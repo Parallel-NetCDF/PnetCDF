@@ -170,25 +170,26 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
 
             // Try if there are offset recorded in attributes, it can happen after opening a file
             if (varp->isnew){
-                varp->offvarid = varp->lenvarid = -1;
+                varp->metaoff = -1;;
                 memset(varp->data_offs, 0, sizeof(MPI_Offset) * (varp->nchunk + 1));
                 memset(varp->data_lens, 0, sizeof(int) * varp->nchunk);
             }
             else{
-                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_offvarid", &(varp->offvarid), MPI_LONG_LONG);
-                err |= nczipp->driver->get_att(nczipp->ncp, varp->varid, "_lenvarid", &(varp->lenvarid), MPI_INT);
+                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_metaoffset", &(varp->metaoff), MPI_LONG_LONG);
                 if (err == NC_NOERR){
                     MPI_Status status;
                     MPI_Offset off;
                     
+                    varp->metaoff += ((NC*)(nczipp->ncp))->begin_var;
+
                     // Set file view
                     CHK_ERR_SET_VIEW(((NC*)(nczipp->ncp))->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
                     
                     // Read data
-                    off = ((NC*)(nczipp->ncp))->vars.value[varp->offvarid]->begin;
+                    off = varp->metaoff;
                     CHK_ERR_READ_AT_ALL(((NC*)(nczipp->ncp))->collective_fh, off, varp->data_offs, sizeof(MPI_Offset) * (varp->nchunk), MPI_BYTE, &status);
 
-                    off = ((NC*)(nczipp->ncp))->vars.value[varp->lenvarid]->begin;
+                    off = varp->metaoff + sizeof(long long) * varp->nchunkalloc;
                     CHK_ERR_READ_AT_ALL(((NC*)(nczipp->ncp))->collective_fh, off, varp->data_lens, sizeof(int) * (varp->nchunk), MPI_BYTE, &status);
 
     #ifndef WORDS_BIGENDIAN // Switch back to little endian
@@ -197,7 +198,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
     #endif
                 }
                 else {
-                    varp->offvarid = varp->lenvarid = -1;
+                    varp->metaoff = -1;;
                     memset(varp->data_offs, 0, sizeof(MPI_Offset) * (varp->nchunk + 1));
                     memset(varp->data_lens, 0, sizeof(int) * varp->nchunk);
                 }
@@ -238,23 +239,6 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
                     varp->zip = nczip_dummy_inq_driver();
                     break;
                 break;
-            }
-
-            // Get metadata, they may not exist so we don't catch error
-            if (varp->isnew == 0){
-                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_datavarid", &(varp->datavarid), MPI_INT);
-                if (err != NC_NOERR){
-                    varp->datavarid = -1;
-                }
-                err = nczipp->driver->get_att(nczipp->ncp, varp->varid, "_dataserial", &(varp->dataserial), MPI_INT);
-                err |= nczipp->driver->get_att(nczipp->ncp, varp->varid, "_metaserial", &(varp->metaserial), MPI_INT);
-                if (err != NC_NOERR){
-                    varp->dataserial = varp->metaserial = 0;
-                }
-            }
-            else{
-                varp->datavarid = -1;
-                varp->dataserial = varp->metaserial = 0;
             }
 
             // Update max ndim and chunksize

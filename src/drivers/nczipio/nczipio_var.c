@@ -80,8 +80,6 @@ nczipio_def_var(void       *ncdp,
     var.etype = ncmpii_nc2mpitype(xtype);
     var.isnew = 1;
     var.expanded = 0;
-    var.metaserial = 0;
-    var.dataserial = 0;
 
     if (ndims < 1) { // Do not compress scalar
         var.varkind = NC_ZIP_VAR_RAW;

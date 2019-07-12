@@ -72,7 +72,6 @@ typedef struct NC_zip_var {
     int ndim;
     MPI_Offset *dimsize;
     int *dimids;
-    MPI_Offset recsize;
     
     int varid;
 
@@ -93,13 +92,8 @@ typedef struct NC_zip_var {
     int nmychunk;
     int nmychunkrec;
     int *mychunks;
-
-    int metaserial;
-    int dataserial;
     
-    int datavarid;
-    int offvarid;
-    int lenvarid;
+    MPI_Offset metaoff;
     MPI_Offset *data_offs;
     int *data_lens;
     
@@ -137,8 +131,11 @@ struct NC_zip {
     int                max_chunk_size;
     int                nmychunks;   // Sum of nmychunk in everyvar
     int                default_zipdriver;
+    int                nwrite;
     MPI_Offset         getsize;
     MPI_Offset         putsize;
+    MPI_Offset         fnalloc;
+    MPI_Offset         fused;
 
 #ifdef PNETCDF_PROFILING
     NC_zip_timers profile; 

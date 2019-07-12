@@ -214,3 +214,43 @@ int nczipioi_print_buffer(char *prefix, unsigned char* buf, int len){
     return NC_NOERR;
 }
 
+int nczipioi_print_buffer_int64(char *prefix, long long* buf, int len){
+    int i;
+    int rank, np;
+    int plen, rlen;
+    char *out, *outp;
+    char rankstr[16];
+
+    MPI_Comm_size(MPI_COMM_WORLD, &np);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    rlen = sprintf(rankstr, "Rank %d: ", rank);
+
+    plen = strlen(prefix);
+    out = outp = (char*)NCI_Malloc(len * 18 + 2 + plen + rlen);
+
+    rlen = sprintf(outp, "%s ", rankstr);   outp += rlen;
+    plen = sprintf(outp, "%s ", prefix);   outp += plen;
+    for(i = 0; i < len; i++){
+        plen = sprintf(outp, "%lld ", buf[i]); outp += plen;
+    }
+
+    printf("%s\n", out);    fflush(stdout);
+
+    NCI_Free(out);
+
+    return NC_NOERR;
+}
+#define SWAP(V0,V1)  \
+        fdisps[V0] ^= fdisps[V1]; fdisps[V1] ^= fdisps[V0]; fdisps[V0] ^= fdisps[V1]; \
+        flens[V0] ^= flens[V1]; flens[V1] ^= flens[V0]; flens[V0] ^= flens[V1]; \
+        mdisps[V0] ^= mdisps[V1]; mdisps[V1] ^= mdisps[V0]; mdisps[V0] ^= mdisps[V1]; \
+        mlens[V0] ^= mlens[V1]; mlens[V1] ^= mlens[V0]; mlens[V0] ^= mlens[V1]; 
+
+int nczipioi_sort_file_offset(int len, MPI_Aint *fdisps, int *flens, MPI_Aint *mdisps, int *mlens){
+    int i;
+    MPI_Aint at;
+
+
+    return NC_NOERR;
+}

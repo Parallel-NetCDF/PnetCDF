@@ -230,7 +230,6 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
         k = 0;
         for(i = 0; i < nvar; i++){
             varp = nczipp->vars.data + varids[i];
-            ncvarp = ncp->vars.value[varp->datavarid];
         
             for(j = 0; j < varp->nmychunk; j++){
                 cid = varp->mychunks[j];
