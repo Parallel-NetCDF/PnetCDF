@@ -44,6 +44,10 @@
 #define uint64 unsigned long long
 #endif
 
+float tolerance_ratio = 1.0;
+float tolerance_difference = 0.0;
+
+
 #define OOM_ERROR { \
     fprintf(stderr, "Error: calloc() out of memory at line %d\n",__LINE__); \
     exit(1); \
@@ -106,6 +110,9 @@
 
 #define CHECK_VAR_DIFF(type, func) {                                         \
     int pos, isDiff;                                                         \
+	int worst = -1;																 \
+	float error_difference = tolerance_difference;								\
+	float error_ratio = tolerance_ratio;									\
     type *b1, *b2;                                                           \
     b1 = (type *)calloc(varsize * 2, sizeof(type));                          \
     if (!b1) OOM_ERROR                                                       \
@@ -115,8 +122,34 @@
     err = func(ncid[1], varid2, start, shape, b2);                           \
     HANDLE_ERROR                                                             \
     for (pos=0; pos<varsize; pos++) {                                        \
-        if (b1[pos] != b2[pos])                                              \
-            break;                                                           \
+		if ( b1[pos] > b2[pos] ) { 											\
+			if ( ( b1[pos] - b2[pos] < error_difference ) ||			\
+			     ( b1[pos] / b2[pos] < 1.0 + error_ratio ) ) continue;	\
+			if ( b1[pos] / b2[pos] > 1.0 + error_ratio ) {					\
+				error_ratio = -1.0 +  b1[pos] / b2[pos];						\
+				worst = pos;												\
+			}																\
+			if ( b1[pos] - b2[pos] > error_difference ) {					\
+				error_difference =  b1[pos] - b2[pos];						\
+				worst = pos;												\
+			}																\
+		}																\
+		if ( b2[pos] > b1[pos] ) { 											\
+			if ( ( b2[pos] - b1[pos] < error_difference ) ||			\
+			     ( b2[pos] / b1[pos] < 1.0 + error_ratio ) ) continue;	\
+			if ( b2[pos] / b1[pos] > 1.0 + error_ratio ) {					\
+				error_ratio = -1.0 +  b2[pos] / b1[pos];						\
+				worst = pos;												\
+			}																\
+			if ( b2[pos] - b1[pos] > error_difference ) {					\
+				error_difference =  b2[pos] - b1[pos];						\
+				worst = pos;												\
+			}																\
+		}																\
+    }                                                                        \
+	if ( worst != -1 ) {															\
+	 	printf("%f vs %f\n",  b1[worst], b2[worst]);					\
+		pos = worst;														\
     }                                                                        \
     if (pos != varsize) { /* diff is found */                                \
         if (ndims[0] == 0) /* scalar variable */                             \
@@ -169,6 +202,8 @@ usage(int rank, char *progname)
   [-q]             quiet mode (no output if two files are the same)\n\
   [-h]             Compare header information only, no variables\n\
   [-v var1[,...]]  Compare variable(s) <var1>,... only\n\
+  [-r]             Relative tolerance, as ratio max/min\n\
+  [-a]             Absolute tolerance, as difference max-min\n\
   file1 file2      File names of two input netCDF files to be compared\n"
 
     if (rank == 0) {
@@ -263,7 +298,7 @@ int main(int argc, char **argv)
     var_list.names      = NULL;
     var_list.nvars      = 0;
 
-    while ((c = getopt(argc, argv, "bhqv:")) != -1)
+    while ((c = getopt(argc, argv, "bhqa:r:v:")) != -1)
         switch(c) {
             case 'h':               /* compare header only */
                 check_header = 1;
@@ -278,6 +313,12 @@ int main(int argc, char **argv)
                 break;
             case 'q':
                 quiet = 1;
+                break;
+            case 'a':
+                sscanf(optarg, "%f", &tolerance_difference);
+                break;
+            case 'r':
+                sscanf(optarg, "%f", &tolerance_ratio);
                 break;
             case '?':
                 usage(rank, argv[0]);
@@ -316,14 +357,14 @@ int main(int argc, char **argv)
             numHeadDIFF++;
             quiet = 1;
             goto cmp_exit;
-        } else if (fmt[i] == NC_FORMAT_BP) {
-            /* BP files are not supported */
-            if (rank == 0)
-                fprintf(stderr, "Error: BP file %s is not supported\n",
-                        argv[optind+i]);
-            numHeadDIFF++;
-            quiet = 1;
-            goto cmp_exit;
+//        } else if (fmt[i] == NC_FORMAT_BP) {
+//            /* BP files are not supported */
+//            if (rank == 0)
+//                fprintf(stderr, "Error: BP file %s is not supported\n",
+//                        argv[optind+i]);
+//            numHeadDIFF++;
+//            quiet = 1;
+//            goto cmp_exit;
         } else if (fmt[i] != NC_FORMAT_CLASSIC &&
                    fmt[i] != NC_FORMAT_CDF2 &&
                    fmt[i] != NC_FORMAT_CDF5) {
