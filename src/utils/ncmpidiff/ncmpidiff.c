@@ -349,22 +349,24 @@ int main(int argc, char **argv)
         err = ncmpi_inq_file_format(argv[optind+i], &fmt[i]);
         HANDLE_ERROR
 
-        if (fmt[i] == NC_FORMAT_NETCDF4) {
-            /* HDF5 files are not supported */
+        if (fmt[i] == NC_FORMAT_NETCDF4 || fmt[i] == NC_FORMAT_NETCDF4_CLASSIC) {
+#ifndef ENABLE_NETCDF4
+            /* HDF5 files are not supported when --enable-netcdf4 is not used */
             if (rank == 0)
                 fprintf(stderr, "Error: HDF5 based NetCDF4 file %s is not supported\n",
                         argv[optind+i]);
             numHeadDIFF++;
             quiet = 1;
             goto cmp_exit;
-//        } else if (fmt[i] == NC_FORMAT_BP) {
-//            /* BP files are not supported */
-//            if (rank == 0)
-//                fprintf(stderr, "Error: BP file %s is not supported\n",
-//                        argv[optind+i]);
-//            numHeadDIFF++;
-//            quiet = 1;
-//            goto cmp_exit;
+#endif
+        } else if (fmt[i] == NC_FORMAT_BP) {
+            /* BP files are not supported */
+            if (rank == 0)
+                fprintf(stderr, "Error: BP file %s is not supported\n",
+                        argv[optind+i]);
+            numHeadDIFF++;
+            quiet = 1;
+            goto cmp_exit;
         } else if (fmt[i] != NC_FORMAT_CLASSIC &&
                    fmt[i] != NC_FORMAT_CDF2 &&
                    fmt[i] != NC_FORMAT_CDF5) {
