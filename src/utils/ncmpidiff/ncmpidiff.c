@@ -123,30 +123,34 @@
                 break;                                                       \
         }                                                                    \
     } else {                                                                 \
-        float error_difference = tolerance_difference;                       \
-        float error_ratio = tolerance_ratio;                                 \
+        double error_difference = tolerance_difference;                      \
+        double error_ratio = tolerance_ratio;                                \
         for (pos=0; pos<varsize; pos++) {                                    \
             if ( b1[pos] == b2[pos] ) continue;                              \
             if ( b1[pos] > b2[pos] ) {                                       \
-                if ( ( b1[pos] - b2[pos] < error_difference ) ||             \
-                     ( b1[pos] / b2[pos] < 1.0 + error_ratio ) ) continue;   \
-                if ( b1[pos] / b2[pos] > 1.0 + error_ratio ) {               \
-                    error_ratio = -1.0 +  b1[pos] / b2[pos];                 \
+                double diff  = b1[pos] - b2[pos];                            \
+                double ratio = (double)b1[pos] / (double)b2[pos];            \
+                if ( ( diff < error_difference ) ||                          \
+                     ( ratio < 1.0 + error_ratio ) ) continue;               \
+                if ( ratio > 1.0 + error_ratio ) {                           \
+                    error_ratio = -1.0 +  ratio;                             \
                     worst = pos;                                             \
                 }                                                            \
-                if ( b1[pos] - b2[pos] > error_difference ) {                \
-                    error_difference =  b1[pos] - b2[pos];                   \
+                if ( diff > error_difference ) {                             \
+                    error_difference = diff;                                 \
                     worst = pos;                                             \
                 }                                                            \
             } else { /* if ( b2[pos] > b1[pos] ) */                          \
-                if ( ( b2[pos] - b1[pos] < error_difference ) ||             \
-                     ( b2[pos] / b1[pos] < 1.0 + error_ratio ) ) continue;   \
-                if ( b2[pos] / b1[pos] > 1.0 + error_ratio ) {               \
-                    error_ratio = -1.0 +  b2[pos] / b1[pos];                 \
+                double diff  = b2[pos] - b1[pos];                            \
+                double ratio = (double)b2[pos] / (double)b1[pos];            \
+                if ( ( diff < error_difference ) ||                          \
+                     ( ratio < 1.0 + error_ratio ) ) continue;               \
+                if ( ratio > 1.0 + error_ratio ) {                           \
+                    error_ratio = -1.0 +  ratio;                             \
                     worst = pos;                                             \
                 }                                                            \
-                if ( b2[pos] - b1[pos] > error_difference ) {                \
-                    error_difference =  b2[pos] - b1[pos];                   \
+                if ( diff > error_difference ) {                             \
+                    error_difference = diff;                                 \
                     worst = pos;                                             \
                 }                                                            \
             }                                                                \
@@ -293,7 +297,7 @@ int main(int argc, char **argv)
     int ncid[2], ndims[2], nvars[2], natts[2], recdim[2], *dimids[2], fmt[2];
     int cmp_nvars, check_header, check_variable_list, check_entire_file;
     long long numVarDIFF=0, numHeadDIFF=0, varDIFF, numDIFF;
-    float tolerance_ratio, tolerance_difference;
+    double tolerance_ratio, tolerance_difference;
     MPI_Offset *shape=NULL, varsize, *start=NULL;
     MPI_Offset attlen[2], dimlen[2];
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -338,13 +342,13 @@ int main(int argc, char **argv)
                     usage(rank, argv[0]);
                     break;
                 } else
-                    sscanf(ptr, "%f", &tolerance_difference);
+                    sscanf(ptr, "%lf", &tolerance_difference);
                 ptr = strtok(NULL, ",");
                 if (ptr == NULL) {
                     usage(rank, argv[0]);
                     break;
                 } else
-                    sscanf(ptr, "%f", &tolerance_ratio);
+                    sscanf(ptr, "%lf", &tolerance_ratio);
                 check_tolerance = 1;
                 break;
             case '?':
