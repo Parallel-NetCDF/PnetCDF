@@ -44,9 +44,6 @@
 #define uint64 unsigned long long
 #endif
 
-float tolerance_ratio = 1.0;
-float tolerance_difference = 0.0;
-
 
 #define OOM_ERROR { \
     fprintf(stderr, "Error: calloc() out of memory at line %d\n",__LINE__); \
@@ -74,9 +71,10 @@ float tolerance_difference = 0.0;
     HANDLE_ERROR                                                       \
     for (pos=0; pos<attlen[0]; pos++) {                                \
         if (b1[pos] != b2[pos]) {                                      \
-            printf("DIFF: global attribute \"%s\" of type \"%s\" differs at element %d\n",  \
+            printf("DIFF: global attribute \"%s\" of type \"%s\" differs first at element %d\n",  \
                     name[0], get_type(xtype[0]), pos);                 \
             numHeadDIFF++;                                             \
+            break;                                                     \
         }                                                              \
     }                                                                  \
     if (pos == attlen[0] && verbose)                                   \
@@ -97,9 +95,10 @@ float tolerance_difference = 0.0;
     HANDLE_ERROR                                                       \
     for (pos=0; pos<attlen[0]; pos++) {                                \
         if (b1[pos] != b2[pos]) {                                      \
-            printf("DIFF: variable \"%s\" attribute \"%s\" of type \"%s\" at element %d\n",  \
+            printf("DIFF: variable \"%s\" attribute \"%s\" of type \"%s\" first at element %d\n",  \
                     name[0], attrname, get_type(xtype[0]), pos);       \
             numHeadDIFF++;                                             \
+            break;                                                     \
         }                                                              \
     }                                                                  \
     if (pos == attlen[0] && verbose)                                   \
@@ -109,10 +108,7 @@ float tolerance_difference = 0.0;
 }
 
 #define CHECK_VAR_DIFF(type, func) {                                         \
-    int pos, isDiff;                                                         \
-	int worst = -1;																 \
-	float error_difference = tolerance_difference;								\
-	float error_ratio = tolerance_ratio;									\
+    int pos, isDiff, worst = -1;                                             \
     type *b1, *b2;                                                           \
     b1 = (type *)calloc(varsize * 2, sizeof(type));                          \
     if (!b1) OOM_ERROR                                                       \
@@ -121,53 +117,70 @@ float tolerance_difference = 0.0;
     HANDLE_ERROR                                                             \
     err = func(ncid[1], varid2, start, shape, b2);                           \
     HANDLE_ERROR                                                             \
-    for (pos=0; pos<varsize; pos++) {                                        \
-		if ( b1[pos] > b2[pos] ) { 											\
-			if ( ( b1[pos] - b2[pos] < error_difference ) ||			\
-			     ( b1[pos] / b2[pos] < 1.0 + error_ratio ) ) continue;	\
-			if ( b1[pos] / b2[pos] > 1.0 + error_ratio ) {					\
-				error_ratio = -1.0 +  b1[pos] / b2[pos];						\
-				worst = pos;												\
-			}																\
-			if ( b1[pos] - b2[pos] > error_difference ) {					\
-				error_difference =  b1[pos] - b2[pos];						\
-				worst = pos;												\
-			}																\
-		}																\
-		if ( b2[pos] > b1[pos] ) { 											\
-			if ( ( b2[pos] - b1[pos] < error_difference ) ||			\
-			     ( b2[pos] / b1[pos] < 1.0 + error_ratio ) ) continue;	\
-			if ( b2[pos] / b1[pos] > 1.0 + error_ratio ) {					\
-				error_ratio = -1.0 +  b2[pos] / b1[pos];						\
-				worst = pos;												\
-			}																\
-			if ( b2[pos] - b1[pos] > error_difference ) {					\
-				error_difference =  b2[pos] - b1[pos];						\
-				worst = pos;												\
-			}																\
-		}																\
+    if (!check_tolerance) {                                                  \
+        for (pos=0; pos<varsize; pos++) {                                    \
+            if (b1[pos] != b2[pos])                                          \
+                break;                                                       \
+        }                                                                    \
+    } else {                                                                 \
+        float error_difference = tolerance_difference;                       \
+        float error_ratio = tolerance_ratio;                                 \
+        for (pos=0; pos<varsize; pos++) {                                    \
+            if ( b1[pos] == b2[pos] ) continue;                              \
+            if ( b1[pos] > b2[pos] ) {                                       \
+                if ( ( b1[pos] - b2[pos] < error_difference ) ||             \
+                     ( b1[pos] / b2[pos] < 1.0 + error_ratio ) ) continue;   \
+                if ( b1[pos] / b2[pos] > 1.0 + error_ratio ) {               \
+                    error_ratio = -1.0 +  b1[pos] / b2[pos];                 \
+                    worst = pos;                                             \
+                }                                                            \
+                if ( b1[pos] - b2[pos] > error_difference ) {                \
+                    error_difference =  b1[pos] - b2[pos];                   \
+                    worst = pos;                                             \
+                }                                                            \
+            } else { /* if ( b2[pos] > b1[pos] ) */                          \
+                if ( ( b2[pos] - b1[pos] < error_difference ) ||             \
+                     ( b2[pos] / b1[pos] < 1.0 + error_ratio ) ) continue;   \
+                if ( b2[pos] / b1[pos] > 1.0 + error_ratio ) {               \
+                    error_ratio = -1.0 +  b2[pos] / b1[pos];                 \
+                    worst = pos;                                             \
+                }                                                            \
+                if ( b2[pos] - b1[pos] > error_difference ) {                \
+                    error_difference =  b2[pos] - b1[pos];                   \
+                    worst = pos;                                             \
+                }                                                            \
+            }                                                                \
+        }                                                                    \
     }                                                                        \
-	if ( worst != -1 ) {															\
-	 	printf("%f vs %f\n",  b1[worst], b2[worst]);					\
-		pos = worst;														\
-    }                                                                        \
-    if (pos != varsize) { /* diff is found */                                \
-        if (ndims[0] == 0) /* scalar variable */                             \
-            printf("DIFF: scalar variable \"%s\" of type \"%s\"\n",          \
-                   name[0], get_type(xtype[0]));                             \
-        else {                                                               \
+    if (pos != varsize || worst != -1) { /* diff is found */                 \
+        if (ndims[0] == 0) { /* scalar variable */                           \
+            if (worst == -1)                                                 \
+                printf("DIFF: scalar variable \"%s\" of type \"%s\"\n",      \
+                       name[0], get_type(xtype[0]));                         \
+            else                                                             \
+                printf("DIFF (tolerance): scalar variable \"%s\" of type \"%s\" of value %f vs %f\n", \
+                       name[0], get_type(xtype[0]), (double)b1[worst], (double)b2[worst]);            \
+        } else {                                                             \
             int _i;                                                          \
             MPI_Offset *diffStart;                                           \
             diffStart = (MPI_Offset*) malloc(ndims[0] * sizeof(MPI_Offset)); \
+            if (worst != -1) pos = worst;                                    \
             for (_i=ndims[0]-1; _i>=0; _i--) {                               \
                 diffStart[_i] = pos % shape[_i] + start[_i];                 \
                 pos /= shape[_i];                                            \
             }                                                                \
-            printf("DIFF: variable \"%s\" of type \"%s\" at element [%lld",  \
-                   name[0], get_type(xtype[0]), diffStart[0]);               \
+            if (worst == -1)                                                 \
+                printf("DIFF: variable \"%s\" of type \"%s\" first at element [%lld", \
+                       name[0], get_type(xtype[0]), diffStart[0]);           \
+            else                                                             \
+                printf("DIFF (tolerance): variable \"%s\" of type \"%s\" max at element [%lld", \
+                       name[0], get_type(xtype[0]), diffStart[0]);           \
             for (_i=1; _i<ndims[0]; _i++)                                    \
                 printf(", %lld", diffStart[_i]);                             \
-            printf("]\n");                                                   \
+            if (worst == -1)                                                 \
+                printf("]\n");                                               \
+            else                                                             \
+                printf("] of value %f vs %f\n", (double)b1[worst], (double)b2[worst]); \
             free(diffStart);                                                 \
         }                                                                    \
         numVarDIFF++;                                                        \
@@ -202,12 +215,13 @@ usage(int rank, char *progname)
   [-q]             quiet mode (no output if two files are the same)\n\
   [-h]             Compare header information only, no variables\n\
   [-v var1[,...]]  Compare variable(s) <var1>,... only\n\
-  [-r]             Relative tolerance, as ratio max/min\n\
-  [-a]             Absolute tolerance, as difference max-min\n\
+  [-t diff,ratio]  Tolerance: diff is absolute element-wise difference\n\
+                   and ratio is relative element-wise ratio\n\
   file1 file2      File names of two input netCDF files to be compared\n"
 
     if (rank == 0) {
-        printf("  %s [-b] [-q] [-h] [-v ...] file1 file2\n%s", progname, USAGE);
+        printf("  %s [-b] [-q] [-h] [-v ...] [-t diff,ratio] file1 file2\n%s",
+               progname, USAGE);
         printf("*PnetCDF library version %s\n", ncmpi_inq_libvers());
     }
     MPI_Finalize();
@@ -275,10 +289,11 @@ int main(int argc, char **argv)
     extern char *optarg;
     extern int optind;
     char *name[2];
-    int i, j, c, err, rank, nprocs, verbose, quiet;
+    int i, j, c, err, rank, nprocs, verbose, quiet, check_tolerance;
     int ncid[2], ndims[2], nvars[2], natts[2], recdim[2], *dimids[2], fmt[2];
     int cmp_nvars, check_header, check_variable_list, check_entire_file;
     long long numVarDIFF=0, numHeadDIFF=0, varDIFF, numDIFF;
+    float tolerance_ratio, tolerance_difference;
     MPI_Offset *shape=NULL, varsize, *start=NULL;
     MPI_Offset attlen[2], dimlen[2];
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -297,8 +312,10 @@ int main(int argc, char **argv)
     check_entire_file   = 0;
     var_list.names      = NULL;
     var_list.nvars      = 0;
+    check_tolerance     = 0;
 
-    while ((c = getopt(argc, argv, "bhqa:r:v:")) != -1)
+    while ((c = getopt(argc, argv, "bhqt:v:")) != -1) {
+        char str[128], *ptr;
         switch(c) {
             case 'h':               /* compare header only */
                 check_header = 1;
@@ -314,16 +331,27 @@ int main(int argc, char **argv)
             case 'q':
                 quiet = 1;
                 break;
-            case 'a':
-                sscanf(optarg, "%f", &tolerance_difference);
-                break;
-            case 'r':
-                sscanf(optarg, "%f", &tolerance_ratio);
+            case 't':
+                strcpy(str, optarg);
+                ptr = strtok(str, ",");
+                if (ptr == NULL) {
+                    usage(rank, argv[0]);
+                    break;
+                } else
+                    sscanf(ptr, "%f", &tolerance_difference);
+                ptr = strtok(NULL, ",");
+                if (ptr == NULL) {
+                    usage(rank, argv[0]);
+                    break;
+                } else
+                    sscanf(ptr, "%f", &tolerance_ratio);
+                check_tolerance = 1;
                 break;
             case '?':
                 usage(rank, argv[0]);
                 break;
         }
+    }
 
     /* quiet mode overwrites verbose */
     if (quiet) verbose = 0;
