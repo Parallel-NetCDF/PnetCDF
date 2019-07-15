@@ -17,7 +17,7 @@
 
 #include <stdio.h>
 #include <stdlib.h> /* malloc(), calloc(), free() */
-#include <string.h> /* strtok(), strcpy(), strlen(), strerror(), strcmp(), memcmp() */
+#include <string.h> /* strtok(), strdup(), strlen(), strerror(), strcmp(), memcmp() */
 #include <sys/types.h> /* lseek() */
 #include <unistd.h> /* getopt(), lseek() */
 
@@ -77,9 +77,8 @@ get_var_names(char *optarg, struct vspec* vspecp)
          cp != NULL;
          cp = strtok((char *) NULL, ",")) {
 
-        *cpp = (char *) calloc(strlen(cp) + 1, 1);
+        *cpp = strdup(cp);
         if (!*cpp) OOM_ERROR
-        strcpy(*cpp, cp);
         cpp++;
     }
     vspecp->nvars = nvars;

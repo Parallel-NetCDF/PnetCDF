@@ -259,9 +259,8 @@ get_var_names(char *optarg, struct vspec* vspecp)
          cp != NULL;
          cp = strtok((char *) NULL, ",")) {
 
-        *cpp = (char *) calloc(strlen(cp) + 1, 1);
+        *cpp = strdup(cp);
         if (!*cpp) OOM_ERROR
-        strcpy(*cpp, cp);
         cpp++;
     }
     vspecp->nvars = nvars;
@@ -319,7 +318,7 @@ int main(int argc, char **argv)
     check_tolerance     = 0;
 
     while ((c = getopt(argc, argv, "bhqt:v:")) != -1) {
-        char str[128], *ptr;
+        char *str, *ptr;
         switch(c) {
             case 'h':               /* compare header only */
                 check_header = 1;
@@ -336,7 +335,7 @@ int main(int argc, char **argv)
                 quiet = 1;
                 break;
             case 't':
-                strcpy(str, optarg);
+                str = strdup(optarg);
                 ptr = strtok(str, ",");
                 if (ptr == NULL) {
                     usage(rank, argv[0]);
@@ -350,6 +349,7 @@ int main(int argc, char **argv)
                 } else
                     sscanf(ptr, "%lf", &tolerance_ratio);
                 check_tolerance = 1;
+                free(str);
                 break;
             case '?':
                 usage(rank, argv[0]);
@@ -792,9 +792,8 @@ cmp_vars:
         /* collect all the variable names from 1st file */
         for (i=0; i<cmp_nvars; i++) {
             ncmpi_inq_varname(ncid[0], i, name[0]);
-            var_list.names[i] = (char *) calloc(strlen(name[0]) + 1, 1);
+            var_list.names[i] = strdup(name[0]);
             if (!var_list.names[i]) OOM_ERROR
-            strcpy(var_list.names[i], name[0]);
         }
     }
     if (!rank && verbose) printf("number of variables to be compared = %d\n",cmp_nvars);

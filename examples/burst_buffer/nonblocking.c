@@ -66,7 +66,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> /* strcpy(), strncpy() */
+#include <string.h> /* strcpy(), strncpy(), strdup() */
 #include <unistd.h> /* getopt() */
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
 {
     extern int optind;
     extern char *optarg;
-    char filename[256], bb_dir[256];
+    char filename[256], *bb_dir;
     int i, rank, np, verbose=1, err, nerrs=0;
     int dimid[2];
     int varid[3];
@@ -105,10 +105,11 @@ int main(int argc, char** argv)
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
     /* get command-line arguments */
-    strcpy(bb_dir, ".");
+    bb_dir = strdup(".");
     while ((i = getopt(argc, argv, "hqb:")) != EOF)
         switch(i) {
-            case 'b': strcpy(bb_dir, optarg);
+            case 'b': free(bb_dir);
+                      bb_dir = strdup(optarg);
                       break;
             case 'q': verbose = 0;
                       break;
@@ -129,7 +130,7 @@ int main(int argc, char** argv)
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_burst_buf", "enable");
     MPI_Info_set(info, "nc_burst_buf_dirname", bb_dir);
-
+    free(bb_dir);
     /* create a new file using clobber mode ----------------------------------*/
     cmode = NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);

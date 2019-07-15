@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>    /* strcpy(), strcat(), memset(); memmove() */
+#include <string.h>    /* strdup(), strcat(), memset(); memmove() */
 #include <errno.h>     /* errno, strerror() */
 #include <sys/types.h> /* open() */
 #include <sys/stat.h>  /* open() */
@@ -1819,10 +1819,8 @@ make_lvars(char *optarg, struct fspec* fspecp)
          cp != NULL;
          cp = strtok((char *) NULL, ",")) {
 
-        *cpp = (char *) malloc(strlen(cp) + 1);
+        *cpp = strdup(cp);
         MALLOC_CHECK(*cpp)
-
-        strcpy(*cpp, cp);
         cpp++;
     }
     fspecp->nlvars = nvars;
@@ -1950,8 +1948,7 @@ int main(int argc, char *argv[])
     }
 
     ncp = (NC*) calloc(1, sizeof(NC));
-    ncp->path = (char*) malloc(strlen(filename)+1);
-    strcpy(ncp->path, filename);
+    ncp->path = strdup(filename);
 
     /* read the header from file */
     err = ncmpii_hdr_get_NC(fd, ncp);
