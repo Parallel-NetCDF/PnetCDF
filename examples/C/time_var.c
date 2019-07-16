@@ -269,7 +269,7 @@ pnetcdf_read(MPI_Comm comm, char *filename)
 
     /* read fixed-size variable, fix_var */
     start[0] = 0;
-    start[1] = local_nx * rank;
+    start[1] = (MPI_Offset)local_nx * rank;
     count[0] = global_ny;
     count[1] = local_nx;
     err = ncmpi_get_vara_double_all(ncid, fix_var, start, count, buf); ERR

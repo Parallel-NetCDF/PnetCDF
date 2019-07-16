@@ -8,6 +8,9 @@ This is essentially a placeholder for the next release note ...
     supported. This feature is provided for convenience purpose. The parallel
     I/O performance to BP files is expected no difference from using ADIOS
     library directly. More information can be found in doc/README.ADIOS.md.
+  + Utility program `ncmpidiff` adds a new option `-t` to compare variables
+    with tolerance. See the man page of `ncmpidiff` for usage. Thanks to
+    Carl Ponder for contributing the source codes.
 
 * New optimization
   + none

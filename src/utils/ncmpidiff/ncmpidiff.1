@@ -13,13 +13,17 @@ mpiexec -n np ncmpidiff
 \%[-b]
 \%[-q]
 \%[-h]
-\%[-v \fIvar1,...\fP]
+\%[-v var1,...]
+\%[-t diff,ratio]
 \%\fIfile1 file2\fP
 .hy
 .ft
 .SH DESCRIPTION
 \fBncmpidiff\fP runs in parallel on np number of MPI processes to compare the
-contents of the two files and reports the difference to the standard output.
+contents of the two files and reports the first difference to the standard output.
+For variables, it reports the array indices of the first element found different
+when option \fB-t\fP is not used. When option \fB-t\fP is used, it reports the
+element with the largest difference that fails to meet the tolerance requirements.
 
 If neither argument -v nor -h is given besides the two file names, the entire
 files are compared.
@@ -43,8 +47,19 @@ verbose mode. When in quiet mode, users should check exit status. See below in
 "EXIT STATUS".
 .IP "\fB-h\fP"
 Compare file header only
-.IP "\fB-v\fP \fIvar1,...,varn\fP"
-Compare only the given list of variables
+.IP "\fB-v\fP var1,...,varn"
+Compare only the given list of variables (names separated by comma without
+space).
+.IP "\fB-t\fP diff,ratio"
+Compare variables elementwisely with tolerance (diff and ratio separated by
+comma without space).  \fIdiff\fP is the absolute value of element-wise
+difference of any two variables.  \fIratio\fP is the relative element-wise
+ratio, for instance, MAX(x,y) / MIN(x,y) - 1, where x is an array element from
+a variable in the first file and y is the corresponding array element of the
+same variable in the second file. Note when this option is used, the comparison
+will compare the entire variables and reports the element with the largest
+difference that fails to meet the both tolerance requirements.
+
 .SH EXIT STATUS
 An exit status of 0 means no differences were found, and 1 means some
 differences were found.  Note on VMS-based system, the exit status values are
