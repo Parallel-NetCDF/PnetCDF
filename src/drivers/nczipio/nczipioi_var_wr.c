@@ -308,7 +308,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     MPI_Offset start, count, oldzoff, voff;
     MPI_Datatype mtype, ftype;  // Memory and file datatype
     int wcnt, ccnt, wcur, ccur;
-    int *mlens, *flens;
+    int *lens;
     MPI_Aint *mdisps, *fdisps;
     MPI_Status status;
     int put_size;
@@ -353,9 +353,8 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     zoffs = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * (total_nchunks + 1));
 
     // Allocate buffer file type
-    mlens = (int*)NCI_Malloc(sizeof(int) * wcnt);
     mdisps = (MPI_Aint*)NCI_Malloc(sizeof(MPI_Aint) * wcnt);
-    flens = (int*)NCI_Malloc(sizeof(int) * wcnt);
+    lens = (int*)NCI_Malloc(sizeof(int) * wcnt);
     fdisps = (MPI_Aint*)NCI_Malloc(sizeof(MPI_Aint) * wcnt);
 
     ccur = 0;
@@ -495,15 +494,17 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         }
 
         if (nczipp->rank == varp->chunk_owner[0]){  // First chunk owner writes metadata
-            flens[wcur] = mlens[wcur] = varp->nchunk * sizeof(long long);
+            lens[wcur] = varp->nchunk * sizeof(long long);
             fdisps[wcur] = (MPI_Aint)varp->metaoff + ncp->begin_var;
             mdisps[wcur++] = (MPI_Aint)(varp->data_offs);
             
-            flens[wcur] = mlens[wcur] = varp->nchunk * sizeof(int);
+            lens[wcur] = varp->nchunk * sizeof(int);
             fdisps[wcur] = (MPI_Aint)(varp->metaoff + ncp->begin_var + sizeof(long long) * varp->nchunkalloc);
             mdisps[wcur++] = (MPI_Aint)(varp->data_lens);
         }
     }
+
+    nczipioi_sort_file_offset(wcur, fdisps, mdisps, lens);
 
     zsizes_allp = zsizes_all + nvar;
     zoffsp = zoffs + nvar;
@@ -526,11 +527,9 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
             // Record parameter
             if (varp->dirty[cid]){
-                flens[wcur + l] = zsizes[cid];
-                //fdisps[wcur + l] = (MPI_Aint)zoffs[cid];
-                mlens[wcur + l] = zsizes[cid];
-                mdisps[wcur + l] = (MPI_Aint)zbufs[(ccur++) + i];
-                ++l;
+                lens[wcur] = varp->data_lens[cid];
+                fdisps[wcur] = (MPI_Aint)varp->data_offs[cid] + ncp->begin_var;
+                mdisps[wcur++] = (MPI_Aint)zbufs[ccur++];
             }
         }
 
@@ -585,11 +584,11 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
      */
     if (wcnt > 0){
          // Create file type
-        MPI_Type_create_hindexed(wcnt, flens, fdisps, MPI_BYTE, &ftype);
+        MPI_Type_create_hindexed(wcnt, lens, fdisps, MPI_BYTE, &ftype);
         CHK_ERR_TYPE_COMMIT(&ftype);
 
         // Create memmory type
-        MPI_Type_create_hindexed(wcnt, mlens, mdisps, MPI_BYTE, &mtype);
+        MPI_Type_create_hindexed(wcnt, lens, mdisps, MPI_BYTE, &mtype);
         CHK_ERR_TYPE_COMMIT(&mtype);
 
 #ifndef WORDS_BIGENDIAN // NetCDF data is big endian
@@ -651,9 +650,8 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     }
     NCI_Free(zbufs);
 
-    NCI_Free(flens);
+    NCI_Free(lens);
     NCI_Free(fdisps);
-    NCI_Free(mlens);
     NCI_Free(mdisps);
 
     NCI_Free(reqids);

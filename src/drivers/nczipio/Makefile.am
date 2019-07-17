@@ -41,7 +41,7 @@ C_SRCS = nczipio_attr.c \
          nczipio_file.c \
          nczipio_var.c \
          nczipio_internal.c \
-         nczipio_util.c \
+         nczipioi_util.c \
          nczipioi_put_var.c \
          nczipioi_get_var.c \
          nczipioi_put_varn.c \
@@ -54,7 +54,8 @@ C_SRCS = nczipio_attr.c \
          nczipioi_chunk.c \
          nczipioi_chunk_size.c \
          nczipioi_chunk_owner.c \
-         nczipioi_var.c \
+         nczipioi_var_init.c \
+         nczipioi_var_resize.c \
          nczipioi_var_wr.c \
          nczipioi_var_rd.c \
          nczipioi_lists.c \

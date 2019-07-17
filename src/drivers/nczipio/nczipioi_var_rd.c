@@ -40,9 +40,9 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     MPI_Offset bsize;
 
     int *lens;
-    MPI_Aint *disps;
+    MPI_Aint *fdisps, *mdisps;
     MPI_Status status;
-    MPI_Datatype ftype;  // Memory and file datatype
+    MPI_Datatype ftype, mtype;  // Memory and file datatype
 
     int *zsizes;
     MPI_Offset *zoffs;
@@ -64,7 +64,8 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
 
     // Allocate buffer for I/O
     lens = (int*)NCI_Malloc(sizeof(int) * nchunk);
-    disps = (MPI_Aint*)NCI_Malloc(sizeof(MPI_Aint) * nchunk);
+    fdisps = (MPI_Aint*)NCI_Malloc(sizeof(MPI_Aint) * nchunk * 2);
+    mdisps = fdisps + nchunk;
     zbufs = (char**)NCI_Malloc(sizeof(char*) * nchunk);
 
     /* Carry our coll I/O
@@ -78,19 +79,25 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
             cid = cids[i];
             // offset and length of compressed chunks
             lens[i] = zsizes[cid];
-            disps[i] = (MPI_Aint)zoffs[cid];
+            fdisps[i] = (MPI_Aint)zoffs[cid] + ncp->begin_var;
+            mdisps[i] = bsize;
             // At the same time, we record the size of buffer we need
             bsize += (MPI_Offset)lens[i];
         }
-        MPI_Type_create_hindexed(nchunk, lens, disps, MPI_BYTE, &ftype);
-        CHK_ERR_TYPE_COMMIT(&ftype);
 
         // Allocate buffer for compressed data
-        // We allocate it continuously so no mem type needed
         zbufs[0] = (char*)NCI_Malloc(bsize);
         for(i = 1; i < nchunk; i++){
-            zbufs[i] = zbufs[i - 1] + zsizes[cids[i - 1]];
+            zbufs[i] = zbufs[i - 1] + zsizes[cids[i - 1]]; 
         }
+
+        nczipioi_sort_file_offset(nchunk, fdisps, mdisps, lens);
+
+        MPI_Type_create_hindexed(nchunk, lens, fdisps, MPI_BYTE, &ftype);
+        CHK_ERR_TYPE_COMMIT(&ftype);
+
+        MPI_Type_create_hindexed(nchunk, lens, mdisps, MPI_BYTE, &mtype);
+        CHK_ERR_TYPE_COMMIT(&mtype);
 
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_INIT)
         NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_RD)
@@ -99,7 +106,7 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
         // Set file view
         CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
         // Write data
-        CHK_ERR_READ_AT_ALL(ncp->collective_fh, 0, zbufs[0], bsize, MPI_BYTE, &status);
+        CHK_ERR_READ_AT_ALL(ncp->collective_fh, 0, zbufs[0], 1, mtype, &status);
         // Restore file view
         CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
@@ -114,6 +121,7 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
 
         // Free type
         MPI_Type_free(&ftype);
+        MPI_Type_free(&mtype);
     }
     else{
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_INIT)
@@ -168,7 +176,7 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     NCI_Free(zbufs);
 
     NCI_Free(lens);
-    NCI_Free(disps);
+    NCI_Free(fdisps);
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO)
 
@@ -187,9 +195,9 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
     MPI_Offset bsize;
 
     int *lens;
-    MPI_Aint *disps;
+    MPI_Aint *fdisps, *mdisps;
     MPI_Status status;
-    MPI_Datatype ftype;  // Memory and file datatype
+    MPI_Datatype ftype, mtype;  // Memory and file datatype
 
     char **zbufs;
 
@@ -217,7 +225,8 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
     // Allocate buffer for I/O
     lens = (int*)NCI_Malloc(sizeof(int) * nchunk);
-    disps = (MPI_Aint*)NCI_Malloc(sizeof(MPI_Aint) * nchunk);
+    fdisps = (MPI_Aint*)NCI_Malloc(sizeof(MPI_Aint) * nchunk * 2);
+    mdisps = fdisps + nchunk;
     zbufs = (char**)NCI_Malloc(sizeof(char*) * nchunk);
 
     /* Carry our coll I/O
@@ -238,15 +247,13 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
                 if (varp->chunk_cache[cid] == NULL){
                     // offset and length of compressed chunks
                     lens[k] = varp->data_lens[cid];
-                    disps[k] = (MPI_Aint)(varp->data_offs[cid]) + (MPI_Aint)ncvarp->begin;
+                    fdisps[k] = (MPI_Aint)(varp->data_offs[cid] + ncp->begin_var);
+                    mdisps[k] = bsize;
                     // At the same time, we record the size of buffer we need
                     bsize += (MPI_Offset)lens[k++];
                 }
             }
         }
-
-        MPI_Type_create_hindexed(nchunk, lens, disps, MPI_BYTE, &ftype);
-        CHK_ERR_TYPE_COMMIT(&ftype);
 
         // Allocate buffer for compressed data
         // We allocate it continuously so no mem type needed
@@ -255,6 +262,14 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
             zbufs[j] = zbufs[j - 1] + lens[j - 1];
         }    
 
+        nczipioi_sort_file_offset(k, fdisps, mdisps, lens);
+
+        MPI_Type_create_hindexed(nchunk, lens, fdisps, MPI_BYTE, &ftype);
+        CHK_ERR_TYPE_COMMIT(&ftype);
+
+        MPI_Type_create_hindexed(nchunk, lens, mdisps, MPI_BYTE, &mtype);
+        CHK_ERR_TYPE_COMMIT(&mtype);
+
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_INIT)
         NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_RD)
 
@@ -262,7 +277,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
         // Set file view
         CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
         // Write data
-        CHK_ERR_READ_AT_ALL(ncp->collective_fh, 0, zbufs[0], bsize, MPI_BYTE, &status);
+        CHK_ERR_READ_AT_ALL(ncp->collective_fh, 0, zbufs[0], 1, mtype, &status);
         // Restore file view
         CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
@@ -277,6 +292,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
         // Free type
         MPI_Type_free(&ftype);
+        MPI_Type_free(&mtype);
 
         NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_DECOM)
 
@@ -343,7 +359,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids) {
     NCI_Free(zbufs);
 
     NCI_Free(lens);
-    NCI_Free(disps);
+    NCI_Free(fdisps);
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO)
 

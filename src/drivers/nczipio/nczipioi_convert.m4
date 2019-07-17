@@ -57,8 +57,7 @@ dnl
 #include <common.h>
 #include <nczipio_driver.h>
 
-int
-nczipioiconvert(void *inbuf, void *outbuf, MPI_Datatype intype, MPI_Datatype outtype, int N) {
+int nczipioiconvert(void *inbuf, void *outbuf, MPI_Datatype intype, MPI_Datatype outtype, int N) {
     int i;
 
 foreach(`dt', (`(`MPI_BYTE', `char')', dnl

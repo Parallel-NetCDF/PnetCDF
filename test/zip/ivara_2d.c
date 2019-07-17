@@ -134,7 +134,7 @@ int main(int argc, char **argv)
             start[0] = rank;
             count[0] = 1;
             count[1] = 1;
-            for(i = 0; i < N; i++){
+            for(i = N - 1; i > -1; i--){
                 start[1] = i;
                 err = ncmpi_iget_vara_int(ncid, varid, start, count, buf + i, reqids + i); CHECK_ERR
             }

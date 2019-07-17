@@ -153,10 +153,12 @@ extern int nczipioi_extract_hint(NC_zip*, MPI_Info);
 extern int nczipioi_export_hint(NC_zip *nczipp, MPI_Info info);
 extern MPI_Offset NC_Type_size(nc_type);
 extern int nczipioi_print_profile(NC_zip*);
+extern void nczipioi_sort_file_offset(int len, MPI_Aint *fdisps, MPI_Aint *mdisps, int *lens);
 
 // Misc
 extern int nczipioi_calc_chunk_owner(NC_zip*, NC_zip_var*, int, MPI_Offset**, MPI_Offset**, int fixed);
 extern int nczipioi_calc_chunk_size(NC_zip*, NC_zip_var*, int, MPI_Offset**, MPI_Offset**);
+extern int nczipioiconvert(void *inbuf, void *outbuf, MPI_Datatype intype, MPI_Datatype outtype, int N);
 
 // Var
 extern int nczipioi_var_init(NC_zip*, NC_zip_var*, int, MPI_Offset**, MPI_Offset**);

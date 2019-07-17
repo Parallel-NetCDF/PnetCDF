@@ -241,16 +241,44 @@ int nczipioi_print_buffer_int64(char *prefix, long long* buf, int len){
 
     return NC_NOERR;
 }
-#define SWAP(V0,V1)  \
+#define NCZIPIOISWAP(V0,V1)  \
         fdisps[V0] ^= fdisps[V1]; fdisps[V1] ^= fdisps[V0]; fdisps[V0] ^= fdisps[V1]; \
-        flens[V0] ^= flens[V1]; flens[V1] ^= flens[V0]; flens[V0] ^= flens[V1]; \
         mdisps[V0] ^= mdisps[V1]; mdisps[V1] ^= mdisps[V0]; mdisps[V0] ^= mdisps[V1]; \
-        mlens[V0] ^= mlens[V1]; mlens[V1] ^= mlens[V0]; mlens[V0] ^= mlens[V1]; 
+        lens[V0] ^= lens[V1]; lens[V1] ^= lens[V0]; lens[V0] ^= lens[V1]; 
 
-int nczipioi_sort_file_offset(int len, MPI_Aint *fdisps, int *flens, MPI_Aint *mdisps, int *mlens){
-    int i;
+void nczipioi_sort_file_offset(int len, MPI_Aint *fdisps, MPI_Aint *mdisps, int *lens){
+    int i, j, p;
     MPI_Aint at;
 
+    if (len < 16){
+        j = 1;
+        while(j){
+            j = 0;
+            for(i = 0; i < len - 1; i++){
+                if (fdisps[i] > fdisps[i + 1]){
+                    NCZIPIOISWAP(i, i + 1);
+                    j = 1;
+                }
+            }
+        }
+    }
+    else{
+        j = len / 2;
+        p = len - 1;
+        NCZIPIOISWAP(j, p);
+        
+        for(i = j = 0; i < len; i++){
+            if (fdisps[i] < fdisps[p]){
+                if (i != j){
+                    NCZIPIOISWAP(i, j);
+                }
+                j++;
+            }
+        }
 
-    return NC_NOERR;
+        NCZIPIOISWAP(p, j);
+
+        nczipioi_sort_file_offset(j, fdisps, mdisps, lens);
+        nczipioi_sort_file_offset(len - j - 1, fdisps + j + 1, mdisps + j + 1, lens + j + 1);
+    }
 }
