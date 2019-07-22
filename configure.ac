@@ -184,14 +184,18 @@ AC_ARG_WITH(mpi,
         PnetCDF is built on top of MPI. Configure option --without-mpi or
         --with-mpi=no should not be used. Abort.
       -----------------------------------------------------------------------])
-   elif test "x${withval}" = x -o "x${withval}" = xyes ; then
+   elif test "x${withval}" = x ; then
       AC_MSG_ERROR(--with-mpi is set but the value is NULL)
-   elif (! test -d "${withval}") ; then
-      AC_MSG_ERROR(Directory '${withval}' specified in --with-mpi does not exist)
+   elif test "x${withval}" != xyes -a ! -d "${withval}" ; then
+      # user may use --with-mpi without an argument, which results in withval
+      # being "yes". This case is OK and we simply take no action, as PnetCDF
+      # requires MPI compilers and will check them.
+      AC_MSG_ERROR(Directory '${withval}' specified in --with-mpi does not exist or is not a directory)
    fi
    MPI_INSTALL=${withval}
    ]
 )
+AC_MSG_ERROR(--with-mpi withval=$withval)
 dnl MPI_INSTALL will be referred in UD_MPI_PATH_PROGS and UD_MPI_PATH_PROG
 dnl defined in acinclude.m4
 
