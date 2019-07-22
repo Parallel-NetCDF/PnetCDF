@@ -195,7 +195,6 @@ AC_ARG_WITH(mpi,
    MPI_INSTALL=${withval}
    ]
 )
-AC_MSG_ERROR(--with-mpi withval=$withval)
 dnl MPI_INSTALL will be referred in UD_MPI_PATH_PROGS and UD_MPI_PATH_PROG
 dnl defined in acinclude.m4
 
