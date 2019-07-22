@@ -8,9 +8,6 @@ This is essentially a placeholder for the next release note ...
     supported. This feature is provided for convenience purpose. The parallel
     I/O performance to BP files is expected no difference from using ADIOS
     library directly. More information can be found in doc/README.ADIOS.md.
-  + Utility program `ncmpidiff` adds a new option `-t` to compare variables
-    with tolerance. See the man page of `ncmpidiff` for usage. Thanks to
-    Carl Ponder for contributing the source codes.
 
 * New optimization
   + none
@@ -67,6 +64,10 @@ This is essentially a placeholder for the next release note ...
   + `ncmpidiff` now checks file format versions of two files, and reports
     difference if not the same. Even if formats are different, it continues to
     compare the contents of file headers and values in variables.
+  + A new option `-t` is added to `ncmpidiff` to compare variables with
+    tolerance. See the man page of `ncmpidiff` for usage. Thanks to Carl Ponder
+    for contributing the source codes. See
+    [PR #53](https://github.com/Parallel-NetCDF/PnetCDF/pull/53)
   + `ncmpidump` can now dump BP files.
 
 * Other updates:
