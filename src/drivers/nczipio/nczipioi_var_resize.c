@@ -32,6 +32,7 @@
 
 int nczipioi_var_resize(NC_zip *nczipp, NC_zip_var *varp) {
     int i, j, err;
+    int cid;
     int valid;
     MPI_Offset len;
     NC_zip_var *var;
@@ -58,7 +59,13 @@ int nczipioi_var_resize(NC_zip *nczipp, NC_zip_var *varp) {
                 varp->chunk_owner = (int*)NCI_Realloc(varp->chunk_owner, sizeof(int) * varp->nchunkalloc);
                 varp->dirty = (int*)NCI_Realloc(varp->dirty, sizeof(int) * varp->nchunkalloc);
                 varp->chunk_cache = (char**)NCI_Realloc(varp->chunk_cache, sizeof(char*) * varp->nchunkalloc);
-                
+                for(i = 0; i < oldnmychunk; i++){
+                    cid = varp->mychunks[i];
+                    if (varp->chunk_cache[cid] != NULL){
+                        varp->chunk_cache[cid]->ref = varp->chunk_cache + cid;
+                    }
+                }
+
                 varp->data_offs = (MPI_Offset*)NCI_Realloc(varp->data_offs, sizeof(MPI_Offset) * (varp->nchunkalloc + 1));
                 varp->data_lens = (int*)NCI_Realloc(varp->data_lens, sizeof(int) * (varp->nchunkalloc + 1));
 
@@ -93,7 +100,10 @@ int nczipioi_var_resize(NC_zip *nczipp, NC_zip_var *varp) {
                     }
                 }
                 varp->mychunks = (int*)NCI_Malloc(sizeof(int) * varp->nmychunkrec * varp->nrecalloc);
-                varp->nmychunk = 0;
+
+                if (nczipp->cache_limit_hint == -1){
+                    nczipp->cache_limit += varp->nmychunkrec * varp->chunksize;
+                }
             }
 
             varp->nmychunk = oldnmychunk;
@@ -104,6 +114,9 @@ int nczipioi_var_resize(NC_zip *nczipp, NC_zip_var *varp) {
                     //memset(varp->chunk_cache[i], 0 , varp->chunksize);
                 }
             }
+
+            // Update global chunk count
+            nczipp->nmychunks += varp->nmychunk - oldnmychunk;
         }
     }
     else{
@@ -142,40 +155,18 @@ int nczipioi_resize_nvar(NC_zip *nczipp, int nput, int *putreqs, int nget, int *
     // Sync flag
     CHK_ERR_ALLREDUCE(flag, flag_all, nflag, MPI_UNSIGNED, MPI_BOR, nczipp->comm);
 
-    // Build a skip list of touched vars
+    // Resize each var
     nvar = 0;
     for(i = 0; i < nczipp->vars.cnt; i++){
         if (flag_all[i >> 5] & (1u << (i % 32))) {
-            if ((nczipp->vars.data + i)->chunkdim == NULL){   // If not yet inited
-                nvar++;
+            flag_all[i >> 5] ^= (1u << (i % 32));
+            if ((nczipp->vars.data + i)->dimsize[0] < nczipp->recsize){
+                nczipioi_var_resize(nczipp, nczipp->vars.data + i);
             }
-            else{   
-                flag_all[i >> 5] ^= (1u << (i % 32));
-                if ((nczipp->vars.data + i)->dimsize[0] < nczipp->recsize){
-                    nczipioi_var_resize(nczipp, nczipp->vars.data + i);
-                }
-            }
-        }
-    }
-    vids = (int*)NCI_Malloc(sizeof(int) * nvar);
-    nvar = 0;
-    for(i = 0; i < nczipp->vars.cnt; i++){
-        if (flag_all[i >> 5] & (1u << (i % 32))) {
-            vids[nvar] = i;
-        }
-    }
-
-    // Count reqs for each var
-    for(i = 0; i < nvar; i++){
-        varp = nczipp->vars.data + vids[i];
-        err = nczipioi_var_resize(nczipp, varp);
-        if (err != NC_NOERR){
-            return err;
         }
     }
 
     NCI_Free(flag);
-    NCI_Free(vids);
 
     return NC_NOERR;
 }

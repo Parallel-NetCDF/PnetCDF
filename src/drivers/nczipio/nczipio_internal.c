@@ -28,6 +28,11 @@ nczipioi_init(NC_zip *nczipp, int isnew){
     nczipp->putsize = 0;
     nczipp->nmychunks = 0;
     nczipp->nwrite = 0;
+    nczipp->cache_head = NULL;
+    nczipp->cache_tail = NULL;
+    nczipp->cache_used = 0;
+    nczipp->cache_limit = 0;
+    nczipp->cache_serial = 0;
 
     err = nczipp->driver->inq(nczipp->ncp, NULL, NULL, NULL, &(nczipp->recdim));
     if (err != NC_NOERR) return err;

@@ -67,6 +67,7 @@ int main(int argc, char **argv)
             /* Initialize file info */
             MPI_Info_create(&info);
             MPI_Info_set(info, "nc_compression", "enable");
+            MPI_Info_set(info, "nc_zip_buffer_size", "0");
             switch(communit){
                 case 0:
                     MPI_Info_set(info, "nc_zip_comm_unit", "chunk");

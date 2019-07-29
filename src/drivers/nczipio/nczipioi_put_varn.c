@@ -248,6 +248,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
     MPI_Waitall(nsend, sreqs, sstats);
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB_SEND_REQ)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB_INIT)
 
     // Preparing chunk cache
     nread = 0;
@@ -263,16 +264,26 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
     nread = 0;
     for(i = 0; i < varp->nmychunk; i++){
         cid = varp->mychunks[i];
-        if ((wcnt_all[cid] || wcnt_local[cid]) && varp->chunk_cache[cid] == NULL){
-            varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
-            if (varp->data_lens[cid] > 0){
-                rids[nread++] = cid;
+        if (wcnt_all[cid] || wcnt_local[cid]){
+            if (varp->chunk_cache[cid] == NULL){
+                err = nczipioi_cache_alloc(nczipp, varp->chunksize, varp->chunk_cache + cid);
+                //varp->chunk_cache[cid] = (NC_zip_cache*)NCI_Malloc(varp->chunksize);
+                if (varp->data_lens[cid] > 0){
+                    rids[nread++] = cid;
+                }
+            }
+            else{
+                nczipioi_cache_visit(nczipp, varp->chunk_cache[cid]);
             }
         }
     }
+    // Increase batch number to indicate allocated chunk buffer can be freed for future allocation
+    (nczipp->cache_serial)++;
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB_INIT)
 
     // Read background
-    nczipioi_load_var(nczipp, varp, nread, rids);
+    nczipioi_load_var_bg(nczipp, varp, nread, rids);
 
     // Allocate intermediate buffer
     if (max_tbuf > 0){
@@ -323,7 +334,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
                     
                     // Unpack data into chunk buffer
                     packoff = 0;
-                    MPI_Unpack(tbuf, overlapsize, &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);
+                    CHK_ERR_UNPACK(tbuf, overlapsize, &packoff, varp->chunk_cache[cid]->buf, 1, ptype, nczipp->comm);
 
                     MPI_Type_free(&ptype);
 
@@ -357,7 +368,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
                 CHK_ERR_TYPE_COMMIT(&ptype);
 
                 // Data
-                CHK_ERR_UNPACK(rbufs[j], rsizes[j], &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);
+                CHK_ERR_UNPACK(rbufs[j], rsizes[j], &packoff, varp->chunk_cache[cid]->buf, 1, ptype, nczipp->comm);
                 MPI_Type_free(&ptype);
 
                 varp->dirty[cid] = 1;
@@ -602,6 +613,7 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
     }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB_RECV_REQ)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB_INIT)
 
     // Preparing chunk cache
     for(j = 0; j < varp->nmychunk && varp->mychunks[j] < wrange_all[0]; j++);
@@ -611,15 +623,23 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
     for(i = j; i < k; i++){
         cid = varp->mychunks[i];
         if (varp->chunk_cache[cid] == NULL){
-            varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
+            err = nczipioi_cache_alloc(nczipp, varp->chunksize, varp->chunk_cache + cid);
+            //varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
             if (varp->data_lens[cid] > 0){
                 rids[nread++] = cid;
             }
         }
+        else{
+            nczipioi_cache_visit(nczipp, varp->chunk_cache[cid]);
+        }
     }
+    // Increase batch number to indicate allocated chunk buffer can be freed for future allocation
+    (nczipp->cache_serial)++;
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB_INIT)
 
     // Read background
-    nczipioi_load_var(nczipp, varp, nread, rids);
+    nczipioi_load_var_bg(nczipp, varp, nread, rids);
 
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB_SELF)
 
@@ -655,7 +675,7 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
                 
                 // Unpack data into chunk buffer
                 packoff = 0;
-                CHK_ERR_UNPACK(tbuf, overlapsize, &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);
+                CHK_ERR_UNPACK(tbuf, overlapsize, &packoff, varp->chunk_cache[cid]->buf, 1, ptype, nczipp->comm);
                 MPI_Type_free(&ptype);    
 
                 varp->dirty[cid] = 1;
@@ -690,7 +710,7 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
 
             // Data
             packoff = 0;
-            CHK_ERR_UNPACK(rbufp[j], rsize[j], &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);   rbufp[j] += packoff;
+            CHK_ERR_UNPACK(rbufp[j], rsize[j], &packoff, varp->chunk_cache[cid]->buf, 1, ptype, nczipp->comm);   rbufp[j] += packoff;
             MPI_Type_free(&ptype);
 
             varp->dirty[cid] = 1;
@@ -786,7 +806,6 @@ nczipioi_put_varn(NC_zip        *nczipp,
             nczipioi_put_varn_cb_proc(nczipp, varp, nreq, starts, counts, (void**)bufs);
             break;
     }
-
     
     // Write the compressed variable
     nczipioi_save_var(nczipp, varp);

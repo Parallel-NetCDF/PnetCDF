@@ -48,8 +48,8 @@ int nczipioi_iget_cb_chunk(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     char **bufs;
     NC_zip_req *req;
 
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB)
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB_INIT)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_INIT)
     
     // Count total number of request in per variable for packed varn request
     nums = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt * 2);
@@ -127,14 +127,14 @@ int nczipioi_iget_cb_chunk(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                 }
             }
             
-            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB)
-            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB_INIT)
+            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)
+            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_INIT)
 
             // Perform collective buffering
             nczipioi_get_varn_cb_chunk(nczipp, nczipp->vars.data + vid, num, starts, counts, NULL, (void**)bufs);
 
-            NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB)
-            NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB_INIT)
+            NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB)
+            NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_INIT)
         }
     }
 
@@ -149,8 +149,8 @@ int nczipioi_iget_cb_chunk(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     NCI_Free(starts);
     NCI_Free(bufs);
 
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB)
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB_INIT)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_INIT)
 
     return NC_NOERR;
 }
@@ -167,7 +167,11 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     MPI_Offset *citr; // Bounding box for chunks overlapping my own write region
     
     int *rcnt_local, *rcnt_all;   // Number of processes that writes to each proc
-    int *rcnt_local_chunk, *rcnt_all_chunk;   // Number of processes that writes to each chunk
+    
+    int nread;
+    int *rlo_local, *rhi_local;
+    int *rlo_all, *rhi_all;
+    int *rids;
 
     int overlapsize;    // Size of overlaping region of request and chunk
     char *tbuf = NULL;     // Intermediate buffer
@@ -208,6 +212,18 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     // Chunk iterator
     citr = osize + nczipp->max_ndim;
 
+    // Access range
+    rlo_local = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt * 5);
+    rhi_local = rlo_local + nczipp->vars.cnt;
+    rlo_all = rhi_local + nczipp->vars.cnt;
+    rhi_all = rlo_all + nczipp->vars.cnt;
+    rids = rhi_all + nczipp->vars.cnt;
+
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        rlo_local[i] = 2147483647;
+        rhi_local[i] = -1;
+    }
+
     // We need to calculate the size of message of each chunk
     // This is just for allocating send buffer
     // We do so by iterating through all request and all chunks they cover
@@ -230,6 +246,13 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                     smap[cown] = nsend++;
                 }
                 rcnt_local[cown] = 1;   // Need to send message if not owner     
+
+                if (rlo_local[req->varid] > cid){
+                    rlo_local[req->varid] = cid;
+                } 
+                if (rhi_local[req->varid] < cid){
+                    rhi_local[req->varid] = cid;
+                }  
             } while (nczipioi_chunk_itr_next(varp, req->starts[r], req->counts[r], citr, &cid));
         }
     }
@@ -240,6 +263,14 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     // Sync number of messages of each chunk
     MPI_Allreduce(rcnt_local, rcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
     nrecv = rcnt_all[nczipp->rank] - rcnt_local[nczipp->rank];  // We don't need to receive request form self
+
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        rhi_local[i] *= -1;
+    }
+    CHK_ERR_ALLREDUCE(rlo_local, rlo_all, nczipp->vars.cnt * 2, MPI_INT, MPI_MIN, nczipp->comm);
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        rhi_all[i] *= -1;
+    }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_SYNC)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_PACK_REQ)
@@ -369,6 +400,23 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_RECV_REQ)
+
+    nread = 0;
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        if (rhi_all[i] >= rlo_all[i]){
+            varp = nczipp->vars.data + i;
+            rids[nread] = i;
+            for(j = 0; j < varp->nmychunk && varp->mychunks[j] < rlo_all[i]; j++);
+            for(k = j; k < varp->nmychunk && varp->mychunks[k] <= rhi_all[i]; k++);
+            rlo_all[nread] = j;
+            rhi_all[nread++] = k;
+        }
+    }
+
+    err = nczipioi_load_nvar(nczipp, nread, rids, rlo_all, rhi_all); CHK_ERR
+    
+    (nczipp->cache_serial)++;
+
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_SELF)
 
     // Handle our own data
@@ -390,7 +438,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
                     // Pack data into intermediate buffer
                     packoff = 0;
-                    CHK_ERR_PACK(varp->chunk_cache[cid], 1, ptype, tbuf, varp->chunksize, &packoff, nczipp->comm);
+                    CHK_ERR_PACK(varp->chunk_cache[cid]->buf, 1, ptype, tbuf, varp->chunksize, &packoff, nczipp->comm);
                     MPI_Type_free(&ptype);
                     overlapsize = packoff;
 
@@ -443,7 +491,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
             CHK_ERR_TYPE_COMMIT(&ptype);
 
             // Pack data
-            CHK_ERR_PACK(varp->chunk_cache[cid], 1, ptype, sbuf_re[j], ssize_re[j], &packoff, nczipp->comm);
+            CHK_ERR_PACK(varp->chunk_cache[cid]->buf, 1, ptype, sbuf_re[j], ssize_re[j], &packoff, nczipp->comm);
             MPI_Type_free(&ptype);
 
             NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_PACK_REP)
@@ -538,7 +586,9 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     NCI_Free(rreq);
     NCI_Free(rbuf);
     NCI_Free(rsize);
-
+    
+    NCI_Free(rlo_local);
+    
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)
 
     return NC_NOERR;

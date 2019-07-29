@@ -35,7 +35,6 @@ int main(int argc, char **argv)
     int buf[N];
     MPI_Offset start[2], count[2];
     MPI_Info info;
-    char bsize[16];
 
     /* Error handling. */
     int err;
@@ -62,14 +61,12 @@ int main(int argc, char **argv)
         free(cmd_str);
     }
 
-    sprintf(bsize, "%d", np * np * sizeof(int));
-
     for(zipdriver = 0; zipdriver < NZIPDRIVER; zipdriver++){
         for(communit = 0; communit < 2; communit++){
             /* Initialize file info */
             MPI_Info_create(&info);
             MPI_Info_set(info, "nc_compression", "enable");
-            MPI_Info_set(info, "nc_zip_buffer_size", bsize);
+            MPI_Info_set(info, "nc_zip_buffer_size", "-1");
             switch(communit){
                 case 0:
                     MPI_Info_set(info, "nc_zip_comm_unit", "chunk");
@@ -108,7 +105,7 @@ int main(int argc, char **argv)
             count[1] = 1;
             for(i = 0; i < N; i++){
                 buf[i] = rank * N + i + 1;
-                start[0] = i + rank;
+                start[0] = i;
                 err = ncmpi_put_vara_int_all(ncid, varid, start, count, buf + i);
             }
 
@@ -129,7 +126,7 @@ int main(int argc, char **argv)
             count[0] = 1;
             count[1] = 1;
             for(i = 0; i < N; i++){
-                start[0] = i + rank;
+                start[0] = i;
                 err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf + i); CHECK_ERR
             }
 

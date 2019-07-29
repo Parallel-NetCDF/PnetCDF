@@ -270,6 +270,8 @@ nczipio_close(void *ncdp)
 #endif
     err = nczipp->driver->close(nczipp->ncp);
 
+    nczipioi_cache_free(nczipp);
+
     err = nczipioi_var_list_free(&(nczipp->vars));
 
     nczipioi_req_list_free(&(nczipp->putlist));

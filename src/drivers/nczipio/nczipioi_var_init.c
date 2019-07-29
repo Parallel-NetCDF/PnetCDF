@@ -145,7 +145,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
                     }
                 }
                 varp->nmychunk = varp->nmychunkrec * varp->nrec;
-                varp->mychunks = (int*)NCI_Malloc(sizeof(int) * varp->nmychunk);
+                varp->mychunks = (int*)NCI_Malloc(sizeof(int) * varp->nmychunkrec * varp->nrecalloc);
                 varp->nmychunk = 0;
                 for(j = 0; j < varp->nchunk; j++){ 
                     if (varp->chunk_owner[j] == nczipp->rank){
@@ -249,6 +249,10 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
             if (nczipp->max_chunk_size < varp->chunksize){
                 nczipp->max_chunk_size = varp->chunksize;
             }
+
+            if (nczipp->cache_limit_hint == -1){
+                nczipp->cache_limit += varp->nmychunkrec * varp->chunksize;
+            }
         }   
     }
 
@@ -268,11 +272,11 @@ void nczipioi_var_free(NC_zip_var *varp) {
         NCI_Free(varp->data_lens);
         NCI_Free(varp->chunk_owner);
         NCI_Free(varp->dirty);
-        for(i = 0; i < varp->nmychunk; i++){
-            if (varp->chunk_cache[varp->mychunks[i]] != NULL){
-                NCI_Free(varp->chunk_cache[varp->mychunks[i]]);
-            }
-        }
+        //for(i = 0; i < varp->nmychunk; i++){
+        //    if (varp->chunk_cache[varp->mychunks[i]] != NULL){
+        //        NCI_Free(varp->chunk_cache[varp->mychunks[i]]);
+        //    }
+        //}
         NCI_Free(varp->chunk_cache);
         NCI_Free(varp->mychunks);
     }

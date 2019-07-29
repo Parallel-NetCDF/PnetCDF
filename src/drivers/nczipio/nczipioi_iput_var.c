@@ -192,14 +192,20 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * nczipp->max_ndim * 3);
     osize = ostart + nczipp->max_ndim;
 
+    // Chunk iterator
+    citr = osize + nczipp->max_ndim;
+
+    // Access range
     rlo_local = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt * 5);
     rhi_local = rlo_local + nczipp->vars.cnt;
     rlo_all = rhi_local + nczipp->vars.cnt;
     rhi_all = rlo_all + nczipp->vars.cnt;
     rids = rhi_all + nczipp->vars.cnt;
 
-    // Chunk iterator
-    citr = osize + nczipp->max_ndim;
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        rlo_local[i] = 2147483647;
+        rhi_local[i] = -1;
+    }
 
     // We need to calculate the size of message of each processes
     // This is just for allocating send buffer
@@ -209,10 +215,6 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     nsend = 0;
 
     // Count total number of messages and build a map of accessed chunk to list of comm datastructure
-    for(i = 0; i < nczipp->vars.cnt; i++){
-        rlo_local[i] = 2147483647;
-        rhi_local[i] = -1;
-    }
     for(i = 0; i < nreq; i++){
         req = nczipp->putlist.reqs + reqids[i];
         varp = nczipp->vars.data + req->varid;
@@ -381,14 +383,19 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     nread = 0;
     for(i = 0; i < nczipp->vars.cnt; i++){
         if (rhi_all[i] >= rlo_all[i]){
+            varp = nczipp->vars.data + i;
             rids[nread] = i;
-            rlo_all[nread] = rlo_all[i];
-            rhi_all[nread++] = rhi_all[i];
+            for(j = 0; j < varp->nmychunk && varp->mychunks[j] < rlo_all[i]; j++);
+            for(k = j; k < varp->nmychunk && varp->mychunks[k] <= rhi_all[i]; k++);
+            rlo_all[nread] = j;
+            rhi_all[nread++] = k;
         }
     }
 
-    err = nczipioi_load_nvar_ex(nczipp, nread, rids, rlo_all, rhi_all);
+    err = nczipioi_load_nvar_bg(nczipp, nread, rids, rlo_all, rhi_all); CHK_ERR
 
+    (nczipp->cache_serial)++;
+    
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB_SELF)
 
     // Handle our own data
@@ -426,7 +433,7 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                     
                     // Unpack data into chunk buffer
                     packoff = 0;
-                    CHK_ERR_UNPACK(tbuf, overlapsize, &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);
+                    CHK_ERR_UNPACK(tbuf, overlapsize, &packoff, varp->chunk_cache[cid]->buf, 1, ptype, nczipp->comm);
                     MPI_Type_free(&ptype);    
 
 #ifdef PNETCDF_PROFILING
@@ -464,7 +471,7 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
             // Pack data
             packoff = 0;
-            CHK_ERR_UNPACK(rbufp[j], rsize[j], &packoff, varp->chunk_cache[cid], 1, ptype, nczipp->comm);
+            CHK_ERR_UNPACK(rbufp[j], rsize[j], &packoff, varp->chunk_cache[cid]->buf, 1, ptype, nczipp->comm);
             rbufp[j] += packoff;
             MPI_Type_free(&ptype);
 

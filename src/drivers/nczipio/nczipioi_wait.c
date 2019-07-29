@@ -138,7 +138,7 @@ int nczipioi_wait_get_reqs(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_NB_WAIT)
 
     // Perform I/O for comrpessed variables
-    nczipioi_load_nvar(nczipp, nvar, vids);
+    //nczipioi_load_nvar(nczipp, nvar, vids);
 
     // Perform collective buffer
     if (nczipp->comm_unit == NC_ZIP_COMM_CHUNK){
@@ -258,11 +258,17 @@ nczipioi_wait(NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMode){
         getstats = NULL;
     }
 
-    if (nczipp->mode & NC_WRITE){
+    if ((nczipp->mode & NC_WRITE) && nreqs != NC_GET_REQ_ALL){
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT)
         nczipioi_wait_put_reqs(nczipp, nput, putreqs, putstats);
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT)
     }
     
-    nczipioi_wait_get_reqs(nczipp, nget, getreqs, getstats);
+    if (nreqs != NC_PUT_REQ_ALL){
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET)
+        nczipioi_wait_get_reqs(nczipp, nget, getreqs, getstats);
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET)
+    }
 
     // Assign stats
     if (stats != NULL){

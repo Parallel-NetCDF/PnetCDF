@@ -51,6 +51,7 @@ C_SRCS = nczipio_attr.c \
          nczipioi_iput.c \
          nczipioi_iget.c \
          nczipioi_nonblocking.c \
+         nczipioi_cache.c \
          nczipioi_chunk.c \
          nczipioi_chunk_size.c \
          nczipioi_chunk_owner.c \

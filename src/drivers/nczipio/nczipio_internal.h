@@ -163,13 +163,18 @@ extern int nczipioiconvert(void *inbuf, void *outbuf, MPI_Datatype intype, MPI_D
 // Var
 extern int nczipioi_var_init(NC_zip*, NC_zip_var*, int, MPI_Offset**, MPI_Offset**);
 extern int nczipioi_load_var(NC_zip*, NC_zip_var*, int, int*);
-extern int nczipioi_load_nvar(NC_zip*, int, int*);
+extern int nczipioi_load_nvar(NC_zip*, int, int*, int*, int*);
 extern int nczipioi_save_var(NC_zip*, NC_zip_var*);
 extern int nczipioi_save_nvar(NC_zip*, int, int*);
 extern void nczipioi_var_free(NC_zip_var*);
 extern int nczipioi_var_resize(NC_zip*, NC_zip_var*);
 extern int nczipioi_init_nvar(NC_zip*, int, int*, int, int*);
 extern int nczipioi_resize_nvar(NC_zip*, int, int*, int, int*);
+
+// Cache
+extern int nczipioi_cache_alloc(NC_zip*, MPI_Offset, NC_zip_cache**);
+extern void nczipioi_cache_visit(NC_zip*, NC_zip_cache*);
+extern void nczipioi_cache_free(NC_zip*);
 
 // Chunks
 extern int nczipioi_chunk_itr_init(NC_zip_var*, const MPI_Offset*, const MPI_Offset*, MPI_Offset*, int*);

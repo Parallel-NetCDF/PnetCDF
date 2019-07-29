@@ -124,13 +124,21 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
         nrecv += rcnt_all[cid] - rcnt_local[cid];
         // Count number of chunks we need to prepare
         // We read only chunks that is required
-        if ((rcnt_all[cid] || rcnt_local[cid]) && varp->chunk_cache[cid] == NULL){
-            varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
-            if (varp->data_lens[cid] > 0){
-                rids[nread++] = cid;
+        if (rcnt_all[cid] || rcnt_local[cid]){
+            if (varp->chunk_cache[cid] == NULL){
+                err = nczipioi_cache_alloc(nczipp, varp->chunksize, varp->chunk_cache + cid);
+                //varp->chunk_cache[cid] = (NC_zip_cache*)NCI_Malloc(varp->chunksize);
+                if (varp->data_lens[cid] > 0){
+                    rids[nread++] = cid;
+                }
+            }
+            else{
+                nczipioi_cache_visit(nczipp, varp->chunk_cache[cid]);
             }
         }
     }
+    // Increase batch number to indicate allocated chunk buffer can be freed for future allocation
+    (nczipp->cache_serial)++;
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)  // I/O time count separately
 
@@ -277,7 +285,7 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
 
                     // Pack data into intermediate buffer
                     packoff = 0;
-                    MPI_Pack(varp->chunk_cache[cid], 1, ptype, cbuf, varp->chunksize, &packoff, nczipp->comm);
+                    CHK_ERR_PACK(varp->chunk_cache[cid]->buf, 1, ptype, cbuf, varp->chunksize, &packoff, nczipp->comm);
                     overlapsize = packoff;
                     MPI_Type_free(&ptype);
 
@@ -338,7 +346,7 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
                 CHK_ERR_TYPE_COMMIT(&ptype);
 
                 // Pack data
-                MPI_Pack(varp->chunk_cache[cid], 1, ptype, sbufs[j + nsend], overlapsize, &packoff, nczipp->comm);
+                CHK_ERR_PACK(varp->chunk_cache[cid]->buf, 1, ptype, sbufs[j + nsend], overlapsize, &packoff, nczipp->comm);
                 MPI_Type_free(&ptype);    
 
                 NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_PACK_REP)   
@@ -556,12 +564,18 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
     for(i = j; i < k; i++){
         cid = varp->mychunks[i];
         if (varp->chunk_cache[cid] == NULL){
-            varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
+            err = nczipioi_cache_alloc(nczipp, varp->chunksize, varp->chunk_cache + cid);
+            //varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
             if (varp->data_lens[cid] > 0){
                 rids[nread++] = cid;
             }
         }
+        else{
+            nczipioi_cache_visit(nczipp, varp->chunk_cache[cid]);
+        }
     }
+    // Increase batch number to indicate allocated chunk buffer can be freed for future allocation
+    (nczipp->cache_serial)++;
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)  // I/O time count separately
 
@@ -706,7 +720,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
 
                 // Pack data into intermediate buffer
                 packoff = 0;
-                CHK_ERR_PACK(varp->chunk_cache[cid], 1, ptype, tbuf, varp->chunksize, &packoff, nczipp->comm);
+                CHK_ERR_PACK(varp->chunk_cache[cid]->buf, 1, ptype, tbuf, varp->chunksize, &packoff, nczipp->comm);
                 MPI_Type_free(&ptype);
                 overlapsize = packoff;
 
@@ -759,7 +773,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
             CHK_ERR_TYPE_COMMIT(&ptype);
 
             // Data
-            CHK_ERR_PACK(varp->chunk_cache[cid], 1, ptype, sbuf_re[j], ssize_re[j], &packoff, nczipp->comm);
+            CHK_ERR_PACK(varp->chunk_cache[cid]->buf, 1, ptype, sbuf_re[j], ssize_re[j], &packoff, nczipp->comm);
             MPI_Type_free(&ptype);
 
             NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_PACK_REP)

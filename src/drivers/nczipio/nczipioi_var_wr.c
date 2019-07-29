@@ -80,7 +80,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
 
             if (varp->dirty[k]){
                 // Apply compression
-                varp->zip->compress_alloc(varp->chunk_cache[k], varp->chunksize, zbufs + l, zsizes + k, varp->ndim, varp->chunkdim, varp->etype);
+                varp->zip->compress_alloc(varp->chunk_cache[k]->buf, varp->chunksize, zbufs + l, zsizes + k, varp->ndim, varp->chunkdim, varp->etype);
             }
         }
         varp->zip->finalize();
@@ -89,7 +89,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
         for(l = 0; l < varp->nmychunk; l++){
             k = varp->mychunks[l];
             if (varp->dirty[k]){
-                zbufs[l] = varp->chunk_cache[k];
+                zbufs[l] = varp->chunk_cache[k]->buf;
                 zsizes[k] = varp->chunksize;
             }
         }
@@ -376,15 +376,21 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
                 cid = varp->mychunks[l];
 
                 // Apply compression
-                varp->zip->compress_alloc(varp->chunk_cache[cid], varp->chunksize, zbufs + ccur + l, zsizes + cid, varp->ndim, varp->chunkdim, varp->etype);
+                if (varp->dirty[cid]){
+                    zdels[ccur] = 1;
+                    varp->zip->compress_alloc(varp->chunk_cache[cid]->buf, varp->chunksize, zbufs + (ccur++), zsizesp + cid, varp->ndim, varp->chunkdim, varp->etype);
+                }
             }
             varp->zip->finalize();
         }
         else{
             for(l = 0; l < varp->nmychunk; l++){
                 cid = varp->mychunks[l];
-                zsizes[cid] = varp->chunksize;
-                zbufs[ccur + l] = varp->chunk_cache[cid];
+                if (varp->dirty[cid]){
+                    zsizesp[cid] = varp->chunksize;
+                    zdels[ccur] = 0;
+                    zbufs[ccur++] = varp->chunk_cache[cid]->buf;
+                }
             }
         }
 
@@ -394,7 +400,6 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         // Sync compressed data size with other processes
         CHK_ERR_IALLREDUCE(zsizesp, zsizes_allp, varp->nchunk, MPI_INT, MPI_MAX, nczipp->comm, reqs + vid);
 
-
         if (varp->metaoff < 0 || varp->expanded){ 
             zsizes_all[vid] = varp->nchunkalloc * (sizeof(long long) + sizeof(int));
         }
@@ -402,11 +407,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
             zsizes_all[vid] = 0;
         }
         
-        
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_SYNC)
-        NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_INIT)
-
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_INIT)
 
         zsizesp += varp->nchunk;
         zsizes_allp += varp->nchunk;
@@ -427,10 +428,11 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         CHK_ERR_WAIT(reqs + vid, &status);
 
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_SYNC)
-        NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_INIT)
 
         zsizes_allp += varp->nchunk;
     }
+
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_INIT)
 
     zoffs[0] = 0;
     for(i = 0; i < total_nchunks; i++){
@@ -470,9 +472,6 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
             if (err != NC_NOERR) return err;
         }
     }
-
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_INIT)
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_INIT)
 
     // Switch back to data mode
     err = nczipp->driver->enddef(nczipp->ncp);
@@ -538,8 +537,6 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
         zsizes_allp += varp->nchunk;
         zoffsp += varp->nchunk;
-
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_INIT)
     }
 
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_INIT)

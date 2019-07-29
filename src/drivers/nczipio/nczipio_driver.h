@@ -26,6 +26,16 @@
 
 #define NC_ZIP_ 1
 
+/* Chunk cache structure */
+typedef struct NC_zip_cache {
+    char *buf;  // Buffer
+    size_t bsize;   // Size in byte
+    int serial; // batch number to detect swap out of cache allocated in the same batch
+    struct NC_zip_cache **ref; // Ref to clr when it is swap out
+    struct NC_zip_cache *prev;
+    struct NC_zip_cache *next;
+} NC_zip_cache;
+
 /* Get_req structure */
 typedef struct NC_zip_req {
     int varid;
@@ -87,7 +97,7 @@ typedef struct NC_zip_var {
     int *chunk_owner;
     int *chunkdim;
     int *dirty;
-    char **chunk_cache;
+    NC_zip_cache **chunk_cache;
 
     int nmychunk;
     int nmychunkrec;
@@ -134,8 +144,12 @@ struct NC_zip {
     int                nwrite;
     MPI_Offset         getsize;
     MPI_Offset         putsize;
-    MPI_Offset         fnalloc;
-    MPI_Offset         fused;
+    size_t             cache_limit;
+    size_t             cache_limit_hint;
+    size_t             cache_used;
+    int                cache_serial;
+    NC_zip_cache       *cache_head;
+    NC_zip_cache       *cache_tail;
 
 #ifdef PNETCDF_PROFILING
     NC_zip_timers profile; 
