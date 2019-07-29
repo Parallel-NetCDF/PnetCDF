@@ -121,8 +121,11 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
         nrecv += rcnt_all[cid] - rcnt_local[cid];
         // Count number of chunks we need to prepare
         // We read only chunks that is required
-        if (rcnt_all[cid] > 0 && varp->chunk_cache[cid] == NULL){
-            rids[nread++] = cid;
+        if ((rcnt_all[cid] || rcnt_local[cid]) && varp->chunk_cache[cid] == NULL){
+            varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
+            if (varp->data_lens[cid] > 0){
+                rids[nread++] = cid;
+            }
         }
     }
 
@@ -425,7 +428,8 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
     MPI_Offset *citr; // Chunk iterator
     
     int *rcnt_local, *rcnt_all;   // Number of processes that writes to each proc
-    int *rcnt_local_chunk, *rcnt_all_chunk;   // Number of processes that writes to each chunk
+
+    int rrange_local[2], rrange_all[2];   // Number of processes that writes to each chunk
 
     int overlapsize;    // Size of overlaping region of request and chunk
     int max_tbuf = 0;   // Size of intermediate buffer
@@ -450,11 +454,9 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_INIT)
 
     // Allocate buffering for write count
-    rcnt_local = (int*)NCI_Malloc(sizeof(int) * (nczipp->np * 3 + varp->nchunk * 2));
-    rcnt_local_chunk = rcnt_local + nczipp->np;
-    rcnt_all = rcnt_local_chunk + varp->nchunk;
-    rcnt_all_chunk = rcnt_all + nczipp->np;
-    smap = rcnt_all_chunk + varp->nchunk;
+    rcnt_local = (int*)NCI_Malloc(sizeof(int) * (nczipp->np * 2 + varp->nchunk * 1));
+    rcnt_all = rcnt_local + nczipp->np;
+    smap = rcnt_all + nczipp->np;
 
     // Allocate buffering for overlaping index
     tsize = (int*)NCI_Malloc(sizeof(int) * varp->ndim * 3);
@@ -474,6 +476,8 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
     nsend = 0;
 
     // Count total number of messages and build a map of accessed chunk to list of comm datastructure
+    rrange_local[0] = varp->nchunk;
+    rrange_local[1] = 0;
     nczipioi_chunk_itr_init(varp, start, count, citr, &cid); // Initialize chunk iterator
     do{
         // Chunk owner
@@ -484,40 +488,28 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
             smap[cown] = nsend++;
         }
         rcnt_local[cown] = 1;   // Need to send message if not owner     
-        rcnt_local_chunk[cid] = 1;  // This tells the owner to prepare the chunks  
+
+        // Record lowest and highest chunk accessed
+        if (rrange_local[0] > cid){
+            rrange_local[0] = cid;
+        } 
+        if (rrange_local[1] < cid){
+            rrange_local[1] = cid;
+        }   
     } while (nczipioi_chunk_itr_next(varp, start, count, citr, &cid));
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_INIT)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_SYNC)
 
-    // Sync number of messages of each chunk
-    MPI_Allreduce(rcnt_local, rcnt_all, nczipp->np + varp->nchunk, MPI_INT, MPI_SUM, nczipp->comm);
+    // Sync number of messages of each chunk and access range
+    CHK_ERR_ALLREDUCE(rcnt_local, rcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
     nrecv = rcnt_all[nczipp->rank] - rcnt_local[nczipp->rank];  // We don't need to receive request form self
+    
+    rrange_local[1] *= -1;
+    CHK_ERR_ALLREDUCE(rrange_local, rrange_all, 2, MPI_INT, MPI_MIN, nczipp->comm);
+    rrange_all[1] *= -1;
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_SYNC)
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_INIT)
-
-    // We need to prepare chunk in the chunk cache
-    // For chunks not yet allocated, we need to read them form file collectively
-    // We collect chunk id of those chunks
-    // Calculate number of recv request
-    // This is for all the chunks
-    rids = (int*)NCI_Malloc(sizeof(int) * varp->nmychunk);
-    nread = 0;
-    for(i = 0; i < varp->nmychunk; i++){
-        cid = varp->mychunks[i];
-        // Count number of chunks we need to prepare
-        // We read only chunks that is required
-        if (rcnt_all_chunk[cid] > 0 && varp->chunk_cache[cid] == NULL){
-            rids[nread++] = cid;
-        }
-    }
-
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)  // I/O time count separately
-
-    // Decompress chunks into chunk cache
-    nczipioi_load_var(nczipp, varp, nread, rids);
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_PACK_REQ)
 
     // Allocate data structure for messaging
@@ -623,6 +615,37 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
     }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_RECV_REQ)
+
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_IO_INIT)
+
+    // We need to prepare chunk in the chunk cache
+    // For chunks not yet allocated, we need to read them form file collectively
+    // We collect chunk id of those chunks
+    // Calculate number of recv request
+    // This is for all the chunks
+    for(j = 0; j < varp->nmychunk && varp->mychunks[j] < rrange_all[0]; j++);
+    for(k = j; k < varp->nmychunk && varp->mychunks[k] <= rrange_all[1]; k++);
+    rids = (int*)NCI_Malloc(sizeof(int) * (k - j));
+    nread = 0;
+    for(i = j; i < k; i++){
+        cid = varp->mychunks[i];
+        if (varp->chunk_cache[cid] == NULL){
+            varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
+            if (varp->data_lens[cid] > 0){
+                rids[nread++] = cid;
+            }
+        }
+    }
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_INIT)
+
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)  // I/O time count separately
+
+    // Decompress chunks into chunk cache
+    nczipioi_load_var(nczipp, varp, nread, rids);
+    
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB)
+
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_SELF)
 
     tbuf = (char*)NCI_Malloc(varp->chunksize);

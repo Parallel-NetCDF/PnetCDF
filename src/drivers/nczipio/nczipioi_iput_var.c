@@ -149,6 +149,11 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     MPI_Offset *citr; // Bounding box for chunks overlapping my own write region
     
     int *wcnt_local, *wcnt_all;   // Number of processes that writes to each chunk
+    
+    int nread;
+    int *rlo_local, *rhi_local;
+    int *rlo_all, *rhi_all;
+    int *rids;
 
     int overlapsize;    // Size of overlaping region of request and chunk
     char *tbuf = NULL;     // Intermediate buffer
@@ -187,6 +192,12 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * nczipp->max_ndim * 3);
     osize = ostart + nczipp->max_ndim;
 
+    rlo_local = (int*)NCI_Malloc(sizeof(int) * nczipp->vars.cnt * 5);
+    rhi_local = rlo_local + nczipp->vars.cnt;
+    rlo_all = rhi_local + nczipp->vars.cnt;
+    rhi_all = rlo_all + nczipp->vars.cnt;
+    rids = rhi_all + nczipp->vars.cnt;
+
     // Chunk iterator
     citr = osize + nczipp->max_ndim;
 
@@ -198,6 +209,10 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     nsend = 0;
 
     // Count total number of messages and build a map of accessed chunk to list of comm datastructure
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        rlo_local[i] = 2147483647;
+        rhi_local[i] = -1;
+    }
     for(i = 0; i < nreq; i++){
         req = nczipp->putlist.reqs + reqids[i];
         varp = nczipp->vars.data + req->varid;
@@ -212,6 +227,13 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                     smap[cown] = nsend++;
                 }
                 wcnt_local[cown] = 1;   // Need to send message if not owner       
+
+                if (rlo_local[req->varid] > cid){
+                    rlo_local[req->varid] = cid;
+                } 
+                if (rhi_local[req->varid] < cid){
+                    rhi_local[req->varid] = cid;
+                }   
             } while (nczipioi_chunk_itr_next(varp, req->starts[r], req->counts[r], citr, &cid));
         }
     }
@@ -222,6 +244,14 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     // Sync number of messages of each chunk
     CHK_ERR_ALLREDUCE(wcnt_local, wcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
     nrecv = wcnt_all[nczipp->rank] - wcnt_local[nczipp->rank];  // We don't need to receive request form self
+
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        rhi_local[i] *= -1;
+    }
+    CHK_ERR_ALLREDUCE(rlo_local, rlo_all, nczipp->vars.cnt * 2, MPI_INT, MPI_MIN, nczipp->comm);
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        rhi_all[i] *= -1;
+    }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB_SYNC)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB_PACK_REQ)
@@ -347,6 +377,18 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB_RECV_REQ)
+
+    nread = 0;
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        if (rhi_all[i] >= rlo_all[i]){
+            rids[nread] = i;
+            rlo_all[nread] = rlo_all[i];
+            rhi_all[nread++] = rhi_all[i];
+        }
+    }
+
+    err = nczipioi_load_nvar_ex(nczipp, nread, rids, rlo_all, rhi_all);
+
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB_SELF)
 
     // Handle our own data
@@ -461,9 +503,9 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     NCI_Free(rbuf);
     NCI_Free(rsize);
 
-    if (tbuf != NULL){
-        NCI_Free(tbuf);
-    }
+    NCI_Free(tbuf);
+
+    NCI_Free(rlo_local);
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB)
 

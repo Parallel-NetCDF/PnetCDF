@@ -100,8 +100,8 @@ int nczipioi_var_resize(NC_zip *nczipp, NC_zip_var *varp) {
             for(i = oldnchunk; i < varp->nchunk; i ++){
                 if (varp->chunk_owner[i] == nczipp->rank){
                     varp->mychunks[varp->nmychunk++] = i;
-                    varp->chunk_cache[i] = (void*)NCI_Malloc(varp->chunksize);  // Allocate buffer for blocks we own
-                    memset(varp->chunk_cache[i], 0 , varp->chunksize);
+                    //varp->chunk_cache[i] = (void*)NCI_Malloc(varp->chunksize);  // Allocate buffer for blocks we own
+                    //memset(varp->chunk_cache[i], 0 , varp->chunksize);
                 }
             }
         }

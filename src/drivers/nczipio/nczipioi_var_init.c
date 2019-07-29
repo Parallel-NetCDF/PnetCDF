@@ -151,7 +151,8 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
                     if (varp->chunk_owner[j] == nczipp->rank){
                         varp->mychunks[varp->nmychunk++] = j;
                         if (varp->isnew){   // Only apply to new var, old var will be read when it is needed
-                            varp->chunk_cache[j] = (void*)NCI_Malloc(varp->chunksize);  // Allocate buffer for blocks we own
+                            // varp->chunk_cache[j] = (void*)NCI_Malloc(varp->chunksize);  // Allocate buffer for blocks we own
+                            //memset(varp->chunk_cache[j], 0 , varp->chunksize);
                         }
                     }
                 }
