@@ -2300,8 +2300,10 @@ AC_DEFUN([CHECK_MPI_VERSION],[
       AC_MSG_RESULT([${mpi_version}.${mpi_subversion}])
    fi
 
-   AC_CHECK_DECLS([MPICH_VERSION, MPICH2_VERSION, OMPI_MAJOR_VERSION, MVAPICH2_VERSION],
-                  [], [], [#include <mpi.h>])
+   AC_CHECK_DECL([MPICH_VERSION],      [], [], [#include <mpi.h>])
+   AC_CHECK_DECL([MPICH2_VERSION],     [], [], [#include <mpi.h>])
+   AC_CHECK_DECL([OMPI_MAJOR_VERSION], [], [], [#include <mpi.h>])
+   AC_CHECK_DECL([MVAPICH2_VERSION],   [], [], [#include <mpi.h>])
    AC_MSG_CHECKING([MPI vendor])
 
 cat - <<_ACEOF >conftest.c

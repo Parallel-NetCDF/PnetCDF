@@ -237,7 +237,7 @@ dtype_filter(MPI_Datatype type)
   Return:
 . total number of blocks assigned from the distributed array
 @*/
-#ifdef HAVE_DECL_MPI_COMBINER_DARRAY
+#if defined HAVE_DECL_MPI_COMBINER_DARRAY && HAVE_DECL_MPI_COMBINER_DARRAY
 static int
 darray_get_totalblks(int rank,
                      MPI_Offset ndims,
@@ -341,13 +341,13 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
     MPI_Type_get_envelope(dtype, &num_ints, &num_adds, &num_dtypes, &combiner);
 
     if (
-#ifdef HAVE_DECL_MPI_COMBINER_F90_INTEGER
+#if defined HAVE_DECL_MPI_COMBINER_F90_INTEGER && HAVE_DECL_MPI_COMBINER_F90_INTEGER
         combiner == MPI_COMBINER_F90_INTEGER ||
 #endif
-#ifdef HAVE_DECL_MPI_COMBINER_F90_REAL
+#if defined HAVE_DECL_MPI_COMBINER_F90_REAL && HAVE_DECL_MPI_COMBINER_F90_REAL
         combiner == MPI_COMBINER_F90_REAL ||
 #endif
-#ifdef HAVE_DECL_MPI_COMBINER_F90_COMPLEX
+#if defined HAVE_DECL_MPI_COMBINER_F90_COMPLEX && HAVE_DECL_MPI_COMBINER_F90_COMPLEX
         combiner == MPI_COMBINER_F90_COMPLEX ||
 #endif
         0) {
@@ -383,25 +383,25 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
         case MPI_COMBINER_VECTOR:
         case MPI_COMBINER_HINDEXED:
         case MPI_COMBINER_INDEXED:
-#ifdef HAVE_DECL_MPI_COMBINER_DUP
+#if defined HAVE_DECL_MPI_COMBINER_DUP && HAVE_DECL_MPI_COMBINER_DUP
         case MPI_COMBINER_DUP:
 #endif
-#ifdef HAVE_DECL_MPI_COMBINER_HVECTOR_INTEGER
+#if defined HAVE_DECL_MPI_COMBINER_HVECTOR_INTEGER && HAVE_DECL_MPI_COMBINER_HVECTOR_INTEGER
         case MPI_COMBINER_HVECTOR_INTEGER:
 #endif
-#ifdef HAVE_DECL_MPI_COMBINER_INDEXED_BLOCK
+#if defined HAVE_DECL_MPI_COMBINER_INDEXED_BLOCK && HAVE_DECL_MPI_COMBINER_INDEXED_BLOCK
         case MPI_COMBINER_INDEXED_BLOCK:
 #endif
-#ifdef HAVE_DECL_MPI_COMBINER_HINDEXED_INTEGER
+#if defined HAVE_DECL_MPI_COMBINER_HINDEXED_INTEGER && HAVE_DECL_MPI_COMBINER_HINDEXED_INTEGER
         case MPI_COMBINER_HINDEXED_INTEGER:
 #endif
-#ifdef HAVE_DECL_MPI_COMBINER_SUBARRAY
+#if defined HAVE_DECL_MPI_COMBINER_SUBARRAY && HAVE_DECL_MPI_COMBINER_SUBARRAY
         case MPI_COMBINER_SUBARRAY:
 #endif
-#ifdef HAVE_DECL_MPI_COMBINER_DARRAY
+#if defined HAVE_DECL_MPI_COMBINER_DARRAY && HAVE_DECL_MPI_COMBINER_DARRAY
         case MPI_COMBINER_DARRAY:
 #endif
-#ifdef HAVE_DECL_MPI_COMBINER_RESIZED
+#if defined HAVE_DECL_MPI_COMBINER_RESIZED && HAVE_DECL_MPI_COMBINER_RESIZED
         case MPI_COMBINER_RESIZED:
 #endif
             status = ncmpii_dtype_decode(array_of_dtypes[0], &ptype, &el_size,
@@ -412,7 +412,7 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
 
         /* multiple etypes */
         case MPI_COMBINER_STRUCT:
-#ifdef HAVE_DECL_MPI_COMBINER_STRUCT_INTEGER
+#if defined HAVE_DECL_MPI_COMBINER_STRUCT_INTEGER && MPI_COMBINER_STRUCT
         case MPI_COMBINER_STRUCT_INTEGER:
 #endif
             count = array_of_ints[0];
@@ -458,10 +458,10 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
             break;
         case MPI_COMBINER_HVECTOR:
         case MPI_COMBINER_VECTOR:
-#ifdef HAVE_DECL_MPI_COMBINER_HVECTOR_INTEGER
+#if defined HAVE_DECL_MPI_COMBINER_HVECTOR_INTEGER && HAVE_DECL_MPI_COMBINER_HVECTOR_INTEGER
         case MPI_COMBINER_HVECTOR_INTEGER:
 #endif
-#ifdef HAVE_DECL_MPI_COMBINER_INDEXED_BLOCK
+#if defined HAVE_DECL_MPI_COMBINER_INDEXED_BLOCK && HAVE_DECL_MPI_COMBINER_INDEXED_BLOCK
         case MPI_COMBINER_INDEXED_BLOCK:
 #endif
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
@@ -469,14 +469,14 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
             break;
         case MPI_COMBINER_HINDEXED:
         case MPI_COMBINER_INDEXED:
-#ifdef HAVE_DECL_MPI_COMBINER_HINDEXED_INTEGER
+#if defined HAVE_DECL_MPI_COMBINER_HINDEXED_INTEGER && HAVE_DECL_MPI_COMBINER_HINDEXED_INTEGER
         case MPI_COMBINER_HINDEXED_INTEGER:
 #endif
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             for (i=0, total_blocks=0; i<array_of_ints[0]; i++)
                 total_blocks += array_of_ints[1+i];
             break;
-#ifdef HAVE_DECL_MPI_COMBINER_SUBARRAY
+#if defined HAVE_DECL_MPI_COMBINER_SUBARRAY && HAVE_DECL_MPI_COMBINER_SUBARRAY
         case MPI_COMBINER_SUBARRAY:
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             ndims = array_of_ints[0];
@@ -484,7 +484,7 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
                 total_blocks *= array_of_ints[1+ndims+i];
             break;
 #endif
-#ifdef HAVE_DECL_MPI_COMBINER_DARRAY
+#if defined HAVE_DECL_MPI_COMBINER_DARRAY && HAVE_DECL_MPI_COMBINER_DARRAY
         case MPI_COMBINER_DARRAY:
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             ndims = array_of_ints[2];
@@ -497,7 +497,7 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
                                                 array_of_ints+3+3*ndims);
             break;
 #endif
-#ifdef HAVE_DECL_MPI_COMBINER_RESIZED
+#if defined HAVE_DECL_MPI_COMBINER_RESIZED && HAVE_DECL_MPI_COMBINER_RESIZED
         case MPI_COMBINER_RESIZED:
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             total_blocks = 1;

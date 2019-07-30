@@ -999,10 +999,10 @@ dnl AC_CHECK_LIB([m], [tanh])
 dnl UD_CHECK_LIB_MATH
 
 dnl When using gcc based compiler with -ansi flag, AC_CHECK_FUNCS can still
-dnl find strdup, but AC_CHECK_DECLS cannot. So we check with AC_CHECK_DECLS
+dnl find strdup, but AC_CHECK_DECL cannot. So we check with AC_CHECK_DECL
 dnl first and then check AC_CHECK_FUNCS.
 dnl AC_CHECK_FUNCS([strdup strerror access unlink])
-AC_CHECK_DECLS([strdup, strerror], [], [], [[#include <string.h>]])
+AC_CHECK_DECL([strdup], [], [], [[#include <string.h>]])
 if test "x$ac_cv_have_decl_strdup" = xyes ; then
    AC_CHECK_FUNCS([strdup])
 else
@@ -1012,17 +1012,19 @@ else
    AC_LIBSOURCE([strdup.c])
    AC_LIBOBJ([strdup])
 fi
+AC_CHECK_DECL([strerror], [], [], [[#include <string.h>]])
 if test "x$ac_cv_have_decl_strerror" = xyes ; then
    AC_CHECK_FUNCS([strerror])
 fi
-AC_CHECK_DECLS([access, unlink], [], [], [[#include <unistd.h>]])
+AC_CHECK_DECL([access], [], [], [[#include <unistd.h>]])
 if test "x$ac_cv_have_decl_access" = xyes ; then
    AC_CHECK_FUNCS([access])
 fi
+AC_CHECK_DECL([unlink], [], [], [[#include <unistd.h>]])
 if test "x$ac_cv_have_decl_unlink" = xyes ; then
    AC_CHECK_FUNCS([unlink])
 fi
-AC_CHECK_DECLS([strcasecmp], [], [], [[#include <strings.h>]])
+AC_CHECK_DECL([strcasecmp], [], [], [[#include <strings.h>]])
 if test "x$ac_cv_have_decl_strcasecmp" = xyes ; then
    AC_CHECK_FUNCS([strcasecmp])
 else
@@ -1043,9 +1045,13 @@ AC_ARG_ENABLE([debug],
 dnl malloc memory allocation tracing relies on tdelete and tsearch
 AC_CHECK_HEADERS([search.h])
 if test "x$ac_cv_header_search_h" = xyes ; then
-   AC_CHECK_DECLS([tsearch, tdelete], [], [], [[#include <search.h>]])
-   if test "x$ac_cv_have_decl_unlink" = xyes ; then
-      AC_CHECK_FUNCS([tsearch tdelete])
+   AC_CHECK_DECL([tsearch], [], [], [[#include <search.h>]])
+   if test "x$ac_cv_have_decl_tsearch" = xyes ; then
+      AC_CHECK_FUNCS([tsearch])
+   fi
+   AC_CHECK_DECL([tdelete], [], [], [[#include <search.h>]])
+   if test "x$ac_cv_have_decl_tdelete" = xyes ; then
+      AC_CHECK_FUNCS([tdelete])
    fi
 fi
 
@@ -1115,17 +1121,31 @@ AC_CHECK_FUNCS([MPI_Get_address \
 
 dnl Check presence of MPI COMBINERS. These are of type int.
 dnl These are introduced in MPI 2.0.
-AC_CHECK_DECLS([MPI_COMBINER_DUP,
+dnl Note from autoconfig user guide: "Unlike the other AC_CHECK_*S macros, when
+dnl a symbol is not declared, HAVE_DECL_symbol is defined to 0 instead of
+dnl leaving HAVE_DECL_symbol undeclared." So, use it like this example:
+dnl #if defined MPI_COMBINER_NAMED && MPI_COMBINER_NAMED
+dnl     ... use MPI_COMBINER_NAMED
+dnl #endif
+
+AC_CHECK_DECLS([MPI_COMBINER_NAMED,
+                MPI_COMBINER_DUP,
+                MPI_COMBINER_CONTIGUOUS,
+                MPI_COMBINER_VECTOR,
                 MPI_COMBINER_HVECTOR_INTEGER,
+                MPI_COMBINER_HVECTOR,
                 MPI_COMBINER_HINDEXED_INTEGER,
+                MPI_COMBINER_HINDEXED,
+                MPI_COMBINER_INDEXED_BLOCK,
+                MPI_COMBINER_STRUCT_INTEGER,
+                MPI_COMBINER_STRUCT,
                 MPI_COMBINER_SUBARRAY,
                 MPI_COMBINER_DARRAY,
-                MPI_COMBINER_RESIZED,
-                MPI_COMBINER_STRUCT_INTEGER,
-                MPI_COMBINER_INDEXED_BLOCK,
                 MPI_COMBINER_F90_REAL,
+                MPI_COMBINER_F90_COMPLEX,
                 MPI_COMBINER_F90_INTEGER,
-                MPI_COMBINER_F90_COMPLEX],
+                MPI_COMBINER_RESIZED,
+                MPI_COMBINER_HINDEXED_BLOCK],
                 [], [], [[#include <mpi.h>]])
 
 dnl Check presence of various MPI error classes. Introduced in MPI 2.0.
@@ -2060,7 +2080,7 @@ if test "x$enable_adios" = "xyes" ; then
       ------------------------------------------------------------])
    fi
    UD_MSG_DEBUG([adios_config=$adios_config])
-    
+
    # Get adios compile flags
    adios_cflag=`$adios_config -c`
    UD_MSG_DEBUG([adios_compiler_flag=$adios_cflag])
@@ -2091,7 +2111,7 @@ if test "x$enable_adios" = "xyes" ; then
    CPPFLAGS="$adios_cflag $CPPFLAGS"
    LDFLAGS="$adios_LDFLAGS $adios_LDFLAGS"
    LIBS="$adios_LIBS $LIBS"
- 
+
    have_adios=no
    AC_MSG_CHECKING(ADIOS library)
    AC_SEARCH_LIBS([adios_read_open_file], [adiosread], [have_adios=yes], [have_adios=no])
@@ -2144,7 +2164,7 @@ if test "x$enable_adios" = "xyes" ; then
       AC_MSG_ERROR([
       ------------------------------------------------------------
       ADIOS version 1.12.0 or later is required to build
-      PnetCDF with ADIOS BP read support. 
+      PnetCDF with ADIOS BP read support.
       ------------------------------------------------------------])
    fi
 
@@ -2160,7 +2180,7 @@ if test "x$enable_adios" = "xyes" ; then
    if test "x${adios_ge_1_13_2}" = xyes; then
       ADIOS_VER_GE_1132=1
    fi
-    
+
    CPPFLAGS=$saved_CPPFLAGS
    LDFLAGS=$saved_LDFLAGS
    LIBS=$saved_LIBS
@@ -2360,10 +2380,10 @@ if test "x${enable_netcdf4}" = xyes; then
    echo "\
               NetCDF-4 support                            - enabled"
 fi
-if test "x${enable_adios}" = xyes; then 
-   echo "\ 
-              ADIOS BP read support                       - enabled" 
-fi 
+if test "x${enable_adios}" = xyes; then
+   echo "\
+              ADIOS BP read support                       - enabled"
+fi
 if test "x${enable_bbdriver}" = xyes ; then
    echo "\
               Burst buffering                             - enabled"
@@ -2465,14 +2485,14 @@ if test "x${enable_netcdf4}" = xyes; then
               NETCDF4_LDFLAGS = ${NETCDF4_LDFLAGS}
               NETCDF4_LIBS    = ${NETCDF4_LIBS}"
 fi
-if test "x${enable_adios}" = xyes; then 
+if test "x${enable_adios}" = xyes; then
    echo "\
 
    ADIOS library:
               ADIOS_INC     = ${ADIOS_INC}
               ADIOS_LDFLAGS = ${ADIOS_LDFLAGS}
               ADIOS_LIBS    = ${ADIOS_LIBS}"
-fi 
+fi
 echo "\
 
    Now run 'make' to build the library and utility tools.
