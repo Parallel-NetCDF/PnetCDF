@@ -138,8 +138,8 @@ PNC_check_id(int ncid, PNC **pncp)
 
 /*----< construct_info() >---------------------------------------------------*/
 static void
-combine_env_hints(MPI_Info  user_info,
-                  MPI_Info *new_info)
+combine_env_hints(MPI_Info  user_info,  /* IN */
+                  MPI_Info *new_info)   /* OUT: may be MPI_INFO_NULL */
 {
     char *warn_str="Warning: skip ill-formed hint set in PNETCDF_HINTS";
     char *env_str;

@@ -905,6 +905,9 @@ ncmpio__enddef(void       *ncdp,
         err = ncmpio_subfile_partition(ncp);
         CHECK_ERROR(err)
     }
+#else
+    MPI_Info_set(ncp->mpiinfo, "pnetcdf_subfiling", "disable");
+    MPI_Info_set(ncp->mpiinfo, "nc_num_subfiles", "0");
 #endif
 
     /* check whether sizes of all variables are legal */

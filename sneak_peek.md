@@ -71,7 +71,8 @@ This is essentially a placeholder for the next release note ...
   + `ncmpidump` can now dump BP files.
 
 * Other updates:
-  + none
+  + The MPI info object now includes all PnetCDF hints once obtained from a
+    call to ncmpi_inq_file_info(), even if the hints are not set by the users.
 
 * Bug fixes
   + When calling a nonblocking API with a zero-length request and argument

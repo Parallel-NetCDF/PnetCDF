@@ -26,6 +26,10 @@ int main( int argc, char *argv[] )
 
    if (rank == 0) {
        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+
+       if (verbose) cout << "PnetCDF version " << ncmpi_inq_libvers() << endl;
+       if (verbose) cout << "Test creation of classic format file" << endl;
+
        sprintf(cmd_str, "*** TESTING C++ %s for creation of classic format file", basename(argv[0]));
        printf("%-66s ------ ", cmd_str);
        free(cmd_str);
@@ -33,7 +37,6 @@ int main( int argc, char *argv[] )
 
    try
    {
-      if (verbose) cout << "Test creation of classic format file" << endl;
       {
 	 NcmpiFile ncFile(MPI_COMM_WORLD, filename, NcmpiFile::replace,
                           NcmpiFile::classic);

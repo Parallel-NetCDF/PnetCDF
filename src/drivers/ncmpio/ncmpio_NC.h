@@ -559,7 +559,7 @@ ncmpio_close_files(NC *ncp, int doUnlink);
 
 /* Begin defined in ncmpio_utils.c ------------------------------------------*/
 extern void
-ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info info);
+ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info user_info, MPI_Info info_used);
 
 extern int
 ncmpio_NC_check_name(const char *name, int file_ver);

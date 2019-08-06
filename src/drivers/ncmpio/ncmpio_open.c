@@ -36,7 +36,7 @@ ncmpio_open(MPI_Comm     comm,
             const char  *path,
             int          omode,
             int          ncid,
-            MPI_Info     info, /* user's info and env info combined */
+            MPI_Info     user_info, /* user's and env info combined */
             void       **ncpp)
 {
     char *env_str;
@@ -74,11 +74,11 @@ ncmpio_open(MPI_Comm     comm,
     /* open file collectively ---------------------------------------------- */
     mpiomode = fIsSet(omode, NC_WRITE) ? MPI_MODE_RDWR : MPI_MODE_RDONLY;
 
-    TRACE_IO(MPI_File_open)(comm, (char *)path, mpiomode, info, &fh);
+    TRACE_IO(MPI_File_open)(comm, (char *)path, mpiomode, user_info, &fh);
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_error_mpi2nc(mpireturn, "MPI_File_open");
 
-    /* get the file info used by MPI-IO */
+    /* get the file info used/modified by MPI-IO */
     mpireturn = MPI_File_get_info(fh, &info_used);
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_error_mpi2nc(mpireturn, "MPI_File_get_info");
@@ -104,12 +104,16 @@ ncmpio_open(MPI_Comm     comm,
     /* buffer to pack noncontiguous user buffers when calling wait() */
     ncp->ibuf_size = NC_DEFAULT_IBUF_SIZE;
 
-    /* extract I/O hints from user info */
-    ncmpio_set_pnetcdf_hints(ncp, info);
+    /* Extract PnetCDF specific I/O hints from user_info and set default hint
+     * values into info_used. Note some MPI libraries, such as MPICH 3.3.1 and
+     * priors fail to preserve user hints that are not recogniozed by the MPI
+     * libraries.
+     */
+    ncmpio_set_pnetcdf_hints(ncp, user_info, info_used);
 
     ncp->iomode         = omode;
     ncp->comm           = comm;  /* reuse comm duplicated in dispatch layer */
-    ncp->mpiinfo        = info_used;
+    ncp->mpiinfo        = info_used; /* is not MPI_INFO_NULL */
     ncp->mpiomode       = mpiomode;
     ncp->collective_fh  = fh;
     ncp->independent_fh = MPI_FILE_NULL;
