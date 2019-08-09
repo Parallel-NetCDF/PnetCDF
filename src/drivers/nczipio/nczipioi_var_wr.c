@@ -111,166 +111,167 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
         zoffs[i + 1] = zoffs[i] + zsizes_all[i];
     }
 
-    //zsizes_all[i] = zoffs[i];   // Remove valgrind warning
-
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_SYNC)
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_INIT)
-
-    /* Write comrpessed variable
-     * We start by defining data variable and writing metadata
-     * Then, we create buffer type and file type for data
-     * Finally MPI collective I/O is used for writing data
-     */
-
-    // Enter redefine mode
-    nczipp->driver->redef(nczipp->ncp);
-
-    // Prepare data variable
     
-    // Define dimension for data variable
-    sprintf(name, "_datablock_dim_%d", nczipp->nwrite);
-    err = nczipp->driver->def_dim(nczipp->ncp, name, zoffs[varp->nchunk], &zdimid);
-    if (err != NC_NOERR) return err;
+    if (zoffs[varp->nchunk] > 0){   // No need to do I/O if no dirty chunk to write
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_INIT)
 
-    // Define data variable
-    sprintf(name, "_datablock_%d", nczipp->nwrite);
-    err = nczipp->driver->def_var(nczipp->ncp, name, NC_BYTE, 1, &zdimid, &(zvarid));
-    if (err != NC_NOERR) return err;
+        /* Write comrpessed variable
+        * We start by defining data variable and writing metadata
+        * Then, we create buffer type and file type for data
+        * Finally MPI collective I/O is used for writing data
+        */
 
-    // Mark as data variable
-    i = NC_ZIP_VAR_DATA;
-    err = nczipp->driver->put_att(nczipp->ncp, zvarid, "_varkind", NC_INT, 1, &i, MPI_INT);
-    if (err != NC_NOERR) return err;
+        // Enter redefine mode
+        nczipp->driver->redef(nczipp->ncp);
 
-    // Record serial
-    nczipp->nwrite++;
-    err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_nwrite", NC_INT, 1, &(nczipp->nwrite), MPI_INT);
-    if (err != NC_NOERR) return err;
-
-    // Metadata offset
-    if (varp->metaoff < 0){
-        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_metaoffset", NC_INT64, 1, &(varp->metaoff), MPI_LONG_LONG);
-        if (err != NC_NOERR) return err;
-    }
-
-    // Switch to data mode
-    err = nczipp->driver->enddef(nczipp->ncp);
-    if (err != NC_NOERR) return err;
-
-    // Update metadata
-    voff = ncp->vars.value[zvarid]->begin;
-    for(i = 0; i < varp->nchunk; i++){
-        if (zsizes_all[i] > 0){
-            varp->data_lens[i] = zsizes_all[i];
-            varp->data_offs[i] = zoffs[i] + voff - ncp->begin_var;
-        }
-    }
-
-    if (varp->metaoff < 0 || varp->expanded){
-        varp->metaoff = voff - ncp->begin_var;
-        err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_metaoffset", NC_INT64, 1, &(varp->metaoff), MPI_LONG_LONG);
-        if (err != NC_NOERR) return err;
-
-        // unset expand flag
-        varp->expanded = 0;
+        // Prepare data variable
         
-    }
+        // Define dimension for data variable
+        sprintf(name, "_datablock_dim_%d", nczipp->nwrite);
+        err = nczipp->driver->def_dim(nczipp->ncp, name, zoffs[varp->nchunk], &zdimid);
+        if (err != NC_NOERR) return err;
 
-    /* Carry out coll I/O
-     * OpenMPI will fail when set view or do I/O on type created with MPI_Type_create_hindexed when count is 0
-     * We use a dummy call inplace of type with 0 count
-     */
-    if (wcnt > 0){
-        // Create file type
-        l = 0;
-        if (nczipp->rank == varp->chunk_owner[0]){  // First chunk owner writes metadata
-            lens[l] = (varp->nchunk) * sizeof(long long);
-            disps[l++] = (MPI_Aint)varp->metaoff + ncp->begin_var;
+        // Define data variable
+        sprintf(name, "_datablock_%d", nczipp->nwrite);
+        err = nczipp->driver->def_var(nczipp->ncp, name, NC_BYTE, 1, &zdimid, &(zvarid));
+        if (err != NC_NOERR) return err;
 
-            lens[l] = (varp->nchunk) * sizeof(int);
-            disps[l++] = (MPI_Aint)(varp->metaoff + ncp->begin_var + sizeof(long long) * varp->nchunkalloc);
+        // Mark as data variable
+        i = NC_ZIP_VAR_DATA;
+        err = nczipp->driver->put_att(nczipp->ncp, zvarid, "_varkind", NC_INT, 1, &i, MPI_INT);
+        if (err != NC_NOERR) return err;
+
+        // Record serial
+        nczipp->nwrite++;
+        err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_nwrite", NC_INT, 1, &(nczipp->nwrite), MPI_INT);
+        if (err != NC_NOERR) return err;
+
+        // Metadata offset
+        if (varp->metaoff < 0){
+            err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_metaoffset", NC_INT64, 1, &(varp->metaoff), MPI_LONG_LONG);
+            if (err != NC_NOERR) return err;
         }
-        for(i = 0; i < varp->nmychunk; i++){
-            k = varp->mychunks[i];
 
-            // Record compressed size
-            if (varp->dirty[k]){
-                lens[l] = zsizes[k];
-                disps[l++] = (MPI_Aint)varp->data_offs[k];
+        // Switch to data mode
+        err = nczipp->driver->enddef(nczipp->ncp);
+        if (err != NC_NOERR) return err;
+
+        // Update metadata
+        voff = ncp->vars.value[zvarid]->begin;
+        for(i = 0; i < varp->nchunk; i++){
+            if (zsizes_all[i] > 0){
+                varp->data_lens[i] = zsizes_all[i];
+                varp->data_offs[i] = zoffs[i] + voff - ncp->begin_var;
             }
         }
-        MPI_Type_create_hindexed(wcnt, lens, disps, MPI_BYTE, &ftype);
-        CHK_ERR_TYPE_COMMIT(&ftype);
 
-        // Create memory buffer type
-        l = 0;
-        if (nczipp->rank == varp->chunk_owner[0]){  // First chunk owner writes metadata
-            lens[l] = (varp->nchunk) * sizeof(long long);
-            disps[l++] = (MPI_Aint)varp->data_offs;
+        if (varp->metaoff < 0 || varp->expanded){
+            varp->metaoff = voff - ncp->begin_var;
+            err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_metaoffset", NC_INT64, 1, &(varp->metaoff), MPI_LONG_LONG);
+            if (err != NC_NOERR) return err;
 
-            lens[l] = (varp->nchunk) * sizeof(int);
-            disps[l++] = (MPI_Aint)varp->data_lens;
+            // unset expand flag
+            varp->expanded = 0;
+            
         }
-        for(i = 0; i < varp->nmychunk; i++){
-            k = varp->mychunks[i];
 
-            // Record compressed size
-            if (varp->dirty[k]){
-                lens[l] = zsizes[k];
-                disps[l++] = (MPI_Aint)zbufs[i];
+        /* Carry out coll I/O
+        * OpenMPI will fail when set view or do I/O on type created with MPI_Type_create_hindexed when count is 0
+        * We use a dummy call inplace of type with 0 count
+        */
+        if (wcnt > 0){
+            // Create file type
+            l = 0;
+            if (nczipp->rank == varp->chunk_owner[0]){  // First chunk owner writes metadata
+                lens[l] = (varp->nchunk) * sizeof(long long);
+                disps[l++] = (MPI_Aint)varp->metaoff + ncp->begin_var;
+
+                lens[l] = (varp->nchunk) * sizeof(int);
+                disps[l++] = (MPI_Aint)(varp->metaoff + ncp->begin_var + sizeof(long long) * varp->nchunkalloc);
             }
+            for(i = 0; i < varp->nmychunk; i++){
+                k = varp->mychunks[i];
+
+                // Record compressed size
+                if (varp->dirty[k]){
+                    lens[l] = zsizes[k];
+                    disps[l++] = (MPI_Aint)varp->data_offs[k] + ncp->begin_var;
+                }
+            }
+            MPI_Type_create_hindexed(wcnt, lens, disps, MPI_BYTE, &ftype);
+            CHK_ERR_TYPE_COMMIT(&ftype);
+
+            // Create memory buffer type
+            l = 0;
+            if (nczipp->rank == varp->chunk_owner[0]){  // First chunk owner writes metadata
+                lens[l] = (varp->nchunk) * sizeof(long long);
+                disps[l++] = (MPI_Aint)varp->data_offs;
+
+                lens[l] = (varp->nchunk) * sizeof(int);
+                disps[l++] = (MPI_Aint)varp->data_lens;
+            }
+            for(i = 0; i < varp->nmychunk; i++){
+                k = varp->mychunks[i];
+
+                // Record compressed size
+                if (varp->dirty[k]){
+                    lens[l] = zsizes[k];
+                    disps[l++] = (MPI_Aint)zbufs[i];
+                }
+            }
+            err = MPI_Type_create_hindexed(wcnt, lens, disps, MPI_BYTE, &mtype);
+            CHK_ERR_TYPE_COMMIT(&mtype);
+
+            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_INIT)
+            NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_WR)
+
+    #ifndef WORDS_BIGENDIAN // NetCDF data is big endian
+            if (nczipp->rank == varp->chunk_owner[0]){
+                ncmpii_in_swapn(varp->data_offs, varp->nchunk, sizeof(long long));
+                ncmpii_in_swapn(varp->data_lens, varp->nchunk, sizeof(int));
+            }
+    #endif
+
+            // Perform MPI-IO
+            // Set file view
+            CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
+            // Write data
+            CHK_ERR_WRITE_AT_ALL(ncp->collective_fh, 0, MPI_BOTTOM, 1, mtype, &status);
+            // Restore file view
+            CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+
+    #ifndef WORDS_BIGENDIAN // Switch back to little endian
+            if (nczipp->rank == varp->chunk_owner[0]){
+                ncmpii_in_swapn(varp->data_offs, varp->nchunk, sizeof(long long));
+                ncmpii_in_swapn(varp->data_lens, varp->nchunk, sizeof(int));
+            }
+    #endif
+
+            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_WR)
+
+    #ifdef _USE_MPI_GET_COUNT
+            MPI_Get_count(&status, MPI_BYTE, &put_size);
+    #else
+            MPI_Type_size(mtype, &put_size);
+    #endif
+            nczipp->putsize += put_size;
+
+            // Free type
+            MPI_Type_free(&ftype);
+            MPI_Type_free(&mtype);
         }
-        err = MPI_Type_create_hindexed(wcnt, lens, disps, MPI_BYTE, &mtype);
-        CHK_ERR_TYPE_COMMIT(&mtype);
+        else{
+            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_INIT)
+            NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_WR)
 
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_INIT)
-        NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_WR)
+            // Follow coll I/O with dummy call
+            CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+            CHK_ERR_WRITE_AT_ALL(ncp->collective_fh, 0, MPI_BOTTOM, 0, MPI_BYTE, &status);
+            CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
-#ifndef WORDS_BIGENDIAN // NetCDF data is big endian
-        if (nczipp->rank == varp->chunk_owner[0]){
-            ncmpii_in_swapn(varp->data_offs, varp->nchunk, sizeof(long long));
-            ncmpii_in_swapn(varp->data_lens, varp->nchunk, sizeof(int));
+            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_WR)
         }
-#endif
-
-        // Perform MPI-IO
-        // Set file view
-        CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
-        // Write data
-        CHK_ERR_WRITE_AT_ALL(ncp->collective_fh, 0, MPI_BOTTOM, 1, mtype, &status);
-        // Restore file view
-        CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
-
-#ifndef WORDS_BIGENDIAN // Switch back to little endian
-        if (nczipp->rank == varp->chunk_owner[0]){
-            ncmpii_in_swapn(varp->data_offs, varp->nchunk, sizeof(long long));
-            ncmpii_in_swapn(varp->data_lens, varp->nchunk, sizeof(int));
-        }
-#endif
-
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_WR)
-
-#ifdef _USE_MPI_GET_COUNT
-        MPI_Get_count(&status, MPI_BYTE, &put_size);
-#else
-        MPI_Type_size(mtype, &put_size);
-#endif
-        nczipp->putsize += put_size;
-
-        // Free type
-        MPI_Type_free(&ftype);
-        MPI_Type_free(&mtype);
-    }
-    else{
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_INIT)
-        NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_WR)
-
-        // Follow coll I/O with dummy call
-        CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
-        CHK_ERR_WRITE_AT_ALL(ncp->collective_fh, 0, MPI_BOTTOM, 0, MPI_BYTE, &status);
-        CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
-
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_WR)
     }
 
     // Free buffers
@@ -432,210 +433,179 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         zsizes_allp += varp->nchunk;
     }
 
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_INIT)
-
     zoffs[0] = 0;
     for(i = 0; i < total_nchunks; i++){
         zoffs[i + 1] = zoffs[i] + zsizes_all[i];
-    }
-    
-    // Prepare data variable
+    }    
 
-    // Enter redefine mode
-    nczipp->driver->redef(nczipp->ncp);
+    if (zoffs[total_nchunks] > 0){   // No need to do I/O if no dirty chunk to write
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_INIT)
 
-    // Define dimension for data variable
-    sprintf(name, "_datablock_dim_%d", nczipp->nwrite);
-    err = nczipp->driver->def_dim(nczipp->ncp, name, zoffs[total_nchunks], &zdimid);
-    if (err != NC_NOERR) return err;
+        // Prepare data variable
 
-    // Define data variable
-    sprintf(name, "_datablock_%d", nczipp->nwrite);
-    err = nczipp->driver->def_var(nczipp->ncp, name, NC_BYTE, 1, &zdimid, &zvarid);
-    if (err != NC_NOERR) return err;
+        // Enter redefine mode
+        nczipp->driver->redef(nczipp->ncp);
 
-    // Mark as data variable
-    i = NC_ZIP_VAR_DATA;
-    err = nczipp->driver->put_att(nczipp->ncp, zvarid, "_varkind", NC_INT, 1, &i, MPI_INT);
-    if (err != NC_NOERR) return err;
+        // Define dimension for data variable
+        sprintf(name, "_datablock_dim_%d", nczipp->nwrite);
+        err = nczipp->driver->def_dim(nczipp->ncp, name, zoffs[total_nchunks], &zdimid);
+        if (err != NC_NOERR) return err;
 
-    // Record serial
-    nczipp->nwrite++;
-    err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_nwrite", NC_INT, 1, &(nczipp->nwrite), MPI_INT);
-    if (err != NC_NOERR) return err;
+        // Define data variable
+        sprintf(name, "_datablock_%d", nczipp->nwrite);
+        err = nczipp->driver->def_var(nczipp->ncp, name, NC_BYTE, 1, &zdimid, &zvarid);
+        if (err != NC_NOERR) return err;
 
-    // Metadata offset
-    for(vid = 0; vid < nvar; vid++){
-        varp = nczipp->vars.data + varids[vid];
-        if (varp->metaoff < 0){
-            err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_metaoffset", NC_INT64, 1, &(varp->metaoff), MPI_LONG_LONG);
-            if (err != NC_NOERR) return err;
-        }
-    }
+        // Mark as data variable
+        i = NC_ZIP_VAR_DATA;
+        err = nczipp->driver->put_att(nczipp->ncp, zvarid, "_varkind", NC_INT, 1, &i, MPI_INT);
+        if (err != NC_NOERR) return err;
 
-    // Switch back to data mode
-    err = nczipp->driver->enddef(nczipp->ncp);
-    if (err != NC_NOERR) return err;
+        // Record serial
+        nczipp->nwrite++;
+        err = nczipp->driver->put_att(nczipp->ncp, NC_GLOBAL, "_nwrite", NC_INT, 1, &(nczipp->nwrite), MPI_INT);
+        if (err != NC_NOERR) return err;
 
-    voff = ncp->vars.value[zvarid]->begin;
-
-    wcur = ccur = 0;
-    for(vid = 0; vid < nvar; vid++){
-        varp = nczipp->vars.data + varids[vid];
-
-        if (varp->metaoff < 0 || varp->expanded){
-            varp->metaoff = zoffs[vid] + voff - ncp->begin_var;
-            err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_metaoffset", NC_INT64, 1, &(varp->metaoff), MPI_LONG_LONG);
-            if (err != NC_NOERR) return err;
-
-            // unset expand flag
-            varp->expanded = 0;
-        }
-
-        if (nczipp->rank == varp->chunk_owner[0]){  // First chunk owner writes metadata
-            lens[wcur] = varp->nchunk * sizeof(long long);
-            fdisps[wcur] = (MPI_Aint)varp->metaoff + ncp->begin_var;
-            mdisps[wcur++] = (MPI_Aint)(varp->data_offs);
-            
-            lens[wcur] = varp->nchunk * sizeof(int);
-            fdisps[wcur] = (MPI_Aint)(varp->metaoff + ncp->begin_var + sizeof(long long) * varp->nchunkalloc);
-            mdisps[wcur++] = (MPI_Aint)(varp->data_lens);
-        }
-    }
-
-    nczipioi_sort_file_offset(wcur, fdisps, mdisps, lens);
-
-    zsizes_allp = zsizes_all + nvar;
-    zoffsp = zoffs + nvar;
-    for(vid = 0; vid < nvar; vid++){
-        varp = nczipp->vars.data + varids[vid];
-
-        for(cid = 0; cid < varp->nchunk; cid++){
-            if (zsizes_allp[cid] > 0){
-                varp->data_lens[cid] = zsizes_allp[cid];
-                varp->data_offs[cid] = zoffsp[cid] + voff - ncp->begin_var;
-            }
-        }
-
-        /* Paramemter for file and memory type 
-         * We do not know variable file offset until the end of define mode
-         * We will add the displacement later
-         */
-        for(i = 0; i < varp->nmychunk; i++){
-            cid = varp->mychunks[i];
-
-            // Record parameter
-            if (varp->dirty[cid]){
-                lens[wcur] = varp->data_lens[cid];
-                fdisps[wcur] = (MPI_Aint)varp->data_offs[cid] + ncp->begin_var;
-                mdisps[wcur++] = (MPI_Aint)zbufs[ccur++];
-            }
-        }
-
-        // Clear dirty flag
-        memset(varp->dirty, 0, varp->nchunk * sizeof(int));
-
-        zsizes_allp += varp->nchunk;
-        zoffsp += varp->nchunk;
-    }
-
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_INIT)
-
-    // Switch back to data mode
-    err = nczipp->driver->enddef(nczipp->ncp);
-    if (err != NC_NOERR) return err;
-
-    /* Now it's time to add variable file offset to displacements
-     * File type offset need to be specified in non-decreasing order
-     * We assume ncmpio place variable according to the order they are declared
-     */
-    wcur = 0;
-    for(vid = 0; vid < nvar; vid++){
-        varp = nczipp->vars.data +  varids[vid];
-        if (nczipp->rank == varp->chunk_owner[0]){  // Skip offset and len
-            ncvarp = ncp->vars.value[varp->offvarid];
-            fdisps[wcur++] = (MPI_Aint)ncvarp->begin;
-            ncvarp = ncp->vars.value[varp->lenvarid];
-            fdisps[wcur++] = (MPI_Aint)ncvarp->begin;
-        }
-        ncvarp = ncp->vars.value[varp->datavarid];
-        for(i = 0; i < varp->nchunk; i++){
-            if (zsizes_all[i] > 0){
-                varp->data_lens[i] = zsizes_all[i];
-                varp->data_offs[i] = zoffs[i] + ncvarp->begin;
-            }
-        }
-        for(l = 0; l < varp->nmychunk; l++){
-            cid = varp->mychunks[l];
-            // Adjust file displacement
-            fdisps[wcur] = (MPI_Aint)ncvarp->data_offs[cid];
-        }
-    }
-
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_INIT)
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_WR)
-
-    /* Carry our coll I/O
-     * OpenMPI will fail when set view or do I/O on type created with MPI_Type_create_hindexed when count is 0
-     * We use a dummy call inplace of type with 0 count
-     */
-    if (wcnt > 0){
-         // Create file type
-        MPI_Type_create_hindexed(wcnt, lens, fdisps, MPI_BYTE, &ftype);
-        CHK_ERR_TYPE_COMMIT(&ftype);
-
-        // Create memmory type
-        MPI_Type_create_hindexed(wcnt, lens, mdisps, MPI_BYTE, &mtype);
-        CHK_ERR_TYPE_COMMIT(&mtype);
-
-#ifndef WORDS_BIGENDIAN // NetCDF data is big endian
+        // Metadata offset
         for(vid = 0; vid < nvar; vid++){
-            varp = nczipp->vars.data +  varids[vid];
-            if (nczipp->rank == varp->chunk_owner[0]){
-                ncmpii_in_swapn(varp->data_offs, varp->nchunk + 1, sizeof(long long));
-                ncmpii_in_swapn(varp->data_lens, varp->nchunk + 1, sizeof(int));
+            varp = nczipp->vars.data + varids[vid];
+            if (varp->metaoff < 0){
+                err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_metaoffset", NC_INT64, 1, &(varp->metaoff), MPI_LONG_LONG);
+                if (err != NC_NOERR) return err;
             }
         }
-#endif     
 
-        // Perform MPI-IO
-        // Set file view
-        CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
-        // Write data
-        CHK_ERR_WRITE_AT_ALL(ncp->collective_fh, 0, MPI_BOTTOM, 1, mtype, &status);
-        // Restore file view
-        CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+        // Switch back to data mode
+        err = nczipp->driver->enddef(nczipp->ncp);
+        if (err != NC_NOERR) return err;
 
-#ifndef WORDS_BIGENDIAN // Switch back to little endian
+        voff = ncp->vars.value[zvarid]->begin;
+
+        wcur = ccur = 0;
         for(vid = 0; vid < nvar; vid++){
-            varp = nczipp->vars.data +  varids[vid];
-            if (nczipp->rank == varp->chunk_owner[0]){
-                ncmpii_in_swapn(varp->data_offs, varp->nchunk + 1, sizeof(long long));
-                ncmpii_in_swapn(varp->data_lens, varp->nchunk + 1, sizeof(int));
+            varp = nczipp->vars.data + varids[vid];
+
+            if (varp->metaoff < 0 || varp->expanded){
+                varp->metaoff = zoffs[vid] + voff - ncp->begin_var;
+                err = nczipp->driver->put_att(nczipp->ncp, varp->varid, "_metaoffset", NC_INT64, 1, &(varp->metaoff), MPI_LONG_LONG);
+                if (err != NC_NOERR) return err;
+
+                // unset expand flag
+                varp->expanded = 0;
+            }
+
+            if (nczipp->rank == varp->chunk_owner[0]){  // First chunk owner writes metadata
+                lens[wcur] = varp->nchunk * sizeof(long long);
+                fdisps[wcur] = (MPI_Aint)varp->metaoff + ncp->begin_var;
+                mdisps[wcur++] = (MPI_Aint)(varp->data_offs);
+                
+                lens[wcur] = varp->nchunk * sizeof(int);
+                fdisps[wcur] = (MPI_Aint)(varp->metaoff + ncp->begin_var + sizeof(long long) * varp->nchunkalloc);
+                mdisps[wcur++] = (MPI_Aint)(varp->data_lens);
             }
         }
-#endif    
 
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_WR)
+        nczipioi_sort_file_offset(wcur, fdisps, mdisps, lens);
 
-#ifdef _USE_MPI_GET_COUNT
-        MPI_Get_count(&status, MPI_BYTE, &put_size);
-#else
-        MPI_Type_size(mtype, &put_size);
-#endif
-        nczipp->putsize += put_size;
+        zsizes_allp = zsizes_all + nvar;
+        zoffsp = zoffs + nvar;
+        for(vid = 0; vid < nvar; vid++){
+            varp = nczipp->vars.data + varids[vid];
 
-        // Free type
-        MPI_Type_free(&ftype);
-        MPI_Type_free(&mtype);
-    }
-    else{
-        // Follow coll I/O with dummy call
-        CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
-        CHK_ERR_WRITE_AT_ALL(ncp->collective_fh, 0, MPI_BOTTOM, 0, MPI_BYTE, &status);
-        CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+            for(cid = 0; cid < varp->nchunk; cid++){
+                if (zsizes_allp[cid] > 0){
+                    varp->data_lens[cid] = zsizes_allp[cid];
+                    varp->data_offs[cid] = zoffsp[cid] + voff - ncp->begin_var;
+                }
+            }
 
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_WR)
+            /* Paramemter for file and memory type 
+            * We do not know variable file offset until the end of define mode
+            * We will add the displacement later
+            */
+            for(i = 0; i < varp->nmychunk; i++){
+                cid = varp->mychunks[i];
+
+                // Record parameter
+                if (varp->dirty[cid]){
+                    lens[wcur] = varp->data_lens[cid];
+                    fdisps[wcur] = (MPI_Aint)varp->data_offs[cid] + ncp->begin_var;
+                    mdisps[wcur++] = (MPI_Aint)zbufs[ccur++];
+                }
+            }
+
+            // Clear dirty flag
+            memset(varp->dirty, 0, varp->nchunk * sizeof(int));
+
+            zsizes_allp += varp->nchunk;
+            zoffsp += varp->nchunk;
+        }
+
+        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_INIT)
+        NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_WR)
+
+        /* Carry our coll I/O
+        * OpenMPI will fail when set view or do I/O on type created with MPI_Type_create_hindexed when count is 0
+        * We use a dummy call inplace of type with 0 count
+        */
+        if (wcnt > 0){
+            // Create file type
+            MPI_Type_create_hindexed(wcnt, lens, fdisps, MPI_BYTE, &ftype);
+            CHK_ERR_TYPE_COMMIT(&ftype);
+
+            // Create memmory type
+            MPI_Type_create_hindexed(wcnt, lens, mdisps, MPI_BYTE, &mtype);
+            CHK_ERR_TYPE_COMMIT(&mtype);
+
+    #ifndef WORDS_BIGENDIAN // NetCDF data is big endian
+            for(vid = 0; vid < nvar; vid++){
+                varp = nczipp->vars.data +  varids[vid];
+                if (nczipp->rank == varp->chunk_owner[0]){
+                    ncmpii_in_swapn(varp->data_offs, varp->nchunk + 1, sizeof(long long));
+                    ncmpii_in_swapn(varp->data_lens, varp->nchunk + 1, sizeof(int));
+                }
+            }
+    #endif     
+
+            // Perform MPI-IO
+            // Set file view
+            CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
+            // Write data
+            CHK_ERR_WRITE_AT_ALL(ncp->collective_fh, 0, MPI_BOTTOM, 1, mtype, &status);
+            // Restore file view
+            CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+
+    #ifndef WORDS_BIGENDIAN // Switch back to little endian
+            for(vid = 0; vid < nvar; vid++){
+                varp = nczipp->vars.data +  varids[vid];
+                if (nczipp->rank == varp->chunk_owner[0]){
+                    ncmpii_in_swapn(varp->data_offs, varp->nchunk + 1, sizeof(long long));
+                    ncmpii_in_swapn(varp->data_lens, varp->nchunk + 1, sizeof(int));
+                }
+            }
+    #endif    
+
+            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_WR)
+
+    #ifdef _USE_MPI_GET_COUNT
+            MPI_Get_count(&status, MPI_BYTE, &put_size);
+    #else
+            MPI_Type_size(mtype, &put_size);
+    #endif
+            nczipp->putsize += put_size;
+
+            // Free type
+            MPI_Type_free(&ftype);
+            MPI_Type_free(&mtype);
+        }
+        else{
+            // Follow coll I/O with dummy call
+            CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+            CHK_ERR_WRITE_AT_ALL(ncp->collective_fh, 0, MPI_BOTTOM, 0, MPI_BYTE, &status);
+            CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+
+            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_WR)
+        }
     }
 
     // Free buffers
