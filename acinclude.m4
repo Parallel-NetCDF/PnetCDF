@@ -1918,7 +1918,7 @@ AC_DEFUN([UD_MPI_PATH_PROG], [
 
    dnl First check if ac_first_token contain a full path
    dnl If yes, check, check if the file exists. Need not check MPI_INSTALL.
-   ac_mpi_prog_path=`dirname $ac_first_token`
+   ac_mpi_prog_path=`AS_DIRNAME(["$ac_first_token"])`
    if test "x$ac_mpi_prog_path" != "x." ; then
       AC_MSG_CHECKING([whether $ac_first_token exists and is executable])
       if test -x "$ac_first_token" ; then
@@ -2270,7 +2270,7 @@ AC_DEFUN([LT_MPI_CHECK_SHLIB],[
    $RM -rf $objdir conftest.$ac_objext conftest.la
    dnl RM must have -f option when calling libtool
    ac_RM_saved=${RM}
-   if test "x$RM" = xrm -o "x$RM" = "x/bin/rm" ; then
+   if test "x$RM" = xrm || test "x$RM" = "x/bin/rm" ; then
       RM="$RM -f"
    fi
    ac_ltcompile='./libtool --mode=compile $MPICC -c $CFLAGS $CPPFLAGS conftest.$ac_ext -o conftest.lo >&AS_MESSAGE_LOG_FD'
@@ -2306,38 +2306,53 @@ AC_DEFUN([CHECK_MPI_VERSION],[
    AC_CHECK_DECL([MVAPICH2_VERSION],   [], [], [#include <mpi.h>])
    AC_MSG_CHECKING([MPI vendor])
 
-cat - <<_ACEOF >conftest.c
-#include <mpi.h>
-_ACEOF
-
-   # CPP flag to show macro definitions
-   # For GCC, Intel, and PGI, it is -dM and prints to stdout
-   # For Oracle Solaris Studio compiler, it is -xdumpmacros=defs and prints to stderr
+   # MACRO_FLAG is the CPP flag to show macro definitions. For GCC, Intel, and
+   # PGI, it is -dM and prints to stdout. For Oracle Solaris Studio compiler,
+   # it is -xdumpmacros=defs and prints to stderr
    MACRO_FLAG="-dM"
    if test "x$ac_cv_mpicc_base" = xXLC ; then
       MACRO_FLAG="-qshowmacros"
    fi
 
+   saved_CPPFLAGS=$CPPFLAGS
+   CPPFLAGS="$CPPFLAGS $MACRO_FLAG"
+   AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[#include <mpi.h>]], [])],
+                     [`cp conftest.i saved_conftest.i`])
+   CPPFLAGS=$saved_CPPFLAGS
+   unset MACRO_FLAG
+
+   # version_str=`${EGREP} -E 'MVAPICH2_VERSION|MPICH_VERSION|MPICH2_VERSION|OMPI_MAJOR_VERSION|OMPI_MINOR_VERSION|OMPI_RELEASE_VERSION' conftest.i`
+   # echo a variable deletes any linefeeds in that variable, so we cannot use
+   # `echo $version_str | ${GREP} MVAPICH2_VERSION`. Instead, we can use
+   # version=`${GREP} MPICH_VERSION <<< "$version_str" | cut -d' ' -d'"' -f2`
+
    # Note MVAPICH2's mpi.h also defines MPICH_VERSION, so this check must be
    # done before MPICH.
-   if test "x$ac_cv_have_decl_MVAPICH2_VERSION" = xyes ; then
-      mvapich2_version=`$CPP $MACRO_FLAG conftest.c |& ${GREP} MVAPICH2_VERSION | cut -d' ' -d'"' -f2`
-      AC_MSG_RESULT(MVAPICH2 $mvapich2_version)
-   elif test "x$ac_cv_have_decl_MPICH_VERSION" = xyes ; then
-      mpich_version=`$CPP $MACRO_FLAG conftest.c |& ${GREP} MPICH_VERSION | cut -d' ' -d'"' -f2`
-      AC_MSG_RESULT(MPICH $mpich_version)
-   elif test "x$ac_cv_have_decl_MPICH2_VERSION" = xyes ; then
-      mpich2_version=`$CPP $MACRO_FLAG conftest.c |& ${GREP} MPICH2_VERSION | cut -d' ' -d'"' -f2`
-      AC_MSG_RESULT(MPICH2 $mpich2_version)
-   elif test "x$ac_cv_have_decl_OMPI_MAJOR_VERSION" = xyes ; then
-      AC_COMPUTE_INT([OMPI_MAJOR_VERSION], [OMPI_MAJOR_VERSION], [[#include <mpi.h>]])
-      AC_COMPUTE_INT([OMPI_MINOR_VERSION], [OMPI_MINOR_VERSION], [[#include <mpi.h>]])
-      AC_COMPUTE_INT([OMPI_RELEASE_VERSION], [OMPI_RELEASE_VERSION], [[#include <mpi.h>]])
-      ompi_version="${OMPI_MAJOR_VERSION}.${OMPI_MINOR_VERSION}.${OMPI_RELEASE_VERSION}"
-      AC_MSG_RESULT(OpenMPI $ompi_version)
+   if test -f saved_conftest.i ; then
+      if test "x$ac_cv_have_decl_MVAPICH2_VERSION" = xyes ; then
+         mvapich2_version=`${GREP} MVAPICH2_VERSION saved_conftest.i | cut -d' ' -d'"' -f2`
+         AC_MSG_RESULT(MVAPICH2 $mvapich2_version)
+      elif test "x$ac_cv_have_decl_MPICH_VERSION" = xyes ; then
+         mpich_version=`${GREP} MPICH_VERSION saved_conftest.i | cut -d' ' -d'"' -f2`
+         AC_MSG_RESULT(MPICH $mpich_version)
+      elif test "x$ac_cv_have_decl_MPICH2_VERSION" = xyes ; then
+         mpich2_version=`${GREP} MPICH2_VERSION saved_conftest.i | cut -d' ' -d'"' -f2`
+         AC_MSG_RESULT(MPICH2 $mpich2_version)
+      elif test "x$ac_cv_have_decl_OMPI_MAJOR_VERSION" = xyes ; then
+         # AC_COMPUTE_INT([OMPI_MAJOR], [OMPI_MAJOR_VERSION], [[#include <mpi.h>]])
+         # AC_COMPUTE_INT([OMPI_MINOR], [OMPI_MINOR_VERSION], [[#include <mpi.h>]])
+         # AC_COMPUTE_INT([OMPI_RELEASE], [OMPI_RELEASE_VERSION], [[#include <mpi.h>]])
+         OMPI_MAJOR=`${GREP} OMPI_MAJOR_VERSION saved_conftest.i | cut -d' ' -f3`
+         OMPI_MINOR=`${GREP} OMPI_MINOR_VERSION saved_conftest.i | cut -d' ' -f3`
+         OMPI_RELEASE=`${GREP} OMPI_RELEASE_VERSION saved_conftest.i | cut -d' ' -f3`
+         ompi_version="${OMPI_MAJOR}.${OMPI_MINOR}.${OMPI_RELEASE}"
+         AC_MSG_RESULT(OpenMPI $ompi_version)
+         unset OMPI_MAJOR
+         unset OMPI_MINOR
+         unset OMPI_RELEASE
+      fi
    else
       AC_MSG_RESULT([unknown])
    fi
-   ${RM} -f conftest.c
-   unset MACRO_FLAG
+   ${RM} -f saved_conftest.i
 ])
