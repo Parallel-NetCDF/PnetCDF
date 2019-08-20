@@ -149,7 +149,8 @@ AC_ARG_VAR(RM, Command for deleting files or directories. @<:@default: rm@:>@)
 if test "x${RM}" != x ; then
    dnl ${RM} set by user may contain flags
    RM_CMD=`echo ${RM} | cut -d' ' -f1`
-   if ! test -f ${RM_CMD} ; then
+   # use "if ! test" is not portable, according to autoconf user guide
+   if test -f ${RM_CMD} ; then :; else
       AC_CHECK_PROG([rm_cmd], [${RM_CMD}], [yes], [no])
       if test "x${rm_cmd}" = xno ; then
          RM=rm
@@ -186,7 +187,7 @@ AC_ARG_WITH(mpi,
       -----------------------------------------------------------------------])
    elif test "x${withval}" = x ; then
       AC_MSG_ERROR(--with-mpi is set but the value is NULL)
-   elif test "x${withval}" != xyes -a ! -d "${withval}" ; then
+   elif test "x${withval}" != xyes && test ! -d "${withval}" ; then
       # user may use --with-mpi without an argument, which results in withval
       # being "yes". This case is OK and we simply take no action, as PnetCDF
       # requires MPI compilers and will check them.
@@ -214,12 +215,12 @@ ac_user_MPICC=$MPICC
 ac_user_MPICXX=$MPICXX
 ac_user_MPIF77=$MPIF77
 ac_user_MPIF90=$MPIF90
-if test "x$MPICC"  = x -a "x$CC"  != x ; then ac_user_MPICC=$CC   ; fi
-if test "x$MPICXX" = x -a "x$CXX" != x ; then ac_user_MPICXX=$CXX ; fi
-if test "x$MPIF77" = x -a "x$F77" != x ; then ac_user_MPIF77=$F77 ; fi
-if test "x$MPIF77" = x -a "x$FC"  != x ; then ac_user_MPIF77=$FC  ; fi
-if test "x$MPIF90" = x -a "x$F90" != x ; then ac_user_MPIF90=$F90 ; fi
-if test "x$MPIF90" = x -a "x$FC"  != x ; then ac_user_MPIF90=$FC  ; fi
+if test "x$MPICC"  = x && test "x$CC"  != x ; then ac_user_MPICC=$CC   ; fi
+if test "x$MPICXX" = x && test "x$CXX" != x ; then ac_user_MPICXX=$CXX ; fi
+if test "x$MPIF77" = x && test "x$F77" != x ; then ac_user_MPIF77=$F77 ; fi
+if test "x$MPIF77" = x && test "x$FC"  != x ; then ac_user_MPIF77=$FC  ; fi
+if test "x$MPIF90" = x && test "x$F90" != x ; then ac_user_MPIF90=$F90 ; fi
+if test "x$MPIF90" = x && test "x$FC"  != x ; then ac_user_MPIF90=$FC  ; fi
 
 CANDIDATE_MPICC="${MPICC} mpicc mpicc_r"
 CANDIDATE_MPICXX="${MPICXX} mpicxx mpic++ mpiCC mpcxx mpc++ mpicxx_r mpiCC_r mpcxx_r mpic++_r mpc++_r"
@@ -227,46 +228,46 @@ CANDIDATE_MPIF77="${MPIF77} mpif77 mpif77_r mpf77 mpf77_r"
 CANDIDATE_MPIF90="${MPIF90} mpif90 mpif90_r mpf90 mpf90_r mpif95 mpif95_r mpf95 mpf95_r"
 
 dnl add GNU MPI compilers
-CANDIDATE_MPICC+=" mpigcc mpgcc mpigcc_r mpgcc_r"
-CANDIDATE_MPICXX+=" mpig++ mpg++ mpig++_r mpg++_r"
-CANDIDATE_MPIF77+=" mpig77 mpig77_r mpg77 mpg77_r"
-CANDIDATE_MPIF90+=" mpigfortran mpgfortran mpigfortran_r mpgfortran_r"
+CANDIDATE_MPICC="$CANDIDATE_MPICC mpigcc mpgcc mpigcc_r mpgcc_r"
+CANDIDATE_MPICXX="$CANDIDATE_MPICXX mpig++ mpg++ mpig++_r mpg++_r"
+CANDIDATE_MPIF77="$CANDIDATE_MPIF77 mpig77 mpig77_r mpg77 mpg77_r"
+CANDIDATE_MPIF90="$CANDIDATE_MPIF90 mpigfortran mpgfortran mpigfortran_r mpgfortran_r"
 
 dnl add IBM MPI compilers
-CANDIDATE_MPICC+=" mpcc_r mpcc mpixlc_r mpixlc"
-CANDIDATE_MPICXX+=" mpCC_r mpCC mpixlcxx_r mpixlcxx mpixlC_r mpixlC"
-CANDIDATE_MPIF77+=" mpixlf77_r mpixlf77"
-CANDIDATE_MPIF90+=" mpixlf90_r mpixlf90"
+CANDIDATE_MPICC="$CANDIDATE_MPICC mpcc_r mpcc mpixlc_r mpixlc"
+CANDIDATE_MPICXX="$CANDIDATE_MPICXX mpCC_r mpCC mpixlcxx_r mpixlcxx mpixlC_r mpixlC"
+CANDIDATE_MPIF77="$CANDIDATE_MPIF77 mpixlf77_r mpixlf77"
+CANDIDATE_MPIF90="$CANDIDATE_MPIF90 mpixlf90_r mpixlf90"
 
 dnl add IBM BGL MPI compilers
-CANDIDATE_MPICC+=" blrts_xlc mpxlc_r mpxlc"
-CANDIDATE_MPICXX+=" blrts_xlC mpxlC_r mpxlC mpixlc++ mpxlcxx mpxlc++ mpxlCC mpixlc++_r mpxlcxx_r mpxlc++_r mpxlCC_r"
-CANDIDATE_MPIF77+=" blrts_xlf mpxlf_r mpxlf mpxlf77 mpxlf77_r mpixlf mpixlf_r"
-CANDIDATE_MPIF90+=" blrts_xlf90 mpxlf90_r mpxlf90 mpxlf95_r mpxlf95 mpixlf95 mpixlf95_r"
+CANDIDATE_MPICC="$CANDIDATE_MPICC blrts_xlc mpxlc_r mpxlc"
+CANDIDATE_MPICXX="$CANDIDATE_MPICXX blrts_xlC mpxlC_r mpxlC mpixlc++ mpxlcxx mpxlc++ mpxlCC mpixlc++_r mpxlcxx_r mpxlc++_r mpxlCC_r"
+CANDIDATE_MPIF77="$CANDIDATE_MPIF77 blrts_xlf mpxlf_r mpxlf mpxlf77 mpxlf77_r mpixlf mpixlf_r"
+CANDIDATE_MPIF90="$CANDIDATE_MPIF90 blrts_xlf90 mpxlf90_r mpxlf90 mpxlf95_r mpxlf95 mpixlf95 mpixlf95_r"
 
 dnl add Fujitsu MPI compilers
-CANDIDATE_MPICC+=" mpifccpx"
-CANDIDATE_MPICXX+=" mpiFCCpx"
-CANDIDATE_MPIF77+=" mpifrtpx"
-CANDIDATE_MPIF90+=" mpifrtpx"
+CANDIDATE_MPICC="$CANDIDATE_MPICC mpifccpx"
+CANDIDATE_MPICXX="$CANDIDATE_MPICXX mpiFCCpx"
+CANDIDATE_MPIF77="$CANDIDATE_MPIF77 mpifrtpx"
+CANDIDATE_MPIF90="$CANDIDATE_MPIF90 mpifrtpx"
 
 dnl add Cray MPI compiler wrappers
-CANDIDATE_MPICC+=" cc"
-CANDIDATE_MPICXX+=" CC"
-CANDIDATE_MPIF77+=" ftn"
-CANDIDATE_MPIF90+=" ftn"
+CANDIDATE_MPICC="$CANDIDATE_MPICC cc"
+CANDIDATE_MPICXX="$CANDIDATE_MPICXX CC"
+CANDIDATE_MPIF77="$CANDIDATE_MPIF77 ftn"
+CANDIDATE_MPIF90="$CANDIDATE_MPIF90 ftn"
 
 dnl add Intel MPI compiler wrappers
-CANDIDATE_MPICC+=" mpiicc icc"
-CANDIDATE_MPICXX+=" mpiicpc mpiicxx mpiic++ mpiiCC icpc"
-CANDIDATE_MPIF77+=" mpiifort mpiifc mpiif77 ifort"
-CANDIDATE_MPIF90+=" mpiifort mpiifc mpiif95 mpiif90 ifort"
+CANDIDATE_MPICC="$CANDIDATE_MPICC mpiicc icc"
+CANDIDATE_MPICXX="$CANDIDATE_MPICXX mpiicpc mpiicxx mpiic++ mpiiCC icpc"
+CANDIDATE_MPIF77="$CANDIDATE_MPIF77 mpiifort mpiifc mpiif77 ifort"
+CANDIDATE_MPIF90="$CANDIDATE_MPIF90 mpiifort mpiifc mpiif95 mpiif90 ifort"
 
 dnl add PGI MPI compiler wrappers
-CANDIDATE_MPICC+=" mpipgcc mppgcc"
-CANDIDATE_MPICXX+=" mpipgCC mppgCC"
-CANDIDATE_MPIF77+=" mpipgf77 mppgf77"
-CANDIDATE_MPIF90+=" mpipgf90 mpipgf95 mppgf90 mppgf95 "
+CANDIDATE_MPICC="$CANDIDATE_MPICC mpipgcc mppgcc"
+CANDIDATE_MPICXX="$CANDIDATE_MPICXX mpipgCC mppgCC"
+CANDIDATE_MPIF77="$CANDIDATE_MPIF77 mpipgf77 mppgf77"
+CANDIDATE_MPIF90="$CANDIDATE_MPIF90 mpipgf90 mpipgf95 mppgf90 mppgf95 "
 
 dnl find the full path of MPICC from CANDIDATE_MPICC and MPI_INSTALL
 if test "x${ac_user_MPICC}" = x ; then
@@ -285,7 +286,7 @@ if test "x${MPICC}" = x ; then
       ERR_MSG="Specified MPI C compiler \"$ac_user_MPICC\" cannot be found"
    fi
    if test "x$MPI_INSTALL" != x ; then
-      ERR_MSG+=" under $MPI_INSTALL"
+      ERR_MSG="$ERR_MSG under $MPI_INSTALL"
    fi
    AC_MSG_ERROR([
    -----------------------------------------------------------------------
@@ -401,7 +402,7 @@ if test "x${enable_cxx}" != xno ; then
          ERR_MSG="Specified MPI C++ compiler \"$ac_user_MPICXX\" cannot be found"
       fi
       if test "x$MPI_INSTALL" != x ; then
-         ERR_MSG+=" under $MPI_INSTALL"
+         ERR_MSG="$ERR_MSG under $MPI_INSTALL"
       fi
       if test "x${enable_cxx}" = xyes ; then
          dnl --enable-cxx is explicitly set at command line
@@ -424,7 +425,7 @@ if test "x${enable_cxx}" != xno ; then
    fi
 fi
 
-if test "x${enable_cxx}" = xno -o "x${MPICXX}" = x ; then
+if test "x${enable_cxx}" = xno || test "x${MPICXX}" = x ; then
    dnl when cxx is explicitly disabled or no MPICXX can be found
    has_mpicxx=no
 else
@@ -491,7 +492,7 @@ AC_ARG_ENABLE(strict,
 
 if test "x${enable_strict}" = xyes; then
    if test "x${GCC}" = xyes; then
-      CFLAGS+=" -Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast"
+      CFLAGS="$CFLAGS -Wall -Wstrict-prototypes -Wmissing-prototypes -Wundef -Wpointer-arith -Wbad-function-cast"
    else
       AC_MSG_WARN([--enable-strict is for GNU compiler only])
       enable_strict=no
@@ -526,7 +527,7 @@ else
          ERR_MSG="Specified MPI Fortran 77 compiler \"$ac_user_MPIF77\" cannot be found"
       fi
       if test "x$MPI_INSTALL" != x ; then
-         ERR_MSG+=" under $MPI_INSTALL"
+         ERR_MSG="$ERR_MSG under $MPI_INSTALL"
       fi
       if test "x${enable_fortran}" = xyes ; then
          dnl --enable-fortran is explicitly set at command line
@@ -567,7 +568,7 @@ if test "x${has_fortran}" = xyes ; then
          ERR_MSG="Specified MPI Fortran 90 compiler \"$ac_user_MPIF90\" cannot be found"
       fi
       if test "x$MPI_INSTALL" != x ; then
-         ERR_MSG+=" under $MPI_INSTALL"
+         ERR_MSG="$ERR_MSG under $MPI_INSTALL"
       fi
       if test "x${enable_fortran}" = xyes ; then
          dnl --enable-fortran is explicitly set at command line
@@ -712,10 +713,10 @@ AM_CONDITIONAL(HAS_FORTRAN, [test x$has_fortran = xyes])
 AM_CONDITIONAL(HAVE_MPI_MOD, [test x$mpi_mod = xyes])
 
 if test "x${has_fortran}" = xyes ; then
-   if test "x${enable_strict}" = xyes -a "x${GFC}" = xyes; then
+   if test "x${enable_strict}" = xyes && test "x${GFC}" = xyes; then
       dnl not all Fortran compilers recognize -Wall
-      FFLAGS+=" -Wall"
-      FCFLAGS+=" -Wall"
+      FFLAGS="$FFLAGS -Wall"
+      FCFLAGS="$FCFLAGS -Wall"
    fi
    dnl AC_SUBST(FLIBS)
    dnl AC_SUBST(FCLIBS)
@@ -825,15 +826,20 @@ if test "x${has_fortran}" = xyes ; then
    UD_CHECK_MPIF90_IS_NAG
    if test "x${ac_cv_mpif90_is_NAG}" = xyes ; then
       dnl Add -mismatch if they are not set by users
-      if ! echo "${FFLAGS}" | ${EGREP} -q -- "-mismatch" ; then
-         FFLAGS+=" -mismatch"
+      # use "grep -q" is not portable, according to autoconf user guide
+      # check exit status of grep command is more portable than using -q
+      str_found=`echo "${FFLAGS}" | ${EGREP} -- "-mismatch"`
+      if test "x$?" != x0 ; then
+         FFLAGS="$FFLAGS -mismatch"
       fi
-      if ! echo "${FCFLAGS}" | ${EGREP} -q -- "-mismatch" ; then
-         FCFLAGS+=" -mismatch"
+      str_found=`echo "${FCFLAGS}" | ${EGREP} -- "-mismatch"`
+      if test "x$?" != x0 ; then
+         FCFLAGS="$FCFLAGS -mismatch"
       fi
+      unset str_found
       dnl Add -DNAGFortran
-       FFLAGS+=" -DNAGFortran"
-      FCFLAGS+=" -DNAGFortran"
+       FFLAGS="$FFLAGS -DNAGFortran"
+      FCFLAGS="$FCFLAGS -DNAGFortran"
    fi
 
    dnl check Fortran parameter modifier for 8-byte integer type
@@ -968,8 +974,8 @@ dnl     AC_MSG_ERROR([could not find flex/lex required by PnetCDF])
 dnl fi
 
 UD_PROG_M4
-M4FLAGS+=" -DPNETCDF"
-M4FFLAGS+=" -DPNETCDF"
+M4FLAGS="$M4FLAGS -DPNETCDF"
+M4FFLAGS="$M4FFLAGS -DPNETCDF"
 
 dnl Check for <stdbool.h> that conforms to C99 requirements
 dnl this is also for using bool type in utf8proc.h/utf8proc.c to support
@@ -1058,7 +1064,7 @@ fi
 PNETCDF_DEBUG=0
 if test "x${debug}" = xyes; then
    dnl check required functions for enabling malloc tracing
-   if test "x${ac_cv_func_tsearch}" = xyes -a "x${ac_cv_func_tdelete}" = xyes ; then
+   if test "x${ac_cv_func_tsearch}" = xyes && test "x${ac_cv_func_tdelete}" = xyes ; then
       AC_DEFINE(PNC_MALLOC_TRACE)
    fi
    PNETCDF_DEBUG=1
@@ -1236,7 +1242,7 @@ dnl AC_DEFINE(DISABLE_IN_PLACE_SWAP, $DISABLE_IN_PLACE_SWAP)
 
 dnl IN_PLACE_SWAP being -1 corresponds to "auto"
 IN_PLACE_SWAP=-1
-if test "x${ac_cv_c_bigendian}" = xyes -a "x${in_place_swap}" != xauto ; then
+if test "x${ac_cv_c_bigendian}" = xyes && test "x${in_place_swap}" != xauto ; then
    AC_MSG_WARN([--(en/dis)able-in-place-swap takes no effect on Big Endian])
 else
    if test "x${in_place_swap}" = xyes ; then
@@ -1256,7 +1262,7 @@ dnl For big Endian, put buffer needs no byte swap and hence can be declared as
 dnl INTENT(IN). For little Endian, put buffer may be used for byte swap in
 dnl place and hence must be declared as INTENT(INOUT).
 dnl This will configure/produce the file src/binding/f90/api.f90
-if test "x${ac_cv_c_bigendian}" = xyes -o "x${in_place_swap}" = xno ; then
+if test "x${ac_cv_c_bigendian}" = xyes || test "x${in_place_swap}" = xno ; then
    INTENTV="IN"
 else
    INTENTV="INOUT"
@@ -1406,7 +1412,7 @@ dnl Some C++ compilers (e.g. Fujitsu) have macro __FUNCTION__, but not __func__
 use_cxx_macro_function=no
 if test "x${has_mpicxx}" = xyes ; then
    UD_CXX_MACRO_FUNC
-   if test "x${ac_cv_cxx_macro_func}" = xno -a "x${ac_cv_cxx_macro_function}" = xyes ; then
+   if test "x${ac_cv_cxx_macro_func}" = xno && test "x${ac_cv_cxx_macro_function}" = xyes ; then
       use_cxx_macro_function=yes
    fi
 fi
@@ -1416,33 +1422,39 @@ if test "x${debug}" = xyes; then
    dnl add -g flag if not presented
    dnl remove all -O and -fast flags
    dnl add -O0 to all flags
-   if ! echo "${CFLAGS}" | ${EGREP} -q -- "-g" ; then
-      CFLAGS+=" -g"
+   # check exit status of grep command is more portable than using -q
+   str_found=`echo "${CFLAGS}" | ${EGREP} -- "-g"`
+   if test "x$?" != x0 ; then
+      CFLAGS="$CFLAGS -g"
    fi
    CFLAGS=`echo $CFLAGS | ${SED} 's/-O. *//g' | ${SED} 's/-fast *//g'`
-   CFLAGS+=" -O0"
+   CFLAGS="$CFLAGS -O0"
 
    if test "x${has_mpicxx}" = xyes ; then
-      if ! echo "${CXXFLAGS}" | ${EGREP} -q -- "-g" ; then
-         CXXFLAGS+=" -g"
+      str_found=`echo "${CXXFLAGS}" | ${EGREP} -- "-g"`
+      if test "x$?" != x0 ; then
+         CXXFLAGS="$CXXFLAGS -g"
       fi
       CXXFLAGS=`echo $CXXFLAGS | ${SED} 's/-O. *//g' | ${SED} 's/-fast *//g'`
-      CXXFLAGS+=" -O0"
+      CXXFLAGS="$CXXFLAGS -O0"
    fi
 
    if test "x${has_fortran}" = xyes ; then
-      if ! echo "${FFLAGS}" | ${EGREP} -q -- "-g" ; then
-         FFLAGS+=" -g"
+      str_found=`echo "${FFLAGS}" | ${EGREP} -- "-g"`
+      if test "x$?" != x0 ; then
+         FFLAGS="$FFLAGS -g"
       fi
-      if ! echo "${FCFLAGS}" | ${EGREP} -q -- "-g" ; then
-         FCFLAGS+=" -g"
+      str_found=`echo "${FCFLAGS}" | ${EGREP} -- "-g"`
+      if test "x$?" != x0 ; then
+         FCFLAGS="$FCFLAGS -g"
       fi
 
        FFLAGS=`echo $FFLAGS  | ${SED} 's/-O. *//g' | ${SED} 's/-fast *//g'`
       FCFLAGS=`echo $FCFLAGS | ${SED} 's/-O. *//g' | ${SED} 's/-fast *//g'`
-       FFLAGS+=" -O0"
-      FCFLAGS+=" -O0"
+       FFLAGS="$FFLAGS -O0"
+      FCFLAGS="$FCFLAGS -O0"
    fi
+   unset str_found
 fi
 
 chmod u+x ${srcdir}/scripts/install-sh
@@ -1480,7 +1492,7 @@ AC_ARG_WITH([pthread],
                    [Specify alternative path to Pthreads library when
                     thread-safe capability is enabled.])
    ],[ dnl this clause is run when --with-pthread or --without-pthread is used
-   if test "x$withval" = xno -a "x$thread_safe" = xyes ; then
+   if test "x$withval" = xno && test "x$thread_safe" = xyes ; then
       AC_MSG_ERROR([conflicted options used: --enable-thread-safe and --without-pthread])
    else
       pthread_dir=$withval
@@ -1491,7 +1503,7 @@ AC_ARG_WITH([pthread],
 )
 
 if test "x${thread_safe}" = xyes ; then
-   if test "x${pthread_dir}" = xcheck -o "x${pthread_dir}" = x -o "x${pthread_dir}" = yes ; then
+   if test "x${pthread_dir}" = xcheck || test "x${pthread_dir}" = x || test "x${pthread_dir}" = yes ; then
       AC_CHECK_HEADER([pthread.h],,[AC_MSG_ERROR([Cannot find pthread.h])])
       AC_CHECK_LIB([pthread], [pthread_self],, [AC_MSG_ERROR([Cannot find pthread library])])
    else
@@ -1528,7 +1540,7 @@ AC_ARG_WITH(netcdf4,
     --with-netcdf4=INC,LIB for include directory and library directory separated by a comma
     --with-netcdf4=DIR for directory containing include/ and lib/ subdirectories
    ])],[ dnl this clause is run when --with-netcdf4 or --without-netcdf4 is used
-   if test "x${withval}" != xyes -a "x${withval}" != xno ; then
+   if test "x${withval}" != xyes && test "x${withval}" != xno ; then
       NETCDF4_INSTALL=${withval}
    fi
    UD_MSG_DEBUG([NETCDF4_INSTALL=$NETCDF4_INSTALL])
@@ -1552,12 +1564,12 @@ AC_ARG_WITH(netcdf4,
 )
 
 # check conflicted command-line options
-if test "x$enable_netcdf4" = xno -a "x$with_netcdf4" != x -a "x$with_netcdf4" != xno ; then
+if test "x$enable_netcdf4" = xno && test "x$with_netcdf4" != x && test "x$with_netcdf4" != xno ; then
    AC_MSG_ERROR([conflicted options used: --disable-netcdf4 and --with-netcdf4])
-elif test "x$enable_netcdf4" = xyes -a "x$with_netcdf4" = xno ; then
+elif test "x$enable_netcdf4" = xyes && test "x$with_netcdf4" = xno ; then
    AC_MSG_ERROR([conflicted options used: --enable-netcdf4 and --without-netcdf4])
 elif test "x$enable_netcdf4" = x ; then
-   if test "x$with_netcdf4" = x -o "x$with_netcdf4" = xno ; then
+   if test "x$with_netcdf4" = x || test "x$with_netcdf4" = xno ; then
       enable_netcdf4=no
    else
       enable_netcdf4=yes
@@ -1788,8 +1800,8 @@ if test "x$enable_netcdf4" = xyes ; then
    # netcdf_libs=`echo $netcdf_libs | $SED "s/[[ ]]* / /g"`
    # UD_MSG_DEBUG([netcdf_ldflags=$netcdf_ldflags])
    # UD_MSG_DEBUG([netcdf_libs=$netcdf_libs])
-   # LDFLAGS+=" ${netcdf_ldflags}"
-   # LIBS+=" ${netcdf_libs}"
+   # LDFLAGS="$LDFLAGS ${netcdf_ldflags}"
+   # LIBS="$LIBS ${netcdf_libs}"
 
    dnl check if HDF5 version 1.10.4 or later is used to build NetCDF
    if test "x$nc_config" != x ; then
@@ -1797,7 +1809,7 @@ if test "x$enable_netcdf4" = xyes ; then
       netcdf_cflags=`$nc_config --cflags`
    fi
 
-   CPPFLAGS+=" $netcdf_cflags"
+   CPPFLAGS="$CPPFLAGS $netcdf_cflags"
    dnl AC_CHECK_HEADERS uses CPPFLAGS, not CFLAGS
    AC_CHECK_HEADER([hdf5.h], [have_hdf5=yes], [have_hdf5=no])
    if test "x$have_hdf5" = xyes ; then
@@ -2030,19 +2042,19 @@ AC_ARG_WITH(adios,
    [AS_HELP_STRING([--with-adios=/path/to/implementation],
                    [installation prefix path for ADIOS implementation])
    ],[ dnl this clause is run when --with-adios or --without-adios is used
-   if test "x${withval}" != xyes -a "x${withval}" != xno ; then
+   if test "x${withval}" != xyes && test "x${withval}" != xno ; then
       ADIOS_INSTALL=${withval}
    fi
    ]
 )
 
 # check conflicted command-line options
-if test "x$enable_adios" = xno -a "x$with_adios" != x -a "x$with_adios" != xno ; then
+if test "x$enable_adios" = xno && test "x$with_adios" != x && test "x$with_adios" != xno ; then
    AC_MSG_ERROR([conflicted options used: --disable-adios and --with-adios])
-elif test "x$enable_adios" = xyes -a "x$with_adios" = xno ; then
+elif test "x$enable_adios" = xyes && test "x$with_adios" = xno ; then
    AC_MSG_ERROR([conflicted options used: --enable-adios and --without-adios])
 elif test "x$enable_adios" = x ; then
-   if test "x$with_adios" = x -o "x$with_adios" = xno ; then
+   if test "x$with_adios" = x || test "x$with_adios" = xno ; then
       enable_adios=no
    else
       enable_adios=yes
@@ -2148,7 +2160,7 @@ if test "x$enable_adios" = "xyes" ; then
          ------------------------------------------------------------])
       fi
    else
-      LIBS+=" -ladiosread -ladios"
+      LIBS="$LIBS -ladiosread -ladios"
    fi
 
    dnl Check if ADIOS version is 1.12.0 or later
@@ -2207,7 +2219,7 @@ if test "x$enable_profiling" = "xyes" ; then
 
    if test "x${debug}" = xno; then
       dnl check required functions for enabling malloc tracing
-      if test "x${ac_cv_func_tsearch}" = xyes -a "x${ac_cv_func_tdelete}" = xyes ; then
+      if test "x${ac_cv_func_tsearch}" = xyes && test "x${ac_cv_func_tdelete}" = xyes ; then
          AC_DEFINE(PNC_MALLOC_TRACE)
       fi
    fi
@@ -2227,7 +2239,7 @@ if test "x${TESTMPIRUN}" = x ; then
    dnl set default to "mpiexec -n NP"
    UD_MPI_PATH_PROGS([TESTMPIRUN], [mpiexec mpirun srun])
    if test "x${TESTMPIRUN}" != x ; then
-      TESTMPIRUN+=" -n NP"
+      TESTMPIRUN="$TESTMPIRUN -n NP"
    fi
 fi
 
@@ -2425,7 +2437,7 @@ if test "x${large_file_test}" = xyes; then
    echo "\
               Testing large file/variable I/O             - enabled"
 fi
-if test "x${has_fortran}" = xyes -a "x${ac_f77_support_freeform}" = xno ; then
+if test "x${has_fortran}" = xyes && test "x${ac_f77_support_freeform}" = xno ; then
    echo "\
               Support free form in Fortran 77             - disabled"
 fi
