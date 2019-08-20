@@ -9,6 +9,23 @@
  Linux cluster using Intel compilers
 -----------------------------------------------------------------------------
 
+Building PnetCDF using Intel compilers are now requiring no special treatment.
+Users are suggested to refer to file 'INSTALL' for instructions. Below is an
+example configure command.
+
+./configure --prefix=/path/to/install \
+            MPICC=mpiicc \
+            MPICXX=mpiicpc \
+            MPIF77=mpiifort \
+            MPIF90=mpiifort
+
+
+
+* Below are some instructions for computer platforms from earlier development
+  time of PnetCDF. They can be safely ignored if you are building PnetCDF
+  1.10.0 and later.
+
+
 # here are the steps John Tannahill <tannahill1@llnl.gov> used when
 # building PnetCDF on the "mcr" cluster at LLNL.  It is a Linux cluster
 # with the Intel compilers.
