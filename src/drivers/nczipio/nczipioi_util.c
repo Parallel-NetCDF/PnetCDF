@@ -303,3 +303,66 @@ void nczipioi_sort_file_offset(int len, MPI_Aint *fdisps, MPI_Aint *mdisps, int 
         nczipioi_sort_file_offset(len - j - 1, fdisps + j + 1, mdisps + j + 1, lens + j + 1);
     }
 }
+
+int nczipioi_subarray_off_len(int ndim, int *tsize, int *tssize, int *tstart, int *off, int *len){
+    int err;
+    int i;
+
+    // Try single row
+    err = 0;
+    for(i = 0; i < ndim - 1; i++){
+        if (tssize[i] > 1){
+            err = -1;
+            break;
+        }
+    }
+    if (err){
+        // Try contiguous block
+        err = 0;
+        for(i = 1; i < ndim; i++){
+            if (tssize[i] < tsize[i]){
+                err = -1;
+                break;
+            }
+        }
+        if (!err){
+            *len = 1;
+            for(i = 0; i < ndim; i++){
+                (*len) *= tssize[i];
+            }
+        }   
+    }
+    else{
+        *len = tssize[ndim - 1];
+    }
+
+    if (!err){
+        *off = 0;
+        for(i = 0; i < ndim; i++){
+            (*off) = (*off) * tsize[i] + tstart[i];
+        }
+    }
+
+    return err;
+}
+
+
+int nczipioi_update_statistics(NC_zip *nczipp){
+    int i, j;
+    int cid;
+    NC_zip_var *varp;
+	
+    nczipp->var_size_sum = nczipp->var_zsize_sum = 0;
+    for(i = 0; i < nczipp->vars.cnt; i++){
+        varp = nczipp->vars.data + i;
+        if (varp->varkind == NC_ZIP_VAR_COMPRESSED){
+			for(j = 0; j < varp->nmychunk; j++){
+				cid = varp->mychunks[j];
+				nczipp->var_zsize_sum += varp->data_lens[cid];
+			}
+			nczipp->var_size_sum += varp->nmychunk * varp->chunksize;
+		}
+    }
+
+    return NC_NOERR;
+}

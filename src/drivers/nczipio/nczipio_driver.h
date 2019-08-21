@@ -155,6 +155,8 @@ struct NC_zip {
     NC_zip_timers profile; 
     MPI_Offset         sendsize;
     MPI_Offset         recvsize;
+    MPI_Offset         var_size_sum;
+    MPI_Offset         var_zsize_sum;
     int                nsend;
     int                nrecv;
     int                nlocal;

@@ -160,6 +160,7 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     
     int packoff; // Pack offset
     MPI_Datatype ptype; // Pack datatype
+    int plen;
 
     int nsend, nrecv;   // Number of send and receive
     MPI_Request *sreq, *rreq;    // Send and recv req
@@ -338,13 +339,21 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                         tsize[i] = (int)req->counts[r][i];
                         tstart[i] = (int)(ostart[i] - req->starts[r][i]);
                     }
-                    CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssizep, tstart, MPI_ORDER_C, varp->etype, &ptype);
-                    CHK_ERR_TYPE_COMMIT(&ptype);
-                  
-                    // Pack data
-                    packoff = 0;
-                    CHK_ERR_PACK(req->xbufs[r], 1, ptype, sbufp[j], ssize[j], &packoff, nczipp->comm);   sbufp[j] += packoff;
-                    MPI_Type_free(&ptype);
+                    err = nczipioi_subarray_off_len(varp->ndim, tsize, tssizep, tstart, &packoff, &plen);
+                    if (err == 0){
+                        plen *= varp->esize;
+                        packoff *= varp->esize;
+                        memcpy(sbufp[j], req->xbufs[r] + packoff, plen);    sbufp[j] += plen;
+                    }
+                    else{
+                        CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssizep, tstart, MPI_ORDER_C, varp->etype, &ptype);
+                        CHK_ERR_TYPE_COMMIT(&ptype);
+                    
+                        // Pack data
+                        packoff = 0;
+                        CHK_ERR_PACK(req->xbufs[r], 1, ptype, sbufp[j], ssize[j], &packoff, nczipp->comm);   sbufp[j] += packoff;
+                        MPI_Type_free(&ptype);
+                    }
 
 #ifdef PNETCDF_PROFILING
                     nczipp->nsend++;
@@ -414,27 +423,44 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                         tsize[j] = (int)req->counts[r][j];
                         tssize[j] = (int)osize[j];
                     }
-                    CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
-                    CHK_ERR_TYPE_COMMIT(&ptype);
+                    err = nczipioi_subarray_off_len(varp->ndim, tsize, tssize, tstart, &packoff, &plen);
+                    if (err == 0){
+                        plen *= varp->esize;
+                        packoff *= varp->esize;
+                        memcpy(tbuf, req->xbufs[r] + packoff, plen);
+                        overlapsize = plen;
+                    }
+                    else{
+                        CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
+                        CHK_ERR_TYPE_COMMIT(&ptype);
 
-                    // Pack data into intermediate buffer
-                    packoff = 0;
-                    CHK_ERR_PACK(req->xbufs[r], 1, ptype, tbuf, varp->chunksize, &packoff, nczipp->comm);
-                    MPI_Type_free(&ptype);
-                    overlapsize = packoff;
+                        // Pack data into intermediate buffer
+                        packoff = 0;
+                        CHK_ERR_PACK(req->xbufs[r], 1, ptype, tbuf, varp->chunksize, &packoff, nczipp->comm);
+                        MPI_Type_free(&ptype);
+                        overlapsize = packoff;
+                    }    
 
                     // Pack type from (contiguous) intermediate buffer to chunk buffer
                     for(j = 0; j < varp->ndim; j++){
                         tstart[j] = (int)(ostart[j] - citr[j]);
                         tsize[j] = varp->chunkdim[j];
                     }
-                    CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
-                    CHK_ERR_TYPE_COMMIT(&ptype);
-                    
-                    // Unpack data into chunk buffer
-                    packoff = 0;
-                    CHK_ERR_UNPACK(tbuf, overlapsize, &packoff, varp->chunk_cache[cid]->buf, 1, ptype, nczipp->comm);
-                    MPI_Type_free(&ptype);    
+                    err = nczipioi_subarray_off_len(varp->ndim, tsize, tssize, tstart, &packoff, &plen);
+                    if (err == 0){
+                        plen *= varp->esize;
+                        packoff *= varp->esize;
+                        memcpy(varp->chunk_cache[cid]->buf + packoff, tbuf, plen);
+                    }
+                    else{
+                        CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
+                        CHK_ERR_TYPE_COMMIT(&ptype);
+                        
+                        // Unpack data into chunk buffer
+                        packoff = 0;
+                        CHK_ERR_UNPACK(tbuf, overlapsize, &packoff, varp->chunk_cache[cid]->buf, 1, ptype, nczipp->comm);
+                        MPI_Type_free(&ptype);    
+                    }    
 
 #ifdef PNETCDF_PROFILING
                     nczipp->nlocal++;
@@ -465,15 +491,24 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
             tstartp = (int*)rbufp[j]; rbufp[j] += varp->ndim * sizeof(int);
             tssizep = (int*)rbufp[j]; rbufp[j] += varp->ndim * sizeof(int);
 
-            // Pack type        
-            CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, varp->chunkdim, tssizep, tstartp, MPI_ORDER_C, varp->etype, &ptype);
-            CHK_ERR_TYPE_COMMIT(&ptype);
+            err = nczipioi_subarray_off_len(varp->ndim, varp->chunkdim, tssizep, tstartp, &packoff, &plen);
+            if (err == 0){
+                plen *= varp->esize;
+                packoff *= varp->esize;
+                memcpy(varp->chunk_cache[cid]->buf + packoff, rbufp[j], plen);
+                rbufp[j] += plen;
+            }
+            else{
+                // Pack type        
+                CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, varp->chunkdim, tssizep, tstartp, MPI_ORDER_C, varp->etype, &ptype);
+                CHK_ERR_TYPE_COMMIT(&ptype);
 
-            // Pack data
-            packoff = 0;
-            CHK_ERR_UNPACK(rbufp[j], rsize[j], &packoff, varp->chunk_cache[cid]->buf, 1, ptype, nczipp->comm);
-            rbufp[j] += packoff;
-            MPI_Type_free(&ptype);
+                // Pack data
+                packoff = 0;
+                CHK_ERR_UNPACK(rbufp[j], rsize[j], &packoff, varp->chunk_cache[cid]->buf, 1, ptype, nczipp->comm);
+                rbufp[j] += packoff;
+                MPI_Type_free(&ptype);
+            }
 
 #ifdef PNETCDF_PROFILING
             nczipp->nrecv++;

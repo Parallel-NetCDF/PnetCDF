@@ -67,7 +67,7 @@ int nczipioi_print_profile(NC_zip *nczipp){
     int err;
     int i, j;
     double tmax[NTIMER], tmin[NTIMER], tmean[NTIMER], tvar[NTIMER], tvar_local[NTIMER + 8];
-    double slocal[7], smax[7], smin[7], ssum[7];
+    double slocal[9], smax[9], smin[9], ssum[9];
     char *pprefix = getenv("PNETCDF_PROFILE_PREFIX");
 
     CHK_ERR_REDUCE(nczipp->profile.tt, tmax, NTIMER, MPI_DOUBLE, MPI_MAX, 0, nczipp->comm);
@@ -86,6 +86,9 @@ int nczipioi_print_profile(NC_zip *nczipp){
     slocal[4] = (double)nczipp->nsend;
     slocal[5] = (double)nczipp->nrecv;
     slocal[6] = (double)nczipp->nlocal;
+    slocal[7] = (double)nczipp->var_size_sum;
+    slocal[8] = (double)nczipp->var_zsize_sum;
+
     CHK_ERR_REDUCE(slocal, smax, 7, MPI_DOUBLE, MPI_MAX, 0, nczipp->comm);
     CHK_ERR_REDUCE(slocal, smin, 7, MPI_DOUBLE, MPI_MIN, 0, nczipp->comm);
     CHK_ERR_REDUCE(slocal, ssum, 7, MPI_DOUBLE, MPI_SUM, 0, nczipp->comm);
@@ -124,6 +127,14 @@ foreach(`t', TIMERS, `PRINTTIME(translit(t, `()'))')dnl
         printf("#%%$: nczipio_nlocal_sum: %lf\n", ssum[6]);
         printf("#%%$: nczipio_nlocal_max: %lf\n", smax[6]);
         printf("#%%$: nczipio_nlocal_min: %lf\n\n", smin[6]);
+
+        printf("#%%$: nczipio_var_raw_size_sum: %lf\n", ssum[7]);
+        printf("#%%$: nczipio_var_raw_size_max: %lf\n", smax[7]);
+        printf("#%%$: nczipio_var_raw_size_min: %lf\n\n", smin[7]);
+
+        printf("#%%$: nczipio_var_com_size_sum: %lf\n", ssum[8]);
+        printf("#%%$: nczipio_var_com_size_max: %lf\n", smax[8]);
+        printf("#%%$: nczipio_var_com_size_min: %lf\n\n", smin[8]);
     }
 
     if (pprefix != NULL && *pprefix != '0') {
@@ -168,7 +179,7 @@ foreach(`t', TIMERS, `PRINTNAME(translit(t, `()'))')dnl
 
             fprintf(pfile, "max, ");
             for(j = 0; j < 7; j++){
-                fprintf(pfile, "%lld, ", smax[j]);
+                fprintf(pfile, "%lf, ", smax[j]);
             }
             fprintf(pfile, ", ");
             for(j = 0; j < NTIMER; j++){
@@ -178,7 +189,7 @@ foreach(`t', TIMERS, `PRINTNAME(translit(t, `()'))')dnl
 
             fprintf(pfile, "min, ");
             for(j = 0; j < 7; j++){
-                fprintf(pfile, "%lld, ", smin[j]);
+                fprintf(pfile, "%lf, ", smin[j]);
             }
             fprintf(pfile, ", ");
             for(j = 0; j < NTIMER; j++){
