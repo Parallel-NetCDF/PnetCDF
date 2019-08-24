@@ -19,7 +19,11 @@ AC_INIT([PnetCDF],[1.11.2],[parallel-netcdf@mcs.anl.gov],[pnetcdf],[https://para
 dnl config.h.in will be created by autoreconf (autoheader)
 dnl call it right after AC_INIT, as suggested by autoconf
 AC_CONFIG_HEADERS([src/include/config.h])
-
+AH_TOP([/*
+ * Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+ * See COPYRIGHT notice in top-level directory.
+ */
+])
 AC_CONFIG_SRCDIR([src/include/pnetcdf.h.in])
 
 AC_CONFIG_AUX_DIR([./scripts])
