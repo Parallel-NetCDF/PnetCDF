@@ -285,7 +285,7 @@ int main(int argc, char **argv)
     if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
     else                      snprintf(filename, 256, "%s", argv[optind]);
 
-    len = (len <= 0) ? 2 : len;
+    len = (len <= 0) ? 10 : len;
 
     switch (kind) {
         case(2): cmode = NC_64BIT_OFFSET;             break;
