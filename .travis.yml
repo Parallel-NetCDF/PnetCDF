@@ -1,60 +1,51 @@
 language: c
 
+os:
+  - osx
+  - linux
+
 env:
   global:
    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-   #   via the "travis encrypt" command using the project repo's public key
+   # via the "travis encrypt" command using the project repo's public key
    - secure: "JLc2CesDa4NcxX6lg7w0hQFZkTWPhqiRYRgKFLRer+usrhQKyMTJDTgq8E5Pd8h2PZJrRmecF0XOGl0kL2pj8nu6HAW8Ht7A16rUC6sHcu0uG4e5D63dxxyXHP9OyhCKXR/5AwXhM/dAAU5Dp/I70i6POniYCDboq4JK6o4zw87aN9yRJ+OYHC86lCsovZcYuogDVAjwWBxgeQIWxQD35cA+SM5P0zstUnBrXwjY5lWCj62t+avIKp7eTIh0FwYcj/5JR0q+GoGwN9/YFpdINirAgOiCQDI08ngXCRCrD1gCQq80vxLVvjDhlFoAHI/063QlxOwsIhxcWhyAxrf+xk5iNTiI/89seBDZR/34aAigAJpZ6HkMPWOm4NSBxnIrAvfg6LqFljRzzhSkRhp2an3YvDTmLXE5iWWMCK0+DCfmeBLqCviq5bD8vmMcPqKKUR14f98oxl9kzC0cp6iGwPbdK1RlaomZY5X4Ya93lKDeQbcW/jWu/5Qnjhn8fezqIbe5CIuG4id77URLn5tt62wInCD9wlNvZ0hc7znd3mFWMpDXfvQXrhnDdG2QRYwc3J7lhWY8aJZuooh2HxIM1OsxCGWURcQBEWYFpkXHNWCWPKl3Gy0Xva1BrlPDIXDJoDjaqSBNV6dqHR65Pcl4UkOK1/d/kuM7U2V8q/Rox9I="
 
 addons:
   coverity_scan:
-    # GitHub project metadata
-    # ** specific to your project **
     project:
       name: "Parallel-NetCDF/PnetCDF"
       description: "PnetCDF nightly build submitted via Travis CI / Coverity Scan"
-    # build_command_prepend: ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug --silent
     notification_email: wkliao@eecs.northwestern.edu
     build_command: make -s V=1 LIBTOOLFLAGS=--silent -j4 tests
     branch_pattern: master
+  apt:
+    packages:
+      - gfortran
+      - autoconf
+      - automake
+      - libtool
+      - libtool-bin
+      - mpich
+      - libmpich-dev
+    update: true
+    # apt-package-whitelist can be found in
+    # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
+
 
 before_install:
   - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
   - test -n $CC && unset CC
-  # apt-package-whitelist can be found in
-  # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
-  - sudo add-apt-repository ppa:dns/gnu -y
-  # - sudo apt-get update -qq
-  - sudo apt-get install -y gfortran
-  - sudo apt-get install --only-upgrade autoconf
+  - if [ $TRAVIS_OS_NAME == osx ]; then brew update; fi
+  - if [ $TRAVIS_OS_NAME == osx ]; then brew install mpich; fi
   - autoconf --version
-  - sudo apt-get install --only-upgrade automake
   - automake --version
-  - sudo apt-get install --only-upgrade libtool
-  - sudo apt-get install -y libtool-bin
-  - libtool --version
-  - sudo apt-get install -y mpich
-  - sudo apt-get install -y libmpich-dev
+  - if [ $TRAVIS_OS_NAME = linux ]; then libtool --version ; else libtool -V ; fi
   - mpichversion
   - autoreconf -i
-  - ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes 
-  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes"
-  # string substitute for SVN keyword LastChangedDate
-  # Below is for Redhat
-  # - DateStr=`stat -f "%Sm" -t "%F %T %z (%a, %d %b %Y)" configure.ac` ; sed -e "s/LastChangedDate/LastChangedDate: $DateStr /g" -i "" configure
-  # Below is for Ubuntu
-  # - DateStr=`date -r configure.ac +"%F %T %z (%a, %d %b %Y)"` ; sed -e "s/LastChangedDate/LastChangedDate $DateStr /g" -i configure
-  # dump the Coverity Scan SCM log file
-  # - cat /home/travis/build/wkliao/pnetcdf/cov-int/scm_log.txt
 
-script: ./travis-run-tests.sh
-# script: if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then ./travis-run-tests.sh ; fi
-  # continue the above "build_command" for static library only (default)
-  # - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS=--silent
-  # build both static and shared libraries
-  # - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-shared LDFLAGS='-Wl,--allow-shlib-undefined'"
-  # build shared library only
-  # - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-shared --disable-static LDFLAGS='-Wl,--allow-shlib-undefined'"
+script:
+  - ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes
+  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes"
 
 after_success:
   - make -s distclean
@@ -62,11 +53,12 @@ after_success:
 after_failure:
   - cat ./config.log
   - make -s distclean
-  # - cat /home/travis/build/wkliao/pnetcdf/cov-int/build-log.txt
 
 notifications:
   email: false
 
+# to build all branches
 branches:
-    only:
-        - master
+  only:
+  - master
+  - /.*/

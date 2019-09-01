@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libgen.h> /* basename() */
-#include <unistd.h> /* unlink() */
+#include <unistd.h> /* _POSIX_BARRIERS, unlink() */
 
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -33,6 +33,70 @@
 #define NTHREADS 6
 #define NY 5
 #define NX 4
+
+#if !defined(_POSIX_BARRIERS) || _POSIX_BARRIERS <= 0
+/* According to opengroup.org, barriers are defined in the optional part of
+ * POSIX standard. For example, Mac OSX does not have pthread_barrier. If
+ * barriers were implemented, the _POSIX_BARRIERS macro is defined as a
+ * positive number.
+ */
+
+#include <errno.h>
+
+typedef int pthread_barrierattr_t;
+typedef struct {
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+    int count;
+    int numThreads;
+} pthread_barrier_t;
+
+static int pthread_barrier_init(pthread_barrier_t           *barrier,
+                                const pthread_barrierattr_t *attr,
+                                unsigned int                 count)
+{
+    if (count == 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (pthread_mutex_init(&barrier->mutex, 0) < 0)
+        return -1;
+
+    if (pthread_cond_init(&barrier->cond, 0) < 0) {
+        pthread_mutex_destroy(&barrier->mutex);
+        return -1;
+    }
+    barrier->numThreads = count;
+    barrier->count = 0;
+
+    return 0;
+}
+
+static int pthread_barrier_destroy(pthread_barrier_t *barrier)
+{
+    pthread_cond_destroy(&barrier->cond);
+    pthread_mutex_destroy(&barrier->mutex);
+    return 0;
+}
+
+static int pthread_barrier_wait(pthread_barrier_t *barrier)
+{
+    int ret;
+    pthread_mutex_lock(&barrier->mutex);
+    ++(barrier->count);
+    if (barrier->count >= barrier->numThreads) {
+        barrier->count = 0;
+        pthread_cond_broadcast(&barrier->cond);
+        ret = 1;
+    } else {
+        pthread_cond_wait(&barrier->cond, &barrier->mutex);
+        ret = 0;
+    }
+    pthread_mutex_unlock(&barrier->mutex);
+    return ret;
+}
+#endif
 
 /* pthread barrier object */
 static pthread_barrier_t barr;

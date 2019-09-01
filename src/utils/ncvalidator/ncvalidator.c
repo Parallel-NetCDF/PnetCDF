@@ -45,7 +45,7 @@ static const char nada[4] = {0, 0, 0, 0};
 /* useful for aligning memory */
 #define _RNDUP(x, unit) ((((x) + (unit) - 1) / (unit)) * (unit))
 
-#define ERR_ADDR (((size_t) gbp->pos - (size_t) gbp->base) + gbp->offset - gbp->size)
+#define ERR_ADDR (((size_t)gbp->pos - (size_t)gbp->base) + (size_t)(gbp->offset - gbp->size))
 
 #define IS_RECVAR(vp) ((vp)->shape != NULL ? (*(vp)->shape == NC_UNLIMITED) : 0 )
 
