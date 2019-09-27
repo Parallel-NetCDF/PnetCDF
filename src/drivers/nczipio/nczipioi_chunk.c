@@ -151,11 +151,13 @@ int nczipioi_chunk_itr_next_ex(NC_zip_var *varp, const MPI_Offset *start, const 
         return 0;
     }
 
-    ostart[i] += ocount[i];
-    ocount[i] = min(varp->chunkdim[i], start[i] + count[i] - ostart[i]);
-    for (i++; i < varp->ndim; i++) {
-        ostart[i] = start[i];
-        ocount[i] = min(count[i], citr[i] + varp->chunkdim[i] - ostart[i]);
+    if (i == varp->ndim - 1){
+        ostart[i] += ocount[i];
+        ocount[i] = min(varp->chunkdim[i], start[i] + count[i] - ostart[i]);
+        for (i++; i < varp->ndim; i++) {
+            ostart[i] = start[i];
+            ocount[i] = min(count[i], citr[i] + varp->chunkdim[i] - ostart[i]);
+        }
     }
 
     return 1;

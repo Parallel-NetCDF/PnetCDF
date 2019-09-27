@@ -36,12 +36,27 @@
             err = ncmpii_error_mpi2nc(err, "MPI_Pack"); \
             DEBUG_RETURN_ERROR(err) \
         }
+#ifdef PNETCDF_DEBUG
+#define CHK_ERR_UNPACK(V0,V1,V2,V3,V4,V5,V6) { \
+        int esize; \
+        MPI_Type_size(V5, &esize); \
+        if (V1 - *((int*)(V2)) < V4 * esize){ \
+            abort(); \
+        } \
+        err = MPI_Unpack(V0,V1,V2,V3,V4,V5,V6); \
+        if (err != MPI_SUCCESS){ \
+            err = ncmpii_error_mpi2nc(err, "MPI_Unpack"); \
+            DEBUG_RETURN_ERROR(err) \
+        } \
+    }
+#else
 #define CHK_ERR_UNPACK(V0,V1,V2,V3,V4,V5,V6) \
         err = MPI_Unpack(V0,V1,V2,V3,V4,V5,V6); \
         if (err != MPI_SUCCESS){ \
             err = ncmpii_error_mpi2nc(err, "MPI_Unpack"); \
             DEBUG_RETURN_ERROR(err) \
         }
+#endif
 #define CHK_ERR_TYPE_COMMIT(V0) \
         err = MPI_Type_commit(V0); \
         if (err != MPI_SUCCESS){ \

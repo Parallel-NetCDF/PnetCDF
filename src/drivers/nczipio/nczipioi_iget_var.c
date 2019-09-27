@@ -439,6 +439,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                         plen *= varp->esize;
                         poff *= varp->esize;
                         memcpy(tbuf, varp->chunk_cache[cid]->buf + poff, plen);
+                        overlapsize = plen;
                     }
                     else{
                         CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, varp->etype, &ptype);
