@@ -121,7 +121,10 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Issues related to MPI library vendors:
-  + none
+  + Per-file thread-safe capability may encounter errors when using OpenMPI
+    with ROMIO backend, i.e. `--mca io romio321` is used at mpirun command line.
+    See OpenMPI github issue
+    [6951](https://github.com/open-mpi/ompi/issues/6951)
 
 * Issues related to Darshan library:
   + none
