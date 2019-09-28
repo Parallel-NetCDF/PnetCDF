@@ -67,8 +67,10 @@ static int pthread_barrier_init(pthread_barrier_t           *barrier,
         pthread_mutex_destroy(&barrier->mutex);
         return -1;
     }
+    pthread_mutex_lock(&barrier->mutex);
     barrier->numThreads = count;
     barrier->count = 0;
+    pthread_mutex_unlock(&barrier->mutex);
 
     return 0;
 }
