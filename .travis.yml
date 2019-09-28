@@ -17,7 +17,7 @@ addons:
       description: "PnetCDF nightly build submitted via Travis CI / Coverity Scan"
     notification_email: wkliao@eecs.northwestern.edu
     build_command_prepend: ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes
-    build_command: make tests
+    build_command: make tests -j8
     branch_pattern: master
   apt:
     packages:
@@ -45,7 +45,7 @@ before_install:
   - autoreconf -i
 
 script:
-  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes"
+  - make distcheck -s -j8 V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes"
 
 after_success:
   - make -s distclean
