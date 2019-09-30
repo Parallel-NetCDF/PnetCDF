@@ -88,8 +88,19 @@ int main(int argc, char **argv) {
 
     /* rank 0 creates a NETCDF4 file */
     if (rank == 0) {
-        err = create_nc4(filename);
-        if (err) goto fn_exit;
+        /* remove the file system type prefix name if there is any.
+         * For example, when filename = "lustre:/home/foo/testfile.nc", remove
+         * "lustre:" to make path = "/home/foo/testfile.nc" in open() below
+         */
+        char *path = strchr(filename, ':');
+        if (path == NULL) path = filename; /* no prefix */
+        else              path++;
+
+        err = create_nc4(path);
+        if (err) {
+            nerrs++;
+            goto fn_exit;
+        }
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
