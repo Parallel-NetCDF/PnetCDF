@@ -27,7 +27,7 @@ int cmp_int(int *in, int n, char *lbl){
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
-    all = malloc(n * sizeof(int));
+    all = malloc(np * sizeof(int));
 
     MPI_Gather(&n, 1, MPI_INT, all, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if (rank == 0) {
