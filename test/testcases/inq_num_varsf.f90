@@ -60,7 +60,7 @@
           character(LEN=256) filename, cmd, msg
           integer err, ierr, nprocs, rank, cmode, ncid, get_args
           integer varid(7), dimid(3), dimid_1D(1), dimid_2D(2)
-          integer nerrs, nvars, num_rec_vars, num_fix_vars
+          integer nerrs, nvars, num_rec_vars, num_fix_vars, old_mode
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
 
           call MPI_Init(ierr)
@@ -116,6 +116,10 @@
           call check(err, 'In nf90mpi_def_var: FIX_VAR_2')
           err = nf90mpi_def_var(ncid, "FIX_VAR_3", NF90_INT, dimid_1D, varid(7))
           call check(err, 'In nf90mpi_def_var: FIX_VAR_3')
+
+          ! set fill mode, so ncmpidiff can compare 2 output files without error
+          err = nf90mpi_set_fill(ncid, NF_FILL, old_mode)
+          call check(err, 'In nf90mpi_set_fill: ')
 
           ! do not forget to exit define mode
           err = nf90mpi_enddef(ncid)

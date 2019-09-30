@@ -165,6 +165,9 @@ tst_fmt(char *filename, int cmode)
         EXP_ERR_N_TYPE(expect_err, "ulonglong", i)
     }
 
+    /* set fill mode, so ncmpidiff can compare 2 output files without error */
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
+
     err = ncmpi_close(ncid); CHECK_ERR
 
     return nerrs;

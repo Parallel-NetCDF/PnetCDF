@@ -96,6 +96,9 @@ tst_fmt(char *filename, int cmode)
 
     nerrs += check_num_vars(ncid, 7, 4, 3);
 
+    /* set fill mode, so ncmpidiff can compare 2 output files without error */
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
+
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* NULL argument test */

@@ -128,8 +128,11 @@ int main(int argc, char** argv) {
     MPI_Info_free(&info);
 
     err = ncmpi_def_var(ncid1, "var", NC_INT, 0, NULL, &varid); CHECK_ERR
-
     err = ncmpi_def_var(ncid2, "var", NC_INT, 0, NULL, &varid); CHECK_ERR
+
+    /* set fill mode, so ncmpidiff can compare 2 output files without error */
+    err = ncmpi_set_fill(ncid1, NC_FILL, NULL); CHECK_ERR
+    err = ncmpi_set_fill(ncid2, NC_FILL, NULL); CHECK_ERR
 
     /* calling ncmpi_enddef() to write the file header */
     err = ncmpi_enddef(ncid2); CHECK_ERR

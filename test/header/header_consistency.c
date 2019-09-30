@@ -220,6 +220,7 @@ int test_var(char *filename, int safe_mode)
         EXP_SAFE_ERR(NC_EMULTIDEFINE_ATTR_NAME)
     else
         CHECK_ERR
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* Test inconsistent global attribute type -------------------------------*/
@@ -234,6 +235,7 @@ int test_var(char *filename, int safe_mode)
         EXP_SAFE_ERR(NC_EMULTIDEFINE_ATTR_TYPE)
     else
         CHECK_ERR
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* Test inconsistent global attribute length -----------------------------*/
@@ -249,6 +251,7 @@ int test_var(char *filename, int safe_mode)
         EXP_SAFE_ERR(NC_EMULTIDEFINE_ATTR_LEN)
     else
         CHECK_ERR
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* Test inconsistent global attribute length -----------------------------*/
@@ -261,6 +264,7 @@ int test_var(char *filename, int safe_mode)
         EXP_SAFE_ERR(NC_EMULTIDEFINE_ATTR_VAL)
     else
         CHECK_ERR
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* Test inconsistent variable name ---------------------------------------*/
@@ -272,6 +276,7 @@ int test_var(char *filename, int safe_mode)
         EXP_SAFE_ERR(NC_EMULTIDEFINE_VAR_NAME)
     else
         CHECK_ERR
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* Test inconsistent variable ndims --------------------------------------*/
@@ -286,6 +291,7 @@ int test_var(char *filename, int safe_mode)
         EXP_SAFE_ERR(NC_EMULTIDEFINE_VAR_NDIMS)
     else
         CHECK_ERR
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* Test inconsistent variable type ---------------------------------------*/
@@ -299,6 +305,7 @@ int test_var(char *filename, int safe_mode)
         EXP_SAFE_ERR(NC_EMULTIDEFINE_VAR_TYPE)
     else
         CHECK_ERR
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* Test inconsistent variable length -------------------------------------*/
@@ -314,6 +321,7 @@ int test_var(char *filename, int safe_mode)
         EXP_SAFE_ERR(NC_EMULTIDEFINE_VAR_DIMIDS)
     else
         CHECK_ERR
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* Test inconsistent variable dimension IDs ------------------------------*/
@@ -329,7 +337,7 @@ int test_var(char *filename, int safe_mode)
         EXP_SAFE_ERR(NC_EMULTIDEFINE_VAR_DIMIDS)
     else
         CHECK_ERR
-
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     return nerrs;
