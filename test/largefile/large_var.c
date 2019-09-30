@@ -246,6 +246,7 @@ int main(int argc, char** argv)
     }
 
     err = ncmpi_close(ncid); CHECK_ERR
+    free(buf);
 #endif
 
     /* Test classic format */
