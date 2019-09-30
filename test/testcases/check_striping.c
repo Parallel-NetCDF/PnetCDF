@@ -33,7 +33,7 @@ static int
 tst_fmt(char *filename, int cmode)
 {
     int err, nerrs=0, ncid, fmt;
-    int striping_size, striping_count, root_striping_size, root_striping_count;
+    int striping_size=0, striping_count=0, root_striping_size, root_striping_count;
 
     cmode |= NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR

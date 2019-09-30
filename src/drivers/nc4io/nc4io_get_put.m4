@@ -288,7 +288,7 @@ nc4io_get_var(void             *ncdp,
               MPI_Datatype      buftype,
               int               reqMode)
 {
-    int i, err, apikind, ndims;
+    int i, err, apikind, ndims=0;
     size_t *sstart=NULL, *scount=NULL;
     ptrdiff_t *sstride=NULL, *simap=NULL;
     MPI_Offset getsize, vsize;
@@ -395,7 +395,7 @@ nc4io_put_var(void             *ncdp,
               MPI_Datatype      buftype,
               int               reqMode)
 {
-    int i, err, apikind, ndims;
+    int i, err, apikind, ndims=0;
     size_t *sstart=NULL, *scount=NULL;
     ptrdiff_t *sstride=NULL, *simap=NULL;
     MPI_Offset putsize, vsize;
