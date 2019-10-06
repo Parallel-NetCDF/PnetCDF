@@ -1,18 +1,14 @@
-/*
-  Copyright 2004-2006, UCAR/Unidata
-  See COPYRIGHT file for copying and redistribution conditions.
-
-  This is part of netCDF.
-
-  This program also takes a long time to run - it writes some data in
-  a very large file, and then reads it all back to be sure it's
-  correct.
-
-  This program is an add-on test to check very large 64-bit offset
-  files (8 GB, so make sure you have the disk space!).
-
-  $Id$
-*/
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ *  Copyright (C) 2014, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ *
+ *  This program tests writing 2 record variables into a file of size larger
+ *  than 4 GiB. First variable is a 4D array of total size > 4 GiB and the
+ *  second is a small 2D array. The contents of both variables are read back
+ *  to check whether they are written correctly.
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,29 +16,14 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-static
-void check_err(const int stat, const int line, const char *file) {
-    if (stat != NC_NOERR) {
-	   (void) fprintf(stderr, "line %d of %s: %s\n", line, file, ncmpi_strerror(stat));
-        exit(1);
-    }
+#define CHECK_ERR { \
+    if (err != NC_NOERR) { \
+        nerrs++; \
+        printf("Error at line %d in %s: (%s)\n", \
+        __LINE__,__FILE__,ncmpi_strerrno(err)); \
+        goto fn_exit; \
+    } \
 }
-
-int
-main(int argc, char **argv) {
-
-   int  stat;			/* return status */
-   int  ncid;			/* netCDF id */
-   int rec, i, j, k, rank, nprocs, nerrs=0;
-   signed char x[] = {42, 21};
-   char filename[256];
-
-   /* dimension ids */
-   int rec_dim;
-   int i_dim;
-   int j_dim;
-   int k_dim;
-   int n_dim;
 
 #define NUMRECS 1
 #define I_LEN 4104
@@ -50,28 +31,130 @@ main(int argc, char **argv) {
 #define K_LEN 1023
 #define N_LEN 2
 
-   /* dimension lengths */
-   MPI_Offset rec_len = NC_UNLIMITED;
-   MPI_Offset i_len = I_LEN;
-   MPI_Offset j_len = J_LEN;
-   MPI_Offset k_len = K_LEN;
-   MPI_Offset n_len = N_LEN;
+static int
+test_large_file(char *filename, int fmt_flag)
+{
+    int err, nerrs=0, ncid, rec_dim, varid, x_id;
+    int n, rec, i, j, k, dims[4];
+    MPI_Offset start[4] = {0, 0, 0, 0};
+    MPI_Offset count[4] = {1, 1, J_LEN, K_LEN};
 
-   /* variable ids */
-   int var1_id;
-   int x_id;
+    /* I/O buffers */
+    signed char x[2], *buf;
 
-   /* rank (number of dimensions) for each variable */
-#  define RANK_var1 4
-#  define RANK_x 2
+    printf("\n*** Testing large files, slowly.\n");
+    printf("*** Creating large file %s...", filename);
 
-   /* variable shapes */
-   int var1_dims[RANK_var1];
-   int x_dims[RANK_x];
+    err = ncmpi_create(MPI_COMM_SELF, filename, NC_CLOBBER|fmt_flag,
+                       MPI_INFO_NULL, &ncid);
+    if (err != NC_NOERR) {
+        printf("Error at line %d in %s: (%s)\n", __LINE__,__FILE__,ncmpi_strerrno(err));
+        return 1;
+    }
 
-   MPI_Init(&argc, &argv);
-   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    buf = (signed char*) malloc(J_LEN * K_LEN);
+
+    /* define a 4D record variable */
+    err = ncmpi_def_dim(ncid, "rec", NC_UNLIMITED, &dims[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "i",   I_LEN,        &dims[1]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "j",   J_LEN,        &dims[2]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "k",   K_LEN,        &dims[3]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var", NC_BYTE, 4, dims, &varid);
+    CHECK_ERR
+
+    /* define a 2D record variable */
+    err = ncmpi_def_dim(ncid, "n", N_LEN, &dims[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "x", NC_BYTE, 2, dims, &x_id); CHECK_ERR
+
+    /* don't initialize variables with fill values */
+    err = ncmpi_set_fill(ncid, NC_NOFILL, 0); CHECK_ERR
+
+    /* leave define mode */
+    err = ncmpi_enddef(ncid); CHECK_ERR
+
+    /* write var */
+    n = 0;
+    for (rec=0; rec<NUMRECS; rec++) {
+        start[0] = rec;
+        for (i=0; i<I_LEN; i++) { /* initialize write buf */
+            for (j=0; j<J_LEN; j++) {
+                for (k=0; k<K_LEN; k++) {
+                    buf[j*K_LEN+k] = (signed char) n % 128;
+                    n++;
+                }
+            }
+            start[1] = i;
+            count[1] = 1;
+            err = ncmpi_put_vara_schar_all(ncid, varid, start, count, buf);
+            CHECK_ERR
+        }
+        buf[0] = 42; /* initialize write buf */
+        buf[1] = 21;
+        start[1] = 0;
+        count[1] = N_LEN;
+        err = ncmpi_put_vara_schar_all(ncid, x_id, start, count, buf);
+        CHECK_ERR
+    }
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    printf("ok\n");
+    printf("*** Reading large file %s...", filename);
+
+    err = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    CHECK_ERR
+
+    /* read variables and check their contents */
+    n = 0;
+    for (rec=0; rec<NUMRECS; rec++) {
+        start[0] = rec;
+        for (i=0; i<I_LEN; i++) {
+            for (j=0; j<J_LEN; j++) /* set read buf to all -1 */
+                for (k=0; k<K_LEN; k++)
+                    buf[j*K_LEN+k] = (signed char) -1;
+
+            start[1] = i;
+            count[1] = 1;
+            err = ncmpi_get_vara_schar_all(ncid, varid, start, count, buf);
+            CHECK_ERR
+
+            for (j=0; j<J_LEN; j++) {
+                for (k=0; k<K_LEN; k++) {
+                    if (buf[j*K_LEN+k] != (signed char) n % 128) {
+                        printf("Error on read, var[%d, %d, %d, %d] = %d wrong, should be %d !\n",
+                               rec, i, j, k, buf[j*K_LEN+k], (signed char) n % 128);
+                        nerrs++;
+                        goto fn_exit;
+                    }
+                    n++;
+                }
+            }
+        }
+
+        /* read variable x and check its contents */
+        buf[0] = buf[1] = -1;
+        start[1] = 0;
+        count[1] = N_LEN;
+        ncmpi_get_vara_schar_all(ncid, x_id, start, count, buf); CHECK_ERR
+        if (buf[0] != 42 || buf[1] != 21) {
+            printf("Error on read, x[] = %d, %d\n", buf[0], buf[1]);
+            nerrs++;
+        }
+    }
+    err = ncmpi_close(ncid); CHECK_ERR
+
+fn_exit:
+    free(buf);
+    return nerrs;
+}
+
+int
+main(int argc, char **argv)
+{
+    char filename[256];
+    int nerrs=0, rank;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
@@ -83,238 +166,15 @@ main(int argc, char **argv) {
     else           strcpy(filename, "testfile.nc");
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
-   if (rank > 0) goto fn_exit3;
-   printf("\n*** Testing large files, slowly.\n");
-   printf("*** Creating large file %s...", filename);
+    if (rank > 0) goto prog_exit;
 
-#ifdef ENABLE_NETCDF4
     /* Test NetCDF 4 first as ncvalidator checks only classic files */
-    /* enter define mode */
-    stat = ncmpi_create(MPI_COMM_SELF, filename, NC_CLOBBER|NC_NETCDF4,
-                        MPI_INFO_NULL, &ncid);
-    check_err(stat,__LINE__,__FILE__);
-
-    /* define dimensions */
-    stat = ncmpi_def_dim(ncid, "rec", rec_len, &rec_dim);
-    check_err(stat,__LINE__,__FILE__);
-    stat = ncmpi_def_dim(ncid, "i", i_len, &i_dim);
-    check_err(stat,__LINE__,__FILE__);
-    stat = ncmpi_def_dim(ncid, "j", j_len, &j_dim);
-    check_err(stat,__LINE__,__FILE__);
-    stat = ncmpi_def_dim(ncid, "k", k_len, &k_dim);
-    check_err(stat,__LINE__,__FILE__);
-    stat = ncmpi_def_dim(ncid, "n", n_len, &n_dim);
-    check_err(stat,__LINE__,__FILE__);
-
-    /* define variables */
-
-    var1_dims[0] = rec_dim;
-    var1_dims[1] = i_dim;
-    var1_dims[2] = j_dim;
-    var1_dims[3] = k_dim;
-    stat = ncmpi_def_var(ncid, "var1", NC_BYTE, RANK_var1, var1_dims, &var1_id);
-    check_err(stat,__LINE__,__FILE__);
-
-    x_dims[0] = rec_dim;
-    x_dims[1] = n_dim;
-    stat = ncmpi_def_var(ncid, "x", NC_BYTE, RANK_x, x_dims, &x_id);
-    check_err(stat,__LINE__,__FILE__);
-
-    /* don't initialize variables with fill values */
-    stat = ncmpi_set_fill(ncid, NC_NOFILL, 0);
-    check_err(stat,__LINE__,__FILE__);
-
-    /* leave define mode */
-    stat = ncmpi_enddef (ncid);
-    check_err(stat,__LINE__,__FILE__);
-
-    {			/* store var1 */
-        int n = 0;
-        static signed char var1[J_LEN][K_LEN];
-        static MPI_Offset var1_start[RANK_var1] = {0, 0, 0, 0};
-        static MPI_Offset var1_count[RANK_var1] = {1, 1, J_LEN, K_LEN};
-        static MPI_Offset x_start[RANK_x] = {0, 0};
-        static MPI_Offset x_count[RANK_x] = {1, N_LEN};
-        for (rec=0; rec<NUMRECS; rec++) {
-            var1_start[0] = rec;
-            x_start[0] = rec;
-            for (i=0; i<I_LEN; i++) {
-                for (j=0; j<J_LEN; j++) {
-                    for (k=0; k<K_LEN; k++) {
-                        var1[j][k] = n++;
-                    }
-                }
-                var1_start[1] = i;
-                stat = ncmpi_put_vara_schar_all(ncid, var1_id, var1_start,
-                                                var1_count, &var1[0][0]);
-                check_err(stat,__LINE__,__FILE__);
-            }
-        }
-        stat = ncmpi_put_vara_schar_all(ncid, x_id, x_start, x_count, x);
-        check_err(stat,__LINE__,__FILE__);
-    }
-
-    stat = ncmpi_close(ncid);
-    check_err(stat,__LINE__,__FILE__);
-
-    printf("ok\n");
-    printf("*** Reading large file %s...", filename);
-
-    stat = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE,
-                      MPI_INFO_NULL, &ncid);
-    check_err(stat,__LINE__,__FILE__);
-
-    {			/* read var1 */
-        int n = 0;
-        static signed char var1[J_LEN][K_LEN];
-        static MPI_Offset var1_start[RANK_var1] = {0, 0, 0, 0};
-        static MPI_Offset var1_count[RANK_var1] = {1, 1, J_LEN, K_LEN};
-        static MPI_Offset x_start[RANK_x] = {0, 0};
-        static MPI_Offset x_count[RANK_x] = {1, N_LEN};
-        for (rec=0; rec<NUMRECS; rec++) {
-            var1_start[0] = rec;
-            x_start[0] = rec;
-            for (i=0; i<I_LEN; i++) {
-                var1_start[1] = i;
-                stat = ncmpi_get_vara_schar_all(ncid, var1_id, var1_start,
-                                                var1_count, &var1[0][0]);
-                check_err(stat,__LINE__,__FILE__);
-                for (j=0; j<J_LEN; j++) {
-                    for (k=0; k<K_LEN; k++) {
-                        if (var1[j][k] != (signed char) n) {
-                            printf("Error on read, var1[%d, %d, %d, %d] = %d wrong, "
-                            "should be %d !\n", rec, i, j, k, var1[j][k], (signed char) n);
-                            nerrs++;
-                            goto fn_exit1;
-                        }
-                        n++;
-                    }
-                }
-            }
-            ncmpi_get_vara_schar_all(ncid, x_id, x_start, x_count, x);
-            if (x[0] != 42 || x[1] != 21) {
-                printf("Error on read, x[] = %d, %d\n", x[0], x[1]);
-                nerrs++;
-            }
-        }
-    }
-fn_exit1:
-    stat = ncmpi_close(ncid);
-    check_err(stat,__LINE__,__FILE__);
+#ifdef ENABLE_NETCDF4
+    nerrs += test_large_file(filename, NC_NETCDF4);
 #endif
 
-    /* Test traditional format */
-    stat = ncmpi_create(MPI_COMM_SELF, filename, NC_CLOBBER|NC_64BIT_DATA,
-                        MPI_INFO_NULL, &ncid);
-    check_err(stat,__LINE__,__FILE__);
-
-    /* define dimensions */
-    stat = ncmpi_def_dim(ncid, "rec", rec_len, &rec_dim);
-    check_err(stat,__LINE__,__FILE__);
-    stat = ncmpi_def_dim(ncid, "i", i_len, &i_dim);
-    check_err(stat,__LINE__,__FILE__);
-    stat = ncmpi_def_dim(ncid, "j", j_len, &j_dim);
-    check_err(stat,__LINE__,__FILE__);
-    stat = ncmpi_def_dim(ncid, "k", k_len, &k_dim);
-    check_err(stat,__LINE__,__FILE__);
-    stat = ncmpi_def_dim(ncid, "n", n_len, &n_dim);
-    check_err(stat,__LINE__,__FILE__);
-
-    /* define variables */
-
-    var1_dims[0] = rec_dim;
-    var1_dims[1] = i_dim;
-    var1_dims[2] = j_dim;
-    var1_dims[3] = k_dim;
-    stat = ncmpi_def_var(ncid, "var1", NC_BYTE, RANK_var1, var1_dims, &var1_id);
-    check_err(stat,__LINE__,__FILE__);
-
-    x_dims[0] = rec_dim;
-    x_dims[1] = n_dim;
-    stat = ncmpi_def_var(ncid, "x", NC_BYTE, RANK_x, x_dims, &x_id);
-    check_err(stat,__LINE__,__FILE__);
-
-    /* don't initialize variables with fill values */
-    stat = ncmpi_set_fill(ncid, NC_NOFILL, 0);
-    check_err(stat,__LINE__,__FILE__);
-
-    /* leave define mode */
-    stat = ncmpi_enddef (ncid);
-    check_err(stat,__LINE__,__FILE__);
-
-    {			/* store var1 */
-        int n = 0;
-        static signed char var1[J_LEN][K_LEN];
-        static MPI_Offset var1_start[RANK_var1] = {0, 0, 0, 0};
-        static MPI_Offset var1_count[RANK_var1] = {1, 1, J_LEN, K_LEN};
-        static MPI_Offset x_start[RANK_x] = {0, 0};
-        static MPI_Offset x_count[RANK_x] = {1, N_LEN};
-        for (rec=0; rec<NUMRECS; rec++) {
-            var1_start[0] = rec;
-            x_start[0] = rec;
-            for (i=0; i<I_LEN; i++) {
-                for (j=0; j<J_LEN; j++) {
-                    for (k=0; k<K_LEN; k++) {
-                        var1[j][k] = n++;
-                    }
-                }
-                var1_start[1] = i;
-                stat = ncmpi_put_vara_schar_all(ncid, var1_id, var1_start,
-                                                var1_count, &var1[0][0]);
-                check_err(stat,__LINE__,__FILE__);
-            }
-        }
-        stat = ncmpi_put_vara_schar_all(ncid, x_id, x_start, x_count, x);
-        check_err(stat,__LINE__,__FILE__);
-    }
-
-    stat = ncmpi_close(ncid);
-    check_err(stat,__LINE__,__FILE__);
-
-    printf("ok\n");
-    printf("*** Reading large file %s...", filename);
-
-    stat = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE,
-                      MPI_INFO_NULL, &ncid);
-    check_err(stat,__LINE__,__FILE__);
-
-    {			/* read var1 */
-        int n = 0;
-        static signed char var1[J_LEN][K_LEN];
-        static MPI_Offset var1_start[RANK_var1] = {0, 0, 0, 0};
-        static MPI_Offset var1_count[RANK_var1] = {1, 1, J_LEN, K_LEN};
-        static MPI_Offset x_start[RANK_x] = {0, 0};
-        static MPI_Offset x_count[RANK_x] = {1, N_LEN};
-        for (rec=0; rec<NUMRECS; rec++) {
-            var1_start[0] = rec;
-            x_start[0] = rec;
-            for (i=0; i<I_LEN; i++) {
-                var1_start[1] = i;
-                stat = ncmpi_get_vara_schar_all(ncid, var1_id, var1_start,
-                                                var1_count, &var1[0][0]);
-                check_err(stat,__LINE__,__FILE__);
-                for (j=0; j<J_LEN; j++) {
-                    for (k=0; k<K_LEN; k++) {
-                        if (var1[j][k] != (signed char) n) {
-                            printf("Error on read, var1[%d, %d, %d, %d] = %d wrong, "
-                            "should be %d !\n", rec, i, j, k, var1[j][k], (signed char) n);
-                            nerrs++;
-                            goto fn_exit2;
-                        }
-                        n++;
-                    }
-                }
-            }
-            ncmpi_get_vara_schar_all(ncid, x_id, x_start, x_count, x);
-            if (x[0] != 42 || x[1] != 21) {
-                printf("Error on read, x[] = %d, %d\n", x[0], x[1]);
-                nerrs++;
-            }
-        }
-    }
-fn_exit2:
-    stat = ncmpi_close(ncid);
-    check_err(stat,__LINE__,__FILE__);
+    /* Test CDF-5 format */
+    nerrs += test_large_file(filename, NC_64BIT_DATA);
 
     if (nerrs == 0) {
         printf("ok\n");
@@ -323,7 +183,7 @@ fn_exit2:
     else
         printf("\n*** Tests failed!\n");
 
-fn_exit3:
+prog_exit:
     MPI_Finalize();
     return (nerrs > 0);
 }
