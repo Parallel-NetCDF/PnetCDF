@@ -79,8 +79,8 @@ test_large_file(char *filename, int fmt_flag)
         for (i=0; i<I_LEN; i++) { /* initialize write buf */
             for (j=0; j<J_LEN; j++) {
                 for (k=0; k<K_LEN; k++) {
-                    buf[j*K_LEN+k] = (signed char) n % 128;
-                    n++;
+                    buf[j*K_LEN+k] = (signed char)n;
+                    n = (n == 127) ? 0 : (n+1);
                 }
             }
             start[1] = i;
@@ -121,11 +121,11 @@ test_large_file(char *filename, int fmt_flag)
                 for (k=0; k<K_LEN; k++) {
                     if (buf[j*K_LEN+k] != (signed char) n % 128) {
                         printf("Error on read, var[%d, %d, %d, %d] = %d wrong, should be %d !\n",
-                               rec, i, j, k, buf[j*K_LEN+k], (signed char) n % 128);
+                               rec, i, j, k, buf[j*K_LEN+k], (signed char)n);
                         nerrs++;
                         goto fn_exit;
                     }
-                    n++;
+                    n = (n == 127) ? 0 : (n+1);
                 }
             }
         }
