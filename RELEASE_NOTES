@@ -6,6 +6,10 @@ PnetCDF Release Notes
 Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
 -------------------------------------
 
+-------------------------------------
+Version 1.12.0 (September 30, 2019)
+-------------------------------------
+
 * New features
   + BP file read capability is supported -- By being built on top of ADIOS
     library PnetCDF can now read files in BP format. Note write capability is

@@ -13,17 +13,20 @@ mpiexec -n np ncmpidiff
 \%[-b]
 \%[-q]
 \%[-h]
-\%[-v var1,...]
+\%[-v var1,...,varn]
 \%[-t diff,ratio]
 \%\fIfile1 file2\fP
 .hy
 .ft
 .SH DESCRIPTION
 \fBncmpidiff\fP runs in parallel on np number of MPI processes to compare the
-contents of the two files and reports the first difference to the standard output.
-For variables, it reports the array indices of the first element found different
-when option \fB-t\fP is not used. When option \fB-t\fP is used, it reports the
-element with the largest difference that fails to meet the tolerance requirements.
+contents of the two files and reports the first difference to the standard
+output.
+
+For variables and attributes, it reports the array indices of the first
+element found different when option \fB-t\fP is not used. When option \fB-t\fP
+is used, it reports the element with the largest difference that fails to meet
+the tolerance requirements.
 
 If neither argument -v nor -h is given besides the two file names, the entire
 files are compared.
@@ -51,7 +54,7 @@ Compare file header only
 Compare only the given list of variables (names separated by comma without
 space).
 .IP "\fB-t\fP diff,ratio"
-Compare variables elementwisely with tolerance (diff and ratio separated by
+Compare variables element-wisely with tolerance (diff and ratio separated by
 comma without space).  \fIdiff\fP is the absolute value of element-wise
 difference of any two variables.  \fIratio\fP is the relative element-wise
 ratio, for instance, MAX(x,y) / MIN(x,y) - 1, where x is an array element from
@@ -67,6 +70,7 @@ reversed.
 .SH "SEE ALSO"
 .LP
 .BR ncmpidump (1),
+.BR cdfdiff (1),
 .BR diff (1),
 .BR pnetcdf (3)
 .SH DATE

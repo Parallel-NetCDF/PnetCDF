@@ -3,9 +3,9 @@
  *  See COPYRIGHT notice in top-level directory.
  */
 
-/* This utility program compares header and variables of two files regardless
- * the define order of the variables and attributes. It can also compare a
- * subset of the variables, for example
+/* This utility program compares header and variables of two classic cdf-based
+ * NetCDF files regardless the define order of the variables and attributes. It
+ * can also compare a subset of the variables, for example
  *     cdfdiff -v var1,var2 file1.nc file2.nc
  *
  * or compare the header only, for example,
@@ -33,6 +33,92 @@
     exit(1); \
 }
 
+#define CHECK_VAR_DIFF(itype) {                                          \
+    int indx, esize, nelems;                                             \
+    itype *b1 = (itype*)buf[0];                                          \
+    itype *b2 = (itype*)buf[1];                                          \
+    esize = sizeof(itype);                                               \
+    nelems = rdLen[0] / esize;                                           \
+    if (esize > 1 && is_little_endian) {                                 \
+        swapn(b1, nelems, esize);                                        \
+        swapn(b2, nelems, esize);                                        \
+    }                                                                    \
+    for (indx=0; indx<nelems; indx++) {                                  \
+        double diff, ratio;                                              \
+        if ( b1[indx] == b2[indx] ) continue;                            \
+        if ( b1[indx] > b2[indx] ) {                                     \
+            diff  = b1[indx] - b2[indx];                                 \
+            ratio = (double)b1[indx] / (double)b2[indx] - 1.0;           \
+        } else {                                                         \
+            diff  = b2[indx] - b1[indx];                                 \
+            ratio = (double)b2[indx] / (double)b1[indx] - 1.0;           \
+        }                                                                \
+        if (diff <= error_difference || ratio <= error_ratio)            \
+            continue;                                                    \
+        /* fail to meet both tolerance errors */                         \
+        error_difference = diff;                                         \
+        error_ratio      = ratio;                                        \
+        worst = chunk_off + indx;                                        \
+        worst1 = b1[indx];                                               \
+        worst2 = b2[indx];                                               \
+    }                                                                    \
+    chunk_off += nelems;                                                 \
+}
+
+#define SWAP2B(a) ( (((a) & 0xff) << 8) | \
+                    (((a) >> 8) & 0xff) )
+
+/*----< swapn() >--------------------------------------------------*/
+/* in-place byte swap, used when Endianness mismatches */
+static void
+swapn(void   *buf,
+      size_t  nelems,  /* number of elements in buf[] */
+      int     esize)   /* byte size of each element */
+{
+    size_t i;
+
+    if (esize <= 1 || nelems <= 0) return;  /* no need */
+
+    if (esize == 4) { /* this is the most common case */
+        uint32_t *dest = (uint32_t*) buf;
+        for (i=0; i<nelems; i++)
+            dest[i] =  ((dest[i]) << 24)
+                    | (((dest[i]) & 0x0000ff00) << 8)
+                    | (((dest[i]) & 0x00ff0000) >> 8)
+                    | (((dest[i]) >> 24));
+    }
+    else if (esize == 8) {
+        uint64_t *dest = (uint64_t*) buf;
+        for (i=0; i<nelems; i++)
+            dest[i] = ((dest[i] & 0x00000000000000FFULL) << 56) |
+                      ((dest[i] & 0x000000000000FF00ULL) << 40) |
+                      ((dest[i] & 0x0000000000FF0000ULL) << 24) |
+                      ((dest[i] & 0x00000000FF000000ULL) <<  8) |
+                      ((dest[i] & 0x000000FF00000000ULL) >>  8) |
+                      ((dest[i] & 0x0000FF0000000000ULL) >> 24) |
+                      ((dest[i] & 0x00FF000000000000ULL) >> 40) |
+                      ((dest[i] & 0xFF00000000000000ULL) >> 56);
+    }
+    else if (esize == 2) {
+        uint16_t *dest = (uint16_t*) buf;
+        for (i=0; i<nelems; i++)
+            dest[i] = (uint16_t)(((dest[i] & 0xff) << 8) |
+                                 ((dest[i] >> 8) & 0xff));
+    }
+    else {
+        unsigned char tmp, *op = (unsigned char*)buf;
+        /* for esize is not 1, 2, or 4 */
+        while (nelems-- > 0) {
+            for (i=0; i<esize/2; i++) {
+                tmp           = op[i];
+                op[i]         = op[esize-1-i];
+                op[esize-1-i] = tmp;
+            }
+            op += esize;
+        }
+    }
+}
+
 /*----< usage() >-------------------------------------------------------------*/
 static void
 usage(char *progname)
@@ -43,10 +129,13 @@ usage(char *progname)
   [-q]             quiet mode (no output if two files are the same)\n\
   [-h]             Compare header information only, no variables\n\
   [-v var1[,...]]  Compare variable(s) <var1>,... only\n\
+  [-t diff,ratio]  Tolerance: diff is absolute element-wise difference\n\
+                   and ratio is relative element-wise ratio\n\
   file1 file2      File names of two input netCDF files to be compared\n\
   *PnetCDF library version PNETCDF_RELEASE_VERSION of PNETCDF_RELEASE_DATE\n"
 
-    printf("  %s [-b] [-q] [-h] [-v ...] file1 file2\n%s", progname, USAGE);
+    printf("  %s [-b] [-q] [-h] [-v ...] [-t diff,ratio] file1 file2\n%s",
+           progname, USAGE);
     exit(1);
 }
 
@@ -109,14 +198,21 @@ int main(int argc, char **argv)
 {
     extern char *optarg;
     extern int optind;
+    char *str, *ptr;
     size_t nbytes;
     int i, j, k, m, n, c, err, verbose, quiet, isDiff, nChunks;
-    int fd[2], nvars[2], ndims[2], nattrs[2];
+    int fd[2], nvars[2], ndims[2], nattrs[2], check_tolerance;
     int cmp_nvars, check_header, check_variable_list, check_entire_file;
     long long numVarDIFF=0, numHeadDIFF=0, numDIFF;
+    long long r, worst, chunk_off, numrecs;
+    double tolerance_difference, tolerance_ratio;
+    double error_difference, error_ratio, worst1, worst2;
     void *buf[2] = {NULL, NULL};
     struct vspec var_list;
     NC *ncp[2];
+
+    /* find Endianness of the running machine */
+    int is_little_endian = check_little_endian();
 
     verbose             = 0;
     quiet               = 0;
@@ -125,8 +221,9 @@ int main(int argc, char **argv)
     check_entire_file   = 0;
     var_list.names      = NULL;
     var_list.nvars      = 0;
+    check_tolerance     = 0;
 
-    while ((c = getopt(argc, argv, "bhqv:")) != -1)
+    while ((c = getopt(argc, argv, "bhqv:t:")) != -1)
         switch(c) {
             case 'h':               /* compare header only */
                 check_header = 1;
@@ -135,6 +232,23 @@ int main(int argc, char **argv)
                 /* make list of names of variables specified */
                 get_var_names(optarg, &var_list);
                 check_variable_list = 1;
+                break;
+            case 't':
+                str = strdup(optarg);
+                ptr = strtok(str, ",");
+                if (ptr == NULL) {
+                    usage(argv[0]);
+                    break;
+                } else
+                    sscanf(ptr, "%lf", &tolerance_difference);
+                ptr = strtok(NULL, ",");
+                if (ptr == NULL) {
+                    usage(argv[0]);
+                    break;
+                } else
+                    sscanf(ptr, "%lf", &tolerance_ratio);
+                check_tolerance = 1;
+                free(str);
                 break;
             case 'b':
                 verbose = 1;
@@ -593,7 +707,7 @@ cmp_vars:
                     else
                         break;
                 }
-                if (m == nattrs[0]) { /* not found imn 1st file */
+                if (m == nattrs[0]) { /* not found in 1st file */
                     if (!quiet)
                         printf("DIFF: variable \"%s\" attribute \"%s\" defined in %s not found in %s\n",
                                var[1]->name, attr[1]->name, argv[optind+1],argv[optind]);
@@ -614,7 +728,7 @@ cmp_vars:
                 else
                     break; /* loop j */
             }
-            if (j == nvars[0]) { /* not found im 1st file */
+            if (j == nvars[0]) { /* not found in 1st file */
                 if (!quiet)
                     printf("DIFF: variable \"%s\" defined in %s not found in %s\n",
                            var[1]->name, argv[optind+1], argv[optind]);
@@ -647,6 +761,7 @@ cmp_vars:
 
     /* compare variables, one at a time */
     for (i=0; i<cmp_nvars; i++) {
+        char *var_name;
         int varid[2], *dimids[2], isRecVar[2];
         long long remainLen, varsize[2], offset[2];
         off_t seek_ret;
@@ -693,6 +808,7 @@ cmp_vars:
             if (ndims[j] > 0 && dimids[j][0] == ncp[j]->dims.unlimited_id)
                 isRecVar[j] = 1;
         }
+        var_name = var_list.names[i];
 
 	/* Header comparison may have been skipped. Even if file headers have
 	 * been compared, we still need to compare variable's xtype and
@@ -704,14 +820,14 @@ cmp_vars:
             if (!check_header) { /* if header has not been checked */
                 if (!quiet)
                     printf("DIFF: variable \"%s\" data type (%s) != (%s)\n",
-                           var_list.names[i],get_type(xtype[0]),get_type(xtype[1]));
+                           var_name,get_type(xtype[0]),get_type(xtype[1]));
                 numHeadDIFF++;
                 numVarDIFF++;
             }
             continue; /* skip this variable */
         }
         else if (!check_header && verbose) {
-            printf("Variable \"%s\":\n",var_list.names[i]);
+            printf("Variable \"%s\":\n",var_name);
             printf("\tSAME: data type (%s)\n",get_type(xtype[0]));
         }
 
@@ -720,7 +836,7 @@ cmp_vars:
             if (!check_header) { /* if header has not been checked */
                 if (!quiet)
                     printf("DIFF: variable \"%s\" number of dimensions (%d) != (%d)\n",
-                           var_list.names[i],ndims[0],ndims[1]);
+                           var_name,ndims[0],ndims[1]);
                 numHeadDIFF++;
                 numVarDIFF++;
             }
@@ -740,7 +856,7 @@ cmp_vars:
                 if (!check_header) { /* if header has not been checked */
                     if (!quiet)
                         printf("DIFF: variable \"%s\" of type \"%s\" dimension %d's length (%lld) != (%lld)\n",
-                               var_list.names[i],get_type(xtype[0]),j,dimlen[0],dimlen[1]);
+                               var_name,get_type(xtype[0]),j,dimlen[0],dimlen[1]);
                     numHeadDIFF++;
                     numVarDIFF++;
                 }
@@ -764,146 +880,78 @@ cmp_vars:
                 if (var[j]->shape[k] != NC_UNLIMITED)
                     varsize[j] *= var[j]->shape[k];
             }
-
-	    /* lseek to the beginning file offset of the variable. Starting
-             * file offsets of the variable on 2 files can be different. As
-             * variables can be defined/added in a different order.
-	     */
-	    offset[j] = var[j]->begin;
-            seek_ret = lseek(fd[j], (off_t)offset[j], SEEK_SET);
-            if (seek_ret < 0) {
-                fprintf(stderr, "Error on lseek offset at %lld file %s (%s)\n",
-                        offset[j], argv[optind+i], strerror(errno));
-                goto fn_exit; /* fatal file error */
-            }
         }
         assert(varsize[0] == varsize[1]);
 
-        /* if scalar variable */
-        if (var[0]->ndims == 0) {
-            ssize_t rdLen[2];
-            rdLen[0] = read(fd[0], buf[0], var[0]->xsz);
-            rdLen[1] = read(fd[1], buf[1], var[1]->xsz);
-            if (rdLen[0] != rdLen[1]) {
-                if (!quiet)
-                    printf("DIFF: variable \"%s\" of type \"%s\" read size (%zd) != (%zd)\n",
-                            var_list.names[i],get_type(xtype[0]),rdLen[0], rdLen[1]);
-                numVarDIFF++;
-                continue; /* go to next variable */
+        error_difference = tolerance_difference;
+        error_ratio = tolerance_ratio;
+        worst = -1;
+        chunk_off = 0; /* array index offset for this chunk */
+        numrecs = (isRecVar[0]) ? ncp[0]->numrecs : 1;
+        /* numrecs = 0 for fixed-size variables */
+
+        for (r=0; r<numrecs; r++) {
+            for (j=0; j<2; j++) {
+                long long recsize = (isRecVar[j]) ? ncp[j]->recsize : 0;
+                /* starting file offsets can be different between 2 files */
+                offset[j] = var[j]->begin + recsize * r;
+
+                /* lseek to starting file offset of the next record */
+                seek_ret = lseek(fd[j], (off_t)offset[j], SEEK_SET);
+                if (seek_ret < 0) {
+                    fprintf(stderr, "Error on lseek offset at %lld file %s (%s)\n",
+                            offset[j], argv[optind+i], strerror(errno));
+                    goto fn_exit; /* fatal file error */
+                }
             }
 
-            if ((isDiff = memcmp(buf[0], buf[1], rdLen[0])) != 0) {
-                if (!quiet)
-                    printf("DIFF: scalar variable \"%s\" of type \"%s\"\n",
-                            var_list.names[i],get_type(xtype[0]));
-                numVarDIFF++;
-            }
-            continue; /* go to next variable */
-        }
+	    /* for record variable, varsize is the size of one record of this
+             * variable. For fixed-size variable, it is the whole size.
+             */
+	    remainLen = varsize[0];
+            nChunks = remainLen / READ_CHUNK_SIZE;
+            if (remainLen % READ_CHUNK_SIZE) nChunks++;
 
-        /* calculate how many chunks needed to read this variable */
-        remainLen = varsize[0];
-        nChunks = remainLen / READ_CHUNK_SIZE;
-        if (remainLen % READ_CHUNK_SIZE) nChunks++;
+            /* compare the variable contents, one chunk at a time */
+            for (k=0; k<nChunks; k++) {
+                ssize_t rdLen[2];
+                size_t  rSize = MIN(remainLen, READ_CHUNK_SIZE);
+                /* read next chunk */
+                rdLen[0] = read(fd[0], buf[0], rSize);
+                rdLen[1] = read(fd[1], buf[1], rSize);
+                if (rdLen[0] != rdLen[1]) {
+                    if (!quiet)
+                        printf("DIFF: variable \"%s\" of type \"%s\" record %lld read size (%zd) != (%zd)\n",
+                                var_name, get_type(xtype[0]), r, rdLen[0], rdLen[1]);
+                    numVarDIFF++;
+                    break; /* loop k */
+                }
+                remainLen -= rdLen[0];
 
-        /* compare the variable contents, one chunk at a time */
-        for (k=0; k<nChunks; k++) {
-            ssize_t rdLen[2];
+                /* compare contents of chunks */
+                if (check_tolerance) {
+                         if (xtype[0] == NC_CHAR)   CHECK_VAR_DIFF(char)
+                    else if (xtype[0] == NC_BYTE)   CHECK_VAR_DIFF(signed char)
+                    else if (xtype[0] == NC_UBYTE)  CHECK_VAR_DIFF(unsigned char)
+                    else if (xtype[0] == NC_SHORT)  CHECK_VAR_DIFF(short)
+                    else if (xtype[0] == NC_USHORT) CHECK_VAR_DIFF(unsigned short)
+                    else if (xtype[0] == NC_INT)    CHECK_VAR_DIFF(int)
+                    else if (xtype[0] == NC_UINT)   CHECK_VAR_DIFF(unsigned int)
+                    else if (xtype[0] == NC_FLOAT)  CHECK_VAR_DIFF(float)
+                    else if (xtype[0] == NC_DOUBLE) CHECK_VAR_DIFF(double)
+                    else if (xtype[0] == NC_INT64)  CHECK_VAR_DIFF(long long)
+                    else if (xtype[0] == NC_UINT64) CHECK_VAR_DIFF(unsigned long long)
+                }
+                else { /* if (check_tolerance) */
+                    if (memcmp(buf[0], buf[1], rdLen[0]) == 0) continue;
 
-            /* read next chunks into buffers */
-            rdLen[0] = read(fd[0], buf[0], READ_CHUNK_SIZE);
-            rdLen[1] = read(fd[1], buf[1], READ_CHUNK_SIZE);
-            rdLen[0] = MIN(rdLen[0], remainLen);
-            rdLen[1] = MIN(rdLen[1], remainLen);
-            if (rdLen[0] != rdLen[1]) {
-                if (!quiet)
-                    printf("DIFF: variable \"%s\" of type \"%s\" read size (%zd) != (%zd)\n",
-                            var_list.names[i],get_type(xtype[0]),rdLen[0], rdLen[1]);
-                numVarDIFF++;
-                break; /* loop k */
-            }
-            remainLen -= rdLen[0];
-
-            /* compare contents of chunks */
-            if ((isDiff = memcmp(buf[0], buf[1], rdLen[0])) != 0) {
-                if (!quiet) {
-                    char *str[2];
-                    int _i;
-                    long long pos, *diffStart;
-
-                    str[0] = (char*) buf[0];
-                    str[1] = (char*) buf[1];
-                    /* find the array index of first element in difference */
-                    for (m=0; m<rdLen[0]; m++)
-                        if (str[0][m] != str[1][m])
-                            break;
-                    pos = ((long long)m + k * nChunks) / var[0]->xsz;
-
-                    diffStart = (long long*) malloc(var[0]->ndims * sizeof(long long));
-                    for (_i=var[0]->ndims-1; _i>=0; _i--) {
-                        if (isRecVar[0] && _i == 0) {
-                            diffStart[_i] = 0; /* 1st record */
-                        } else {
-                            diffStart[_i] = pos % var[0]->shape[_i];
-                            pos /= var[0]->shape[_i];
+                    /* difference found */
+                    if (!quiet) {
+                        if (ndims[0] == 0) { /* scalar variable */
+                            printf("DIFF: scalar variable \"%s\" of type \"%s\"\n",
+                                   var_name, get_type(xtype[0]));
                         }
-                    }
-                    printf("DIFF: variable \"%s\" of type \"%s\" at element [%lld",
-                           var_list.names[i], get_type(xtype[0]), diffStart[0]);
-                    for (_i=1; _i<var[0]->ndims; _i++)
-                        printf(", %lld", diffStart[_i]);
-                    printf("]\n");
-                    free(diffStart);
-                }
-                numVarDIFF++;
-                break; /* loop k */
-            }
-        }
-
-        if (k < nChunks) continue; /* diff found, go to next variable */
-
-        if (isRecVar[0] == 0) { /* for fixed-size variables, we are done */
-            if (verbose)
-                printf("\tSAME: variable \"%s\" contents\n", var_list.names[i]);
-        } else { /* for record variables, compare the remaining records */
-            for (j=1; j<ncp[0]->numrecs; j++) {
-                for (k=0; k<2; k++) {
-                    /* starting file offset can be different */
-                    offset[k] = var[k]->begin + ncp[k]->recsize * j;
-
-                    /* lseek to starting file offset of the next record */
-                    seek_ret = lseek(fd[k], (off_t)offset[k], SEEK_SET);
-                    if (seek_ret < 0) {
-                        fprintf(stderr, "Error on lseek offset at %lld file %s (%s)\n",
-                                offset[j], argv[optind+i], strerror(errno));
-                        goto fn_exit; /* fatal file error */
-                    }
-                }
-
-                /* varsize is the size of one record of this variable */
-                remainLen = varsize[0];
-                nChunks = remainLen / READ_CHUNK_SIZE;
-                if (remainLen % READ_CHUNK_SIZE) nChunks++;
-
-                /* compare the variable contents, one chunk at a time */
-                for (k=0; k<nChunks; k++) {
-                    ssize_t rdLen[2];
-                    /* read next chunk */
-                    rdLen[0] = read(fd[0], buf[0], READ_CHUNK_SIZE);
-                    rdLen[1] = read(fd[1], buf[1], READ_CHUNK_SIZE);
-                    rdLen[0] = MIN(rdLen[0], remainLen);
-                    rdLen[1] = MIN(rdLen[1], remainLen);
-                    if (rdLen[0] != rdLen[1]) {
-                        if (!quiet)
-                            printf("DIFF: variable \"%s\" of type \"%s\" record %d read size (%zd) != (%zd)\n",
-                                    var_list.names[i], get_type(xtype[0]), j, rdLen[0], rdLen[1]);
-                        numVarDIFF++;
-                        break; /* loop k */
-                    }
-                    remainLen -= rdLen[0];
-
-                    if ((isDiff = memcmp(buf[0], buf[1], rdLen[0])) != 0) {
-                        if (!quiet) {
+                        else {
                             char *str[2];
                             int _i;
                             long long pos, *diffStart;
@@ -919,30 +967,68 @@ cmp_vars:
                             diffStart = (long long*) malloc(var[0]->ndims * sizeof(long long));
                             for (_i=var[0]->ndims-1; _i>=0; _i--) {
                                 if (isRecVar[0] && _i == 0) {
-                                    diffStart[_i] = j; /* jth record */
+                                    diffStart[_i] = r; /* r-th record */
                                 } else {
                                     diffStart[_i] = pos % var[0]->shape[_i];
                                     pos /= var[0]->shape[_i];
                                 }
                             }
                             printf("DIFF: variable \"%s\" of type \"%s\" at element [%lld",
-                                   var_list.names[i], get_type(xtype[0]), diffStart[0]);
+                                   var_name, get_type(xtype[0]), diffStart[0]);
                             for (_i=1; _i<var[0]->ndims; _i++)
                                 printf(", %lld", diffStart[_i]);
                             printf("]\n");
                             free(diffStart);
                         }
-                        numVarDIFF++;
-                        break; /* loop k */
                     }
+                    worst = 0;
+                    numVarDIFF++;
+                    r = numrecs; /* break both loops k and r */
+                    break;
                 }
-                if (k < nChunks) /* diff or error found, go to next variable */
-                    break; /* loop j */
-            }
+            } /* loop k */
+        } /* loop r */
+
+        if (!check_tolerance && worst == 0)
+            continue; /* go to next variable */
+
+        if (worst == -1) {
             if (verbose)
-                printf("\tSAME: variable \"%s\" contents\n", var_list.names[i]);
+                printf("\tSAME: variable \"%s\" contents\n",var_name);
+            continue; /* go to next variable */
         }
-    }
+
+        /* diff is found when check_tolerance = 1 */
+        if (ndims[0] == 0) { /* scalar variable */
+            printf("DIFF (tolerance): scalar variable \"%s\" of type \"%s\" of value %f vs %f\n",
+                   var_name, get_type(xtype[0]), worst1, worst2);
+        } else {
+            int _i;
+            long long pos, *diffStart;
+            diffStart = (long long*) malloc(ndims[0] * sizeof(long long));
+            if (worst != -1) pos = worst;
+            for (_i=ndims[0]-1; _i>=0; _i--) {
+                long long dimLen = var[0]->shape[_i];
+                if (_i == 0 && isRecVar[0]) dimLen = numrecs;
+                diffStart[_i] = pos % dimLen;
+                pos /= dimLen;
+            }
+            if (worst == -1)
+                printf("DIFF: variable \"%s\" of type \"%s\" first at element [%lld",
+                       var_name, get_type(xtype[0]), diffStart[0]);
+            else
+                printf("DIFF (tolerance): variable \"%s\" of type \"%s\" max at element [%lld",
+                       var_name, get_type(xtype[0]), diffStart[0]);
+            for (_i=1; _i<ndims[0]; _i++)
+                printf(", %lld", diffStart[_i]);
+            if (worst == -1)
+                printf("]\n");
+            else
+                printf("] of value %f vs %f\n", worst1, worst2);
+            free(diffStart);
+        }
+        numVarDIFF++;
+    } /* loop i */
 
 fn_exit:
     /* close files and free up the memory previously allocated */

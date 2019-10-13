@@ -45,7 +45,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New/updated utility program
-  + none
+  + A new command-line option `-t` is added to utility program `cdfdiff` to
+    compare variable differences within a tolerance. See the man page of
+    `cdfdiff` for usage.
 
 * Other updates:
   + none

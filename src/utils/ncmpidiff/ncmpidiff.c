@@ -126,34 +126,21 @@
         double error_difference = tolerance_difference;                      \
         double error_ratio = tolerance_ratio;                                \
         for (pos=0; pos<varsize; pos++) {                                    \
+            double diff, ratio;                                              \
             if ( b1[pos] == b2[pos] ) continue;                              \
             if ( b1[pos] > b2[pos] ) {                                       \
-                double diff  = b1[pos] - b2[pos];                            \
-                double ratio = (double)b1[pos] / (double)b2[pos];            \
-                if ( ( diff < error_difference ) ||                          \
-                     ( ratio < 1.0 + error_ratio ) ) continue;               \
-                if ( ratio > 1.0 + error_ratio ) {                           \
-                    error_ratio = -1.0 +  ratio;                             \
-                    worst = pos;                                             \
-                }                                                            \
-                if ( diff > error_difference ) {                             \
-                    error_difference = diff;                                 \
-                    worst = pos;                                             \
-                }                                                            \
-            } else { /* if ( b2[pos] > b1[pos] ) */                          \
-                double diff  = b2[pos] - b1[pos];                            \
-                double ratio = (double)b2[pos] / (double)b1[pos];            \
-                if ( ( diff < error_difference ) ||                          \
-                     ( ratio < 1.0 + error_ratio ) ) continue;               \
-                if ( ratio > 1.0 + error_ratio ) {                           \
-                    error_ratio = -1.0 +  ratio;                             \
-                    worst = pos;                                             \
-                }                                                            \
-                if ( diff > error_difference ) {                             \
-                    error_difference = diff;                                 \
-                    worst = pos;                                             \
-                }                                                            \
+                diff  = b1[pos] - b2[pos];                                   \
+                ratio = (double)b1[pos] / (double)b2[pos] - 1.0;             \
+            } else {                                                         \
+                diff  = b2[pos] - b1[pos];                                   \
+                ratio = (double)b2[pos] / (double)b1[pos] - 1.0;             \
             }                                                                \
+            if (diff <= error_difference || ratio <= error_ratio)            \
+                continue;                                                    \
+            /* fail to meet both tolerance errors */                         \
+            error_difference = diff;                                         \
+            error_ratio      = ratio;                                        \
+            worst            = pos;                                          \
         }                                                                    \
     }                                                                        \
     if (pos != varsize || worst != -1) { /* diff is found */                 \

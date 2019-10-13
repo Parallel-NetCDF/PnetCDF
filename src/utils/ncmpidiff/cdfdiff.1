@@ -4,7 +4,7 @@
 .af dy 01
 .TH cdfdiff 1 "PnetCDF PNETCDF_RELEASE_VERSION" "Printed: \n(yr-\n(mo-\n(dy" "PnetCDF utilities"
 .SH NAME
-cdfdiff \- compares two classic NetCDF files in parallel
+cdfdiff \- compares two classic netCDF files in parallel
 .SH SYNOPSIS
 .ft B
 .HP
@@ -13,14 +13,20 @@ cdfdiff
 \%[-b]
 \%[-q]
 \%[-h]
-\%[-v \fIvar1,...\fP]
+\%[-v var1,...,varn]
+\%[-t diff,ratio]
 \%\fIfile1 file2\fP
 .hy
 .ft
 .SH DESCRIPTION
 \fBcdfdiff\fP, a sequential version of \fBncmpidiff\fP, compares the contents
-of the two classic NetCDF files and reports the difference to the standard
-output. The classic file formats include CDF-1, CDF-2, and CDF-5.
+of the two classic netCDF files and reports the first difference found to the
+standard output. The classic file formats include CDF-1, CDF-2, and CDF-5.
+
+For variables and attributes, it reports the array indices of the first
+element found different when option \fB-t\fP is not used. When option \fB-t\fP
+is used, it reports the element with the largest difference that fails to meet
+the tolerance requirements.
 
 If neither argument -v nor -h is given besides the two file names, the entire
 files are compared.
@@ -31,7 +37,7 @@ gaps may occur when the alignment feature is used to create a new file. This
 alignment allows to allocate a larger space for the file header and align the
 starting file offsets of fixed-size variables (see API \fBncmpi__enddef\fP and
 \fBPnetCDF hints\fP). Oftentimes, the contents of gaps are non-zero arbitrary
-bytes. Thus, two NetCDF files (of same or different sizes) can be reported
+bytes. Thus, two netCDF files (of same or different sizes) can be reported
 identical by \fBcdfdiff\fP but not by \fBdiff\fP.
 
 .SH OPTIONS
@@ -44,8 +50,19 @@ verbose mode. When in quiet mode, users should check exit status. See below in
 "EXIT STATUS".
 .IP "\fB-h\fP"
 Compare file header only
-.IP "\fB-v\fP \fIvar1,...,varn\fP"
-Compare only the given list of variables
+.IP "\fB-v\fP var1,...,varn"
+Compare only the given list of variables (names separated by comma without
+space).
+.IP "\fB-t\fP diff,ratio"
+Compare variables element-wisely with tolerance (diff and ratio separated by
+comma without space).  \fIdiff\fP is the absolute value of element-wise
+difference of any two variables.  \fIratio\fP is the relative element-wise
+ratio, for instance, MAX(x,y) / MIN(x,y) - 1, where x is an array element from
+a variable in the first file and y is the corresponding array element of the
+same variable in the second file. Note when this option is used, the comparison
+will compare the entire variables and reports the element with the largest
+difference that fails to meet the both tolerance requirements.
+
 .SH EXIT STATUS
 An exit status of 0 means no differences were found, and 1 means some
 differences were found.  Note on VMS-based system, the exit status values are
@@ -53,6 +70,7 @@ reversed.
 .SH "SEE ALSO"
 .LP
 .BR ncmpidiff (1),
+.BR ncmpidump (1),
 .BR diff (1),
 .BR pnetcdf (3)
 .SH DATE
