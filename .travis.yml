@@ -74,5 +74,7 @@ notifications:
 # to build all branches
 branches:
   only:
-        - test_travis_ci
+   - master
+   - /.*/
+
 
