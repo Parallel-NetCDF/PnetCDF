@@ -67,7 +67,7 @@ int nczipioi_print_profile(NC_zip *nczipp){
     int err;
     int i, j;
     double tmax[NTIMER], tmin[NTIMER], tmean[NTIMER], tvar[NTIMER], tvar_local[NTIMER + 8];
-    double slocal[9], smax[9], smin[9], ssum[9];
+    double slocal[11], smax[11], smin[11], ssum[11];
     char *pprefix = getenv("PNETCDF_PROFILE_PREFIX");
 
     CHK_ERR_REDUCE(nczipp->profile.tt, tmax, NTIMER, MPI_DOUBLE, MPI_MAX, 0, nczipp->comm);
@@ -85,13 +85,15 @@ int nczipioi_print_profile(NC_zip *nczipp){
     slocal[3] = (double)nczipp->recvsize  / 1048576.0f;
     slocal[4] = (double)nczipp->nsend;
     slocal[5] = (double)nczipp->nrecv;
-    slocal[6] = (double)nczipp->nlocal;
-    slocal[7] = (double)nczipp->var_size_sum;
-    slocal[8] = (double)nczipp->var_zsize_sum;
+    slocal[6] = (double)nczipp->nremote;
+    slocal[7] = (double)nczipp->nreq;
+    slocal[8] = (double)nczipp->nlocal;
+    slocal[9] = (double)nczipp->var_size_sum;
+    slocal[10] = (double)nczipp->var_zsize_sum;
 
-    CHK_ERR_REDUCE(slocal, smax, 7, MPI_DOUBLE, MPI_MAX, 0, nczipp->comm);
-    CHK_ERR_REDUCE(slocal, smin, 7, MPI_DOUBLE, MPI_MIN, 0, nczipp->comm);
-    CHK_ERR_REDUCE(slocal, ssum, 7, MPI_DOUBLE, MPI_SUM, 0, nczipp->comm);
+    CHK_ERR_REDUCE(slocal, smax, 11, MPI_DOUBLE, MPI_MAX, 0, nczipp->comm);
+    CHK_ERR_REDUCE(slocal, smin, 11, MPI_DOUBLE, MPI_MIN, 0, nczipp->comm);
+    CHK_ERR_REDUCE(slocal, ssum, 11, MPI_DOUBLE, MPI_SUM, 0, nczipp->comm);
 
     if (nczipp->rank == 0){
         for(i = 0; i < NTIMER; i++){
@@ -124,17 +126,25 @@ foreach(`t', TIMERS, `PRINTTIME(translit(t, `()'))')dnl
         printf("#%%$: nczipio_nrecv_max: %lf\n", smax[5]);
         printf("#%%$: nczipio_nrecv_min: %lf\n\n", smin[5]);
 
-        printf("#%%$: nczipio_nlocal_sum: %lf\n", ssum[6]);
-        printf("#%%$: nczipio_nlocal_max: %lf\n", smax[6]);
-        printf("#%%$: nczipio_nlocal_min: %lf\n\n", smin[6]);
+        printf("#%%$: nczipio_nremote_sum: %lf\n", ssum[6]);
+        printf("#%%$: nczipio_nremote_max: %lf\n", smax[6]);
+        printf("#%%$: nczipio_nremote_min: %lf\n\n", smin[6]);
 
-        printf("#%%$: nczipio_var_raw_size_sum: %lf\n", ssum[7]);
-        printf("#%%$: nczipio_var_raw_size_max: %lf\n", smax[7]);
-        printf("#%%$: nczipio_var_raw_size_min: %lf\n\n", smin[7]);
+        printf("#%%$: nczipio_nreq_sum: %lf\n", ssum[7]);
+        printf("#%%$: nczipio_nreq_max: %lf\n", smax[7]);
+        printf("#%%$: nczipio_nreq_min: %lf\n\n", smin[7]);
 
-        printf("#%%$: nczipio_var_com_size_sum: %lf\n", ssum[8]);
-        printf("#%%$: nczipio_var_com_size_max: %lf\n", smax[8]);
-        printf("#%%$: nczipio_var_com_size_min: %lf\n\n", smin[8]);
+        printf("#%%$: nczipio_nlocal_sum: %lf\n", ssum[8]);
+        printf("#%%$: nczipio_nlocal_max: %lf\n", smax[8]);
+        printf("#%%$: nczipio_nlocal_min: %lf\n\n", smin[8]);
+
+        printf("#%%$: nczipio_var_raw_size_sum: %lf\n", ssum[9]);
+        printf("#%%$: nczipio_var_raw_size_max: %lf\n", smax[9]);
+        printf("#%%$: nczipio_var_raw_size_min: %lf\n\n", smin[9]);
+
+        printf("#%%$: nczipio_var_com_size_sum: %lf\n", ssum[10]);
+        printf("#%%$: nczipio_var_com_size_max: %lf\n", smax[10]);
+        printf("#%%$: nczipio_var_com_size_min: %lf\n\n", smin[10]);
     }
 
     if (pprefix != NULL && *pprefix != '0') {

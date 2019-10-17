@@ -61,6 +61,8 @@ nczipioi_init(NC_zip *nczipp, int isnew){
     nczipp->recvsize = 0;
     nczipp->nsend = 0;
     nczipp->nrecv = 0;
+    nczipp->nremote = 0;
+    nczipp->nreq = 0;
     nczipp->nlocal = 0;
 #endif
 }

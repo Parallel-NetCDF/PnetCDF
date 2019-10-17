@@ -265,6 +265,11 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     MPI_Allreduce(rcnt_local, rcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
     nrecv = rcnt_all[nczipp->rank] - rcnt_local[nczipp->rank];  // We don't need to receive request form self
 
+#ifdef PNETCDF_PROFILING
+    nczipp->nsend += nrecv + nsend;
+    nczipp->nrecv += nrecv + nsend;
+#endif
+
     for(i = 0; i < nczipp->vars.cnt; i++){
         rhi_local[i] *= -1;
     }
@@ -335,6 +340,10 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         *((int*)sbufp[i]) = rsize_re[i];    sbufp[i] += sizeof(int);
         rbuf_re[i] = (char*)NCI_Malloc(rsize_re[i]);
         reqs[i] = (int*)NCI_Malloc(sizeof(int) * rcnt_local[i] * 2);
+#ifdef PNETCDF_PROFILING
+        nczipp->sendsize += ssize[i];
+        nczipp->recvsize += rsize_re[i];
+#endif
     }
 
     // Pack requests
@@ -363,6 +372,10 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                     // Record source of the request
                     reqs[j][rcnt_local[j]++] = i;
                     reqs[j][rcnt_local[j]++] = r;
+
+#ifdef PNETCDF_PROFILING
+                    nczipp->nremote++;
+#endif
                 }
             } while (nczipioi_chunk_itr_next_ex(varp, req->starts[r], req->counts[r], citr, &cid, ostart, osize));
         }
@@ -395,7 +408,9 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
         // Allocate buffer
         rbuf[i] = rbufp[i] = (char*)NCI_Malloc(rsize[i]);
-
+#ifdef PNETCDF_PROFILING
+        nczipp->recvsize += rsize[i];
+#endif
         // Post irecv
         MPI_Imrecv(rbuf[i], rsize[i], MPI_BYTE, &rmsg, rreq + i);
     }
@@ -472,6 +487,9 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                         CHK_ERR_UNPACK(tbuf, overlapsize, &packoff, req->xbufs[r], 1, ptype, nczipp->comm);
                         MPI_Type_free(&ptype);    
                     }
+#ifdef PNETCDF_PROFILING
+                    nczipp->nlocal++;
+#endif
                 }
             } while (nczipioi_chunk_itr_next_ex(varp, req->starts[r], req->counts[r], citr, &cid, ostart, osize));
         }
@@ -521,13 +539,18 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
             }
 
             NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_PACK_REP)
+#ifdef PNETCDF_PROFILING
+            nczipp->nreq++;
+#endif
         }
 
         NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_SEND_REQ)
 
         // Send Response
         CHK_ERR_ISEND(sbuf_re[j], packoff, MPI_BYTE, rstat.MPI_SOURCE, 1, nczipp->comm, sreq_re + j);
-
+#ifdef PNETCDF_PROFILING
+        nczipp->sendsize += packoff;
+#endif
         NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_SEND_REQ)
     }
 
