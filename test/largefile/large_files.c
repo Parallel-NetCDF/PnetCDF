@@ -34,13 +34,13 @@
 static int
 test_large_file(char *filename, int fmt_flag)
 {
-    int err, nerrs=0, ncid, rec_dim, varid, x_id;
+    int err, nerrs=0, ncid, varid, x_id;
     int n, rec, i, j, k, dims[4];
     MPI_Offset start[4] = {0, 0, 0, 0};
     MPI_Offset count[4] = {1, 1, J_LEN, K_LEN};
 
     /* I/O buffers */
-    signed char x[2], *buf;
+    signed char *buf;
 
     printf("\n*** Testing large files, slowly.\n");
     printf("*** Creating large file %s...", filename);
