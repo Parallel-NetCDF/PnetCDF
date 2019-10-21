@@ -515,8 +515,10 @@ construct_filetypes(NC           *ncp,
 #endif
             if (mpireturn != MPI_SUCCESS)
                 err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_struct");
-            else
+            else {
                 MPI_Type_commit(filetype);
+                err = NC_NOERR;
+            }
         }
 
         if (err != NC_NOERR) *filetype = MPI_BYTE;

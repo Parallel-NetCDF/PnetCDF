@@ -66,7 +66,7 @@ ncadios_open(MPI_Comm     comm,
            MPI_Info     info,
            void       **ncpp)
 {
-    int err, parse_done;
+    int err, parse_done=0;
     NC_ad *ncadp;
 
     if (fIsSet(omode, NC_WRITE)){

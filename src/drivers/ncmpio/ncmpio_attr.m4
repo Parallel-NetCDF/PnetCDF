@@ -418,7 +418,7 @@ ncmpio_rename_att(void       *ncdp,
                   const char *name,
                   const char *newname)
 {
-    int attr_id, err;
+    int attr_id=-1, err;
     char *nname=NULL;    /* normalized name */
     char *nnewname=NULL; /* normalized newname */
     size_t nnewname_len=0;
