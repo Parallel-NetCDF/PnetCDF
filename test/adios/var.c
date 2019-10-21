@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
     err = ncmpi_get_vara_double_all(ncid, 0, start, count, data); CHECK_ERR
     for(i = 0; i < NY; i++){
         if (fabs(data[i] - (((double)start[0]) + ((double)i) / 100)) > 0.0001){
-            printf("Rank %d: Expect Var 0 [%llu][%d] = %lf, but got %lf\n",
+            printf("Rank %d: Expect Var 0 [%lld][%d] = %lf, but got %lf\n",
                     rank, start[0], i, ((double)start[0]) + ((double)i) / 100,
                     data[i]);
             nerrs++;
@@ -143,8 +143,8 @@ int main(int argc, char** argv) {
     count[0] = 1;
     err = ncmpi_get_vara_double_all(ncid, 1, start, count, data); CHECK_ERR
     if (fabs(data[0] - ((double)start[0])) > 0.0001){
-        printf("Rank %d: Expect Var 1 [%llu] = %lf, but got %lf\n", rank,
-                start[0], ((double)start[0]), data[i]);
+        printf("Rank %d: Expect Var 1 [%lld] = %lf, but got %lf\n", rank,
+                start[0], ((double)start[0]), data[0]);
         nerrs++;
     }
 
