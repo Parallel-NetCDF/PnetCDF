@@ -35,9 +35,7 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 #include "adios_read.h"
 #include <arpa/inet.h>
 #define BP_MINIFOOTER_SIZE 28
-#define BUFREAD64(buf,var) var = *(off_t *) (buf); \
-                         if (diff_endian) \
-                             swap_64(&var);
+#define BUFREAD64(buf,var) memcpy(&var, buf, 8); if (diff_endian) swap_64(&var);
 #endif
 
 /* TODO: the following 3 global variables make PnetCDF not thread safe */
@@ -1138,15 +1136,17 @@ ncmpi_inq_format(int  ncid,
 #ifdef ENABLE_ADIOS
 static void swap_64(void *data)
 {
-    uint64_t d = *(uint64_t *)data;
-    *(uint64_t *)data = ((d&0x00000000000000FF)<<56)
-                          + ((d&0x000000000000FF00)<<40)
-                          + ((d&0x0000000000FF0000)<<24)
-                          + ((d&0x00000000FF000000)<<8)
-                          + ((d&0x000000FF00000000LL)>>8)
-                          + ((d&0x0000FF0000000000LL)>>24)
-                          + ((d&0x00FF000000000000LL)>>40)
-                          + ((d&0xFF00000000000000LL)>>56);
+    uint64_t *dest = (uint64_t*) data;
+    uint64_t tmp;
+    memcpy(&tmp, dest, 8);
+    *dest = ((tmp & 0x00000000000000FFULL) << 56) |
+            ((tmp & 0x000000000000FF00ULL) << 40) |
+            ((tmp & 0x0000000000FF0000ULL) << 24) |
+            ((tmp & 0x00000000FF000000ULL) <<  8) |
+            ((tmp & 0x000000FF00000000ULL) >>  8) |
+            ((tmp & 0x0000FF0000000000ULL) >> 24) |
+            ((tmp & 0x00FF000000000000ULL) >> 40) |
+            ((tmp & 0xFF00000000000000ULL) >> 56);
 }
 
 static int adios_parse_endian(char *footer, int *diff_endianness) {

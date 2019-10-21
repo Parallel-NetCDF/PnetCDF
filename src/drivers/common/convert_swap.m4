@@ -148,29 +148,38 @@ ncmpii_in_swapn(void       *buf,
 
     if (esize == 4) { /* this is the most common case */
         uint32_t *dest = (uint32_t*) buf;
-        for (i=0; i<nelems; i++)
-            dest[i] =  ((dest[i]) << 24)
-                    | (((dest[i]) & 0x0000ff00) << 8)
-                    | (((dest[i]) & 0x00ff0000) >> 8)
-                    | (((dest[i]) >> 24));
+        for (i=0; i<nelems; i++) {
+            uint32_t tmp;
+            memcpy(&tmp, dest+i, 4);
+            dest[i] =  (tmp << 24)
+                    | ((tmp & 0x0000ff00) << 8)
+                    | ((tmp & 0x00ff0000) >> 8)
+                    |  (tmp >> 24);
+        }
     }
     else if (esize == 8) {
         uint64_t *dest = (uint64_t*) buf;
-        for (i=0; i<nelems; i++)
-            dest[i] = ((dest[i] & 0x00000000000000FFULL) << 56) |
-                      ((dest[i] & 0x000000000000FF00ULL) << 40) |
-                      ((dest[i] & 0x0000000000FF0000ULL) << 24) |
-                      ((dest[i] & 0x00000000FF000000ULL) <<  8) |
-                      ((dest[i] & 0x000000FF00000000ULL) >>  8) |
-                      ((dest[i] & 0x0000FF0000000000ULL) >> 24) |
-                      ((dest[i] & 0x00FF000000000000ULL) >> 40) |
-                      ((dest[i] & 0xFF00000000000000ULL) >> 56);
+        for (i=0; i<nelems; i++) {
+            uint64_t tmp;
+            memcpy(&tmp, dest+i, 8);
+            dest[i] = ((tmp & 0x00000000000000FFULL) << 56) |
+                      ((tmp & 0x000000000000FF00ULL) << 40) |
+                      ((tmp & 0x0000000000FF0000ULL) << 24) |
+                      ((tmp & 0x00000000FF000000ULL) <<  8) |
+                      ((tmp & 0x000000FF00000000ULL) >>  8) |
+                      ((tmp & 0x0000FF0000000000ULL) >> 24) |
+                      ((tmp & 0x00FF000000000000ULL) >> 40) |
+                      ((tmp & 0xFF00000000000000ULL) >> 56);
+        }
     }
     else if (esize == 2) {
         uint16_t *dest = (uint16_t*) buf;
-        for (i=0; i<nelems; i++)
-            dest[i] = (uint16_t)(((dest[i] & 0xff) << 8) |
-                                 ((dest[i] >> 8) & 0xff));
+        for (i=0; i<nelems; i++) {
+            uint16_t tmp;
+            memcpy(&tmp, dest+i, 2);
+            dest[i] = ((tmp & 0xff) << 8) |
+                      ((tmp >> 8) & 0xff);
+        }
     }
     else {
         uchar tmp, *op = (uchar*)buf;
