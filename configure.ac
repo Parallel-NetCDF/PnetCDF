@@ -1137,26 +1137,29 @@ dnl leaving HAVE_DECL_symbol undeclared." So, use it like this example:
 dnl #if defined MPI_COMBINER_NAMED && MPI_COMBINER_NAMED
 dnl     ... use MPI_COMBINER_NAMED
 dnl #endif
-
-AC_CHECK_DECLS([MPI_COMBINER_NAMED,
-                MPI_COMBINER_DUP,
-                MPI_COMBINER_CONTIGUOUS,
-                MPI_COMBINER_VECTOR,
-                MPI_COMBINER_HVECTOR_INTEGER,
-                MPI_COMBINER_HVECTOR,
-                MPI_COMBINER_HINDEXED_INTEGER,
-                MPI_COMBINER_HINDEXED,
-                MPI_COMBINER_INDEXED_BLOCK,
-                MPI_COMBINER_STRUCT_INTEGER,
-                MPI_COMBINER_STRUCT,
-                MPI_COMBINER_SUBARRAY,
-                MPI_COMBINER_DARRAY,
-                MPI_COMBINER_F90_REAL,
-                MPI_COMBINER_F90_COMPLEX,
-                MPI_COMBINER_F90_INTEGER,
-                MPI_COMBINER_RESIZED,
-                MPI_COMBINER_HINDEXED_BLOCK],
-                [], [], [[#include <mpi.h>]])
+dnl However, we cannot use AC_CHECK_DECLS to check whether these MPI constants
+dnl are deprecated. OpenMPI still define those constants deprecated by MPI 3.0
+dnl as error messages. We need to call AC_COMPILE_IFELSE to check whether they
+dnl can be used without compilation errors.
+UD_CHECK_MPI_CONSTANTS([MPI_COMBINER_NAMED,
+                        MPI_COMBINER_DUP,
+                        MPI_COMBINER_CONTIGUOUS,
+                        MPI_COMBINER_VECTOR,
+                        MPI_COMBINER_HVECTOR_INTEGER,
+                        MPI_COMBINER_HVECTOR,
+                        MPI_COMBINER_HINDEXED_INTEGER,
+                        MPI_COMBINER_HINDEXED,
+                        MPI_COMBINER_INDEXED_BLOCK,
+                        MPI_COMBINER_STRUCT_INTEGER,
+                        MPI_COMBINER_STRUCT,
+                        MPI_COMBINER_SUBARRAY,
+                        MPI_COMBINER_DARRAY,
+                        MPI_COMBINER_F90_REAL,
+                        MPI_COMBINER_F90_COMPLEX,
+                        MPI_COMBINER_F90_INTEGER,
+                        MPI_COMBINER_RESIZED,
+                        MPI_COMBINER_HINDEXED_BLOCK],
+                        [], [], [[#include <mpi.h>]])
 
 dnl Check presence of various MPI error classes. Introduced in MPI 2.0.
 dnl These could be enums, so we have to do compile checks.
