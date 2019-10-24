@@ -537,7 +537,7 @@ dconst:
                    {
 		       if(valnum >= var_len) {
 			   if (vars[varnum].dims[0] != rec_dim) { /* not recvar */
-			       derror("too many values for this variable, %d >= %d",
+			       derror("too many values for this variable, %d >= %lld",
 				      valnum, var_len);
 			       exit (4);
 			   } else { /* a record variable, so grow data
@@ -656,7 +656,7 @@ const:         CHAR_CONST
 
 			   if(valnum + len > var_len) {
 			       if (vars[varnum].dims[0] != rec_dim) {
-				   derror("too many values for this variable, %d>%d",
+				   derror("too many values for this variable, %lld>%lld",
 					  valnum+len, var_len);
 				   exit (5);
 			       } else {/* a record variable so grow it */
