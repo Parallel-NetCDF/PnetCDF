@@ -52,7 +52,7 @@ str2err(char *err_str, int *expected_errno)
 
 int main(int argc, char** argv) {
     char filename[256];
-    int nerrs=0, rank, err, ncid, expected_errno;
+    int nerrs=0, rank, err, ncid, expected_errno=NC_NOERR;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

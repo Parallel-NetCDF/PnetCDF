@@ -2356,3 +2356,22 @@ AC_DEFUN([CHECK_MPI_VERSION],[
    fi
    ${RM} -f saved_conftest.i
 ])
+
+dnl It is not sufficient to use AC_CHECK_DECLS to check whether deprecated MPI
+dnl constants are defined. OpenMPI still define the constants deprecated by MPI
+dnl 3.0 as some error messages. We need to call AC_COMPILE_IFELSE to check
+dnl whether they can be used without compilation errors.
+dnl
+m4_define([_UD_CHECK_MPI_CONSTANTS],
+   [AC_MSG_CHECKING([whether $1 is defined])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([$4],[[int dummy=$1;]])],
+                      [ac_have_const=yes], [ac_have_const=no])
+    AC_MSG_RESULT([$ac_have_const])
+    if test "x$ac_have_const" = xyes ; then
+       AC_DEFINE([HAVE_$1], [1], [Define if $1 is defined and not deprecated])
+    fi]
+   [m4_ifvaln([$2$3], [AS_IF([test x$ac_have_const = xyes], [$2], [$3])])])
+
+AC_DEFUN([UD_CHECK_MPI_CONSTANTS],
+   [m4_map_args_sep([_$0(], [, [$2], [$3], [$4])], [], $1)])
+

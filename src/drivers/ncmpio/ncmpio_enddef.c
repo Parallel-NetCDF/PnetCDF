@@ -753,7 +753,8 @@ ncmpio_NC_check_voffs(NC *ncp)
 
     if (ncp->begin_rec < prev_off) {
         if (ncp->safe_mode)
-            printf("Record variable section begin offset (%lld) is less than fixed-size variable section end offset (%lld)\n", varp->begin, prev_off);
+            printf("Record variable section begin offset (%lld) is less than fixed-size variable section end offset (%lld)\n",
+                   ncp->begin_rec, prev_off);
         DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
 

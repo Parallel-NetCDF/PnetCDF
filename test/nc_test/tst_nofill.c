@@ -349,7 +349,7 @@ create_file(char *file_name, int fill_mode)
 int
 main(int argc, char **argv)
 {
-    char filename[256], fill_filename[256], nofill_filename[256];
+    char *filename, *fill_filename, *nofill_filename;
     int rank, nprocs, err, nerrs=0;
 
     MPI_Init(&argc, &argv);
@@ -361,15 +361,16 @@ main(int argc, char **argv)
         MPI_Finalize();
         return 1;
     }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    if (argc == 2) filename = strdup(argv[1]);
+    else           filename = strdup("testfile.nc");
 
     char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
     sprintf(cmd_str, "*** TESTING C   %s for fill/nofill modes ", basename(argv[0]));
     if (rank == 0) printf("%-66s ------ ", cmd_str);
     free(cmd_str);
 
+      fill_filename = (char*) malloc(strlen(filename) + 16);
+    nofill_filename = (char*) malloc(strlen(filename) + 16);
     sprintf(fill_filename, "%s.fill", filename);
     sprintf(nofill_filename, "%s.nofill", filename);
     nerrs += create_file(nofill_filename, NC_NOFILL);
@@ -480,6 +481,10 @@ main(int argc, char **argv)
         if (nerrs) printf(FAIL_STR,nerrs);
         else       printf(PASS_STR);
     }
+
+    free(fill_filename);
+    free(nofill_filename);
+    free(filename);
 
     MPI_Finalize();
     return (nerrs > 0);

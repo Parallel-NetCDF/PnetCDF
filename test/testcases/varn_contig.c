@@ -75,7 +75,7 @@ int main(int argc, char** argv)
     char filename[256];
     int i, rank, nprocs, err, nerrs=0;
     int ncid, cmode, varid[3], dimid[2], num_reqs, *buffer, *r_buffer;
-    MPI_Offset w_len, **starts, **counts;
+    MPI_Offset w_len, **starts=NULL, **counts=NULL;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

@@ -307,6 +307,7 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
                 type_name);
         fflush(stderr);
 #endif
+        return err;
     }
 
     total_put_size = 0;

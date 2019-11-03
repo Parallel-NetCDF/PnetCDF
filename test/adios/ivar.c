@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
 
     if (fabs(data2[0] - ((double)start[0])) > 0.0001){
         printf("Rank %d: Expect Var 1 [%llu] = %lf, but got %lf\n", rank,
-                start[0], ((double)start[0]), data2[i]);
+                start[0], ((double)start[0]), data2[0]);
         nerrs++;
     }
 
@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
     }
     if (fabs(data2[0] - ((double)start[0])) > 0.0001){
         printf("Rank %d: Expect Var 1 [%llu] = %lf, but got %lf\n", rank,
-                start[0], ((double)start[0]), data2[i]);
+                start[0], ((double)start[0]), data2[0]);
         nerrs++;
     }
 

@@ -521,7 +521,7 @@ TestFunc(var)_$1(VarArgs)
 {
     int i, err, ncid, varid, cdf_format, nok=0, reqid, status;
     int canConvert;      /* Both text or both numeric */
-    int allInExtRange;   /* all values within external range? */
+    int allInExtRange=1; /* all values within external range? */
     IntType j, index[MAX_RANK];
     $1 value[MAX_NELS];
     int bb_enabled=0;
@@ -915,7 +915,7 @@ TestFunc(vara)_$1(VarArgs)
 {
     int i, k, err, ncid, cdf_format, nslabs, nok=0, reqid, status;
     int canConvert;      /* Both text or both numeric */
-    int allInExtRange;   /* all values within external range? */
+    int allInExtRange=1; /* all values within external range? */
     IntType j;
     IntType start[MAX_RANK], edge[MAX_RANK], mid[MAX_RANK], index[MAX_RANK];
     $1 value[MAX_NELS];
@@ -1388,7 +1388,7 @@ TestFunc(vars)_$1(VarArgs)
 {
     int i, k, err, ncid, cdf_format, nslabs, nok=0, reqid, status;
     int canConvert;      /* Both text or both numeric */
-    int allInExtRange;   /* all values within external range? */
+    int allInExtRange=1; /* all values within external range? */
     IntType j;
     IntType start[MAX_RANK], edge[MAX_RANK], mid[MAX_RANK], index[MAX_RANK];
     IntType index2[MAX_RANK], count[MAX_RANK], sstride[MAX_RANK];
@@ -1897,7 +1897,7 @@ TestFunc(varm)_$1(VarArgs)
 {
     int i, k, err, ncid, cdf_format, nslabs, nok=0, reqid, status;
     int canConvert;      /* Both text or both numeric */
-    int allInExtRange;   /* all values within external range? */
+    int allInExtRange=1; /* all values within external range? */
     IntType j;
     IntType start[MAX_RANK], edge[MAX_RANK], mid[MAX_RANK], index[MAX_RANK];
     IntType index2[MAX_RANK], count[MAX_RANK], sstride[MAX_RANK];

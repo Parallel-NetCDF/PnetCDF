@@ -79,7 +79,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
     size_t databufferused, databuffersize, dataread;
     NC_bb_metadataentry *entryp;
     MPI_Offset *start, *count, *stride;
-    MPI_Offset **starts, **counts;
+    MPI_Offset **starts=NULL, **counts=NULL;
     MPI_Datatype buftype;
     char *databuffer, *databufferoff;
     NC_bb_metadataheader *headerp;
@@ -283,9 +283,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
                      * Don't realloc because old data is not needed
                      */
                     if(len < num){
-                        if (len > 0){
-                            NCI_Free(starts);
-                        }
+                        if (len > 0) NCI_Free(starts);
                         starts = (MPI_Offset**)NCI_Malloc(sizeof(MPI_Offset*) * num * 2);
                         counts = starts + num;
                         len = num;
@@ -394,9 +392,8 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
     NCI_Free(databuffer);
     NCI_Free(reqids);
     NCI_Free(stats);
-    if (len > 0){
+    if (starts != NULL)
         NCI_Free(starts);
-    }
 
 #ifdef PNETCDF_PROFILING
     t4 = MPI_Wtime();
