@@ -354,12 +354,12 @@ ncadiosi_init_get_req( NC_ad *ncadp,
     /* PnetCDF allows accessing in different type
      * Check if we need to convert
      */
+    esize = (size_t)adios_type_size(v->type, NULL);
     r->vtype = ncadios_to_mpi_type(v->type);
     if (r->vtype == buftype){
         r->xbuf = r->cbuf;
     }
     else{
-        esize = (size_t)adios_type_size(v->type, NULL);
         r->xbuf = NCI_Malloc(esize * r->ecnt);
     }
 

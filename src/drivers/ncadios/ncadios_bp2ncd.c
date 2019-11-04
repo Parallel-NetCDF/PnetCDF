@@ -253,45 +253,45 @@ int ncd_dataset (NC_ad* ncid
                                 break;
                             }
                         }
-                    }
-                    if (i==var_dims_count) {
-                        adios_posix_read_attributes_index (ptr_buffer);
-                        err = adios_parse_attributes_index_v1 (ptr_buffer, &atts_root);
-                        if (err != 0){
-                            return err;
-                        }
+                        if (i==var_dims_count) {
+                            adios_posix_read_attributes_index (ptr_buffer);
+                            err = adios_parse_attributes_index_v1 (ptr_buffer, &atts_root);
+                            if (err != 0){
+                                return err;
+                            }
 
-                        while (atts_root) {
-                            if (atts_root->id == dims->dimension.var_id) {
-                                ncd_gen_name (dimname, atts_root->attr_path
-                                        ,atts_root->attr_name);
-                                if (!atts_root->characteristics->value) {
-                                    for (i = 0; i < var_dims_count; i++) {
-                                        if (var_dims [i].id == atts_root->characteristics->var_id) {
-                                            start_dims[rank]=0;
-                                            count_dims [rank] = var_dims [i].rank;
+                            while (atts_root) {
+                                if (atts_root->id == dims->dimension.var_id) {
+                                    ncd_gen_name (dimname, atts_root->attr_path
+                                            ,atts_root->attr_name);
+                                    if (!atts_root->characteristics->value) {
+                                        for (i = 0; i < var_dims_count; i++) {
+                                            if (var_dims [i].id == atts_root->characteristics->var_id) {
+                                                start_dims[rank]=0;
+                                                count_dims [rank] = var_dims [i].rank;
 
-                                            ncadiosi_inq_dimid(ncid, dimname, &dimids[rank]);
-                                            if (dimids [rank] <= 0)
-                                                ncadiosi_def_dim (ncid, dimname
-                                                        ,var_dims[i].rank
-                                                        ,&dimids [rank]);
-                                            i = var_dims_count + 1;
+                                                ncadiosi_inq_dimid(ncid, dimname, &dimids[rank]);
+                                                if (dimids [rank] <= 0)
+                                                    ncadiosi_def_dim (ncid, dimname
+                                                            ,var_dims[i].rank
+                                                            ,&dimids [rank]);
+                                                i = var_dims_count + 1;
+                                            }
                                         }
                                     }
+                                    else {
+                                        count_dims [ rank] = *(int *)atts_root->characteristics->value;
+                                        start_dims[rank]=0;
+                                        ncadiosi_inq_dimid(ncid, dimname, &dimids[rank]);
+                                        if (dimids [rank] <= 0)
+                                            ncadiosi_def_dim (ncid, dimname
+                                                    ,*(int *)atts_root->characteristics->value
+                                                    ,&dimids [rank]);
+                                    }
+                                    break;
                                 }
-                                else {
-                                    count_dims [ rank] = *(int *)atts_root->characteristics->value;
-                                    start_dims[rank]=0;
-                                    ncadiosi_inq_dimid(ncid, dimname, &dimids[rank]);
-                                    if (dimids [rank] <= 0)
-                                        ncadiosi_def_dim (ncid, dimname
-                                                ,*(int *)atts_root->characteristics->value
-                                                ,&dimids [rank]);
-                                }
-                                break;
+                                atts_root = atts_root->next;
                             }
-                            atts_root = atts_root->next;
                         }
                     }
                 }
