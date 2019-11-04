@@ -17,7 +17,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> /* strcpy() */
+#include <string.h> /* strdup() */
 #include <libgen.h> /* basename() */
 #include <unistd.h> /* unlink(), access() */
 #include <mpi.h>

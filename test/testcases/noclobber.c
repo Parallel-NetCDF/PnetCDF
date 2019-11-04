@@ -12,7 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <string.h> /* strdup() */
 #include <strings.h> /* strcasecmp() */
 #include <libgen.h> /* basename() */
 #include <mpi.h>
@@ -21,20 +21,20 @@
 #include <testutils.h>
 
 static int
-tst_fmt(char *filename, int flag)
+tst_fmt(char *filename, int fmt_flag)
 {
     int err, nerrs=0, ncid, cmode;
 
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* create a file if it does not exist */
-    cmode = NC_CLOBBER | flag;
+    cmode = NC_CLOBBER | fmt_flag;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* now the file exists, test if PnetCDF can return correct error code */
-    cmode = NC_NOCLOBBER | flag;
+    cmode = NC_NOCLOBBER | fmt_flag;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     EXP_ERR(NC_EEXIST) /* err == NC_EOFILE */
 
@@ -42,8 +42,8 @@ tst_fmt(char *filename, int flag)
 }
 
 int main(int argc, char **argv) {
-    char filename[256], *hint_value;
-    int  err, nerrs=0, rank, bb_enabled=0;
+    char *filename, *hint_value;
+    int  err, nerrs=0, len, rank, bb_enabled=0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -53,9 +53,11 @@ int main(int argc, char **argv) {
         MPI_Finalize();
         return 1;
     }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    if (argc == 2) filename = strdup(argv[1]);
+    else           filename = strdup("testfile.nc");
+    len = strlen(filename) + 1;
+    MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(filename, len, MPI_CHAR, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
