@@ -554,13 +554,8 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     }
     else {
         /* create fileview: a list of contiguous segment for each variable */
-#ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
         mpireturn = MPI_Type_create_hindexed(k, blocklengths, offset, MPI_BYTE,
                                              &filetype);
-#else
-        mpireturn = MPI_Type_hindexed(k, blocklengths, offset, MPI_BYTE,
-                                      &filetype);
-#endif
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_hindexed");
             /* return the first encountered error if there is any */

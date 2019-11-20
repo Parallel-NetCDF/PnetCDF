@@ -337,7 +337,7 @@ AC_CHECK_FUNC([MPI_Comm_rank], [],
 
 AC_CHECK_FUNC([MPI_File_open], [],
    dnl maybe -lmpio is needed at link stage
-   [AC_SEARCH_LIBS([MPI_File_open], [mpio], [],
+   [AC_SEARCH_LIBS([MPI_File_open], [mpi mpio], [],
                    [AC_MSG_ERROR([
    -----------------------------------------------------------------------
      The underneath MPI implementation does not support MPI-IO.
@@ -351,8 +351,18 @@ AM_CONDITIONAL(MPICC_IS_XLC,   [test "x${ac_cv_mpicc_base}" = xXLC])
 AM_CONDITIONAL(MPICC_IS_PGCC,  [test "x${ac_cv_mpicc_base}" = xPGCC])
 AM_CONDITIONAL(MPICC_IS_FCCPX, [test "x${ac_cv_mpicc_base}" = xFCCPX])
 
-dnl print out MPI version and vendor infomration
+dnl print out MPI version and vendor information
 CHECK_MPI_VERSION
+
+dnl PnetCDF requires MPI-IO support and MPI-IO was first introduced in MPI 2.0
+if test "$mpi_version" -lt "2" ; then
+   AC_MSG_ERROR([
+   -----------------------------------------------------------------------
+     PnetCDF requires the MPI library that supports MPI standard version
+     2.0 and later. The supplied MPI library only supports MPI $mpi_version.
+     Abort.
+   -----------------------------------------------------------------------])
+fi
 
 dnl compute canonical system types
 AC_CANONICAL_BUILD
@@ -451,7 +461,7 @@ if test "x${has_mpicxx}" = xyes ; then
    AC_LANG_PUSH(C++)
    AC_CHECK_FUNC([MPI_File_close], [],
       dnl maybe -lmpi++ is needed at link stage
-      [AC_SEARCH_LIBS([MPI_File_close], [mpi++ mpichcxx mpi_cxx], [],
+      [AC_SEARCH_LIBS([MPI_File_close], [mpi mpio mpi++ mpichcxx mpi_cxx], [],
                       [has_mpicxx=no])])
    AC_LANG_POP(C++)
    if test "x$has_mpicxx" = xno ; then
@@ -1076,13 +1086,13 @@ fi
 AC_SUBST(PNETCDF_DEBUG)
 AM_CONDITIONAL(PNETCDF_DEBUG, [test x"$PNETCDF_DEBUG" = x1])
 
+dnl Data type MPI_Offset was first introduced in MPI 2 and since PnetCDF
+dnl requires MPI-IO (also introduced in MPI 2), there is no need to check
+dnl whether MPI_Offset is defined in mpi.h
+dnl AC_CHECK_TYPE([MPI_Offset], [], [], [#include <mpi.h>])
+
 dnl check the size of MPI_Offset. PnetCDF requires it be 8 bytes.
-AC_CHECK_TYPE([MPI_Offset], [], [], [#include <mpi.h>])
-if test "x${ac_cv_type_MPI_Offset}" = xyes; then
-   AC_CHECK_SIZEOF([MPI_Offset], [], [#include <mpi.h>])
-else
-   AC_MSG_ERROR([Unable to find type MPI_Offset in mpi.h])
-fi
+AC_CHECK_SIZEOF([MPI_Offset], [], [#include <mpi.h>])
 if test "$ac_cv_sizeof_MPI_Offset" -lt "8"; then
    AC_MSG_ERROR([
    -----------------------------------------------------------------------
@@ -1120,17 +1130,39 @@ dnl if test "x${ac_cv_type_MPI_Count}" = xyes; then
 dnl    AC_DEFINE(HAVE_MPI_COUNT)
 dnl fi
 
-dnl check MPI-2 only functions
-AC_CHECK_FUNCS([MPI_Get_address \
-                MPI_Type_create_subarray \
-                MPI_Type_create_hvector \
-                MPI_Type_create_hindexed \
-                MPI_Type_create_struct \
-                MPI_Type_create_resized \
-                MPI_Type_get_extent])
+dnl Because MPI-IO was first introduced in MPI 2.0 and MPI-IO is a requirement
+dnl of PnetCDF, there is no need to check the below APIs which were also
+dnl introduced in MPI 2.0.
+dnl AC_CHECK_FUNCS([MPI_Get_address \
+dnl                 MPI_Type_create_subarray \
+dnl                 MPI_Type_create_hvector \
+dnl                 MPI_Type_create_hindexed \
+dnl                 MPI_Type_create_struct \
+dnl                 MPI_Type_create_resized \
+dnl                 MPI_Type_get_extent])
 
 dnl Check presence of MPI COMBINERS. These are of type int.
-dnl These are introduced in MPI 2.0.
+dnl These are introduced in MPI 2.0. As PnetCDF requires an MPI library that
+dnl supports MPI-IO and MPI-IO was first introduced in MPI 2.0, checking these
+dnl MPI constants is not necessary.
+dnl UD_CHECK_MPI_CONSTANTS([MPI_COMBINER_NAMED,
+dnl                         MPI_COMBINER_DUP,
+dnl                         MPI_COMBINER_CONTIGUOUS,
+dnl                         MPI_COMBINER_VECTOR,
+dnl                         MPI_COMBINER_HVECTOR,
+dnl                         MPI_COMBINER_HINDEXED,
+dnl                         MPI_COMBINER_INDEXED_BLOCK,
+dnl                         MPI_COMBINER_STRUCT,
+dnl                         MPI_COMBINER_SUBARRAY,
+dnl                         MPI_COMBINER_DARRAY,
+dnl                         MPI_COMBINER_F90_REAL,
+dnl                         MPI_COMBINER_F90_COMPLEX,
+dnl                         MPI_COMBINER_F90_INTEGER,
+dnl                         MPI_COMBINER_RESIZED,
+dnl                         MPI_COMBINER_HINDEXED_BLOCK],
+dnl                         [], [], [[#include <mpi.h>]])
+
+dnl Below MPI constants have been deprecated since MPI 3.0
 dnl Note from autoconfig user guide: "Unlike the other AC_CHECK_*S macros, when
 dnl a symbol is not declared, HAVE_DECL_symbol is defined to 0 instead of
 dnl leaving HAVE_DECL_symbol undeclared." So, use it like this example:
@@ -1141,38 +1173,28 @@ dnl However, we cannot use AC_CHECK_DECLS to check whether these MPI constants
 dnl are deprecated. OpenMPI still define those constants deprecated by MPI 3.0
 dnl as error messages. We need to call AC_COMPILE_IFELSE to check whether they
 dnl can be used without compilation errors.
-UD_CHECK_MPI_CONSTANTS([MPI_COMBINER_NAMED,
-                        MPI_COMBINER_DUP,
-                        MPI_COMBINER_CONTIGUOUS,
-                        MPI_COMBINER_VECTOR,
-                        MPI_COMBINER_HVECTOR_INTEGER,
-                        MPI_COMBINER_HVECTOR,
-                        MPI_COMBINER_HINDEXED_INTEGER,
-                        MPI_COMBINER_HINDEXED,
-                        MPI_COMBINER_INDEXED_BLOCK,
-                        MPI_COMBINER_STRUCT_INTEGER,
-                        MPI_COMBINER_STRUCT,
-                        MPI_COMBINER_SUBARRAY,
-                        MPI_COMBINER_DARRAY,
-                        MPI_COMBINER_F90_REAL,
-                        MPI_COMBINER_F90_COMPLEX,
-                        MPI_COMBINER_F90_INTEGER,
-                        MPI_COMBINER_RESIZED,
-                        MPI_COMBINER_HINDEXED_BLOCK],
-                        [], [], [[#include <mpi.h>]])
+dnl
+dnl Check MPI constants below only when MPI library implements MPI 3 and later
+dnl as they were introduced in MPI 2, but deprecated since MPI 3.
+if test "$mpi_version" -ge "3" ; then
+   UD_CHECK_MPI_CONSTANTS([MPI_COMBINER_HVECTOR_INTEGER,
+                           MPI_COMBINER_HINDEXED_INTEGER,
+                           MPI_COMBINER_STRUCT_INTEGER],
+                          [], [], [[#include <mpi.h>]])
+fi
 
 dnl Check presence of various MPI error classes. Introduced in MPI 2.0.
 dnl These could be enums, so we have to do compile checks.
-AC_CHECK_DECLS([MPI_ERR_FILE_EXISTS,
-                MPI_ERR_NO_SUCH_FILE,
-                MPI_ERR_AMODE,
-                MPI_ERR_NOT_SAME,
-                MPI_ERR_BAD_FILE,
-                MPI_ERR_READ_ONLY,
-                MPI_ERR_ACCESS,
-                MPI_ERR_NO_SPACE,
-                MPI_ERR_QUOTA],
-                [], [], [[#include <mpi.h>]])
+dnl AC_CHECK_DECLS([MPI_ERR_FILE_EXISTS,
+dnl                 MPI_ERR_NO_SUCH_FILE,
+dnl                 MPI_ERR_AMODE,
+dnl                 MPI_ERR_NOT_SAME,
+dnl                 MPI_ERR_BAD_FILE,
+dnl                 MPI_ERR_READ_ONLY,
+dnl                 MPI_ERR_ACCESS,
+dnl                 MPI_ERR_NO_SPACE,
+dnl                 MPI_ERR_QUOTA],
+dnl                 [], [], [[#include <mpi.h>]])
 
 dnl Check presence of C MPI data types.
 dnl Note they are of type MPI_Datatype, thus cannot use AC_CHECK_DECLS
@@ -1195,7 +1217,11 @@ dnl UD_CHECK_MPI_DATATYPE(MPI_LB)		dnl first defined in MPI 1.0
 
 dnl C data type MPI_Offset was first introduced in MPI 2.0, but MPI_OFFSET was
 dnl introduced as a predefined MPI datatype in MPI 2.2
-UD_CHECK_MPI_DATATYPE(MPI_OFFSET)
+if test "$mpi_version" -ge "3" ; then
+   ac_cv_CHECK_MPI_DATATYPE_MPI_OFFSET=yes
+else
+   UD_CHECK_MPI_DATATYPE(MPI_OFFSET)
+fi
 AM_CONDITIONAL(DECL_MPI_OFFSET, [test x$ac_cv_CHECK_MPI_DATATYPE_MPI_OFFSET = xyes])
 
 dnl Check for presence of Fortran types
@@ -1205,19 +1231,19 @@ dnl We do this for a couple of reasons.  First, the MPI might have been
 dnl built without Fortran support, in which case these types might not
 dnl exist.  Second, we need to map these types to corresponding C types
 dnl where possible to simplify processing at run time.
-if test "x${has_fortran}" = xyes ; then
-    UD_CHECK_MPI_DATATYPE(MPI_INTEGER8)		dnl first defined in MPI 2.1
-    UD_CHECK_MPI_DATATYPE(MPI_CHARACTER)	dnl first defined in MPI 1.0
-    UD_CHECK_MPI_DATATYPE(MPI_REAL)		dnl first defined in MPI 1.0
-    UD_CHECK_MPI_DATATYPE(MPI_INTEGER)		dnl first defined in MPI 1.0
-    UD_CHECK_MPI_DATATYPE(MPI_DOUBLE_PRECISION)	dnl first defined in MPI 1.0
-    UD_CHECK_MPI_DATATYPE(MPI_INTEGER1)		dnl first defined in MPI 1.0
-    UD_CHECK_MPI_DATATYPE(MPI_INTEGER2)		dnl first defined in MPI 1.0
-    UD_CHECK_MPI_DATATYPE(MPI_INTEGER4)		dnl first defined in MPI 1.0
-    UD_CHECK_MPI_DATATYPE(MPI_REAL2)		dnl first defined in MPI 1.0
-    UD_CHECK_MPI_DATATYPE(MPI_REAL4)		dnl first defined in MPI 1.0
-    UD_CHECK_MPI_DATATYPE(MPI_REAL8)		dnl first defined in MPI 1.0
-fi
+dnl if test "x${has_fortran}" = xyes ; then
+dnl     UD_CHECK_MPI_DATATYPE(MPI_CHARACTER)		dnl first defined in MPI 1.0
+dnl     UD_CHECK_MPI_DATATYPE(MPI_INTEGER)		dnl first defined in MPI 1.0
+dnl     UD_CHECK_MPI_DATATYPE(MPI_INTEGER1)		dnl first defined in MPI 1.0
+dnl     UD_CHECK_MPI_DATATYPE(MPI_INTEGER2)		dnl first defined in MPI 1.0
+dnl     UD_CHECK_MPI_DATATYPE(MPI_INTEGER4)		dnl first defined in MPI 1.0
+dnl     UD_CHECK_MPI_DATATYPE(MPI_INTEGER8)		dnl first defined in MPI 2.1
+dnl     UD_CHECK_MPI_DATATYPE(MPI_REAL)			dnl first defined in MPI 1.0
+dnl     UD_CHECK_MPI_DATATYPE(MPI_REAL2)		dnl first defined in MPI 1.0
+dnl     UD_CHECK_MPI_DATATYPE(MPI_REAL4)		dnl first defined in MPI 1.0
+dnl     UD_CHECK_MPI_DATATYPE(MPI_REAL8)		dnl first defined in MPI 1.0
+dnl     UD_CHECK_MPI_DATATYPE(MPI_DOUBLE_PRECISION)	dnl first defined in MPI 1.0
+dnl fi
 
 AC_C_CHAR_UNSIGNED
 AC_C_BIGENDIAN
@@ -1483,8 +1509,8 @@ AM_CONDITIONAL(ENABLE_SUBFILING, [test x$enable_subfiling = xyes])
 AC_ARG_ENABLE([thread-safe],
     [AS_HELP_STRING([--enable-thread-safe],
                     [Enable thread-safe capability. @<:@default: disabled@:>@])],
-    [thread_safe=${enableval}], # --eanble-thread-safe or --disable-thread-safe is used
-    [thread_safe=no]            # neither --eanble-thread-safe nor --disable-thread-safe is used
+    [thread_safe=${enableval}], # --enable-thread-safe or --disable-thread-safe is used
+    [thread_safe=no]            # neither --enable-thread-safe nor --disable-thread-safe is used
 )
 ENABLE_THREAD_SAFE=0
 if test "x${thread_safe}" = xyes ; then

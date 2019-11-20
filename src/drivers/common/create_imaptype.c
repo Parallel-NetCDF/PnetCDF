@@ -87,21 +87,14 @@ ncmpii_create_imaptype(int               ndims,
         MPI_Datatype tmptype;
         if (count[dim] != (int)count[dim])
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-#ifdef HAVE_MPI_TYPE_CREATE_HVECTOR
+
         mpireturn = MPI_Type_create_hvector((int)count[dim], 1,
                     imap[dim]*el_size, *imaptype, &tmptype);
         if (mpireturn != MPI_SUCCESS) {
             ncmpii_error_mpi2nc(mpireturn,"MPI_Type_create_hvector");
             DEBUG_RETURN_ERROR(NC_EMPI)
         }
-#else
-        mpireturn = MPI_Type_hvector((int)count[dim], 1, imap[dim]*el_size,
-                    *imaptype, &tmptype);
-        if (mpireturn != MPI_SUCCESS) {
-            ncmpii_error_mpi2nc(mpireturn,"MPI_Type_hvector");
-            DEBUG_RETURN_ERROR(NC_EMPI)
-        }
-#endif
+
         mpireturn = MPI_Type_free(imaptype);
         if (mpireturn != MPI_SUCCESS) {
             ncmpii_error_mpi2nc(mpireturn,"MPI_Type_free");

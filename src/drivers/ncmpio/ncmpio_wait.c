@@ -322,64 +322,6 @@ ncmpio_cancel(void *ncdp,
     return status;
 }
 
-#if 0
-/*----< concatenate_datatypes() >--------------------------------------------*/
-static int
-concatenate_datatypes(int           num,
-                      int          *blocklens,     /* IN: [num] */
-                      MPI_Offset   *displacements, /* IN: [num] */
-                      MPI_Datatype *dtypes,        /* IN: [num] */
-                      MPI_Datatype *datatype)      /* OUT: */
-{
-#if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
-    int i;
-#endif
-    int mpireturn, status=NC_NOERR;
-    MPI_Aint *addrs;
-
-    *datatype = MPI_BYTE;
-
-    if (num <= 0) return NC_NOERR;
-
-    /* on most 32 bit systems, MPI_Aint and MPI_Offset are different sizes.
-     * Possible that on those platforms some of the beginning offsets of
-     * these variables in the dataset won't fit into the aint used by
-     * MPI_Type_create_struct.  Minor optimization: we don't need to do any
-     * of this if MPI_Aint and MPI_Offset are the same size  */
-
-    /* at the configure time, size of MPI_Offset and MPI_Aint are checked */
-#if SIZEOF_MPI_AINT == SIZEOF_MPI_OFFSET
-    addrs = (MPI_Aint*) displacements; /* cast ok: types same size */
-#else
-    /* if (SIZEOF_MPI_OFFSET != SIZEOF_MPI_AINT) */
-    addrs = (MPI_Aint *) NCI_Malloc((size_t)num * SIZEOF_MPI_AINT);
-    for (i=0; i<num; i++) {
-        addrs[i] = displacements[i];
-        if (displacements[i] != addrs[i]) {
-            NCI_Free(addrs);
-            DEBUG_RETURN_ERROR(NC_EAINT_TOO_SMALL)
-        }
-    }
-#endif
-
-#ifdef HAVE_MPI_TYPE_CREATE_STRUCT
-    mpireturn = MPI_Type_create_struct(num, blocklens, addrs, dtypes, datatype);
-#else
-    mpireturn = MPI_Type_struct(num, blocklens, addrs, dtypes, datatype);
-#endif
-    if (mpireturn != MPI_SUCCESS)
-        status = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_struct");
-    else
-        MPI_Type_commit(datatype);
-
-#if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
-    NCI_Free(addrs);
-#endif
-
-    return status;
-}
-#endif
-
 /*----< construct_filetypes() >----------------------------------------------*/
 /* concatenate the requests into a single MPI derived filetype */
 static int
@@ -506,13 +448,8 @@ construct_filetypes(NC           *ncp,
         }
         else {
             int mpireturn;
-#ifdef HAVE_MPI_TYPE_CREATE_STRUCT
             mpireturn = MPI_Type_create_struct(num_reqs, blocklens, disps,
                                                ftypes, filetype);
-#else
-            mpireturn = MPI_Type_struct(num_reqs, blocklens, disps,
-                                               ftypes, filetype);
-#endif
             if (mpireturn != MPI_SUCCESS)
                 err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_struct");
             else {
@@ -576,11 +513,7 @@ construct_buffertypes(NC_lead_req  *lead_list,
         }
         blocklens[j] = (int)req_size;
 
-#ifdef HAVE_MPI_GET_ADDRESS
         MPI_Get_address(reqs[i].xbuf, &ai);
-#else
-        MPI_Address(reqs[i].xbuf, &ai);
-#endif
         if (j == 0) a0 = ai;
         disps[j] = ai - a0;
         j++;
@@ -590,13 +523,8 @@ construct_buffertypes(NC_lead_req  *lead_list,
 
     if (num_reqs > 0) {
         /* concatenate buffer addresses into a single buffer type */
-#ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
         mpireturn = MPI_Type_create_hindexed(num_reqs, blocklens, disps,
                                              MPI_BYTE, buf_type);
-#else
-        mpireturn = MPI_Type_hindexed(num_reqs, blocklens, disps, MPI_BYTE,
-                                      buf_type);
-#endif
         if (mpireturn != MPI_SUCCESS) {
             int err = ncmpii_error_mpi2nc(mpireturn,"MPI_Type_create_hindexed");
             /* return the first encountered error if there is any */
@@ -1384,11 +1312,7 @@ merge_requests(NC          *ncp,
     *buf = reqs[0].xbuf; /* I/O buffer of first request */
 
     /* buf_addr is the buffer address of the first request */
-#ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(reqs[0].xbuf, &buf_addr);
-#else
-    MPI_Address(reqs[0].xbuf, &buf_addr);
-#endif
 
     /* Count the number off-len pairs from reqs[], so we can malloc a
      * contiguous memory space for storing off-len pairs
@@ -1433,11 +1357,7 @@ merge_requests(NC          *ncp,
         NC_lead_req *lead = lead_list + reqs[i].lead_off;
 
         /* buf_addr is the buffer address of the first valid request */
-#ifdef HAVE_MPI_GET_ADDRESS
         MPI_Get_address(reqs[i].xbuf, &addr);
-#else
-        MPI_Address(reqs[i].xbuf, &addr);
-#endif
         addr -= buf_addr,  /* distance to the buf of first req */
 
         ndims  = lead->varp->ndims;
@@ -1578,12 +1498,8 @@ type_create_off_len(MPI_Offset    nsegs,    /* no. off-len pairs */
     }
     /* j+1 is the coalesced length */
 
-#ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
     mpireturn = MPI_Type_create_hindexed(j+1, blocklens, disps, MPI_BYTE,
                                          filetype);
-#else
-    mpireturn = MPI_Type_hindexed(j+1, blocklens, disps, MPI_BYTE, filetype);
-#endif
     if (mpireturn != MPI_SUCCESS) {
         *filetype = MPI_BYTE;
         *buf_type = MPI_BYTE;
@@ -1640,12 +1556,8 @@ type_create_off_len(MPI_Offset    nsegs,    /* no. off-len pairs */
         }
     }
     /* j+1 is the coalesced length */
-#ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
     mpireturn = MPI_Type_create_hindexed(j+1, blocklens, disps, MPI_BYTE,
                                          buf_type);
-#else
-    mpireturn = MPI_Type_hindexed(j+1, blocklens, disps, MPI_BYTE, buf_type);
-#endif
     NCI_Free(disps);
     NCI_Free(blocklens);
     if (mpireturn != MPI_SUCCESS) {
@@ -1813,11 +1725,7 @@ req_aggregation(NC     *ncp,
 
     buf = reqs[0].xbuf; /* the buffer of 1st request */
     b_disps[0] = 0;     /* relative to address of 1st buf */
-#ifdef HAVE_MPI_GET_ADDRESS
     MPI_Get_address(buf, &b_begin);
-#else
-    MPI_Address(buf, &b_begin);
-#endif
 
     /* temp buffers, used by multiple calls to construct_filetypes()  */
     int *blocklens = (int*) NCI_Malloc((size_t)num_reqs*SIZEOF_INT);
@@ -1911,11 +1819,7 @@ req_aggregation(NC     *ncp,
 
         if (i > 0) {
             /* get the buffer address of the first request in this group */
-#ifdef HAVE_MPI_GET_ADDRESS
             MPI_Get_address(g_reqs[0].xbuf, &b_addr);
-#else
-            MPI_Address(g_reqs[0].xbuf, &b_addr);
-#endif
             b_disps[i] = b_addr - b_begin; /* to 1st buffer of 1st group*/
         }
         b_blocklens[i] = 1;
@@ -1933,13 +1837,8 @@ req_aggregation(NC     *ncp,
     }
     else {
         /* concatenate all ftypes[] to filetype */
-#ifdef HAVE_MPI_TYPE_CREATE_STRUCT
         mpireturn = MPI_Type_create_struct(ngroups, f_blocklens, f_disps,
                                            ftypes, &filetype);
-#else
-        mpireturn = MPI_Type_struct(ngroups, f_blocklens, f_disps, ftypes,
-                                    &filetype);
-#endif
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_struct");
             /* return the first encountered error if there is any */
@@ -1956,13 +1855,8 @@ req_aggregation(NC     *ncp,
         }
 
         /* concatenate all btypes[] to buf_type */
-#ifdef HAVE_MPI_TYPE_CREATE_STRUCT
         mpireturn = MPI_Type_create_struct(ngroups, b_blocklens, b_disps,
                                            btypes, &buf_type);
-#else
-        mpireturn = MPI_Type_struct(ngroups, b_blocklens, b_disps, btypes,
-                                    &buf_type);
-#endif
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_struct");
             /* return the first encountered error if there is any */
@@ -2327,11 +2221,7 @@ mgetput(NC     *ncp,
             }
             blocklens[j] = (int)req_size;
 
-#ifdef HAVE_MPI_GET_ADDRESS
             MPI_Get_address(reqs[i].xbuf, &ai);
-#else
-            MPI_Address(reqs[i].xbuf, &ai);
-#endif
             if (j == 0) { /* first valid request */
                 a_last_contig = a0 = ai;
                 buf = reqs[i].xbuf;
@@ -2369,13 +2259,8 @@ mgetput(NC     *ncp,
             int num_contig_reqs = last_contig_req+1;
 
             /* concatenate buffer addresses into a single buffer type */
-#ifdef HAVE_MPI_TYPE_CREATE_HINDEXED
             mpireturn = MPI_Type_create_hindexed(num_contig_reqs, blocklens,
                                                  disps, MPI_BYTE, &buf_type);
-#else
-            mpireturn = MPI_Type_hindexed(num_contig_reqs, blocklens, disps,
-                                          MPI_BYTE, &buf_type);
-#endif
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn,"MPI_Type_create_hindexed");
                 /* return the first encountered error if there is any */

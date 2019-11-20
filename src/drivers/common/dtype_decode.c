@@ -34,10 +34,8 @@ static MPI_Datatype
 dtype_filter(MPI_Datatype type)
 {
     /* char types */
-#ifdef HAVE_DECL_MPI_CHARACTER
     if (type == MPI_CHARACTER)
         return  MPI_CHAR;
-#endif
     if (type == MPI_CHAR)
         return  MPI_CHAR;
 
@@ -49,19 +47,15 @@ dtype_filter(MPI_Datatype type)
     if (type == MPI_SIGNED_CHAR)
         return  MPI_SIGNED_CHAR;
 
-#ifdef HAVE_DECL_MPI_INTEGER1
     if (type == MPI_INTEGER1)
         return  MPI_SIGNED_CHAR;
-#endif
     if (type == MPI_BYTE)
         return  MPI_BYTE;
 
     /* 2-byte integer types (only supported if MPI_SHORT is 2-bytes). */
 #if (SIZEOF_SHORT == 2)
-  #ifdef HAVE_DECL_MPI_INTEGER2
     if (type == MPI_INTEGER2)
         return  MPI_SHORT;
-  #endif
     if (type == MPI_SHORT)
         return  MPI_SHORT;
 
@@ -92,14 +86,10 @@ dtype_filter(MPI_Datatype type)
 #endif
 #endif
 
-#ifdef HAVE_DECL_MPI_INTEGER
     if (type == MPI_INTEGER)
         return int_4byte;
-#endif
-#ifdef HAVE_DECL_MPI_INTEGER4
     if (type == MPI_INTEGER4)
         return int_4byte;
-#endif
 #if (SIZEOF_LONG == 4)
     if (type == MPI_LONG)
         return int_4byte;
@@ -123,22 +113,12 @@ dtype_filter(MPI_Datatype type)
       * is 8-bytes).
       */
 #if (SIZEOF_INT == 8) || (SIZEOF_LONG == 8)
-  #ifdef HAVE_DECL_MPI_INTEGER8
     if (type == MPI_INTEGER8)
       #if (SIZEOF_INT == 8)
         return MPI_INT;
       #else
         return MPI_LONG;
       #endif
-  #endif
-  #ifdef HAVE_DECL_MPI_UNSIGNED_INTEGER8
-    if (type == MPI_UNSIGNED_INTEGER8)
-      #if (SIZEOF_UINT == 8)
-        return MPI_UNSIGNED;
-      #else
-        return MPI_UNSIGNED_LONG;
-      #endif
-  #endif
 
   #if (SIZEOF_INT == 8)
     if (type == MPI_INT)
@@ -163,26 +143,18 @@ dtype_filter(MPI_Datatype type)
 #endif
 
     /* 4-byte float types (we assume float is 4-bytes). */
-#ifdef HAVE_DECL_MPI_REAL
     if (type == MPI_REAL)
         return  MPI_FLOAT;
-#endif
-#ifdef HAVE_DECL_MPI_REAL4
     if (type == MPI_REAL4)
         return  MPI_FLOAT;
-#endif
     if (type == MPI_FLOAT)
         return  MPI_FLOAT;
 
     /* 8-byte float types (we assume double is 8-bytes). */
-#ifdef HAVE_DECL_MPI_REAL8
     if (type == MPI_REAL8)
         return MPI_DOUBLE;
-#endif
-#ifdef HAVE_DECL_MPI_DOUBLE_PRECISION
     if (type == MPI_DOUBLE_PRECISION)
         return  MPI_DOUBLE;
-#endif
     if (type == MPI_DOUBLE)
         return  MPI_DOUBLE;
 
@@ -237,7 +209,6 @@ dtype_filter(MPI_Datatype type)
   Return:
 . total number of blocks assigned from the distributed array
 @*/
-#if defined HAVE_MPI_COMBINER_DARRAY
 static int
 darray_get_totalblks(int rank,
                      MPI_Offset ndims,
@@ -287,8 +258,6 @@ darray_get_totalblks(int rank,
 
   return total_blocks;
 }
-#endif
-
 
 /*----< ncmpii_dtype_decode() >----------------------------------------------*/
 /*@
@@ -340,17 +309,9 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
 
     MPI_Type_get_envelope(dtype, &num_ints, &num_adds, &num_dtypes, &combiner);
 
-    if (
-#if defined HAVE_MPI_COMBINER_F90_INTEGER
-        combiner == MPI_COMBINER_F90_INTEGER ||
-#endif
-#if defined HAVE_MPI_COMBINER_F90_REAL
+    if (combiner == MPI_COMBINER_F90_INTEGER ||
         combiner == MPI_COMBINER_F90_REAL ||
-#endif
-#if defined HAVE_MPI_COMBINER_F90_COMPLEX
-        combiner == MPI_COMBINER_F90_COMPLEX ||
-#endif
-        0) {
+        combiner == MPI_COMBINER_F90_COMPLEX) {
         fprintf(stderr, "FIXME: F90_INTEGER, F90_REAL or F90_COMPLEX are not supported.\n");
         DEBUG_RETURN_ERROR(NC_EUNSPTETYPE)
     }
@@ -383,27 +344,17 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
         case MPI_COMBINER_VECTOR:
         case MPI_COMBINER_HINDEXED:
         case MPI_COMBINER_INDEXED:
-#if defined HAVE_MPI_COMBINER_DUP
         case MPI_COMBINER_DUP:
-#endif
+        case MPI_COMBINER_INDEXED_BLOCK:
+        case MPI_COMBINER_SUBARRAY:
+        case MPI_COMBINER_DARRAY:
 #if defined HAVE_MPI_COMBINER_HVECTOR_INTEGER
         case MPI_COMBINER_HVECTOR_INTEGER:
-#endif
-#if defined HAVE_MPI_COMBINER_INDEXED_BLOCK
-        case MPI_COMBINER_INDEXED_BLOCK:
 #endif
 #if defined HAVE_MPI_COMBINER_HINDEXED_INTEGER
         case MPI_COMBINER_HINDEXED_INTEGER:
 #endif
-#if defined HAVE_MPI_COMBINER_SUBARRAY
-        case MPI_COMBINER_SUBARRAY:
-#endif
-#if defined HAVE_MPI_COMBINER_DARRAY
-        case MPI_COMBINER_DARRAY:
-#endif
-#if defined HAVE_MPI_COMBINER_RESIZED
         case MPI_COMBINER_RESIZED:
-#endif
             status = ncmpii_dtype_decode(array_of_dtypes[0], &ptype, &el_size,
                                          &nelems, &isderived,
                                          iscontig_of_ptypes);
@@ -461,9 +412,7 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
 #if defined HAVE_MPI_COMBINER_HVECTOR_INTEGER
         case MPI_COMBINER_HVECTOR_INTEGER:
 #endif
-#if defined HAVE_MPI_COMBINER_INDEXED_BLOCK
         case MPI_COMBINER_INDEXED_BLOCK:
-#endif
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             total_blocks = (MPI_Offset)array_of_ints[0]*array_of_ints[1];
             break;
@@ -476,15 +425,12 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
             for (i=0, total_blocks=0; i<array_of_ints[0]; i++)
                 total_blocks += array_of_ints[1+i];
             break;
-#if defined HAVE_MPI_COMBINER_SUBARRAY
         case MPI_COMBINER_SUBARRAY:
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             ndims = array_of_ints[0];
             for (i=0, total_blocks=1; i<ndims; i++)
                 total_blocks *= array_of_ints[1+ndims+i];
             break;
-#endif
-#if defined HAVE_MPI_COMBINER_DARRAY
         case MPI_COMBINER_DARRAY:
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             ndims = array_of_ints[2];
@@ -496,13 +442,10 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
                                                 array_of_ints+3+2*ndims,
                                                 array_of_ints+3+3*ndims);
             break;
-#endif
-#if defined HAVE_MPI_COMBINER_RESIZED
         case MPI_COMBINER_RESIZED:
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             total_blocks = 1;
             break;
-#endif
         default: /* DUP etc. */
             total_blocks = 1;
             break;

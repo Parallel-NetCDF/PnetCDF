@@ -54,8 +54,11 @@ int inq_env_hint(char *hint_key, char **hint_value);
 
 extern char* nc_err_code_name(int err);
 
+#if MPI_VERSION < 3
+/* MPI_OFFSET was first defined in MPI standard 2.2 */
 #ifndef HAVE_DECL_MPI_OFFSET
 #define MPI_OFFSET MPI_LONG_LONG_INT
+#endif
 #endif
 
 #ifndef HAVE_STRDUP
