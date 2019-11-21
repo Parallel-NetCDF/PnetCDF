@@ -905,9 +905,9 @@ AC_DEFUN([UD_FORTRAN_TYPES],
 	UD_CHECK_CTYPE_FORTRAN(real, float double, REAL)
 	UD_CHECK_CTYPE_FORTRAN(doubleprecision, double float, DOUBLEPRECISION)
 
-	UD_CHECK_FORTRAN_NCTYPE(NCBYTE_T, byte integer*1 integer, byte)
+dnl	UD_CHECK_FORTRAN_NCTYPE(NCBYTE_T, byte integer*1 integer, byte)
 
-	UD_CHECK_FORTRAN_NCTYPE(NCSHORT_T, integer*2 integer, short)
+dnl	UD_CHECK_FORTRAN_NCTYPE(NCSHORT_T, integer*2 integer, short)
 dnl	UD_CHECK_FORTRAN_CTYPE(NF_SHORT_T, $NCSHORT_T, short, SHRT_MIN, SHRT_MAX)
 
 dnl	UD_CHECK_FORTRAN_NCTYPE(NCLONG_T, integer*4 integer, long)
@@ -2291,7 +2291,7 @@ AC_DEFUN([LT_MPI_CHECK_SHLIB],[
 # check MPI version and vendor
 AC_DEFUN([CHECK_MPI_VERSION],[
    AC_REQUIRE([AC_PROG_GREP])
-   AC_MSG_CHECKING([MPI version])
+   AC_MSG_CHECKING([MPI Standard version implemented])
    AC_COMPUTE_INT([mpi_version], [MPI_VERSION], [[#include <mpi.h>]])
    AC_COMPUTE_INT([mpi_subversion], [MPI_SUBVERSION], [[#include <mpi.h>]])
    if test "x$mpi_version" = x ; then
