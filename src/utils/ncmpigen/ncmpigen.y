@@ -537,7 +537,7 @@ dconst:
                    {
 		       if(valnum >= var_len) {
 			   if (vars[varnum].dims[0] != rec_dim) { /* not recvar */
-			       derror("too many values for this variable, %d >= %lld",
+			       derror("too many values for this variable, %lld >= %lld",
 				      valnum, var_len);
 			       exit (4);
 			   } else { /* a record variable, so grow data

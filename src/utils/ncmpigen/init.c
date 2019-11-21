@@ -23,10 +23,10 @@ int natts;			/* number of attributes */
 int nvdims;			/* number of dimensions for variables */
 int dimnum;			/* dimension number index for variables */
 int varnum;			/* variable number index for attributes */
-int valnum;			/* value number index for attributes */
-int rec_dim;			/* number of the unlimited dimension, if any */
-MPI_Offset var_len;			/* variable length (product of dimensions) */
-MPI_Offset rec_len;			/* number of elements for a record of data */
+MPI_Offset valnum;		/* value number index for attributes */
+MPI_Offset rec_dim;		/* number of the unlimited dimension, if any */
+MPI_Offset var_len;		/* variable length (product of dimensions) */
+MPI_Offset rec_len;		/* number of elements for a record of data */
 MPI_Offset var_size;		/* size of each element of variable */
 
 struct vars *vars;		/* a malloc'ed list */

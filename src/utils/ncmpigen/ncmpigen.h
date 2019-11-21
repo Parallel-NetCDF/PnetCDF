@@ -19,8 +19,8 @@ extern int natts;		/* number of attributes */
 extern int nvdims;		/* number of dimensions for variables */
 extern int dimnum;		/* dimension number index for variables */
 extern int varnum;		/* variable number index for attributes */
-extern int valnum;		/* number of values specified for variable */
-extern int rec_dim;		/* number of the unlimited dimension, if any */
+extern MPI_Offset valnum;		/* number of values specified for variable */
+extern MPI_Offset rec_dim;		/* number of the unlimited dimension, if any */
 extern MPI_Offset rec_len;		/* number of elements for a record of data */
 extern MPI_Offset var_len;		/* variable length (product of dimensions) */
 extern MPI_Offset var_size;		/* size of each element of variable */
