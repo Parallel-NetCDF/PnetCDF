@@ -73,24 +73,25 @@ This is essentially a placeholder for the next release note ...
 
 * Issues related to MPI library vendors:
   + When building PnetCDF using OpenMPI 4.0.2, some of MPI constants deprecated
-    in MPI 3.0, such as MPI_COMBINER_HVECTOR_INTEGER, are still defined in
+    in MPI 3.0, such as `MPI_COMBINER_HVECTOR_INTEGER`, are still defined in
     mpi.h, even if the compatibility option of MPI-1 is disable (default) when
     OpenMPI is configured. However, they are defined as error messages to cause
     a compile-time error if user programs try to use them. This behavior first
-    appears in OpenMPI 4.0.2 when newer versions of C compilers with
-    __STDC_VERSION__ >= 201112L is used to build OpenMPI. When using earlier
-    versions of C compilers, those deprecated MPI constants are not defined at
-    all. See discussion
+    appears in OpenMPI 4.0.2 when the underlying C compilers supporting 2011
+    revision of the C standard (with `__STDC_VERSION__ >= 201112L`) such as GCC
+    version 4.6 and later are used to build OpenMPI. When using earlier
+    versions of C compilers to build OpenMPI 4.0.2, those deprecated MPI
+    constants are not defined at all in mpi.h. See discussion
     [issue 7099](https://github.com/open-mpi/ompi/issues/7099). Thanks to Carl
     Ponder who found that using gcc version 7.4.0 to build PnetCDF failed with
     error message "error: expected expression before _Static_assert" when the
-    compiler sees the deprecated constant MPI_COMBINER_HVECTOR_INTEGER. Thanks
-    to Nick Papior of providing a workaround solution: to rebuild OpenMPI 4.0.2
-    and add configure option "--enable-mpi1-compatibility" when building
-    PnetCDF 1.12.0 and erarlier versions. Note the latest MPICH 3.3.1 does not
-    have such an issue, as all deprecated constants are still defined. This
-    issue is now fixed in PnetCDF of release 1.12.1 which no longer requires
-    the workaround build of OpenMPI.
+    compiler sees the deprecated constant `MPI_COMBINER_HVECTOR_INTEGER`.
+    Thanks to Nick Papior for providing a workaround solution: to rebuild
+    OpenMPI 4.0.2 and add configure option "--enable-mpi1-compatibility" when
+    building PnetCDF 1.12.0 and earlier versions. Note the latest MPICH 3.3.1
+    does not have such an issue, as all deprecated constants are still defined.
+    This issue is now fixed in PnetCDF of release 1.12.1 which no longer
+    requires the workaround build of OpenMPI.
 
 * Issues related to Darshan library:
   + none
