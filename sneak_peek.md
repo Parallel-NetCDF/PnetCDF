@@ -42,7 +42,19 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Build recipes
-  + none
+  + One Theta @ ALCF, when compiling utility programs ncoffsets and cdfdiff,
+    one may encounter rrror messages below, when the compile environment is set
+    to use Intel-based compilers, i.e. PrgEnv-intel
+    ```
+    In file included from /usr/include/inttypes.h:27:0,
+    /theta-archive/intel/compilers_and_libraries_2019.5.281/linux/compiler/include/stdint.h:43:54: error: missing binary operator before token "("
+       defined(__has_include_next) && __has_include_next(<stdint.h>)
+                                                        ^
+    ```
+    This can be resolved by adding "SEQ_CC=icc" to your make command line, i.e.
+    ```
+    make SEQ_CC=icc
+    ```
 
 * New/updated utility program
   + A new command-line option `-t` is added to utility program `cdfdiff` to

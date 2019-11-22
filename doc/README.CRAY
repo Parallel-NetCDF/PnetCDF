@@ -44,6 +44,23 @@
   http://www.nersc.gov/users/computational-systems/edison/running-jobs/shared-and-dynamic-libraries/
 
 
+* Note on compiling utility programs ncoffsets and cdfdiff.
+  Error messages as shown below may appear, when the environment is set to use
+  Intel-based compilers (i.e. PrgEnv-intel, default on Cray XC40).
+
+  /usr/bin/gcc -o ncoffsets src/utils/ncoffsets/ncoffsets.c
+  In file included from /usr/include/inttypes.h:27:0,
+                   from src/utils/ncoffsets/ncoffsets.c:16:
+  /theta-archive/intel/compilers_and_libraries_2019.5.281/linux/compiler/include/stdint.h:43:54: error: missing binary operator before token "("
+       defined(__has_include_next) && __has_include_next(<stdint.h>)
+                                                        ^
+  There are two ways to resolve this problem.
+  1. Add "SEQ_CC=icc" to your make command line, i.e.
+     make SEQ_CC=icc
+  2. Unset environment variable CPATH whose value conflicts with the gcc
+     include directories, i.e. run command:
+     make SEQ_CC=gcc CPATH=
+
 * Note on using compile command-line option "-fast".
   According to the NERSC URL below, the flag "-no-ipo" must be used together
   with flag "-fast" to build an application.
