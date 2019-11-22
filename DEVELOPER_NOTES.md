@@ -492,7 +492,7 @@ inconsistency of any kind start at -250.
 ---
 ### Some tricks for wiki trac format
 * Escape character is !
-  * for example ncmpi__enddef will show underscore "enddef", so add ! before the
+  * for example `ncmpi__enddef` will show underscore "enddef", so add ! before the
   double underscores to disable the formatting. eg. `ncmpi!__enddef`
 * Example of using it on the command line:
   ```

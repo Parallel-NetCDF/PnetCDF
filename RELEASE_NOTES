@@ -1543,7 +1543,7 @@ Version 1.6.0 (February 2, 2015)
   o PnetCDF hint priority
     * The alignment hints set in the environment variable "PNETCDF_HINTS" have
       the highest priority, which overwrite the alignment hints set in
-      ncmpi__enddef(), which overwrite the alignment hints set in the MPI_Info
+      `ncmpi__enddef()`, which overwrite the alignment hints set in the MPI_Info
       object used in the call of ncmpi_create() and ncmpi_open().
 
   o New error code
@@ -1716,9 +1716,9 @@ Version 1.5.0 (July 8, 2014)
       Note they are not the "flexible" APIs. Flexible APIs have an MPI derived
       datatype argument.
 
-    * ncmpi__enddef, nfmpi__enddef, and nf90mpi_enddef - these APIs correspond
-      to netCDF nc__enddef, nf__enddef, and nf90_enddef (with additional
-      optional arguments).
+    * `ncmpi__enddef`, `nfmpi__enddef`, and `nf90mpi_enddef` - these APIs
+      correspond to netCDF `nc__enddef`, `nf__enddef`, and `nf90_enddef` (with
+      additional optional arguments).
 
     * ncmpi_inq_file_info - the naming for ncmpi_get_file_info may cause
       confusion, as "get" has a different meaning on PnetCDF. The correct
