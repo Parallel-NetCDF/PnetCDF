@@ -20,24 +20,23 @@
  */
 void ncbbio_extract_hint(NC_bb *ncbbp, MPI_Info info) {
     int flag;
-    char value[MPI_MAX_INFO_VAL];
+    char value[PATH_MAX];
 
     ncbbp->hints = NC_LOG_HINT_DEL_ON_CLOSE | NC_LOG_HINT_FLUSH_ON_READ |
                    NC_LOG_HINT_FLUSH_ON_SYNC;
 
     /* Directory to store log files */
-    MPI_Info_get(info, "nc_burst_buf_dirname", MPI_MAX_INFO_VAL - 1,
-                 value, &flag);
+    MPI_Info_get(info, "nc_burst_buf_dirname", PATH_MAX - 1, value, &flag);
     if (flag) {
-        strncpy(ncbbp->logbase, value, PATH_MAX);
+        strcpy(ncbbp->logbase, value);
+        ncbbp->logbase[PATH_MAX-1] = '\0';
     }
     else {
         memset(ncbbp->logbase, 0, sizeof(ncbbp->logbase));
     }
 
     /* Overwrite the log file if already exists (disable) */
-    MPI_Info_get(info, "nc_burst_buf_overwrite", MPI_MAX_INFO_VAL - 1,
-                 value, &flag);
+    MPI_Info_get(info, "nc_burst_buf_overwrite", PATH_MAX - 1, value, &flag);
     if (flag && strcasecmp(value, "enable") == 0){
         ncbbp->hints |= NC_LOG_HINT_LOG_OVERWRITE;
     }
@@ -46,21 +45,19 @@ void ncbbio_extract_hint(NC_bb *ncbbp, MPI_Info info) {
      * disabled). This feature depends on the availability of MPI constant
      * MPI_COMM_TYPE_SHARED, which is first defined in MPI standard version 3.0
      */
-    MPI_Info_get(info, "nc_burst_buf_shared_logs", MPI_MAX_INFO_VAL - 1,
-                 value, &flag);
+    MPI_Info_get(info, "nc_burst_buf_shared_logs", PATH_MAX - 1, value, &flag);
     if (flag && strcasecmp(value, "enable") == 0){
         ncbbp->hints |= NC_LOG_HINT_LOG_SHARE;
     }
 
     /* Delete the log file after file closing (enable) */
-    MPI_Info_get(info, "nc_burst_buf_del_on_close", MPI_MAX_INFO_VAL - 1,
-                 value, &flag);
+    MPI_Info_get(info, "nc_burst_buf_del_on_close", PATH_MAX - 1, value, &flag);
     if (flag && strcasecmp(value, "disable") == 0){
         ncbbp->hints ^= NC_LOG_HINT_DEL_ON_CLOSE;
     }
 
     /* Buffer size used to flush the log (0 (unlimited)) */
-    MPI_Info_get(info, "nc_burst_buf_flush_buffer_size", MPI_MAX_INFO_VAL - 1,
+    MPI_Info_get(info, "nc_burst_buf_flush_buffer_size", PATH_MAX - 1,
                  value, &flag);
     if (flag){
         long int bsize = strtol(value, NULL, 0);
