@@ -8,11 +8,12 @@
 #ifndef _NCFOO_DRIVER_H
 #define _NCFOO_DRIVER_H
 
+#include <limits.h>
+#include <unistd.h>
+
 #include <mpi.h>
 #include <pnetcdf.h>
 #include <dispatch.h>
-#include <limits.h>
-#include <unistd.h>
 
 #define NC_LOG_TYPE_TEXT 1
 #define NC_LOG_TYPE_SCHAR 2
@@ -53,21 +54,6 @@
 #define NC_LOG_HINT_LOG_OVERWRITE 0x20
 #define NC_LOG_HINT_LOG_CHECK 0x40
 #define NC_LOG_HINT_LOG_SHARE 0x80
-
-/* PATH_MAX after padding to 4 byte allignment */
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
-
-#if PATH_MAX % 4 == 0
-#define NC_LOG_PATH_MAX PATH_MAX
-#elif PATH_MAX % 4 == 1
-#define NC_LOG_PATH_MAX PATH_MAX + 3
-#elif PATH_MAX % 4 == 2
-#define NC_LOG_PATH_MAX PATH_MAX + 2
-#elif PATH_MAX % 4 == 3
-#define NC_LOG_PATH_MAX PATH_MAX + 1
-#endif
 
 /* Metadata header
  * Variable named according to the spec
@@ -163,9 +149,12 @@ typedef struct NC_bb_sharedfile {
 
 /* Log structure */
 typedef struct NC_bb {
-    char metalogpath[PATH_MAX];    /* path of metadata log */
-    char datalogpath[PATH_MAX];    /* path of data log */
-    char logbase[PATH_MAX];        /* path of log files */
+    /* burst buffer directory name is passed from an MPI hint and the argument
+     * "value" of MPI_Info_get() is limited to the size of MPI_MAX_INFO_VAL.
+     */
+    char metalogpath[MPI_MAX_INFO_VAL];    /* path of metadata log */
+    char datalogpath[MPI_MAX_INFO_VAL];    /* path of data log */
+    char logbase[MPI_MAX_INFO_VAL];        /* path of log files */
     int rank;
     int np;
     NC_bb_sharedfile *metalog_fd;    /* file handle of metadata log */

@@ -27,7 +27,7 @@ int ncbbio_log_create(NC_bb* ncbbp,
                       MPI_Info info)
 {
     int i, rank, np, err, flag, masterrank, procname_len;
-    char logbase[NC_LOG_PATH_MAX], basename[NC_LOG_PATH_MAX];
+    char logbase[MPI_MAX_INFO_VAL], basename[MPI_MAX_INFO_VAL];
     char procname[MPI_MAX_PROCESSOR_NAME];
     char *abspath, *fname, *path, *fdir = NULL;
     char *logbasep = ".";

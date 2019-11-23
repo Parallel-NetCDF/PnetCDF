@@ -109,5 +109,10 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Clarifications
-  + none
+  + The string length of I/O hint `nc_burst_buf_dirname`, the name of burst
+    buffer directory must be less than the value of MPI_MAX_INFO_VAL. This is
+    because all PnetCDF I/O hints were handled through MPI info mechanism and
+    MPI requires the maximum string length of the value of an MPI info object
+    to be MPI_MAX_INFO_VAL. If violated, error MPI_ERR_INFO_VALUE will be
+    returned.
 

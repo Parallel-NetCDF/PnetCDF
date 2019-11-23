@@ -60,7 +60,8 @@ int ncmpii_error_mpi2nc(int   mpi_errorcode, /* returned value from MPI call */
     if (errorclass == MPI_ERR_QUOTA)     return NC_EQUOTA;
 
     /* other errors that currently have no corresponding PnetCDF error codes,
-     * or the error class is MPI_ERR_IO (Other I/O error).
+     * or the error class is MPI_ERR_IO (Other I/O error). For example,
+     * MPI_ERR_INFO_VALUE (MPI info Value longer than MPI_MAX_INFO_VAL).
      */
 
     MPI_Error_string(mpi_errorcode, errorString, &errorStringLen);

@@ -494,9 +494,6 @@ UD_MSG_DEBUG(has_mpicxx=$has_mpicxx)
 AM_CONDITIONAL(HAS_MPICXX, [test x$has_mpicxx = xyes])
 AM_CONDITIONAL(SEEK_SET_REDEFINED, [test x$ac_cv_CHECK_MPI_CPP_SEEK_SET = xyes])
 
-dnl I took the "-ansi" off the CFLAGS for the strict case, as it was
-dnl preventing PATH_MAX from being defined for some of the test files,
-dnl and I was having a tough time figuring out how to get it back! -- RobR
 dnl Note this must be done after the type of C compiler is determined
 AC_ARG_ENABLE(strict,
     [AS_HELP_STRING([--enable-strict],
