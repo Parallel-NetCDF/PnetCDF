@@ -61,7 +61,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
                 for(j = 0; j < varp->ndim; j++){ 
                     if (varp->chunkdim[j] <= 0){
                         valid = 0;
-                        printf("Warning: block size invalid, use default");
+                        printf("Warning: chunk size invalid, use default");
                         break;
                     }
                 }
@@ -70,9 +70,24 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
                 valid = 0;
             }
 
+            // Now, try global default
+            if ((!valid) && nczipp->chunkdim){
+                valid = 1;
+                for(i = 0; i < varp->ndim; i++){
+                    if (nczipp->chunkdim[varp->dimids[i]] > 0){
+                        varp->chunkdim[i] = nczipp->chunkdim[varp->dimids[i]];
+                    }
+                    else{
+                        valid = 0;
+                        break;
+                    }
+                }
+            }
+
             NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT_META)
             
-            // Default block size is same as dim size, only 1 blocks
+            // Still no clue, try to infer form I/O pattern (expensive)
+            // If there is no I/O records, the default is just set to entire variable (only 1 chunk)
             if (!valid){
                 err = nczipioi_calc_chunk_size(nczipp, varp, nreq, starts, counts);
                 if (err != NC_NOERR){

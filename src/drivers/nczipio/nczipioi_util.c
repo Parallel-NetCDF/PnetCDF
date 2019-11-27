@@ -366,3 +366,43 @@ int nczipioi_update_statistics(NC_zip *nczipp){
 
     return NC_NOERR;
 }
+
+int nczipioi_get_default_chunk_dim(NC_zip * nczipp){
+    int err;
+    int i;
+    int ndim, dimid;
+    int len;
+    char *cur, *pre;
+    char name[1024];
+    char *env = getenv("PNETCDF_DEFAULT_CHUNK_DIM");
+
+    if (env != NULL) {       
+        err = nczipp->driver->inq(nczipp->ncp, &ndim, NULL, NULL, NULL);
+        if (err != NC_NOERR) return err;
+
+        if (ndim > nczipp->ndim){
+            nczipp->chunkdim = NCI_Realloc(nczipp->chunkdim, ndim * sizeof(int));
+            for(i = nczipp->ndim; i < ndim; i++){
+                nczipp->chunkdim[i] = 0;
+            }
+            nczipp->ndim = ndim;
+        }
+
+        cur = pre = env;
+        for(cur = pre = env; (*cur)!='\0'; cur++){
+            if ((*cur) == ';'){
+                if (sscanf(pre, "%s : %d ;", name, &len) == 2){
+                    if (len > 0){
+                        err = nczipp->driver->inq_dimid(nczipp->ncp, name, &dimid);
+                        if (err == NC_NOERR){
+                            nczipp->chunkdim[dimid] = len;
+                        }
+                    }
+                }
+                pre = cur + 1;
+            }
+        }
+    }
+
+    return NC_NOERR;
+}

@@ -150,6 +150,8 @@ struct NC_zip {
     int                cache_serial;
     NC_zip_cache       *cache_head;
     NC_zip_cache       *cache_tail;
+    int                      ndim;  // Number of dim in file
+    int                 *chunkdim;  // Default chunk dim for each dimension
 
 #ifdef PNETCDF_PROFILING
     NC_zip_timers profile; 

@@ -33,6 +33,8 @@ nczipioi_init(NC_zip *nczipp, int isnew){
     nczipp->cache_used = 0;
     nczipp->cache_limit = 0;
     nczipp->cache_serial = 0;
+    nczipp->ndim = 0;
+    nczipp->chunkdim = NULL;
 
     err = nczipp->driver->inq(nczipp->ncp, NULL, NULL, NULL, &(nczipp->recdim));
     if (err != NC_NOERR) return err;

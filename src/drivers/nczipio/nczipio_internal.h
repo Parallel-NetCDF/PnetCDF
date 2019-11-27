@@ -169,6 +169,8 @@ extern int nczipioi_export_hint(NC_zip *nczipp, MPI_Info info);
 extern MPI_Offset NC_Type_size(nc_type);
 extern int nczipioi_print_profile(NC_zip*);
 extern void nczipioi_sort_file_offset(int len, MPI_Aint *fdisps, MPI_Aint *mdisps, int *lens);
+extern int nczipioi_update_statistics(NC_zip *nczipp);
+extern int nczipioi_get_default_chunk_dim(NC_zip * nczipp);
 
 // Misc
 extern int nczipioi_calc_chunk_owner(NC_zip*, NC_zip_var*, int, MPI_Offset**, MPI_Offset**, int fixed);
