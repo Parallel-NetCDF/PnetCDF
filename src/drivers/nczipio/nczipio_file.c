@@ -185,6 +185,9 @@ nczipio_open(MPI_Comm     comm,
         DEBUG_RETURN_ERROR(NC_EINVAL)
     }
 
+    err = nczipioi_get_default_chunk_dim(nczipp);
+    if (err != NC_NOERR) return err;
+
     nczipioi_init(nczipp, 0);
 
     nczipioi_parse_var_info(nczipp);

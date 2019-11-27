@@ -102,7 +102,7 @@ int nczipioi_var_resize(NC_zip *nczipp, NC_zip_var *varp) {
                 varp->mychunks = (int*)NCI_Malloc(sizeof(int) * varp->nmychunkrec * varp->nrecalloc);
 
                 if (nczipp->cache_limit_hint == -1){
-                    nczipp->cache_limit += varp->nmychunkrec * varp->chunksize;
+                    nczipp->cache_limit += (size_t)(varp->nmychunkrec) * (size_t)(varp->chunksize);
                 }
             }
 

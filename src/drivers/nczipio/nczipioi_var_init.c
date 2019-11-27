@@ -266,7 +266,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
             }
 
             if (nczipp->cache_limit_hint == -1){
-                nczipp->cache_limit += varp->nmychunkrec * varp->chunksize;
+                nczipp->cache_limit += (size_t)(varp->nmychunkrec) * (size_t)(varp->chunksize);
             }
         }   
     }
