@@ -121,11 +121,13 @@ nczipioi_parse_var_info(NC_zip *nczipp){
             var.etype = ncmpii_nc2mpitype(var.xtype);
             var.chunkdim = NULL;
 
-            NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT_META)
+            if (!(nczipp->delay_init)){
+                NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT_META)
 
-            nczipioi_var_init(nczipp, &var, 0, NULL, NULL);
+                nczipioi_var_init(nczipp, &var, 0, NULL, NULL);
 
-            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT_META)
+                NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_INIT_META)
+            }
         }
     
         if (var.varkind == NC_ZIP_VAR_COMPRESSED || var.varkind == NC_ZIP_VAR_RAW){
