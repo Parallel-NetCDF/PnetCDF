@@ -1725,7 +1725,8 @@ AC_DEFUN([UD_CHECK_MPICC_BASE],[
       else
          # Check Intel C
          ac_MPICC_VER="$($MPICC --version 2>&1)"
-         ac_MPICC_VER=`echo $ac_MPICC_VER | ${GREP} -w icc`
+         # grep keyword Intel instead of "icc"
+         ac_MPICC_VER=`echo $ac_MPICC_VER | ${GREP} -w Intel`
          # AC_MSG_NOTICE(icc ac_MPICC_VER=$ac_MPICC_VER)
          if test "x${ac_MPICC_VER}" != x ; then
             ac_cv_mpicc_base="ICC"
@@ -1739,7 +1740,8 @@ AC_DEFUN([UD_CHECK_MPICC_BASE],[
             else
                # Check PGCC
                ac_MPICC_VER="$($MPICC -V -c 2>&1)"
-               ac_MPICC_VER=`echo $ac_MPICC_VER | ${GREP} -w pgcc`
+               # grep keyword PGI instead of "pgcc"
+               ac_MPICC_VER=`echo $ac_MPICC_VER | ${GREP} -w PGI`
                # AC_MSG_NOTICE(pgcc ac_MPICC_VER=$ac_MPICC_VER)
                if test "x${ac_MPICC_VER}" != x ; then
                   ac_cv_mpicc_base="PGCC"

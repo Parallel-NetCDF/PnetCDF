@@ -9,7 +9,15 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New Limitations
-  + none
+  + Configure command now checks whether the supplied MPI C compiler is a
+    wrapper of a C++ compiler. If this is detected, the PnetCDF configuration
+    will be aborted. This check is enforced because using such an MPI C
+    compiler will cause problem for linking Fortran, C and C++ programs, with
+    an error message similar to this:
+    ```
+    conftestf.o: In function `MAIN_': conftestf.f:4: undefined reference to `sub_'
+    configure:33318: error: Could not link conftestf.o and conftest.o
+    ```
 
 * Update configure options
   + none

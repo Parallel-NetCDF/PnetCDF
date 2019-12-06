@@ -364,6 +364,18 @@ if test "$mpi_version" -lt "2" ; then
    -----------------------------------------------------------------------])
 fi
 
+dnl check whether MPICC is built using a C++ compiler
+AC_MSG_CHECKING([whether $MPICC is a wrapper of a C++ compiler])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [int class=0;])],
+                  [AC_MSG_RESULT(no)],
+                  [AC_MSG_ERROR([
+   -----------------------------------------------------------------------
+     PnetCDF requires the supplied MPI C compiler is not a wrapper of a
+     C++ compiler. MPI C compiler is $MPICC
+     Abort.
+   -----------------------------------------------------------------------])]
+)
+
 dnl compute canonical system types
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
