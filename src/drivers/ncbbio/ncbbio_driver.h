@@ -152,9 +152,9 @@ typedef struct NC_bb {
     /* burst buffer directory name is passed from an MPI hint and the argument
      * "value" of MPI_Info_get() is limited to the size of MPI_MAX_INFO_VAL.
      */
-    char metalogpath[MPI_MAX_INFO_VAL];    /* path of metadata log */
-    char datalogpath[MPI_MAX_INFO_VAL];    /* path of data log */
-    char logbase[MPI_MAX_INFO_VAL];        /* path of log files */
+    char metalogpath[PATH_MAX];    /* path of metadata log */
+    char datalogpath[PATH_MAX];    /* path of data log */
+    char logbase[PATH_MAX];        /* path of log files */
     int rank;
     int np;
     NC_bb_sharedfile *metalog_fd;    /* file handle of metadata log */

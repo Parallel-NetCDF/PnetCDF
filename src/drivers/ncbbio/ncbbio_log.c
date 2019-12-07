@@ -7,13 +7,15 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <dirent.h>
-#include <unistd.h>
+
 #include <stdio.h>
-#include <stdlib.h>
+#include <limits.h> /* realpath() */
+#include <stdlib.h> /* realpath() */
 #include <string.h>
+#include <sys/types.h> /* opendir() closedir() */
+#include <dirent.h>    /* opendir() closedir() */
+#include <unistd.h>
 #include <fcntl.h>
-#include <sys/types.h>
 #include <pnc_debug.h>
 #include <common.h>
 #include <ncbbio_driver.h>
@@ -27,7 +29,7 @@ int ncbbio_log_create(NC_bb* ncbbp,
                       MPI_Info info)
 {
     int i, rank, np, err, flag, masterrank, procname_len;
-    char logbase[MPI_MAX_INFO_VAL], basename[MPI_MAX_INFO_VAL];
+    char logbase[PATH_MAX], basename[PATH_MAX];
     char procname[MPI_MAX_PROCESSOR_NAME];
     char *abspath, *fname, *path, *fdir = NULL;
     char *logbasep = ".";
