@@ -221,9 +221,9 @@
 
 ! create a character variable to hold the string representation of the block
 ! number.  Note this is set to be 4 characters long (i.e. max = 9999).
-      character*4  fnum_string
-      character*80 filename
-      character*8 str
+      character*4   fnum_string
+      character*512 filename
+      character*8   str
 
 ! set the number of variables we are going to write out
       integer, parameter ::  num_out = 4
