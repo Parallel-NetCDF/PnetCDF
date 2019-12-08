@@ -1681,7 +1681,7 @@ if test "x$enable_netcdf4" = xyes ; then
    fi
    have_netcdf4=yes
    AC_CHECK_HEADER([netcdf.h],      [], [have_netcdf4=no])
-   AC_CHECK_HEADER([netcdf_meta.h], [], [have_netcdf4=no])
+   AC_CHECK_HEADERS([netcdf_meta.h],[], [have_netcdf4=no], [[#include <netcdf.h>]])
    if test "x${have_netcdf4}" = xno; then
       AC_MSG_ERROR([
       ------------------------------------------------------------
@@ -1694,7 +1694,7 @@ if test "x$enable_netcdf4" = xyes ; then
       Stopping ...
       ------------------------------------------------------------])
    fi
-   AC_CHECK_HEADER([netcdf_par.h],  [], [have_netcdf4=no])
+   AC_CHECK_HEADERS([netcdf_par.h],  [], [have_netcdf4=no], [[#include <netcdf.h>]])
    if test "x${have_netcdf4}" = xno; then
       AC_MSG_ERROR([
       ------------------------------------------------------------
