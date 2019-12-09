@@ -98,6 +98,7 @@ int main(int argc, char **argv) {
         if (nerrs) printf(FAIL_STR,nerrs);
         else       printf(PASS_STR);
     }
+    free(filename);
 
     MPI_Finalize();
     return (nerrs > 0);
