@@ -175,10 +175,7 @@ nczipioi_parse_var_info(NC_zip *nczipp){
             CHK_ERR_SET_VIEW(((NC*)(nczipp->ncp))->collective_fh, 0, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
             
             // Read data
-            CHK_ERR_READ_AT_ALL(((NC*)(nczipp->ncp))->collective_fh, 0, varp->chunk_index, 1, mtype, &status);
-            
-            // Restore file view
-            CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+            CHK_ERR_READ_AT_ALL(((NC*)(nczipp->ncp))->collective_fh, 0, varp->chunk_index, 1, mdisps, &status);
 
 #ifndef WORDS_BIGENDIAN // Switch back to little endian
             //ncmpii_in_swapn(varp->chunk_index, varp->nchunk + 1, sizeof(long long));

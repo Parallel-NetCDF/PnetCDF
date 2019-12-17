@@ -205,7 +205,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
             // Create memory buffer type
             l = 0;
             if (nczipp->rank == varp->chunk_owner[0]){  // First chunk owner writes metadata
-                lens[l] = (varp->nchunk) * sizeof(NC_zip_chunk_index_entry);
+                lens[l] = (varp->nchunk) * sizeof(long long);
                 disps[l++] = (MPI_Aint)varp->chunk_index;
             }
             for(i = 0; i < varp->nmychunk; i++){
