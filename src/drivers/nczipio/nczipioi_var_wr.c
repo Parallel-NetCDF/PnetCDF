@@ -63,7 +63,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
         }
     }
     if (nczipp->rank == varp->chunk_owner[0]){
-        wcnt += 2;
+        wcnt += 1;
     }
     lens = (int*)NCI_Malloc(sizeof(int) * wcnt);
     disps = (MPI_Aint*)NCI_Malloc(sizeof(MPI_Aint) * wcnt);
@@ -161,8 +161,8 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
         voff = ncp->vars.value[zvarid]->begin;
         for(i = 0; i < varp->nchunk; i++){
             if (zsizes_all[i] > 0){
-                varp->data_lens[i] = zsizes_all[i];
-                varp->data_offs[i] = zoffs[i] + voff - ncp->begin_var;
+                varp->chunk_index[i].len = zsizes_all[i];
+                varp->chunk_index[i].off = zoffs[i] + voff - ncp->begin_var;
             }
         }
 
@@ -196,7 +196,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
                 // Record compressed size
                 if (varp->dirty[k]){
                     lens[l] = zsizes[k];
-                    disps[l++] = (MPI_Aint)varp->data_offs[k] + ncp->begin_var;
+                    disps[l++] = (MPI_Aint)(varp->chunk_index[k].off) + ncp->begin_var;
                 }
             }
             MPI_Type_create_hindexed(wcnt, lens, disps, MPI_BYTE, &ftype);
@@ -205,11 +205,8 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
             // Create memory buffer type
             l = 0;
             if (nczipp->rank == varp->chunk_owner[0]){  // First chunk owner writes metadata
-                lens[l] = (varp->nchunk) * sizeof(long long);
-                disps[l++] = (MPI_Aint)varp->data_offs;
-
-                lens[l] = (varp->nchunk) * sizeof(int);
-                disps[l++] = (MPI_Aint)varp->data_lens;
+                lens[l] = (varp->nchunk) * sizeof(NC_zip_chunk_index_entry);
+                disps[l++] = (MPI_Aint)varp->chunk_index;
             }
             for(i = 0; i < varp->nmychunk; i++){
                 k = varp->mychunks[i];
@@ -228,8 +225,8 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
 
     #ifndef WORDS_BIGENDIAN // NetCDF data is big endian
             if (nczipp->rank == varp->chunk_owner[0]){
-                ncmpii_in_swapn(varp->data_offs, varp->nchunk, sizeof(long long));
-                ncmpii_in_swapn(varp->data_lens, varp->nchunk, sizeof(int));
+                //ncmpii_in_swapn(varp->chunk_index, varp->nchunk, sizeof(long long));
+                //ncmpii_in_swapn(varp->data_lens, varp->nchunk, sizeof(int));
             }
     #endif
 
@@ -243,8 +240,8 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
 
     #ifndef WORDS_BIGENDIAN // Switch back to little endian
             if (nczipp->rank == varp->chunk_owner[0]){
-                ncmpii_in_swapn(varp->data_offs, varp->nchunk, sizeof(long long));
-                ncmpii_in_swapn(varp->data_lens, varp->nchunk, sizeof(int));
+                //ncmpii_in_swapn(varp->chunk_index, varp->nchunk, sizeof(long long));
+                //ncmpii_in_swapn(varp->data_lens, varp->nchunk, sizeof(int));
             }
     #endif
 
@@ -329,7 +326,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     for(i = 0; i < nvar; i++){
         varp = nczipp->vars.data + varids[i];
         if (nczipp->rank == varp->chunk_owner[0]){
-            wcnt += 2;
+            wcnt += 1;
         }
         for(l = 0; l < varp->nmychunk; l++){
             k = varp->mychunks[l];
@@ -495,13 +492,13 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
             }
 
             if (nczipp->rank == varp->chunk_owner[0]){  // First chunk owner writes metadata
-                lens[wcur] = varp->nchunk * sizeof(long long);
+                lens[wcur] = varp->nchunk * sizeof(NC_zip_chunk_index_entry);
                 fdisps[wcur] = (MPI_Aint)varp->metaoff + ncp->begin_var;
-                mdisps[wcur++] = (MPI_Aint)(varp->data_offs);
+                mdisps[wcur++] = (MPI_Aint)(varp->chunk_index);
                 
-                lens[wcur] = varp->nchunk * sizeof(int);
-                fdisps[wcur] = (MPI_Aint)(varp->metaoff + ncp->begin_var + sizeof(long long) * varp->nchunkalloc);
-                mdisps[wcur++] = (MPI_Aint)(varp->data_lens);
+                //lens[wcur] = varp->nchunk * sizeof(int);
+                //fdisps[wcur] = (MPI_Aint)(varp->metaoff + ncp->begin_var + sizeof(long long) * varp->nchunkalloc);
+                //mdisps[wcur++] = (MPI_Aint)(varp->data_lens);
             }
         }
 
@@ -514,8 +511,8 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
             for(cid = 0; cid < varp->nchunk; cid++){
                 if (zsizes_allp[cid] > 0){
-                    varp->data_lens[cid] = zsizes_allp[cid];
-                    varp->data_offs[cid] = zoffsp[cid] + voff - ncp->begin_var;
+                    varp->chunk_index[cid].len = zsizes_allp[cid];
+                    varp->chunk_index[cid].off = zoffsp[cid] + voff - ncp->begin_var;
                 }
             }
 
@@ -528,8 +525,8 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
 
                 // Record parameter
                 if (varp->dirty[cid]){
-                    lens[wcur] = varp->data_lens[cid];
-                    fdisps[wcur] = (MPI_Aint)varp->data_offs[cid] + ncp->begin_var;
+                    lens[wcur] = varp->chunk_index[cid].len;
+                    fdisps[wcur] = (MPI_Aint)(varp->chunk_index[cid].off) + ncp->begin_var;
                     mdisps[wcur++] = (MPI_Aint)zbufs[ccur++];
                 }
             }
@@ -561,8 +558,8 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
             for(vid = 0; vid < nvar; vid++){
                 varp = nczipp->vars.data +  varids[vid];
                 if (nczipp->rank == varp->chunk_owner[0]){
-                    ncmpii_in_swapn(varp->data_offs, varp->nchunk + 1, sizeof(long long));
-                    ncmpii_in_swapn(varp->data_lens, varp->nchunk + 1, sizeof(int));
+                    //ncmpii_in_swapn(varp->chunk_index, varp->nchunk + 1, sizeof(long long));
+                    //ncmpii_in_swapn(varp->data_lens, varp->nchunk + 1, sizeof(int));
                 }
             }
     #endif     
@@ -579,8 +576,8 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
             for(vid = 0; vid < nvar; vid++){
                 varp = nczipp->vars.data +  varids[vid];
                 if (nczipp->rank == varp->chunk_owner[0]){
-                    ncmpii_in_swapn(varp->data_offs, varp->nchunk + 1, sizeof(long long));
-                    ncmpii_in_swapn(varp->data_lens, varp->nchunk + 1, sizeof(int));
+                    //ncmpii_in_swapn(varp->chunk_index, varp->nchunk + 1, sizeof(long long));
+                    //ncmpii_in_swapn(varp->data_lens, varp->nchunk + 1, sizeof(int));
                 }
             }
     #endif    

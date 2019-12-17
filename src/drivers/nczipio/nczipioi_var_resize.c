@@ -66,15 +66,12 @@ int nczipioi_var_resize(NC_zip *nczipp, NC_zip_var *varp) {
                     }
                 }
 
-                varp->data_offs = (MPI_Offset*)NCI_Realloc(varp->data_offs, sizeof(MPI_Offset) * (varp->nchunkalloc + 1));
-                varp->data_lens = (int*)NCI_Realloc(varp->data_lens, sizeof(int) * (varp->nchunkalloc + 1));
-
+                varp->chunk_index = (NC_zip_chunk_index_entry*)NCI_Realloc(varp->chunk_index, sizeof(NC_zip_chunk_index_entry) * (varp->nchunkalloc + 1));
                 varp->mychunks = (int*)NCI_Realloc(varp->mychunks, sizeof(int) * varp->nrecalloc * varp->nmychunkrec);
 
                 varp->expanded = 1;
             }
-            memset(varp->data_offs + oldnchunk, 0, sizeof(int) * (varp->nchunk - oldnchunk));
-            memset(varp->data_lens + oldnchunk, 0, sizeof(int) * (varp->nchunk - oldnchunk));
+            memset(varp->chunk_index + oldnchunk, 0, sizeof(NC_zip_chunk_index_entry) * (varp->nchunk - oldnchunk));
             memset(varp->dirty + oldnchunk, 0, sizeof(int) * (varp->nchunk - oldnchunk));
             memset(varp->chunk_cache + oldnchunk, 0, sizeof(char*) * (varp->nchunk - oldnchunk));
 

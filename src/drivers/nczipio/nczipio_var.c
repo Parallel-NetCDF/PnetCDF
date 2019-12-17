@@ -73,7 +73,7 @@ nczipio_def_var(void       *ncdp,
 
     var.ndim = ndims;
     var.chunkdim = NULL;
-    var.data_offs = NULL;
+    var.chunk_index = NULL;
     var.chunk_owner = NULL;
     var.xtype = xtype;
     var.esize = NC_Type_size(xtype);

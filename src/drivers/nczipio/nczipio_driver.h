@@ -70,6 +70,11 @@ typedef struct NC_zip_var_chunk {
     char *xdata;
 } NC_zip_var_chunk;
 
+typedef struct NC_zip_chunk_index_entry{
+    MPI_Offset off;
+    int len;
+}NC_zip_chunk_index_entry;
+
 typedef struct NC_zip_var {
     int varkind;
     int isrec;
@@ -104,8 +109,9 @@ typedef struct NC_zip_var {
     int *mychunks;
     
     MPI_Offset metaoff;
-    MPI_Offset *data_offs;
-    int *data_lens;
+    NC_zip_chunk_index_entry *chunk_index;
+    //MPI_Offset *data_offs;
+    //int *data_lens;
     
     NCZIP_driver      *zip;         /* Compression driver */
     int                zipdriver;

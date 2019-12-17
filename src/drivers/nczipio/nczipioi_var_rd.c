@@ -44,8 +44,6 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
     MPI_Status status;
     MPI_Datatype ftype, mtype;  // Memory and file datatype
 
-    int *zsizes;
-    MPI_Offset *zoffs;
     char **zbufs;
 
     NC *ncp = (NC*)(nczipp->ncp);
@@ -58,9 +56,6 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
         nchunk = varp->nmychunk;
         cids = varp->mychunks;
     }
-
-    zsizes = varp->data_lens;
-    zoffs = varp->data_offs;
 
     // Allocate buffer for I/O
     lens = (int*)NCI_Malloc(sizeof(int) * nchunk);
@@ -78,8 +73,8 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
         for(i = 0; i < nchunk; i++){
             cid = cids[i];
             // offset and length of compressed chunks
-            lens[i] = zsizes[cid];
-            fdisps[i] = (MPI_Aint)zoffs[cid] + ncp->begin_var;
+            lens[i] = varp->chunk_index[cid].len;
+            fdisps[i] = (MPI_Aint)(varp->chunk_index[cid].off) + ncp->begin_var;
             mdisps[i] = bsize;
             // At the same time, we record the size of buffer we need
             bsize += (MPI_Offset)lens[i];
@@ -88,7 +83,7 @@ int nczipioi_load_var(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
         // Allocate buffer for compressed data
         zbufs[0] = (char*)NCI_Malloc(bsize);
         for(i = 1; i < nchunk; i++){
-            zbufs[i] = zbufs[i - 1] + zsizes[cids[i - 1]]; 
+            zbufs[i] = zbufs[i - 1] + varp->chunk_index[cids[i - 1]].len; 
         }
 
         nczipioi_sort_file_offset(nchunk, fdisps, mdisps, lens);
@@ -223,7 +218,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids, int *lo, int *hi) 
 
         for(j = lo[i]; j < hi[i]; j++){
             cid = varp->mychunks[j];
-            if (varp->chunk_cache[cid] == NULL && varp->data_lens[cid] > 0){                
+            if (varp->chunk_cache[cid] == NULL && varp->chunk_index[cid].len > 0){                
                 nchunk++;
             }
         }
@@ -250,10 +245,10 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids, int *lo, int *hi) 
                 cid = varp->mychunks[j];
 
                 // We only need to read when it is not in cache
-                if (varp->chunk_cache[cid] == NULL && varp->data_lens[cid] > 0){
+                if (varp->chunk_cache[cid] == NULL && varp->chunk_index[cid].len > 0){
                     // offset and length of compressed chunks
-                    lens[k] = varp->data_lens[cid];
-                    fdisps[k] = (MPI_Aint)(varp->data_offs[cid] + ncp->begin_var);
+                    lens[k] = varp->chunk_index[cid].len;
+                    fdisps[k] = (MPI_Aint)(varp->chunk_index[cid].off + ncp->begin_var);
                     mdisps[k] = bsize;
                     // At the same time, we record the size of buffer we need
                     bsize += (MPI_Offset)lens[k++];
@@ -320,7 +315,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids, int *lo, int *hi) 
                         //varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 
                         // Perform decompression
-                        if (varp->data_lens[cid] > 0){
+                        if (varp->chunk_index[cid].len > 0){
                             varp->zip->decompress(zbufs[k], lens[k], varp->chunk_cache[cid]->buf, &dsize, varp->ndim, varp->chunkdim, varp->etype);
                             if(dsize != varp->chunksize){
                                 printf("Decompress Error\n");
@@ -346,7 +341,7 @@ int nczipioi_load_nvar(NC_zip *nczipp, int nvar, int *varids, int *lo, int *hi) 
                         err = nczipioi_cache_alloc(nczipp, varp->chunksize, varp->chunk_cache + cid);
                         //varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 
-                        if (varp->data_lens[cid] > 0){
+                        if (varp->chunk_index[cid].len > 0){
                             memcpy(varp->chunk_cache[cid]->buf, zbufs[k], lens[k]);
                             k++;
                         }
@@ -421,8 +416,6 @@ int nczipioi_load_var_bg(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids
     MPI_Status status;
     MPI_Datatype ftype, mtype;  // Memory and file datatype
 
-    int *zsizes;
-    MPI_Offset *zoffs;
     char **zbufs;
 
     NC *ncp = (NC*)(nczipp->ncp);
@@ -435,9 +428,6 @@ int nczipioi_load_var_bg(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids
         nchunk = varp->nmychunk;
         cids = varp->mychunks;
     }
-
-    zsizes = varp->data_lens;
-    zoffs = varp->data_offs;
 
     // Allocate buffer for I/O
     lens = (int*)NCI_Malloc(sizeof(int) * nchunk);
@@ -455,8 +445,8 @@ int nczipioi_load_var_bg(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids
         for(i = 0; i < nchunk; i++){
             cid = cids[i];
             // offset and length of compressed chunks
-            lens[i] = zsizes[cid];
-            fdisps[i] = (MPI_Aint)zoffs[cid] + ncp->begin_var;
+            lens[i] = varp->chunk_index[cid].len;
+            fdisps[i] = (MPI_Aint)(varp->chunk_index[cid].off) + ncp->begin_var;
             mdisps[i] = bsize;
             // At the same time, we record the size of buffer we need
             bsize += (MPI_Offset)lens[i];
@@ -465,7 +455,7 @@ int nczipioi_load_var_bg(NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids
         // Allocate buffer for compressed data
         zbufs[0] = (char*)NCI_Malloc(bsize);
         for(i = 1; i < nchunk; i++){
-            zbufs[i] = zbufs[i - 1] + zsizes[cids[i - 1]]; 
+            zbufs[i] = zbufs[i - 1] + varp->chunk_index[cids[i - 1]].len; 
         }
 
         nczipioi_sort_file_offset(nchunk, fdisps, mdisps, lens);
@@ -600,7 +590,7 @@ int nczipioi_load_nvar_bg(NC_zip *nczipp, int nvar, int *varids, int *lo, int *h
 
         for(j = lo[i]; j < hi[i]; j++){
             cid = varp->mychunks[j];
-            if (varp->chunk_cache[cid] == NULL && varp->data_lens[cid] > 0){                
+            if (varp->chunk_cache[cid] == NULL && varp->chunk_index[cid].len > 0){                
                 nchunk++;
             }
         }
@@ -627,10 +617,10 @@ int nczipioi_load_nvar_bg(NC_zip *nczipp, int nvar, int *varids, int *lo, int *h
                 cid = varp->mychunks[j];
 
                 // We only need to read when it is not in cache
-                if (varp->chunk_cache[cid] == NULL && varp->data_lens[cid] > 0){
+                if (varp->chunk_cache[cid] == NULL && varp->chunk_index[cid].len > 0){
                     // offset and length of compressed chunks
-                    lens[k] = varp->data_lens[cid];
-                    fdisps[k] = (MPI_Aint)(varp->data_offs[cid] + ncp->begin_var);
+                    lens[k] = varp->chunk_index[cid].len;
+                    fdisps[k] = (MPI_Aint)(varp->chunk_index[cid].off + ncp->begin_var);
                     mdisps[k] = bsize;
                     // At the same time, we record the size of buffer we need
                     bsize += (MPI_Offset)lens[k++];
@@ -697,7 +687,7 @@ int nczipioi_load_nvar_bg(NC_zip *nczipp, int nvar, int *varids, int *lo, int *h
                         //varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 
                         // Perform decompression
-                        if (varp->data_lens[cid] > 0){
+                        if (varp->chunk_index[cid].len > 0){
                             varp->zip->decompress(zbufs[k], lens[k], varp->chunk_cache[cid]->buf, &dsize, varp->ndim, varp->chunkdim, varp->etype);
                             if(dsize != varp->chunksize){
                                 printf("Decompress Error\n");
@@ -723,7 +713,7 @@ int nczipioi_load_nvar_bg(NC_zip *nczipp, int nvar, int *varids, int *lo, int *h
                         err = nczipioi_cache_alloc(nczipp, varp->chunksize, varp->chunk_cache + cid);
                         //varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 
-                        if (varp->data_lens[cid] > 0){
+                        if (varp->chunk_index[cid].len > 0){
                             memcpy(varp->chunk_cache[cid]->buf, zbufs[k], lens[k]);
                             k++;
                         }

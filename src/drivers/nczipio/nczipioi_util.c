@@ -358,7 +358,7 @@ int nczipioi_update_statistics(NC_zip *nczipp){
         if (varp->varkind == NC_ZIP_VAR_COMPRESSED){
 			for(j = 0; j < varp->nmychunk; j++){
 				cid = varp->mychunks[j];
-				nczipp->var_zsize_sum += varp->data_lens[cid];
+				nczipp->var_zsize_sum += varp->chunk_index[cid].len;
 			}
 			nczipp->var_size_sum += varp->nmychunk * varp->chunksize;
 		}

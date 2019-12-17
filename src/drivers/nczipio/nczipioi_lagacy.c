@@ -92,7 +92,7 @@ nczipioi_get_var_old(NC_zip        *nczipp,
         j = get_chunk_idx(varp, ccord);   
         bidx[i] = j; // chunk idx
         cbsize += varp->data_lens[j];  // total buffer size of compressed data
-        starts[i] = varp->data_offs + j;   // start of the chunk
+        starts[i] = varp->chunk_index + j;   // start of the chunk
         counts[i] = varp->data_lens + j; // count of the chunk
 
         // move on to next chunk
