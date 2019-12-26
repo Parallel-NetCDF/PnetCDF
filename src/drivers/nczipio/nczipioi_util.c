@@ -406,3 +406,23 @@ int nczipioi_get_default_chunk_dim(NC_zip * nczipp){
 
     return NC_NOERR;
 }
+
+/* in-place byte swap */
+void nczipioi_idx_in_swapn(NC_zip_chunk_index_entry *idx, MPI_Offset nelems){
+    NC_zip_chunk_index_entry *bufp;
+
+    for (bufp = idx; bufp < idx + nelems; bufp++){
+        bufp->off = ((bufp->off & 0x00000000000000FFULL) << 56) |
+                    ((bufp->off & 0x000000000000FF00ULL) << 40) |
+                    ((bufp->off & 0x0000000000FF0000ULL) << 24) |
+                    ((bufp->off & 0x00000000FF000000ULL) <<  8) |
+                    ((bufp->off & 0x000000FF00000000ULL) >>  8) |
+                    ((bufp->off & 0x0000FF0000000000ULL) >> 24) |
+                    ((bufp->off & 0x00FF000000000000ULL) >> 40) |
+                    ((bufp->off & 0xFF00000000000000ULL) >> 56);
+        bufp->len =  ((bufp->len) << 24)
+                    | (((bufp->len) & 0x0000ff00) << 8)
+                    | (((bufp->len) & 0x00ff0000) >> 8)
+                    | (((bufp->len) >> 24));
+    }
+}

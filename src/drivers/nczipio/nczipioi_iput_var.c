@@ -412,7 +412,12 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         }
     }
 
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)
+#ifdef PNETCDF_PROFILING
+    MPI_Barrier(nczipp->comm);
+#endif
     err = nczipioi_load_nvar_bg(nczipp, nread, rids, rlo_all, rhi_all); CHK_ERR
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB)
 
     (nczipp->cache_serial)++;
     

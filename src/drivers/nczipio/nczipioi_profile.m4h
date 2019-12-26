@@ -17,6 +17,11 @@ define(`upcase', `translit(`$*', `a-z', `A-Z')')dnl
 
 #define NC_ZIP_TIMER_START(A) nczipp->profile.st[A] = MPI_Wtime(); 
 #define NC_ZIP_TIMER_STOP(A)  nczipp->profile.tt[A] += MPI_Wtime() - nczipp->profile.st[A];
+#define NC_ZIP_TIMER_SWAP(A, B)  { \
+    nczipp->profile.tmp = MPI_Wtime(); \
+    nczipp->profile.tt[A] += nczipp->profile.tmp - nczipp->profile.st[A]; \
+    nczipp->profile.st[B] = nczipp->profile.tmp;  \
+}
 #define NC_ZIP_TIMER_STOPEX(A, B)  { \
     nczipp->profile.tmp = MPI_Wtime(); \
     nczipp->profile.tt[A] += nczipp->profile.tmp - nczipp->profile.st[A]; \
@@ -44,6 +49,7 @@ typedef struct NC_zip_timers {
 
 #define NC_ZIP_TIMER_START(A)
 #define NC_ZIP_TIMER_STOP(A)
+#define NC_ZIP_TIMER_SWAP(A, B)
 #define NC_ZIP_TIMER_STOPEX(A, B) 
 
 #endif

@@ -389,6 +389,35 @@ int nczipioi_init_nvar(NC_zip *nczipp, int nput, int *putreqs, int nget, int *ge
         }
     }
 
+    if (nread){
+        nczipioi_sort_file_offset(nread, fdisps, mdisps, lens);
+
+        MPI_Type_create_hindexed(nread, lens, fdisps, MPI_BYTE, &ftype);
+        CHK_ERR_TYPE_COMMIT(&ftype);
+
+        MPI_Type_create_hindexed(nread, lens, mdisps, MPI_BYTE, &mtype);
+        CHK_ERR_TYPE_COMMIT(&mtype);
+
+        // Set file view
+        CHK_ERR_SET_VIEW(((NC*)(nczipp->ncp))->collective_fh, ((NC*)(nczipp->ncp))->begin_var, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
+        
+        // Read data
+        CHK_ERR_READ_AT_ALL(((NC*)(nczipp->ncp))->collective_fh, 0, MPI_BOTTOM, 1, mtype, &status);
+        
+        // Restore file view
+        CHK_ERR_SET_VIEW(((NC*)(nczipp->ncp))->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+
+#ifdef WORDS_BIGENDIAN // Switch back to little endian
+        nczipioi_idx_in_swapn(varp-chunk_index, varp->nchunk + 1);
+#endif
+
+        MPI_Type_free(&ftype);
+        MPI_Type_free(&mtype);
+    }
+
+    NCI_Free(lens);
+    NCI_Free(fdisps);
+
     NCI_Free(flag);
     NCI_Free(vids);
     NCI_Free(vmap);

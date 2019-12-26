@@ -177,9 +177,8 @@ nczipioi_parse_var_info(NC_zip *nczipp){
             // Read data
             CHK_ERR_READ_AT_ALL(((NC*)(nczipp->ncp))->collective_fh, 0, varp->chunk_index, 1, mdisps, &status);
 
-#ifndef WORDS_BIGENDIAN // Switch back to little endian
-            //ncmpii_in_swapn(varp->chunk_index, varp->nchunk + 1, sizeof(long long));
-            //ncmpii_in_swapn(varp->data_lens, varp->nchunk + 1, sizeof(int));
+#ifdef WORDS_BIGENDIAN // Switch back to little endian
+                nczipioi_idx_in_swapn(varp-chunk_index, varp->nchunk + 1);
 #endif
 
             MPI_Type_free(&ftype);

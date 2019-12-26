@@ -165,22 +165,25 @@ extern int nczipioi_var_list_add(NC_zip_var_list*, NC_zip_var);
 
 // Util
 extern int nczipioi_extract_hint(NC_zip*, MPI_Info);
-extern int nczipioi_export_hint(NC_zip *nczipp, MPI_Info info);
+extern int nczipioi_export_hint(NC_zip*, MPI_Info);
 extern MPI_Offset NC_Type_size(nc_type);
 extern int nczipioi_print_profile(NC_zip*);
-extern void nczipioi_sort_file_offset(int len, MPI_Aint *fdisps, MPI_Aint *mdisps, int *lens);
-extern int nczipioi_update_statistics(NC_zip *nczipp);
-extern int nczipioi_get_default_chunk_dim(NC_zip * nczipp);
+extern void nczipioi_sort_file_offset(int, MPI_Aint*, MPI_Aint*, int*);
+extern int nczipioi_update_statistics(NC_zip*);
+extern int nczipioi_get_default_chunk_dim(NC_zip*);
+extern int nczipioi_subarray_off_len(int, int*, int*, int*, int*, int*);
+extern void nczipioi_idx_in_swapn(NC_zip_chunk_index_entry*, MPI_Offset);
 
 // Misc
 extern int nczipioi_calc_chunk_owner(NC_zip*, NC_zip_var*, int, MPI_Offset**, MPI_Offset**, int fixed);
 extern int nczipioi_calc_chunk_size(NC_zip*, NC_zip_var*, int, MPI_Offset**, MPI_Offset**);
-extern int nczipioiconvert(void *inbuf, void *outbuf, MPI_Datatype intype, MPI_Datatype outtype, int N);
+extern int nczipioiconvert(void*, void*, MPI_Datatype, MPI_Datatype, int);
 
 // Var
 extern int nczipioi_var_init(NC_zip*, NC_zip_var*, int, MPI_Offset**, MPI_Offset**);
 extern int nczipioi_load_var(NC_zip*, NC_zip_var*, int, int*);
 extern int nczipioi_load_nvar(NC_zip*, int, int*, int*, int*);
+extern int nczipioi_load_nvar_bg(NC_zip*, int, int*, int*, int*);
 extern int nczipioi_save_var(NC_zip*, NC_zip_var*);
 extern int nczipioi_save_nvar(NC_zip*, int, int*);
 extern void nczipioi_var_free(NC_zip_var*);
@@ -207,8 +210,8 @@ extern int nczipioi_chunk_itr_next_ex(NC_zip_var*, const MPI_Offset*, const MPI_
 extern int nczipioi_get_var_cb_chunk(NC_zip*, NC_zip_var*, const MPI_Offset*, const MPI_Offset*, const MPI_Offset*, void*);
 extern int nczipioi_get_var_cb_proc(NC_zip*, NC_zip_var*, const MPI_Offset*, const MPI_Offset*, const MPI_Offset*, void*);
 extern int nczipioi_get_varn(NC_zip *, NC_zip_var*, int , MPI_Offset* const *, MPI_Offset* const *, const void*);
-extern int nczipioi_get_varn_cb_chunk(NC_zip*, NC_zip_var*, int nreq, MPI_Offset* const*, MPI_Offset* const*, MPI_Offset* const*, void**);
-extern int nczipioi_get_varn_cb_proc(NC_zip*, NC_zip_var*, int nreq, MPI_Offset* const*, MPI_Offset* const*, void**);
+extern int nczipioi_get_varn_cb_chunk(NC_zip*, NC_zip_var*, int, MPI_Offset* const*, MPI_Offset* const*, MPI_Offset* const*, void**);
+extern int nczipioi_get_varn_cb_proc(NC_zip*, NC_zip_var*, int, MPI_Offset* const*, MPI_Offset* const*, void**);
 extern int nczipioi_iget_var(NC_zip*, int, const MPI_Offset*, const MPI_Offset*, const MPI_Offset*, const MPI_Offset*, void*, MPI_Offset, MPI_Datatype, int*);
 extern int nczipioi_iget_varn(NC_zip*, int, int, MPI_Offset * const*, MPI_Offset * const*, void*, MPI_Offset, MPI_Datatype, int*);
 extern int nczipioi_iget_cb_chunk(NC_zip*, int, int*, int*);

@@ -96,6 +96,13 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_COM)
+
+#ifdef PNETCDF_PROFILING
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO)
+    MPI_Barrier(nczipp->comm);
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO)
+#endif
+
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_SYNC)
 
     // Sync compressed data size with other processes
@@ -220,15 +227,13 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
             err = MPI_Type_create_hindexed(wcnt, lens, disps, MPI_BYTE, &mtype);
             CHK_ERR_TYPE_COMMIT(&mtype);
 
-            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_INIT)
-            NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_WR)
+            NC_ZIP_TIMER_SWAP(NC_ZIP_TIMER_PUT_IO_INIT,NC_ZIP_TIMER_PUT_IO_WR)
 
-    #ifndef WORDS_BIGENDIAN // NetCDF data is big endian
+#ifdef WORDS_BIGENDIAN // NetCDF data is big endian
             if (nczipp->rank == varp->chunk_owner[0]){
-                //ncmpii_in_swapn(varp->chunk_index, varp->nchunk, sizeof(long long));
-                //ncmpii_in_swapn(varp->data_lens, varp->nchunk, sizeof(int));
+                nczipioi_idx_in_swapn(varp-chunk_index, varp->nchunk);
             }
-    #endif
+#endif
 
             // Perform MPI-IO
             // Set file view
@@ -238,20 +243,19 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
             // Restore file view
             CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
-    #ifndef WORDS_BIGENDIAN // Switch back to little endian
+#ifdef WORDS_BIGENDIAN // Switch back to little endian
             if (nczipp->rank == varp->chunk_owner[0]){
-                //ncmpii_in_swapn(varp->chunk_index, varp->nchunk, sizeof(long long));
-                //ncmpii_in_swapn(varp->data_lens, varp->nchunk, sizeof(int));
+                nczipioi_idx_in_swapn(varp-chunk_index, varp->nchunk);
             }
-    #endif
+#endif
 
             NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_WR)
 
-    #ifdef _USE_MPI_GET_COUNT
+#ifdef _USE_MPI_GET_COUNT
             MPI_Get_count(&status, MPI_BYTE, &put_size);
-    #else
+#else
             MPI_Type_size(mtype, &put_size);
-    #endif
+#endif
             nczipp->putsize += put_size;
 
             // Free type
@@ -259,8 +263,7 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
             MPI_Type_free(&mtype);
         }
         else{
-            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_INIT)
-            NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_WR)
+            NC_ZIP_TIMER_SWAP(NC_ZIP_TIMER_PUT_IO_INIT,NC_ZIP_TIMER_PUT_IO_WR)
 
             // Follow coll I/O with dummy call
             CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
@@ -392,8 +395,8 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
             }
         }
 
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_COM)
-        NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_SYNC)
+
+        NC_ZIP_TIMER_SWAP(NC_ZIP_TIMER_PUT_IO_COM,NC_ZIP_TIMER_PUT_IO_SYNC)
 
         // Sync compressed data size with other processes
         CHK_ERR_IALLREDUCE(zsizesp, zsizes_allp, varp->nchunk, MPI_INT, MPI_MAX, nczipp->comm, reqs + vid);
@@ -411,6 +414,12 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
         zsizes_allp += varp->nchunk;
     }
     
+#ifdef PNETCDF_PROFILING
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO)
+    MPI_Barrier(nczipp->comm);
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO)
+#endif
+
     /* Write comrpessed variable
     * We start by defining data variable and writing metadata
     * Then, we create buffer type and file type for data
@@ -538,8 +547,7 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
             zoffsp += varp->nchunk;
         }
 
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_INIT)
-        NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_WR)
+        NC_ZIP_TIMER_SWAP(NC_ZIP_TIMER_PUT_IO_INIT,NC_ZIP_TIMER_PUT_IO_WR)
 
         /* Carry our coll I/O
         * OpenMPI will fail when set view or do I/O on type created with MPI_Type_create_hindexed when count is 0
@@ -554,15 +562,14 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
             MPI_Type_create_hindexed(wcnt, lens, mdisps, MPI_BYTE, &mtype);
             CHK_ERR_TYPE_COMMIT(&mtype);
 
-    #ifndef WORDS_BIGENDIAN // NetCDF data is big endian
+#ifdef WORDS_BIGENDIAN // NetCDF data is big endian
             for(vid = 0; vid < nvar; vid++){
                 varp = nczipp->vars.data +  varids[vid];
                 if (nczipp->rank == varp->chunk_owner[0]){
-                    //ncmpii_in_swapn(varp->chunk_index, varp->nchunk + 1, sizeof(long long));
-                    //ncmpii_in_swapn(varp->data_lens, varp->nchunk + 1, sizeof(int));
+                    nczipioi_idx_in_swapn(varp-chunk_index, varp->nchunk + 1);
                 }
             }
-    #endif     
+#endif     
 
             // Perform MPI-IO
             // Set file view
@@ -572,23 +579,22 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
             // Restore file view
             CHK_ERR_SET_VIEW(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
 
-    #ifndef WORDS_BIGENDIAN // Switch back to little endian
+#ifdef WORDS_BIGENDIAN // Switch back to little endian
             for(vid = 0; vid < nvar; vid++){
                 varp = nczipp->vars.data +  varids[vid];
                 if (nczipp->rank == varp->chunk_owner[0]){
-                    //ncmpii_in_swapn(varp->chunk_index, varp->nchunk + 1, sizeof(long long));
-                    //ncmpii_in_swapn(varp->data_lens, varp->nchunk + 1, sizeof(int));
+                    nczipioi_idx_in_swapn(varp-chunk_index, varp->nchunk + 1);
                 }
             }
-    #endif    
+#endif    
 
             NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_WR)
 
-    #ifdef _USE_MPI_GET_COUNT
+#ifdef _USE_MPI_GET_COUNT
             MPI_Get_count(&status, MPI_BYTE, &put_size);
-    #else
+#else
             MPI_Type_size(mtype, &put_size);
-    #endif
+#endif
             nczipp->putsize += put_size;
 
             // Free type

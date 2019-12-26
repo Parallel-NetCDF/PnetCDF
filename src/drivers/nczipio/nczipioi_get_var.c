@@ -139,6 +139,9 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)  // I/O time count separately
 
+#ifdef PNETCDF_PROFILING
+    MPI_Barrier(nczipp->comm);
+#endif
     // Decompress chunks into chunk cache
     nczipioi_load_var(nczipp, varp, nread, rids);
 
@@ -655,6 +658,9 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)  // I/O time count separately
 
+#ifdef PNETCDF_PROFILING
+    MPI_Barrier(nczipp->comm);
+#endif
     // Decompress chunks into chunk cache
     nczipioi_load_var(nczipp, varp, nread, rids);
     
