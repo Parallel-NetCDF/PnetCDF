@@ -126,14 +126,14 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
         // We read only chunks that is required
         if (rcnt_all[cid] || rcnt_local[cid]){
             if (varp->chunk_cache[cid] == NULL){
-                err = nczipioi_cache_alloc(nczipp, varp->chunksize, varp->chunk_cache + cid);
+                //err = nczipioi_cache_alloc(nczipp, varp->chunksize, varp->chunk_cache + cid);
                 //varp->chunk_cache[cid] = (NC_zip_cache*)NCI_Malloc(varp->chunksize);
                 if (varp->chunk_index[cid].len > 0){
                     rids[nread++] = cid;
                 }
             }
             else{
-                nczipioi_cache_visit(nczipp, varp->chunk_cache[cid]);
+                //nczipioi_cache_visit(nczipp, varp->chunk_cache[cid]);
             }
         }
     }
@@ -567,14 +567,14 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
     for(i = j; i < k; i++){
         cid = varp->mychunks[i];
         if (varp->chunk_cache[cid] == NULL){
-            err = nczipioi_cache_alloc(nczipp, varp->chunksize, varp->chunk_cache + cid);
+            //err = nczipioi_cache_alloc(nczipp, varp->chunksize, varp->chunk_cache + cid);
             //varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
             if (varp->chunk_index[cid].len > 0){
                 rids[nread++] = cid;
             }
         }
         else{
-            nczipioi_cache_visit(nczipp, varp->chunk_cache[cid]);
+            //nczipioi_cache_visit(nczipp, varp->chunk_cache[cid]);
         }
     }
     // Increase batch number to indicate allocated chunk buffer can be freed for future allocation
