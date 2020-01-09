@@ -412,7 +412,7 @@ int nczipioi_iput_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         }
     }
 
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB)
 #ifdef PNETCDF_PROFILING
     MPI_Barrier(nczipp->comm);
 #endif
