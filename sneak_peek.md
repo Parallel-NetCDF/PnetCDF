@@ -44,8 +44,17 @@ This is essentially a placeholder for the next release note ...
 * Build recipes
   + none
 
-* New/updated utility program
-  + none
+* Updated utility program
+  + ncvalidator now reports the name of variable that violates the NetCDF
+    limitation on large variables for CDF-2 files
+  + add corrupted file bad_large_fixed_var.nc2 that contains one large
+    fixed-size variables that is not defined last
+  + add corrupted file bad_large_rec_2_vars.nc2 that contains 2 large record
+    variables
+  + add corrupted file bad_large_rec_var.nc2 that contains 1 large record
+    variable that is not defined last
+  + add URLs of NetCDF limitations on large variables for CDF-1 and 2 file
+    formats
 
 * Other updates:
   + none
