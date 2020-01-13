@@ -1876,6 +1876,8 @@ val_NC_check_vlens(NC *ncp)
        and format 2. */
     long long ii, vlen_max, rec_vars_count;
     long long large_fix_vars_count, large_rec_vars_count;
+    long long first_large_fix_var, first_large_rec_var;
+    long long second_large_fix_var, second_large_rec_var;
     int last = 0;
 
     if (ncp->vars.ndefined == 0)
@@ -1902,6 +1904,8 @@ val_NC_check_vlens(NC *ncp)
                     if (verbose) printf("\tvar %s: variable size greater than max (%lld) allowable by CDF-%d\n",(*vpp)->name,vlen_max,ncp->format);
                     DEBUG_RETURN_ERROR(NC_EVARSIZE)
                 }
+                if (!large_fix_vars_count) first_large_fix_var = ii;
+                else if (large_fix_vars_count == 1) second_large_fix_var = ii;
                 large_fix_vars_count++;
                 last = 1;
             }
@@ -1912,15 +1916,30 @@ val_NC_check_vlens(NC *ncp)
     /* OK if last non-record variable size too large, since not used to
        compute an offset */
     if (large_fix_vars_count > 1) {  /* only one "too-large" variable allowed */
-        if (verbose) printf("Error:\n");
-        if (verbose) printf("\tCDF-%d format allows only one large fixed-size variable\n",ncp->format);
+        if (verbose) {
+            printf("Error:\n");
+            printf("\tInput file contains %d large fixed-size variables\n",large_fix_vars_count);
+            printf("\tCDF-%d format allows only one large fixed-size variable\n",ncp->format);
+            printf("\tThe 1st large fixed-size variable is %s\n",ncp->vars.value[first_large_fix_var]->name);
+            printf("\tThe 2nd large fixed-size variable is %s\n",ncp->vars.value[second_large_fix_var]->name);
+            if (ncp->format == 1)
+                printf("\tSee: https://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations\n");
+            else if (ncp->format == 2)
+                printf("\tSee: http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations\n");
+        }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
 
     /* The only "too-large" variable must be the last one defined */
     if (large_fix_vars_count == 1 && last == 0) {
-        if (verbose) printf("Error:\n");
-        if (verbose) printf("\tCDF-%d format allows only one large fixed-size variable\n",ncp->format);
+        if (verbose) {
+            printf("Error:\n");
+            printf("\tCDF-%d format allows only one large fixed-size variable which must be defined last and there is no record variable\n",ncp->format);
+            if (ncp->format == 1)
+                printf("\tSee: https://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations\n");
+            else if (ncp->format == 2)
+                printf("\tSee: http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations\n");
+        }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
 
@@ -1929,8 +1948,15 @@ val_NC_check_vlens(NC *ncp)
     /* if there is a "too-large" fixed-size variable, no record variable is
      * allowed */
     if (large_fix_vars_count == 1) {
-        if (verbose) printf("Error:\n");
-        if (verbose) printf("\tCDF-%d format allows only one large fixed-size variable when there is no record variable defined\n",ncp->format);
+        if (verbose) {
+            printf("Error:\n");
+            printf("\tInput file contains 1 large fixed-size variables and %s record variables\n", rec_vars_count);
+            printf("\tCDF-%d format allows only one large fixed-size variable which must be defined last and there is no record variable\n",ncp->format);
+            if (ncp->format == 1)
+                printf("\tSee: https://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations\n");
+            else if (ncp->format == 2)
+                printf("\tSee: http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations\n");
+        }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
 
@@ -1947,6 +1973,8 @@ val_NC_check_vlens(NC *ncp)
                     if (verbose) printf("\tvar %s: variable size greater than max (%lld) allowable by CDF-%d\n",(*vpp)->name,vlen_max,ncp->format);
                     DEBUG_RETURN_ERROR(NC_EVARSIZE)
                 }
+                if (!large_rec_vars_count) first_large_rec_var = ii;
+                else if (large_rec_vars_count == 1) second_large_rec_var = ii;
                 large_rec_vars_count++;
                 last = 1;
             }
@@ -1959,15 +1987,31 @@ val_NC_check_vlens(NC *ncp)
      * http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations
      */
     if (large_rec_vars_count > 1) { /* only one "too-large" variable allowed */
-        if (verbose) printf("Error:\n");
-        if (verbose) printf("\tCDF-%d format allows only one large record variable\n",ncp->format);
+        if (verbose) {
+            printf("Error:\n");
+            printf("\tInput file contains %d large record variables\n",large_rec_vars_count);
+            printf("\tThe 1st large record variable is %s\n",ncp->vars.value[first_large_rec_var]->name);
+            printf("\tThe 2nd large record variable is %s\n",ncp->vars.value[second_large_rec_var]->name);
+            printf("\tCDF-%d format allows only one large record variable\n",ncp->format);
+            if (ncp->format == 1)
+                printf("\tSee: https://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations\n");
+            else if (ncp->format == 2)
+                printf("\tSee: http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations\n");
+        }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
 
     /* and it has to be the last one */
     if (large_rec_vars_count == 1 && last == 0) {
-        if (verbose) printf("Error:\n");
-        if (verbose) printf("\tCDF-%d format allows only one large record variable and it must be the last one defined\n",ncp->format);
+        if (verbose) {
+            printf("Error:\n");
+            printf("\tThe 1st large record variable that is not defined last is %s\n",ncp->vars.value[first_large_rec_var]->name);
+            printf("\tCDF-%d format allows only one large record variable and it must be defined last\n",ncp->format);
+            if (ncp->format == 1)
+                printf("\tSee: https://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations\n");
+            else if (ncp->format == 2)
+                printf("\tSee: http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations\n");
+        }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
 
@@ -2366,6 +2410,7 @@ int main(int argc, char **argv)
 
 prog_exit:
     if (ncp != NULL) {
+        fmt = ncp->format;
         free_NC_dimarray(&ncp->dims);
         free_NC_attrarray(&ncp->attrs);
         free_NC_vararray(&ncp->vars);

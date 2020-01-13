@@ -39,3 +39,11 @@ for i in ${ENOTNC_FILES} ; do
     done
 done
 
+for i in ${EVARSIZE_FILES} ; do
+    for j in 0 1 ; do
+        export PNETCDF_SAFE_MODE=$j
+        # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+        ${TESTSEQRUN} ./tst_open ${srcdir}/$i NC_EVARSIZE
+    done
+done
+

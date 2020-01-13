@@ -69,6 +69,10 @@ ENOTNC_FILES =   bad_magic.nc \
                  bad_tag_variable.nc2 \
                  bad_tag_variable.nc5
 
+EVARSIZE_FILES = bad_large_fixed_var.nc2 \
+                 bad_large_rec_2_vars.nc2 \
+                 bad_large_rec_var.nc2
+
 ncvalidator$(EXEEXT): ncvalidator.c Makefile
 	$(SEQ_CC) -o $@ $<
 
@@ -84,13 +88,14 @@ TESTS_ENVIRONMENT += ENULLPAD_FILES="$(ENULLPAD_FILES)" ; export ENULLPAD_FILES;
 TESTS_ENVIRONMENT += EMAXVARS_FILES="$(EMAXVARS_FILES)" ; export EMAXVARS_FILES;
 TESTS_ENVIRONMENT += EUNLIMIT_FILES="$(EUNLIMIT_FILES)" ; export EUNLIMIT_FILES;
 TESTS_ENVIRONMENT += ENOTNC_FILES="$(ENOTNC_FILES)" ; export ENOTNC_FILES;
+TESTS_ENVIRONMENT += EVARSIZE_FILES="$(EVARSIZE_FILES)" ; export EVARSIZE_FILES;
 
 TESTS = xfail_runs.sh wrap_runs.sh
 XFAIL_TESTS = xfail_runs.sh
 
 EXTRA_DIST = xfail_runs.sh wrap_runs.sh \
              $(ENULLPAD_FILES) $(EMAXVARS_FILES) \
-             $(EUNLIMIT_FILES) $(ENOTNC_FILES)
+             $(EUNLIMIT_FILES) $(ENOTNC_FILES) $(EVARSIZE_FILES)
 
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out
 

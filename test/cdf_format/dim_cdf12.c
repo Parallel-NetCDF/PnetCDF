@@ -207,7 +207,7 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid);
     EXP_ERR(NC_EVARSIZE)
 
-    /* define 2 int 1D variables of dimension size > max */
+    /* define 2 1D int variables of dimension size > max */
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); CHECK_ERR
     err = ncmpi_def_dim(ncid, "Y", INT_MAX, &dimid[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", 2,       &dimid[1]); CHECK_ERR
@@ -224,6 +224,31 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid);
     EXP_ERR(NC_EVARSIZE)
 
+    /* No record variable can require more than 2^32 - 4 bytes of storage for
+     * each record's worth of data, unless it is the last record variable.
+     */
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "Z", NC_UNLIMITED, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "Y", INT_MAX/64,   &dimid[1]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", 64,           &dimid[2]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var0", NC_INT, 3, dimid, &varid); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var1", NC_INT, 3, dimid, &varid); CHECK_ERR
+    err = ncmpi_close(ncid);
+    EXP_ERR(NC_EVARSIZE)
+
+    /* test large record variable that is not defined last */
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "Z", NC_UNLIMITED, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "Y", INT_MAX/64,   &dimid[1]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", 64,           &dimid[2]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var0", NC_INT, 3, dimid, &varid); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var1", NC_INT, 2, dimid, &varid); CHECK_ERR
+    err = ncmpi_close(ncid);
+    EXP_ERR(NC_EVARSIZE)
+
+    /* Note for developers: keep the last test that produces no error, so the
+     * output file can be tested by ncvalidator in wrap_runs.sh
+     */
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); CHECK_ERR
     err = ncmpi_def_dim(ncid, "Y", INT_MAX/2, &dimid[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", 2,         &dimid[1]); CHECK_ERR
