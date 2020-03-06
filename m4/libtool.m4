@@ -5299,6 +5299,8 @@ _LT_EOF
 	  _LT_TAGVAR(whole_archive_flag_spec, $1)=
 	  tmp_sharedflag='--shared' ;;
         nagfor*)                        # NAGFOR 5.3
+          _LT_TAGVAR(whole_archive_flag_spec, $1)='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
+          _LT_TAGVAR(compiler_needs_object, $1)=yes
           tmp_sharedflag='-Wl,-shared' ;;
 	xl[[cC]]* | bgxl[[cC]]* | mpixl[[cC]]*) # IBM XL C 8.0 on PPC (deal with xlf below)
 	  tmp_sharedflag='-qmkshrobj'
