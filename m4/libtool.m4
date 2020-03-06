@@ -7632,10 +7632,11 @@ if AC_TRY_EVAL(ac_compile); then
     case $prev$p in
 
     -L* | -R* | -l*)
-       # Some compilers place space between "-{L,R}" and the path.
+       # Some compilers place space between "-{L,R,l}" and the path (value).
        # Remove the space.
-       if test x-L = "$p" ||
-          test x-R = "$p"; then
+       if test x-L = x"$p" ||
+          test x-R = x"$p" ||
+          test x-l = x"$p"; then
 	 prev=$p
 	 continue
        fi
