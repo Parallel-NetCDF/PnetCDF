@@ -7862,6 +7862,13 @@ func_mode_link ()
 	# Convert "-framework foo" to "foo.ltframework"
 	if test -n "$inherited_linker_flags"; then
 	  tmp_inherited_linker_flags=`$ECHO "$inherited_linker_flags" | $SED 's/-framework \([^ $]*\)/\1.ltframework/g'`
+
+	  # Additionally convert " -pthread" to " -Wl,-pthread" for nagfor
+	  func_cc_basename $CC
+	  case $func_cc_basename_result in
+	    nagfor*) tmp_inherited_linker_flags=`$ECHO "$tmp_inherited_linker_flags" | $SED 's/ -pthread/ -Wl,-pthread/g'` ;;
+	  esac
+
 	  for tmp_inherited_linker_flag in $tmp_inherited_linker_flags; do
 	    case " $new_inherited_linker_flags " in
 	      *" $tmp_inherited_linker_flag "*) ;;
@@ -8881,7 +8888,8 @@ func_mode_link ()
 	  xlcverstring="$wl-compatibility_version $wl$minor_current $wl-current_version $wl$minor_current.$revision"
 	  verstring="-compatibility_version $minor_current -current_version $minor_current.$revision"
           # On Darwin other compilers
-          case $CC in
+          func_cc_basename $CC
+          case $func_cc_basename_result in
               nagfor*)
                   verstring="$wl-compatibility_version $wl$minor_current $wl-current_version $wl$minor_current.$revision"
                   ;;
@@ -9491,6 +9499,13 @@ EOF
 	  new_inherited_linker_flags=`$ECHO " $new_inherited_linker_flags" | $SED 's% \([^ $]*\).ltframework% -framework \1%g'`
 	  deplibs=`$ECHO " $deplibs" | $SED 's% \([^ $]*\).ltframework% -framework \1%g'`
 	  ;;
+      esac
+
+      # Time to revert the changes made for nagfor.
+      func_cc_basename $CC
+      case $func_cc_basename_result in
+        nagfor*)
+          new_inherited_linker_flags=`$ECHO " $new_inherited_linker_flags" | $SED 's% -Wl,-pthread% -pthread%g'` ;;
       esac
 
       # move library search paths that coincide with paths to not yet
