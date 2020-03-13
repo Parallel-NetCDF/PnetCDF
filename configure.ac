@@ -617,10 +617,40 @@ UD_MSG_DEBUG(has_fortran=${has_fortran})
 UD_MSG_DEBUG([MPIF77=$MPIF77])
 UD_MSG_DEBUG([MPIF90=$MPIF90])
 
+ac_cv_mpif77_is_NAG=no
+ac_cv_mpif90_is_NAG=no
+
 if test "x${has_fortran}" = xyes ; then
+
    dnl Check if MPIF77 is a valid MPI compiler
    F77=${MPIF77}
    AC_PROG_F77
+
+   dnl Check if the Fortran compiler is an NAG
+   UD_CHECK_MPIF77_IS_NAG
+   if test "x${ac_cv_mpif77_is_NAG}" = xyes ; then
+      dnl Add -mismatch if they are not set by users
+      # use "grep -q" is not portable, according to autoconf user guide
+      # check exit status of grep command is more portable than using -q
+      str_found=`echo "${FFLAGS}" | ${EGREP} -- "-mismatch"`
+      if test "x$?" != x0 ; then
+         FFLAGS="$FFLAGS -mismatch"
+      fi
+      unset str_found
+
+      dnl Add -Wc=$MPICC, as NAG Fortran may choose a different CC from the one
+      dnl used in MPICC, which can cause link errors
+      FFLAGS="$FFLAGS -Wc=$MPICC"
+
+      # The line below must appear before AC_F77_LIBRARY_LDFLAGS
+      # There is no flags in NAG Fortran (at least 6.2 and earlier) to compute
+      # the flags needed to verbose linking output. These are important for
+      # linking C and Fortran libraries. See autoconf user guide for the output
+      # variable from a call to AC_F77_LIBRARY_LDFLAGS. Current solution is to
+      # hard code the flag when NAG Fortran is used.
+      ac_cv_prog_f77_v="-Wl,-v"
+   fi
+
    dnl FFLAGS is set in AC_PROG_F77
    AC_F77_LIBRARY_LDFLAGS
 
@@ -654,13 +684,40 @@ if test "x${has_fortran}" = xyes ; then
       fi
    fi
 fi
+AM_CONDITIONAL(NAG_FORTRAN, [test x$ac_cv_mpif77_is_NAG = xyes])
 
 mpi_mod=no
 if test "x${has_fortran}" = xyes ; then
+
    dnl Check if MPIF90 is a valid MPI compiler
    FC=${MPIF90}
    AC_PROG_FC
    dnl FCFLAGS is set in AC_PROG_FC
+
+   dnl Check if the Fortran compiler is an NAG
+   UD_CHECK_MPIF90_IS_NAG
+   if test "x${ac_cv_mpif90_is_NAG}" = xyes ; then
+      dnl Add -mismatch if they are not set by users
+      # use "grep -q" is not portable, according to autoconf user guide
+      # check exit status of grep command is more portable than using -q
+      str_found=`echo "${FCFLAGS}" | ${EGREP} -- "-mismatch"`
+      if test "x$?" != x0 ; then
+         FCFLAGS="$FCFLAGS -mismatch"
+      fi
+      unset str_found
+
+      dnl Add -Wc=$MPICC, as NAG Fortran may choose a different CC from the one
+      dnl used in MPICC, which can cause link errors
+      FCFLAGS="$FCFLAGS -Wc=$MPICC"
+
+      # The line below must appear before AC_FC_LIBRARY_LDFLAGS
+      # There is no flags in NAG Fortran (at least 6.2 and earlier) to compute
+      # the flags needed to verbose linking output. These are important for
+      # linking C and Fortran libraries. See autoconf user guide for the output
+      # variable from a call to AC_FC_LIBRARY_LDFLAGS. Current solution is to
+      # hard code the flag when NAG Fortran is used.
+      ac_cv_prog_fc_v="-Wl,-v"
+   fi
 
    dnl FCLIBS_save="$FCLIBS"
    dnl FCLIBS=""
@@ -844,26 +901,6 @@ if test "x${has_fortran}" = xyes ; then
    dnl because _8 modifier is a Fortran 90 feature
    dnl UD_CHECK_MPIF77_IS_PGF77
    dnl UD_MSG_DEBUG([ac_cv_mpif77_is_PGF77=$ac_cv_mpif77_is_PGF77])
-
-   dnl Check if the Fortran compiler is an NAG
-   UD_CHECK_MPIF90_IS_NAG
-   if test "x${ac_cv_mpif90_is_NAG}" = xyes ; then
-      dnl Add -mismatch if they are not set by users
-      # use "grep -q" is not portable, according to autoconf user guide
-      # check exit status of grep command is more portable than using -q
-      str_found=`echo "${FFLAGS}" | ${EGREP} -- "-mismatch"`
-      if test "x$?" != x0 ; then
-         FFLAGS="$FFLAGS -mismatch"
-      fi
-      str_found=`echo "${FCFLAGS}" | ${EGREP} -- "-mismatch"`
-      if test "x$?" != x0 ; then
-         FCFLAGS="$FCFLAGS -mismatch"
-      fi
-      unset str_found
-      dnl Add -DNAGFortran
-       FFLAGS="$FFLAGS -DNAGFortran"
-      FCFLAGS="$FCFLAGS -DNAGFortran"
-   fi
 
    dnl check Fortran parameter modifier for 8-byte integer type
    dnl We need this to set the max constants for UINT, INT64, and UINT64

@@ -60,7 +60,10 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Bug fixes
-  + none
+  + Fix various compile and link bugs when NAG Fortran is used. Bugs include
+    flag needed to verbose linking output, unrecognized link option -pthread,
+    unmatched C compiler underneath. Thanks Sergey Kosukhin for providing the
+    fix in [PR #59](https://github.com/Parallel-NetCDF/PnetCDF/pull/59)
 
 * New example programs
   + none

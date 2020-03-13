@@ -1821,14 +1821,27 @@ dnl
 dnl Note "nagfor -V" prints the version info on stderr, instead of stdout
 dnl
 AC_DEFUN([UD_CHECK_MPIF90_IS_NAG],[
-    AC_CACHE_CHECK([if MPI Fortran 90 compiler is NAG Fortran], [ac_cv_mpif90_is_NAG],
-    [ac_cv_mpif90_is_NAG=no
-     ac_MPIF90_VENDOR=`eval $MPIF90 -V 2>&1 | head -c 3`
-     if test "x${ac_MPIF90_VENDOR}" = xNAG ; then
-        ac_cv_mpif90_is_NAG=yes
-     fi
-     unset ac_MPIF90_VENDOR
-    ])
+   AC_MSG_CHECKING([if MPI Fortran 90 compiler is NAG Fortran])
+   ac_cv_mpif90_is_NAG=no
+   ac_MPIF90_VENDOR=`eval $MPIF90 -V 2>&1 | head -c 3`
+   UD_MSG_DEBUG([ac_MPIF90_VENDOR=$ac_MPIF90_VENDOR])
+   if test "x${ac_MPIF90_VENDOR}" = xNAG ; then
+      ac_cv_mpif90_is_NAG=yes
+   fi
+   unset ac_MPIF90_VENDOR
+   AC_MSG_RESULT($ac_cv_mpif90_is_NAG)
+])
+
+AC_DEFUN([UD_CHECK_MPIF77_IS_NAG],[
+   AC_MSG_CHECKING([if MPI Fortran 77 compiler is NAG Fortran])
+   ac_cv_mpif77_is_NAG=no
+   ac_MPIF77_VENDOR=`eval $MPIF77 -V 2>&1 | head -c 3`
+   UD_MSG_DEBUG([ac_MPIF77_VENDOR=$ac_MPIF77_VENDOR])
+   if test "x${ac_MPIF77_VENDOR}" = xNAG ; then
+      ac_cv_mpif77_is_NAG=yes
+   fi
+   unset ac_MPIF77_VENDOR
+   AC_MSG_RESULT($ac_cv_mpif77_is_NAG)
 ])
 
 AC_DEFUN([UD_CXX_MACRO_FUNC],[
