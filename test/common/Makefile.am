@@ -27,12 +27,20 @@ libtestutils_la_LIBADD = libtestutilsf.la
 CLEANFILES += testutilsf.mod
 endif
 
+AM_FFLAGS  =
+AM_FCFLAGS =
+
 if DECL_MPI_OFFSET
    # Do not add to AM_CPPFLAGS, as it will be used by both C and Fortran programs
    # AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
    # AM_CFLAGS  = -DHAVE_DECL_MPI_OFFSET
-   AM_FFLAGS  = $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
-   AM_FCFLAGS = $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
+   AM_FFLAGS  += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
+   AM_FCFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
+endif
+
+if NAG_FORTRAN
+   AM_FFLAGS  += $(FC_DEFINE)NAGFortran
+   AM_FCFLAGS += $(FC_DEFINE)NAGFortran
 endif
 
 # overwrite PPFCCOMPILE and LTPPFCCOMPILE to avoid using DEFS
