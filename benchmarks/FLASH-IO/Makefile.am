@@ -17,14 +17,17 @@ flash_benchmark_io_LDADD = -lpnetcdf
 if BUILD_BENCHMARKS_IN_PNETCDF
    AM_FCFLAGS = $(FC_MODINC)${top_builddir}/src/binding/f90
    AM_LDFLAGS = -L${top_builddir}/src/libs
-   flash_benchmark_io_LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@  
+   flash_benchmark_io_LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 else
    AM_FCFLAGS = $(FC_MODINC)$(PNETCDF_INC)
    AM_LDFLAGS = $(PNETCDF_LIB)
 endif
 
-AM_FCFLAGS += -I$(srcdir) $(NAGf90FPPFLAGS)
-AM_FCFLAGS += $(NAG_FCFLAGS)
+AM_FCFLAGS += -I$(srcdir)
+
+if NAG_FORTRAN
+   AM_FCFLAGS += $(FC_DEFINE)NAGFortran
+endif
 
 AM_FCFLAGS += $(FC_DEFINE)N_DIM=3
 AM_FCFLAGS += $(FC_DEFINE)MAXBLOCKS=100

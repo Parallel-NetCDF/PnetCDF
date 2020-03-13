@@ -50,7 +50,7 @@
             print *, &
             'Usage: ',trim(executable),' [-q] <ouput file base name>'
             isArgvRight = .FALSE.
-         else
+         else if (argc .NE. 0) then
             ! default file name prefix
             basenm = "flash_io_test_"
             if (argc .EQ. 1) then

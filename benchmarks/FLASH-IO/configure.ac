@@ -6,8 +6,10 @@ dnl
 AC_PREREQ(2.69)
 AC_INIT([PnetCDF-FLASH-IO], [1.0.0], [parallel-netcdf@mcs.anl.gov])
 
+AC_CONFIG_AUX_DIR([./scripts])
+
 AM_INIT_AUTOMAKE([foreign])
-AM_MAINTAINER_MODE
+dnl AM_MAINTAINER_MODE
 AC_CONFIG_MACRO_DIRS([m4])
 
 dnl AM_EXTRA_RECURSIVE_TARGETS macro was introduced into automake 1.13
@@ -90,26 +92,20 @@ dnl Check if Fortran compiler is NAG
 dnl According to nagfor manual the command-line option to should version is -V
 dnl
 AC_DEFUN([UD_CHECK_FC_NAG],[
-    AC_CACHE_CHECK([if Fortran compiler is NAG], [ac_cv_fc_compiler_nag],
-    [ac_cv_fc_compiler_nag=no
-     eval $MPIF90 -V </dev/null >& conftest.ver
-     _FC_VENDOR=`head -c 3 conftest.ver`
-     if test "x${_FC_VENDOR}" = xNAG ; then
-        ac_cv_fc_compiler_nag=yes
-     fi
-     ${RM} -f conftest.ver
-     unset _FC_VENDOR
-    ])
+    AC_MSG_CHECKING([if Fortran compiler is NAG])
+    ac_cv_fc_compiler_nag=no
+    _FC_VENDOR=`eval $MPIF90 -V 2>&1 | head -c 3`
+    if test "x${_FC_VENDOR}" = xNAG ; then
+       ac_cv_fc_compiler_nag=yes
+    fi
+    unset _FC_VENDOR
+    AC_MSG_RESULT($ac_cv_fc_compiler_nag)
+    FCFLAGS="$FCFLAGS -mismatch"
 ])
 
 dnl Check if the Fortran compiler is an NAG
 UD_CHECK_FC_NAG
-if test "x${ac_cv_fc_compiler_nag}" = xyes ; then
-   NAGf90FPPFLAGS="-DNAGFortran"
-   NAG_FCFLAGS="-mismatch"
-   AC_SUBST(NAGf90FPPFLAGS)
-   AC_SUBST(NAG_FCFLAGS)
-fi
+AM_CONDITIONAL(NAG_FORTRAN, [test x$ac_cv_fc_compiler_nag = xyes])
 
 dnl find compile flags for handling files with .F .F90 .f90 extensions
 dnl steal AC_FC_PP_SRCEXT from autoconf V2.69 to make AC_FC_PP_SRCEXT
