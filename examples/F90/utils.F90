@@ -27,6 +27,10 @@
         get_args = 1
         call getarg(0, cmd)
         argc = IARGC()
+
+        ! command-line arguments are optional
+        if (argc .EQ. 0) return
+
         if (argc .GT. max_argc) then
             if (max_argc .EQ. 3) &
                 print*,'Usage: ',trim(cmd),' [-q] [filename] [len]'
