@@ -1,0 +1,29 @@
+# Autoreconf stage files
+/aclocal.m4
+/autom4te.cache
+/configure
+/m4/ltoptions.m4
+/m4/ltsugar.m4
+/m4/ltversion.m4
+/m4/lt~obsolete.m4
+/scripts/compile
+/scripts/config.guess
+/scripts/config.sub
+/scripts/install-sh
+/scripts/missing
+/scripts/test-driver
+Makefile.in
+
+# Configure stage files
+/config.log
+/config.status
+/libtool
+Makefile
+
+# Build stage files
+*.o
+/flash_benchmark_io
+
+# Test stage files
+*.log
+*.nc
