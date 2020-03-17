@@ -684,7 +684,6 @@ if test "x${has_fortran}" = xyes ; then
       fi
    fi
 fi
-AM_CONDITIONAL(NAG_FORTRAN, [test x$ac_cv_mpif77_is_NAG = xyes])
 
 mpi_mod=no
 if test "x${has_fortran}" = xyes ; then

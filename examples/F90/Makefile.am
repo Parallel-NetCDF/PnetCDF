@@ -14,10 +14,6 @@ AM_FCFLAGS = ${FC_MODINC}$(top_builddir)/src/binding/f90
 LDADD  = ${top_builddir}/src/libs/libpnetcdf.la utils.o
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
-if NAG_FORTRAN
-   AM_FCFLAGS += $(FC_DEFINE)NAGFortran
-endif
-
 check_PROGRAMS = nonblocking_write \
                  column_wise \
                  block_cyclic \

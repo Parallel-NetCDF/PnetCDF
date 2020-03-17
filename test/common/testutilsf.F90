@@ -9,7 +9,7 @@
       ! This function gets the executable name and output file name from the
       ! command line.
       integer function get_args(cmd, filename)
-#ifdef NAGFortran
+#ifdef NAGFOR
           USE F90_UNIX_ENV, only : iargc, getarg
           implicit none
 #else

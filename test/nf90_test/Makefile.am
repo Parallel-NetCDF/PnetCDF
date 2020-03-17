@@ -19,10 +19,6 @@ AM_FCFLAGS  = $(FC_MODINC)$(top_builddir)/src/binding/f90 \
               $(FC_MODINC)../common
 AM_CFLAGS   =
 
-if NAG_FORTRAN
-   AM_FCFLAGS += $(FC_DEFINE)NAGFortran
-endif
-
 LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 

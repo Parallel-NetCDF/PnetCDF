@@ -38,11 +38,6 @@ if DECL_MPI_OFFSET
    AM_FCFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
 endif
 
-if NAG_FORTRAN
-   AM_FFLAGS  += $(FC_DEFINE)NAGFortran
-   AM_FCFLAGS += $(FC_DEFINE)NAGFortran
-endif
-
 # overwrite PPFCCOMPILE and LTPPFCCOMPILE to avoid using DEFS
 # IBM xlf compiler uses -WF,-D not -D
 # FCDEFS=`echo $(DEFS) | $(SED) 's/-D/-WF,-D/g'`
