@@ -105,7 +105,6 @@ AC_DEFUN([UD_CHECK_FC_NAG],[
 
 dnl Check if the Fortran compiler is an NAG
 UD_CHECK_FC_NAG
-AM_CONDITIONAL(NAG_FORTRAN, [test x$ac_cv_fc_compiler_nag = xyes])
 
 dnl find compile flags for handling files with .F .F90 .f90 extensions
 dnl steal AC_FC_PP_SRCEXT from autoconf V2.69 to make AC_FC_PP_SRCEXT

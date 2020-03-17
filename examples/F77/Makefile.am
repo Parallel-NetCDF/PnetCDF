@@ -17,10 +17,6 @@ if SIZEOF_MPI_AINT_IS_4
    AM_FFLAGS += $(FC_DEFINE)SIZEOF_MPI_AINT_IS_4
 endif
 
-if NAG_FORTRAN
-   AM_FCFLAGS = $(FC_DEFINE)NAGFortran
-endif
-
 check_PROGRAMS = nonblocking_write \
                  column_wise \
                  block_cyclic \

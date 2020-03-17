@@ -108,7 +108,7 @@ C implementation of the netCDF library.
 !       DIGITAL Visual Fortran needs DFPORT for iargc
         USE DFPORT
         implicit        none
-#elif defined(NAGFortran)
+#elif defined(NAGFOR)
         USE F90_UNIX_ENV, only : iargc, getarg
         implicit none
 #else

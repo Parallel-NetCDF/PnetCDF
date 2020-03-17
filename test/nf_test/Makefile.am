@@ -17,10 +17,6 @@ AM_CPPFLAGS  = -I$(top_builddir)/src/include \
 AM_CFLAGS =
 AM_FFLAGS =
 
-if NAG_FORTRAN
-   AM_FFLAGS += $(FC_DEFINE)NAGFortran
-endif
-
 LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
