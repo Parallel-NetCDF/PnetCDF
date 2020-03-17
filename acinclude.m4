@@ -1811,39 +1811,6 @@ AC_DEFUN([UD_CHECK_MPIF77_IS_PGF77],[
     ])
 ])
 
-dnl Check if Fortran compiler is NAG
-dnl According to nagfor manual the command-line option to get version is -V
-dnl % nagfor -V
-dnl NAG Fortran Compiler Release 6.1(Tozai) Build 6106
-dnl Product NPL6A61NA for x86-64 Linux
-dnl Copyright 1990-2016 The Numerical Algorithms Group Ltd., Oxford, U.K.
-dnl
-dnl Note "nagfor -V" prints the version info on stderr, instead of stdout
-dnl
-AC_DEFUN([UD_CHECK_MPIF90_IS_NAG],[
-   AC_MSG_CHECKING([if MPI Fortran 90 compiler is NAG Fortran])
-   ac_cv_mpif90_is_NAG=no
-   ac_MPIF90_VENDOR=`eval $MPIF90 -V 2>&1 | head -c 3`
-   UD_MSG_DEBUG([ac_MPIF90_VENDOR=$ac_MPIF90_VENDOR])
-   if test "x${ac_MPIF90_VENDOR}" = xNAG ; then
-      ac_cv_mpif90_is_NAG=yes
-   fi
-   unset ac_MPIF90_VENDOR
-   AC_MSG_RESULT($ac_cv_mpif90_is_NAG)
-])
-
-AC_DEFUN([UD_CHECK_MPIF77_IS_NAG],[
-   AC_MSG_CHECKING([if MPI Fortran 77 compiler is NAG Fortran])
-   ac_cv_mpif77_is_NAG=no
-   ac_MPIF77_VENDOR=`eval $MPIF77 -V 2>&1 | head -c 3`
-   UD_MSG_DEBUG([ac_MPIF77_VENDOR=$ac_MPIF77_VENDOR])
-   if test "x${ac_MPIF77_VENDOR}" = xNAG ; then
-      ac_cv_mpif77_is_NAG=yes
-   fi
-   unset ac_MPIF77_VENDOR
-   AC_MSG_RESULT($ac_cv_mpif77_is_NAG)
-])
-
 AC_DEFUN([UD_CXX_MACRO_FUNC],[
    AC_CACHE_CHECK([if C++ macro __func__ or __FUNCTION__ is defined], [ac_cv_cxx_macro_func],
    [ac_cv_cxx_macro_func=no
@@ -2390,3 +2357,92 @@ m4_define([_UD_CHECK_MPI_CONSTANTS],
 AC_DEFUN([UD_CHECK_MPI_CONSTANTS],
    [m4_map_args_sep([_$0(], [, [$2], [$3], [$4])], [], $1)])
 
+# _ACX_FC_MISMATCH([ACTION-IF-SUCCESS],
+#                  [ACTION-IF-FAILURE = FAILURE])
+# -----------------------------------------------------------------------------
+# Finds the compiler flag needed to allow routines to be called with different
+# argument types. The result is either "unknown", or the actual compiler flag
+# required to downgrade consistency checking of procedure argument lists, which
+# may be an empty string.
+#
+# If successful, runs ACTION-IF-SUCCESS, otherwise runs ACTION-IF-FAILURE
+# (defaults to failing with an error message).
+#
+# The flag is cached in the acx_cv_[]_AC_LANG_ABBREV[]_mismatch_flag variable.
+#
+# Known flags:
+# NAGWare: -mismatch
+#
+AC_DEFUN([_ACX_FC_MISMATCH],
+  [_AC_FORTRAN_ASSERT()dnl
+   m4_pushdef([acx_cache_var], [acx_cv_[]_AC_LANG_ABBREV[]_mismatch_flag])dnl
+   AC_MSG_CHECKING([for _AC_LANG compiler flag needed to allow routines to dnl
+be called with different argument types])
+   AC_CACHE_VAL([acx_cache_var],
+     [acx_cache_var=unknown
+      acx_save_[]_AC_LANG_PREFIX[]FLAGS=$[]_AC_LANG_PREFIX[]FLAGS
+      AC_LANG_CONFTEST([AC_LANG_PROGRAM([], [[      implicit none
+      integer a
+      real b
+      character c
+      call foo1(a)
+      call foo1(b)
+      call foo1(c)]])])
+      for acx_flag in '' -mismatch; do
+        _AC_LANG_PREFIX[]FLAGS="${acx_save_[]_AC_LANG_PREFIX[]FLAGS} $acx_flag"
+        AC_COMPILE_IFELSE([], [acx_cache_var=$acx_flag])
+        test "x$acx_cache_var" != xunknown && break
+      done
+      rm -f conftest.$ac_ext
+      _AC_LANG_PREFIX[]FLAGS=$acx_save_[]_AC_LANG_PREFIX[]FLAGS])
+   AS_IF([test -n "$acx_cache_var"],
+     [AC_MSG_RESULT([$acx_cache_var])],
+     [AC_MSG_RESULT([none needed])])
+   AS_VAR_IF([acx_cache_var], [unknown], [m4_default([$2],
+     [AC_MSG_FAILURE([unable to detect _AC_LANG compiler flag needed to dnl
+allow routines to be called with different argument types])])], [$1])
+   m4_popdef([acx_cache_var])])
+
+# ACX_FC_MISMATCH([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
+# -----------------------------------------------------------------------------
+AC_DEFUN([ACX_FC_MISMATCH],
+  [AC_LANG_PUSH([Fortran])_ACX_FC_MISMATCH($@)AC_LANG_POP([Fortran])])
+
+# ACX_F77_MISMATCH([ACTION-IF-SUCCESS], [ACTION-IF-FAILURE = FAILURE])
+# -----------------------------------------------------------------------------
+AC_DEFUN([ACX_F77_MISMATCH],
+  [AC_LANG_PUSH([Fortran 77])_ACX_FC_MISMATCH($@)AC_LANG_POP([Fortran 77])])
+
+# _AC_PROG_FC_V
+# -------------
+# Determine the flag that causes the Fortran compiler to print
+# information of library and object files (normally -v)
+# Needed for _AC_FC_LIBRARY_FLAGS
+# Some compilers don't accept -v (Lahey: (-)-verbose, xlf: -V, Fujitsu: -###)
+# -------------
+# This macro is used by AC_F77_LIBRARY_LDFLAGS and AC_FC_LIBRARY_LDFLAGS.
+# We need to overload it to allow for additional possible results:
+# NAG: -Wl,-v
+AC_DEFUN([_AC_PROG_FC_V],
+[_AC_FORTRAN_ASSERT()dnl
+AC_CACHE_CHECK([how to get verbose linking output from $[]_AC_FC[]],
+                [ac_cv_prog_[]_AC_LANG_ABBREV[]_v],
+[AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
+[ac_cv_prog_[]_AC_LANG_ABBREV[]_v=
+# Try some options frequently used verbose output
+for ac_verb in -v -verbose --verbose -V -\#\#\# -Wl,-v; do
+  _AC_PROG_FC_V_OUTPUT($ac_verb)
+  # look for -l* and *.a constructs in the output
+  for ac_arg in $ac_[]_AC_LANG_ABBREV[]_v_output; do
+     case $ac_arg in
+	[[\\/]]*.a | ?:[[\\/]]*.a | -[[lLRu]]*)
+	  ac_cv_prog_[]_AC_LANG_ABBREV[]_v=$ac_verb
+	  break 2 ;;
+     esac
+  done
+done
+if test -z "$ac_cv_prog_[]_AC_LANG_ABBREV[]_v"; then
+   AC_MSG_WARN([cannot determine how to obtain linking information from $[]_AC_FC[]])
+fi],
+                  [AC_MSG_WARN([compilation failed])])
+])])# _AC_PROG_FC_V
