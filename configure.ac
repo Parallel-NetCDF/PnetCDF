@@ -617,41 +617,15 @@ UD_MSG_DEBUG(has_fortran=${has_fortran})
 UD_MSG_DEBUG([MPIF77=$MPIF77])
 UD_MSG_DEBUG([MPIF90=$MPIF90])
 
-ac_cv_mpif77_is_NAG=no
-ac_cv_mpif90_is_NAG=no
-
 if test "x${has_fortran}" = xyes ; then
 
    dnl Check if MPIF77 is a valid MPI compiler
    F77=${MPIF77}
    AC_PROG_F77
-
-   dnl Check if the Fortran compiler is an NAG
-   UD_CHECK_MPIF77_IS_NAG
-   if test "x${ac_cv_mpif77_is_NAG}" = xyes ; then
-      dnl Add -mismatch if they are not set by users
-      # use "grep -q" is not portable, according to autoconf user guide
-      # check exit status of grep command is more portable than using -q
-      str_found=`echo "${FFLAGS}" | ${EGREP} -- "-mismatch"`
-      if test "x$?" != x0 ; then
-         FFLAGS="$FFLAGS -mismatch"
-      fi
-      unset str_found
-
-      dnl Add -Wc=$MPICC, as NAG Fortran may choose a different CC from the one
-      dnl used in MPICC, which can cause link errors
-      FFLAGS="$FFLAGS -Wc=$MPICC"
-
-      # The line below must appear before AC_F77_LIBRARY_LDFLAGS
-      # There is no flags in NAG Fortran (at least 6.2 and earlier) to compute
-      # the flags needed to verbose linking output. These are important for
-      # linking C and Fortran libraries. See autoconf user guide for the output
-      # variable from a call to AC_F77_LIBRARY_LDFLAGS. Current solution is to
-      # hard code the flag when NAG Fortran is used.
-      ac_cv_prog_f77_v="-Wl,-v"
-   fi
-
    dnl FFLAGS is set in AC_PROG_F77
+
+   ACX_F77_MISMATCH([AS_VAR_APPEND([FFLAGS], [" $acx_cv_f77_mismatch_flag"])])
+
    AC_F77_LIBRARY_LDFLAGS
 
    AC_MSG_CHECKING([whether $MPIF77 is a valid MPI compiler])
@@ -693,30 +667,7 @@ if test "x${has_fortran}" = xyes ; then
    AC_PROG_FC
    dnl FCFLAGS is set in AC_PROG_FC
 
-   dnl Check if the Fortran compiler is an NAG
-   UD_CHECK_MPIF90_IS_NAG
-   if test "x${ac_cv_mpif90_is_NAG}" = xyes ; then
-      dnl Add -mismatch if they are not set by users
-      # use "grep -q" is not portable, according to autoconf user guide
-      # check exit status of grep command is more portable than using -q
-      str_found=`echo "${FCFLAGS}" | ${EGREP} -- "-mismatch"`
-      if test "x$?" != x0 ; then
-         FCFLAGS="$FCFLAGS -mismatch"
-      fi
-      unset str_found
-
-      dnl Add -Wc=$MPICC, as NAG Fortran may choose a different CC from the one
-      dnl used in MPICC, which can cause link errors
-      FCFLAGS="$FCFLAGS -Wc=$MPICC"
-
-      # The line below must appear before AC_FC_LIBRARY_LDFLAGS
-      # There is no flags in NAG Fortran (at least 6.2 and earlier) to compute
-      # the flags needed to verbose linking output. These are important for
-      # linking C and Fortran libraries. See autoconf user guide for the output
-      # variable from a call to AC_FC_LIBRARY_LDFLAGS. Current solution is to
-      # hard code the flag when NAG Fortran is used.
-      ac_cv_prog_fc_v="-Wl,-v"
-   fi
+   ACX_FC_MISMATCH([AS_VAR_APPEND([FCFLAGS], [" $acx_cv_fc_mismatch_flag"])])
 
    dnl FCLIBS_save="$FCLIBS"
    dnl FCLIBS=""

@@ -88,23 +88,8 @@ dnl Check if MPIF90 is a valid MPI compiler
 FC=${MPIF90}
 AC_PROG_FC
 
-dnl Check if Fortran compiler is NAG
-dnl According to nagfor manual the command-line option to should version is -V
-dnl
-AC_DEFUN([UD_CHECK_FC_NAG],[
-    AC_MSG_CHECKING([if Fortran compiler is NAG])
-    ac_cv_fc_compiler_nag=no
-    _FC_VENDOR=`eval $MPIF90 -V 2>&1 | head -c 3`
-    if test "x${_FC_VENDOR}" = xNAG ; then
-       ac_cv_fc_compiler_nag=yes
-    fi
-    unset _FC_VENDOR
-    AC_MSG_RESULT($ac_cv_fc_compiler_nag)
-    FCFLAGS="$FCFLAGS -mismatch"
-])
-
-dnl Check if the Fortran compiler is an NAG
-UD_CHECK_FC_NAG
+dnl FCFLAGS is set in AC_PROG_FC
+ACX_FC_MISMATCH([AS_VAR_APPEND([FCFLAGS], [" $acx_cv_fc_mismatch_flag"])])
 
 dnl find compile flags for handling files with .F .F90 .f90 extensions
 dnl steal AC_FC_PP_SRCEXT from autoconf V2.69 to make AC_FC_PP_SRCEXT
