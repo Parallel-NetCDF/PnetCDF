@@ -66,7 +66,10 @@ This is essentially a placeholder for the next release note ...
     fix in [PR #59](https://github.com/Parallel-NetCDF/PnetCDF/pull/59)
   + Fix a bug of calling Fortran getarg() with the first argument k with a
     value > 0 when there is no command-line argument is used. NAG Fortran may
-    crash the program. See [f16bd3c](https://github.com/Parallel-NetCDF/PnetCDF/commit/f16bd3c1ba1b08eade2384f094c519f3f2dc114e)
+    crash the program. See
+    [f16bd3c](https://github.com/Parallel-NetCDF/PnetCDF/commit/f16bd3c1ba1b08eade2384f094c519f3f2dc114e)
+  + Fix a bug that limits FLASH-IO to run on less than 16K MPI processes. See
+    [1d84fa5](https://github.com/Parallel-NetCDF/PnetCDF/commit/1d84fa5d54ca9179da4a5b1a4ee3b92cc92287ed)
 
 * New example programs
   + none
