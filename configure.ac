@@ -346,7 +346,7 @@ AC_CHECK_FUNC([MPI_File_open], [],
 ])])
 
 dnl check the base of MPICC compiler
-UD_CHECK_MPICC_BASE
+UD_CHECK_MPICC_BASE_VENDOR
 AM_CONDITIONAL(MPICC_IS_XLC,   [test "x${ac_cv_mpicc_base}" = xXLC])
 AM_CONDITIONAL(MPICC_IS_PGCC,  [test "x${ac_cv_mpicc_base}" = xPGCC])
 AM_CONDITIONAL(MPICC_IS_FCCPX, [test "x${ac_cv_mpicc_base}" = xFCCPX])

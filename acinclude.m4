@@ -1706,22 +1706,22 @@ AC_DEFUN([UD_CHECK_MPICC_IS_SOLARIS],[
 
 dnl Check MPI C compiler base
 dnl
-AC_DEFUN([UD_CHECK_MPICC_BASE],[
+AC_DEFUN([UD_CHECK_MPICC_BASE_VENDOR],[
    AC_MSG_CHECKING([MPI C compiler base])
-   ac_cv_mpicc_base=
+   ac_cv_mpicc_base_vendor=
    # Check GCC
    ac_MPICC_VER="$($MPICC --version 2>&1)"
    ac_MPICC_VER=`echo $ac_MPICC_VER | ${GREP} -w gcc`
    # AC_MSG_NOTICE(GCC ac_MPICC_VER=$ac_MPICC_VER)
    if test "x${ac_MPICC_VER}" != x ; then
-      ac_cv_mpicc_base="GCC"
+      ac_cv_mpicc_base_vendor="GCC"
    else
       # Check CLANG
       ac_MPICC_VER="$($MPICC --version 2>&1)"
       ac_MPICC_VER=`echo $ac_MPICC_VER | ${GREP} -w clang`
       # AC_MSG_NOTICE(clang ac_MPICC_VER=$ac_MPICC_VER)
       if test "x${ac_MPICC_VER}" != x ; then
-         ac_cv_mpicc_base="CLANG"
+         ac_cv_mpicc_base_vendor="CLANG"
       else
          # Check Intel C
          ac_MPICC_VER="$($MPICC --version 2>&1)"
@@ -1729,14 +1729,14 @@ AC_DEFUN([UD_CHECK_MPICC_BASE],[
          ac_MPICC_VER=`echo $ac_MPICC_VER | ${GREP} -w Intel`
          # AC_MSG_NOTICE(icc ac_MPICC_VER=$ac_MPICC_VER)
          if test "x${ac_MPICC_VER}" != x ; then
-            ac_cv_mpicc_base="ICC"
+            ac_cv_mpicc_base_vendor="ICC"
          else
             # Check XLC
             ac_MPICC_VER="$($MPICC -qversion 2>&1)"
             ac_MPICC_VER=`echo $ac_MPICC_VER | ${GREP} "IBM XL C"`
             # AC_MSG_NOTICE(XLC ac_MPICC_VER=$ac_MPICC_VER)
             if test "x${ac_MPICC_VER}" != x ; then
-               ac_cv_mpicc_base="XLC"
+               ac_cv_mpicc_base_vendor="XLC"
             else
                # Check PGCC
                ac_MPICC_VER="$($MPICC -V -c 2>&1)"
@@ -1744,28 +1744,28 @@ AC_DEFUN([UD_CHECK_MPICC_BASE],[
                ac_MPICC_VER=`echo $ac_MPICC_VER | ${GREP} -w PGI`
                # AC_MSG_NOTICE(pgcc ac_MPICC_VER=$ac_MPICC_VER)
                if test "x${ac_MPICC_VER}" != x ; then
-                  ac_cv_mpicc_base="PGCC"
+                  ac_cv_mpicc_base_vendor="PGCC"
                else
                   # Check SOLARIS
                   ac_MPICC_VER="$($MPICC -V 2>&1)"
                   ac_MPICC_VER=`echo $ac_MPICC_VER | ${GREP} -w Sun`
                   # AC_MSG_NOTICE(Sun ac_MPICC_VER=$ac_MPICC_VER)
                   if test "x${ac_MPICC_VER}" != x ; then
-                     ac_cv_mpicc_base="SOLARIS"
+                     ac_cv_mpicc_base_vendor="SOLARIS"
                   else
                      # Check FCCPX
                      ac_MPICC_VER="$($MPICC --showme 2>&1)"
                      ac_MPICC_VER=`echo $ac_MPICC_VER | ${GREP} -w fccpx`
                      # AC_MSG_NOTICE(fccpx ac_MPICC_VER=$ac_MPICC_VER)
                      if test "x${ac_MPICC_VER}" != x ; then
-                        ac_cv_mpicc_base="FCCPX"
+                        ac_cv_mpicc_base_vendor="FCCPX"
                      else
                         # If just cc, check if it is a wrapper of GCC
                         ac_MPICC_VER="$($MPICC -v 2>&1)"
                         UD_MSG_DEBUG(GCC ac_MPICC_VER=$ac_MPICC_VER)
                         ac_MPICC_VER=`echo $ac_MPICC_VER | ${GREP} -w gcc`
                         if test "x${ac_MPICC_VER}" != x ; then
-                           ac_cv_mpicc_base="GCC"
+                           ac_cv_mpicc_base_vendor="GCC"
                         fi
                      fi
                   fi
@@ -1774,10 +1774,10 @@ AC_DEFUN([UD_CHECK_MPICC_BASE],[
          fi
       fi
    fi
-   if test "x$ac_cv_mpicc_base" = x ; then
+   if test "x$ac_cv_mpicc_base_vendor" = x ; then
       AC_MSG_RESULT([unknown])
    else
-      AC_MSG_RESULT([$ac_cv_mpicc_base])
+      AC_MSG_RESULT([$ac_cv_mpicc_base_vendor])
    fi
 ])
 
@@ -2292,7 +2292,7 @@ AC_DEFUN([CHECK_MPI_VERSION],[
    # PGI, it is -dM and prints to stdout. For Oracle Solaris Studio compiler,
    # it is -xdumpmacros=defs and prints to stderr
    MACRO_FLAG="-dM"
-   if test "x$ac_cv_mpicc_base" = xXLC ; then
+   if test "x$ac_cv_mpicc_base_vendor" = xXLC ; then
       MACRO_FLAG="-qshowmacros"
    fi
 
@@ -2314,12 +2314,15 @@ AC_DEFUN([CHECK_MPI_VERSION],[
       if test "x$ac_cv_have_decl_MVAPICH2_VERSION" = xyes ; then
          mvapich2_version=`${GREP} MVAPICH2_VERSION saved_conftest.i | cut -d' ' -d'"' -f2`
          AC_MSG_RESULT(MVAPICH2 $mvapich2_version)
+         unset mvapich2_version
       elif test "x$ac_cv_have_decl_MPICH_VERSION" = xyes ; then
          mpich_version=`${GREP} MPICH_VERSION saved_conftest.i | cut -d' ' -d'"' -f2`
          AC_MSG_RESULT(MPICH $mpich_version)
+         unset mpich_version
       elif test "x$ac_cv_have_decl_MPICH2_VERSION" = xyes ; then
          mpich2_version=`${GREP} MPICH2_VERSION saved_conftest.i | cut -d' ' -d'"' -f2`
          AC_MSG_RESULT(MPICH2 $mpich2_version)
+         unset mpich2_version
       elif test "x$ac_cv_have_decl_OMPI_MAJOR_VERSION" = xyes ; then
          # AC_COMPUTE_INT([OMPI_MAJOR], [OMPI_MAJOR_VERSION], [[#include <mpi.h>]])
          # AC_COMPUTE_INT([OMPI_MINOR], [OMPI_MINOR_VERSION], [[#include <mpi.h>]])
@@ -2332,6 +2335,7 @@ AC_DEFUN([CHECK_MPI_VERSION],[
          unset OMPI_MAJOR
          unset OMPI_MINOR
          unset OMPI_RELEASE
+         unset ompi_version
       fi
    else
       AC_MSG_RESULT([unknown])
