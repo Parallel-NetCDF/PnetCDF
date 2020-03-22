@@ -274,6 +274,7 @@ CANDIDATE_MPIF77="$CANDIDATE_MPIF77 mpipgf77 mppgf77"
 CANDIDATE_MPIF90="$CANDIDATE_MPIF90 mpipgf90 mpipgf95 mppgf90 mppgf95 "
 
 dnl find the full path of MPICC from CANDIDATE_MPICC and MPI_INSTALL
+UD_MSG_DEBUG([ac_user_MPICC=$ac_user_MPICC])
 if test "x${ac_user_MPICC}" = x ; then
    dnl if MPICC or CC has not been set by users, then search from
    dnl CANDIDATE_MPICC, and find the full path of MPICC
@@ -282,6 +283,7 @@ else
    dnl check whether user specified MPICC is valid
    UD_MPI_PATH_PROG([MPICC], [$ac_user_MPICC])
 fi
+UD_MSG_DEBUG([MPICC=$MPICC])
 
 if test "x${MPICC}" = x ; then
    if test "x$ac_user_MPICC" = x ; then

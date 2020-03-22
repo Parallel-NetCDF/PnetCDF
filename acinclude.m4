@@ -1935,7 +1935,11 @@ AC_DEFUN([UD_MPI_PATH_PROG], [
             fi
          fi
          if test "x$ac_mpi_prog_$1" != x ; then
-            $1="${ac_mpi_prog_$1} $ac_rest_tokens"
+            if test "x$ac_rest_tokens" != x ; then
+               $1="${ac_mpi_prog_$1} $ac_rest_tokens"
+            else
+               $1=${ac_mpi_prog_$1}
+            fi
          else
             $1=
          fi
@@ -1943,7 +1947,11 @@ AC_DEFUN([UD_MPI_PATH_PROG], [
          dnl MPI_INSTALL is not set, i.e. --with-mpi is not used
          AC_PATH_PROG([ac_mpi_prog_$1], [$ac_first_token])
          if test "x$ac_mpi_prog_$1" != x ; then
-            $1="${ac_mpi_prog_$1} $ac_rest_tokens"
+            if test "x$ac_rest_tokens" != x ; then
+               $1="${ac_mpi_prog_$1} $ac_rest_tokens"
+            else
+               $1=${ac_mpi_prog_$1}
+            fi
          else
             $1=
          fi
