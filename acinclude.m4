@@ -2431,6 +2431,8 @@ AC_DEFUN([ACX_F77_MISMATCH],
 # information of library and object files (normally -v)
 # Needed for _AC_FC_LIBRARY_FLAGS
 # Some compilers don't accept -v (Lahey: (-)-verbose, xlf: -V, Fujitsu: -###)
+# Fujitsu accepts --verbose and passes it to the linker, which doesn't yield
+# the desired result. Therefore test for -### before testing for --verbose.
 # -------------
 # This macro is used by AC_F77_LIBRARY_LDFLAGS and AC_FC_LIBRARY_LDFLAGS.
 # We need to overload it to allow for additional possible results:
@@ -2442,7 +2444,7 @@ AC_CACHE_CHECK([how to get verbose linking output from $[]_AC_FC[]],
 [AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
 [ac_cv_prog_[]_AC_LANG_ABBREV[]_v=
 # Try some options frequently used verbose output
-for ac_verb in -v -verbose --verbose -V -\#\#\# -Wl,-v; do
+for ac_verb in -v -verbose -V -\#\#\# --verbose -Wl,-v; do
   _AC_PROG_FC_V_OUTPUT($ac_verb)
   # look for -l* and *.a constructs in the output
   for ac_arg in $ac_[]_AC_LANG_ABBREV[]_v_output; do
