@@ -2280,6 +2280,7 @@ AC_DEFUN([LT_MPI_CHECK_SHLIB],[
 # -----------------------------------------------------------------
 # check MPI version and vendor
 AC_DEFUN([CHECK_MPI_VERSION],[
+   AC_REQUIRE([AX_COMPILER_VENDOR])
    AC_REQUIRE([AC_PROG_GREP])
    AC_MSG_CHECKING([MPI Standard version implemented])
    AC_COMPUTE_INT([mpi_version], [MPI_VERSION], [[#include <mpi.h>]])
@@ -2300,7 +2301,7 @@ AC_DEFUN([CHECK_MPI_VERSION],[
    # PGI, it is -dM and prints to stdout. For Oracle Solaris Studio compiler,
    # it is -xdumpmacros=defs and prints to stderr
    MACRO_FLAG="-dM"
-   if test "x$ac_cv_mpicc_base_vendor" = xXLC ; then
+   if test "x$ax_cv_c_compiler_vendor" = xibm ; then
       MACRO_FLAG="-qshowmacros"
    fi
 
@@ -2460,3 +2461,52 @@ if test -z "$ac_cv_prog_[]_AC_LANG_ABBREV[]_v"; then
 fi],
                   [AC_MSG_WARN([compilation failed])])
 ])])# _AC_PROG_FC_V
+
+# MPI_COMPILER_BASE
+# -----------------------------------------------------------------
+# Returns the base compiler command used in MPI compiler wrapper in
+# ac_cv_mpi_compiler_base_MPICC, ac_cv_mpi_compiler_base_MPICXX,
+# ac_cv_mpi_compiler_base_MPIF90, such as /usr/bin/gcc, /usr/bin/g++,
+# /usr/bin/gfortran
+#
+AC_DEFUN([MPI_COMPILER_BASE],[
+   AC_MSG_CHECKING([base compiler command in $1 wrapper])
+   cc_basename=
+   case $$1 in
+        mpicc | mpicxx | mpif77 | mpif90 | *[[\\/]]mpicc | *[[\\/]]mpicxx | *[[\\/]]mpif77 | *[[\\/]]mpif90 )
+           # MPICH, OpenMPI
+           cc_basename=`$$1 -show | cut -d' ' -f1`
+           ;;
+        mpixlc | mpixlcxx | mpixlf77 | mpixlf90 | *[[\\/]]mpixlc | *[[\\/]]mpixlcxx | *[[\\/]]mpixlf77 | *[[\\/]]mpixlf90 )
+           # IBM XL MPI compilers
+           cc_basename=`$$1 -show | cut -d' ' -f1`
+           ;;
+        mpifccpx | mpiFCCpx | mpifrtpx | *[[\\/]]mpifccpx | *[[\\/]]mpiFCCpx | *[[\\/]]mpifrtpx )
+           # Fujitsu MPI compilers: fccpx, FCCpx, frtpx
+           cc_basename=`$$1 -showme | cut -d' ' -f1`
+           ;;
+        cc | CC | ftn | *[[\\/]]cc | *[[\\/]]CC | *[[\\/]]ftn )
+           # For Cray PrgEnv-intel, cc is a wrapper of icc
+           # For Cray PrgEnv-gnu, cc is a wrapper of gcc
+           eval "$$1 --version" < /dev/null >& conftest.ver
+           cc_basename=`head -n1 conftest.ver |cut -d' ' -f1`
+           ${RM} -f conftest.ver
+           if test "x${cc_basename}" = x ; then
+              # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
+              # Cray cc -V sends the output to stderr.
+              eval "$$1 -V" < /dev/null >& conftest.ver
+              cc_basename=`head -n1 conftest.ver |cut -d' ' -f1`
+              ${RM} -f conftest.ver
+           fi
+           ;;
+        *) break;;
+   esac
+   if test "x${cc_basename}" != x ; then
+      AC_MSG_RESULT([$cc_basename])
+      AC_PATH_PROG([ac_cv_mpi_compiler_base_$1], [$cc_basename])
+   else
+      AC_MSG_RESULT([not found])
+   fi
+   unset cc_basename
+])# MPI_COMPILER_BASE
+

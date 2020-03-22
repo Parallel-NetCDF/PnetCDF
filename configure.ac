@@ -309,6 +309,13 @@ CC=${MPICC}
 AC_PROG_CC
 dnl AM_PROG_CC_C_O
 
+dnl get compiler vendor in ax_cv_c_compiler_vendor (e.g. gnu, intel)
+AX_COMPILER_VENDOR
+
+dnl get base compiler command of MPI C compiler wrapper in
+dnl ac_cv_mpi_compiler_base_MPICC (e.g. /usr/bin/gcc)
+MPI_COMPILER_BASE(MPICC)
+
 dnl Set output variable CPP to a command that runs the C preprocessor.
 dnl Some C compilers require -E to be used as C preprocessor.
 AC_PROG_CPP
@@ -348,10 +355,9 @@ AC_CHECK_FUNC([MPI_File_open], [],
 ])])
 
 dnl check the base of MPICC compiler
-UD_CHECK_MPICC_BASE_VENDOR
-AM_CONDITIONAL(MPICC_IS_XLC,   [test "x${ac_cv_mpicc_base}" = xXLC])
-AM_CONDITIONAL(MPICC_IS_PGCC,  [test "x${ac_cv_mpicc_base}" = xPGCC])
-AM_CONDITIONAL(MPICC_IS_FCCPX, [test "x${ac_cv_mpicc_base}" = xFCCPX])
+AM_CONDITIONAL(MPICC_IS_XLC,  [test "x${ax_cv_c_compiler_vendor}" = xibm])
+AM_CONDITIONAL(MPICC_IS_PGCC, [test "x${ax_cv_c_compiler_vendor}" = xportland])
+AM_CONDITIONAL(MPICC_IS_FCCPX,[test "x${ax_cv_c_compiler_vendor}" = xfujitsu])
 
 dnl print out MPI version and vendor information
 CHECK_MPI_VERSION
@@ -473,6 +479,11 @@ dnl AC_PROG_CXX_C_O
 if test "x${has_mpicxx}" = xyes ; then
    dnl test if MPICXX can compile an MPI-IO program
    AC_LANG_PUSH(C++)
+   dnl get compiler vendor in ax_cv_cxx_compiler_vendor (e.g. gnu, intel)
+   AX_COMPILER_VENDOR
+   dnl get base compiler command of MPI C++ compiler wrapper in
+   dnl ac_cv_mpi_compiler_base_MPICXX (e.g. /usr/bin/g++)
+   MPI_COMPILER_BASE(MPICXX)
    AC_CHECK_FUNC([MPI_File_close], [],
       dnl maybe -lmpi++ is needed at link stage
       [AC_SEARCH_LIBS([MPI_File_close], [mpi mpio mpi++ mpichcxx mpi_cxx], [],
@@ -800,6 +811,15 @@ if test "x${has_fortran}" = xyes ; then
    AC_FC_SRCEXT([F])
    AC_FC_SRCEXT([f90])
    AC_FC_SRCEXT([F90])
+
+   AC_LANG_PUSH([Fortran])
+   dnl get compiler vendor in ax_cv_fc_compiler_vendor (e.g. gnu, intel)
+   AX_COMPILER_VENDOR
+   AC_LANG_POP([Fortran])
+
+   dnl get base compiler command of MPI Fortran compiler wrapper in
+   dnl ac_cv_mpi_compiler_base_MPIF90 (e.g. /usr/bin/gfortran)
+   MPI_COMPILER_BASE(MPIF90)
 
    dnl customized AC_FC_FIXEDFORM: to just get ac_cv_fc_fixedform without
    dnl appending ac_cv_fc_fixedform to FCFLAGS
