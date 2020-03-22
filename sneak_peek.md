@@ -64,6 +64,7 @@ This is essentially a placeholder for the next release note ...
     flag needed to verbose linking output, unrecognized link option -pthread,
     unmatched C compiler underneath. Thanks Sergey Kosukhin for providing the
     fix in [PR #59](https://github.com/Parallel-NetCDF/PnetCDF/pull/59)
+    and [PR #60](https://github.com/Parallel-NetCDF/PnetCDF/pull/60)
   + Fix a bug of calling Fortran getarg() with the first argument k with a
     value > 0 when there is no command-line argument is used. NAG Fortran may
     crash the program. See
