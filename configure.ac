@@ -637,8 +637,6 @@ if test "x${has_fortran}" = xyes ; then
    AC_PROG_F77
    dnl FFLAGS is set in AC_PROG_F77
 
-   ACX_F77_MISMATCH([AS_VAR_APPEND([FFLAGS], [" $acx_cv_f77_mismatch_flag"])])
-
    AC_F77_LIBRARY_LDFLAGS
 
    AC_MSG_CHECKING([whether $MPIF77 is a valid MPI compiler])
@@ -679,8 +677,6 @@ if test "x${has_fortran}" = xyes ; then
    FC=${MPIF90}
    AC_PROG_FC
    dnl FCFLAGS is set in AC_PROG_FC
-
-   ACX_FC_MISMATCH([AS_VAR_APPEND([FCFLAGS], [" $acx_cv_fc_mismatch_flag"])])
 
    dnl FCLIBS_save="$FCLIBS"
    dnl FCLIBS=""
@@ -942,6 +938,28 @@ if test "x${has_fortran}" = xyes ; then
    UD_PROG_FC_UPPERCASE_MOD
 fi
 AM_CONDITIONAL(UPPER_CASE_MOD, [test x$ac_cv_prog_f90_uppercase_mod = xyes])
+
+if test "x${has_fortran}" = xyes && test "x${ax_cv_fc_compiler_vendor}" = xnag ; then
+   # Special treatment for NAG Fortran compiler
+   UD_MSG_DEBUG([ac_cv_mpi_compiler_base_MPICC=$ac_cv_mpi_compiler_base_MPICC])
+   str_found=`echo "${FFLAGS}" | ${EGREP} -- "-Wc="`
+   if test "x$?" != x0 ; then
+      AC_MSG_WARN([Add to FFLAGS -Wc=$ac_cv_mpi_compiler_base_MPICC])
+      AS_VAR_APPEND([FFLAGS], [" -Wc=$ac_cv_mpi_compiler_base_MPICC"])
+   fi
+   str_found=`echo "${FCFLAGS}" | ${EGREP} -- "-Wc="`
+   if test "x$?" != x0 ; then
+      AC_MSG_WARN([Add to FCFLAGS -Wc=$ac_cv_mpi_compiler_base_MPICC])
+      AS_VAR_APPEND([FCFLAGS], [" -Wc=$ac_cv_mpi_compiler_base_MPICC"])
+   fi
+   unset str_found
+
+   # Add -mismatch to downgrade consistency checking of procedure argument
+   # lists so that mismatches produce warning messages instead of error
+   # messages
+   ACX_F77_MISMATCH([AS_VAR_APPEND([FFLAGS], [" $acx_cv_f77_mismatch_flag"])])
+   ACX_FC_MISMATCH([AS_VAR_APPEND([FCFLAGS], [" $acx_cv_fc_mismatch_flag"])])
+fi
 
 if test "x$enable_shared" = xyes ; then
    dnl Call LT_OUTPUT to produce file ./libtool which is used later in
