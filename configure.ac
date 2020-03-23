@@ -941,18 +941,20 @@ AM_CONDITIONAL(UPPER_CASE_MOD, [test x$ac_cv_prog_f90_uppercase_mod = xyes])
 
 if test "x${has_fortran}" = xyes && test "x${ax_cv_fc_compiler_vendor}" = xnag ; then
    # Special treatment for NAG Fortran compiler
-   UD_MSG_DEBUG([ac_cv_mpi_compiler_base_MPICC=$ac_cv_mpi_compiler_base_MPICC])
-   str_found=`echo "${FFLAGS}" | ${EGREP} -- "-Wc="`
-   if test "x$?" != x0 ; then
-      AC_MSG_WARN([Add to FFLAGS -Wc=$ac_cv_mpi_compiler_base_MPICC])
-      AS_VAR_APPEND([FFLAGS], [" -Wc=$ac_cv_mpi_compiler_base_MPICC"])
+   if test "x${ac_cv_mpi_compiler_base_MPICC}" != x ; then
+      UD_MSG_DEBUG([ac_cv_mpi_compiler_base_MPICC=$ac_cv_mpi_compiler_base_MPICC])
+      str_found=`echo "${FFLAGS}" | ${EGREP} -- "-Wc="`
+      if test "x$?" != x0 ; then
+         AC_MSG_WARN([Add to FFLAGS -Wc=$ac_cv_mpi_compiler_base_MPICC])
+         AS_VAR_APPEND([FFLAGS], [" -Wc=$ac_cv_mpi_compiler_base_MPICC"])
+      fi
+      str_found=`echo "${FCFLAGS}" | ${EGREP} -- "-Wc="`
+      if test "x$?" != x0 ; then
+         AC_MSG_WARN([Add to FCFLAGS -Wc=$ac_cv_mpi_compiler_base_MPICC])
+         AS_VAR_APPEND([FCFLAGS], [" -Wc=$ac_cv_mpi_compiler_base_MPICC"])
+      fi
+      unset str_found
    fi
-   str_found=`echo "${FCFLAGS}" | ${EGREP} -- "-Wc="`
-   if test "x$?" != x0 ; then
-      AC_MSG_WARN([Add to FCFLAGS -Wc=$ac_cv_mpi_compiler_base_MPICC])
-      AS_VAR_APPEND([FCFLAGS], [" -Wc=$ac_cv_mpi_compiler_base_MPICC"])
-   fi
-   unset str_found
 
    # Add -mismatch to downgrade consistency checking of procedure argument
    # lists so that mismatches produce warning messages instead of error
