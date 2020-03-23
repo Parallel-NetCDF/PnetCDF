@@ -114,7 +114,7 @@ func_cc_basename ()
         compile | *[[\\/]]compile | ccache | *[[\\/]]ccache ) ;;
         distcc | *[[\\/]]distcc | purify | *[[\\/]]purify ) ;;
         \-*) ;;
-        mpicc | mpicxx | mpif77 | mpif90 | *[[\\/]]mpicc | *[[\\/]]mpicxx | *[[\\/]]mpif77 | *[[\\/]]mpif90 )
+        mpicc | mpicxx | mpif77 | mpif90 | mpifort | *[[\\/]]mpicc | *[[\\/]]mpicxx | *[[\\/]]mpif77 | *[[\\/]]mpif90 | *[[\\/]]mpifort )
            # MPICH compilers
            #   eval "$cc_temp -show" < /dev/null >& conftest.ver
            #   func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
