@@ -2470,43 +2470,46 @@ fi],
 # /usr/bin/gfortran
 #
 AC_DEFUN([MPI_COMPILER_BASE],[
+   # before checking, remove compile command-line options, if there is any
+   compile_cmd=`echo $$1 | cut -d" " -f1`
    AC_MSG_CHECKING([base compiler command in $1 wrapper])
-   cc_basename=
-   case $$1 in
-        mpicc | mpicxx | mpif77 | mpif90 | *[[\\/]]mpicc | *[[\\/]]mpicxx | *[[\\/]]mpif77 | *[[\\/]]mpif90 )
+   compile_basename=
+   case $compile_cmd in
+        mpicc | mpicxx | mpif77 | mpif90 | mpifort | *[[\\/]]mpicc | *[[\\/]]mpicxx | *[[\\/]]mpif77 | *[[\\/]]mpif90 | *[[\\/]]mpifort )
            # MPICH, OpenMPI
-           cc_basename=`$$1 -show | cut -d' ' -f1`
+           compile_basename=`$compile_cmd -show | cut -d' ' -f1`
            ;;
         mpixlc | mpixlcxx | mpixlf77 | mpixlf90 | *[[\\/]]mpixlc | *[[\\/]]mpixlcxx | *[[\\/]]mpixlf77 | *[[\\/]]mpixlf90 )
            # IBM XL MPI compilers
-           cc_basename=`$$1 -show | cut -d' ' -f1`
+           compile_basename=`$compile_cmd -show | cut -d' ' -f1`
            ;;
         mpifccpx | mpiFCCpx | mpifrtpx | *[[\\/]]mpifccpx | *[[\\/]]mpiFCCpx | *[[\\/]]mpifrtpx )
            # Fujitsu MPI compilers: fccpx, FCCpx, frtpx
-           cc_basename=`$$1 -showme | cut -d' ' -f1`
+           compile_basename=`$compile_cmd -showme | cut -d' ' -f1`
            ;;
         cc | CC | ftn | *[[\\/]]cc | *[[\\/]]CC | *[[\\/]]ftn )
            # For Cray PrgEnv-intel, cc is a wrapper of icc
            # For Cray PrgEnv-gnu, cc is a wrapper of gcc
-           eval "$$1 --version" < /dev/null >& conftest.ver
-           cc_basename=`head -n1 conftest.ver |cut -d' ' -f1`
+           eval "$compile_cmd --version" < /dev/null >& conftest.ver
+           compile_basename=`head -n1 conftest.ver |cut -d' ' -f1`
            ${RM} -f conftest.ver
-           if test "x${cc_basename}" = x ; then
+           if test "x${compile_basename}" = x ; then
               # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
               # Cray cc -V sends the output to stderr.
-              eval "$$1 -V" < /dev/null >& conftest.ver
-              cc_basename=`head -n1 conftest.ver |cut -d' ' -f1`
+              eval "$compile_cmd -V" < /dev/null >& conftest.ver
+              compile_basename=`head -n1 conftest.ver |cut -d' ' -f1`
               ${RM} -f conftest.ver
            fi
            ;;
         *) break;;
    esac
-   if test "x${cc_basename}" != x ; then
-      AC_MSG_RESULT([$cc_basename])
-      AC_PATH_PROG([ac_cv_mpi_compiler_base_$1], [$cc_basename])
+   if test "x${compile_basename}" != x ; then
+      AC_MSG_RESULT([$compile_basename])
+      AC_PATH_PROG([ac_cv_mpi_compiler_base_$1], [$compile_basename])
    else
       AC_MSG_RESULT([not found])
    fi
-   unset cc_basename
+   unset compile_basename
+   unset compile_cmd
 ])# MPI_COMPILER_BASE
 
