@@ -941,6 +941,7 @@ AM_CONDITIONAL(UPPER_CASE_MOD, [test x$ac_cv_prog_f90_uppercase_mod = xyes])
 
 if test "x${has_fortran}" = xyes && test "x${ax_cv_fc_compiler_vendor}" = xnag ; then
    # Special treatment for NAG Fortran compiler
+   # Command 'nagfor -dryrun dummy.f90' can reveal the C linker nagfor uses.
    if test "x${ac_cv_mpi_compiler_base_MPICC}" != x ; then
       UD_MSG_DEBUG([ac_cv_mpi_compiler_base_MPICC=$ac_cv_mpi_compiler_base_MPICC])
       str_found=`echo "${FFLAGS}" | ${EGREP} -- "-Wc="`
