@@ -57,7 +57,12 @@ This is essentially a placeholder for the next release note ...
     formats
 
 * Other updates:
-  + none
+  + Improve detection of HDF5 signature. The HDF5 signature is located at the
+    beginning of the HDF5 superblock, but the location of HDF5 superblock may
+    not be at the beginning of the file. It is located at byte offset 0, byte
+    offset 512, and at successive locations in the file, each a multiple of two
+    of the previous location; in other words, at these byte offsets: 0, 512,
+    1024, 2048, and so on.
 
 * Bug fixes
   + Fix various compile and link bugs when NAG Fortran is used. Bugs include

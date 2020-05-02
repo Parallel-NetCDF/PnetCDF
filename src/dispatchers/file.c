@@ -9,13 +9,14 @@
 #endif
 
 #include <stdio.h>
-#include <stdlib.h>  /* getenv() */
-#include <string.h>  /* strtok(), strtok_r(), strchr(), strcpy(), strdup() */
-#include <strings.h> /* strcasecmp() */
-#include <fcntl.h>   /* open() */
-#include <unistd.h>  /* read(), close() */
-#include <assert.h>  /* assert() */
-#include <errno.h>   /* errno */
+#include <stdlib.h>     /* getenv() */
+#include <string.h>     /* strtok(), strtok_r(), strchr(), strcpy(), strdup() */
+#include <strings.h>    /* strcasecmp() */
+#include <fcntl.h>      /* open() */
+#include <sys/types.h>  /* lseek() */
+#include <unistd.h>     /* read(), close(), lseek() */
+#include <assert.h>     /* assert() */
+#include <errno.h>      /* errno */
 
 #ifdef ENABLE_THREAD_SAFE
 #include<pthread.h>
@@ -1216,31 +1217,57 @@ ncmpi_inq_file_format(const char *filename,
         DEBUG_RETURN_ERROR(NC_EFILE)
     }
 
-    if (memcmp(signature, hdf5_signature, 8) == 0) {
-        /* TODO: whether the file is NC_FORMAT_NETCDF4_CLASSIC is determined by
-         * HDF5 attribute "_nc3_strict" which requires a call to H5Aget_name().
-         * For now, we do not distinguish NC_CLASSIC_MODEL, but simply return
-         * NETCDF4 format.
-         */
-#ifdef ENABLE_NETCDF4
-        int err, ncid;
-        err = nc_open(path, NC_NOWRITE, &ncid);
-        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-        err = nc_inq_format(ncid, formatp);
-        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-        err = nc_close(ncid);
-        if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-#else
-        *formatp = NC_FORMAT_NETCDF4;
-#endif
-    }
-    else if (memcmp(signature, cdf_signature, 3) == 0) {
+    if (memcmp(signature, cdf_signature, 3) == 0) {
              if (signature[3] == 5)  *formatp = NC_FORMAT_CDF5;
         else if (signature[3] == 2)  *formatp = NC_FORMAT_CDF2;
         else if (signature[3] == 1)  *formatp = NC_FORMAT_CLASSIC;
     }
+
+    /* check if the file is an HDF5. */
+    if (*formatp == NC_FORMAT_UNKNOWN) {
+        /* The HDF5 superblock is located by searching for the HDF5 format
+         * signature at byte offset 0, byte offset 512, and at successive
+         * locations in the file, each a multiple of two of the previous
+         * location; in other words, at these byte offsets: 0, 512, 1024, 2048,
+         * and so on. The space before the HDF5 superblock is referred as to
+         * "user block".
+         */
+        off_t offset=0;
+
+        fd = open(path, O_RDONLY, 00400); /* error check already done */
+        /* get first 8 bytes of file */
+        rlen = read(fd, signature, 8); /* error check already done */
+
+        while (rlen == 8 && memcmp(signature, hdf5_signature, 8)) {
+            offset = (offset == 0) ? 512 : offset * 2;
+            lseek(fd, offset, SEEK_SET);
+            rlen = read(fd, signature, 8);
+        }
+        close(fd); /* ignore error */
+
+        if (rlen == 8) { /* HDF5 signature found */
+            /* TODO: whether the file is NC_FORMAT_NETCDF4_CLASSIC is
+             * determined by HDF5 attribute "_nc3_strict" which requires a call
+             * to H5Aget_name(). For now, we do not distinguish
+             * NC_CLASSIC_MODEL, but simply return NETCDF4 format.
+             */
+#ifdef ENABLE_NETCDF4
+            int err, ncid;
+            err = nc_open(path, NC_NOWRITE, &ncid);
+            if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+            err = nc_inq_format(ncid, formatp);
+            if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+            err = nc_close(ncid);
+            if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+#else
+            *formatp = NC_FORMAT_NETCDF4;
+#endif
+        }
+    }
+
 #ifdef ENABLE_ADIOS
-    else{
+    /* check if the file is a BP. */
+    if (*formatp == NC_FORMAT_UNKNOWN) {
         off_t fsize;
         int diff_endian;
         char footer[BP_MINIFOOTER_SIZE];

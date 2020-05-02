@@ -73,6 +73,8 @@ EVARSIZE_FILES = bad_large_fixed_var.nc2 \
                  bad_large_rec_2_vars.nc2 \
                  bad_large_rec_var.nc2
 
+TST_HDF5_FILES = pad_superblock.h5
+
 ncvalidator$(EXEEXT): ncvalidator.c Makefile
 	$(SEQ_CC) -o $@ $<
 
@@ -89,13 +91,15 @@ TESTS_ENVIRONMENT += EMAXVARS_FILES="$(EMAXVARS_FILES)" ; export EMAXVARS_FILES;
 TESTS_ENVIRONMENT += EUNLIMIT_FILES="$(EUNLIMIT_FILES)" ; export EUNLIMIT_FILES;
 TESTS_ENVIRONMENT += ENOTNC_FILES="$(ENOTNC_FILES)" ; export ENOTNC_FILES;
 TESTS_ENVIRONMENT += EVARSIZE_FILES="$(EVARSIZE_FILES)" ; export EVARSIZE_FILES;
+TESTS_ENVIRONMENT += TST_HDF5_FILES="$(TST_HDF5_FILES)" ; export TST_HDF5_FILES;
 
 TESTS = xfail_runs.sh wrap_runs.sh
 XFAIL_TESTS = xfail_runs.sh
 
 EXTRA_DIST = xfail_runs.sh wrap_runs.sh \
              $(ENULLPAD_FILES) $(EMAXVARS_FILES) \
-             $(EUNLIMIT_FILES) $(ENOTNC_FILES) $(EVARSIZE_FILES)
+             $(EUNLIMIT_FILES) $(ENOTNC_FILES) $(EVARSIZE_FILES) \
+             $(TST_HDF5_FILES)
 
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out
 

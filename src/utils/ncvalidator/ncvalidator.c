@@ -93,6 +93,13 @@ typedef int nc_type;
 #define MIN_NC_XSZ 32
 #define NC_DEFAULT_CHUNKSIZE 1048576
 
+#define NC_FORMAT_UNKNOWN         -1
+#define NC_FORMAT_CLASSIC         1
+#define NC_FORMAT_CDF2            2
+#define NC_FORMAT_CDF5            5
+#define NC_FORMAT_NETCDF4         3
+#define NC_FORMAT_NETCDF4_CLASSIC 4
+
 typedef enum {
     NC_INVALID     = -1,  /* invalid */
     NC_UNSPECIFIED =  0,  /* ABSENT */
@@ -2092,7 +2099,6 @@ val_get_NC(int fd, NC *ncp)
     bufferinfo getbuf;
     char magic[5];
     size_t err_addr, pos_addr, base_addr;
-    const char *hdf5_signature="\211HDF\r\n\032\n";
 
     /* find Endianness of the running machine */
     getbuf.is_little_endian = check_little_endian();
@@ -2107,19 +2113,9 @@ val_get_NC(int fd, NC *ncp)
     /* Fetch the next header chunk. The chunk is 'gbp->size' bytes big
      * netcdf_file = header data
      * header      = magic numrecs dim_list gatt_list var_list
-     */
+    */
     status = val_fetch(fd, &getbuf);
     if (status != NC_NOERR) goto fn_exit;
-
-    /* Check HDF file signature */
-    if (memcmp(getbuf.base, hdf5_signature, 8) == 0) {
-        if (verbose) {
-            printf("Error: Input file is in HDF format\n");
-            printf("       ncvalidator only validates NetCDF classic files\n");
-        }
-        status = NC_ENOTSUPPORT;
-        goto fn_exit;
-    }
 
     /* Check classic CDF file signature */
     magic[4] = '\0';
@@ -2279,6 +2275,71 @@ fn_exit:
 
 /* End Of get NC */
 
+static int
+check_signature(char *filename)
+{
+    const char *cdf_signature="CDF";
+    const char *hdf5_signature="\211HDF\r\n\032\n";
+    char signature[8];
+    int fd, format = NC_FORMAT_UNKNOWN;
+    off_t offset=0;
+    ssize_t rlen;
+
+    if ((fd = open(filename, O_RDONLY, 00400)) == -1) { /* open for read */
+        fprintf(stderr,"Error at line %d on opening file %s (%s)\n",
+                __LINE__,filename,strerror(errno));
+        exit(1);
+    }
+
+    /* get first 8 bytes of file */
+    rlen = read(fd, signature, 8);
+    if (rlen == -1) {
+        fprintf(stderr,"Error at line %d on reading file %s (%s)\n",
+                __LINE__,filename,strerror(errno));
+        exit(1);
+    }
+    if (rlen != 8) { /* file size less than 8 bytes */
+        printf("Error at line %d: invalid file %s\n",__LINE__,filename);
+        close(fd); /* ignore error */
+        exit(1);
+    }
+
+    /* check NetCDF classic CDF signature */
+    if (memcmp(signature, cdf_signature, 3) == 0) {
+        if      (signature[3] == 5) format = NC_FORMAT_CDF5;
+        else if (signature[3] == 2) format = NC_FORMAT_CDF2;
+        else if (signature[3] == 1) format = NC_FORMAT_CLASSIC;
+
+        if (format != NC_FORMAT_UNKNOWN) {
+            close(fd); /* ignore error */
+            return format;
+        }
+    }
+
+    /* The HDF5 superblock is located by searching for the HDF5 format
+     * signature at byte offset 0, byte offset 512, and at successive locations
+     * in the file, each a multiple of two of the previous location; in other
+     * words, at these byte offsets: 0, 512, 1024, 2048, and so on. The space
+     * before the HDF5 superblock is referred as to "user block".
+     */
+    while (rlen == 8 && memcmp(signature, hdf5_signature, 8)) {
+        offset = (offset == 0) ? 512 : offset * 2;
+        lseek(fd, offset, SEEK_SET);
+        rlen = read(fd, signature, 8);
+    }
+    close(fd); /* ignore error */
+
+    if (rlen == 8) { /* HDF5 signature found */
+        if (verbose) {
+            printf("Error: Input file is in HDF format\n");
+            printf("       ncvalidator only validates NetCDF classic files\n");
+        }
+        return NC_FORMAT_NETCDF4;
+    }
+
+    return NC_FORMAT_UNKNOWN;
+}
+
 #ifndef BUILD_CDFDIFF
 static void
 usage(char *argv0)
@@ -2333,6 +2394,15 @@ int main(int argc, char **argv)
     path = strchr(filename, ':');
     if (path == NULL) path = filename; /* no prefix */
     else              path++;
+
+    /* check file signature */
+    fmt = check_signature(path);
+    if (fmt != NC_FORMAT_CDF5 && fmt != NC_FORMAT_CDF2 &&
+        fmt != NC_FORMAT_CLASSIC) {
+        if (fmt == NC_FORMAT_UNKNOWN && verbose)
+            printf("File \"%s\" format is unknown\n",filename);
+        return EXIT_FAILURE;
+    }
 
     if (repair) omode = O_RDWR;
     else        omode = O_RDONLY;
