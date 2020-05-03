@@ -67,7 +67,7 @@ int check_pnetcdf_hints(int ncid)
 }
 
 int main(int argc, char** argv) {
-    char filename[256], value[MPI_MAX_INFO_VAL], stderr_buf[BUFSIZ];
+    char filename[256], value[MPI_MAX_INFO_VAL];
     int ncid1, ncid2, rank, err, nerrs=0, len, flag, varid;
     MPI_Offset header_size, header_extent, expect;
     MPI_Info info, info_used;
@@ -93,14 +93,6 @@ int main(int argc, char** argv) {
     /* create a new file and keep it opened to make ncmpii_mem_root not NULL */
     err = ncmpi_create(MPI_COMM_WORLD, "dummy", NC_CLOBBER, MPI_INFO_NULL, &ncid1); CHECK_ERR
 
-    /* use stderr_buf to capture messages from stderr */
-    stderr_buf[0]='\0';
-    err = setvbuf(stderr, stderr_buf, _IOLBF, BUFSIZ);
-    if (err != 0) {
-        printf("Error: setvbuf %s\n",strerror(errno));
-        nerrs++;
-    }
-
     /* retrieve MPI info object and check if all PnetCDF recognizable hints are
      * present */
     nerrs += check_pnetcdf_hints(ncid1);
@@ -121,9 +113,6 @@ int main(int argc, char** argv) {
 
     /* create another new file using a non-NULL MPI info --------------------*/
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid2); CHECK_ERR
-
-    /* any non-NULL stderr is considered an error */
-    if (stderr_buf[0] != '\0') nerrs++;
 
     MPI_Info_free(&info);
 
