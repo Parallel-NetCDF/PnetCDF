@@ -2332,7 +2332,8 @@ check_signature(char *filename)
     if (rlen == 8) { /* HDF5 signature found */
         if (verbose) {
             printf("Error: Input file is in HDF format\n");
-            printf("       ncvalidator only validates NetCDF classic files\n");
+            printf("       'ncvalidator' only validates NetCDF classic files\n");
+            printf("       Consider 'h5check', the HDF5 format checker\n");
         }
         return NC_FORMAT_NETCDF4;
     }
