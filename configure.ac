@@ -1079,6 +1079,11 @@ AC_CHECK_DECL([access], [], [], [[#include <unistd.h>]])
 if test "x$ac_cv_have_decl_access" = xyes ; then
    AC_CHECK_FUNCS([access])
 fi
+AC_CHECK_DECL([truncate], [], [], [[#include <unistd.h>
+#include <sys/types.h>]])
+if test "x$ac_cv_have_decl_truncate" = xyes ; then
+   AC_CHECK_FUNCS([truncate])
+fi
 AC_CHECK_DECL([unlink], [], [], [[#include <unistd.h>]])
 if test "x$ac_cv_have_decl_unlink" = xyes ; then
    AC_CHECK_FUNCS([unlink])

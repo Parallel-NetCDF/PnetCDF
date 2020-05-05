@@ -57,6 +57,9 @@ This is essentially a placeholder for the next release note ...
     formats
 
 * Other updates:
+  + When using NC_CLOBBER in the call of ncmpi_create(), use access() to check
+    whether file exists. If not, successive calls to truncate() or unlink() can
+    be skip.
   + Improve detection of HDF5 signature. The HDF5 signature is located at the
     beginning of the HDF5 superblock, but the location of HDF5 superblock may
     not be at the beginning of the file. It is located at byte offset 0, byte
