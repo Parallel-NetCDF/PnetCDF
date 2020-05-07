@@ -319,17 +319,18 @@ ncmpio_inq_misc(void       *ncdp,
 
     /* obtain the number of fixed-size variables */
     if (num_fix_varsp != NULL) {
+        int num_rec_vars;
         if (NC_indef(ncp)) {
             /* if in define mode, recalculate the number of record variables */
-            *num_fix_varsp = 0;
+            num_rec_vars = 0;
             for (i=0; i<ncp->vars.ndefined; i++)
-                *num_fix_varsp += IS_RECVAR(ncp->vars.value[i]);
+                num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
         }
         else
-            *num_fix_varsp = ncp->vars.num_rec_vars;
+            num_rec_vars = ncp->vars.num_rec_vars;
 
         /* no. fixed-size == ndefined - no. record variables */
-        *num_fix_varsp = ncp->vars.ndefined - *num_fix_varsp;
+        *num_fix_varsp = ncp->vars.ndefined - num_rec_vars;
     }
 
     /* obtain the number of record variables */
