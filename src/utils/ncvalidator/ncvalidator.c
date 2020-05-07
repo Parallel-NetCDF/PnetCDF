@@ -2025,24 +2025,145 @@ val_NC_check_vlens(NC *ncp)
     return NC_NOERR;
 }
 
+#ifdef VAR_BEGIN_IN_ARBITRARY_ORDER
+typedef struct {
+    long long off;      /* starting file offset of a variable */
+    long long len;      /* length in bytes of a variable */
+    int       ID;       /* variable index ID */
+} off_len;
+
+/*----< off_compare() >------------------------------------------------------*/
+/* used for sorting the offsets of the off_len array */
+static int
+off_compare(const void *a, const void *b)
+{
+    if (((off_len*)a)->off > ((off_len*)b)->off) return  1;
+    if (((off_len*)a)->off < ((off_len*)b)->off) return -1;
+    return 0;
+}
+#endif
+
 /*
- * Given a valid ncp, check all variables for their begins whether in an
- * increasing order.
+ * Given a valid ncp, check all variables for overlapping begins and lengths.
  */
 static int
 val_NC_check_voff(NC *ncp)
 {
-    int nerrs=0, status=NC_NOERR;
-    NC_var *varp;
-    long long i, prev, prev_off;
+    int i, num_fix_vars, nerrs=0, status=NC_NOERR;
 
     if (ncp->vars.ndefined == 0) return NC_NOERR;
 
+    num_fix_vars = ncp->vars.ndefined - ncp->vars.num_rec_vars;
+
+#ifdef VAR_BEGIN_IN_ARBITRARY_ORDER
+    int j;
+    off_len *var_off_len;
+    long long var_end, max_var_end;
+
+    if (num_fix_vars == 0) goto check_rec_var;
+
+    /* check non-record variables first */
+    var_off_len = (off_len*) malloc(num_fix_vars * sizeof(off_len));
+    for (i=0, j=0; i<ncp->vars.ndefined; i++) {
+        NC_var *varp = ncp->vars.value[i];
+        if (varp->begin < ncp->begin_var) {
+            if (verbose) {
+                printf("Error - variable begin offset:\n");
+                printf("\tvar \"%s\" begin offset (%lld) is less than file header extent (%lld)\n",
+                       varp->name, varp->begin, ncp->begin_var);
+            }
+            nerrs++;
+            DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
+        }
+        if (IS_RECVAR(varp)) continue;
+        var_off_len[j].off = varp->begin;
+        var_off_len[j].len = varp->len;
+        var_off_len[j].ID  = i;
+        j++;
+    }
+    assert(j == num_fix_vars);
+
+    for (i=1; i<num_fix_vars; i++) {
+        if (var_off_len[i].off < var_off_len[i-1].off)
+            break;
+    }
+
+    if (i < num_fix_vars)
+        /* sort the off-len array into an increasing order */
+        qsort(var_off_len, num_fix_vars, sizeof(off_len), off_compare);
+
+    max_var_end = var_off_len[0].off + var_off_len[0].len;
+    for (i=1; i<num_fix_vars; i++) {
+        if (var_off_len[i].off < var_off_len[i-1].off + var_off_len[i-1].len) {
+            if (verbose) {
+                NC_var *var_cur = ncp->vars.value[var_off_len[i].ID];
+                NC_var *var_prv = ncp->vars.value[var_off_len[i-1].ID];
+                printf("Error - variable begin offset:\n");
+                printf("\tvar \"%s\" begin offset (%lld) overlaps var %s (begin=%lld, length=%lld)\n",
+                       var_cur->name, var_cur->begin, var_prv->name, var_prv->begin, var_prv->len);
+            }
+            nerrs++;
+            DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
+        }
+        var_end = var_off_len[i].off + var_off_len[i].len;
+        max_var_end = MAX(max_var_end, var_end);
+    }
+
+    if (ncp->begin_rec < max_var_end) {
+        if (verbose) printf("Error:\n");
+        if (verbose) printf("\tRecord variable section begin offset (%lld) is less than fixed-size variable section end offset (%lld)\n", ncp->begin_rec, max_var_end);
+        nerrs++;
+        DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
+    }
+    free(var_off_len);
+
+check_rec_var:
+    if (ncp->vars.num_rec_vars == 0) return status;
+
+    /* check record variables */
+    var_off_len = (off_len*) malloc(ncp->vars.num_rec_vars * sizeof(off_len));
+    for (i=0, j=0; i<ncp->vars.ndefined; i++) {
+        NC_var *varp = ncp->vars.value[i];
+        if (!IS_RECVAR(varp)) continue;
+        var_off_len[j].off = varp->begin;
+        var_off_len[j].len = varp->len;
+        var_off_len[j].ID  = i;
+        j++;
+    }
+    assert(j == ncp->vars.num_rec_vars);
+
+    for (i=1; i<ncp->vars.num_rec_vars; i++) {
+        if (var_off_len[i].off < var_off_len[i-1].off)
+            break;
+    }
+
+    if (i < ncp->vars.num_rec_vars)
+        /* sort the off-len array into an increasing order */
+        qsort(var_off_len, ncp->vars.num_rec_vars, sizeof(off_len), off_compare);
+
+    for (i=1; i<ncp->vars.num_rec_vars; i++) {
+        if (var_off_len[i].off < var_off_len[i-1].off + var_off_len[i-1].len) {
+            if (verbose) {
+                NC_var *var_cur = ncp->vars.value[var_off_len[i].ID];
+                NC_var *var_prv = ncp->vars.value[var_off_len[i-1].ID];
+                printf("Error - variable begin offset:\n");
+                printf("\tvar \"%s\" begin offset (%lld) overlaps var %s (begin=%lld, length=%lld)\n",
+                       var_cur->name, var_cur->begin, var_prv->name, var_prv->begin, var_prv->len);
+            }
+            nerrs++;
+            DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
+        }
+    }
+    free(var_off_len);
+#else
     /* Loop through vars, first pass is for non-record variables */
+    if (num_fix_vars == 0) goto check_rec_var;
+
+    long long prev, prev_off;
     prev_off = ncp->begin_var;
     prev     = 0;
     for (i=0; i<ncp->vars.ndefined; i++) {
-        varp = ncp->vars.value[i];
+        NC_var *varp = ncp->vars.value[i];
         if (IS_RECVAR(varp)) continue;
 
         if (varp->begin < prev_off) {
@@ -2062,16 +2183,19 @@ val_NC_check_voff(NC *ncp)
 
     if (ncp->begin_rec < prev_off) {
         if (verbose) printf("Error:\n");
-        if (verbose) printf("\tRecord variable section begin offset (%lld) is less than fixed-size variable section end offset (%lld)\n", varp->begin, prev_off);
+        if (verbose) printf("\tRecord variable section begin offset (%lld) is less than fixed-size variable section end offset (%lld)\n", ncp->begin_rec, prev_off);
         nerrs++;
         DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
     }
+
+check_rec_var:
+    if (ncp->vars.num_rec_vars == 0) return status;
 
     /* Loop through vars, second pass is for record variables */
     prev_off = ncp->begin_rec;
     prev     = 0;
     for (i=0; i<ncp->vars.ndefined; i++) {
-        varp = ncp->vars.value[i];
+        NC_var *varp = ncp->vars.value[i];
         if (!IS_RECVAR(varp)) continue;
 
         if (varp->begin < prev_off) {
@@ -2088,6 +2212,7 @@ val_NC_check_voff(NC *ncp)
         prev_off = varp->begin + varp->len;
         prev = i;
     }
+#endif
 
     return status;
 }
@@ -2095,7 +2220,7 @@ val_NC_check_voff(NC *ncp)
 static int
 val_get_NC(int fd, NC *ncp)
 {
-    int err, status=NC_NOERR;
+    int i, err, status=NC_NOERR;
     bufferinfo getbuf;
     char magic[5];
     size_t err_addr, pos_addr, base_addr;
@@ -2221,6 +2346,11 @@ val_get_NC(int fd, NC *ncp)
         status = err;
         goto fn_exit;
     }
+
+    /* update the total number of record variables --------------------------*/
+    ncp->vars.num_rec_vars = 0;
+    for (i=0; i<ncp->vars.ndefined; i++)
+        ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
 
     err = val_NC_check_voff(ncp);
     if (err != NC_NOERR) {
@@ -2456,14 +2586,25 @@ int main(int argc, char **argv)
             }
         }
     }
-    else {
+    else { /* no record variable */
         long long expect_fsize;
         if (ncp->vars.ndefined == 0)
             expect_fsize = ncp->xsz;
-        else
+        else {
+#ifdef VAR_BEGIN_IN_ARBITRARY_ORDER
+            /* find max end offset among all varaibles */
+            long long var_end;
+            expect_fsize = ncp->xsz;
+            for (i=0; i<ncp->vars.ndefined; i++) {
+                var_end = ncp->vars.value[i]->begin + ncp->vars.value[i]->len;
+                expect_fsize = MAX(expect_fsize, var_end);
+            }
+#else
             /* find the size of last fixed-size variable */
             expect_fsize = ncp->vars.value[ncp->vars.ndefined-1]->begin +
                            ncp->vars.value[ncp->vars.ndefined-1]->len;
+#endif
+        }
         if (expect_fsize < ncfilestat.st_size) {
             if (verbose) printf("Error:\n");
             if (verbose) printf("\tfile size (%lld) is larger than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);

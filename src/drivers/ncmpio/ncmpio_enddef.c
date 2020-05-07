@@ -688,6 +688,24 @@ ncmpio_NC_check_vlens(NC *ncp)
     return NC_NOERR;
 }
 
+#ifdef VAR_BEGIN_IN_ARBITRARY_ORDER
+typedef struct {
+    MPI_Offset off;      /* starting file offset of a variable */
+    MPI_Offset len;      /* length in bytes of a variable */
+    int        ID;       /* variable index ID */
+} off_len;
+
+/*----< off_compare() >------------------------------------------------------*/
+/* used for sorting the offsets of the off_len array */
+static int
+off_compare(const void *a, const void *b)
+{
+    if (((off_len*)a)->off > ((off_len*)b)->off) return  1;
+    if (((off_len*)a)->off < ((off_len*)b)->off) return -1;
+    return 0;
+}
+#endif
+
 /*----< ncmpio_NC_check_voffs() >--------------------------------------------*/
 /*
  * Given a valid ncp, check whether the file starting offsets (begin) of all
@@ -723,17 +741,119 @@ ncmpio_NC_check_vlens(NC *ncp)
 int
 ncmpio_NC_check_voffs(NC *ncp)
 {
-    NC_var *varp;
-    int i, prev;
-    MPI_Offset prev_off;
+    int i, num_fix_vars;
 
     if (ncp->vars.ndefined == 0) return NC_NOERR;
 
+    num_fix_vars = ncp->vars.ndefined - ncp->vars.num_rec_vars;
+
+#ifdef VAR_BEGIN_IN_ARBITRARY_ORDER
+    int j;
+    off_len *var_off_len;
+    MPI_Offset var_end, max_var_end;
+
+    if (num_fix_vars == 0) goto check_rec_var;
+
+    /* check non-record variables first */
+    var_off_len = (off_len*) NCI_Malloc(num_fix_vars * sizeof(off_len));
+    for (i=0, j=0; i<ncp->vars.ndefined; i++) {
+        NC_var *varp = ncp->vars.value[i];
+        if (varp->begin < ncp->xsz) {
+            if (ncp->safe_mode) {
+                printf("Variable %s begin offset (%lld) is less than file header extent (%lld)\n",
+                       varp->name, varp->begin, ncp->xsz);
+            }
+            NCI_Free(var_off_len);
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
+        }
+        if (IS_RECVAR(varp)) continue;
+        var_off_len[j].off = varp->begin;
+        var_off_len[j].len = varp->len;
+        var_off_len[j].ID  = i;
+        j++;
+    }
+    assert(j == num_fix_vars);
+
+    for (i=1; i<num_fix_vars; i++) {
+        if (var_off_len[i].off < var_off_len[i-1].off)
+            break;
+    }
+
+    if (i < num_fix_vars)
+        /* sort the off-len array into an increasing order */
+        qsort(var_off_len, num_fix_vars, sizeof(off_len), off_compare);
+
+    max_var_end = var_off_len[0].off + var_off_len[0].len;
+    for (i=1; i<num_fix_vars; i++) {
+        if (var_off_len[i].off < var_off_len[i-1].off + var_off_len[i-1].len) {
+            if (ncp->safe_mode) {
+                NC_var *var_cur = ncp->vars.value[var_off_len[i].ID];
+                NC_var *var_prv = ncp->vars.value[var_off_len[i-1].ID];
+                printf("Variable %s begin offset (%lld) overlaps variable %s (begin=%lld, length=%lld)\n",
+                       var_cur->name, var_cur->begin, var_prv->name, var_prv->begin, var_prv->len);
+            }
+            NCI_Free(var_off_len);
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
+        }
+        var_end = var_off_len[i].off + var_off_len[i].len;
+        max_var_end = MAX(max_var_end, var_end);
+    }
+
+    if (ncp->begin_rec < max_var_end) {
+        if (ncp->safe_mode)
+            printf("Record variable section begin (%lld) is less than fixed-size variable section end (%lld)\n",
+                   ncp->begin_rec, max_var_end);
+        NCI_Free(var_off_len);
+        DEBUG_RETURN_ERROR(NC_ENOTNC)
+    }
+    NCI_Free(var_off_len);
+
+check_rec_var:
+    if (ncp->vars.num_rec_vars == 0) return NC_NOERR;
+
+    /* check record variables */
+    var_off_len = (off_len*) NCI_Malloc(ncp->vars.num_rec_vars * sizeof(off_len));
+    for (i=0, j=0; i<ncp->vars.ndefined; i++) {
+        NC_var *varp = ncp->vars.value[i];
+        if (!IS_RECVAR(varp)) continue;
+        var_off_len[j].off = varp->begin;
+        var_off_len[j].len = varp->len;
+        var_off_len[j].ID  = i;
+        j++;
+    }
+    assert(j == ncp->vars.num_rec_vars);
+
+    for (i=1; i<ncp->vars.num_rec_vars; i++) {
+        if (var_off_len[i].off < var_off_len[i-1].off)
+            break;
+    }
+
+    if (i < ncp->vars.num_rec_vars)
+        /* sort the off-len array into an increasing order */
+        qsort(var_off_len, ncp->vars.num_rec_vars, sizeof(off_len), off_compare);
+
+    for (i=1; i<ncp->vars.num_rec_vars; i++) {
+        if (var_off_len[i].off < var_off_len[i-1].off + var_off_len[i-1].len) {
+            if (ncp->safe_mode) {
+                NC_var *var_cur = ncp->vars.value[var_off_len[i].ID];
+                NC_var *var_prv = ncp->vars.value[var_off_len[i-1].ID];
+                printf("Variable %s begin offset (%lld) overlaps variable %s (begin=%lld, length=%lld)\n",
+                       var_cur->name, var_cur->begin, var_prv->name, var_prv->begin, var_prv->len);
+            }
+            NCI_Free(var_off_len);
+            DEBUG_RETURN_ERROR(NC_ENOTNC)
+        }
+    }
+    NCI_Free(var_off_len);
+#else
     /* Loop through vars, first pass is for non-record variables */
-    prev_off = ncp->begin_var;
-    prev     = 0;
+    if (num_fix_vars == 0) goto check_rec_var;
+
+    int prev = 0;
+    MPI_Offset prev_off = ncp->begin_var;
+
     for (i=0; i<ncp->vars.ndefined; i++) {
-        varp = ncp->vars.value[i];
+        NC_var *varp = ncp->vars.value[i];
         if (IS_RECVAR(varp)) continue;
 
         if (varp->begin < prev_off) {
@@ -758,11 +878,14 @@ ncmpio_NC_check_voffs(NC *ncp)
         DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
 
+check_rec_var:
+    if (ncp->vars.num_rec_vars == 0) return NC_NOERR;
+
     /* Loop through vars, second pass is for record variables */
     prev_off = ncp->begin_rec;
     prev     = 0;
     for (i=0; i<ncp->vars.ndefined; i++) {
-        varp = ncp->vars.value[i];
+        NC_var *varp = ncp->vars.value[i];
         if (!IS_RECVAR(varp)) continue;
 
         if (varp->begin < prev_off) {
@@ -781,6 +904,7 @@ ncmpio_NC_check_voffs(NC *ncp)
         prev_off = varp->begin + varp->len;
         prev     = i;
     }
+#endif
 
     return NC_NOERR;
 }
@@ -927,6 +1051,11 @@ ncmpio__enddef(void       *ncdp,
     err = NC_begins(ncp);
     CHECK_ERROR(err)
 
+    /* update the total number of record variables */
+    ncp->vars.num_rec_vars = 0;
+    for (i=0; i<ncp->vars.ndefined; i++)
+        ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
+
     if (ncp->safe_mode) {
         /* check whether variable begins are in an increasing order.
          * This check is for debugging purpose. */
@@ -1002,11 +1131,6 @@ ncmpio__enddef(void       *ncdp,
         if (status == NC_NOERR) status = err;
     }
 #endif
-
-    /* update the total number of record variables */
-    ncp->vars.num_rec_vars = 0;
-    for (i=0; i<ncp->vars.ndefined; i++)
-        ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
 
     /* fill variables according to their fill mode settings */
     if (ncp->vars.ndefined > 0) {
