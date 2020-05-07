@@ -179,11 +179,6 @@ ncmpio_open(MPI_Comm     comm,
         ncp->num_subfiles = 0;
 #endif
 
-    /* update the total number of record variables --------------------------*/
-    ncp->vars.num_rec_vars = 0;
-    for (i=0; i<ncp->vars.ndefined; i++)
-        ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
-
 #ifndef SEARCH_NAME_LINEARLY
     /* initialize and populate name lookup tables ---------------------------*/
     ncmpio_hash_table_populate_NC_dim(&ncp->dims);

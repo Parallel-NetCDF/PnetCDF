@@ -1305,7 +1305,7 @@ ncmpio_hdr_len_NC(const NC *ncp)
 int
 ncmpio_hdr_get_NC(NC *ncp)
 {
-    int err, status=NC_NOERR;
+    int i, err, status=NC_NOERR;
     bufferinfo getbuf;
     char magic[NC_MAGIC_LEN];
 
@@ -1402,6 +1402,11 @@ ncmpio_hdr_get_NC(NC *ncp)
      */
     err = compute_var_shape(ncp);
     if (err != NC_NOERR) goto fn_exit;
+
+    /* update the total number of record variables --------------------------*/
+    ncp->vars.num_rec_vars = 0;
+    for (i=0; i<ncp->vars.ndefined; i++)
+        ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
 
     /* Check whether variable sizes are legal for the given file format */
     err = ncmpio_NC_check_vlens(ncp);
