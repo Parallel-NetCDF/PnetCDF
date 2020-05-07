@@ -68,6 +68,17 @@ This is essentially a placeholder for the next release note ...
     1024, 2048, and so on.
 
 * Bug fixes
+  + Fix NC_CLOBBER mode for ncmpi_create() when called on existing symbolically
+    linked files. In all previous PnetCDF implementations, symbolic links, like
+    other regular files, was first deleted by unlink() and then created. This
+    can result in an unexpected outcome, i.e. the symbolic link being deleted.
+    NetCDF library implements this differently, by adding O_TRUNC flag when
+    calling open() to truncate the file to length 0. Historically, PnetCDF did
+    not adopt the same approach because MPI does not define a similar flag to
+    O_TRUNC and the only way to achieve the file clobber effect is to through
+    MPI_File_set_size(), which can be expensive as the function takes an MPI
+    file handler argument, which requires to open the file first with a call to
+    MPI_File_open().
   + Fix various compile and link bugs when NAG Fortran is used. Bugs include
     flag needed to verbose linking output, unrecognized link option -pthread,
     unmatched C compiler underneath. Thanks Sergey Kosukhin for providing the

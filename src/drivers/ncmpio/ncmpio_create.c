@@ -110,20 +110,33 @@ ncmpio_create(MPI_Comm     comm,
                 DEBUG_ASSIGN_ERROR(err, NC_EFILE) /* other error */
             else
                 err = NC_NOERR;
-#elif defined(HAVE_UNLINK)
-            err = unlink(filename);
-            if (err < 0 && errno != ENOENT) /* ignore ENOENT: file not exist */
-                DEBUG_ASSIGN_ERROR(err, NC_EFILE) /* other error */
-            else
-                err = NC_NOERR;
 #else
+            /* call MPI_File_set_size() to truncate the file. Note this can
+             * be expensive.
+             */
             err = NC_NOERR;
-            TRACE_IO(MPI_File_delete)((char*)path, MPI_INFO_NULL);
+            TRACE_IO(MPI_File_open)(MPI_COMM_SELF, (char *)path, MPI_MODE_RDWR,
+                                    MPI_INFO_NULL, &fh);
             if (mpireturn != MPI_SUCCESS) {
                 int errorclass;
                 MPI_Error_class(mpireturn, &errorclass);
-                if (errorclass != MPI_ERR_NO_SUCH_FILE) /* ignore this error */
-                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_delete");
+                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_open");
+            }
+            else {
+                TRACE_IO(MPI_File_set_size)(fh, 0);
+                if (mpireturn != MPI_SUCCESS) {
+                    int errorclass;
+                    MPI_Error_class(mpireturn, &errorclass);
+                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_set_size");
+                }
+                else {
+                    TRACE_IO(MPI_File_close)(fh);
+                    if (mpireturn != MPI_SUCCESS) {
+                        int errorclass;
+                        MPI_Error_class(mpireturn, &errorclass);
+                        err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_close");
+                    }
+                }
             }
 #endif
             if (errno == ENOENT) errno = 0; /* reset errno */
