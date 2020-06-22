@@ -312,6 +312,17 @@ dnl AM_PROG_CC_C_O
 dnl get compiler vendor in ax_cv_c_compiler_vendor (e.g. gnu, intel)
 AX_COMPILER_VENDOR
 
+if test "x${ax_cv_c_compiler_vendor}" = xgnu ; then
+   dnl gcc command-line option "-dumpversion" can also show version.
+   AC_MSG_CHECKING([whether gcc version is greater than 10.0.0])
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if __GNUC__ < 10
+#error gcc version < 10.0.0
+#endif
+   ]])], [gcc_ge_10=yes], [gcc_ge_10=no])
+   AC_MSG_RESULT([$gcc_ge_10])
+fi
+
 dnl get base compiler command of MPI C compiler wrapper in
 dnl ac_cv_mpi_compiler_base_MPICC (e.g. /usr/bin/gcc)
 MPI_COMPILER_BASE(MPICC)
@@ -1532,6 +1543,40 @@ if test "x${debug}" = xyes; then
       FCFLAGS="$FCFLAGS -O0"
    fi
    unset str_found
+fi
+
+dnl Starting from GNU Fortran 10.0.0, function/subroutine argument type
+dnl mismatch becomes a compile error. "Mismatches between actual and dummy
+dnl argument lists in a single file are now rejected with an error. Use the new
+dnl option -fallow-argument-mismatch to turn these errors into warnings; this
+dnl option is implied with -std=legacy. -Wargument-mismatch has been removed."
+dnl See https://gcc.gnu.org/gcc-10/changes.html and
+dnl https://github.com/Parallel-NetCDF/PnetCDF/issues/61
+if test "x${has_fortran}" = xyes ; then
+   AC_MSG_CHECKING([whether MPIF77 accepts option -fallow-argument-mismatch])
+   AC_LANG_PUSH([Fortran 77])
+   saved_FFLAGS=$FFLAGS
+   FFLAGS="$FFLAGS -fallow-argument-mismatch"
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [])],
+                     [fallow_argument_mismatch=yes],
+                     [fallow_argument_mismatch=no])
+   AC_MSG_RESULT([$fallow_argument_mismatch])
+   if test "x${fallow_argument_mismatch}" = xno ; then
+      FFLAGS=$saved_FFLAGS
+   fi
+   AC_LANG_POP([Fortran 77])
+   AC_MSG_CHECKING([whether MPIF90 accepts option -fallow-argument-mismatch])
+   AC_LANG_PUSH([Fortran])
+   saved_FCFLAGS=$FCFLAGS
+   FCFLAGS="$FCFLAGS -fallow-argument-mismatch"
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [])],
+                     [fallow_argument_mismatch=yes],
+                     [fallow_argument_mismatch=no])
+   AC_MSG_RESULT([$fallow_argument_mismatch])
+   if test "x${fallow_argument_mismatch}" = xno ; then
+      FCFLAGS=$saved_FCFLAGS
+   fi
+   AC_LANG_POP([Fortran])
 fi
 
 chmod u+x ${srcdir}/scripts/install-sh
