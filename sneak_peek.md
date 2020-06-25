@@ -42,7 +42,15 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Build recipes
-  + none
+  + Starting from GNU Fortran 10.0.0, function/subroutine argument type
+    mismatch becomes a compile error. A new compile command-line option
+    "-fallow-argument-mismatch" can turn these errors into warnings. This
+    command-line option is added automatically in PnetCDF version 1.12.2 and
+    later. When building PnetCDF of version 1.12.1 and earlier versions using
+    GNU Fortran 10.0.0 and later, please add "-fallow-argument-mismatch" to
+    environment variables FFLAGS and FCFLAGS.
+    See [issue #61](https://github.com/Parallel-NetCDF/PnetCDF/issues/61)
+    and [GCC 10 Release note](https://gcc.gnu.org/gcc-10/changes.html)
 
 * Updated utility program
   + ncvalidator now reports the name of variable that violates the NetCDF
@@ -57,9 +65,9 @@ This is essentially a placeholder for the next release note ...
     formats
 
 * Other updates:
-  + When using NC_CLOBBER in the call of ncmpi_create(), use access() to check
-    whether file exists. If not, successive calls to truncate() or unlink() can
-    be skip.
+  + When calling ncmpi_create() with NC_CLOBBER flag, PnetCDF now calls
+    access() to check whether file exists first. If the file does not exist,
+    successive calls to truncate() or unlink() can be skipped.
   + Improve detection of HDF5 signature. The HDF5 signature is located at the
     beginning of the HDF5 superblock, but the location of HDF5 superblock may
     not be at the beginning of the file. It is located at byte offset 0, byte
@@ -68,17 +76,16 @@ This is essentially a placeholder for the next release note ...
     1024, 2048, and so on.
 
 * Bug fixes
-  + Fix NC_CLOBBER mode for ncmpi_create() when called on existing symbolically
-    linked files. In all previous PnetCDF implementations, symbolic links, like
-    other regular files, was first deleted by unlink() and then created. This
-    can result in an unexpected outcome, i.e. the symbolic link being deleted.
-    NetCDF library implements this differently, by adding O_TRUNC flag when
-    calling open() to truncate the file to length 0. Historically, PnetCDF did
-    not adopt the same approach because MPI does not define a similar flag to
-    O_TRUNC and the only way to achieve the file clobber effect is to through
-    MPI_File_set_size(), which can be expensive as the function takes an MPI
-    file handler argument, which requires to open the file first with a call to
-    MPI_File_open().
+  + Fix NC_CLOBBER mode for ncmpi_create() when files are existing symbolic
+    links. Prior to this release, symbolic links, like other regular files, was
+    first deleted and then created. This can result in an unexpected outcome,
+    i.e. the deletion of symbolic link. NetCDF-4 library implements this
+    differently, by adding O_TRUNC flag when calling open() to truncate the
+    file to length 0. Historically, PnetCDF did not adopt the same approach
+    because MPI does not define a similar flag to O_TRUNC and the only way to
+    achieve the file clobber effect is to through MPI_File_set_size(), which
+    can be expensive as the function takes an MPI file handler argument, which
+    requires to open the file first with a call to MPI_File_open().
   + Fix various compile and link bugs when NAG Fortran is used. Bugs include
     flag needed to verbose linking output, unrecognized link option -pthread,
     unmatched C compiler underneath. Thanks Sergey Kosukhin for providing the
