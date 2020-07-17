@@ -220,6 +220,16 @@ check_vars_$1(const char *filename, int numVars)
             if (CheckNumRange($1, expect, datatype)) {
                 IF (err != NC_NOERR) {
                     error("GetVar1($1): %s", APIFunc(strerror)(err));
+                    if (verbose) {
+                        error("\nvarid: %d, ", i);
+                        error("var_name: %s, ", var_name[i]);
+                        error("var_type: %s, ", s_nc_type(var_type[i]));
+                        error("index:");
+                        for (d = 0; d < var_rank[i]; d++)
+                            error(" %d", index[d]);
+                        error(", expect: %g, ", expect);
+                        error("got: %g", (double) value);
+                    }
                 } else {
                     ifelse(`$1', `uchar', `
                     /* In put_vars(), PutVara(double)() is used to write
