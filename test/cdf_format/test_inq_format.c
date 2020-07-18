@@ -15,7 +15,7 @@
 #include <testutils.h>
 
 int main(int argc, char **argv) {
-    char dir_name[256], filename[256];
+    char dir_name[256], filename[512];
     int err, rank, nerrs=0, format, ncid;
 
     MPI_Init(&argc, &argv);

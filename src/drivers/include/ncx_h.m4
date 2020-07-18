@@ -68,7 +68,7 @@ dnl
  * If compiled with support for "large files", then
  * netcdf will use a 64 bit off_t and it can then write a file
  * using 64 bit offsets.
- *  see also X_SIZE_MAX, X_OFF_MAX below
+ *  see also X_SIZE_T_MAX, X_OFF_MAX below
  */
 /* #define X_SIZEOF_OFF_T	(sizeof(off_t)) */
 #define X_SIZEOF_OFF_T		SIZEOF_OFF_T
@@ -105,7 +105,7 @@ dnl
 #define X_DOUBLE_MIN	(-X_DOUBLE_MAX)
 #define X_DBL_MAX	X_DOUBLE_MAX	/* alias compatible with limits.h */
 
-#define X_SIZE_MAX	X_UINT_MAX
+#define X_SIZE_T_MAX	X_UINT_MAX
 #define X_OFF_MAX	X_INT_MAX
 
 

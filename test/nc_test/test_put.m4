@@ -339,8 +339,23 @@ check_atts_$1(int ncid, int numGatts, int numVars)
                 IF (err != NC_NOERR)
                     EXPECT_ERR(NC_NOERR, err)
             } else {
-                IF (err != NC_NOERR && err != NC_ERANGE)
+                IF (err != NC_NOERR && err != NC_ERANGE) {
                     EXPECT_ERR(NC_NOERR or NC_ERANGE, err)
+                    if (verbose) {
+                        error("\n expect NC_NOERR or NC_ERANGE, err ");
+                        error("varid: %d, ", i);
+                        error("att_name: %s, ", ATT_NAME(i,j));
+                        error("att_type: %s, ", s_nc_type(ATT_TYPE(i,j)));
+                        error("num elements: %d, ", length);
+                        error("nInExtRange: %d, ", nInExtRange);
+                        error("nInIntRange: %d, ", nInIntRange);
+                        for (k = 0; k < length; k++) {
+                            error("element number: %d ", k);
+                            error("expect: %g, ", expect[k]);
+                            error("got: %g ", (double) value[k]);
+                        }
+                    }
+                }
             }
             for (k = 0; k < length; k++) {
                 if (CheckNumRange($1, expect[k], datatype)) {
@@ -363,7 +378,7 @@ check_atts_$1(int ncid, int numGatts, int numVars)
                             error("att_type: %s, ", s_nc_type(ATT_TYPE(i,j)));
                             error("element number: %d ", k);
                             error("expect: %g, ", expect[k]);
-                            error("got: %g", (double) value[k]);
+                            error("got: %g ", (double) value[k]);
                         }
                     } else {
                         nok++;

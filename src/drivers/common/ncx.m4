@@ -302,39 +302,9 @@ swapn2b(void *dst, const void *src, IntType nn)
     uint16_t *op = (uint16_t*) dst;
     uint16_t *ip = (uint16_t*) src;
     for (i=0; i<nn; i++) {
-        op[i] = ip[i];
-        op[i] = (uint16_t)SWAP2(op[i]);
+        uint16_t tmp = ip[i];
+        op[i] = (uint16_t)SWAP2(tmp);
     }
-#if 0
-	char *op = dst;
-	const char *ip = src;
-
-/* unroll the following to reduce loop overhead
- *
- *	while (nn-- > 0)
- *	{
- *		*op++ = *(++ip);
- *		*op++ = *(ip++ -1);
- *	}
- */
-	while (nn > 3)
-	{
-		*op++ = *(++ip);
-		*op++ = *(ip++ -1);
-		*op++ = *(++ip);
-		*op++ = *(ip++ -1);
-		*op++ = *(++ip);
-		*op++ = *(ip++ -1);
-		*op++ = *(++ip);
-		*op++ = *(ip++ -1);
-		nn -= 4;
-	}
-	while (nn-- > 0)
-	{
-		*op++ = *(++ip);
-		*op++ = *(ip++ -1);
-	}
-#endif
 }
 
 # ifndef vax
@@ -342,43 +312,14 @@ static void
 swap4b(void *dst, const void *src)
 {
     /* copy over, make the below swap in-place */
-    uint32_t tmp = *(uint32_t*)src;
-    tmp = SWAP4(tmp);
-    memcpy(dst, &tmp, 4);
+    uint32_t dst_tmp, src_tmp = *(uint32_t*)src;
+    dst_tmp = SWAP4(src_tmp);
+    memcpy(dst, &dst_tmp, 4);
 
     /* Codes below will cause "break strict-aliasing rules" in gcc
     uint32_t *op = (uint32_t*)dst;
     *op = *(uint32_t*)src;
     *op = SWAP4(*op);
-    */
-
-    /* Below are copied from netCDF-4.
-     * See https://bugtracking.unidata.ucar.edu/browse/NCF-338
-     * Quote "One issue we are wrestling with is how compilers optimize this
-     * code.  For some reason, we are actually needing to add an artificial
-     * move to a 4 byte space to get it to work.  I think what is happening is
-     * that the optimizer is bit shifting within a double, which is incorrect.
-     * The following code actually does work correctly.
-     *  This is in Linux land, gcc.
-     *
-     * However, the above in-place byte-swap does not appear affected by this.
-     */
-#if 0
-    uint32_t *ip = (uint32_t*)src;
-    uint32_t tempOut;  /* cannot use pointer when gcc O2 optimizer is used */
-    tempOut = SWAP4(*ip);
-
-    *(float *)dst = *(float *)(&tempOut);
-#endif
-
-    /* OLD implementation that results in four load and four store CPU
-       instructions
-    char *op = dst;
-    const char *ip = src;
-    op[0] = ip[3];
-    op[1] = ip[2];
-    op[2] = ip[1];
-    op[3] = ip[0];
     */
 }
 # endif /* !vax */
@@ -390,58 +331,9 @@ swapn4b(void *dst, const void *src, IntType nn)
     uint32_t *op = (uint32_t*) dst;
     uint32_t *ip = (uint32_t*) src;
     for (i=0; i<nn; i++) {
-        /* copy over, make the below swap in-place */
-        op[i] = ip[i];
-        op[i] = SWAP4(op[i]);
+        uint32_t tmp = ip[i];
+        op[i] = SWAP4(tmp);
     }
-
-#if 0
-	char *op = dst;
-	const char *ip = src;
-
-/* unroll the following to reduce loop overhead
- *	while (nn-- > 0)
- *	{
- *		op[0] = ip[3];
- *		op[1] = ip[2];
- *		op[2] = ip[1];
- *		op[3] = ip[0];
- *		op += 4;
- *		ip += 4;
- *	}
- */
-	while (nn > 3)
-	{
-		op[0] = ip[3];
-		op[1] = ip[2];
-		op[2] = ip[1];
-		op[3] = ip[0];
-		op[4] = ip[7];
-		op[5] = ip[6];
-		op[6] = ip[5];
-		op[7] = ip[4];
-		op[8] = ip[11];
-		op[9] = ip[10];
-		op[10] = ip[9];
-		op[11] = ip[8];
-		op[12] = ip[15];
-		op[13] = ip[14];
-		op[14] = ip[13];
-		op[15] = ip[12];
-		op += 16;
-		ip += 16;
-		nn -= 4;
-	}
-	while (nn-- > 0)
-	{
-		op[0] = ip[3];
-		op[1] = ip[2];
-		op[2] = ip[1];
-		op[3] = ip[0];
-		op += 4;
-		ip += 4;
-	}
-#endif
 }
 
 # ifndef vax
@@ -466,30 +358,6 @@ swap8b(void *dst, const void *src)
     *op = *(uint64_t*)src;
     *op = SWAP8(*op);
     */
-#endif
-
-#if 0
-	char *op = dst;
-	const char *ip = src;
-#  ifndef FLOAT_WORDS_BIGENDIAN
-	op[0] = ip[7];
-	op[1] = ip[6];
-	op[2] = ip[5];
-	op[3] = ip[4];
-	op[4] = ip[3];
-	op[5] = ip[2];
-	op[6] = ip[1];
-	op[7] = ip[0];
-#  else
-	op[0] = ip[3];
-	op[1] = ip[2];
-	op[2] = ip[1];
-	op[3] = ip[0];
-	op[4] = ip[7];
-	op[5] = ip[6];
-	op[6] = ip[5];
-	op[7] = ip[4];
-#endif
 #endif
 }
 # endif /* !vax */
@@ -1013,30 +881,17 @@ typedef long ix_int;
 static void
 get_ix_int(const void *xp, ix_int *ip)
 {
-	const uchar *cp = (const uchar *) xp;
-
-	*ip = (ix_int)(*cp++) << 24;
-#if SIZEOF_IX_INT > X_SIZEOF_INT
-	if (*ip & 0x80000000)
-	{
-		/* extern is negative */
-		*ip |= (~(0xffffffff)); /* N.B. Assumes "twos complement" */
-	}
-#endif
-	*ip |= (ix_int)(*cp++) << 16;
-	*ip |= (ix_int)(*cp++) << 8;
-	*ip |= (ix_int)*cp;
+    ix_int tmp;
+    memcpy(&tmp, xp, 4);
+    *ip = SWAP4(tmp);
 }
 
 static void
 put_ix_int(void *xp, const ix_int *ip)
 {
-	uchar *cp = (uchar *) xp;
-
-	*cp++ = (uchar) (*ip               >> 24);
-	*cp++ = (uchar)((*ip & 0x00ff0000) >> 16);
-	*cp++ = (uchar)((*ip & 0x0000ff00) >>  8);
-	*cp   = (uchar) (*ip & 0x000000ff);
+    ix_int xtmp, itmp = *ip;
+    xtmp = SWAP4(itmp);
+    memcpy(xp, &xtmp, 4);
 }
 
 #if X_SIZEOF_INT != SIZEOF_INT
@@ -1119,23 +974,17 @@ typedef ulong ix_uint;
 static void
 get_ix_uint(const void *xp, ix_uint *ip)
 {
-	const uchar *cp = (const uchar *) xp;
-
-	*ip  = (ix_uint)(*cp++) << 24;
-	*ip |= (ix_uint)(*cp++) << 16;
-	*ip |= (ix_uint)(*cp++) <<  8;
-	*ip |= (ix_uint)*cp;
+    ix_uint tmp;
+    memcpy(&tmp, xp, 4);
+    *ip = SWAP4(tmp);
 }
 
 static void
 put_ix_uint(void *xp, const ix_uint *ip)
 {
-	uchar *cp = (uchar *) xp;
-
-	*cp++ = (uchar) (*ip               >> 24);
-	*cp++ = (uchar)((*ip & 0x00ff0000) >> 16);
-	*cp++ = (uchar)((*ip & 0x0000ff00) >>  8);
-	*cp   = (uchar) (*ip & 0x000000ff);
+    ix_uint xtmp, itmp = *ip;
+    xtmp = SWAP4(itmp);
+    memcpy(xp, &xtmp, 4);
 }
 
 #if X_SIZEOF_UINT != SIZEOF_UINT
@@ -1387,7 +1236,7 @@ PUT_VAX_DFLOAT_Body(xp)
 static size_t
 word_align(const void *vp)
 {
-	const size_t rem = ((size_t)vp >> (64 - 3)) & 0x7;
+	size_t rem = ((size_t)vp >> (64 - 3)) & 0x7;
 	return (rem != 0);
 }
 
@@ -2047,31 +1896,17 @@ typedef long ix_int64;
 static void
 get_ix_int64(const void *xp, ix_int64 *ip)
 {
-    const uchar *cp = (const uchar *) xp;
-
-    *ip  = (ix_int64)(*cp++) << 56;
-    *ip |= (ix_int64)(*cp++) << 48;
-    *ip |= (ix_int64)(*cp++) << 40;
-    *ip |= (ix_int64)(*cp++) << 32;
-    *ip |= (ix_int64)(*cp++) << 24;
-    *ip |= (ix_int64)(*cp++) << 16;
-    *ip |= (ix_int64)(*cp++) <<  8;
-    *ip |= (ix_int64)*cp;
+    ix_int64 tmp;
+    memcpy(&tmp, xp, 8);
+    *ip = SWAP8(tmp);
 }
 
 static void
 put_ix_int64(void *xp, const ix_int64 *ip)
 {
-    uchar *cp = (uchar *) xp;
-
-    *cp++ = (uchar) (*ip                         >> 56);
-    *cp++ = (uchar)((*ip & 0x00ff000000000000LL) >> 48);
-    *cp++ = (uchar)((*ip & 0x0000ff0000000000LL) >> 40);
-    *cp++ = (uchar)((*ip & 0x000000ff00000000LL) >> 32);
-    *cp++ = (uchar)((*ip & 0x00000000ff000000LL) >> 24);
-    *cp++ = (uchar)((*ip & 0x0000000000ff0000LL) >> 16);
-    *cp++ = (uchar)((*ip & 0x000000000000ff00LL) >>  8);
-    *cp   = (uchar) (*ip & 0x00000000000000ffLL);
+    ix_int64 xtmp, itmp = *ip;
+    xtmp = SWAP8(itmp);
+    memcpy(xp, &xtmp, 8);
 }
 
 #if X_SIZEOF_INT64 != SIZEOF_LONGLONG
@@ -2125,31 +1960,17 @@ typedef ulong ix_uint64;
 static void
 get_ix_uint64(const void *xp, ix_uint64 *ip)
 {
-    const uchar *cp = (const uchar *) xp;
-
-    *ip  = (ix_uint64)(*cp++) << 56;
-    *ip |= (ix_uint64)(*cp++) << 48;
-    *ip |= (ix_uint64)(*cp++) << 40;
-    *ip |= (ix_uint64)(*cp++) << 32;
-    *ip |= (ix_uint64)(*cp++) << 24;
-    *ip |= (ix_uint64)(*cp++) << 16;
-    *ip |= (ix_uint64)(*cp++) <<  8;
-    *ip |= (ix_uint64)*cp;
+    ix_uint64 tmp;
+    memcpy(&tmp, xp, 8);
+    *ip = SWAP8(tmp);
 }
 
 static void
 put_ix_uint64(void *xp, const ix_uint64 *ip)
 {
-    uchar *cp = (uchar *) xp;
-
-    *cp++ = (uchar) (*ip                          >> 56);
-    *cp++ = (uchar)((*ip & 0x00ff000000000000ULL) >> 48);
-    *cp++ = (uchar)((*ip & 0x0000ff0000000000ULL) >> 40);
-    *cp++ = (uchar)((*ip & 0x000000ff00000000ULL) >> 32);
-    *cp++ = (uchar)((*ip & 0x00000000ff000000ULL) >> 24);
-    *cp++ = (uchar)((*ip & 0x0000000000ff0000ULL) >> 16);
-    *cp++ = (uchar)((*ip & 0x000000000000ff00ULL) >>  8);
-    *cp   = (uchar) (*ip & 0x00000000000000ffULL);
+    ix_uint64 xtmp, itmp = *ip;
+    xtmp = SWAP8(itmp);
+    memcpy(xp, &xtmp, 8);
 }
 
 #if X_SIZEOF_UINT64 != SIZEOF_ULONGLONG
@@ -2199,21 +2020,16 @@ APIPrefix`x_put_size_t'(void **xpp, const size_t *ulp)
  * APIPrefix`x_put_uint32'()
  */
 {
-	/* similar to put_ix_int() */
-	uchar *cp = (uchar *) *xpp;
-	assert(*ulp <= X_SIZE_MAX);
+    size_t xtmp, itmp = *ulp;
+    xtmp = SWAP4(itmp);
+    memcpy(*xpp, &xtmp, 4);
 
-	*cp++ = (uchar) (*ulp               >> 24);
-	*cp++ = (uchar)((*ulp & 0x00ff0000) >> 16);
-	*cp++ = (uchar)((*ulp & 0x0000ff00) >>  8);
-	*cp   = (uchar) (*ulp & 0x000000ff);
-
-	*xpp = (void *)((char *)(*xpp) + X_SIZEOF_SIZE_T);
-	return NC_NOERR;
+    *xpp = (void *)((char *)(*xpp) + X_SIZEOF_SIZE_T);
+    return NC_NOERR;
 }
 
 int
-APIPrefix`x_get_size_t'(const void **xpp,  size_t *ulp)
+APIPrefix`x_get_size_t'(const void **xpp, size_t *ulp)
 /* This subroutine is used only in NetCDF, not PnetCDF, and only used for
  * classic CDF-1 and 2 file formats where external int is 32-bit in files.
  * The name of this function is misleading, as size_t is an interanl memory
@@ -2223,20 +2039,9 @@ APIPrefix`x_get_size_t'(const void **xpp,  size_t *ulp)
  * APIPrefix`x_get_uint32'()
  */
 {
-    /* similar to get_ix_int */
-    const uchar *cp = (const uchar *) *xpp;
-
-    /* X_SIZEOF_SIZE_T is always 4 bytes in CDF-1 and 2 files, while size_t
-     * in memory may be 4 or 8 bytes, thus we must read xpp into an unsigned
-     * int (4 bytes) and then type cast it to size_t */
-    uint32_t u32;
-
-    u32  = (uint32_t)(*cp++) << 24;
-    u32 |= (uint32_t)(*cp++) << 16;
-    u32 |= (uint32_t)(*cp++) <<  8;
-    u32 |= (uint32_t)*cp;
-
-    *ulp = (size_t)u32;
+    size_t tmp;
+    memcpy(&tmp, *xpp, 4);
+    *ulp = SWAP4(tmp);
 
     *xpp = (const void *)((const char *)(*xpp) + X_SIZEOF_SIZE_T);
     return NC_NOERR;
@@ -2248,105 +2053,45 @@ int
 APIPrefix`x_put_off_t'(void **xpp, const off_t *lp, size_t sizeof_off_t)
 /* This subroutine is used only in NetCDF. not PnetCDF */
 {
-	/* No negative offsets stored in netcdf */
-	if (*lp < 0) {
-	  /* Assume this is an overflow of a 32-bit int... */
-	  DEBUG_RETURN_ERROR(NC_ERANGE)
-	}
+    /* No negative offsets stored in netcdf */
+    if (*lp < 0) {
+        /* Assume this is an overflow of a 32-bit int... */
+        DEBUG_RETURN_ERROR(NC_ERANGE)
+    }
 
-	assert(sizeof_off_t == 4 || sizeof_off_t == 8);
+    assert(sizeof_off_t == 4 || sizeof_off_t == 8);
 
-	/* similar to put_ix_int() */
-	uchar *cp = (uchar *) *xpp;
-
-	if (sizeof_off_t == 4) {
-		*cp++ = (uchar) (*lp               >> 24);
-		*cp++ = (uchar)((*lp & 0x00ff0000) >> 16);
-		*cp++ = (uchar)((*lp & 0x0000ff00) >>  8);
-		*cp   = (uchar) (*lp & 0x000000ff);
-	} else {
-#if SIZEOF_OFF_T == 4
-/* Write a 64-bit offset on a system with only a 32-bit offset */
-		*cp++ = (uchar)0;
-		*cp++ = (uchar)0;
-		*cp++ = (uchar)0;
-		*cp++ = (uchar)0;
-
-		*cp++ = (uchar)((*lp & 0xff000000) >> 24);
-		*cp++ = (uchar)((*lp & 0x00ff0000) >> 16);
-		*cp++ = (uchar)((*lp & 0x0000ff00) >>  8);
-		*cp   = (uchar) (*lp & 0x000000ff);
-#else
-		*cp++ = (uchar) (*lp                         >> 56);
-		*cp++ = (uchar)((*lp & 0x00ff000000000000LL) >> 48);
-		*cp++ = (uchar)((*lp & 0x0000ff0000000000LL) >> 40);
-		*cp++ = (uchar)((*lp & 0x000000ff00000000LL) >> 32);
-		*cp++ = (uchar)((*lp & 0x00000000ff000000LL) >> 24);
-		*cp++ = (uchar)((*lp & 0x0000000000ff0000LL) >> 16);
-		*cp++ = (uchar)((*lp & 0x000000000000ff00LL) >>  8);
-		*cp   = (uchar) (*lp & 0x00000000000000ffLL);
-#endif
-	}
-	*xpp = (void *)((char *)(*xpp) + sizeof_off_t);
-	return NC_NOERR;
+    if (sizeof_off_t == 4) {
+        int xtmp, itmp = *lp;
+        xtmp = SWAP4(itmp);
+        memcpy(*xpp, &xtmp, 4);
+    } else {
+        off_t xtmp, itmp = *lp;
+        xtmp = SWAP8(itmp);
+        memcpy(*xpp, &xtmp, 8);
+    }
+    *xpp = (void *)((char *)(*xpp) + sizeof_off_t);
+    return NC_NOERR;
 }
 
 int
 APIPrefix`x_get_off_t'(const void **xpp, off_t *lp, size_t sizeof_off_t)
 /* This subroutine is used only in NetCDF. not PnetCDF */
 {
-	/* similar to get_ix_int() */
-	const uchar *cp = (const uchar *) *xpp;
-	assert(sizeof_off_t == 4 || sizeof_off_t == 8);
+    /* similar to get_ix_int() */
+    assert(sizeof_off_t == 4 || sizeof_off_t == 8);
 
- 	if (sizeof_off_t == 4) {
-		*lp =  (off_t)(*cp++) << 24;
-		*lp |= (off_t)(*cp++) << 16;
-		*lp |= (off_t)(*cp++ )<<  8;
-		*lp |= (off_t)*cp;
-	} else {
-#if SIZEOF_OFF_T == 4
-/* Read a 64-bit offset on a system with only a 32-bit offset */
-/* If the offset overflows, set an error code and return */
-		*lp =  (off_t)(*cp++) << 24;
-		*lp |= (off_t)(*cp++) << 16;
-		*lp |= (off_t)(*cp++) <<  8;
-		*lp |= (off_t)(*cp++);
-/*
- * lp now contains the upper 32-bits of the 64-bit offset.  if lp is
- * not zero, then the dataset is larger than can be represented
- * on this system.  Set an error code and return.
- */
-		if (*lp != 0) {
-		  DEBUG_RETURN_ERROR(NC_ERANGE)
-		}
-
-		*lp  = (off_t)(*cp++) << 24;
-		*lp |= (off_t)(*cp++) << 16;
-		*lp |= (off_t)(*cp++) <<  8;
-		*lp |= (off_t)*cp;
-
-		if (*lp < 0) {
-		  /*
-		   * If this fails, then the offset is >2^31, but less
-		   * than 2^32 which is not allowed, but is not caught
-		   * by the previous check
-		   */
-		  DEBUG_RETURN_ERROR(NC_ERANGE)
-		}
-#else
-		*lp =  (off_t)(*cp++) << 56;
-		*lp |= (off_t)(*cp++) << 48;
-		*lp |= (off_t)(*cp++) << 40;
-		*lp |= (off_t)(*cp++) << 32;
-		*lp |= (off_t)(*cp++) << 24;
-		*lp |= (off_t)(*cp++) << 16;
-		*lp |= (off_t)(*cp++) <<  8;
-		*lp |= (off_t)*cp;
-#endif
-	}
-	*xpp = (const void *)((const char *)(*xpp) + sizeof_off_t);
-	return NC_NOERR;
+    if (sizeof_off_t == 4) {
+        int tmp;
+        memcpy(&tmp, *xpp, 4);
+        *lp = (off_t) SWAP4(tmp);
+    } else {
+        long long tmp;
+        memcpy(&tmp, *xpp, 8);
+        *lp = (off_t) SWAP8(tmp);
+    }
+    *xpp = (const void *)((const char *)(*xpp) + sizeof_off_t);
+    return NC_NOERR;
 }
 
 /*----< APIPrefix`x_get_uint32'() >------------------------------------------*/
@@ -2358,12 +2103,9 @@ APIPrefix`x_get_uint32'(const void **xpp, uint *ip)
      * some system, such as HPUX */
     (void) memcpy(ip, *xpp, 4);
 #else
-    const uchar *cp = (const uchar *) *xpp;
-
-    *ip  = (uint)(*cp++) << 24;
-    *ip |= (uint)(*cp++) << 16;
-    *ip |= (uint)(*cp++) <<  8;
-    *ip |= (uint)(*cp);
+    uint tmp;
+    memcpy(&tmp, *xpp, 4);
+    *ip = SWAP4(tmp);
 #endif
     /* advance *xpp 4 bytes */
     *xpp = (void *)((const char *)(*xpp) + 4);
@@ -2397,17 +2139,9 @@ APIPrefix`x_get_uint64'(const void **xpp, unsigned long long *ullp)
      * some system, such as HPUX */
     (void) memcpy(ullp, *xpp, 8);
 #else
-    const uchar *cp = (const uchar *) *xpp;
-
-    /* below is the same as calling swap8b(ullp, *xpp) */
-    *ullp  = (unsigned long long)(*cp++) << 56;
-    *ullp |= (unsigned long long)(*cp++) << 48;
-    *ullp |= (unsigned long long)(*cp++) << 40;
-    *ullp |= (unsigned long long)(*cp++) << 32;
-    *ullp |= (unsigned long long)(*cp++) << 24;
-    *ullp |= (unsigned long long)(*cp++) << 16;
-    *ullp |= (unsigned long long)(*cp++) <<  8;
-    *ullp |= (unsigned long long)(*cp);
+    unsigned long long tmp;
+    memcpy(&tmp, *xpp, 8);
+    *ullp = SWAP8(tmp);
 #endif
     /* advance *xpp 8 bytes */
     *xpp = (void *)((const char *)(*xpp) + 8);
@@ -2437,7 +2171,7 @@ APIPrefix`x_getn_uint64'(const void **xpp, unsigned long long *ullp, int nelems)
  * form and advance *xpp 4 bytes
  */
 int
-APIPrefix`x_put_uint32'(void **xpp, const unsigned int ip)
+APIPrefix`x_put_uint32'(void **xpp, unsigned int ip)
 {
 #ifdef WORDS_BIGENDIAN
     /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
@@ -2445,11 +2179,9 @@ APIPrefix`x_put_uint32'(void **xpp, const unsigned int ip)
     (void) memcpy(*xpp, &ip, X_SIZEOF_UINT);
 #else
     /* bitwise shifts below are to produce an integer in Big Endian */
-    uchar *cp = (uchar *) *xpp;
-    *cp++ = (uchar)((ip & 0xff000000) >> 24);
-    *cp++ = (uchar)((ip & 0x00ff0000) >> 16);
-    *cp++ = (uchar)((ip & 0x0000ff00) >>  8);
-    *cp   = (uchar) (ip & 0x000000ff);
+    unsigned int tmp;
+    tmp = SWAP4(ip);
+    memcpy(*xpp, &tmp, 4);
 #endif
     /* advance *xpp 4 bytes */
     *xpp  = (void *)((char *)(*xpp) + 4);
@@ -2482,23 +2214,16 @@ APIPrefix`x_putn_uint32'(void **xpp, const unsigned int *ip, int nelems)
  * form and advance *xpp 8 bytes
  */
 int
-APIPrefix`x_put_uint64'(void **xpp, const unsigned long long ip)
+APIPrefix`x_put_uint64'(void **xpp, unsigned long long ip)
 {
 #ifdef WORDS_BIGENDIAN
     /* use memcpy instead of assignment to avoid BUS_ADRALN alignment error on
      * some system, such as HPUX */
     (void) memcpy(*xpp, &ip, X_SIZEOF_UINT64);
 #else
-    uchar *cp = (uchar *) *xpp;
-    /* below is the same as calling swap8b(*xpp, &ip) */
-    *cp++ = (uchar) (ip                         >> 56);
-    *cp++ = (uchar)((ip & 0x00ff000000000000LL) >> 48);
-    *cp++ = (uchar)((ip & 0x0000ff0000000000LL) >> 40);
-    *cp++ = (uchar)((ip & 0x000000ff00000000LL) >> 32);
-    *cp++ = (uchar)((ip & 0x00000000ff000000LL) >> 24);
-    *cp++ = (uchar)((ip & 0x0000000000ff0000LL) >> 16);
-    *cp++ = (uchar)((ip & 0x000000000000ff00LL) >>  8);
-    *cp   = (uchar) (ip & 0x00000000000000ffLL);
+    unsigned long long tmp;
+    tmp = SWAP8(ip);
+    memcpy(*xpp, &tmp, 8);
 #endif
     /* advance *xpp 8 bytes */
     *xpp  = (void *)((char *)(*xpp) + 8);

@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     char *bad_dimid[3] ={"bad_dimid.nc1",  "bad_dimid.nc2",  "bad_dimid.nc5"};
     char *bad_nattrs[3]={"bad_nattrs.nc1", "bad_nattrs.nc2", "bad_nattrs.nc5"};
 
-    char filename[512], dirname[512];
+    char filename[1024], dirname[512];
     int i, rank, err, ncid, nerrs=0;
 
     MPI_Init(&argc, &argv);
