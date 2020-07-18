@@ -99,7 +99,7 @@ int ncmpi_diff(char *filename1, char *filename2)
     int i, j, err, rank, nprocs, nerrs=0;
     int ncid1, ndims1, nvars1, natts1, unlimdimid1, *dimids1;
     int ncid2, ndims2, nvars2, natts2, unlimdimid2, *dimids2;
-    char str[512], name1[NC_MAX_NAME], name2[NC_MAX_NAME], name[NC_MAX_NAME];
+    char str[1024], name1[NC_MAX_NAME], name2[NC_MAX_NAME], name[NC_MAX_NAME];
     MPI_Offset *shape, *start;
     MPI_Offset varsize, attlen1, dimlen1, attlen2, dimlen2;
     nc_type type1, type2;
@@ -304,8 +304,8 @@ int main(int argc, char **argv)
     int array_of_psizes[3];
     int err, nerrs=0;
     MPI_Offset array_of_starts[3], stride[3];
-    char fbasename[256], filename[256];
-    char filename1[256], filename2[256], filename3[256];
+    char fbasename[256], filename[512];
+    char filename1[512], filename2[512], filename3[512];
     char dimname[20], varname[20];
     int ncid, dimids0[3], dimids1[3], rank_dim[3], *varid;
     MPI_Info info;
