@@ -40,7 +40,7 @@ ncmpio_open(MPI_Comm     comm,
             void       **ncpp)
 {
     char *env_str;
-    int i, mpiomode, err, status=NC_NOERR, mpireturn;
+    int mpiomode, err, status=NC_NOERR, mpireturn;
     MPI_File fh;
     MPI_Info info_used;
     NC *ncp=NULL;
@@ -150,6 +150,7 @@ ncmpio_open(MPI_Comm     comm,
         err = ncmpio_get_att(ncp, NC_GLOBAL, "_PnetCDF_SubFiling.num_subfiles",
                              &ncp->num_subfiles, MPI_INT);
         if (err == NC_NOERR && ncp->num_subfiles > 1) {
+            int i;
             /* ignore error NC_ENOTATT if this attribute is not defined */
             for (i=0; i<ncp->vars.ndefined; i++) {
                 /* variables may have different numbers of subfiles */
