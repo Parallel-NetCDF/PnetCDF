@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
+#include <assert.h>
 #include <errno.h>
 
 #include <mpi.h>
@@ -166,21 +167,25 @@ int benchmark_write(char       *filename,
     for (i=0; i<NVARS; i++) {
         if (i % 4 == 0) {
             int *int_b = (int*) malloc(len * len * sizeof(int));
+            assert(int_b != NULL);
             for (j=0; j<len*len; j++) int_b[j] = rank;
             buf[i] = (void*)int_b;
         }
         else if (i % 4 == 1) {
             float *flt_b = (float*) malloc(len * len * sizeof(float));
+            assert(flt_b != NULL);
             for (j=0; j<len*len; j++) flt_b[j] = rank;
             buf[i] = (void*)flt_b;
         }
         else if (i % 4 == 2) {
             short *shr_b = (short*) malloc(len * len * sizeof(short));
+            assert(shr_b != NULL);
             for (j=0; j<len*len; j++) shr_b[j] = rank;
             buf[i] = (void*)shr_b;
         }
         else {
             double *dbl_b = (double*) malloc(len * len * sizeof(double));
+            assert(dbl_b != NULL);
             for (j=0; j<len*len; j++) dbl_b[j] = rank;
             buf[i] = (void*)dbl_b;
         }
