@@ -117,11 +117,11 @@ put_varm(NC               *ncp,
          int               reqMode)   /* WR/RD/COLL/INDEP */
 {
     void *xbuf=NULL;
-    int mpireturn, err=NC_NOERR, status=NC_NOERR, nelems, buftype_is_contig;
+    int mpireturn, err=NC_NOERR, status=NC_NOERR, nelems=0, buftype_is_contig;
     int el_size, need_convert, need_swap, in_place_swap, need_swap_back_buf=0;
-    int coll_indep, xtype_is_contig;
+    int coll_indep, xtype_is_contig=1;
     MPI_Offset bnelems=0, nbytes=0, offset=0;
-    MPI_Datatype itype, xtype, imaptype, filetype=MPI_BYTE;
+    MPI_Datatype itype, xtype=MPI_BYTE, imaptype, filetype=MPI_BYTE;
     MPI_File fh;
 
     /* decode buftype to obtain the followings:
@@ -368,10 +368,10 @@ get_varm(NC               *ncp,
          int               reqMode)   /* WR/RD/COLL/INDEP */
 {
     void *xbuf=NULL;
-    int err=NC_NOERR, status=NC_NOERR, coll_indep, xtype_is_contig;
-    int nelems, el_size, buftype_is_contig, need_swap=0, need_convert=0;
+    int err=NC_NOERR, status=NC_NOERR, coll_indep, xtype_is_contig=1;
+    int nelems=0, el_size, buftype_is_contig, need_swap=0, need_convert=0;
     MPI_Offset bnelems=0, nbytes=0, offset=0;
-    MPI_Datatype itype, xtype, filetype=MPI_BYTE, imaptype=MPI_DATATYPE_NULL;
+    MPI_Datatype itype, xtype=MPI_BYTE, filetype=MPI_BYTE, imaptype=MPI_DATATYPE_NULL;
     MPI_File fh;
 
     /* decode buftype to see if we can use buf to read from file.
