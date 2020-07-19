@@ -60,7 +60,7 @@
 
 int main(int argc, char *argv[])
 {
-    char *filename=NULL, dimname[8];
+    char *filename=NULL, dimname[64];
     int i, ret=NC_NOERR, nerr=0;
     int rank, np, ndims;
     int ncid, varid;
