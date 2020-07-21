@@ -27,10 +27,20 @@
 #include "adios_read.h"
 #include <arpa/inet.h>
 #define BP_MINIFOOTER_SIZE 28
-#define ADIOS_VERSION_NUM_MASK                       0x000000FF
-#define BUFREAD64(buf,var) var = *(off_t *) (buf); \
-                         if (diff_endian) \
-                             swap_64(&var);
+#define ADIOS_VERSION_NUM_MASK 0x000000FF
+#define BUFREAD64(src, dst) {                              \
+    memcpy(&dst, src, 8);                                  \
+    if (diff_endian) {                                     \
+        dst = ( (((dst) & 0x00000000000000FFULL) << 56) |  \
+                (((dst) & 0x000000000000FF00ULL) << 40) |  \
+                (((dst) & 0x0000000000FF0000ULL) << 24) |  \
+                (((dst) & 0x00000000FF000000ULL) <<  8) |  \
+                (((dst) & 0x000000FF00000000ULL) >>  8) |  \
+                (((dst) & 0x0000FF0000000000ULL) >> 24) |  \
+                (((dst) & 0x00FF000000000000ULL) >> 40) |  \
+                (((dst) & 0xFF00000000000000ULL) >> 56) ); \
+    }                                                      \
+}
 #endif
 
 static void usage(void);
@@ -707,19 +717,6 @@ enum FILE_KIND {
 };
 
 #ifdef ENABLE_ADIOS
-static void swap_64(void *data)
-{
-    uint64_t d = *(uint64_t *)data;
-    *(uint64_t *)data = ((d&0x00000000000000FF)<<56)
-                          + ((d&0x000000000000FF00)<<40)
-                          + ((d&0x0000000000FF0000)<<24)
-                          + ((d&0x00000000FF000000)<<8)
-                          + ((d&0x000000FF00000000LL)>>8)
-                          + ((d&0x0000FF0000000000LL)>>24)
-                          + ((d&0x00FF000000000000LL)>>40)
-                          + ((d&0xFF00000000000000LL)>>56);
-}
-
 static int adios_parse_version (char *footer, unsigned int *version,
                                 int *diff_endianness) {
     unsigned int test = 1; /* If high bit set, big endian */
