@@ -39,15 +39,15 @@ before_install:
   - if [ $TRAVIS_OS_NAME = linux ]; then libtool --version ; else libtool -V ; fi
   - mpichversion
   - autoreconf -i
-  # - make tests
 
 script:
-  - ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes
+  - ./configure --silent
   # - if [[ "${TRAVIS_OS_NAME}" = "linux" ]] ; then make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes" ; fi
   # - if [[ "${TRAVIS_OS_NAME}" = "osx" ]] ; then make -s V=1 LIBTOOLFLAGS=--silent check ; fi
   # - make -s V=1 LIBTOOLFLAGS=--silent check
   # - make -s V=1 LIBTOOLFLAGS=--silent ptest
-  - make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes CFLAGS=-O3 CXXFLAGS=-O3 FCFLAGS=-O3 FFLAGS=-O3"
+  - if [[ "${TRAVIS_OS_NAME}" = "linux" ]] ; then make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes CFLAGS=-O3 CXXFLAGS=-O3 FCFLAGS=-O3 FFLAGS=-O3" ; fi
+  - if [[ "${TRAVIS_OS_NAME}" = "osx" ]] ; then make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes CFLAGS=-O3" ; fi
 
 
 after_success:
