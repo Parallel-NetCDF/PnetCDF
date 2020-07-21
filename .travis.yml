@@ -39,10 +39,10 @@ before_install:
   - if [ $TRAVIS_OS_NAME = linux ]; then libtool --version ; else libtool -V ; fi
   - mpichversion
   - autoreconf -i
-  - ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes
   # - make tests
 
 script:
+  - ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes
   # - if [[ "${TRAVIS_OS_NAME}" = "linux" ]] ; then make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes" ; fi
   # - if [[ "${TRAVIS_OS_NAME}" = "osx" ]] ; then make -s V=1 LIBTOOLFLAGS=--silent check ; fi
   # - make -s V=1 LIBTOOLFLAGS=--silent check
