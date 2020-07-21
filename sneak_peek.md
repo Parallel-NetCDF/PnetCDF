@@ -76,6 +76,11 @@ This is essentially a placeholder for the next release note ...
     1024, 2048, and so on.
 
 * Bug fixes
+  + Fix more strict aliasing bug when building PnetCDF with -O3 flag. Thanks to
+    Gianfranco Costamagna for reporting
+    [issue #55](https://github.com/Parallel-NetCDF/PnetCDF/issues/55). See
+    [pull request r65](https://github.com/Parallel-NetCDF/PnetCDF/pull/65) for
+    the fix.
   + Fix NC_CLOBBER mode for ncmpi_create() when files are existing symbolic
     links. Prior to this release, symbolic links, like other regular files, was
     first deleted and then created. This can result in an unexpected outcome,
