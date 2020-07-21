@@ -881,17 +881,25 @@ typedef long ix_int;
 static void
 get_ix_int(const void *xp, ix_int *ip)
 {
+#ifdef WORDS_BIGENDIAN
+    memcpy(ip, xp, 4);
+#else
     ix_int tmp;
     memcpy(&tmp, xp, 4);
     *ip = SWAP4(tmp);
+#endif
 }
 
 static void
 put_ix_int(void *xp, const ix_int *ip)
 {
+#ifdef WORDS_BIGENDIAN
+    memcpy(xp, ip, 4);
+#else
     ix_int xtmp, itmp = *ip;
     xtmp = SWAP4(itmp);
     memcpy(xp, &xtmp, 4);
+#endif
 }
 
 #if X_SIZEOF_INT != SIZEOF_INT
@@ -974,17 +982,25 @@ typedef ulong ix_uint;
 static void
 get_ix_uint(const void *xp, ix_uint *ip)
 {
+#ifdef WORDS_BIGENDIAN
+    memcpy(ip, xp, 4);
+#else
     ix_uint tmp;
     memcpy(&tmp, xp, 4);
     *ip = SWAP4(tmp);
+#endif
 }
 
 static void
 put_ix_uint(void *xp, const ix_uint *ip)
 {
+#ifdef WORDS_BIGENDIAN
+    memcpy(xp, ip, 4);
+#else
     ix_uint xtmp, itmp = *ip;
     xtmp = SWAP4(itmp);
     memcpy(xp, &xtmp, 4);
+#endif
 }
 
 #if X_SIZEOF_UINT != SIZEOF_UINT
@@ -1896,17 +1912,25 @@ typedef long ix_int64;
 static void
 get_ix_int64(const void *xp, ix_int64 *ip)
 {
+#ifdef WORDS_BIGENDIAN
+    memcpy(ip, xp, 8);
+#else
     ix_int64 tmp;
     memcpy(&tmp, xp, 8);
     *ip = SWAP8(tmp);
+#endif
 }
 
 static void
 put_ix_int64(void *xp, const ix_int64 *ip)
 {
+#ifdef WORDS_BIGENDIAN
+    memcpy(xp, ip, 8);
+#else
     ix_int64 xtmp, itmp = *ip;
     xtmp = SWAP8(itmp);
     memcpy(xp, &xtmp, 8);
+#endif
 }
 
 #if X_SIZEOF_INT64 != SIZEOF_LONGLONG
@@ -1960,17 +1984,25 @@ typedef ulong ix_uint64;
 static void
 get_ix_uint64(const void *xp, ix_uint64 *ip)
 {
+#ifdef WORDS_BIGENDIAN
+    memcpy(ip, xp, 8);
+#else
     ix_uint64 tmp;
     memcpy(&tmp, xp, 8);
     *ip = SWAP8(tmp);
+#endif
 }
 
 static void
 put_ix_uint64(void *xp, const ix_uint64 *ip)
 {
+#ifdef WORDS_BIGENDIAN
+    memcpy(xp, ip, 8);
+#else
     ix_uint64 xtmp, itmp = *ip;
     xtmp = SWAP8(itmp);
     memcpy(xp, &xtmp, 8);
+#endif
 }
 
 #if X_SIZEOF_UINT64 != SIZEOF_ULONGLONG
@@ -2020,9 +2052,13 @@ APIPrefix`x_put_size_t'(void **xpp, const size_t *ulp)
  * APIPrefix`x_put_uint32'()
  */
 {
+#ifdef WORDS_BIGENDIAN
+    memcpy(*xpp, ulp, 4);
+#else
     size_t xtmp, itmp = *ulp;
     xtmp = SWAP4(itmp);
     memcpy(*xpp, &xtmp, 4);
+#endif
 
     *xpp = (void *)((char *)(*xpp) + X_SIZEOF_SIZE_T);
     return NC_NOERR;
@@ -2039,9 +2075,13 @@ APIPrefix`x_get_size_t'(const void **xpp, size_t *ulp)
  * APIPrefix`x_get_uint32'()
  */
 {
+#ifdef WORDS_BIGENDIAN
+    memcpy(ulp, *xpp, 4);
+#else
     size_t tmp;
     memcpy(&tmp, *xpp, 4);
     *ulp = SWAP4(tmp);
+#endif
 
     *xpp = (const void *)((const char *)(*xpp) + X_SIZEOF_SIZE_T);
     return NC_NOERR;
@@ -2062,13 +2102,21 @@ APIPrefix`x_put_off_t'(void **xpp, const off_t *lp, size_t sizeof_off_t)
     assert(sizeof_off_t == 4 || sizeof_off_t == 8);
 
     if (sizeof_off_t == 4) {
+#ifdef WORDS_BIGENDIAN
+        memcpy(*xpp, lp, 4);
+#else
         int xtmp, itmp = *lp;
         xtmp = SWAP4(itmp);
         memcpy(*xpp, &xtmp, 4);
+#endif
     } else {
+#ifdef WORDS_BIGENDIAN
+        memcpy(*xpp, lp, 8);
+#else
         off_t xtmp, itmp = *lp;
         xtmp = SWAP8(itmp);
         memcpy(*xpp, &xtmp, 8);
+#endif
     }
     *xpp = (void *)((char *)(*xpp) + sizeof_off_t);
     return NC_NOERR;
@@ -2082,13 +2130,21 @@ APIPrefix`x_get_off_t'(const void **xpp, off_t *lp, size_t sizeof_off_t)
     assert(sizeof_off_t == 4 || sizeof_off_t == 8);
 
     if (sizeof_off_t == 4) {
+#ifdef WORDS_BIGENDIAN
+        memcpy(lp, *xpp, 4);
+#else
         int tmp;
         memcpy(&tmp, *xpp, 4);
         *lp = (off_t) SWAP4(tmp);
+#endif
     } else {
+#ifdef WORDS_BIGENDIAN
+        memcpy(lp, *xpp, 8);
+#else
         long long tmp;
         memcpy(&tmp, *xpp, 8);
         *lp = (off_t) SWAP8(tmp);
+#endif
     }
     *xpp = (const void *)((const char *)(*xpp) + sizeof_off_t);
     return NC_NOERR;
