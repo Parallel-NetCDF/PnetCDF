@@ -156,9 +156,9 @@ struct NC_zip {
     int                cache_serial;
     NC_zip_cache       *cache_head;
     NC_zip_cache       *cache_tail;
-    int                      ndim;  // Number of dim in file
-    int                 *chunkdim;  // Default chunk dim for each dimension
-
+    int                ndim;  // Number of dim in file
+    int                *chunkdim;  // Default chunk dim for each dimension
+    int                assigned_chunks;    // Number of chunks already assigned, used by noise on chunk assignment 
 #ifdef PNETCDF_PROFILING
     NC_zip_timers profile; 
     MPI_Offset         sendsize;

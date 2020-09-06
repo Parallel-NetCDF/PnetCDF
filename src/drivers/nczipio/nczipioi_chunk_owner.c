@@ -85,9 +85,10 @@ int nczipioi_calc_chunk_owner(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Of
         ocnt[i].osize -= nczipp->nmychunks * 10;   // Penality for load ballance
     }
     // Noise to break tie
-    for(i = (nczipp->rank + varp->varid) % nczipp->np; i < varp->nchunkrec; i += nczipp->np){
+    for(i = (nczipp->rank - nczipp->assigned_chunks) % nczipp->np; i < varp->nchunkrec; i += nczipp->np){
         ocnt[i].osize++;
     }
+    nczipp->assigned_chunks += varp->nchunk;
 
     CHK_ERR_ALLREDUCE(ocnt, ocnt_all, varp->nchunkrec, MPI_2INT, MPI_MAXLOC, nczipp->comm);
 

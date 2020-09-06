@@ -36,6 +36,7 @@ nczipioi_init(NC_zip *nczipp, int isnew){
     nczipp->cache_serial = 0;
     nczipp->ndim = 0;
     nczipp->chunkdim = NULL;
+    nczipp->assigned_chunks=0;
 
     err = nczipp->driver->inq(nczipp->ncp, NULL, NULL, NULL, &(nczipp->recdim));
     if (err != NC_NOERR) return err;
@@ -46,7 +47,6 @@ nczipioi_init(NC_zip *nczipp, int isnew){
     else{
         err = nczipp->driver->get_att(nczipp->ncp, NC_GLOBAL, "_recsize", &(nczipp->recsize), MPI_LONG_LONG); CHK_ERR // Mark this file as compressed
     }
-
 
     /* Initialize var list */
     err = nczipioi_var_list_init(&(nczipp->vars));
