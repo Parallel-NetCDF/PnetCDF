@@ -346,7 +346,7 @@ int nczipioi_subarray_off_len(int ndim, int *tsize, int *tssize, int *tstart, in
     return err;
 }
 
-
+#ifdef PNETCDF_PROFILING
 int nczipioi_update_statistics(NC_zip *nczipp){
     int i, j;
     int cid;
@@ -366,6 +366,7 @@ int nczipioi_update_statistics(NC_zip *nczipp){
 
     return NC_NOERR;
 }
+#endif
 
 int nczipioi_get_default_chunk_dim(NC_zip * nczipp){
     int err;

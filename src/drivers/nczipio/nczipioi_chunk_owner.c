@@ -5,7 +5,7 @@
 /* $Id$ */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <stdio.h>
@@ -20,15 +20,17 @@
 #include <nczipio_driver.h>
 #include "nczipio_internal.h"
 
-typedef struct MPI_Offset_int {
+typedef struct MPI_Offset_int
+{
     int osize;
     int rank;
 } MPI_Offset_int;
 
-int nczipioi_calc_chunk_owner(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **starts, MPI_Offset **counts){
+int nczipioi_calc_chunk_owner(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **starts, MPI_Offset **counts)
+{
     int err;
     int i, j, k;
-    int cid;   // Chunk iterator
+    int cid; // Chunk iterator
     int req;
     MPI_Offset overlapsize;
     MPI_Offset *ostart, *osize;
@@ -36,67 +38,86 @@ int nczipioi_calc_chunk_owner(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Of
     MPI_Offset_int *ocnt, *ocnt_all;
 
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_INIT_COWN)
-    
-    ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * 3);
+
+    ostart = (MPI_Offset *)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * 3);
     osize = ostart + varp->ndim;
     citr = osize + varp->ndim;
 
-    ocnt = (MPI_Offset_int*)NCI_Malloc(sizeof(MPI_Offset_int) * varp->nchunkrec * 2);
+    ocnt = (MPI_Offset_int *)NCI_Malloc(sizeof(MPI_Offset_int) * varp->nchunkrec * 2);
     ocnt_all = ocnt + varp->nchunkrec;
     memset(ocnt, 0, sizeof(MPI_Offset_int) * varp->nchunkrec);
 
     // Count overlapsize of each request
-    if (varp->isrec){
-        for(req = 0; req < nreq; req++){
+    if (varp->isrec)
+    {
+        for (req = 0; req < nreq; req++)
+        {
             nczipioi_chunk_itr_init_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize); // Initialize chunk iterator
-            do{
-                if (cid < varp->nchunkrec){ // Count only first record
+            do
+            {
+                if (cid < varp->nchunkrec)
+                { // Count only first record
                     // Count overlap
                     overlapsize = 1;
-                    for(i = 0; i < varp->ndim; i++){
+                    for (i = 0; i < varp->ndim; i++)
+                    {
                         overlapsize *= osize[i];
                     }
                     ocnt[cid].osize += (int)overlapsize;
-                    if (ocnt[cid].osize > varp->chunksize){
+                    if (ocnt[cid].osize > varp->chunksize)
+                    {
                         ocnt[cid].osize = varp->chunksize;
                     }
                 }
             } while (nczipioi_chunk_itr_next_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize));
         }
     }
-    else{
-        for(req = 0; req < nreq; req++){
+    else
+    {
+        for (req = 0; req < nreq; req++)
+        {
             nczipioi_chunk_itr_init_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize); // Initialize chunk iterator
-            do{
+            do
+            {
                 // Count overlap
                 overlapsize = 1;
-                for(i = 0; i < varp->ndim; i++){
+                for (i = 0; i < varp->ndim; i++)
+                {
                     overlapsize *= osize[i];
                 }
                 ocnt[cid].osize += (int)overlapsize;
-                if (ocnt[cid].osize > varp->chunksize){
+                if (ocnt[cid].osize > varp->chunksize)
+                {
                     ocnt[cid].osize = varp->chunksize;
                 }
             } while (nczipioi_chunk_itr_next_ex(varp, starts[req], counts[req], citr, &cid, ostart, osize));
         }
     }
-    for(i = 0; i < varp->nchunkrec; i++){
+    for (i = 0; i < varp->nchunkrec; i++)
+    {
         ocnt[i].rank = nczipp->rank;
-        ocnt[i].osize -= nczipp->nmychunks * 10;   // Penality for load ballance
+        ocnt[i].osize -= nczipp->nmychunks * 10; // Penality for load ballance
     }
     // Noise to break tie
-    for(i = (nczipp->rank - nczipp->assigned_chunks) % nczipp->np; i < varp->nchunkrec; i += nczipp->np){
+    i = (nczipp->rank - nczipp->assigned_chunks) % nczipp->np;
+    if (i < 0)
+        i += nczipp->np;
+    for (; i < varp->nchunkrec; i += nczipp->np)
+    {
         ocnt[i].osize++;
     }
     nczipp->assigned_chunks += varp->nchunk;
 
     CHK_ERR_ALLREDUCE(ocnt, ocnt_all, varp->nchunkrec, MPI_2INT, MPI_MAXLOC, nczipp->comm);
 
-    for(i = 0; i < varp->nchunkrec; i++){
+    for (i = 0; i < varp->nchunkrec; i++)
+    {
         varp->chunk_owner[i] = ocnt_all[i].rank;
     }
-    if (varp->isrec){
-        for(i = varp->nchunkrec; i < varp->nchunk; i += varp->nchunkrec){
+    if (varp->isrec)
+    {
+        for (i = varp->nchunkrec; i < varp->nchunk; i += varp->nchunkrec)
+        {
             memcpy(varp->chunk_owner + i, varp->chunk_owner, sizeof(int) * varp->nchunkrec);
         }
     }
@@ -105,18 +126,23 @@ int nczipioi_calc_chunk_owner(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Of
 #ifdef PNETCDF_PROFILING
     {
         char *pprefix = getenv("PNETCDF_OWNER_PREFIX");
-        if (pprefix != NULL){
-            if (nczipp->rank == 0){
+        if (pprefix != NULL)
+        {
+            if (nczipp->rank == 0)
+            {
                 MPI_Status stat;
                 FILE *pfile;
                 char fname[1024], ppath[1024];
 
                 strcpy(fname, nczipp->path);
-                for(i = strlen(fname); i > 0; i--){
-                    if (fname[i] == '.'){
+                for (i = strlen(fname); i > 0; i--)
+                {
+                    if (fname[i] == '.')
+                    {
                         fname[i] = '\0';
                     }
-                    else if (fname[i] == '\\' || fname[i] == '/'){
+                    else if (fname[i] == '\\' || fname[i] == '/')
+                    {
                         i++;
                         break;
                     }
@@ -126,22 +152,27 @@ int nczipioi_calc_chunk_owner(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Of
 
                 fprintf(pfile, "Var:, %d\n", varp->varid);
                 fprintf(pfile, "Rank\\Chunk, ");
-                for(j = 0; j < varp->nchunk; j++){
+                for (j = 0; j < varp->nchunk; j++)
+                {
                     fprintf(pfile, "%d, ", j);
                 }
-				fprintf(pfile, "\nOwner, ");
-                for(j = 0; j < varp->nchunk; j++){
+                fprintf(pfile, "\nOwner, ");
+                for (j = 0; j < varp->nchunk; j++)
+                {
                     fprintf(pfile, "%d, ", varp->chunk_owner[j]);
-                }                
-				fprintf(pfile, "\n0, ");
-                for(j = 0; j < varp->nchunk; j++){
+                }
+                fprintf(pfile, "\n0, ");
+                for (j = 0; j < varp->nchunk; j++)
+                {
                     fprintf(pfile, "%d, ", ocnt[j].osize);
                 }
                 fprintf(pfile, "\n");
-                for(i = 1; i < nczipp->np; i++){
+                for (i = 1; i < nczipp->np; i++)
+                {
                     MPI_Recv(ocnt_all, varp->nchunk, MPI_2INT, i, 0, nczipp->comm, &stat);
                     fprintf(pfile, "%d, ", i);
-                    for(j = 0; j < varp->nchunk; j++){
+                    for (j = 0; j < varp->nchunk; j++)
+                    {
                         fprintf(pfile, "%d, ", ocnt_all[j].osize);
                     }
                     fprintf(pfile, "\n");
@@ -149,7 +180,8 @@ int nczipioi_calc_chunk_owner(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Of
 
                 fclose(pfile);
             }
-            else{
+            else
+            {
                 MPI_Send(ocnt, varp->nchunk, MPI_2INT, 0, 0, nczipp->comm);
             }
         }
