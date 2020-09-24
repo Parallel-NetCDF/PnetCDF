@@ -1552,7 +1552,7 @@ dnl option -fallow-argument-mismatch to turn these errors into warnings; this
 dnl option is implied with -std=legacy. -Wargument-mismatch has been removed."
 dnl See https://gcc.gnu.org/gcc-10/changes.html and
 dnl https://github.com/Parallel-NetCDF/PnetCDF/issues/61
-if test "x${ax_cv_c_compiler_vendor}" = xgnu && test "x${has_fortran}" = xyes ; then
+if test "x${has_fortran}" = xyes && test "x${ax_cv_fc_compiler_vendor}" = xgnu ; then
    AC_MSG_CHECKING([whether MPIF77 accepts option -fallow-argument-mismatch])
    AC_LANG_PUSH([Fortran 77])
    saved_FFLAGS=$FFLAGS
