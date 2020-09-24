@@ -7,8 +7,10 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This program tests nonblocking functionality of bb driver
- * It create many nonblocking request to test the driver's ability to handle large amount of nonblocking requests
+ * This program tests nonblocking functionality of bb driver by making multiple
+ * nonblocking request to test the driver's ability to handle large amount of
+ * nonblocking requests.
+ *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdio.h>

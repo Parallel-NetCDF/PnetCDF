@@ -13,8 +13,8 @@ It is designed to work on a wide range of burst buffer architecture.
 -----------------------------------------------------------------------------
  Publication
 -----------------------------------------------------------------------------
-For details about the implementation of the Burst uffer feature, please refer
-to:
+For detailed description of the implementation of the burst buffer feature,
+please refer to:
 
 Kai-Yuan Hou, Reda Al-Bahrani, Esteban Rangel, Ankit Agrawal, Robert Latham, 
 Robert Ross, Alok Choudhary, and Wei-keng Liao. Integration of Burst Buffer 
@@ -89,9 +89,9 @@ nc_burst_buf_flush_buffer_size  <integer>       0        Amount of memory per
 export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${DW_JOB_PRIVATE};nc_burst_buf_del_on_close=disable"
 srun -n 1 ./a.out
 
-Note the value of hint nc_burst_buf_dirname is set to the DataWarp path
-automatically set by the job scheduler SLURM. See more information about the
-DataWarp usage in the following URL.
+Note in this example, hint nc_burst_buf_dirname is set to the DataWarp path
+automatically by the job scheduler SLURM. See more information about the
+DataWarp usage in:
 http://www.nersc.gov/users/computational-systems/cori/burst-buffer
 
 -----------------------------------------------------------------------------
@@ -99,19 +99,21 @@ http://www.nersc.gov/users/computational-systems/cori/burst-buffer
 -----------------------------------------------------------------------------
 
 The burst buffer driver is a wrapper driver of the ncmpio (MPI-IO) driver. All
-variable write APIs are intercepted and their requests are saved in the burst
-buffer. File header I/O proceeds with the ncmpio driver as usual, i.e. directly
-accessing to the header stored on the destination file system. When flushing
-the data stored in the burst buffer, the driver combines the PnetCDF write
-requests into large MPI write requests in hope to achieve a better I/O
-performance. When the flushing buffer size is not big enough to accommodate all
-data cached in burst buffer, flushing will be done in multiple rounds.
+variable write APIs are intercepted and their requests are saved (cached) in
+the burst buffer. File header I/O proceeds with the ncmpio driver as usual,
+i.e. directly write to the header stored on the destination file system. When
+flushing data stored in the burst buffer, the driver retrieves the write
+requests and combines them into few large write requests, thus to achieve a
+better I/O performance.  When the flushing buffer size is not big enough to
+accommodate all data cached in burst buffer, flushing will be done in multiple
+rounds.
 
-The data stored in the burst buffer is flushed when:
+The data stored in the burst buffer is flushed (log-replayed) when:
     (1) the NetCDF file is closed,
-    (2) there is a variable read request made,
-    (3) ncmpi_wait/ncmpi_wait_all is called, or
-    (4) ncmpi_flush is called.
+    (2) a read request is made to a variable written before,
+    (3) ncmpi_wait/ncmpi_wait_all is called
+    (4) ncmpi_flush is called, or
+    (5) ncmpi_close is called.
 
 
 -----------------------------------------------------------------------------
@@ -122,16 +124,16 @@ The data stored in the burst buffer is flushed when:
    to an individual request, it will be reported at the flushing time and only
    the first error encountered will be reported.
 
-2. Partial flushing is not supported. Any flushing option will flush the entire
+2. Partial flushing is not supported. Any flushing calls will flush the entire
    cached data to the destination file system.  Thus, cancelling nonblocking
    write requests may result in getting the error code NC_EFLUSHED, which means
    it is too late to cancel as the requests have been flushed.
 
 3. Sequential consistency is not guaranteed. The burst buffer driver does not
-   consider the order the data is cached when flushing.  As a result, if the
+   consider the order of write requests when flushing.  As a result, if the
    application write to the same file location multiple times without flushing,
    the resulting NetCDF file can contain either value regardless the order the
-   write requests were made. User must call ncmpi_flush in order to ensure the
+   write requests were made. Users must call ncmpi_flush in order to ensure the
    desired consistency.  For example, after the first write to a variable, a
    flush must be explicitly called before the second write to the same
    variable.
