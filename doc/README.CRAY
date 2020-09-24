@@ -8,6 +8,91 @@
     Cray XC40
 ===============================================================================
 
+* Cori @ NERSC
+  http://www.nersc.gov/systems/cori/
+
+    ./configure --prefix=/path/to/install \
+                cross_compiling="yes" \
+                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn
+
+  + Note that the default setting of PnetCDF is to build static libraries only.
+    To also build shared libraries, add "--enable-shared" to the configure
+    command.
+
+    ./configure --prefix=/path/to/install \
+                cross_compiling="yes" \
+                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn \
+                --enable-shared
+
+  + Adding "-dynamic" to the environment variable LDFLAGS is no longer
+    required when building shared libraries, as the default linking mode has
+    been changed since CDT/19.06 in Nov. 2019. See Cori Programming Environment
+    Change at
+    https://docs.nersc.gov/systems/cori/timeline/default_PE_history/2019Dec-2020Jan/
+
+* Theta @ ALCF
+  https://www.alcf.anl.gov/theta
+
+    ./configure --prefix=/path/to/install \
+                cross_compiling="yes" \
+                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn
+
+  + Note that the default setting of PnetCDF is to build static libraries only.
+    To also build shared libraries, add "--enable-shared LDFLAGS=-dynamic" to
+    the configure command.
+
+    ./configure --prefix=/path/to/install \
+                cross_compiling="yes" \
+                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn \
+                --enable-shared LDFLAGS=-dynamic
+
+  + See Compiling and Linking Overview on Theta at
+    https://www.alcf.anl.gov/support-center/theta/compiling-and-linking-overview-theta
+
+* Note on running "make check" or "make ptest".
+  Cori and Theta are in a cross-compile environment. Jobs must be run through a
+  batch scheduler. At the time of this writing, the schedule is Slurm. Below
+  configure command line adds 3 variables in preparation for job submission.
+
+    ./configure --prefix=/path/to/install \
+                cross_compiling="yes" \
+                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn \
+                TESTMPIRUN="srun -n NP" TESTSEQRUN="srun -n 1" \
+                TESTOUTDIR="$SCRATCH"
+
+  + Run test programs on a single MPI processes with command "make check".
+    Add below lines to your batch script which runs a single MPI process on one
+    node only. Variable TESTOUTDIR should be set to the file directory for
+    storing the test output files.
+        #SBATCH -N 1
+        #SBATCH -t 01:30:00
+        make check
+
+  + Run test programs in parallel. A sample batch script fragment shown below
+    allocates 4 compute nodes. "make ptest" requires at least 4 MPI processes.
+    The number can be changed to use less number of nodes. Variable TESTOUTDIR
+    should be set to the file directory for storing the test output files.
+        #SBATCH -N 4
+        #SBATCH -t 00:20:00
+        make ptest
+
+* Note on using GNU compilers (i.e. gcc, g++, and gfortran)
+  To swap to the GNU programming environment from default, run command below
+  first before running configure command:
+
+      module swap PrgEnv-intel PrgEnv-gnu
+
+* Note on using Cray compilers (i.e. craycc, crayCC, crayftn)
+  (Not supported on Theta. See note below.)
+  To swap to the Cray programming environment from default, run command below
+  first before running configure command:
+
+      module swap PrgEnv-intel PrgEnv-cray
+
+===============================================================================
+    Historical notes before upgrade to CDT/19.06
+===============================================================================
+
 * Building PnetCDF on the Cray XC40 (tested on Cori @ NERSC and Theta @ ALCF)
   http://www.nersc.gov/systems/cori/
   https://www.alcf.anl.gov/theta
