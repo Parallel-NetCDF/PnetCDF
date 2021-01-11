@@ -1553,30 +1553,53 @@ dnl option is implied with -std=legacy. -Wargument-mismatch has been removed."
 dnl See https://gcc.gnu.org/gcc-10/changes.html and
 dnl https://github.com/Parallel-NetCDF/PnetCDF/issues/61
 if test "x${has_fortran}" = xyes && test "x${ax_cv_fc_compiler_vendor}" = xgnu ; then
-   AC_MSG_CHECKING([whether MPIF77 accepts option -fallow-argument-mismatch])
-   AC_LANG_PUSH([Fortran 77])
-   saved_FFLAGS=$FFLAGS
-   FFLAGS="$FFLAGS -fallow-argument-mismatch"
-   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [])],
-                     [fallow_argument_mismatch=yes],
-                     [fallow_argument_mismatch=no])
-   AC_MSG_RESULT([$fallow_argument_mismatch])
-   if test "x${fallow_argument_mismatch}" = xno ; then
-      FFLAGS=$saved_FFLAGS
+   AC_MSG_CHECKING([whether FFLAGS already includes -fallow-argument-mismatch])
+   str_found=`echo "${FFLAGS}" | ${EGREP} -- "-fallow-argument-mismatch"`
+   if test "x$?" = x0 ; then
+      has_fallow_argument_mismatch=yes
+   else
+      has_fallow_argument_mismatch=no
    fi
-   AC_LANG_POP([Fortran 77])
-   AC_MSG_CHECKING([whether MPIF90 accepts option -fallow-argument-mismatch])
-   AC_LANG_PUSH([Fortran])
-   saved_FCFLAGS=$FCFLAGS
-   FCFLAGS="$FCFLAGS -fallow-argument-mismatch"
-   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [])],
-                     [fallow_argument_mismatch=yes],
-                     [fallow_argument_mismatch=no])
-   AC_MSG_RESULT([$fallow_argument_mismatch])
-   if test "x${fallow_argument_mismatch}" = xno ; then
-      FCFLAGS=$saved_FCFLAGS
+   AC_MSG_RESULT([$has_fallow_argument_mismatch])
+
+   if test "x${has_fallow_argument_mismatch}" = xno ; then
+      AC_MSG_CHECKING([whether MPIF77 accepts option -fallow-argument-mismatch])
+      AC_LANG_PUSH([Fortran 77])
+      saved_FFLAGS=$FFLAGS
+      FFLAGS="$FFLAGS -fallow-argument-mismatch"
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [])],
+                        [fallow_argument_mismatch=yes],
+                        [fallow_argument_mismatch=no])
+      AC_MSG_RESULT([$fallow_argument_mismatch])
+      if test "x${fallow_argument_mismatch}" = xno ; then
+         FFLAGS=$saved_FFLAGS
+      fi
+      AC_LANG_POP([Fortran 77])
    fi
-   AC_LANG_POP([Fortran])
+
+   AC_MSG_CHECKING([whether FCLAGS already includes -fallow-argument-mismatch])
+   str_found=`echo "${FCLAGS}" | ${EGREP} -- "-fallow-argument-mismatch"`
+   if test "x$?" = x0 ; then
+      has_fallow_argument_mismatch=yes
+   else
+      has_fallow_argument_mismatch=no
+   fi
+   AC_MSG_RESULT([$has_fallow_argument_mismatch])
+
+   if test "x${has_fallow_argument_mismatch}" = xno ; then
+      AC_MSG_CHECKING([whether MPIF90 accepts option -fallow-argument-mismatch])
+      AC_LANG_PUSH([Fortran])
+      saved_FCFLAGS=$FCFLAGS
+      FCFLAGS="$FCFLAGS -fallow-argument-mismatch"
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [])],
+                        [fallow_argument_mismatch=yes],
+                        [fallow_argument_mismatch=no])
+      AC_MSG_RESULT([$fallow_argument_mismatch])
+      if test "x${fallow_argument_mismatch}" = xno ; then
+         FCFLAGS=$saved_FCFLAGS
+      fi
+      AC_LANG_POP([Fortran])
+   fi
 fi
 
 chmod u+x ${srcdir}/scripts/install-sh

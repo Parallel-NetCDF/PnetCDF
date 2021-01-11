@@ -50,7 +50,9 @@ This is essentially a placeholder for the next release note ...
     GNU Fortran 10.0.0 and later, please add "-fallow-argument-mismatch" to
     environment variables FFLAGS and FCFLAGS.
     See [issue #61](https://github.com/Parallel-NetCDF/PnetCDF/issues/61)
-    and [GCC 10 Release note](https://gcc.gnu.org/gcc-10/changes.html)
+    and [GCC 10 Release note](https://gcc.gnu.org/gcc-10/changes.html).
+  + README.CRAY has been revised to reflect the recent changes of default
+    compiling environment on Cori at NERSC.
 
 * Updated utility program
   + ncvalidator now reports the name of variable that violates the NetCDF
