@@ -1577,8 +1577,8 @@ if test "x${has_fortran}" = xyes && test "x${ax_cv_fc_compiler_vendor}" = xgnu ;
       AC_LANG_POP([Fortran 77])
    fi
 
-   AC_MSG_CHECKING([whether FCLAGS already includes -fallow-argument-mismatch])
-   str_found=`echo "${FCLAGS}" | ${EGREP} -- "-fallow-argument-mismatch"`
+   AC_MSG_CHECKING([whether FCFLAGS already includes -fallow-argument-mismatch])
+   str_found=`echo "${FCFLAGS}" | ${EGREP} -- "-fallow-argument-mismatch"`
    if test "x$?" = x0 ; then
       has_fallow_argument_mismatch=yes
    else
