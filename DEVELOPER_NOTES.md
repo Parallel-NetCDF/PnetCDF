@@ -35,7 +35,7 @@
     ```
  5. Commit all changes to repo servers
     * 1.8.1 and priors -- run `svn commit` to upload changes to SVN server.
-    * 1.9.0 and after -- run `git push master origin` to upload changes to github.com.
+    * 1.9.0 and after -- run `git push origin master` to upload changes to github.com.
 
  6. Generate release tar ball
     * Generate a new `configure` file
