@@ -113,7 +113,7 @@ int nczipioi_var_resize(NC_zip *nczipp, NC_zip_var *varp) {
             }
 
             // Update global chunk count
-            nczipp->nmychunks += varp->nmychunk - oldnmychunk;
+            nczipp->nmychunks += (MPI_Offset)(varp->nmychunk - oldnmychunk) * (MPI_Offset)(varp->chunksize);
         }
     }
     else{

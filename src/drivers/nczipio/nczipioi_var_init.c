@@ -178,7 +178,7 @@ int nczipioi_var_init(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **s
             }
             
             // Update global chunk count
-            nczipp->nmychunks += varp->nmychunk;
+            nczipp->nmychunks += (MPI_Offset)(varp->nmychunk) * (MPI_Offset)(varp->chunksize);
 
             // Determine block offset
             varp->chunk_index = (NC_zip_chunk_index_entry*)NCI_Malloc(sizeof(NC_zip_chunk_index_entry) * (varp->nchunkalloc + 1));
