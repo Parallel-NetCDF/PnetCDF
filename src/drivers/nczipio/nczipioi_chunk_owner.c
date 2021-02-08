@@ -19,12 +19,12 @@
 
 #include "nczipio_internal.h"
 
-typedef struct MPI_Offset_int {
-	double osize;
+typedef struct nczipioi_chunk_overlap_t {
+	MPI_Offset osize;
 	int rank;
-} MPI_Offset_int;
+} nczipioi_chunk_overlap_t;
 
-void max_rank (MPI_Offset_int *in, MPI_Offset_int *inout, int *len, MPI_Datatype *dptr) {
+void max_osize_rank_op (nczipioi_chunk_overlap_t *in, nczipioi_chunk_overlap_t *inout, int *len, MPI_Datatype *dptr) {
 	int i;
 
 	for (i = 0; i < *len; i++) {
@@ -47,17 +47,21 @@ int nczipioi_calc_chunk_owner (
 	MPI_Offset overlapsize;
 	MPI_Offset *ostart, *osize;
 	MPI_Offset *citr;  // Bounding box for chunks overlapping my own write region
-	MPI_Offset_int *ocnt, *ocnt_all;
+	nczipioi_chunk_overlap_t *ocnt, *ocnt_all;
+	MPI_Datatype overlaptype;
 
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_INIT_COWN)
+
+    MPI_Type_contiguous(sizeof(nczipioi_chunk_overlap_t),MPI_BYTE,&overlaptype);
+    MPI_Type_commit(&overlaptype);
 
 	ostart = (MPI_Offset *)NCI_Malloc (sizeof (MPI_Offset) * varp->ndim * 3);
 	osize  = ostart + varp->ndim;
 	citr   = osize + varp->ndim;
 
-	ocnt	 = (MPI_Offset_int *)NCI_Malloc (sizeof (MPI_Offset_int) * varp->nchunkrec * 2);
+	ocnt	 = (nczipioi_chunk_overlap_t *)NCI_Malloc (sizeof (nczipioi_chunk_overlap_t) * varp->nchunkrec * 2);
 	ocnt_all = ocnt + varp->nchunkrec;
-	memset (ocnt, 0, sizeof (MPI_Offset_int) * varp->nchunkrec);
+	memset (ocnt, 0, sizeof (nczipioi_chunk_overlap_t) * varp->nchunkrec);
 
 	// Count overlapsize of each request
 	if (varp->isrec) {
@@ -97,32 +101,33 @@ int nczipioi_calc_chunk_owner (
 		ocnt[i].rank = nczipp->rank;
 		ocnt[i].osize -=
 			(double)(nczipp->nmychunks >> 4);  // Penality for load ballance, set at 1/16
+		ocnt[i].osize <<= 16;
 	}
 	// Noise to break tie
 	j = (nczipp->rank - nczipp->assigned_chunks) % nczipp->np;
 	if (j < 0) j += nczipp->np;
 	k		   = nczipp->np - 1;  // noise from 0 ~ np-1
-	noise_step = 10.0f / (double)(nczipp->np);
-	noise	   = 10;
 	for (i = j; i < varp->nchunkrec; i++) {
-		ocnt[i].osize += noise;
-		noise -= noise_step;
-		if (noise < 0) { noise += 10; }
+		ocnt[i].osize += k;
+		k--;
+		if (k < 0) { k += nczipp->np; }
 	}
 	for (i = 0; i < j; i++) {
-		ocnt[i].osize += noise;
-		noise -= noise_step;
-		if (noise < 0) { noise += 10; }
+		ocnt[i].osize += k;
+		k--;
+		if (k < 0) { k += nczipp->np; }
 	}
 	nczipp->assigned_chunks += varp->nchunk;
 
-	CHK_ERR_ALLREDUCE (ocnt, ocnt_all, varp->nchunkrec, MPI_DOUBLE_INT, MPI_MAXLOC, nczipp->comm);
+	CHK_ERR_ALLREDUCE (ocnt, ocnt_all, varp->nchunkrec, overlaptype, MPI_MAXLOC, nczipp->comm);
 	for (i = 0; i < varp->nchunkrec; i++) { varp->chunk_owner[i] = ocnt_all[i].rank; }
 	if (varp->isrec) {
 		for (i = varp->nchunkrec; i < varp->nchunk; i += varp->nchunkrec) {
 			memcpy (varp->chunk_owner + i, varp->chunk_owner, sizeof (int) * varp->nchunkrec);
 		}
 	}
+
+	MPI_Type_free(&overlaptype);
 
 #ifdef PNETCDF_DEBUG
 #ifdef PNETCDF_PROFILING
