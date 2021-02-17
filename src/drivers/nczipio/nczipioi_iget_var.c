@@ -652,5 +652,6 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)
 
-    return NC_NOERR;
+    err_out:;
+    return err;
 }

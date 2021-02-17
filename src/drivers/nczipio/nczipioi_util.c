@@ -153,6 +153,13 @@ int nczipioi_extract_hint(NC_zip *nczipp, MPI_Info info){
         }
     }
 
+    // Chunk owning size penalty
+    nczipp->cown_ratio = 3;  
+    MPI_Info_get(info, "nc_zip_cown_ratio", MPI_MAX_INFO_VAL - 1, value, &flag);
+    if (flag) {
+        nczipp->cown_ratio = atoi(value);
+    }
+
     return NC_NOERR;
 }
 
