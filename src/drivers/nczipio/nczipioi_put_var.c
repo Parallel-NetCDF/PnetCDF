@@ -387,7 +387,7 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
                             const MPI_Offset      *stride,
                             void            *buf)
 {
-    int err;
+    int err=NC_NOERR;
     int i, j, k;
     int cid, cown;   // Chunk iterator
 
@@ -415,6 +415,7 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
     int *rsize, *ssize;    // recv size of each message
     int *sdst;    // recv size of each message
     int *smap;
+    size_t bsize;
     MPI_Message rmsg;   // Receive message
 
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_CB)
@@ -422,14 +423,17 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
 
     // Allocate buffering for write count
     wcnt_local = (int*)NCI_Malloc(sizeof(int) * nczipp->np * 3);
+    CHK_PTR(wcnt_local)
     wcnt_all = wcnt_local + nczipp->np;
     smap = wcnt_all + nczipp->np;
 
     // Allocate buffering for overlaping index
     tstart = (int*)NCI_Malloc(sizeof(int) * varp->ndim * 3);
+    CHK_PTR(tstart)
     tssize = tstart + varp->ndim;
     tsize = tssize + varp->ndim;
     ostart = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * varp->ndim * 3);
+    CHK_PTR(ostart)
     osize = ostart + varp->ndim;
 
     // Chunk iterator
@@ -472,7 +476,7 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
     CHK_ERR_ALLREDUCE(wcnt_local, wcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
     wrange_local[1] *= -1;
     CHK_ERR_ALLREDUCE(wrange_local, wrange_all, 2, MPI_INT, MPI_MIN, nczipp->comm);
-    nrecv = wcnt_all[nczipp->rank] - wcnt_local[nczipp->rank];  // We don't need to receive request form self
+    nrecv = wcnt_all[nczipp->rank] - wcnt_local[nczipp->rank];  // We don't need to receive request from self
     wrange_all[1] *= -1;
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB_SYNC)
@@ -511,8 +515,13 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
     } while (nczipioi_chunk_itr_next_ex(varp, start, count, citr, &cid, ostart, osize));
 
     // Allocate buffer for send
+    bsize=0;
     for(i = 0; i < nsend; i++){
-        sbuf[i] = sbufp[i] = (char*)NCI_Malloc(ssize[i]);
+        bsize+=ssize[i];
+    }
+    sbuf[0] = sbufp[0] = (char*)NCI_Malloc(bsize);
+    for(i = 1; i < nsend; i++){
+        sbuf[i] = sbufp[i] = sbuf[0]+ssize[i];
     }
 
     // Pack requests
@@ -583,6 +592,7 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
         cid = varp->mychunks[i];
         if (varp->chunk_cache[cid] == NULL){
             err = nczipioi_cache_alloc(nczipp, varp->chunksize, varp->chunk_cache + cid);
+            CHK_ERR
             //varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
             if (varp->chunk_index[cid].len > 0){
                 rids[nread++] = cid;
@@ -692,9 +702,7 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
     NCI_Free(sstat);
     NCI_Free(ssize);
 
-    for(i = 0; i < nsend; i++){
-        NCI_Free(sbuf[i]);
-    }
+    NCI_Free(sbuf[0]);
     NCI_Free(sbuf);
 
     NCI_Free(rreq);
@@ -707,6 +715,8 @@ nczipioi_put_var_cb_proc(   NC_zip          *nczipp,
     NCI_Free(tbuf);
 
     NCI_Free(rids);
+
+err_out:;
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB)
 
