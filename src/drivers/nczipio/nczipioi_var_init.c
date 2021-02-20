@@ -234,22 +234,135 @@ void nczipioi_var_free (NC_zip_var *varp) {
 	}
 }
 
+int nczipioi_init_nvar_core_gather (NC_zip *nczipp,
+									int nvar,
+									NC_zip_var **varps,
+									int *rcnt,
+									int *roff,
+									MPI_Offset **starts,
+									MPI_Offset **counts) {
+	int err = NC_NOERR;
+	int i, j;
+	NC_zip_var *varp;
+	nczipioi_chunk_overlap_t *ocnt[2], *ocnt_all[2];
+	size_t ocnt_size[2];
+	MPI_Status stat;
+	MPI_Request req;
+
+	// Iinit vars
+	ocnt_size[0] = ocnt_size[1] = 0;
+	ocnt[0] = ocnt[1] = NULL;
+	for (i = 0; i < nvar; i++) {
+		varp = varps[i];
+		j	 = i & 1;
+
+		err = nczipioi_var_init_core (nczipp, varp, rcnt[i], starts + roff[i], counts + roff[i]);
+		CHK_ERR
+
+		if (varp->nchunkrec > ocnt_size[j]) {
+			ocnt_size[j] = varp->nchunkrec;
+			NCI_Free (ocnt[j]);
+			ocnt[j] = (nczipioi_chunk_overlap_t *)NCI_Malloc (sizeof (nczipioi_chunk_overlap_t) *
+															  varp->nchunkrec * 2);
+			ocnt_all[j] = ocnt[j] + varp->nchunkrec;
+		}
+
+		err = nczipioi_calc_chunk_overlap (nczipp, varp, rcnt[i], starts, counts, ocnt[j]);
+		CHK_ERR
+
+		if (i > 0) {  // Wait comm for prev var
+			err = MPI_Wait (&req, &stat);
+			nczipioi_assign_chunk_owner (nczipp, varps[i - 1], ocnt_all[(i - 1) & 1]);
+			nczipioi_write_chunk_ocnt (nczipp, varps[i - 1], ocnt[(i - 1) & 1],
+									   sizeof (nczipioi_chunk_overlap_t));
+		}
+
+		nczipioi_sync_ocnt_reduce (nczipp, varp->nchunkrec, ocnt[j], ocnt_all[j], &req);
+	}
+	// Last var
+	err = MPI_Wait (&req, &stat);
+	nczipioi_assign_chunk_owner (nczipp, varp, ocnt_all[(i - 1) & 1]);
+	nczipioi_write_chunk_ocnt (nczipp, varp, ocnt[(i - 1) & 1], sizeof (nczipioi_chunk_overlap_t));
+
+err_out:;
+	NCI_Free (ocnt[0]);
+	NCI_Free (ocnt[1]);
+	return err;
+}
+
+int nczipioi_init_nvar_core_reduce (NC_zip *nczipp,
+									int nvar,
+									NC_zip_var **varps,
+									int *rcnt,
+									int *roff,
+									MPI_Offset **starts,
+									MPI_Offset **counts) {
+	int err = NC_NOERR;
+	int i, j;
+	NC_zip_var *varp;
+	nczipioi_chunk_overlap_t *ocnt[2], *ocnt_all[2];
+	size_t ocnt_size[2];
+	MPI_Status stat;
+	MPI_Request req;
+
+	// Iinit vars
+	ocnt_size[0] = ocnt_size[1] = 0;
+	ocnt[0] = ocnt[1] = NULL;
+	for (i = 0; i < nvar; i++) {
+		varp = varps[i];
+		j	 = i & 1;
+
+		err = nczipioi_var_init_core (nczipp, varp, rcnt[i], starts + roff[i], counts + roff[i]);
+		CHK_ERR
+
+		if (varp->nchunkrec > ocnt_size[j]) {
+			ocnt_size[j] = varp->nchunkrec;
+			NCI_Free (ocnt[j]);
+			ocnt[j] = (nczipioi_chunk_overlap_t *)NCI_Malloc (sizeof (nczipioi_chunk_overlap_t) *
+															  varp->nchunkrec * 2);
+			ocnt_all[j] = ocnt[j] + varp->nchunkrec;
+		}
+
+		err = nczipioi_calc_chunk_overlap (nczipp, varp, rcnt[i], starts, counts, ocnt[j]);
+		CHK_ERR
+
+		if (i > 0) {  // Wait comm for prev var
+			err = MPI_Wait (&req, &stat);
+			nczipioi_assign_chunk_owner (nczipp, varps[i - 1], ocnt_all[(i - 1) & 1]);
+			nczipioi_write_chunk_ocnt (nczipp, varps[i - 1], ocnt[(i - 1) & 1],
+									   sizeof (nczipioi_chunk_overlap_t));
+		}
+
+		nczipioi_sync_ocnt_reduce (nczipp, varp->nchunkrec, ocnt[j], ocnt_all[j], &req);
+	}
+	// Last var
+	err = MPI_Wait (&req, &stat);
+	nczipioi_assign_chunk_owner (nczipp, varp, ocnt_all[(i - 1) & 1]);
+	nczipioi_write_chunk_ocnt (nczipp, varp, ocnt[(i - 1) & 1], sizeof (nczipioi_chunk_overlap_t));
+
+err_out:;
+	NCI_Free (ocnt[0]);
+	NCI_Free (ocnt[1]);
+	return err;
+}
+
 int nczipioi_init_nvar (NC_zip *nczipp, int nput, int *putreqs, int nget, int *getreqs) {
 	int err = NC_NOERR;
 	int i, j;
 	int nflag;
 	unsigned int *flag, *flag_all;
 	int nvar;
+	int *vmap;
+	NC_zip_var *varp;
+	NC_zip_var **varps;
 	int *rcnt, *roff;
-	int *vids, *vmap;
+	MPI_Offset **starts, **counts;
+	NC_zip_req *req;
 	int nread;
 	int *lens;
 	MPI_Aint *fdisps, *mdisps;
 	MPI_Datatype ftype, mtype;
 	MPI_Status status;
-	MPI_Offset **starts, **counts;
-	NC_zip_req *req;
-	NC_zip_var *varp;
 
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_INIT_META)
 
@@ -288,15 +401,15 @@ int nczipioi_init_nvar (NC_zip *nczipp, int nput, int *putreqs, int nget, int *g
 			}
 		}
 	}
-	vids = (int *)NCI_Malloc (sizeof (int) * nvar);
-	CHK_PTR (vids)
+	varps = (NC_zip_var **)NCI_Malloc (sizeof (NC_zip_var *) * nvar);
+	CHK_PTR (varps)
 	vmap = (int *)NCI_Malloc (sizeof (int) * nczipp->vars.cnt);
 	CHK_PTR (vmap)
 	nvar = 0;
 	for (i = 0; i < nczipp->vars.cnt; i++) {
 		if (flag_all[i >> 5] & (1u << (i % 32))) {
-			vids[nvar] = i;
-			vmap[i]	   = nvar++;
+			varps[nvar] = nczipp->vars.data + i;
+			vmap[i]		= nvar++;
 		}
 	}
 
@@ -355,155 +468,22 @@ int nczipioi_init_nvar (NC_zip *nczipp, int nput, int *putreqs, int nget, int *g
 		}
 	}
 
+	// Buffer for index table type
 	lens = NCI_Malloc (sizeof (int) * nvar);
 	CHK_PTR (lens)
 	fdisps = NCI_Malloc (sizeof (MPI_Aint) * nvar * 2);
 	CHK_PTR (fdisps)
 	mdisps = fdisps + nvar;
-
-	nread = 0;
-	for (i = 0; i < nvar; i++) {
-		varp = nczipp->vars.data + vids[i];
-
-		err = nczipioi_var_init (nczipp, varp, rcnt[i], starts + roff[i], counts + roff[i]);
-		if (err != NC_NOERR) { return err; }
-
-		if (!(varp->isnew)) {
-			err = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
-										   &(varp->metaoff), MPI_LONG_LONG);
-			if (err == NC_NOERR) {
-				lens[nread]		= sizeof (NC_zip_chunk_index_entry) * (varp->nchunk);
-				fdisps[nread]	= varp->metaoff;
-				mdisps[nread++] = (MPI_Aint) (varp->chunk_index);
-			} else {
-				varp->metaoff = -1;
-				memset (varp->chunk_index, 0,
-						sizeof (NC_zip_chunk_index_entry) * (varp->nchunk + 1));
-			}
-		}
-	}
-
-	if (nread) {
-		nczipioi_sort_file_offset (nread, fdisps, mdisps, lens);
-
-		MPI_Type_create_hindexed (nread, lens, fdisps, MPI_BYTE, &ftype);
-		CHK_ERR_TYPE_COMMIT (&ftype);
-
-		MPI_Type_create_hindexed (nread, lens, mdisps, MPI_BYTE, &mtype);
-		CHK_ERR_TYPE_COMMIT (&mtype);
-
-		// Set file view
-		CHK_ERR_SET_VIEW (((NC *)(nczipp->ncp))->collective_fh, ((NC *)(nczipp->ncp))->begin_var,
-						  MPI_BYTE, ftype, "native", MPI_INFO_NULL);
-
-		// Read data
-		CHK_ERR_READ_AT_ALL (((NC *)(nczipp->ncp))->collective_fh, 0, MPI_BOTTOM, 1, mtype,
-							 &status);
-
-		// Restore file view
-		CHK_ERR_SET_VIEW (((NC *)(nczipp->ncp))->collective_fh, 0, MPI_BYTE, MPI_BYTE, "native",
-						  MPI_INFO_NULL);
-
-#ifdef WORDS_BIGENDIAN	// Switch back to little endian
-		nczipioi_idx_in_swapn (varp - chunk_index, varp->nchunk + 1);
-#endif
-
-		MPI_Type_free (&ftype);
-		MPI_Type_free (&mtype);
-	}
-
-	NCI_Free (lens);
-	NCI_Free (fdisps);
-
-	NCI_Free (flag);
-	NCI_Free (vids);
-	NCI_Free (vmap);
-	NCI_Free (roff);
-	NCI_Free (rcnt);
-	NCI_Free (starts);
-
-	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_INIT_META)
-
-err_out:;
-	return err;
-}
-
-int nczipioi_init_nvar_new (NC_zip *nczipp, int nput, int *putreqs, int nget, int *getreqs) {
-	int err;
-	int i, j;
-	int nflag;
-	unsigned int *flag, *flag_all;
-	int nvar;
-	int *rcnt, *roff;
-	int *vmap;
-	int nread;
-	int *lens;
-	MPI_Aint *fdisps, *mdisps;
-	MPI_Datatype ftype, mtype;
-	MPI_Status status;
-	MPI_Offset **starts, **counts;
-	NC_zip_req *req;
-	NC_zip_var *varp;
-	NC_zip_var **varps;
-
-	NC_ZIP_TIMER_START (NC_ZIP_TIMER_INIT_META)
-
-	// Sync #rec
-	CHK_ERR_ALLREDUCE (MPI_IN_PLACE, &(nczipp->recsize), 1, MPI_LONG_LONG, MPI_MAX,
-					   nczipp->comm);  // Sync number of recs
-
-	// Find out what variables are touched
-	// Flag of touched vars
-	nflag	 = nczipp->vars.cnt / 32 + 1;
-	flag	 = (unsigned int *)NCI_Malloc (sizeof (int) * nflag * 2);
-	flag_all = flag + nflag;
-	memset (flag, 0, sizeof (int) * nflag);
-	for (i = 0; i < nput; i++) {
-		req = nczipp->putlist.reqs + putreqs[i];
-		flag[req->varid >> 5] |= 1u << (req->varid & 31);
-	}
-	for (i = 0; i < nget; i++) {
-		req = nczipp->getlist.reqs + getreqs[i];
-		flag[req->varid >> 5] |= 1u << (req->varid & 31);
-	}
-
-	// Sync flag
-	CHK_ERR_ALLREDUCE (flag, flag_all, nflag, MPI_UNSIGNED, MPI_BOR, nczipp->comm);
-
-	// Count number of vars to init
-	nvar = 0;
-	for (i = 0; i < nczipp->vars.cnt; i++) {
-		if (flag_all[i >> 5] & (1u << (i % 32))) {
-			if ((nczipp->vars.data + i)->chunkdim == NULL) {  // If not yet inited
-				nvar++;
-			} else {
-				flag_all[i >> 5] ^= (1u << (i % 32));  // Cancel init, expand it instead
-				if ((nczipp->vars.data + i)->dimsize[0] < nczipp->recsize) {
-					nczipioi_var_resize (nczipp, nczipp->vars.data + i);
-				}
-			}
-		}
-	}
-
-	// Build a skip list of vars to init
-	varps = (NC_zip_var **)NCI_Malloc (sizeof (NC_zip_var *) * nvar);
-	nvar  = 0;
-	for (i = 0; i < nczipp->vars.cnt; i++) {
-		if (flag_all[i >> 5] & (1u << (i % 32))) { varps[nvar++] = nczipp->vars.data + i; }
-	}
-
-	// err = nczipioi_var_init_n (nczipp, nvar, varps, nput, putreqs, nget, getreqs);
-	// if (err != NC_NOERR) { return err; }
-
-	// Load the index table if exists
-	// Construct mtype
-	lens   = NCI_Malloc (sizeof (int) * nvar);
-	fdisps = NCI_Malloc (sizeof (MPI_Aint) * nvar * 2);
-	mdisps = fdisps + nvar;
 	nread  = 0;
+
+	// Iinit vars
+	err = nczipioi_init_nvar_core_reduce (nczipp, nvar, varps, rcnt, roff, starts, counts);
+	CHK_ERR
+
+	// Read the index table for existing variables
+	// MPI Type to load the index table for existing variables
 	for (i = 0; i < nvar; i++) {
 		varp = varps[i];
-
 		if (!(varp->isnew)) {
 			err = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
 										   &(varp->metaoff), MPI_LONG_LONG);
@@ -518,7 +498,6 @@ int nczipioi_init_nvar_new (NC_zip *nczipp, int nput, int *putreqs, int nget, in
 			}
 		}
 	}
-	// Read the index table
 	if (nread) {
 		nczipioi_sort_file_offset (nread, fdisps, mdisps, lens);
 
@@ -541,7 +520,9 @@ int nczipioi_init_nvar_new (NC_zip *nczipp, int nput, int *putreqs, int nget, in
 						  MPI_INFO_NULL);
 
 #ifdef WORDS_BIGENDIAN	// Switch back to little endian
-		nczipioi_idx_in_swapn (varp - chunk_index, varp->nchunk + 1);
+		for (i = 0; i < nvar; i++) {
+			nczipioi_idx_in_swapn (varps[i]->chunk_index, varps[i]->nchunk + 1);
+		}
 #endif
 
 		MPI_Type_free (&ftype);
@@ -553,8 +534,13 @@ int nczipioi_init_nvar_new (NC_zip *nczipp, int nput, int *putreqs, int nget, in
 
 	NCI_Free (flag);
 	NCI_Free (varps);
+	NCI_Free (vmap);
+	NCI_Free (roff);
+	NCI_Free (rcnt);
+	NCI_Free (starts);
+
+err_out:;
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_INIT_META)
-
-	return NC_NOERR;
+	return err;
 }

@@ -19,15 +19,7 @@
 
 #include "nczipio_internal.h"
 
-typedef struct nczipioi_chunk_overlap_t {
-	MPI_Offset osize;
-	int rank;
-} nczipioi_chunk_overlap_t;
-
-static inline void nczipioi_write_chunk_ocnt (NC_zip *nczipp,
-											  NC_zip_var *varp,
-											  void *ocnt,
-											  size_t ocnt_size) {
+void nczipioi_write_chunk_ocnt (NC_zip *nczipp, NC_zip_var *varp, void *ocnt, size_t ocnt_size) {
 #ifdef PNETCDF_DEBUG
 #ifdef PNETCDF_PROFILING
 	{
@@ -107,6 +99,26 @@ static inline void nczipioi_write_chunk_ocnt (NC_zip *nczipp,
 #endif
 }
 
+void max_osize_rank_op (void *inp, void *inoutp, int *len, MPI_Datatype *dptr) {
+	int i;
+	nczipioi_chunk_overlap_t *in	= (nczipioi_chunk_overlap_t *)inp;
+	nczipioi_chunk_overlap_t *inout = (nczipioi_chunk_overlap_t *)inoutp;
+
+	for (i = 0; i < *len; i++) {
+		if (in->osize > inout->osize) {
+			inout->osize = in->osize;
+			inout->rank	 = in->rank;
+		}
+		in++;
+		inout++;
+	}
+}
+
+int nczipioi_calc_chunk_owner (
+	NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **starts, MPI_Offset **counts) {
+	return nczipioi_calc_chunk_owner_reduce (nczipp, varp, nreq, starts, counts);
+}
+
 static inline void nczipioi_rec_chunk_overlap (MPI_Offset *ostart,
 											   MPI_Offset *osize,
 											   MPI_Offset *citr,
@@ -134,34 +146,19 @@ static inline void nczipioi_rec_chunk_overlap (MPI_Offset *ostart,
 	}
 }
 
-void max_osize_rank_op (void *inp, void *inoutp, int *len, MPI_Datatype *dptr) {
-	int i;
-	nczipioi_chunk_overlap_t *in	= (nczipioi_chunk_overlap_t *)inp;
-	nczipioi_chunk_overlap_t *inout = (nczipioi_chunk_overlap_t *)inoutp;
-
-	for (i = 0; i < *len; i++) {
-		if (in->osize > inout->osize) {
-			inout->osize = in->osize;
-			inout->rank	 = in->rank;
-		}
-		in++;
-		inout++;
-	}
-}
-
-int nczipioi_calc_chunk_owner (
-	NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **starts, MPI_Offset **counts) {
+int nczipioi_calc_chunk_overlap (NC_zip *nczipp,
+								 NC_zip_var *varp,
+								 int nreq,
+								 MPI_Offset **starts,
+								 MPI_Offset **counts,
+								 nczipioi_chunk_overlap_t *ocnt) {
 	int err = NC_NOERR;
 	int i, j, k;
 	int cid;  // Chunk iterator
 	int req;
-	double noise, noise_step;
 	MPI_Offset overlapsize;
 	MPI_Offset *ostart, *osize;
 	MPI_Offset *citr;  // Bounding box for chunks overlapping my own write region
-	nczipioi_chunk_overlap_t *ocnt, *ocnt_all;
-
-	NC_ZIP_TIMER_START (NC_ZIP_TIMER_INIT_COWN)
 
 	// Construct MPI type for overlap if not already constructed
 	if (nczipp->overlaptype == MPI_DATATYPE_NULL) {
@@ -178,10 +175,6 @@ int nczipioi_calc_chunk_owner (
 	osize = ostart + varp->ndim;
 	citr  = osize + varp->ndim;
 
-	ocnt = (nczipioi_chunk_overlap_t *)NCI_Malloc (sizeof (nczipioi_chunk_overlap_t) *
-												   varp->nchunkrec * 2);
-	CHK_PTR (ocnt)
-	ocnt_all = ocnt + varp->nchunkrec;
 	memset (ocnt, 0, sizeof (nczipioi_chunk_overlap_t) * varp->nchunkrec);
 
 	// Count overlapsize of each request
@@ -216,14 +209,17 @@ int nczipioi_calc_chunk_owner (
 												 osize));
 		}
 	}
+
+	// First 16 bit used as noise
 	for (i = 0; i < varp->nchunkrec; i++) {
 		ocnt[i].rank = nczipp->rank;
-		ocnt[i].osize -= nczipp->cown_size;	 // Penality for load ballance, set at 1/16
-		ocnt[i].osize <<= 16;				 // First 16 bit used as noise
+		ocnt[i].osize <<= 16;
 	}
+
 	// Noise to break tie
 	j = (nczipp->rank - nczipp->assigned_chunks) % nczipp->np;
 	if (j < 0) j += nczipp->np;
+	if (j > varp->nchunkrec) { j = varp->nchunkrec; }
 	k = nczipp->np - 1;	 // noise from 0 ~ np-1
 	for (i = j; i < varp->nchunkrec; i++) {
 		ocnt[i].osize += k;
@@ -237,9 +233,16 @@ int nczipioi_calc_chunk_owner (
 	}
 	nczipp->assigned_chunks += varp->nchunk;
 
-	CHK_ERR_ALLREDUCE (ocnt, ocnt_all, varp->nchunkrec, nczipp->overlaptype, nczipp->max_cown_op,
-					   nczipp->comm);
-	for (i = 0; i < varp->nchunkrec; i++) { varp->chunk_owner[i] = ocnt_all[i].rank; }
+err_out:;
+	NCI_Free (ostart);
+	return err;
+}
+
+void nczipioi_assign_chunk_owner (NC_zip *nczipp,
+								  NC_zip_var *varp,
+								  nczipioi_chunk_overlap_t *ocnt) {
+	int i, j;
+	for (i = 0; i < varp->nchunkrec; i++) { varp->chunk_owner[i] = ocnt[i].rank; }
 	if (varp->isrec) {
 		for (i = varp->nchunkrec; i < varp->nchunk; i += varp->nchunkrec) {
 			memcpy (varp->chunk_owner + i, varp->chunk_owner, sizeof (int) * varp->nchunkrec);
@@ -258,7 +261,8 @@ int nczipioi_calc_chunk_owner (
 		for (j = 0; j < varp->nchunk; j++) {
 			if (varp->chunk_owner[j] == nczipp->rank) {
 				varp->mychunks[varp->nmychunk++] = j;
-				if (varp->isnew) {	// Only apply to new var, old var will be read when it is needed
+				if (varp->isnew) {	// Only apply to new var, old var will be read when it is
+									// needed
 					// varp->chunk_cache[j] = (void*)NCI_Malloc(varp->chunksize);  // Allocate
 					// buffer for blocks we own
 					// memset(varp->chunk_cache[j], 0 , varp->chunksize);
@@ -273,10 +277,152 @@ int nczipioi_calc_chunk_owner (
 	// Update global chunk count
 	nczipp->nmychunks += (MPI_Offset) (varp->nmychunk);
 	nczipp->cown_size += ((MPI_Offset) (varp->nmychunk) * varp->chunksize) << nczipp->cown_ratio;
+}
+
+int nczipioi_sync_ocnt_reduce (NC_zip *nczipp,
+							   int nchunk,
+							   nczipioi_chunk_overlap_t *ocnt,
+							   nczipioi_chunk_overlap_t *ocnt_all,
+							   MPI_Request *req) {
+	int err = NC_NOERR;
+	int i;
+
+	// Construct MPI type for overlap if not already constructed
+	if (nczipp->overlaptype == MPI_DATATYPE_NULL) {
+		err = MPI_Type_contiguous (sizeof (nczipioi_chunk_overlap_t), MPI_BYTE,
+								   &(nczipp->overlaptype));
+		CHK_MPIERR
+		err = MPI_Type_commit (&(nczipp->overlaptype));
+		CHK_MPIERR
+	}
+
+	if (nczipp->max_cown_op == MPI_OP_NULL) {
+		err = MPI_Op_create (max_osize_rank_op, 1, &(nczipp->max_cown_op));
+		CHK_MPIERR
+	}
+
+	// Apply owner penalty
+	for (i = 0; i < nchunk; i++) {
+		ocnt[i].osize -= nczipp->cown_size << 16;  // Penality for load ballance, set at 1/16
+	}
+
+	if (req) {
+		CHK_ERR_IALLREDUCE (ocnt, ocnt_all, nchunk, nczipp->overlaptype, nczipp->max_cown_op,
+							nczipp->comm, req);
+	} else {
+		CHK_ERR_ALLREDUCE (ocnt, ocnt_all, nchunk, nczipp->overlaptype, nczipp->max_cown_op,
+						   nczipp->comm);
+	}
+
+err_out:;
+	return err;
+}
+
+int nczipioi_sync_ocnt_gather (NC_zip *nczipp,
+							   int nchunk,
+							   nczipioi_chunk_overlap_t *ocnt,
+							   MPI_Offset **ocnt_all,
+							   MPI_Request *req) {
+	int err = NC_NOERR;
+
+	// Construct MPI type for overlap if not already constructed
+	if (nczipp->overlaptype == MPI_DATATYPE_NULL) {
+		MPI_Datatype tmptype;
+
+		err = MPI_Type_contiguous (sizeof (MPI_Offset), MPI_BYTE, &tmptype);
+		CHK_MPIERR
+		err = MPI_Type_commit (&tmptype);
+		CHK_MPIERR
+		err = MPI_Type_create_resized (tmptype, 0, sizeof (nczipioi_chunk_overlap_t),
+									   &(nczipp->overlaptype));
+		CHK_MPIERR
+		err = MPI_Type_commit (&(nczipp->overlaptype));
+		CHK_MPIERR
+		err = MPI_Type_free (&tmptype);
+	}
+
+	if (req) {
+		err = MPI_Igather (ocnt, nchunk, nczipp->overlaptype, ocnt_all[0], nchunk, MPI_LONG_LONG, 0,
+						   nczipp->comm, req);
+	} else {
+		err = MPI_Gather (ocnt, nchunk, nczipp->overlaptype, ocnt_all[0], nchunk, MPI_LONG_LONG, 0,
+						  nczipp->comm);
+	}
+	CHK_MPIERR
+
+err_out:;
+	return err;
+}
+
+int nczipioi_sync_ocnt_gather_bcast (NC_zip *nczipp,
+									 NC_zip_var *varp,
+									 MPI_Offset **ocnt_in,
+									 nczipioi_chunk_overlap_t *ocnt_all,
+									 MPI_Request *req) {
+	int err = NC_NOERR;
+	int i, j, k;
+	MPI_Offset *cown_size;
+
+	if (nczipp->rank == 0) {
+		cown_size = (MPI_Offset *)NCI_Malloc (sizeof (MPI_Offset) * nczipp->np);
+		memset (cown_size, 0, sizeof (MPI_Offset) * nczipp->np);
+		for (i = 0; i < varp->nchunkrec; i++) {
+			ocnt_all[i].rank  = 0;
+			ocnt_all[i].osize = ocnt_in[0][i];
+			k				  = 0;
+			for (j = 1; j < nczipp->np; j++) {
+				if (ocnt_in[j][i] - cown_size[j] > ocnt_in[k][i] - cown_size[k]) { k = j; }
+			}
+			cown_size[k] += (varp->chunksize >> nczipp->cown_ratio) * varp->nrec;
+			ocnt_all[i].rank  = k;
+			ocnt_all[i].osize = ocnt_in[i][k];
+		}
+	}
+
+	if (req) {
+		err = MPI_Ibcast (ocnt_all, varp->nchunkrec, nczipp->overlaptype, 0, nczipp->comm, req);
+	} else {
+		err = MPI_Bcast (ocnt_all, varp->nchunkrec, nczipp->overlaptype, 0, nczipp->comm);
+	}
+	CHK_MPIERR
+
+err_out:;
+	return err;
+}
+
+int nczipioi_calc_chunk_owner_reduce (
+	NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **starts, MPI_Offset **counts) {
+	int err = NC_NOERR;
+	int i, j, k;
+	int cid;  // Chunk iterator
+	int req;
+	double noise, noise_step;
+	MPI_Offset overlapsize;
+	nczipioi_chunk_overlap_t *ocnt, *ocnt_all;
+
+	NC_ZIP_TIMER_START (NC_ZIP_TIMER_INIT_COWN)
+
+	ocnt = (nczipioi_chunk_overlap_t *)NCI_Malloc (sizeof (nczipioi_chunk_overlap_t) *
+												   varp->nchunkrec * 2);
+	CHK_PTR (ocnt)
+	ocnt_all = ocnt + varp->nchunkrec;
+
+	err = nczipioi_calc_chunk_overlap (nczipp, varp, nreq, starts, counts, ocnt);
+	CHK_ERR
+
+	if (nczipp->exact_cown) {
+		// err = nczipioi_sync_ocnt_gather (nczipp, varp->nchunkrec, ocnt, ocnt_all, NULL);
+		// CHK_ERR
+		RET_ERR (NC_ENOTSUPPORT)
+	} else {
+		err = nczipioi_sync_ocnt_reduce (nczipp, varp->nchunkrec, ocnt, ocnt_all, NULL);
+		CHK_ERR
+	}
+
+	nczipioi_assign_chunk_owner (nczipp, varp, ocnt_all);
 
 	nczipioi_write_chunk_ocnt (nczipp, varp, ocnt, sizeof (nczipioi_chunk_overlap_t));
 
-	NCI_Free (ostart);
 	NCI_Free (ocnt);
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_INIT_COWN)

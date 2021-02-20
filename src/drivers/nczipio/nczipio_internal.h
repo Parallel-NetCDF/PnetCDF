@@ -18,9 +18,15 @@
 		goto err_out;            \
 	}
 #define CHK_ERR                  \
-	if (err != MPI_SUCCESS) {    \
+	if (err != NC_NOERR) {       \
 		DEBUG_TRACE_ERROR (err); \
 		goto err_out;            \
+	}
+#define CHK_MPIERR                              \
+	if (err != MPI_SUCCESS) {                   \
+		err = ncmpii_error_mpi2nc (err, "MPI"); \
+		DEBUG_TRACE_ERROR (err);                \
+		goto err_out;                           \
 	}
 
 #define CHK_PTR(P)               \
@@ -211,7 +217,38 @@ extern int nczipioi_subarray_off_len (int, int *, int *, int *, int *, int *);
 extern void nczipioi_idx_in_swapn (NC_zip_chunk_index_entry *, MPI_Offset);
 
 // Misc
+typedef struct nczipioi_chunk_overlap_t {
+	MPI_Offset osize;
+	int rank;
+} nczipioi_chunk_overlap_t;
+extern int nczipioi_init_nvar_core_reduce (NC_zip *nczipp,
+										   int nvar,
+										   NC_zip_var **varps,
+										   int *rcnt,
+										   int *roff,
+										   MPI_Offset **starts,
+										   MPI_Offset **counts);
+extern int nczipioi_calc_chunk_overlap (NC_zip *nczipp,
+										NC_zip_var *varp,
+										int nreq,
+										MPI_Offset **starts,
+										MPI_Offset **counts,
+										nczipioi_chunk_overlap_t *ocnt);
+extern void nczipioi_assign_chunk_owner (NC_zip *nczipp,
+										 NC_zip_var *varp,
+										 nczipioi_chunk_overlap_t *ocnt);
+extern int nczipioi_sync_ocnt_reduce (NC_zip *nczipp,
+									  int nchunk,
+									  nczipioi_chunk_overlap_t *ocnt,
+									  nczipioi_chunk_overlap_t *ocnt_all,
+									  MPI_Request *req);
+extern void nczipioi_write_chunk_ocnt (NC_zip *nczipp,
+									   NC_zip_var *varp,
+									   void *ocnt,
+									   size_t ocnt_size);
 extern int nczipioi_calc_chunk_owner (NC_zip *, NC_zip_var *, int, MPI_Offset **, MPI_Offset **);
+extern int nczipioi_calc_chunk_owner_reduce (
+	NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **starts, MPI_Offset **counts);
 extern int nczipioi_calc_chunk_size (NC_zip *, NC_zip_var *, int, MPI_Offset **, MPI_Offset **);
 extern int nczipioiconvert (void *, void *, MPI_Datatype, MPI_Datatype, int);
 

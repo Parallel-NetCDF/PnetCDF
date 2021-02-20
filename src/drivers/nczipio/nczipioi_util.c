@@ -120,6 +120,22 @@ int nczipioi_extract_hint(NC_zip *nczipp, MPI_Info info){
         }
     }
 
+    // Exact chunk owner assignment
+    nczipp->exact_cown = 0;  
+    MPI_Info_get(info, "nc_zip_exact_cown", MPI_MAX_INFO_VAL - 1, value, &flag);
+    if (flag) {
+        if (strcmp(value, "1") == 0){
+            nczipp->exact_cown = 1;  
+        }
+    }
+
+    // Reserve space for records
+    nczipp->default_recnalloc = NC_ZIP_DEFAULT_REC_ALLOC;  
+    MPI_Info_get(info, "nc_zip_nrec", MPI_MAX_INFO_VAL - 1, value, &flag);
+    if (flag) {
+        nczipp->default_recnalloc = atoi(value);
+    }
+
     // Default zipdriver
     nczipp->default_zipdriver = NC_ZIP_DRIVER_NONE;  
     MPI_Info_get(info, "nc_zip_driver", MPI_MAX_INFO_VAL - 1, value, &flag);
@@ -188,11 +204,20 @@ int nczipioi_export_hint(NC_zip *nczipp, MPI_Info info){
             break;
     }
 
+    // Delay inint
     if (nczipp->delay_init){
         MPI_Info_set(info, "nc_zip_delay_init", "1");
     }
     else{
         MPI_Info_set(info, "nc_zip_delay_init", "0");
+    }
+
+    // Exact cown
+    if (nczipp->exact_cown){
+        MPI_Info_set(info, "nc_zip_exact_cown", "1");
+    }
+    else{
+        MPI_Info_set(info, "nc_zip_exact_cown", "0");
     }
 
     // Reserve space for records
