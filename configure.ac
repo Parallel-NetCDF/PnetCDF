@@ -112,6 +112,8 @@ AC_SUBST(PACKAGE_VERSION)
 AC_SUBST(CONFIGURE_ARGS_CLEAN)
 
 dnl autoheader only adds these templates to the first invocation of AC_CONFIG_HEADERS
+AH_TEMPLATE([ENABLE_FORTRAN],           [Define if to enable Fortran feature])
+AH_TEMPLATE([ENABLE_CXX],               [Define if to enable C++ feature])
 AH_TEMPLATE([NCBYTE_T],                 [Type of NC_BYTE])
 AH_TEMPLATE([NCSHORT_T],                [Type of NC_SHORT])
 AH_TEMPLATE([NF_DOUBLEPRECISION_IS_C_], [C type for Fortran double])
@@ -525,6 +527,14 @@ if test "x${has_mpicxx}" = xyes ; then
       fi
    fi
 fi
+if test "x${has_mpicxx}" = xyes ; then
+   ENABLE_CXX=1
+   AC_DEFINE(ENABLE_CXX)
+else
+   ENABLE_CXX=0
+fi
+AC_SUBST(ENABLE_CXX)
+
 AC_SUBST(has_mpicxx)dnl for src/utils/pnetcdf-config.in
 UD_MSG_DEBUG(has_mpicxx=$has_mpicxx)
 AM_CONDITIONAL(HAS_MPICXX, [test x$has_mpicxx = xyes])
@@ -758,6 +768,14 @@ if test "x${has_fortran}" = xyes ; then
       AC_SUBST(USE_MPIF_HEADER)
    fi
 fi
+if test "x${has_fortran}" = xyes ; then
+   ENABLE_FORTRAN=1
+   AC_DEFINE(ENABLE_FORTRAN)
+else
+   ENABLE_FORTRAN=0
+fi
+AC_SUBST(ENABLE_FORTRAN)
+
 AC_SUBST(has_fortran)dnl for src/utils/pnetcdf-config.in
 AM_CONDITIONAL(HAS_FORTRAN, [test x$has_fortran = xyes])
 AM_CONDITIONAL(HAVE_MPI_MOD, [test x$mpi_mod = xyes])

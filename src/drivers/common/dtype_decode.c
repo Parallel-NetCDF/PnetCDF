@@ -34,8 +34,10 @@ static MPI_Datatype
 dtype_filter(MPI_Datatype type)
 {
     /* char types */
-    if (type == MPI_CHARACTER)
+#if defined(ENABLE_FORTRAN) && (ENABLE_FORTRAN == 1)
+    if (type == MPI_CHARACTER) /* a Fortran datatype */
         return  MPI_CHAR;
+#endif
     if (type == MPI_CHAR)
         return  MPI_CHAR;
 
@@ -47,15 +49,19 @@ dtype_filter(MPI_Datatype type)
     if (type == MPI_SIGNED_CHAR)
         return  MPI_SIGNED_CHAR;
 
-    if (type == MPI_INTEGER1)
+#if defined(ENABLE_FORTRAN) && (ENABLE_FORTRAN == 1)
+    if (type == MPI_INTEGER1) /* a Fortran datatype */
         return  MPI_SIGNED_CHAR;
+#endif
     if (type == MPI_BYTE)
         return  MPI_BYTE;
 
     /* 2-byte integer types (only supported if MPI_SHORT is 2-bytes). */
 #if (SIZEOF_SHORT == 2)
-    if (type == MPI_INTEGER2)
+#if defined(ENABLE_FORTRAN) && (ENABLE_FORTRAN == 1)
+    if (type == MPI_INTEGER2) /* a Fortran datatype */
         return  MPI_SHORT;
+#endif
     if (type == MPI_SHORT)
         return  MPI_SHORT;
 
@@ -86,10 +92,12 @@ dtype_filter(MPI_Datatype type)
 #endif
 #endif
 
-    if (type == MPI_INTEGER)
+#if defined(ENABLE_FORTRAN) && (ENABLE_FORTRAN == 1)
+    if (type == MPI_INTEGER) /* a Fortran datatype */
         return int_4byte;
-    if (type == MPI_INTEGER4)
+    if (type == MPI_INTEGER4) /* a Fortran datatype */
         return int_4byte;
+#endif
 #if (SIZEOF_LONG == 4)
     if (type == MPI_LONG)
         return int_4byte;
@@ -113,12 +121,14 @@ dtype_filter(MPI_Datatype type)
       * is 8-bytes).
       */
 #if (SIZEOF_INT == 8) || (SIZEOF_LONG == 8)
-    if (type == MPI_INTEGER8)
+  #if defined(ENABLE_FORTRAN) && (ENABLE_FORTRAN == 1)
+    if (type == MPI_INTEGER8) /* a Fortran datatype */
       #if (SIZEOF_INT == 8)
         return MPI_INT;
       #else
         return MPI_LONG;
       #endif
+  #endif
 
   #if (SIZEOF_INT == 8)
     if (type == MPI_INT)
@@ -143,18 +153,22 @@ dtype_filter(MPI_Datatype type)
 #endif
 
     /* 4-byte float types (we assume float is 4-bytes). */
-    if (type == MPI_REAL)
+#if defined(ENABLE_FORTRAN) && (ENABLE_FORTRAN == 1)
+    if (type == MPI_REAL) /* a Fortran datatype */
         return  MPI_FLOAT;
-    if (type == MPI_REAL4)
+    if (type == MPI_REAL4) /* a Fortran datatype */
         return  MPI_FLOAT;
+#endif
     if (type == MPI_FLOAT)
         return  MPI_FLOAT;
 
     /* 8-byte float types (we assume double is 8-bytes). */
-    if (type == MPI_REAL8)
+#if defined(ENABLE_FORTRAN) && (ENABLE_FORTRAN == 1)
+    if (type == MPI_REAL8) /* a Fortran datatype */
         return MPI_DOUBLE;
-    if (type == MPI_DOUBLE_PRECISION)
+    if (type == MPI_DOUBLE_PRECISION) /* a Fortran datatype */
         return  MPI_DOUBLE;
+#endif
     if (type == MPI_DOUBLE)
         return  MPI_DOUBLE;
 
