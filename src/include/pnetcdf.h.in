@@ -21,6 +21,8 @@
 /* List of PnetCDF features enabled/disabled at configure time.
  * 0: disabled, 1: enabled, -1: auto
  */
+#define PNETCDF_ENABLE_FORTRAN           @ENABLE_FORTRAN@
+#define PNETCDF_ENABLE_CXX               @ENABLE_CXX@
 #define PNETCDF_ERANGE_FILL              @ENABLE_ERANGE_FILL@
 #define PNETCDF_SUBFILING                @ENABLE_SUBFILING@
 #define PNETCDF_RELAX_COORD_BOUND        @RELAX_COORD_BOUND@
@@ -31,6 +33,7 @@
 #define PNETCDF_BURST_BUFFERING          @ENABLE_BURST_BUFFER@
 #define PNETCDF_THREAD_SAFE              @ENABLE_THREAD_SAFE@
 #define PNETCDF_DRIVER_NETCDF4           @ENABLE_NETCDF4@
+#define PNETCDF_DRIVER_ADIOS             @ENABLE_ADIOS@
 
 #if defined(__cplusplus)
 extern "C" {
