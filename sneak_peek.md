@@ -53,7 +53,7 @@ This is essentially a placeholder for the next release note ...
 * Bug fixes
   + When using an MPI compiler whose Fortran feature was disabled, the MPI
     Fortran constants and datatypes may not be defined in the header file
-    mpi.h. This is the case for OpenMPI (tested with 4.0.2). PnetCDF used some
+    mpi.h. This is the case for Open MPI (tested with 4.0.2). PnetCDF used some
     Fortran datatypes without checking whether they are defined, which can fail
     at 'make' time. A fix has been added that checks whether the Fortran
     feature is disabled and wraps around the Fortran datatypes with 'ifdef
@@ -84,4 +84,3 @@ This is essentially a placeholder for the next release note ...
 
 * Clarifications
   + none
-
