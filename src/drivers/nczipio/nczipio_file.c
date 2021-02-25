@@ -274,7 +274,27 @@ int nczipio_close (void *ncdp) {
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_TOTAL)
 
 #ifdef PNETCDF_PROFILING
-	if (_env_str != NULL && *_env_str != '0') { nczipioi_print_profile (nczipp); }
+	if (_env_str != NULL && *_env_str != '0') {
+		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_PUT_SIZE,
+								   (double)nczipp->putsize / 1048576.0f);
+		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_GET_SIZE,
+								   (double)nczipp->getsize / 1048576.0f);
+		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_SEND_SIZE,
+								   (double)nczipp->sendsize / 1048576.0f);
+		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_RECV_SIZE,
+								   (double)nczipp->recvsize / 1048576.0f);
+		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_NSEND, (double)nczipp->nsend);
+		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_NRECV, (double)nczipp->nrecv);
+		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_NREMOTE, (double)nczipp->nremote);
+		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_NREQ, (double)nczipp->nreq);
+		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_NLOCAL, (double)nczipp->nlocal);
+		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_VAR_SIZE,
+								   (double)nczipp->var_size_sum / 1048576.0f);
+		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_VAR_ZSIZE,
+								   (double)nczipp->var_zsize_sum / 1048576.0f);
+
+		nczipioi_print_profile (nczipp);
+	}
 #endif
 
 	NCI_Free (nczipp->path);

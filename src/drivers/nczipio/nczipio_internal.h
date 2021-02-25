@@ -1,6 +1,10 @@
 #ifndef _nczipio_INTERNAL_H
 #define _nczipio_INTERNAL_H
 
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include "nczipio_driver.h"
 
 #define NC_ZIP_DRIVER_NONE	0
@@ -60,7 +64,7 @@
 #define CHK_ERR_REDUCE(V0, V1, V2, V3, V4, V5, V6)        \
 	err = MPI_Reduce (V0, V1, V2, V3, V4, V5, V6);        \
 	if (err != MPI_SUCCESS) {                             \
-		err = ncmpii_error_mpi2nc (err, "MPI_Allreduce"); \
+		err = ncmpii_error_mpi2nc (err, "MPI_Reduce"); \
 		DEBUG_RETURN_ERROR (err)                          \
 	}
 
@@ -209,12 +213,15 @@ extern int nczipioi_var_list_add (NC_zip_var_list *);
 extern int nczipioi_extract_hint (NC_zip *, MPI_Info);
 extern int nczipioi_export_hint (NC_zip *, MPI_Info);
 extern MPI_Offset NC_Type_size (nc_type);
-extern int nczipioi_print_profile (NC_zip *);
 extern void nczipioi_sort_file_offset (int, MPI_Aint *, MPI_Aint *, int *);
 extern int nczipioi_update_statistics (NC_zip *);
 extern int nczipioi_get_default_chunk_dim (NC_zip *);
 extern int nczipioi_subarray_off_len (int, int *, int *, int *, int *, int *);
 extern void nczipioi_idx_in_swapn (NC_zip_chunk_index_entry *, MPI_Offset);
+#ifdef PNETCDF_PROFILING
+extern int nczipioi_print_profile (NC_zip *);
+extern void nczipioi_profile_add_time (NC_zip *nczipp, int id, double t);
+#endif
 
 // Misc
 typedef struct nczipioi_chunk_overlap_t {
