@@ -35,24 +35,17 @@ int nczipioi_var_list_free(NC_zip_var_list *list) {
     return NC_NOERR;
 }
 
-int nczipioi_var_list_add(NC_zip_var_list *list, NC_zip_var data) {
-    int id;
-
-    id = list->cnt;
-
+int nczipioi_var_list_add(NC_zip_var_list *list) {
     if (list->nalloc == 0){
         list->nalloc = 16;
         list->data = NCI_Malloc(list->nalloc * sizeof(NC_zip_var));
         CHK_ALLOC(list->data)
     }
-    else if (list->nalloc == id){
+    else if (list->nalloc == list->cnt){
         list->nalloc *= 2;
         list->data = NCI_Realloc(list->data, list->nalloc * sizeof(NC_zip_var));
         CHK_ALLOC(list->data)
     }
 
-    list->data[id] = data;
-    list->cnt++;
-
-    return id;
+    return ((list->cnt)++);
 }

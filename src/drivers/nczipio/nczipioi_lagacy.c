@@ -156,12 +156,12 @@ nczipioi_get_var_old(NC_zip        *nczipp,
         tssize[i] = (int)count[i];
         tstart[i] = start[i] % varp->chunkdim[i];
     }
-    MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, ncmpii_nc2mpitype(xtype), &subarytype);
-    MPI_Type_commit(&subarytype);
+    CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, ncmpii_nc2mpitype(xtype), &subarytype);
+    CHK_ERR_TYPE_COMMIT(&subarytype);
 
     // Pack data into user buffer
     tpos = 0;
-    MPI_Pack(rbuffer, bsize * nb, subarytype, buf, bsize * nb, &tpos, nczipp->comm);
+    CHK_ERR_PACK(rbuffer, bsize * nb, subarytype, buf, bsize * nb, &tpos, nczipp->comm);
     
     // Free datatype
     MPI_Type_free(&subarytype);
@@ -336,11 +336,11 @@ nczipioi_put_var_old(NC_zip        *nczipp,
         }
 
         // Pack type
-        MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, ncmpii_nc2mpitype(xtype), &ptype);
-        MPI_Type_commit(&ptype);
+        CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, ncmpii_nc2mpitype(xtype), &ptype);
+        CHK_ERR_TYPE_COMMIT(&ptype);
         
         // Pack data
-        MPI_Pack(buf, 1, ptype, sbuf + sdispls[j], sendcounts[j], packoff + j, nczipp->comm);
+        CHK_ERR_PACK(buf, 1, ptype, sbuf + sdispls[j], sendcounts[j], packoff + j, nczipp->comm);
     
         // Free datatype
         MPI_Type_free(&ptype);
@@ -482,11 +482,11 @@ nczipioi_put_var_old(NC_zip        *nczipp,
                 }
 
                 // Pack type
-                MPI_Type_create_subarray(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, ncmpii_nc2mpitype(xtype), &ptype);
-                MPI_Type_commit(&ptype);
+                CHK_ERR_TYPE_CREATE_SUBARRAY(varp->ndim, tsize, tssize, tstart, MPI_ORDER_C, ncmpii_nc2mpitype(xtype), &ptype);
+                CHK_ERR_TYPE_COMMIT(&ptype);
 
                 // Pack data
-                MPI_Unpack(rbuf + rdispls[j], overlapsize, packoff + j, xbuf + bsize * i, 1, ptype, nczipp->comm);
+                CHK_ERR_UNPACK(rbuf + rdispls[j], overlapsize, packoff + j, xbuf + bsize * i, 1, ptype, nczipp->comm);
 
                 // Free datatype
                 MPI_Type_free(&ptype);
@@ -588,7 +588,7 @@ nczipioi_put_var_old(NC_zip        *nczipp,
     }
 
     // All reduce
-    MPI_Allreduce(zsize_local, zsize_all, varp->nchunk, MPI_INT, MPI_MAX, nczipp->comm);
+    CHK_ERR_ALLREDUCE(zsize_local, zsize_all, varp->nchunk, MPI_INT, MPI_MAX, nczipp->comm);
 
     // Calculate variable displacement
     zdispls_all[0] = 0;

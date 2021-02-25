@@ -43,6 +43,7 @@ int smaller (const void * a, const void * b) {
 }
 
 int nczipioi_calc_chunk_size(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Offset **starts, MPI_Offset **counts){
+    int err;
     int r, i, j;
     int primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97};
     MPI_Offset *chunkdim;
@@ -100,7 +101,7 @@ int nczipioi_calc_chunk_size(NC_zip *nczipp, NC_zip_var *varp, int nreq, MPI_Off
 
     // Global gcd
     MPI_Op_create((MPI_User_function *)gcd_reduce, 1, &gcd_op); 
-    MPI_Allreduce(MPI_IN_PLACE, chunkdim, varp->ndim, MPI_LONG_LONG, gcd_op, nczipp->comm);
+    CHK_ERR_ALLREDUCE(MPI_IN_PLACE, chunkdim, varp->ndim, MPI_LONG_LONG, gcd_op, nczipp->comm);
     MPI_Op_free(&gcd_op);
 
     // If we have no clue accross processes, set chunk to max

@@ -262,7 +262,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_SYNC)
 
     // Sync number of messages of each chunk
-    MPI_Allreduce(rcnt_local, rcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
+    CHK_ERR_ALLREDUCE(rcnt_local, rcnt_all, nczipp->np, MPI_INT, MPI_SUM, nczipp->comm);
     nrecv = rcnt_all[nczipp->rank] - rcnt_local[nczipp->rank];  // We don't need to receive request form self
 
 #ifdef PNETCDF_PROFILING
@@ -394,7 +394,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 
     // Post receive  
     for(i = 0; i < nsend; i++){
-        MPI_Irecv(rbuf_re[i], rsize_re[i], MPI_BYTE, sdst[i], 1, nczipp->comm, rreq_re + i);
+        CHK_ERR_IRECV(rbuf_re[i], rsize_re[i], MPI_BYTE, sdst[i], 1, nczipp->comm, rreq_re + i);
     }   
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_RECV_REP)
@@ -403,8 +403,8 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     // Post recv
     for(i = 0; i < nrecv; i++){
         // Get message size, including metadata
-        MPI_Mprobe(MPI_ANY_SOURCE, 0, nczipp->comm, &rmsg, &rstat);
-        MPI_Get_count(&rstat, MPI_BYTE, rsize + i);
+        CHK_ERR_MPROBE(MPI_ANY_SOURCE, 0, nczipp->comm, &rmsg, &rstat);
+        CHK_ERR_GET_COUNT(&rstat, MPI_BYTE, rsize + i);
 
         // Allocate buffer
         rbuf[i] = rbufp[i] = (char*)NCI_Malloc(rsize[i]);
@@ -412,7 +412,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         nczipp->recvsize += rsize[i];
 #endif
         // Post irecv
-        MPI_Imrecv(rbuf[i], rsize[i], MPI_BYTE, &rmsg, rreq + i);
+        CHK_ERR_IMRECV(rbuf[i], rsize[i], MPI_BYTE, &rmsg, rreq + i);
     }
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_RECV_REQ)
@@ -561,7 +561,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_SEND_REQ)
 
     // Wait for all request
-    MPI_Waitall(nsend, sreq, sstat);
+    CHK_ERR_WAITALL(nsend, sreq, sstat);
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_SEND_REQ)
 
@@ -618,7 +618,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_SEND_REP)
 
     // Wait for all Response
-    MPI_Waitall(nrecv, sreq_re, sstat_re);
+    CHK_ERR_WAITALL(nrecv, sreq_re, sstat_re);
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_SEND_REP)
 
