@@ -46,6 +46,10 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     char name[128]; // Name of objects
     NC *ncp = (NC*)(nczipp->ncp);
 
+    if (nczipp->rank==0){
+        printf("nczipioi_save_var\n");
+    }
+
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO)
 
     // Allocate buffer for compression
@@ -98,9 +102,9 @@ int nczipioi_save_var(NC_zip *nczipp, NC_zip_var *varp) {
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_COM)
 
 #ifdef PNETCDF_PROFILING
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_BARR)
     MPI_Barrier(nczipp->comm);
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_BARR)
 #endif
 
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_SYNC)
@@ -395,7 +399,6 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
             }
         }
 
-
         NC_ZIP_TIMER_SWAP(NC_ZIP_TIMER_PUT_IO_COM,NC_ZIP_TIMER_PUT_IO_SYNC)
 
         // Sync compressed data size with other processes
@@ -415,9 +418,9 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     }
     
 #ifdef PNETCDF_PROFILING
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO)
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_BARR)
     MPI_Barrier(nczipp->comm);
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO)
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_BARR)
 #endif
 
     /* Write comrpessed variable
@@ -426,18 +429,14 @@ int nczipioi_save_nvar(NC_zip *nczipp, int nvar, int *varids) {
     * Finally MPI collective I/O is used for writing data
     */
    
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_SYNC)
     zsizes_allp = zsizes_all + nvar;
     for(vid = 0; vid < nvar; vid++){
         varp = nczipp->vars.data + varids[vid];
-
-        NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT_IO_SYNC)
-
         CHK_ERR_WAIT(reqs + vid, &status);
-
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_SYNC)
-
         zsizes_allp += varp->nchunk;
     }
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_IO_SYNC)
 
     zoffs[0] = 0;
     for(i = 0; i < total_nchunks; i++){

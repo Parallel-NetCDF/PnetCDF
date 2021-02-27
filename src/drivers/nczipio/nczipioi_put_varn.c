@@ -781,12 +781,12 @@ nczipioi_put_varn(NC_zip        *nczipp,
         }
         CHK_ERR_ALLREDUCE(MPI_IN_PLACE, &(nczipp->recsize), 1, MPI_LONG_LONG, MPI_MAX, nczipp->comm);   // Sync number of recs
         if (varp->dimsize[0] < nczipp->recsize){
-            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT)
-            NC_ZIP_TIMER_START(NC_ZIP_TIMER_RESIZE)
+            NC_ZIP_TIMER_PAUSE(NC_ZIP_TIMER_PUT)
+            NC_ZIP_TIMER_START(NC_ZIP_TIMER_VAR_RESIZE)
 
             nczipioi_var_resize(nczipp, varp);
 
-            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_RESIZE)
+            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_VAR_RESIZE)
             NC_ZIP_TIMER_START(NC_ZIP_TIMER_PUT)
         }
     }

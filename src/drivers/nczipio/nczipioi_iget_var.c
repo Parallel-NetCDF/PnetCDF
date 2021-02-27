@@ -127,8 +127,8 @@ int nczipioi_iget_cb_chunk(NC_zip *nczipp, int nreq, int *reqids, int *stats){
                 }
             }
             
-            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)
-            NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_INIT)
+            NC_ZIP_TIMER_PAUSE(NC_ZIP_TIMER_GET_CB)
+            NC_ZIP_TIMER_PAUSE(NC_ZIP_TIMER_GET_CB_INIT)
 
             // Perform collective buffering
             nczipioi_get_varn_cb_chunk(nczipp, nczipp->vars.data + vid, num, starts, counts, NULL, (void**)bufs);
@@ -429,9 +429,11 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
         }
     }
 
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)
+    NC_ZIP_TIMER_PAUSE(NC_ZIP_TIMER_GET_CB)
 #ifdef PNETCDF_PROFILING
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_BARR)
     MPI_Barrier(nczipp->comm);
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_BARR)
 #endif
     err = nczipioi_load_nvar(nczipp, nread, rids, rlo_all, rhi_all); CHK_ERR
     (nczipp->cache_serial)++;
@@ -555,7 +557,7 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
 #ifdef PNETCDF_PROFILING
         nczipp->sendsize += packoff;
 #endif
-        NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_SEND_REQ)
+        NC_ZIP_TIMER_PAUSE(NC_ZIP_TIMER_GET_CB_SEND_REQ)
     }
 
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_SEND_REQ)

@@ -400,7 +400,7 @@ int nczipioi_calc_chunk_owner_reduce (
 	MPI_Offset overlapsize;
 	nczipioi_chunk_overlap_t *ocnt, *ocnt_all;
 
-	NC_ZIP_TIMER_START (NC_ZIP_TIMER_INIT_COWN)
+	NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT_COWN)
 
 	ocnt = (nczipioi_chunk_overlap_t *)NCI_Malloc (sizeof (nczipioi_chunk_overlap_t) *
 												   varp->nchunkrec * 2);
@@ -425,7 +425,7 @@ int nczipioi_calc_chunk_owner_reduce (
 
 	NCI_Free (ocnt);
 
-	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_INIT_COWN)
+	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_VAR_INIT_COWN)
 
 err_out:;
 	return err;
@@ -553,7 +553,7 @@ int nczipioi_calc_chunk_owner_gather (
 	int *idmap;
 	NC_zip_req *reqp;
 
-	NC_ZIP_TIMER_START (NC_ZIP_TIMER_INIT_COWN)
+	NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT_COWN)
 
 	// Allocate buffer for overlappinp structure
 	// Box of single overlap
@@ -612,7 +612,7 @@ int nczipioi_calc_chunk_owner_gather (
 
 err_out:;
 
-	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_INIT_COWN)
+	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_VAR_INIT_COWN)
 
 	return err;
 }

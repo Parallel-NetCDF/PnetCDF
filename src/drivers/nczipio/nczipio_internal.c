@@ -91,7 +91,7 @@ int nczipioi_parse_var_info (NC_zip *nczipp) {
 	MPI_Datatype ftype, mtype;
 	MPI_Status status;
 
-	NC_ZIP_TIMER_START (NC_ZIP_TIMER_INIT_META)
+	NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT_META)
 
 	err = nczipp->driver->inq (nczipp->ncp, NULL, &nvar, NULL, &(nczipp->recdim));
 
@@ -210,7 +210,7 @@ int nczipioi_parse_var_info (NC_zip *nczipp) {
 		}
 	}
 
-	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_INIT_META)
+	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_VAR_INIT_META)
 
 	return NC_NOERR;
 }

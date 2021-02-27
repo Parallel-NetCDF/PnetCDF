@@ -81,7 +81,7 @@ int nczipioi_var_init_core (
 				}
 			}
 
-			NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_INIT_META)
+			NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_VAR_INIT_META)
 
 			// Still no clue, try to infer form I/O pattern (expensive)
 			// If there is no I/O records, the default is just set to entire variable (only 1 chunk)
@@ -91,7 +91,7 @@ int nczipioi_var_init_core (
 				CHK_ERR
 			}
 
-			NC_ZIP_TIMER_START (NC_ZIP_TIMER_INIT_META)
+			NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT_META)
 
 			// Calculate total # chunks, # chunks along each dim, chunksize
 			varp->nchunkrec = 1;
@@ -364,7 +364,7 @@ int nczipioi_init_nvar (NC_zip *nczipp, int nput, int *putreqs, int nget, int *g
 	MPI_Datatype ftype, mtype;
 	MPI_Status status;
 
-	NC_ZIP_TIMER_START (NC_ZIP_TIMER_INIT_META)
+	NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT_META)
 
 	CHK_ERR_ALLREDUCE (MPI_IN_PLACE, &(nczipp->recsize), 1, MPI_LONG_LONG, MPI_MAX,
 					   nczipp->comm);  // Sync number of recs
@@ -541,6 +541,6 @@ int nczipioi_init_nvar (NC_zip *nczipp, int nput, int *putreqs, int nget, int *g
 
 err_out:;
 
-	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_INIT_META)
+	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_VAR_INIT_META)
 	return err;
 }

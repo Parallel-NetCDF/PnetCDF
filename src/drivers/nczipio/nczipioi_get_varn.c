@@ -140,7 +140,8 @@ nczipioi_get_varn_cb_chunk(NC_zip          *nczipp,
     // Increase batch number to indicate allocated chunk buffer can be freed for future allocation
     (nczipp->cache_serial)++;
 
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)  // I/O time count separately
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_INIT)
+    NC_ZIP_TIMER_PAUSE(NC_ZIP_TIMER_GET_CB)  // I/O time count separately
 
 #ifdef PNETCDF_PROFILING
     MPI_Barrier(nczipp->comm);
@@ -580,7 +581,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
     // Increase batch number to indicate allocated chunk buffer can be freed for future allocation
     (nczipp->cache_serial)++;
 
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)  // I/O time count separately
+    NC_ZIP_TIMER_PAUSE(NC_ZIP_TIMER_GET_CB)  // I/O time count separately
 
 #ifdef PNETCDF_PROFILING
     MPI_Barrier(nczipp->comm);
@@ -705,7 +706,7 @@ nczipioi_get_varn_cb_proc(  NC_zip          *nczipp,
         CHK_ERR_IMRECV(rbuf[i], rsize[i], MPI_BYTE, &rmsg, rreq + i);
     }
 
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_RECV_REQ)
+    NC_ZIP_TIMER_PAUSE(NC_ZIP_TIMER_GET_CB_RECV_REQ)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_SELF)
 
     tbuf = (char*)NCI_Malloc(varp->chunksize);

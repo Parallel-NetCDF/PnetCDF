@@ -98,7 +98,7 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
         }
     } while (nczipioi_chunk_itr_next(varp, start, count, citr, &cid));
 
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB_INIT)
+    NC_ZIP_TIMER_PAUSE(NC_ZIP_TIMER_GET_CB_INIT)
     NC_ZIP_TIMER_START(NC_ZIP_TIMER_GET_CB_SYNC)
 
     // Sync number of messages of each chunk
@@ -137,7 +137,7 @@ nczipioi_get_var_cb_chunk(NC_zip          *nczipp,
     // Increase batch number to indicate allocated chunk buffer can be freed for future allocation
     (nczipp->cache_serial)++;
 
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)  // I/O time count separately
+    NC_ZIP_TIMER_PAUSE(NC_ZIP_TIMER_GET_CB)  // I/O time count separately
 
 #ifdef PNETCDF_PROFILING
     MPI_Barrier(nczipp->comm);
@@ -656,7 +656,7 @@ nczipioi_get_var_cb_proc(      NC_zip          *nczipp,
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_IO_INIT)
 
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_GET_CB)  // I/O time count separately
+    NC_ZIP_TIMER_PAUSE(NC_ZIP_TIMER_GET_CB)  // I/O time count separately
 
 #ifdef PNETCDF_PROFILING
     MPI_Barrier(nczipp->comm);

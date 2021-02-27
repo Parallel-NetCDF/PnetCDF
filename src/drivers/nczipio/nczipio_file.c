@@ -101,7 +101,7 @@ int nczipio_create (
 	// Timer array is not avaiable until init, can't use NC_ZIP_TIMER_START
 #ifdef PNETCDF_PROFILING
 	t0 = MPI_Wtime () - t0;
-	nczipp->profile.tt[NC_ZIP_TIMER_INIT] += t0;
+	nczipp->profile.tt[NC_ZIP_TIMER_VAR_INIT] += t0;
 	nczipp->profile.tt[NC_ZIP_TIMER_TOTAL] += t0;
 #endif
 
@@ -186,7 +186,7 @@ int nczipio_open (
 	// Timer array is not avaiable until init, can't use NC_ZIP_TIMER_START
 #ifdef PNETCDF_PROFILING
 	t0 = MPI_Wtime () - t0;
-	nczipp->profile.tt[NC_ZIP_TIMER_INIT] += t0;
+	nczipp->profile.tt[NC_ZIP_TIMER_VAR_INIT] += t0;
 	nczipp->profile.tt[NC_ZIP_TIMER_TOTAL] += t0;
 #endif
 
@@ -288,6 +288,7 @@ int nczipio_close (void *ncdp) {
 		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_NREMOTE, (double)nczipp->nremote);
 		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_NREQ, (double)nczipp->nreq);
 		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_NLOCAL, (double)nczipp->nlocal);
+		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_NCHUNK, (double)nczipp->nmychunks);
 		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_VAR_SIZE,
 								   (double)nczipp->var_size_sum / 1048576.0f);
 		nczipioi_profile_add_time (nczipp, NC_ZIP_TIMER_VAR_ZSIZE,
@@ -312,7 +313,7 @@ int nczipio_enddef (void *ncdp) {
 	NC_zip *nczipp = (NC_zip *)ncdp;
 
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_TOTAL)
-	NC_ZIP_TIMER_START (NC_ZIP_TIMER_INIT)
+	NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT)
 
 	drecnalloc	 = 1;
 	logrecnalloc = 0;
@@ -360,7 +361,7 @@ int nczipio_enddef (void *ncdp) {
 		MPI_Status status;
 		NC_zip_var *varp;
 
-		NC_ZIP_TIMER_START (NC_ZIP_TIMER_INIT_META)
+		NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT_META)
 
 		lens   = NCI_Malloc (sizeof (int) * nczipp->vars.cnt);
 		fdisps = NCI_Malloc (sizeof (MPI_Aint) * nczipp->vars.cnt * 2);
@@ -422,10 +423,10 @@ int nczipio_enddef (void *ncdp) {
 		NCI_Free (lens);
 		NCI_Free (fdisps);
 
-		NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_INIT_META)
+		NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_VAR_INIT_META)
 	}
 
-	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_INIT)
+	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_VAR_INIT)
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_TOTAL)
 
 	return NC_NOERR;
@@ -443,7 +444,7 @@ int nczipio__enddef (void *ncdp,
 	NC_zip *nczipp = (NC_zip *)ncdp;
 
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_TOTAL)
-	NC_ZIP_TIMER_START (NC_ZIP_TIMER_INIT)
+	NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT)
 
 	drecnalloc	 = 1;
 	logrecnalloc = 0;
@@ -491,7 +492,7 @@ int nczipio__enddef (void *ncdp,
 		MPI_Status status;
 		NC_zip_var *varp;
 
-		NC_ZIP_TIMER_START (NC_ZIP_TIMER_INIT_META)
+		NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT_META)
 
 		lens   = NCI_Malloc (sizeof (int) * nczipp->vars.cnt);
 		fdisps = NCI_Malloc (sizeof (MPI_Aint) * nczipp->vars.cnt * 2);
@@ -551,10 +552,10 @@ int nczipio__enddef (void *ncdp,
 		NCI_Free (lens);
 		NCI_Free (fdisps);
 
-		NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_INIT_META)
+		NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_VAR_INIT_META)
 	}
 
-	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_INIT)
+	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_VAR_INIT)
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_TOTAL)
 
 	return NC_NOERR;
@@ -670,8 +671,8 @@ int nczipio_wait (void *ncdp, int num_reqs, int *req_ids, int *statuses, int req
 	NC_zip *nczipp = (NC_zip *)ncdp;
 
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_TOTAL)
-	NC_ZIP_TIMER_START (NC_ZIP_TIMER_NB)
-	NC_ZIP_TIMER_START (NC_ZIP_TIMER_NB_WAIT)
+	
+	NC_ZIP_TIMER_START (NC_ZIP_TIMER_WAIT)
 
 	if (num_reqs < 0) {	 // NC_REQ_ALL || nreqs == NC_PUT_REQ_ALL || nreqs == NC_GET_REQ_ALL
 		err = nczipioi_wait (nczipp, num_reqs, NULL, NULL, reqMode);
@@ -742,8 +743,8 @@ int nczipio_wait (void *ncdp, int num_reqs, int *req_ids, int *statuses, int req
 done:
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_TOTAL)
-	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_NB)
-	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_NB_WAIT)
+	
+	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_WAIT)
 
 	return NC_NOERR;
 }

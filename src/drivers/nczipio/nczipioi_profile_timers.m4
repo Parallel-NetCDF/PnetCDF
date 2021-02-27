@@ -1,9 +1,9 @@
 define(`NC_ZIP_TIMERS', `( `total', dnl
-                    `init', dnl
-                    `init_meta', dnl
-                    `init_csize', dnl
-                    `init_cown', dnl
-                    `resize', dnl
+                    `var_init', dnl
+                    `var_init_meta', dnl
+                    `var_init_csize', dnl
+                    `var_init_cown', dnl
+                    `var_resize', dnl
                     `put', dnl
                     `put_cb', dnl
                     `put_cb_init', dnl   
@@ -17,14 +17,18 @@ define(`NC_ZIP_TIMERS', `( `total', dnl
                     `put_cb_recv_req', dnl  
                     `put_cb_recv_rep', dnl  
                     `put_cb_self', dnl   
-                    `put_barrier', dnl
+                    `put_cb_barr', dnl
+                    `put_bg', dnl
+                    `put_bg_init', dnl
+                    `put_bg_cache', dnl
+                    `put_bg_rd', dnl
+                    `put_bg_decom', dnl
                     `put_io', dnl
-                    `put_io_wr', dnl
-                    `put_io_rd', dnl
-                    `put_io_com', dnl
-                    `put_io_decom', dnl
-                    `put_io_sync', dnl
                     `put_io_init', dnl
+                    `put_io_com', dnl
+                    `put_io_sync', dnl
+                    `put_io_wr', dnl
+                    `put_io_barr', dnl
                     `get', dnl
                     `get_resize', dnl
                     `get_cb', dnl
@@ -39,18 +43,20 @@ define(`NC_ZIP_TIMERS', `( `total', dnl
                     `get_cb_recv_req', dnl  
                     `get_cb_recv_rep', dnl  
                     `get_cb_self', dnl   
+                    `get_cb_barr', dnl   
                     `get_io', dnl
-                    `get_io_wr', dnl
-                    `get_io_rd', dnl
-                    `get_io_com', dnl
-                    `get_io_decom', dnl
-                    `get_io_sync', dnl
                     `get_io_init', dnl
+                    `get_io_cache', dnl
+                    `get_io_rd', dnl
+                    `get_io_decom', dnl
+                    `get_convert', dnl
                     `finalize', dnl
                     `finalize_meta', dnl
-                    `nb', dnl
-                    `nb_post', dnl
-                    `nb_wait', dnl
+                    `iput', dnl
+                    `iget', dnl
+                    `wait', dnl
+                    `wait_put', dnl
+                    `wait_get', dnl
                     `put_size', dnl
                     `get_size', dnl
                     `send_size', dnl
@@ -60,6 +66,7 @@ define(`NC_ZIP_TIMERS', `( `total', dnl
                     `nremote', dnl
                     `nreq', dnl
                     `nlocal', dnl
+                    `nchunk', dnl
                     `var_size', dnl
                     `var_zsize', dnl
 )')`'dnl

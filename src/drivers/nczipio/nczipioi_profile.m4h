@@ -35,21 +35,24 @@ foreach_idx(`t', `i', NC_ZIP_TIMERS, `#define CONCATE(`NC_ZIP_TIMER_', upcase(t)
 ')dnl
 
 #define NC_ZIP_TIMER_START(A) nczipp->profile.st[A] = MPI_Wtime(); 
-#define NC_ZIP_TIMER_STOP(A)  { \
+#define NC_ZIP_TIMER_PAUSE(A)  { \
     nczipp->profile.tt[A] += MPI_Wtime() - nczipp->profile.st[A]; \
+}
+#define NC_ZIP_TIMER_STOP(A)  { \
+    NC_ZIP_TIMER_PAUSE(A) \
     nczipp->profile.cnt[A] ++; \
 }
 #define NC_ZIP_TIMER_SWAP(A, B)  { \
-    nczipp->profile.tmp = MPI_Wtime(); \
-    nczipp->profile.tt[A] += nczipp->profile.tmp - nczipp->profile.st[A]; \
+    double tmp = MPI_Wtime(); \
+    nczipp->profile.tt[A] += tmp - nczipp->profile.st[A]; \
     nczipp->profile.cnt[A] ++; \
-    nczipp->profile.st[B] = nczipp->profile.tmp;  \
+    nczipp->profile.st[B] = tmp;  \
 }
 #define NC_ZIP_TIMER_STOPEX(A, B)  { \
-    nczipp->profile.tmp = MPI_Wtime(); \
-    nczipp->profile.tt[A] += nczipp->profile.tmp - nczipp->profile.st[A]; \
+    double tmp = MPI_Wtime(); \
+    nczipp->profile.tt[A] += tmp - nczipp->profile.st[A]; \
     nczipp->profile.cnt[A] ++; \
-    nczipp->profile.tt[B] -= nczipp->profile.tmp - nczipp->profile.st[A]; \
+    nczipp->profile.tt[B] -= tmp - nczipp->profile.st[A]; \
 }
 
 dnl
@@ -58,13 +61,13 @@ typedef struct NC_zip_timers {
     double st[NC_ZIP_NTIMER];
     double tt[NC_ZIP_NTIMER];
     double cnt[NC_ZIP_NTIMER];
-    double tmp;
 } NC_zip_timers;
 
 #else
 
 #define NC_ZIP_TIMER_START(A)
 #define NC_ZIP_TIMER_STOP(A)
+#define NC_ZIP_TIMER_PAUSE(A)
 #define NC_ZIP_TIMER_SWAP(A, B)
 #define NC_ZIP_TIMER_STOPEX(A, B) 
 
