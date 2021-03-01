@@ -56,6 +56,7 @@ define(`NC_ZIP_TIMERS', `( `total', dnl
                     `iget', dnl
                     `wait', dnl
                     `wait_put', dnl
+                    `wait_put_barr', dnl
                     `wait_get', dnl
                     `put_size', dnl
                     `get_size', dnl

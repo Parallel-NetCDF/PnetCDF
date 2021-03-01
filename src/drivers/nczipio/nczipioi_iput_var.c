@@ -409,13 +409,13 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 		}
 	}
 
-	NC_ZIP_TIMER_PAUSE (NC_ZIP_TIMER_PUT_CB)
 #ifdef PNETCDF_PROFILING
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_PUT_CB_BARR)
 	MPI_Barrier (nczipp->comm);
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_PUT_CB_BARR)
 #endif
 
+	NC_ZIP_TIMER_PAUSE (NC_ZIP_TIMER_PUT_CB)
 	err = nczipioi_load_nvar_bg (nczipp, nread, rids, rlo_all, rhi_all);
 	CHK_ERR
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_PUT_CB)

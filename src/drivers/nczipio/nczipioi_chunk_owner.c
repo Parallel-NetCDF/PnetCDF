@@ -213,6 +213,7 @@ int nczipioi_calc_chunk_overlap (NC_zip *nczipp,
 	// First 16 bit used as noise
 	for (i = 0; i < varp->nchunkrec; i++) {
 		ocnt[i].rank = nczipp->rank;
+		ocnt[i].osize *= varp->esize;
 		ocnt[i].osize <<= 16;
 	}
 
@@ -276,7 +277,7 @@ void nczipioi_assign_chunk_owner (NC_zip *nczipp,
 
 	// Update global chunk count
 	nczipp->nmychunks += (MPI_Offset) (varp->nmychunk);
-	nczipp->cown_size += ((MPI_Offset) (varp->nmychunk) * varp->chunksize) << nczipp->cown_ratio;
+	nczipp->cown_size += (MPI_Offset) ((double)((MPI_Offset)(varp->nmychunk) * (MPI_Offset)(varp->chunksize)) * nczipp->cown_ratio);
 }
 
 int nczipioi_sync_ocnt_reduce (NC_zip *nczipp,
@@ -373,7 +374,7 @@ int nczipioi_sync_ocnt_gather_bcast (NC_zip *nczipp,
 			for (j = 1; j < nczipp->np; j++) {
 				if (ocnt_in[j][i] - cown_size[j] > ocnt_in[k][i] - cown_size[k]) { k = j; }
 			}
-			cown_size[k] += (varp->chunksize >> nczipp->cown_ratio) * varp->nrec;
+			cown_size[k] += (MPI_Offset)((double)(varp->chunksize) * nczipp->cown_ratio) * varp->nrec;
 			ocnt_all[i].rank  = k;
 			ocnt_all[i].osize = ocnt_in[i][k];
 		}
@@ -502,7 +503,7 @@ static inline int nczipioi_reduce_max_csize_n (
 				for (j = 1; j < nczipp->np; j++) {
 					if (ocnt_all[j][i] - cown_size[j] > ocnt_all[k][i] - cown_size[k]) { k = j; }
 				}
-				cown_size[k] += (varp->chunksize >> nczipp->cown_ratio) * varp->nrec;
+				cown_size[k] += (MPI_Offset)((double)(varp->chunksize) * nczipp->cown_ratio) * varp->nrec;
 				cown[i] = k;
 			}
 

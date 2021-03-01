@@ -165,7 +165,7 @@ struct NC_zip {
 	MPI_Datatype overlaptype;
     MPI_Op max_cown_op;
 	MPI_Offset assigned_chunks;
-    int cown_ratio;
+    double cown_ratio;
 #ifdef PNETCDF_PROFILING
 	NC_zip_timers profile;
 	MPI_Offset sendsize;

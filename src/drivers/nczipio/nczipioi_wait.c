@@ -74,6 +74,12 @@ int nczipioi_wait_put_reqs (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 	}
 	CHK_ERR
 
+#ifdef PNETCDF_PROFILING
+    NC_ZIP_TIMER_START(NC_ZIP_TIMER_WAIT_PUT_BARR)
+    MPI_Barrier(nczipp->comm);
+    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_WAIT_PUT_BARR)
+#endif
+
 	// Perform I/O for comrpessed variables
 	err = nczipioi_save_nvar (nczipp, nvar, vids);
 	CHK_ERR

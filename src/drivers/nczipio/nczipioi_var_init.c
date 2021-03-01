@@ -322,6 +322,8 @@ int nczipioi_init_nvar_core_reduce (NC_zip *nczipp,
 															  varp->nchunkrec * 2);
 			ocnt_all[j] = ocnt[j] + varp->nchunkrec;
 		}
+		
+		NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT_COWN)
 
 		err = nczipioi_calc_chunk_overlap (nczipp, varp, rcnt[i], starts, counts, ocnt[j]);
 		CHK_ERR
@@ -334,11 +336,15 @@ int nczipioi_init_nvar_core_reduce (NC_zip *nczipp,
 		}
 
 		nczipioi_sync_ocnt_reduce (nczipp, varp->nchunkrec, ocnt[j], ocnt_all[j], &req);
+
+		NC_ZIP_TIMER_STOPEX (NC_ZIP_TIMER_VAR_INIT_COWN, NC_ZIP_TIMER_VAR_INIT_META)
 	}
 	// Last var
+	NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT_COWN)
 	err = MPI_Wait (&req, &stat);
 	nczipioi_assign_chunk_owner (nczipp, varp, ocnt_all[(i - 1) & 1]);
 	nczipioi_write_chunk_ocnt (nczipp, varp, ocnt[(i - 1) & 1], sizeof (nczipioi_chunk_overlap_t));
+	NC_ZIP_TIMER_STOPEX (NC_ZIP_TIMER_VAR_INIT_COWN, NC_ZIP_TIMER_VAR_INIT_META)
 
 err_out:;
 	NCI_Free (ocnt[0]);
