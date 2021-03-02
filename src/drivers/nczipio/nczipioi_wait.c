@@ -166,7 +166,7 @@ err_out:;
 	NCI_Free (vids);
 	NCI_Free (flag);
 
-	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_WAIT_PUT)
+	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_WAIT_GET)
 
 	return NC_NOERR;
 }

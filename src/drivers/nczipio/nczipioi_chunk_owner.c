@@ -20,7 +20,6 @@
 #include "nczipio_internal.h"
 
 void nczipioi_write_chunk_ocnt (NC_zip *nczipp, NC_zip_var *varp, void *ocnt, size_t ocnt_size) {
-#ifdef PNETCDF_DEBUG
 #ifdef PNETCDF_PROFILING
 	{
 		int i, j;
@@ -95,7 +94,6 @@ void nczipioi_write_chunk_ocnt (NC_zip *nczipp, NC_zip_var *varp, void *ocnt, si
 			}
 		}
 	}
-#endif
 #endif
 }
 

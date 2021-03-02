@@ -483,6 +483,7 @@ int nczipioi_init_nvar (NC_zip *nczipp, int nput, int *putreqs, int nget, int *g
 	nread  = 0;
 
 	// Iinit vars
+	nczipp->cown_size=0;	// Reset owner penalty
 	err = nczipioi_init_nvar_core_reduce (nczipp, nvar, varps, rcnt, roff, starts, counts);
 	CHK_ERR
 
