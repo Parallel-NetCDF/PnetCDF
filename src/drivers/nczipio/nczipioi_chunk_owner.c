@@ -28,11 +28,13 @@ void nczipioi_write_chunk_ocnt (NC_zip *nczipp, NC_zip_var *varp, void *ocnt, si
 		if (pprefix != NULL) {
 			if (nczipp->rank == 0) {
 				void *ocnt_in;
+				int *cown;
 				MPI_Status stat;
 				FILE *pfile;
 				char fname[1024], ppath[1024];
 
 				ocnt_in = NCI_Malloc (ocnt_size * varp->nchunkrec);
+				cown	= NCI_Malloc (sizeof (int) * varp->nchunkrec);
 
 				strcpy (fname, nczipp->path);
 				for (i = strlen (fname); i > 0; i--) {
@@ -55,42 +57,53 @@ void nczipioi_write_chunk_ocnt (NC_zip *nczipp, NC_zip_var *varp, void *ocnt, si
 				}
 				fprintf (pfile, "\n0, ");
 				if (ocnt_size == sizeof (MPI_Offset)) {
-					for (j = 0; j < varp->nchunk; j++) {
+					for (j = 0; j < varp->nchunkrec; j++) {
 						fprintf (pfile, "%lld, ", ((MPI_Offset *)ocnt)[j]);
 					}
 				} else {
-					for (j = 0; j < varp->nchunk; j++) {
+					for (j = 0; j < varp->nchunkrec; j++) {
 						fprintf (pfile, "%lld, ", ((nczipioi_chunk_overlap_t *)ocnt)[j].osize);
 					}
 				}
 				fprintf (pfile, "\n");
 				for (i = 1; i < nczipp->np; i++) {
 					if (ocnt_size == sizeof (MPI_Offset)) {
-						MPI_Recv (ocnt_in, varp->nchunk, MPI_LONG_LONG, i, 0, nczipp->comm, &stat);
+						MPI_Recv (ocnt_in, varp->nchunkrec, MPI_LONG_LONG, i, 0, nczipp->comm,
+								  &stat);
 						fprintf (pfile, "%d, ", i);
-						for (j = 0; j < varp->nchunk; j++) {
+						for (j = 0; j < varp->nchunkrec; j++) {
 							fprintf (pfile, "%lld, ", ((MPI_Offset *)ocnt_in)[j]);
 						}
 					} else {
-						MPI_Recv (ocnt_in, varp->nchunk, nczipp->overlaptype, i, 0, nczipp->comm,
+						MPI_Recv (ocnt_in, varp->nchunkrec, nczipp->overlaptype, i, 0, nczipp->comm,
 								  &stat);
 						fprintf (pfile, "%d, ", i);
-						for (j = 0; j < varp->nchunk; j++) {
+						for (j = 0; j < varp->nchunkrec; j++) {
 							fprintf (pfile, "%lld, ",
 									 ((nczipioi_chunk_overlap_t *)ocnt_in)[j].osize);
 						}
 					}
 					fprintf (pfile, "\n");
+
+					MPI_Recv (cown, varp->nchunkrec, MPI_INT, i, 0, nczipp->comm, &stat);
+					for (j = 0; j < varp->nchunkrec; j++) {
+						if (cown[j] != varp->chunk_owner[j]) {
+							printf ("Warning: cown[%d][%d] on rank %d = %d, != %d\n", varp->varid, j,
+									i, cown[j], varp->chunk_owner[j]);
+						}
+					}
 				}
 
 				fclose (pfile);
 				NCI_Free (ocnt_in);
+				NCI_Free (cown);
 			} else {
 				if (ocnt_size == sizeof (MPI_Offset)) {
-					MPI_Send (ocnt, varp->nchunk, MPI_LONG_LONG, 0, 0, nczipp->comm);
+					MPI_Send (ocnt, varp->nchunkrec, MPI_LONG_LONG, 0, 0, nczipp->comm);
 				} else {
-					MPI_Send (ocnt, varp->nchunk, nczipp->overlaptype, 0, 0, nczipp->comm);
+					MPI_Send (ocnt, varp->nchunkrec, nczipp->overlaptype, 0, 0, nczipp->comm);
 				}
+				MPI_Send (varp->chunk_owner, varp->nchunkrec, MPI_INT, 0, 0, nczipp->comm);
 			}
 		}
 	}
@@ -104,6 +117,9 @@ void max_osize_rank_op (void *inp, void *inoutp, int *len, MPI_Datatype *dptr) {
 
 	for (i = 0; i < *len; i++) {
 		if (in->osize > inout->osize) {
+			inout->osize = in->osize;
+			inout->rank	 = in->rank;
+		} else if ((in->osize == inout->osize) && (in->rank < inout->rank)) {
 			inout->osize = in->osize;
 			inout->rank	 = in->rank;
 		}
@@ -275,7 +291,9 @@ void nczipioi_assign_chunk_owner (NC_zip *nczipp,
 
 	// Update global chunk count
 	nczipp->nmychunks += (MPI_Offset) (varp->nmychunk);
-	nczipp->cown_size += (MPI_Offset) ((double)((MPI_Offset)(varp->nmychunk) * (MPI_Offset)(varp->chunksize)) * nczipp->cown_ratio);
+	nczipp->cown_size +=
+		(MPI_Offset) ((double)((MPI_Offset) (varp->nmychunk) * (MPI_Offset) (varp->chunksize)) *
+					  nczipp->cown_ratio);
 }
 
 int nczipioi_sync_ocnt_reduce (NC_zip *nczipp,
@@ -372,7 +390,8 @@ int nczipioi_sync_ocnt_gather_bcast (NC_zip *nczipp,
 			for (j = 1; j < nczipp->np; j++) {
 				if (ocnt_in[j][i] - cown_size[j] > ocnt_in[k][i] - cown_size[k]) { k = j; }
 			}
-			cown_size[k] += (MPI_Offset)((double)(varp->chunksize) * nczipp->cown_ratio) * varp->nrec;
+			cown_size[k] +=
+				(MPI_Offset) ((double)(varp->chunksize) * nczipp->cown_ratio) * varp->nrec;
 			ocnt_all[i].rank  = k;
 			ocnt_all[i].osize = ocnt_in[i][k];
 		}
@@ -501,7 +520,8 @@ static inline int nczipioi_reduce_max_csize_n (
 				for (j = 1; j < nczipp->np; j++) {
 					if (ocnt_all[j][i] - cown_size[j] > ocnt_all[k][i] - cown_size[k]) { k = j; }
 				}
-				cown_size[k] += (MPI_Offset)((double)(varp->chunksize) * nczipp->cown_ratio) * varp->nrec;
+				cown_size[k] +=
+					(MPI_Offset) ((double)(varp->chunksize) * nczipp->cown_ratio) * varp->nrec;
 				cown[i] = k;
 			}
 
