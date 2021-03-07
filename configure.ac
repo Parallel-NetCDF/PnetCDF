@@ -182,9 +182,9 @@ AC_ARG_ENABLE(echo,
 
 MPI_INSTALL=
 AC_ARG_WITH(mpi,
-   [AS_HELP_STRING([--with-mpi=/path/to/implementation],
-                   [The installation prefix path for MPI implementation.])
-   ],[ dnl this clause is run when --with-mpi or --without-mpi is used
+   [AS_HELP_STRING([--with-mpi=DIR],
+                   [Provide the MPI installation path in DIR.])],
+   [ dnl this clause is run when --with-mpi or --without-mpi is used
    if test "x${withval}" = xno ; then
       AC_MSG_ERROR([
       -----------------------------------------------------------------------
@@ -1652,11 +1652,13 @@ AM_CONDITIONAL(ENABLE_THREAD_SAFE, [test x$thread_safe = xyes])
 
 AC_ARG_WITH([pthread],
    [AS_HELP_STRING([--with-pthread=DIR],
-                   [Specify alternative path to Pthreads library when
-                    thread-safe capability is enabled.])
-   ],[ dnl this clause is run when --with-pthread or --without-pthread is used
+                   [Search Pthreads library within the supplied path DIR,
+                    when --enable-thread-safe is enabled.])],
+   [ dnl this clause is run when --with-pthread or --without-pthread is used
    if test "x$withval" = xno && test "x$thread_safe" = xyes ; then
       AC_MSG_ERROR([conflicted options used: --enable-thread-safe and --without-pthread])
+   elif test "x$withval" = xyes ; then
+      pthread_dir=check
    else
       pthread_dir=$withval
    fi
@@ -1666,7 +1668,7 @@ AC_ARG_WITH([pthread],
 )
 
 if test "x${thread_safe}" = xyes ; then
-   if test "x${pthread_dir}" = xcheck || test "x${pthread_dir}" = x || test "x${pthread_dir}" = yes ; then
+   if test "x${pthread_dir}" = xcheck ; then
       AC_CHECK_HEADER([pthread.h],,[AC_MSG_ERROR([Cannot find pthread.h])])
       AC_CHECK_LIB([pthread], [pthread_self],, [AC_MSG_ERROR([Cannot find pthread library])])
    else
@@ -1688,56 +1690,43 @@ if test "x${thread_safe}" = xyes ; then
    fi
 fi
 
-AC_ARG_ENABLE([netcdf4],
-   [AS_HELP_STRING([--enable-netcdf4],
-                   [Enable NetCDF-4 support. @<:@default: disabled@:>@])],
-   [enable_netcdf4=${enableval}]
-)
-
+enable_netcdf4=no
 NETCDF4_INSTALL=""
 netcdf_includedir=""
 netcdf4_libdir=""
 AC_ARG_WITH(netcdf4,
-   [AS_HELP_STRING([--with-netcdf4=/path/to/netcdf4],
-                   [installation path(s) of NetCDF-4 libraries:
-    --with-netcdf4=INC,LIB for include directory and library directory separated by a comma
-    --with-netcdf4=DIR for directory containing include/ and lib/ subdirectories
+   [AS_HELP_STRING([--with-netcdf4@<:@=INC,LIB | =DIR@:>@],
+                   [Enable NetCDF-4 feature and provide the NetCDF-4 installation path(s):
+    --with-netcdf4=INC,LIB for include and lib paths separated by a comma.
+    --with-netcdf4=DIR for the path containing include/ and lib/ subdirectories.
+    @<:@default: disabled@:>@
    ])],[ dnl this clause is run when --with-netcdf4 or --without-netcdf4 is used
    if test "x${withval}" != xyes && test "x${withval}" != xno ; then
       NETCDF4_INSTALL=${withval}
+      enable_netcdf4=yes
+
+      case $NETCDF4_INSTALL in
+        "") ;;
+        *,*)
+           netcdf_includedir="`echo $NETCDF4_INSTALL |cut -f1 -d,`"
+           netcdf4_libdir="`echo $NETCDF4_INSTALL |cut -f2 -d, -s`"
+           netcdf_bindir="$netcdf_includedir/../bin"
+           ;;
+        *)
+           netcdf_includedir="$NETCDF4_INSTALL/include"
+           netcdf4_libdir="$NETCDF4_INSTALL/lib"
+           netcdf_bindir="$NETCDF4_INSTALL/bin"
+           ;;
+      esac
+   elif test "x${withval}" = xyes ; then
+      dnl user may add NetCDF INC and LIB to CFLAGS and LDFLAGS, respectively.
+      enable_netcdf4=yes
    fi
    UD_MSG_DEBUG([NETCDF4_INSTALL=$NETCDF4_INSTALL])
-
-   case $NETCDF4_INSTALL in
-     "") ;;
-     *,*)
-        netcdf_includedir="`echo $NETCDF4_INSTALL |cut -f1 -d,`"
-        netcdf4_libdir="`echo $NETCDF4_INSTALL |cut -f2 -d, -s`"
-        netcdf_bindir="$netcdf_includedir/../bin"
-        ;;
-     *)
-        netcdf_includedir="$NETCDF4_INSTALL/include"
-        netcdf4_libdir="$NETCDF4_INSTALL/lib"
-        netcdf_bindir="$NETCDF4_INSTALL/bin"
-        ;;
-   esac
    UD_MSG_DEBUG([netcdf_includedir=$netcdf_includedir])
    UD_MSG_DEBUG([netcdf4_libdir=$netcdf4_libdir])
    ]
 )
-
-# check conflicted command-line options
-if test "x$enable_netcdf4" = xno && test "x$with_netcdf4" != x && test "x$with_netcdf4" != xno ; then
-   AC_MSG_ERROR([conflicted options used: --disable-netcdf4 and --with-netcdf4])
-elif test "x$enable_netcdf4" = xyes && test "x$with_netcdf4" = xno ; then
-   AC_MSG_ERROR([conflicted options used: --enable-netcdf4 and --without-netcdf4])
-elif test "x$enable_netcdf4" = x ; then
-   if test "x$with_netcdf4" = x || test "x$with_netcdf4" = xno ; then
-      enable_netcdf4=no
-   else
-      enable_netcdf4=yes
-   fi
-fi
 
 if test "x$enable_netcdf4" = xyes ; then
    # check availability of nc-config only under $NETCDF4_INSTALL/bin
@@ -2009,35 +1998,42 @@ if test "x$enable_netcdf4" = xyes ; then
    #    NETCDF4_INC="-I$netcdf_incdir"
    # fi
    # AC_SUBST([NETCDF4_INC])
-   AC_MSG_CHECKING([NETCDF4_INC])
    NETCDF4_INC=
    if test "x$netcdf_includedir" != x ; then
       NETCDF4_INC="-I$netcdf_includedir"
    fi
-   AC_MSG_RESULT([$NETCDF4_INC])
    AC_SUBST([NETCDF4_INC])
 
-   AC_MSG_CHECKING([NETCDF4_LDFLAGS])
+   AC_MSG_CHECKING([NetCDF-4 LDFLAGS])
+   NETCDF4_LDFLAGS=
    if test "x$netcdf4_libdir" != x ; then
       NETCDF4_LDFLAGS="-L$netcdf4_libdir"
    fi
    UD_MSG_DEBUG(NETCDF4_LDFLAGS=$NETCDF4_LDFLAGS)
    # remove all -l options from netcdf_libs that should leave -L only
-   netcdf4_L=`echo $netcdf_libs | ${SED} 's/-l[[^ ]]*//g'`
+   if test "x$netcdf_libs" = x ; then
+      netcdf4_L=`echo $netcdf_libs | ${SED} 's/-l[[^ ]]*//g'`
+   fi
    if test "x$netcdf4_L" = x ; then
       netcdf4_L=$NETCDF4_LDFLAGS
    elif test "x$NETCDF4_LDFLAGS" != x ; then
       netcdf4_L="$NETCDF4_LDFLAGS $netcdf4_L"
    fi
    # remove space between -L and path
-   netcdf4_L=`echo $netcdf4_L | ${SED} 's/-L[[ ]]*/-L/g'`
+   if test "x$netcdf4_L" != x ; then
+      netcdf4_L=`echo $netcdf4_L | ${SED} 's/-L[[ ]]*/-L/g'`
+   fi
    UD_MSG_DEBUG(netcdf4_L=$netcdf4_L)
 
    if test "x$netcdf4_L" != x ; then
       # remove any duplicate in netcdf4_L
       NETCDF4_LDFLAGS=`echo $netcdf4_L | ${AWK} -v RS=' ' '{if (!seen[[$1]]++){printf "%s%s",sep,$1; sep=" "}}'`
    fi
-   AC_MSG_RESULT([$NETCDF4_LDFLAGS])
+   if test "x$NETCDF4_LDFLAGS" != x ; then
+      AC_MSG_RESULT([$NETCDF4_LDFLAGS])
+   else
+      AC_MSG_RESULT([$LDFLAGS])
+   fi
    AC_SUBST([NETCDF4_LDFLAGS])
 
    # remove all -L options from netcdf_libs that should leave -l only
@@ -2194,35 +2190,20 @@ fi
 AC_SUBST(ENABLE_BURST_BUFFER)
 AM_CONDITIONAL(ENABLE_BURST_BUFFER, [test x$enable_bbdriver = xyes])
 
-AC_ARG_ENABLE([adios],
-   [AS_HELP_STRING([--enable-adios],
-                   [Enable ADIOS BP read support. @<:@default: disabled@:>@])],
-   [enable_adios=${enableval}]
-)
-
 ADIOS_INSTALL=""
 AC_ARG_WITH(adios,
-   [AS_HELP_STRING([--with-adios=/path/to/implementation],
-                   [installation prefix path for ADIOS implementation])
-   ],[ dnl this clause is run when --with-adios or --without-adios is used
-   if test "x${withval}" != xyes && test "x${withval}" != xno ; then
+   [AS_HELP_STRING([--with-adios@<:@=DIR@:>@],
+                   [Enable ADIOS feature and provide the ADIOS installation path in DIR.
+                    @<:@default: disabled@:>@])],
+   [ dnl this clause is run when --with-adios or --without-adios is used
+   if test "x${withval}" = xyes ; then
+      enable_adios=yes
+   elif test "x${withval}" != xno ; then
       ADIOS_INSTALL=${withval}
-   fi
-   ]
-)
-
-# check conflicted command-line options
-if test "x$enable_adios" = xno && test "x$with_adios" != x && test "x$with_adios" != xno ; then
-   AC_MSG_ERROR([conflicted options used: --disable-adios and --with-adios])
-elif test "x$enable_adios" = xyes && test "x$with_adios" = xno ; then
-   AC_MSG_ERROR([conflicted options used: --enable-adios and --without-adios])
-elif test "x$enable_adios" = x ; then
-   if test "x$with_adios" = x || test "x$with_adios" = xno ; then
-      enable_adios=no
-   else
       enable_adios=yes
    fi
-fi
+   ],[enable_adios=no]
+)
 
 ENABLE_ADIOS=0
 if test "x$enable_adios" = "xyes" ; then
@@ -2266,7 +2247,11 @@ if test "x$enable_adios" = "xyes" ; then
 
    # remove all -l options from adios_ldflag that should leave -L only
    adios_LDFLAGS=`echo $adios_ldflag | ${SED} 's/-l[[^ ]]*//g'`
-   UD_MSG_DEBUG(adios_LDFLAGS=$adios_LDFLAGS)
+   UD_MSG_DEBUG(after removing -l adios_LDFLAGS=$adios_LDFLAGS)
+
+   # remove space between -L and path
+   adios_LDFLAGS=`echo $adios_LDFLAGS | ${SED} 's/-L[[ ]]*/-L/g'`
+   UD_MSG_DEBUG(after removing space between -L and path adios_LDFLAGS=$adios_LDFLAGS)
 
    # remove -L from adios_LDFLAGS that should leave libdir only
    adios_libdir=`echo ${adios_LDFLAGS} | ${SED} 's/-L//g'`
@@ -2276,19 +2261,15 @@ if test "x$enable_adios" = "xyes" ; then
    adios_LIBS=`echo $adios_ldflag | ${SED} 's/-L[[^ ]]*//g'`
    UD_MSG_DEBUG(adios_LIBS=$adios_LIBS)
 
-   # remove space between -L and path
-   netcdf4_L=`echo $netcdf4_L | ${SED} 's/-L[[ ]]*/-L/g'`
-   UD_MSG_DEBUG(netcdf4_L=$netcdf4_L)
    saved_CPPFLAGS=$CPPFLAGS
    saved_LDFLAGS=$LDFLAGS
    saved_LIBS=$LIBS
 
    CPPFLAGS="$adios_cflag $CPPFLAGS"
-   LDFLAGS="$adios_LDFLAGS $adios_LDFLAGS"
+   LDFLAGS="$adios_LDFLAGS $LDFLAGS"
    LIBS="$adios_LIBS $LIBS"
 
    have_adios=no
-   AC_MSG_CHECKING(ADIOS library)
    AC_SEARCH_LIBS([adios_read_open_file], [adiosread], [have_adios=yes], [have_adios=no])
    if test "x${have_adios}" = xyes; then
       AC_SEARCH_LIBS([adios_posix_open_read_internal], [adios], [have_adios=yes], [have_adios=no])
@@ -2367,7 +2348,6 @@ if test "x$enable_adios" = "xyes" ; then
 fi
 
 AC_SUBST(ADIOS_VER_GE_1132)
-AM_CONDITIONAL(ADIOS_VER_GE_1132, [test x"$ADIOS_VER_GE_1132" = x1])
 
 AC_ARG_ENABLE([profiling],
    [AS_HELP_STRING([--enable-profiling],
