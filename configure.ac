@@ -49,7 +49,9 @@ dnl if maintainer mode is disabled, make will *never* attempt to rebuild
 dnl configure, Makefile.ins, etc.
 AM_MAINTAINER_MODE([enable])
 
-m4_ifdef([AC_CONFIG_MACRO_DIRS], [AC_CONFIG_MACRO_DIRS([m4])], [AC_CONFIG_MACRO_DIR([m4])])
+dnl search all local macro files in folder m4
+dnl m4_ifdef([AC_CONFIG_MACRO_DIRS], [AC_CONFIG_MACRO_DIRS([m4])], [AC_CONFIG_MACRO_DIR([m4])])
+AC_CONFIG_MACRO_DIRS([m4])
 
 dnl AM_EXTRA_RECURSIVE_TARGETS macro was introduced into automake 1.13
 dnl m4_ifdef([AM_EXTRA_RECURSIVE_TARGETS], [AM_EXTRA_RECURSIVE_TARGETS([tests])])
@@ -896,7 +898,7 @@ if test "x${has_fortran}" = xyes ; then
 
    dnl Some Fortran 77 compilers, such as pgf77, do not allow "_8" modifier,
    dnl because _8 modifier is a Fortran 90 feature
-   dnl UD_CHECK_MPIF77_IS_PGF77
+   dnl UD_CHECK_F77_IS_PGF77
    dnl UD_MSG_DEBUG([ac_cv_mpif77_is_PGF77=$ac_cv_mpif77_is_PGF77])
 
    dnl check Fortran parameter modifier for 8-byte integer type
@@ -2309,7 +2311,7 @@ if test "x$enable_adios" = "xyes" ; then
 
    dnl Check if ADIOS version is 1.12.0 or later
    AC_MSG_CHECKING([Check if ADIOS version is 1.12.0 or later])
-   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>]], [[
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>
 #if (ADIOS_VERSION_MAJOR*1000000 + ADIOS_VERSION_MINOR*1000 + ADIOS_VERSION_PATCH < 1012000)
       choke me
 #endif
@@ -2326,7 +2328,7 @@ if test "x$enable_adios" = "xyes" ; then
 
    dnl Check if ADIOS version is 1.13.2 or later
    AC_MSG_CHECKING([Check if ADIOS version is 1.13.2 or later])
-   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>]], [[
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <adios_version.h>
 #if (ADIOS_VERSION_MAJOR*1000000 + ADIOS_VERSION_MINOR*1000 + ADIOS_VERSION_PATCH < 1013002)
       choke me
 #endif
