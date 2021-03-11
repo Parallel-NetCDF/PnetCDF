@@ -159,23 +159,22 @@ Here lists a few important options:
   --enable-burst-buffering
 			  Enable burst buffer driver support. [default:
 			  disabled]
-  --enable-netcdf4        Enable NetCDF-4 support. [default: disabled]
-  --enable-adios          Enable ADIOS BP read support. [default: disabled]
   --enable-profiling      Enable time and memory profiling. [default: disabled]
   --disable-versioning    Disable library versioning. [default: enabled]
 
 Optional Packages:
 
-  --with-mpi=/path/to/implementation
-                          The installation prefix path for MPI implementation.
-  --with-netcdf4=/path/to/netcdf4
-                          installation path(s) of NetCDF-4 libraries:
-                          --with-netcdf4=INC,LIB for include directory and
-                          library directory separated by a comma
-                          --with-netcdf4=DIR for directory containing include/
-                          and lib/ subdirectories
-  --with-adios=/path/to/implementation
-                          installation prefix path for ADIOS implementation
+  --with-mpi[=DIR]        Provide the MPI installation path in DIR.
+  --with-pthread=DIR      Search Pthreads library within the supplied path
+                          DIR, when --enable-thread-safe is enabled.
+  --with-netcdf4[=INC,LIB | =DIR]
+                          Enable NetCDF-4 feature and provide the NetCDF-4
+                          installation path(s): --with-netcdf4=INC,LIB for
+                          include and lib paths separated by a comma.
+                          --with-netcdf4=DIR for the path containing include/
+                          and lib/ subdirectories. [default: disabled]
+  --with-adios[=DIR]      Enable ADIOS feature and provide the ADIOS
+                          installation path in DIR. [default: disabled]
 
 Some influential environment variables:
   RM          Command for deleting files or directories. [default: rm]
