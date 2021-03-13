@@ -46,7 +46,6 @@ EXTRA_DIST = block_boundary_data.fh \
              physicaldata.fh \
              tree.fh \
              README \
-             acinclude.m4 \
              configure.ac \
              parallel_run.sh
 
