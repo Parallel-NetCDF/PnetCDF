@@ -7,8 +7,8 @@ arch:
   - arm64
 
 os:
-  - osx
   - linux
+  # - osx
 
 env:
   global:
