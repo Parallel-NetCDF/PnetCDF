@@ -325,7 +325,7 @@ int nczipioi_init_nvar_core_reduce (NC_zip *nczipp,
 		
 		NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT_COWN)
 
-		err = nczipioi_calc_chunk_overlap (nczipp, varp, rcnt[i], starts, counts, ocnt[j]);
+		err = nczipioi_calc_chunk_overlap (nczipp, varp, rcnt[i], starts + roff[i], counts + roff[i], ocnt[j]);
 		CHK_ERR
 
 		if (i > 0) {  // Wait comm for prev var
