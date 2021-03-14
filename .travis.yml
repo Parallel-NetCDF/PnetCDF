@@ -2,9 +2,9 @@ language: c
 
 arch:
   - amd64
-  - ppc64le
-  - s390x
-  - arm64
+  # - ppc64le
+  # - s390x
+  # - arm64
 
 os:
   - linux
@@ -43,7 +43,8 @@ before_install:
   # - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
   - test -n $CC && unset CC
   # - if [ $TRAVIS_OS_NAME == osx ]; then brew update; fi
-  - if [ $TRAVIS_OS_NAME == osx ]; then brew install mpich; fi
+  # - if [ $TRAVIS_OS_NAME == osx ]; then brew install mpich; fi
+  - if [ $TRAVIS_OS_NAME == osx ]; then brew install open-mpi; fi
   - autoconf --version
   - automake --version
   - if [ $TRAVIS_OS_NAME = linux ]; then libtool --version ; else libtool -V ; fi
