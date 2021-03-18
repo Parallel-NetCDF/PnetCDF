@@ -62,7 +62,8 @@
  * ids[0:nused] => active (used) request ids
  * ids[nused:nalloc] => available (unused) request ids
  */
-int nczipioi_get_list_init(NC_zip_req_list *lp) {
+int nczipioi_req_list_init(NC_zip_req_list *lp) {
+    int err=NC_NOERR;
     int i;
 
     /* Initialize parameter and allocate the array  */
@@ -70,7 +71,9 @@ int nczipioi_get_list_init(NC_zip_req_list *lp) {
     lp->nalloc = PUT_ARRAY_SIZE;
     lp->reqs = (NC_zip_req*)NCI_Malloc(lp->nalloc * sizeof(NC_zip_req));
     lp->ids = (int*)NCI_Malloc(lp->nalloc * SIZEOF_INT);
+    CHK_PTR(lp->ids)
     lp->pos = (int*)NCI_Malloc(lp->nalloc * SIZEOF_INT);
+    CHK_PTR(lp->pos)
     if (lp->reqs == NULL || lp->ids == NULL) {
         DEBUG_RETURN_ERROR(NC_ENOMEM);
     }
@@ -83,7 +86,8 @@ int nczipioi_get_list_init(NC_zip_req_list *lp) {
         lp->pos[i] = i; // Not in use
     }
 
-    return NC_NOERR;
+err_out:;
+    return err;
 }
 
 /*

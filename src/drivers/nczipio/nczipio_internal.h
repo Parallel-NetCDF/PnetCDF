@@ -23,7 +23,6 @@
 	}
 #define CHK_ERR                  \
 	if (err != NC_NOERR) {       \
-		DEBUG_TRACE_ERROR (err); \
 		goto err_out;            \
 	}
 #define CHK_MPIERR                              \

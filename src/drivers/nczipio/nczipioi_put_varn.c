@@ -47,7 +47,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
                     MPI_Offset* const *strides,
                     void              **bufs)
 {
-    int err;
+    int err=NC_NOERR;
     int i, j, k;
     int cid, req;   // Chunk and request iterator
 
@@ -267,6 +267,7 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
         if (wcnt_all[cid] || wcnt_local[cid]){
             if (varp->chunk_cache[cid] == NULL){
                 err = nczipioi_cache_alloc(nczipp, varp->chunksize, varp->chunk_cache + cid);
+                CHK_ERR
                 //varp->chunk_cache[cid] = (NC_zip_cache*)NCI_Malloc(varp->chunksize);
                 if (varp->chunk_index[cid].len > 0){
                     rids[nread++] = cid;
@@ -413,7 +414,8 @@ nczipioi_put_varn_cb_chunk(  NC_zip        *nczipp,
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB)
 
-    return NC_NOERR;
+err_out:;
+    return err;
 }
 
 int
@@ -626,6 +628,7 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
         cid = varp->mychunks[i];
         if (varp->chunk_cache[cid] == NULL){
             err = nczipioi_cache_alloc(nczipp, varp->chunksize, varp->chunk_cache + cid);
+            CHK_ERR
             //varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
             if (varp->chunk_index[cid].len > 0){
                 rids[nread++] = cid;
@@ -756,7 +759,8 @@ nczipioi_put_varn_cb_proc(  NC_zip        *nczipp,
 
     NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_PUT_CB)
 
-    return NC_NOERR;
+err_out:;
+    return err;
 }
 
 int

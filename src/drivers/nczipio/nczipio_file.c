@@ -87,14 +87,14 @@ int nczipio_create (
 	MPI_Comm_rank (comm, &(nczipp->rank));
 	MPI_Comm_size (comm, &(nczipp->np));
 
+	nczipioi_init (nczipp, 1);
+
 	err = nczipioi_extract_hint (nczipp, info);
 	if (err != NC_NOERR) return err;
 
 	err = driver->put_att (nczipp->ncp, NC_GLOBAL, "_comressed", NC_INT, 1, &one,
 						   MPI_INT);  // Mark this file as compressed
 	if (err != NC_NOERR) return err;
-
-	nczipioi_init (nczipp, 1);
 
 	*ncpp = nczipp;
 
@@ -157,6 +157,8 @@ int nczipio_open (
 	MPI_Comm_rank (comm, &(nczipp->rank));
 	MPI_Comm_size (comm, &(nczipp->np));
 
+	nczipioi_init (nczipp, 0);
+
 	err = nczipioi_extract_hint (nczipp, info);
 	if (err != NC_NOERR) goto errout;
 
@@ -173,8 +175,6 @@ int nczipio_open (
 		NCI_Free (nczipp);
 		DEBUG_RETURN_ERROR (NC_EINVAL)
 	}
-
-	nczipioi_init (nczipp, 0);
 
 	err = nczipioi_get_default_chunk_dim (nczipp);
 	if (err != NC_NOERR) return err;
@@ -203,7 +203,7 @@ errout:
 }
 
 int nczipio_close (void *ncdp) {
-	int err;
+	int err = NC_NOERR;
 #ifdef PNETCDF_PROFILING
 	MPI_Offset put_size, get_size;
 	char *_env_str = getenv ("PNETCDF_SHOW_PERFORMANCE_INFO");
@@ -253,17 +253,22 @@ int nczipio_close (void *ncdp) {
 #ifdef PNETCDF_PROFILING
 	err = nczipp->driver->inq_misc (nczipp->ncp, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 									NULL, &put_size, &get_size, NULL, NULL, NULL, NULL);
+	CHK_ERR
 	nczipp->putsize += put_size;
 	nczipp->getsize += get_size;
 #endif
 	err = nczipp->driver->close (nczipp->ncp);
+	CHK_ERR
 
 	nczipioi_cache_free (nczipp);
 
 	err = nczipioi_var_list_free (&(nczipp->vars));
+	CHK_ERR
 
-	nczipioi_req_list_free (&(nczipp->putlist));
-	nczipioi_req_list_free (&(nczipp->getlist));
+	err = nczipioi_req_list_free (&(nczipp->putlist));
+	CHK_ERR
+	err = nczipioi_req_list_free (&(nczipp->getlist));
+	CHK_ERR
 
 	NCI_Free (nczipp->chunkdim);
 
@@ -297,6 +302,8 @@ int nczipio_close (void *ncdp) {
 		nczipioi_print_profile (nczipp);
 	}
 #endif
+
+err_out:;
 
 	NCI_Free (nczipp->path);
 
@@ -437,7 +444,7 @@ int nczipio__enddef (void *ncdp,
 					 MPI_Offset v_align,
 					 MPI_Offset v_minfree,
 					 MPI_Offset r_align) {
-	int i, err;
+	int i, err = NC_NOERR;
 	MPI_Offset logrecnalloc, drecnalloc;
 	MPI_Offset rsize;
 	NC_zip_var *varp;
@@ -502,7 +509,8 @@ int nczipio__enddef (void *ncdp,
 		for (i = 0; i < nczipp->vars.cnt; i++) {
 			varp = nczipp->vars.data + i;
 
-			nczipioi_var_init (nczipp, varp, 0, NULL, NULL);
+			err = nczipioi_var_init (nczipp, varp, 0, NULL, NULL);
+			CHK_ERR
 
 			if (!(varp->isnew)) {
 				err = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
@@ -558,7 +566,8 @@ int nczipio__enddef (void *ncdp,
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_VAR_INIT)
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_TOTAL)
 
-	return NC_NOERR;
+err_out:;
+	return err;
 }
 
 int nczipio_redef (void *ncdp) {
@@ -663,7 +672,7 @@ int nczipio_cancel (void *ncdp, int num_req, int *req_ids, int *statuses) {
 }
 
 int nczipio_wait (void *ncdp, int num_reqs, int *req_ids, int *statuses, int reqMode) {
-	int err, status = NC_NOERR;
+	int err = NC_NOERR, status = NC_NOERR;
 	int i;
 	int ncom = 0, nraw = 0;
 	int *rawreqs = NULL, *comreqs = NULL;
@@ -671,7 +680,7 @@ int nczipio_wait (void *ncdp, int num_reqs, int *req_ids, int *statuses, int req
 	NC_zip *nczipp = (NC_zip *)ncdp;
 
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_TOTAL)
-	
+
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_WAIT)
 
 	if (num_reqs < 0) {	 // NC_REQ_ALL || nreqs == NC_PUT_REQ_ALL || nreqs == NC_GET_REQ_ALL
@@ -691,7 +700,9 @@ int nczipio_wait (void *ncdp, int num_reqs, int *req_ids, int *statuses, int req
 		// Allocate buffer
 		ncom	= num_reqs - nraw;
 		rawreqs = (int *)NCI_Malloc (sizeof (int) * nraw);
+		CHK_PTR (rawreqs)
 		comreqs = (int *)NCI_Malloc (sizeof (int) * ncom);
+		CHK_PTR (comreqs)
 
 		// Build put and get req list
 		nraw = ncom = 0;
@@ -706,7 +717,9 @@ int nczipio_wait (void *ncdp, int num_reqs, int *req_ids, int *statuses, int req
 
 	if (statuses != NULL) {
 		rawstats = (int *)NCI_Malloc (sizeof (int) * nraw);
+		CHK_PTR (rawstats)
 		comstats = (int *)NCI_Malloc (sizeof (int) * ncom);
+		CHK_PTR (comstats)
 	} else {
 		rawstats = NULL;
 		comstats = NULL;
@@ -740,13 +753,15 @@ int nczipio_wait (void *ncdp, int num_reqs, int *req_ids, int *statuses, int req
 	NCI_Free (rawreqs);
 	NCI_Free (comreqs);
 
-done:
+err_out:;
+	if (status == NC_NOERR) status = err;
+done:;
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_TOTAL)
-	
+
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_WAIT)
 
-	return NC_NOERR;
+	return status;
 }
 
 int nczipio_set_fill (void *ncdp, int fill_mode, int *old_fill_mode) {

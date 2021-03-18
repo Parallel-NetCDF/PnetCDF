@@ -29,7 +29,6 @@
 #include "../ncmpio/ncmpio_NC.h"
 #include "nczipio_internal.h"
 
-
 int nczipioi_var_resize (NC_zip *nczipp, NC_zip_var *varp) {
 	int i, j, err;
 	int cid;
@@ -117,8 +116,7 @@ int nczipioi_var_resize (NC_zip *nczipp, NC_zip_var *varp) {
 			}
 
 			// Update global chunk count
-			nczipp->nmychunks +=
-				(MPI_Offset) (varp->nmychunk - oldnmychunk);
+			nczipp->nmychunks += (MPI_Offset) (varp->nmychunk - oldnmychunk);
 		}
 	} else {
 		// Notify ncmpio driver
@@ -129,10 +127,10 @@ err_out:;
 }
 
 int nczipioi_resize_nvar (NC_zip *nczipp, int nput, int *putreqs, int nget, int *getreqs) {
-	int err;
+	int err = NC_NOERR;
 	int i;
 	int nflag;
-	unsigned int *flag, *flag_all;
+	unsigned int *flag = NULL, *flag_all;
 	int nvar;
 	int *vids;
 	NC_zip_req *req;
@@ -142,8 +140,9 @@ int nczipioi_resize_nvar (NC_zip *nczipp, int nput, int *putreqs, int nget, int 
 					   nczipp->comm);  // Sync number of recs
 
 	// Flag of touched vars
-	nflag	 = nczipp->vars.cnt / 32 + 1;
-	flag	 = (unsigned int *)NCI_Malloc (sizeof (int) * nflag * 2);
+	nflag = nczipp->vars.cnt / 32 + 1;
+	flag  = (unsigned int *)NCI_Malloc (sizeof (int) * nflag * 2);
+	CHK_PTR (flag)
 	flag_all = flag + nflag;
 	memset (flag, 0, sizeof (int) * nflag);
 	for (i = 0; i < nput; i++) {
@@ -164,12 +163,14 @@ int nczipioi_resize_nvar (NC_zip *nczipp, int nput, int *putreqs, int nget, int 
 		if (flag_all[i >> 5] & (1u << (i % 32))) {
 			flag_all[i >> 5] ^= (1u << (i % 32));
 			if ((nczipp->vars.data + i)->dimsize[0] < nczipp->recsize) {
-				nczipioi_var_resize (nczipp, nczipp->vars.data + i);
+				err = nczipioi_var_resize (nczipp, nczipp->vars.data + i);
+				CHK_ERR
 			}
 		}
 	}
 
 	NCI_Free (flag);
 
-	return NC_NOERR;
+err_out:;
+	return err;
 }

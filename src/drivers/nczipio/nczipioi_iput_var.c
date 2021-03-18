@@ -140,11 +140,11 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 	int cid, cown;	// Chunk iterator and owner
 	int vid;
 	int r;
-	MPI_Offset *ostart, *osize;
-	int *tsize, *tssize, *tstart, *tssizep, *tstartp;  // Size for sub-array type
+	MPI_Offset *ostart = NULL, *osize;
+	int *tsize, *tssize, *tstart = NULL, *tssizep, *tstartp;  // Size for sub-array type
 	MPI_Offset *citr;  // Bounding box for chunks overlapping my own write region
 
-	int *wcnt_local, *wcnt_all;	 // Number of processes that writes to each chunk
+	int *wcnt_local = NULL, *wcnt_all;	// Number of processes that writes to each chunk
 
 	int nread;
 	int *rlo_local, *rhi_local;
@@ -158,12 +158,12 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 	MPI_Datatype ptype;	 // Pack datatype
 	int plen;
 
-	int nsend, nrecv;		   // Number of send and receive
-	MPI_Request *sreq, *rreq;  // Send and recv req
-	MPI_Status *sstat, rstat;  // Send and recv status
-	char **sbuf, **rbuf;	   // Send and recv buffer
-	char **sbufp, **rbufp;	   // Send and recv buffer pointer
-	int *rsize, *ssize;		   // Send and recv size of each message
+	int nsend, nrecv;						 // Number of send and receive
+	MPI_Request *sreq = NULL, *rreq = NULL;	 // Send and recv req
+	MPI_Status *sstat = NULL, rstat;		 // Send and recv status
+	char **sbuf = NULL, **rbuf = NULL;		 // Send and recv buffer
+	char **sbufp, **rbufp;					 // Send and recv buffer pointer
+	int *rsize = NULL, *ssize = NULL;		 // Send and recv size of each message
 	MPI_Offset totalsize;
 	int *sdst;	// recv size of each message
 	int *smap;
@@ -176,24 +176,29 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 
 	// Allocate buffering for write count
 	wcnt_local = (int *)NCI_Malloc (sizeof (int) * nczipp->np * 3);
-	wcnt_all   = wcnt_local + nczipp->np;
-	smap	   = wcnt_all + nczipp->np;
+	CHK_PTR (wcnt_local)
+	wcnt_all = wcnt_local + nczipp->np;
+	smap	 = wcnt_all + nczipp->np;
 
 	// Intermediate buffer for our own data
 	tbuf = (char *)NCI_Malloc (nczipp->max_chunk_size);
+	CHK_PTR (tbuf)
 
 	// Allocate buffering for overlaping index
 	tstart = (int *)NCI_Malloc (sizeof (int) * nczipp->max_ndim * 3);
+	CHK_PTR (tstart)
 	tssize = tstart + nczipp->max_ndim;
 	tsize  = tssize + nczipp->max_ndim;
 	ostart = (MPI_Offset *)NCI_Malloc (sizeof (MPI_Offset) * nczipp->max_ndim * 3);
-	osize  = ostart + nczipp->max_ndim;
+	CHK_PTR (ostart)
+	osize = ostart + nczipp->max_ndim;
 
 	// Chunk iterator
 	citr = osize + nczipp->max_ndim;
 
 	// Access range
 	rlo_local = (int *)NCI_Malloc (sizeof (int) * nczipp->vars.cnt * 5);
+	CHK_PTR (rlo_local)
 	rhi_local = rlo_local + nczipp->vars.cnt;
 	rlo_all	  = rhi_local + nczipp->vars.cnt;
 	rhi_all	  = rlo_all + nczipp->vars.cnt;
@@ -249,17 +254,24 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_PUT_CB_PACK_REQ)
 
 	// Allocate data structure for messaging
-	sbuf  = (char **)NCI_Malloc (sizeof (char *) * nsend * 2);
+	sbuf = (char **)NCI_Malloc (sizeof (char *) * nsend * 2);
+	CHK_PTR (sbuf)
 	sbufp = sbuf + nsend;
 	ssize = (int *)NCI_Malloc (sizeof (int) * nsend * 2);
-	sdst  = ssize + nsend;
-	sreq  = (MPI_Request *)NCI_Malloc (sizeof (MPI_Request) * nsend);
+	CHK_PTR (ssize)
+	sdst = ssize + nsend;
+	sreq = (MPI_Request *)NCI_Malloc (sizeof (MPI_Request) * nsend);
+	CHK_PTR (sreq)
 	sstat = (MPI_Status *)NCI_Malloc (sizeof (MPI_Status) * nsend);
+	CHK_PTR (sstat)
 
-	rbuf  = (char **)NCI_Malloc (sizeof (char *) * nrecv * 2);
+	rbuf = (char **)NCI_Malloc (sizeof (char *) * nrecv * 2);
+	CHK_PTR (rbuf)
 	rbufp = rbuf + nrecv;
 	rsize = (int *)NCI_Malloc (sizeof (int) * nrecv);
-	rreq  = (MPI_Request *)NCI_Malloc (sizeof (MPI_Request) * nrecv);
+	CHK_PTR (rsize)
+	rreq = (MPI_Request *)NCI_Malloc (sizeof (MPI_Request) * nrecv);
+	CHK_PTR (rreq)
 
 	// Count size of each request
 	memset (ssize, 0, sizeof (int) * nsend);
@@ -291,6 +303,7 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 	for (i = 0; i < nsend; i++) { totalsize += ssize[i]; }
 	if (nsend > 0) {
 		sbuf[0] = sbufp[0] = (char *)NCI_Malloc (totalsize);
+		CHK_PTR (sbuf[0])
 		for (i = 1; i < nsend; i++) { sbuf[i] = sbufp[i] = sbuf[i - 1] + ssize[i - 1]; }
 	}
 #ifdef PNETCDF_PROFILING
@@ -381,6 +394,7 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 
 		// Allocate buffer
 		rbuf[i] = rbufp[i] = (char *)NCI_Malloc (rsize[i]);
+		CHK_PTR (rbuf[i])
 
 #ifdef PNETCDF_PROFILING
 		nczipp->recvsize += rsize[i];
@@ -557,6 +571,7 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_PUT_CB_SEND_REQ)
 
+err_out:;
 	// Free buffers
 	NCI_Free (wcnt_local);
 
@@ -581,6 +596,5 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_PUT_CB)
 
-err_out:;
 	return err;
 }

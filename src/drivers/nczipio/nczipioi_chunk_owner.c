@@ -174,16 +174,6 @@ int nczipioi_calc_chunk_overlap (NC_zip *nczipp,
 	MPI_Offset *ostart, *osize;
 	MPI_Offset *citr;  // Bounding box for chunks overlapping my own write region
 
-	// Construct MPI type for overlap if not already constructed
-	if (nczipp->overlaptype == MPI_DATATYPE_NULL) {
-		MPI_Type_contiguous (sizeof (nczipioi_chunk_overlap_t), MPI_BYTE, &(nczipp->overlaptype));
-		MPI_Type_commit (&(nczipp->overlaptype));
-	}
-
-	if (nczipp->max_cown_op == MPI_OP_NULL) {
-		MPI_Op_create (max_osize_rank_op, 1, &(nczipp->max_cown_op));
-	}
-
 	ostart = (MPI_Offset *)NCI_Malloc (sizeof (MPI_Offset) * varp->ndim * 3);
 	CHK_PTR (ostart)
 	osize = ostart + varp->ndim;

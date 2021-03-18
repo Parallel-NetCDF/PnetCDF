@@ -30,7 +30,7 @@
 #include "nczipio_internal.h"
 
 int nczipioi_load_var (NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
-	int err;
+	int err = NC_NOERR;
 	int i;
 	int cid;
 	int get_size;
@@ -135,6 +135,7 @@ int nczipioi_load_var (NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) 
 			cid = cids[i];
 			if (varp->chunk_cache[cid] == NULL) {
 				err = nczipioi_cache_alloc (nczipp, varp->chunksize, varp->chunk_cache + cid);
+				CHK_ERR
 				// varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 			} else {
 				nczipioi_cache_visit (nczipp, varp->chunk_cache[cid]);
@@ -153,6 +154,7 @@ int nczipioi_load_var (NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) 
 			cid = cids[i];
 			if (varp->chunk_cache[cid] == NULL) {
 				err = nczipioi_cache_alloc (nczipp, varp->chunksize, varp->chunk_cache + cid);
+				CHK_ERR
 				// varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 
 				NC_ZIP_TIMER_START (NC_ZIP_TIMER_GET_IO_DECOM)
@@ -175,11 +177,12 @@ int nczipioi_load_var (NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) 
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_GET_IO)
 
-	return NC_NOERR;
+err_out:;
+	return err;
 }
 
 int nczipioi_load_nvar (NC_zip *nczipp, int nvar, int *varids, int *lo, int *hi) {
-	int err;
+	int err = NC_NOERR;
 	int i, j, k, l;
 	int cid, vid;
 	int get_size;
@@ -298,6 +301,7 @@ int nczipioi_load_nvar (NC_zip *nczipp, int nvar, int *varids, int *lo, int *hi)
 					if (varp->chunk_cache[cid] == NULL) {
 						err =
 							nczipioi_cache_alloc (nczipp, varp->chunksize, varp->chunk_cache + cid);
+						CHK_ERR
 						// varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 
 						// Perform decompression
@@ -325,6 +329,7 @@ int nczipioi_load_nvar (NC_zip *nczipp, int nvar, int *varids, int *lo, int *hi)
 					if (varp->chunk_cache[cid] == NULL) {
 						err =
 							nczipioi_cache_alloc (nczipp, varp->chunksize, varp->chunk_cache + cid);
+						CHK_ERR
 						// varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 
 						if (varp->chunk_index[cid].len > 0) {
@@ -356,6 +361,7 @@ int nczipioi_load_nvar (NC_zip *nczipp, int nvar, int *varids, int *lo, int *hi)
 				// Allocate chunk cache if not allocated
 				if (varp->chunk_cache[cid] == NULL) {
 					err = nczipioi_cache_alloc (nczipp, varp->chunksize, varp->chunk_cache + cid);
+					CHK_ERR
 					// varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 					memset (varp->chunk_cache[cid]->buf, 0, varp->chunksize);
 				} else {
@@ -383,7 +389,8 @@ int nczipioi_load_nvar (NC_zip *nczipp, int nvar, int *varids, int *lo, int *hi)
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_GET_IO)
 
-	return NC_NOERR;
+err_out:;
+	return err;
 }
 
 int nczipioi_load_var_bg (NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cids) {
@@ -496,6 +503,7 @@ int nczipioi_load_var_bg (NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cid
 			cid = cids[i];
 			if (varp->chunk_cache[cid] == NULL) {
 				err = nczipioi_cache_alloc (nczipp, varp->chunksize, varp->chunk_cache + cid);
+				CHK_ERR
 				// varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 			} else {
 				nczipioi_cache_visit (nczipp, varp->chunk_cache[cid]);
@@ -512,6 +520,7 @@ int nczipioi_load_var_bg (NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cid
 			cid = cids[i];
 			if (varp->chunk_cache[cid] == NULL) {
 				err = nczipioi_cache_alloc (nczipp, varp->chunksize, varp->chunk_cache + cid);
+				CHK_ERR
 				// varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 			} else {
 				nczipioi_cache_visit (nczipp, varp->chunk_cache[cid]);
@@ -532,11 +541,12 @@ int nczipioi_load_var_bg (NC_zip *nczipp, NC_zip_var *varp, int nchunk, int *cid
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_PUT_BG)
 
-	return NC_NOERR;
+err_out:;
+	return err;
 }
 
 int nczipioi_load_nvar_bg (NC_zip *nczipp, int nvar, int *varids, int *lo, int *hi) {
-	int err;
+	int err = NC_NOERR;
 	int i, j, k, l;
 	int cid, vid;
 	int get_size;
@@ -656,6 +666,7 @@ int nczipioi_load_nvar_bg (NC_zip *nczipp, int nvar, int *varids, int *lo, int *
 					if (varp->chunk_cache[cid] == NULL) {
 						err =
 							nczipioi_cache_alloc (nczipp, varp->chunksize, varp->chunk_cache + cid);
+						CHK_ERR
 						// varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 
 						// Perform decompression
@@ -684,6 +695,7 @@ int nczipioi_load_nvar_bg (NC_zip *nczipp, int nvar, int *varids, int *lo, int *
 					if (varp->chunk_cache[cid] == NULL) {
 						err =
 							nczipioi_cache_alloc (nczipp, varp->chunksize, varp->chunk_cache + cid);
+						CHK_ERR
 						// varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 
 						if (varp->chunk_index[cid].len > 0) {
@@ -716,6 +728,7 @@ int nczipioi_load_nvar_bg (NC_zip *nczipp, int nvar, int *varids, int *lo, int *
 				// Allocate chunk cache if not allocated
 				if (varp->chunk_cache[cid] == NULL) {
 					err = nczipioi_cache_alloc (nczipp, varp->chunksize, varp->chunk_cache + cid);
+					CHK_ERR
 					// varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
 					memset (varp->chunk_cache[cid]->buf, 0, varp->chunksize);
 				} else {
@@ -743,5 +756,6 @@ int nczipioi_load_nvar_bg (NC_zip *nczipp, int nvar, int *varids, int *lo, int *
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_PUT_BG)
 
-	return NC_NOERR;
+err_out:;
+	return err;
 }

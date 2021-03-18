@@ -75,9 +75,9 @@ int nczipioi_wait_put_reqs (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 	CHK_ERR
 
 #ifdef PNETCDF_PROFILING
-    NC_ZIP_TIMER_START(NC_ZIP_TIMER_WAIT_PUT_BARR)
-    MPI_Barrier(nczipp->comm);
-    NC_ZIP_TIMER_STOP(NC_ZIP_TIMER_WAIT_PUT_BARR)
+	NC_ZIP_TIMER_START (NC_ZIP_TIMER_WAIT_PUT_BARR)
+	MPI_Barrier (nczipp->comm);
+	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_WAIT_PUT_BARR)
 #endif
 
 	// Perform I/O for comrpessed variables
@@ -99,7 +99,7 @@ err_out:;
  * We pack all request as a large varn request
  */
 int nczipioi_wait_get_reqs (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
-	int err;
+	int err = NC_NOERR;
 	int i;
 	unsigned int j;
 	int nvar, nflag;
@@ -138,12 +138,12 @@ int nczipioi_wait_get_reqs (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 
 	// Perform collective buffer
 	if (nczipp->comm_unit == NC_ZIP_COMM_CHUNK) {
-		err=nczipioi_iget_cb_chunk (nczipp, nreq, reqids, stats);
+		err = nczipioi_iget_cb_chunk (nczipp, nreq, reqids, stats);
 	} else {
-		err=nczipioi_iget_cb_proc (nczipp, nreq, reqids, stats);
+		err = nczipioi_iget_cb_proc (nczipp, nreq, reqids, stats);
 		// nczipioi_iget_cb_chunk(nczipp, nreq, reqids, stats);
 	}
-    CHK_ERR
+	CHK_ERR
 
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_GET_CONVERT)
 	for (i = 0; i < nreq; i++) {
@@ -168,11 +168,11 @@ err_out:;
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_WAIT_GET)
 
-	return NC_NOERR;
+	return err;
 }
 
 int nczipioi_wait (NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMode) {
-	int err;
+	int err = NC_NOERR;
 	int i;
 	int nput = 0, nget = 0;
 	int *putreqs = NULL, *getreqs = NULL;
@@ -181,11 +181,13 @@ int nczipioi_wait (NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMo
 	if (nreqs == NC_REQ_ALL || nreqs == NC_PUT_REQ_ALL) {
 		nput	= nczipp->putlist.nused;
 		putreqs = (int *)NCI_Malloc (sizeof (int) * nput);
+		CHK_PTR (putreqs)
 		memcpy (putreqs, nczipp->putlist.ids, nput * sizeof (int));
 	}
 	if (nreqs == NC_REQ_ALL || nreqs == NC_GET_REQ_ALL) {
 		nget	= nczipp->getlist.nused;
 		getreqs = (int *)NCI_Malloc (sizeof (int) * nget);
+		CHK_PTR (getreqs)
 		memcpy (getreqs, nczipp->getlist.ids, nget * sizeof (int));
 	}
 
@@ -198,7 +200,9 @@ int nczipioi_wait (NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMo
 		// Allocate buffer
 		nget	= nreqs - nput;
 		putreqs = (int *)NCI_Malloc (sizeof (int) * nput);
+		CHK_PTR (putreqs)
 		getreqs = (int *)NCI_Malloc (sizeof (int) * nget);
+		CHK_PTR (getreqs)
 
 		// Build put and get req list
 		nput = nget = 0;
@@ -237,7 +241,9 @@ int nczipioi_wait (NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMo
 
 	if (stats != NULL) {
 		putstats = (int *)NCI_Malloc (sizeof (int) * nput);
+		CHK_PTR (putstats)
 		getstats = (int *)NCI_Malloc (sizeof (int) * nget);
+		CHK_PTR (getstats)
 		memset (putstats, 0, sizeof (int) * nput);
 		memset (getstats, 0, sizeof (int) * nget);
 	} else {
@@ -247,13 +253,15 @@ int nczipioi_wait (NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMo
 
 	if ((nczipp->mode & NC_WRITE) && nreqs != NC_GET_REQ_ALL) {
 		NC_ZIP_TIMER_START (NC_ZIP_TIMER_PUT)
-		nczipioi_wait_put_reqs (nczipp, nput, putreqs, putstats);
+		err = nczipioi_wait_put_reqs (nczipp, nput, putreqs, putstats);
+		CHK_ERR
 		NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_PUT)
 	}
 
 	if (nreqs != NC_PUT_REQ_ALL) {
 		NC_ZIP_TIMER_START (NC_ZIP_TIMER_GET)
-		nczipioi_wait_get_reqs (nczipp, nget, getreqs, getstats);
+		err = nczipioi_wait_get_reqs (nczipp, nget, getreqs, getstats);
+		CHK_ERR
 		NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_GET)
 	}
 
@@ -276,8 +284,9 @@ int nczipioi_wait (NC_zip *nczipp, int nreqs, int *reqids, int *stats, int reqMo
 	for (i = 0; i < nput; i++) { nczipioi_req_list_remove (&(nczipp->putlist), putreqs[i]); }
 	for (i = 0; i < nget; i++) { nczipioi_req_list_remove (&(nczipp->getlist), getreqs[i]); }
 
+err_out:;
 	NCI_Free (putreqs);
 	NCI_Free (getreqs);
 
-	return NC_NOERR;
+	return err;
 }

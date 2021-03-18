@@ -19,7 +19,6 @@
 #include "../ncmpio/ncmpio_NC.h"
 #include "nczipio_internal.h"
 
-
 int nczipioi_init (NC_zip *nczipp, int isnew) {
 	int err;
 
@@ -39,7 +38,7 @@ int nczipioi_init (NC_zip *nczipp, int isnew) {
 	nczipp->assigned_chunks = 0;
 	nczipp->cown_size		= 0;
 	nczipp->max_cown_op		= MPI_OP_NULL;
-	nczipp->overlaptype = MPI_DATATYPE_NULL;
+	nczipp->overlaptype		= MPI_DATATYPE_NULL;
 
 	err = nczipp->driver->inq (nczipp->ncp, NULL, NULL, NULL, &(nczipp->recdim));
 	if (err != NC_NOERR) return err;
@@ -78,7 +77,7 @@ err_out:;
 }
 
 int nczipioi_parse_var_info (NC_zip *nczipp) {
-	int err;
+	int err = NC_NOERR;
 	int vid;
 	int i;
 	int nvar;
@@ -94,6 +93,7 @@ int nczipioi_parse_var_info (NC_zip *nczipp) {
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT_META)
 
 	err = nczipp->driver->inq (nczipp->ncp, NULL, &nvar, NULL, &(nczipp->recdim));
+	CHK_ERR
 
 	if (nvar > 0) {
 		for (vid = 0; vid < nvar; vid++) {
@@ -116,8 +116,10 @@ int nczipioi_parse_var_info (NC_zip *nczipp) {
 												   MPI_INT);  // Original dimensions
 					if (err != NC_NOERR) return err;
 
-					varp->dimids  = (int *)NCI_Malloc (sizeof (int) * varp->ndim);
+					varp->dimids = (int *)NCI_Malloc (sizeof (int) * varp->ndim);
+					CHK_PTR (varp->dimids)
 					varp->dimsize = (MPI_Offset *)NCI_Malloc (sizeof (MPI_Offset) * varp->ndim);
+					CHK_PTR (varp->dimsize)
 
 					err = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_dimids",
 												   varp->dimids, MPI_INT);	// Dimensiona IDs
@@ -149,8 +151,10 @@ int nczipioi_parse_var_info (NC_zip *nczipp) {
 
 		// Collective read index table
 		if (!(nczipp->delay_init)) {
-			lens   = NCI_Malloc (sizeof (int) * nvar);
+			lens = NCI_Malloc (sizeof (int) * nvar);
+			CHK_PTR (lens)
 			fdisps = NCI_Malloc (sizeof (MPI_Aint) * nvar * 2);
+			CHK_PTR (fdisps)
 			mdisps = fdisps + nvar;
 
 			nread = 0;
@@ -159,7 +163,8 @@ int nczipioi_parse_var_info (NC_zip *nczipp) {
 
 				if (varp->varkind == NC_ZIP_VAR_COMPRESSED) {
 					// Init var
-					nczipioi_var_init (nczipp, varp, 0, NULL, NULL);
+					err = nczipioi_var_init (nczipp, varp, 0, NULL, NULL);
+					CHK_ERR
 
 					err = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
 												   &(varp->metaoff), MPI_LONG_LONG);
@@ -212,5 +217,6 @@ int nczipioi_parse_var_info (NC_zip *nczipp) {
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_VAR_INIT_META)
 
-	return NC_NOERR;
+err_out:;
+	return err;
 }
