@@ -178,7 +178,8 @@ int nczipioi_iget_cb_proc(NC_zip *nczipp, int nreq, int *reqids, int *stats){
     
     int packoff; // Pack offset
     MPI_Datatype ptype; // Pack datatype
-    int poff, plen;
+    MPI_Offset poff;		 // Offset of buffer to pack to/ from
+    int plen;
 
     int nsend, nrecv;   // Number of send and receive
     MPI_Request *sreq, *rreq, *sreq_re, *rreq_re;    // Send and recv req

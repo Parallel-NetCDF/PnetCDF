@@ -333,7 +333,7 @@ void nczipioi_sort_file_offset (int len, MPI_Aint *fdisps, MPI_Aint *mdisps, int
 	}
 }
 
-int nczipioi_subarray_off_len (int ndim, int *tsize, int *tssize, int *tstart, int *off, int *len) {
+int nczipioi_subarray_off_len (int ndim, int *tsize, int *tssize, int *tstart, MPI_Offset *off, int *len) {
 	int err;
 	int i;
 

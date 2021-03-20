@@ -155,6 +155,7 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 	char *tbuf = NULL;	// Intermediate buffer
 
 	int packoff;		 // Pack offset
+	MPI_Offset pboff;		 // Offset of buffer to pack to/ from
 	MPI_Datatype ptype;	 // Pack datatype
 	int plen;
 
@@ -346,12 +347,12 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 						tsize[i]  = (int)req->counts[r][i];
 						tstart[i] = (int)(ostart[i] - req->starts[r][i]);
 					}
-					err = nczipioi_subarray_off_len (varp->ndim, tsize, tssizep, tstart, &packoff,
+					err = nczipioi_subarray_off_len (varp->ndim, tsize, tssizep, tstart, &pboff,
 													 &plen);
 					if (err == 0) {
 						plen *= varp->esize;
-						packoff *= varp->esize;
-						memcpy (sbufp[j], req->xbufs[r] + packoff, plen);
+						pboff *= varp->esize;
+						memcpy (sbufp[j], req->xbufs[r] + pboff, plen);
 						sbufp[j] += plen;
 					} else {
 						CHK_ERR_TYPE_CREATE_SUBARRAY (varp->ndim, tsize, tssizep, tstart,
@@ -455,12 +456,12 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 						tsize[j]  = (int)req->counts[r][j];
 						tssize[j] = (int)osize[j];
 					}
-					err = nczipioi_subarray_off_len (varp->ndim, tsize, tssize, tstart, &packoff,
+					err = nczipioi_subarray_off_len (varp->ndim, tsize, tssize, tstart, &pboff,
 													 &plen);
 					if (err == 0) {
 						plen *= varp->esize;
-						packoff *= varp->esize;
-						memcpy (tbuf, req->xbufs[r] + packoff, plen);
+						pboff *= varp->esize;
+						memcpy (tbuf, req->xbufs[r] + pboff, plen);
 						overlapsize = plen;
 					} else {
 						CHK_ERR_TYPE_CREATE_SUBARRAY (varp->ndim, tsize, tssize, tstart,
@@ -480,12 +481,12 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 						tstart[j] = (int)(ostart[j] - citr[j]);
 						tsize[j]  = varp->chunkdim[j];
 					}
-					err = nczipioi_subarray_off_len (varp->ndim, tsize, tssize, tstart, &packoff,
+					err = nczipioi_subarray_off_len (varp->ndim, tsize, tssize, tstart, &pboff,
 													 &plen);
 					if (err == 0) {
 						plen *= varp->esize;
-						packoff *= varp->esize;
-						memcpy (varp->chunk_cache[cid]->buf + packoff, tbuf, plen);
+						pboff *= varp->esize;
+						memcpy (varp->chunk_cache[cid]->buf + pboff, tbuf, plen);
 					} else {
 						CHK_ERR_TYPE_CREATE_SUBARRAY (varp->ndim, tsize, tssize, tstart,
 													  MPI_ORDER_C, varp->etype, &ptype);
@@ -534,12 +535,12 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 			tssizep = (int *)rbufp[j];
 			rbufp[j] += varp->ndim * sizeof (int);
 
-			err = nczipioi_subarray_off_len (varp->ndim, varp->chunkdim, tssizep, tstartp, &packoff,
+			err = nczipioi_subarray_off_len (varp->ndim, varp->chunkdim, tssizep, tstartp, &pboff,
 											 &plen);
 			if (err == 0) {
 				plen *= varp->esize;
-				packoff *= varp->esize;
-				memcpy (varp->chunk_cache[cid]->buf + packoff, rbufp[j], plen);
+				pboff *= varp->esize;
+				memcpy (varp->chunk_cache[cid]->buf + pboff, rbufp[j], plen);
 				rbufp[j] += plen;
 			} else {
 				// Pack type

@@ -215,7 +215,7 @@ extern MPI_Offset NC_Type_size (nc_type);
 extern void nczipioi_sort_file_offset (int, MPI_Aint *, MPI_Aint *, int *);
 extern int nczipioi_update_statistics (NC_zip *);
 extern int nczipioi_get_default_chunk_dim (NC_zip *);
-extern int nczipioi_subarray_off_len (int, int *, int *, int *, int *, int *);
+extern int nczipioi_subarray_off_len (int, int *, int *, int *, MPI_Offset *, int *);
 extern void nczipioi_idx_in_swapn (NC_zip_chunk_index_entry *, MPI_Offset);
 #ifdef PNETCDF_PROFILING
 extern int nczipioi_print_profile (NC_zip *);
