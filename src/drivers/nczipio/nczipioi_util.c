@@ -333,7 +333,8 @@ void nczipioi_sort_file_offset (int len, MPI_Aint *fdisps, MPI_Aint *mdisps, int
 	}
 }
 
-int nczipioi_subarray_off_len (int ndim, int *tsize, int *tssize, int *tstart, MPI_Offset *off, int *len) {
+int nczipioi_subarray_off_len (
+	int ndim, int *tsize, int *tssize, int *tstart, MPI_Offset *off, int *len) {
 	int err;
 	int i;
 
@@ -393,7 +394,7 @@ int nczipioi_update_statistics (NC_zip *nczipp) {
 #endif
 
 int nczipioi_get_default_chunk_dim (NC_zip *nczipp) {
-	int err;
+	int err = NC_NOERR, ret;
 	int i;
 	int ndim, dimid;
 	int len;
@@ -416,8 +417,8 @@ int nczipioi_get_default_chunk_dim (NC_zip *nczipp) {
 			if ((*cur) == ';') {
 				if (sscanf (pre, "%s : %d ;", name, &len) == 2) {
 					if (len > 0) {
-						err = nczipp->driver->inq_dimid (nczipp->ncp, name, &dimid);
-						if (err == NC_NOERR) { nczipp->chunkdim[dimid] = len; }
+						ret = nczipp->driver->inq_dimid (nczipp->ncp, name, &dimid);
+						if (ret == NC_NOERR) { nczipp->chunkdim[dimid] = len; }
 					}
 				}
 				pre = cur + 1;

@@ -2,10 +2,13 @@
 #define _nczipio_INTERNAL_H
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include "nczipio_driver.h"
+#ifdef PNETCDF_DEBUG
+#include <assert.h>
+#endif
 
 #define NC_ZIP_DRIVER_NONE	0
 #define NC_ZIP_DRIVER_DUMMY 1
@@ -15,20 +18,34 @@
 #define NC_ZIP_DEFAULT_REC_ALLOC 1024
 #define NC_ZIP_REC_MULTIPLIER	 2
 
+#ifdef PNETCDF_DEBUG
+#define DEBUG_ABORT                                             \
+	{                                                           \
+		char *_env_str = getenv ("PNETCDF_ABORT_ON_ERR");       \
+		if (_env_str != NULL && *_env_str != '0') { abort (); } \
+	}
+#else
+#define DEBUG_ABORT
+#endif
+
 #define RET_ERR(E)               \
 	{                            \
 		err = E;                 \
 		DEBUG_TRACE_ERROR (err); \
+		DEBUG_ABORT              \
 		goto err_out;            \
 	}
-#define CHK_ERR                  \
-	if (err != NC_NOERR) {       \
-		goto err_out;            \
+#define CHK_ERR            \
+	if (err != NC_NOERR) { \
+		DEBUG_ABORT        \
+		goto err_out;      \
 	}
+
 #define CHK_MPIERR                              \
 	if (err != MPI_SUCCESS) {                   \
 		err = ncmpii_error_mpi2nc (err, "MPI"); \
 		DEBUG_TRACE_ERROR (err);                \
+		DEBUG_ABORT                             \
 		goto err_out;                           \
 	}
 
@@ -36,50 +53,34 @@
 	if (!P) {                    \
 		err = NC_ENOMEM;         \
 		DEBUG_TRACE_ERROR (err); \
+		DEBUG_ABORT              \
 		goto err_out;            \
 	}
 
-#define CHK_ERR_WAIT(V0, V1)                         \
-	err = MPI_Wait (V0, V1);                         \
-	if (err != MPI_SUCCESS) {                        \
-		err = ncmpii_error_mpi2nc (err, "MPI_Wait"); \
-		DEBUG_RETURN_ERROR (err)                     \
-	}
+#define CHK_ERR_WAIT(V0, V1) \
+	err = MPI_Wait (V0, V1); \
+	CHK_MPIERR
 
-#define CHK_ERR_ALLREDUCE(V0, V1, V2, V3, V4, V5)         \
-	err = MPI_Allreduce (V0, V1, V2, V3, V4, V5);         \
-	if (err != MPI_SUCCESS) {                             \
-		err = ncmpii_error_mpi2nc (err, "MPI_Allreduce"); \
-		DEBUG_RETURN_ERROR (err)                          \
-	}
+#define CHK_ERR_ALLREDUCE(V0, V1, V2, V3, V4, V5) \
+	err = MPI_Allreduce (V0, V1, V2, V3, V4, V5); \
+	CHK_MPIERR
 
-#define CHK_ERR_IALLREDUCE(V0, V1, V2, V3, V4, V5, V6)     \
-	err = MPI_Iallreduce (V0, V1, V2, V3, V4, V5, V6);     \
-	if (err != MPI_SUCCESS) {                              \
-		err = ncmpii_error_mpi2nc (err, "MPI_Iallreduce"); \
-		DEBUG_RETURN_ERROR (err)                           \
-	}
+#define CHK_ERR_IALLREDUCE(V0, V1, V2, V3, V4, V5, V6) \
+	err = MPI_Iallreduce (V0, V1, V2, V3, V4, V5, V6); \
+	CHK_MPIERR
 
-#define CHK_ERR_REDUCE(V0, V1, V2, V3, V4, V5, V6)        \
-	err = MPI_Reduce (V0, V1, V2, V3, V4, V5, V6);        \
-	if (err != MPI_SUCCESS) {                             \
-		err = ncmpii_error_mpi2nc (err, "MPI_Reduce"); \
-		DEBUG_RETURN_ERROR (err)                          \
-	}
+#define CHK_ERR_REDUCE(V0, V1, V2, V3, V4, V5, V6) \
+	err = MPI_Reduce (V0, V1, V2, V3, V4, V5, V6); \
+	CHK_MPIERR
 
 #define CHK_ERR_GATHER(V0, V1, V2, V3, V4, V5, V6, V7) \
 	err = MPI_Gather (V0, V1, V2, V3, V4, V5, V6, V7); \
-	if (err != MPI_SUCCESS) {                          \
-		err = ncmpii_error_mpi2nc (err, "MPI_Gather"); \
-		DEBUG_RETURN_ERROR (err)                       \
-	}
+	CHK_MPIERR
 
-#define CHK_ERR_PACK(V0, V1, V2, V3, V4, V5, V6)     \
-	err = MPI_Pack (V0, V1, V2, V3, V4, V5, V6);     \
-	if (err != MPI_SUCCESS) {                        \
-		err = ncmpii_error_mpi2nc (err, "MPI_Pack"); \
-		DEBUG_RETURN_ERROR (err)                     \
-	}
+#define CHK_ERR_PACK(V0, V1, V2, V3, V4, V5, V6) \
+	err = MPI_Pack (V0, V1, V2, V3, V4, V5, V6); \
+	CHK_MPIERR
+
 #ifdef PNETCDF_DEBUG
 #define CHK_ERR_UNPACK(V0, V1, V2, V3, V4, V5, V6)          \
 	{                                                       \
@@ -87,25 +88,18 @@
 		MPI_Type_size (V5, &esize);                         \
 		if (V1 - *((int *)(V2)) < V4 * esize) { abort (); } \
 		err = MPI_Unpack (V0, V1, V2, V3, V4, V5, V6);      \
-		if (err != MPI_SUCCESS) {                           \
-			err = ncmpii_error_mpi2nc (err, "MPI_Unpack");  \
-			DEBUG_RETURN_ERROR (err)                        \
-		}                                                   \
+		CHK_MPIERR                                          \
 	}
 #else
-#define CHK_ERR_UNPACK(V0, V1, V2, V3, V4, V5, V6)     \
-	err = MPI_Unpack (V0, V1, V2, V3, V4, V5, V6);     \
-	if (err != MPI_SUCCESS) {                          \
-		err = ncmpii_error_mpi2nc (err, "MPI_Unpack"); \
-		DEBUG_RETURN_ERROR (err)                       \
-	}
+#define CHK_ERR_UNPACK(V0, V1, V2, V3, V4, V5, V6) \
+	err = MPI_Unpack (V0, V1, V2, V3, V4, V5, V6); \
+	CHK_MPIERR
 #endif
-#define CHK_ERR_TYPE_COMMIT(V0)                             \
-	err = MPI_Type_commit (V0);                             \
-	if (err != MPI_SUCCESS) {                               \
-		err = ncmpii_error_mpi2nc (err, "MPI_Type_commit"); \
-		DEBUG_RETURN_ERROR (err)                            \
-	}
+
+#define CHK_ERR_TYPE_COMMIT(V0) \
+	err = MPI_Type_commit (V0); \
+	CHK_MPIERR
+
 #ifdef PNETCDF_DEBUG
 #define CHK_ERR_TYPE_CREATE_SUBARRAY(V0, V1, V2, V3, V4, V5, V6)                               \
 	{                                                                                          \
@@ -124,73 +118,63 @@
 			}                                                                                  \
 		}                                                                                      \
 		err = MPI_Type_create_subarray (V0, V1, V2, V3, V4, V5, V6);                           \
-		if (err != MPI_SUCCESS) {                                                              \
-			err = ncmpii_error_mpi2nc (err, "MPI_Type_create_subarray");                       \
-			DEBUG_RETURN_ERROR (err)                                                           \
-		}                                                                                      \
+		CHK_MPIERR                                                                             \
 	}
 #else
-#define CHK_ERR_TYPE_CREATE_SUBARRAY(V0, V1, V2, V3, V4, V5, V6)     \
-	err = MPI_Type_create_subarray (V0, V1, V2, V3, V4, V5, V6);     \
-	if (err != MPI_SUCCESS) {                                        \
-		err = ncmpii_error_mpi2nc (err, "MPI_Type_create_subarray"); \
-		DEBUG_RETURN_ERROR (err)                                     \
-	}
+#define CHK_ERR_TYPE_CREATE_SUBARRAY(V0, V1, V2, V3, V4, V5, V6) \
+	err = MPI_Type_create_subarray (V0, V1, V2, V3, V4, V5, V6); \
+	CHK_MPIERR
 #endif
-#define CHK_ERR_WAITALL(V0, V1, V2)                     \
-	err = MPI_Waitall (V0, V1, V2);                     \
-	if (err != MPI_SUCCESS) {                           \
-		err = ncmpii_error_mpi2nc (err, "MPI_Waitall"); \
-		DEBUG_RETURN_ERROR (err)                        \
-	}
-#define CHK_ERR_MPROBE(V0, V1, V2, V3, V4)             \
-	err = MPI_Mprobe (V0, V1, V2, V3, V4);             \
-	if (err != MPI_SUCCESS) {                          \
-		err = ncmpii_error_mpi2nc (err, "MPI_Mprobe"); \
-		DEBUG_RETURN_ERROR (err)                       \
-	}
-#define CHK_ERR_GET_COUNT(V0, V1, V2)                     \
-	err = MPI_Get_count (V0, V1, V2);                     \
-	if (err != MPI_SUCCESS) {                             \
-		err = ncmpii_error_mpi2nc (err, "MPI_Get_count"); \
-		DEBUG_RETURN_ERROR (err)                          \
-	}
-#define CHK_ERR_IMRECV(V0, V1, V2, V3, V4)             \
-	err = MPI_Imrecv (V0, V1, V2, V3, V4);             \
-	if (err != MPI_SUCCESS) {                          \
-		err = ncmpii_error_mpi2nc (err, "MPI_Imrecv"); \
-		DEBUG_RETURN_ERROR (err)                       \
-	}
-#define CHK_ERR_ISEND(V0, V1, V2, V3, V4, V5, V6)     \
-	err = MPI_Isend (V0, V1, V2, V3, V4, V5, V6);     \
-	if (err != MPI_SUCCESS) {                         \
-		err = ncmpii_error_mpi2nc (err, "MPI_Isend"); \
-		DEBUG_RETURN_ERROR (err)                      \
-	}
-#define CHK_ERR_IRECV(V0, V1, V2, V3, V4, V5, V6)     \
-	err = MPI_Irecv (V0, V1, V2, V3, V4, V5, V6);     \
-	if (err != MPI_SUCCESS) {                         \
-		err = ncmpii_error_mpi2nc (err, "MPI_Irecv"); \
-		DEBUG_RETURN_ERROR (err)                      \
-	}
-#define CHK_ERR_SET_VIEW(V0, V1, V2, V3, V4, V5)              \
-	err = MPI_File_set_view (V0, V1, V2, V3, V4, V5);         \
-	if (err != MPI_SUCCESS) {                                 \
-		err = ncmpii_error_mpi2nc (err, "MPI_File_set_view"); \
-		DEBUG_RETURN_ERROR (err)                              \
-	}
-#define CHK_ERR_READ_AT_ALL(V0, V1, V2, V3, V4, V5)              \
-	err = MPI_File_read_at_all (V0, V1, V2, V3, V4, V5);         \
-	if (err != MPI_SUCCESS) {                                    \
-		err = ncmpii_error_mpi2nc (err, "MPI_File_read_at_all"); \
-		DEBUG_RETURN_ERROR (err)                                 \
-	}
-#define CHK_ERR_WRITE_AT_ALL(V0, V1, V2, V3, V4, V5)              \
-	err = MPI_File_write_at_all (V0, V1, V2, V3, V4, V5);         \
-	if (err != MPI_SUCCESS) {                                     \
-		err = ncmpii_error_mpi2nc (err, "MPI_File_write_at_all"); \
-		DEBUG_RETURN_ERROR (err)                                  \
-	}
+
+#define CHK_ERR_WAITALL(V0, V1, V2) \
+	err = MPI_Waitall (V0, V1, V2); \
+	CHK_MPIERR
+#define CHK_ERR_MPROBE(V0, V1, V2, V3, V4) \
+	err = MPI_Mprobe (V0, V1, V2, V3, V4); \
+	CHK_MPIERR
+
+#define CHK_ERR_GET_COUNT(V0, V1, V2) \
+	err = MPI_Get_count (V0, V1, V2); \
+	CHK_MPIERR
+
+#define CHK_ERR_IMRECV(V0, V1, V2, V3, V4) \
+	err = MPI_Imrecv (V0, V1, V2, V3, V4); \
+	CHK_MPIERR
+
+#ifdef PNETCDF_DEBUG
+#define CHK_ERR_ISEND(V0, V1, V2, V3, V4, V5, V6) \
+	assert (V1 >= 0);                             \
+	err = MPI_Isend (V0, V1, V2, V3, V4, V5, V6); \
+	CHK_MPIERR
+#else
+#define CHK_ERR_ISEND(V0, V1, V2, V3, V4, V5, V6) \
+	err = MPI_Isend (V0, V1, V2, V3, V4, V5, V6); \
+	CHK_MPIERR
+#endif
+
+#ifdef PNETCDF_DEBUG
+#define CHK_ERR_IRECV(V0, V1, V2, V3, V4, V5, V6) \
+	assert (V1 >= 0);                             \
+	err = MPI_Irecv (V0, V1, V2, V3, V4, V5, V6); \
+	CHK_MPIERR
+#else
+#define CHK_ERR_IRECV(V0, V1, V2, V3, V4, V5, V6) \
+	err = MPI_Irecv (V0, V1, V2, V3, V4, V5, V6); \
+	CHK_MPIERR
+#endif
+
+#define CHK_ERR_SET_VIEW(V0, V1, V2, V3, V4, V5)      \
+	err = MPI_File_set_view (V0, V1, V2, V3, V4, V5); \
+	CHK_MPIERR
+
+#define CHK_ERR_READ_AT_ALL(V0, V1, V2, V3, V4, V5)      \
+	err = MPI_File_read_at_all (V0, V1, V2, V3, V4, V5); \
+	CHK_MPIERR
+
+#define CHK_ERR_WRITE_AT_ALL(V0, V1, V2, V3, V4, V5)      \
+	err = MPI_File_write_at_all (V0, V1, V2, V3, V4, V5); \
+	CHK_MPIERR
+
 #define CHK_ALLOC(V0) \
 	if (V0 == NULL) { DEBUG_RETURN_ERROR (NC_ENOMEM) }
 

@@ -77,7 +77,7 @@ err_out:;
 }
 
 int nczipioi_parse_var_info (NC_zip *nczipp) {
-	int err = NC_NOERR;
+	int err = NC_NOERR, ret;
 	int vid;
 	int i;
 	int nvar;
@@ -166,9 +166,9 @@ int nczipioi_parse_var_info (NC_zip *nczipp) {
 					err = nczipioi_var_init (nczipp, varp, 0, NULL, NULL);
 					CHK_ERR
 
-					err = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
+					ret = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
 												   &(varp->metaoff), MPI_LONG_LONG);
-					if (err == NC_NOERR) {
+					if (ret == NC_NOERR) {
 						lens[nread]		= sizeof (NC_zip_chunk_index_entry) * (varp->nchunk);
 						fdisps[nread]	= varp->metaoff;
 						mdisps[nread++] = (MPI_Aint) (varp->chunk_index);

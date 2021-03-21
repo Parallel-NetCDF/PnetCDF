@@ -210,7 +210,7 @@ int nczipio_get_var (void *ncdp,
 					 MPI_Offset bufcount,
 					 MPI_Datatype buftype,
 					 int reqMode) {
-	int err = NC_NOERR, status = NC_NOERR;
+	int err = NC_NOERR, status = NC_NOERR, ret;
 	void *cbuf = (void *)buf;
 	void *xbuf = (void *)buf;
 	MPI_Offset nelem;
@@ -237,9 +237,9 @@ int nczipio_get_var (void *ncdp,
 		CHK_ERR
 
 		if (!(varp->isnew)) {
-			err = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
+			ret = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
 										   &(varp->metaoff), MPI_LONG_LONG);
-			if (err == NC_NOERR) {	// Read index table
+			if (ret == NC_NOERR) {	// Read index table
 				MPI_Status status;
 
 				// Set file view
@@ -323,7 +323,7 @@ int nczipio_put_var (void *ncdp,
 					 MPI_Offset bufcount,
 					 MPI_Datatype buftype,
 					 int reqMode) {
-	int err	   = NC_NOERR;
+	int err	   = NC_NOERR, ret;
 	void *cbuf = (void *)buf;
 	void *xbuf = (void *)buf;
 	NC_zip_var *varp;
@@ -351,9 +351,9 @@ int nczipio_put_var (void *ncdp,
 		CHK_ERR
 
 		if (!(varp->isnew)) {
-			err = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
+			ret = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
 										   &(varp->metaoff), MPI_LONG_LONG);
-			if (err == NC_NOERR) {	// Read index table
+			if (ret == NC_NOERR) {	// Read index table
 				MPI_Status status;
 
 				// Set file view
@@ -704,7 +704,7 @@ int nczipio_get_varn (void *ncdp,
 					  MPI_Offset bufcount,
 					  MPI_Datatype buftype,
 					  int reqMode) {
-	int err = NC_NOERR;
+	int err = NC_NOERR, ret;
 	int i;
 	void *cbuf = (void *)buf;
 	void *xbuf = (void *)buf;
@@ -734,9 +734,9 @@ int nczipio_get_varn (void *ncdp,
 		CHK_ERR
 
 		if (!(varp->isnew)) {
-			err = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
+			ret = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
 										   &(varp->metaoff), MPI_LONG_LONG);
-			if (err == NC_NOERR) {	// Read index table
+			if (ret == NC_NOERR) {	// Read index table
 				MPI_Status status;
 
 				// Set file view
@@ -820,7 +820,7 @@ int nczipio_put_varn (void *ncdp,
 					  MPI_Offset bufcount,
 					  MPI_Datatype buftype,
 					  int reqMode) {
-	int err	   = NC_NOERR;
+	int err	   = NC_NOERR, ret;
 	void *cbuf = (void *)buf;
 	void *xbuf = (void *)buf;
 	NC_zip_var *varp;
@@ -847,9 +847,9 @@ int nczipio_put_varn (void *ncdp,
 		err = nczipioi_var_init (nczipp, varp, num, (MPI_Offset **)starts, (MPI_Offset **)counts);
 		CHK_ERR
 		if (!(varp->isnew)) {
-			err = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
+			ret = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
 										   &(varp->metaoff), MPI_LONG_LONG);
-			if (err == NC_NOERR) {	// Read index table
+			if (ret == NC_NOERR) {	// Read index table
 				MPI_Status status;
 
 				// Set file view

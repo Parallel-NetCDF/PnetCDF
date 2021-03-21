@@ -313,7 +313,8 @@ err_out:;
 }
 
 int nczipio_enddef (void *ncdp) {
-	int i, err;
+	int err = NC_NOERR, ret;
+	int i;
 	MPI_Offset logrecnalloc, drecnalloc;
 	MPI_Offset rsize;
 	NC_zip_var *varp;
@@ -381,9 +382,9 @@ int nczipio_enddef (void *ncdp) {
 			nczipioi_var_init (nczipp, varp, 0, NULL, NULL);
 
 			if (!(varp->isnew)) {
-				err = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
+				ret = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
 											   &(varp->metaoff), MPI_LONG_LONG);
-				if (err == NC_NOERR) {
+				if (ret == NC_NOERR) {
 					lens[nread]		= sizeof (NC_zip_chunk_index_entry) * (varp->nchunk);
 					fdisps[nread]	= varp->metaoff;
 					mdisps[nread++] = (MPI_Aint) (varp->chunk_index);
@@ -433,10 +434,12 @@ int nczipio_enddef (void *ncdp) {
 		NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_VAR_INIT_META)
 	}
 
+err_out:;
+
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_VAR_INIT)
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_TOTAL)
 
-	return NC_NOERR;
+	return err;
 }
 
 int nczipio__enddef (void *ncdp,
@@ -444,7 +447,8 @@ int nczipio__enddef (void *ncdp,
 					 MPI_Offset v_align,
 					 MPI_Offset v_minfree,
 					 MPI_Offset r_align) {
-	int i, err = NC_NOERR;
+	int err = NC_NOERR, ret;
+	int i;
 	MPI_Offset logrecnalloc, drecnalloc;
 	MPI_Offset rsize;
 	NC_zip_var *varp;
@@ -513,9 +517,9 @@ int nczipio__enddef (void *ncdp,
 			CHK_ERR
 
 			if (!(varp->isnew)) {
-				err = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
+				ret = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
 											   &(varp->metaoff), MPI_LONG_LONG);
-				if (err == NC_NOERR) {
+				if (ret == NC_NOERR) {
 					lens[nread]		= sizeof (NC_zip_chunk_index_entry) * (varp->nchunk);
 					fdisps[nread]	= varp->metaoff;
 					mdisps[nread++] = (MPI_Aint) (varp->chunk_index);

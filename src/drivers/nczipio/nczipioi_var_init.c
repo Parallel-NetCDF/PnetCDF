@@ -322,10 +322,11 @@ int nczipioi_init_nvar_core_reduce (NC_zip *nczipp,
 															  varp->nchunkrec * 2);
 			ocnt_all[j] = ocnt[j] + varp->nchunkrec;
 		}
-		
+
 		NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT_COWN)
 
-		err = nczipioi_calc_chunk_overlap (nczipp, varp, rcnt[i], starts + roff[i], counts + roff[i], ocnt[j]);
+		err = nczipioi_calc_chunk_overlap (nczipp, varp, rcnt[i], starts + roff[i],
+										   counts + roff[i], ocnt[j]);
 		CHK_ERR
 
 		if (i > 0) {  // Wait comm for prev var
@@ -353,7 +354,7 @@ err_out:;
 }
 
 int nczipioi_init_nvar (NC_zip *nczipp, int nput, int *putreqs, int nget, int *getreqs) {
-	int err = NC_NOERR;
+	int err = NC_NOERR, ret;
 	int i, j;
 	int nflag;
 	unsigned int *flag, *flag_all;
@@ -483,7 +484,7 @@ int nczipioi_init_nvar (NC_zip *nczipp, int nput, int *putreqs, int nget, int *g
 	nread  = 0;
 
 	// Iinit vars
-	nczipp->cown_size=0;	// Reset owner penalty
+	nczipp->cown_size = 0;	// Reset owner penalty
 	err = nczipioi_init_nvar_core_reduce (nczipp, nvar, varps, rcnt, roff, starts, counts);
 	CHK_ERR
 
@@ -492,9 +493,9 @@ int nczipioi_init_nvar (NC_zip *nczipp, int nput, int *putreqs, int nget, int *g
 	for (i = 0; i < nvar; i++) {
 		varp = varps[i];
 		if (!(varp->isnew)) {
-			err = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
+			ret = nczipp->driver->get_att (nczipp->ncp, varp->varid, "_metaoffset",
 										   &(varp->metaoff), MPI_LONG_LONG);
-			if (err == NC_NOERR) {
+			if (ret == NC_NOERR) {
 				lens[nread]		= sizeof (NC_zip_chunk_index_entry) * (varp->nchunk);
 				fdisps[nread]	= varp->metaoff;
 				mdisps[nread++] = (MPI_Aint) (varp->chunk_index);

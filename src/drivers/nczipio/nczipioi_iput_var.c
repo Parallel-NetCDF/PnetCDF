@@ -155,7 +155,7 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 	char *tbuf = NULL;	// Intermediate buffer
 
 	int packoff;		 // Pack offset
-	MPI_Offset pboff;		 // Offset of buffer to pack to/ from
+	MPI_Offset pboff;	 // Offset of buffer to pack to/ from
 	MPI_Datatype ptype;	 // Pack datatype
 	int plen;
 
@@ -301,7 +301,12 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 	}
 	// Allocate buffer for send
 	totalsize = 0;
-	for (i = 0; i < nsend; i++) { totalsize += ssize[i]; }
+	for (i = 0; i < nsend; i++) {
+#ifdef PNETCDF_DEBUG
+		assert (ssize[i] >= 0);
+#endif
+		totalsize += ssize[i];
+	}
 	if (nsend > 0) {
 		sbuf[0] = sbufp[0] = (char *)NCI_Malloc (totalsize);
 		CHK_PTR (sbuf[0])
