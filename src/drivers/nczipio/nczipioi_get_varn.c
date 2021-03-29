@@ -131,8 +131,6 @@ int nczipioi_get_varn_cb_chunk (NC_zip *nczipp,
 			}
 		}
 	}
-	// Increase batch number to indicate allocated chunk buffer can be freed for future allocation
-	(nczipp->cache_serial)++;
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_GET_IO_INIT)
 	NC_ZIP_TIMER_PAUSE (NC_ZIP_TIMER_GET_CB)  // I/O time count separately
@@ -141,7 +139,11 @@ int nczipioi_get_varn_cb_chunk (NC_zip *nczipp,
 	MPI_Barrier (nczipp->comm);
 #endif
 	// Decompress chunks into chunk cache
-	nczipioi_load_var (nczipp, varp, nread, rids);
+	err = nczipioi_load_var (nczipp, varp, nread, rids);
+	CHK_ERR
+	
+	// Increase batch number to indicate allocated chunk buffer can be freed for future allocation
+	(nczipp->cache_serial)++;
 
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_GET_CB)
 
@@ -584,8 +586,6 @@ int nczipioi_get_varn_cb_proc (NC_zip *nczipp,
 			// nczipioi_cache_visit(nczipp, varp->chunk_cache[cid]);
 		}
 	}
-	// Increase batch number to indicate allocated chunk buffer can be freed for future allocation
-	(nczipp->cache_serial)++;
 
 	NC_ZIP_TIMER_PAUSE (NC_ZIP_TIMER_GET_CB)  // I/O time count separately
 
@@ -594,6 +594,8 @@ int nczipioi_get_varn_cb_proc (NC_zip *nczipp,
 #endif
 	// Decompress chunks into chunk cache
 	nczipioi_load_var (nczipp, varp, nread, rids);
+	// Increase batch number to indicate allocated chunk buffer can be freed for future allocation
+	(nczipp->cache_serial)++;
 
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_GET_CB)
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_GET_CB_PACK_REQ)

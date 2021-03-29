@@ -438,10 +438,10 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 	NC_ZIP_TIMER_PAUSE (NC_ZIP_TIMER_PUT_CB)
 	err = nczipioi_load_nvar_bg (nczipp, nread, rids, rlo_all, rhi_all);
 	CHK_ERR
-	NC_ZIP_TIMER_START (NC_ZIP_TIMER_PUT_CB)
-
+	// Increase batch number to indicate allocated chunk buffer can be freed for future allocation
 	(nczipp->cache_serial)++;
 
+	NC_ZIP_TIMER_START (NC_ZIP_TIMER_PUT_CB)
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_PUT_CB_SELF)
 
 	// Handle our own data

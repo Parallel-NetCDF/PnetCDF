@@ -30,7 +30,8 @@
 #include "nczipio_internal.h"
 
 int nczipioi_var_resize (NC_zip *nczipp, NC_zip_var *varp) {
-	int i, j, err;
+	int err=NC_NOERR;
+	int i, j;
 	int cid;
 	int valid;
 	MPI_Offset len;

@@ -421,9 +421,6 @@ int nczipio_enddef (void *ncdp) {
 #ifdef WORDS_BIGENDIAN	// Switch back to big endian
 			nczipioi_idx_in_swapn (varp->chunk_index, varp->nchunk + 1);
 #endif
-#ifdef WORDS_BIGENDIAN	// Switch back to big endian
-			nczipioi_idx_in_swapn (varp->chunk_index, varp->nchunk + 1);
-#endif
 			MPI_Type_free (&ftype);
 			MPI_Type_free (&mtype);
 		}

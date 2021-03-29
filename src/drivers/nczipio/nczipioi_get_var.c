@@ -128,8 +128,6 @@ int nczipioi_get_var_cb_chunk (NC_zip *nczipp,
 			}
 		}
 	}
-	// Increase batch number to indicate allocated chunk buffer can be freed for future allocation
-	(nczipp->cache_serial)++;
 
 	NC_ZIP_TIMER_PAUSE (NC_ZIP_TIMER_GET_CB)  // I/O time count separately
 
@@ -139,6 +137,8 @@ int nczipioi_get_var_cb_chunk (NC_zip *nczipp,
 	// Decompress chunks into chunk cache
 	err = nczipioi_load_var (nczipp, varp, nread, rids);
 	CHK_ERR
+	// Increase batch number to indicate allocated chunk buffer can be freed for future allocation
+	(nczipp->cache_serial)++;
 
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_GET_CB)
 
@@ -662,7 +662,7 @@ int nczipioi_get_var_cb_proc (NC_zip *nczipp,
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_GET_IO_INIT)
 
 	// We need to prepare chunk in the chunk cache
-	// For chunks not yet allocated, we need to read them form file collectively
+	// For chunks not yet allocated, we need to read them from file collectively
 	// We collect chunk id of those chunks
 	// Calculate number of recv request
 	// This is for all the chunks
@@ -674,16 +674,15 @@ int nczipioi_get_var_cb_proc (NC_zip *nczipp,
 	nread = 0;
 	for (i = j; i < k; i++) {
 		cid = varp->mychunks[i];
+						printf("checking chunk %d, size is %d\n",cid, varp->chunk_index[cid].len);
 		if (varp->chunk_cache[cid] == NULL) {
 			// err = nczipioi_cache_alloc(nczipp, varp->chunksize, varp->chunk_cache + cid);
 			// varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
-			if (varp->chunk_index[cid].len > 0) { rids[nread++] = cid; }
+			if (varp->chunk_index[cid].len > 0) { rids[nread++] = cid; printf("chunk %d need read\n",cid);}
 		} else {
 			// nczipioi_cache_visit(nczipp, varp->chunk_cache[cid]);
 		}
 	}
-	// Increase batch number to indicate allocated chunk buffer can be freed for future allocation
-	(nczipp->cache_serial)++;
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_GET_IO_INIT)
 
@@ -695,7 +694,9 @@ int nczipioi_get_var_cb_proc (NC_zip *nczipp,
 	// Decompress chunks into chunk cache
 	err = nczipioi_load_var (nczipp, varp, nread, rids);
 	CHK_ERR
-
+	// Increase batch number to indicate allocated chunk buffer can be freed for future allocation
+	(nczipp->cache_serial)++;
+	
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_GET_CB)
 
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_GET_CB_SELF)

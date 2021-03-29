@@ -77,9 +77,19 @@
 	err = MPI_Gather (V0, V1, V2, V3, V4, V5, V6, V7); \
 	CHK_MPIERR
 
+#ifdef PNETCDF_DEBUG
+#define CHK_ERR_PACK(V0, V1, V2, V3, V4, V5, V6)     \
+	{                                                \
+		assert ((V0) != NULL);                       \
+		assert ((V3) != NULL);                       \
+		err = MPI_Pack (V0, V1, V2, V3, V4, V5, V6); \
+		CHK_MPIERR                                   \
+	}
+#else
 #define CHK_ERR_PACK(V0, V1, V2, V3, V4, V5, V6) \
 	err = MPI_Pack (V0, V1, V2, V3, V4, V5, V6); \
 	CHK_MPIERR
+#endif
 
 #ifdef PNETCDF_DEBUG
 #define CHK_ERR_UNPACK(V0, V1, V2, V3, V4, V5, V6)          \

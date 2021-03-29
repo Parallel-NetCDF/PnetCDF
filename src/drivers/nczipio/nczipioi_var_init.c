@@ -40,6 +40,9 @@ int nczipioi_var_init_core (
 
 	if (varp->varkind == NC_ZIP_VAR_COMPRESSED) {
 		if (varp->chunkdim == NULL) {  // This is a new uninitialized variable
+			// Init value
+			varp->mychunks = NULL;	// To be added later
+
 			// Update dimsize on rec dim
 			if (nczipp->recdim >= 0) {
 				if (varp->dimsize[0] < nczipp->recsize) { varp->dimsize[0] = nczipp->recsize; }
@@ -205,8 +208,11 @@ int nczipioi_var_init (
 
 	err = nczipioi_var_init_core (nczipp, varp, nreq, starts, counts);
 	CHK_ERR
-	err = nczipioi_calc_chunk_owner (nczipp, varp, nreq, starts, counts);
-	CHK_ERR
+
+	if (varp->varkind == NC_ZIP_VAR_COMPRESSED) {
+		err = nczipioi_calc_chunk_owner (nczipp, varp, nreq, starts, counts);
+		CHK_ERR
+	}
 
 err_out:;
 	return err;
@@ -259,30 +265,40 @@ int nczipioi_init_nvar_core_gather (NC_zip *nczipp,
 		err = nczipioi_var_init_core (nczipp, varp, rcnt[i], starts + roff[i], counts + roff[i]);
 		CHK_ERR
 
-		if (varp->nchunkrec > ocnt_size[j]) {
-			ocnt_size[j] = varp->nchunkrec;
-			NCI_Free (ocnt[j]);
-			ocnt[j] = (nczipioi_chunk_overlap_t *)NCI_Malloc (sizeof (nczipioi_chunk_overlap_t) *
-															  varp->nchunkrec * 2);
-			ocnt_all[j] = ocnt[j] + varp->nchunkrec;
+		if (varp->varkind == NC_ZIP_VAR_COMPRESSED) {
+			if (varp->nchunkrec > ocnt_size[j]) {
+				ocnt_size[j] = varp->nchunkrec;
+				NCI_Free (ocnt[j]);
+				ocnt[j] = (nczipioi_chunk_overlap_t *)NCI_Malloc (
+					sizeof (nczipioi_chunk_overlap_t) * varp->nchunkrec * 2);
+				ocnt_all[j] = ocnt[j] + varp->nchunkrec;
+			}
+
+			err = nczipioi_calc_chunk_overlap (nczipp, varp, rcnt[i], starts, counts, ocnt[j]);
+			CHK_ERR
 		}
 
-		err = nczipioi_calc_chunk_overlap (nczipp, varp, rcnt[i], starts, counts, ocnt[j]);
-		CHK_ERR
-
-		if (i > 0) {  // Wait comm for prev var
+		if ((i > 0) && (req != MPI_REQUEST_NULL)) {	 // Wait comm for prev var
 			err = MPI_Wait (&req, &stat);
 			nczipioi_assign_chunk_owner (nczipp, varps[i - 1], ocnt_all[(i - 1) & 1]);
 			nczipioi_write_chunk_ocnt (nczipp, varps[i - 1], ocnt[(i - 1) & 1],
 									   sizeof (nczipioi_chunk_overlap_t));
 		}
 
-		nczipioi_sync_ocnt_reduce (nczipp, varp->nchunkrec, ocnt[j], ocnt_all[j], &req);
+		if (varp->varkind == NC_ZIP_VAR_COMPRESSED) {
+			err = nczipioi_sync_ocnt_reduce (nczipp, varp->nchunkrec, ocnt[j], ocnt_all[j], &req);
+			CHK_ERR
+		} else {
+			req = MPI_REQUEST_NULL;
+		}
 	}
 	// Last var
-	err = MPI_Wait (&req, &stat);
-	nczipioi_assign_chunk_owner (nczipp, varp, ocnt_all[(i - 1) & 1]);
-	nczipioi_write_chunk_ocnt (nczipp, varp, ocnt[(i - 1) & 1], sizeof (nczipioi_chunk_overlap_t));
+	if (req != MPI_REQUEST_NULL) {
+		err = MPI_Wait (&req, &stat);
+		nczipioi_assign_chunk_owner (nczipp, varp, ocnt_all[(i - 1) & 1]);
+		nczipioi_write_chunk_ocnt (nczipp, varp, ocnt[(i - 1) & 1],
+								   sizeof (nczipioi_chunk_overlap_t));
+	}
 
 err_out:;
 	NCI_Free (ocnt[0]);
@@ -315,28 +331,34 @@ int nczipioi_init_nvar_core_reduce (NC_zip *nczipp,
 		err = nczipioi_var_init_core (nczipp, varp, rcnt[i], starts + roff[i], counts + roff[i]);
 		CHK_ERR
 
-		if (varp->nchunkrec > ocnt_size[j]) {
-			ocnt_size[j] = varp->nchunkrec;
-			NCI_Free (ocnt[j]);
-			ocnt[j] = (nczipioi_chunk_overlap_t *)NCI_Malloc (sizeof (nczipioi_chunk_overlap_t) *
-															  varp->nchunkrec * 2);
-			ocnt_all[j] = ocnt[j] + varp->nchunkrec;
-		}
-
 		NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT_COWN)
 
-		err = nczipioi_calc_chunk_overlap (nczipp, varp, rcnt[i], starts + roff[i],
-										   counts + roff[i], ocnt[j]);
-		CHK_ERR
+		if (varp->varkind == NC_ZIP_VAR_COMPRESSED) {
+			if (varp->nchunkrec > ocnt_size[j]) {
+				ocnt_size[j] = varp->nchunkrec;
+				NCI_Free (ocnt[j]);
+				ocnt[j] = (nczipioi_chunk_overlap_t *)NCI_Malloc (
+					sizeof (nczipioi_chunk_overlap_t) * varp->nchunkrec * 2);
+				ocnt_all[j] = ocnt[j] + varp->nchunkrec;
+			}
 
-		if (i > 0) {  // Wait comm for prev var
+			err = nczipioi_calc_chunk_overlap (nczipp, varp, rcnt[i], starts + roff[i],
+											   counts + roff[i], ocnt[j]);
+			CHK_ERR
+		}
+
+		if ((i > 0) && (req != MPI_REQUEST_NULL)) {	 // Wait comm for prev var
 			err = MPI_Wait (&req, &stat);
 			nczipioi_assign_chunk_owner (nczipp, varps[i - 1], ocnt_all[(i - 1) & 1]);
 			nczipioi_write_chunk_ocnt (nczipp, varps[i - 1], ocnt[(i - 1) & 1],
 									   sizeof (nczipioi_chunk_overlap_t));
 		}
 
-		nczipioi_sync_ocnt_reduce (nczipp, varp->nchunkrec, ocnt[j], ocnt_all[j], &req);
+		if (varp->varkind == NC_ZIP_VAR_COMPRESSED) {
+			nczipioi_sync_ocnt_reduce (nczipp, varp->nchunkrec, ocnt[j], ocnt_all[j], &req);
+		} else {
+			req = MPI_REQUEST_NULL;
+		}
 
 		NC_ZIP_TIMER_STOPEX (NC_ZIP_TIMER_VAR_INIT_COWN, NC_ZIP_TIMER_VAR_INIT_META)
 	}

@@ -45,8 +45,6 @@ int nczipioi_save_var (NC_zip *nczipp, NC_zip_var *varp) {
 	char name[128];	 // Name of objects
 	NC *ncp = (NC *)(nczipp->ncp);
 
-	if (nczipp->rank == 0) { printf ("nczipioi_save_var\n"); }
-
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_PUT_IO)
 
 	// Allocate buffer for compression

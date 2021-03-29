@@ -506,9 +506,11 @@ int nczipioi_put_var_cb_proc (NC_zip *nczipp,
 	// Allocate buffer for send
 	bsize = 0;
 	for (i = 0; i < nsend; i++) { bsize += ssize[i]; }
-	sbuf[0] = sbufp[0] = (char *)NCI_Malloc (bsize);
-	CHK_PTR (sbuf[0])
-	for (i = 1; i < nsend; i++) { sbuf[i] = sbufp[i] = sbuf[0] + ssize[i]; }
+	if (nsend > 0) {
+		sbuf[0] = sbufp[0] = (char *)NCI_Malloc (bsize);
+		CHK_PTR (sbuf[0])
+		for (i = 1; i < nsend; i++) { sbuf[i] = sbufp[i] = sbuf[0] + ssize[i]; }
+	}
 
 	// Pack requests
 	nczipioi_chunk_itr_init_ex (varp, start, count, citr, &cid, ostart,
@@ -707,8 +709,7 @@ err_out:;
 	NCI_Free (sreq);
 	NCI_Free (sstat);
 	NCI_Free (ssize);
-
-	NCI_Free (sbuf[0]);
+	if (nsend > 0) { NCI_Free (sbuf[0]); }
 	NCI_Free (sbuf);
 
 	NCI_Free (rreq);

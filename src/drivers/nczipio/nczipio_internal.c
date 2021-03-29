@@ -210,6 +210,10 @@ int nczipioi_parse_var_info (NC_zip *nczipp) {
 				MPI_Type_free (&mtype);
 			}
 
+			for (vid = 0; vid < nczipp->vars.cnt; vid++) {
+				varp = nczipp->vars.data + vid;
+			}
+
 			NCI_Free (lens);
 			NCI_Free (fdisps);
 		}

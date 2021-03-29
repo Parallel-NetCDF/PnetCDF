@@ -438,7 +438,10 @@ int nczipioi_iget_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_GET_CB_BARR)
 #endif
 	err = nczipioi_load_nvar (nczipp, nread, rids, rlo_all, rhi_all);
-	CHK_ERR (nczipp->cache_serial)++;
+	CHK_ERR 
+	// Increase batch number to indicate allocated chunk buffer can be freed for future allocation
+	(nczipp->cache_serial)++;
+	
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_GET_CB)
 
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_GET_CB_SELF)

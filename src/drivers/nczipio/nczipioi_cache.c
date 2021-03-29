@@ -39,6 +39,8 @@ static int nczipioi_cache_evict (NC_zip *nczipp) {
 	*(target->ref) = NULL;	// Mark as evicted
 	NCI_Free (target->buf);
 	NCI_Free (target);
+
+	return NC_NOERR;
 }
 
 int nczipioi_cache_alloc (NC_zip *nczipp, MPI_Offset size, NC_zip_cache **ref) {

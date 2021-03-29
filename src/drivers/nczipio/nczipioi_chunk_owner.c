@@ -261,7 +261,7 @@ void nczipioi_assign_chunk_owner (NC_zip *nczipp,
 			if (varp->chunk_owner[j] == nczipp->rank) { varp->nmychunkrec++; }
 		}
 		varp->nmychunk = varp->nmychunkrec * varp->nrec;
-		varp->mychunks = (int *)NCI_Malloc (sizeof (int) * varp->nmychunkrec * varp->nrecalloc);
+		varp->mychunks = (int *)NCI_Realloc (varp->mychunks, sizeof (int) * varp->nmychunkrec * varp->nrecalloc);
 		varp->nmychunk = 0;
 		for (j = 0; j < varp->nchunk; j++) {
 			if (varp->chunk_owner[j] == nczipp->rank) {
