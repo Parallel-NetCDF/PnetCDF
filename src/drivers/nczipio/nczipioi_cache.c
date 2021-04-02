@@ -20,13 +20,14 @@
 #include "nczipio_internal.h"
 
 static int nczipioi_cache_evict (NC_zip *nczipp) {
+	int err=NC_NOERR;
 	NC_zip_cache *target;
 
 	target = nczipp->cache_head;
 
 	if (target == NULL || target->serial >= nczipp->cache_serial) {
 		printf ("Rank %d: Cache limit exceeded\n", nczipp->rank);
-		DEBUG_RETURN_ERROR (NC_ENOMEM)
+		RET_ERR(NC_ENOMEM)
 	}
 
 	// Remove from list
@@ -40,7 +41,8 @@ static int nczipioi_cache_evict (NC_zip *nczipp) {
 	NCI_Free (target->buf);
 	NCI_Free (target);
 
-	return NC_NOERR;
+err_out:;
+	return err;
 }
 
 int nczipioi_cache_alloc (NC_zip *nczipp, MPI_Offset size, NC_zip_cache **ref) {

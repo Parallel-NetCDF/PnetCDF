@@ -33,7 +33,8 @@ check_PROGRAMS = varn_2d \
                  rec \
                  irec \
                  bsize \
-                 notdivide 
+                 notdivide \
+				 large_nchunk
 
 EXTRA_DIST = # wrap_runs.sh parallel_run.sh
 
