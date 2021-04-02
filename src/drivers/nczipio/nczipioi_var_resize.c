@@ -99,7 +99,7 @@ int nczipioi_var_resize (NC_zip *nczipp, NC_zip_var *varp) {
 					if (varp->chunk_owner[i] == nczipp->rank) { varp->nmychunkrec++; }
 				}
 				varp->mychunks =
-					(int *)NCI_Malloc (sizeof (int) * varp->nmychunkrec * varp->nrecalloc);
+					(int *)NCI_Realloc (varp->mychunks, sizeof (int) * varp->nmychunkrec * varp->nrecalloc);
 
 				if (nczipp->cache_limit_hint == -1) {
 					nczipp->cache_limit +=
