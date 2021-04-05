@@ -294,11 +294,15 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 					overlapsize = varp->esize;
 					for (i = 0; i < varp->ndim; i++) { overlapsize *= osize[i]; }
 					ssize[j] += overlapsize + sizeof (int) * (varp->ndim * 2 + 2);
+#ifdef PNETCDF_DEBUG
+					if (ssize[j] < 0) { RET_ERR (NC_EAINT_TOO_SMALL) }
+#endif
 				}
 			} while (nczipioi_chunk_itr_next_ex (varp, req->starts[r], req->counts[r], citr, &cid,
 												 ostart, osize));
 		}
 	}
+
 	// Allocate buffer for send
 	totalsize = 0;
 	for (i = 0; i < nsend; i++) {
@@ -357,6 +361,9 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 					if (err == 0) {
 						plen *= varp->esize;
 						pboff *= varp->esize;
+#ifdef PNETCDF_DEBUG
+						if (sbufp[j] - sbuf[j] + plen > ssize[j]) { RET_ERR (NC_EINTERNAL) }
+#endif
 						memcpy (sbufp[j], req->xbufs[r] + pboff, plen);
 						sbufp[j] += plen;
 					} else {
@@ -387,6 +394,10 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 	// Post send
 	for (i = 0; i < nsend; i++) {
 		CHK_ERR_ISEND (sbuf[i], ssize[i], MPI_BYTE, sdst[i], 0, nczipp->comm, sreq + i);
+		if (ssize[i] == 24 && sdst[i] == 983) {
+			printf ("rank %d: wrong ssize to 983\n", nczipp->rank);
+			abort ();
+		}
 	}
 
 	NC_ZIP_TIMER_STOP (NC_ZIP_TIMER_PUT_CB_SEND_REQ)
@@ -438,8 +449,10 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 	NC_ZIP_TIMER_PAUSE (NC_ZIP_TIMER_PUT_CB)
 	err = nczipioi_load_nvar_bg (nczipp, nread, rids, rlo_all, rhi_all);
 	CHK_ERR
-	// Increase batch number to indicate allocated chunk buffer can be freed for future allocation
-	(nczipp->cache_serial)++;
+		// Increase batch number to indicate allocated chunk buffer can be freed for future
+		// allocation
+		(nczipp->cache_serial)
+	++;
 
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_PUT_CB)
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_PUT_CB_SELF)
@@ -545,9 +558,9 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 			if (err == 0) {
 				plen *= varp->esize;
 				pboff *= varp->esize;
-				if (rbufp[j]-rbuf[j]+plen>rsize[j]){
-					abort();
-				}
+#ifdef PNETCDF_DEBUG
+				if (rbufp[j] - rbuf[j] + plen > rsize[j]) { RET_ERR (NC_EINTERNAL) }
+#endif
 				memcpy (varp->chunk_cache[cid]->buf + pboff, rbufp[j], plen);
 				rbufp[j] += plen;
 			} else {

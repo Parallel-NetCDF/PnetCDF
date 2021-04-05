@@ -341,7 +341,7 @@ int nczipioi_subarray_off_len (
 	// Try single row
 	err = 0;
 	for (i = 0; i < ndim - 1; i++) {
-		if (tssize[i] > 1) {
+		if (tssize[i] != 1) {
 			err = -1;
 			break;
 		}
