@@ -101,9 +101,9 @@ int nczipioi_var_init_core (
 			varp->chunksize = NC_Type_size (varp->xtype);
 			for (i = 0; i < varp->ndim; i++) {	// chunkdim must be at leasst 1
 				if (varp->dimsize[i] % varp->chunkdim[i] == 0) {
-					varp->nchunks[i] = varp->dimsize[i] / (MPI_Offset)varp->chunkdim[i];
+					varp->nchunks[i] = (int)(varp->dimsize[i] / (MPI_Offset)varp->chunkdim[i]);
 				} else {
-					varp->nchunks[i] = varp->dimsize[i] / (MPI_Offset)varp->chunkdim[i] + 1;
+					varp->nchunks[i] = (int)(varp->dimsize[i] / (MPI_Offset)varp->chunkdim[i] + 1);
 				}
 				if (i > 0) { varp->nchunkrec *= varp->nchunks[i]; }
 				varp->chunksize *= varp->chunkdim[i];
@@ -364,9 +364,12 @@ int nczipioi_init_nvar_core_reduce (NC_zip *nczipp,
 	}
 	// Last var
 	NC_ZIP_TIMER_START (NC_ZIP_TIMER_VAR_INIT_COWN)
-	err = MPI_Wait (&req, &stat);
-	nczipioi_assign_chunk_owner (nczipp, varp, ocnt_all[(i - 1) & 1]);
-	nczipioi_write_chunk_ocnt (nczipp, varp, ocnt[(i - 1) & 1], sizeof (nczipioi_chunk_overlap_t));
+	if (req != MPI_REQUEST_NULL) {
+		err = MPI_Wait (&req, &stat);
+		nczipioi_assign_chunk_owner (nczipp, varp, ocnt_all[(i - 1) & 1]);
+		nczipioi_write_chunk_ocnt (nczipp, varp, ocnt[(i - 1) & 1],
+								   sizeof (nczipioi_chunk_overlap_t));
+	}
 	NC_ZIP_TIMER_STOPEX (NC_ZIP_TIMER_VAR_INIT_COWN, NC_ZIP_TIMER_VAR_INIT_META)
 
 err_out:;

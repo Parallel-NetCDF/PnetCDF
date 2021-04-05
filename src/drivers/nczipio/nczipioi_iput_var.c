@@ -545,6 +545,9 @@ int nczipioi_iput_cb_proc (NC_zip *nczipp, int nreq, int *reqids, int *stats) {
 			if (err == 0) {
 				plen *= varp->esize;
 				pboff *= varp->esize;
+				if (rbufp[j]-rbuf[j]+plen>rsize[j]){
+					abort();
+				}
 				memcpy (varp->chunk_cache[cid]->buf + pboff, rbufp[j], plen);
 				rbufp[j] += plen;
 			} else {
