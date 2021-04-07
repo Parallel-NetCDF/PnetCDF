@@ -166,6 +166,7 @@ struct NC_zip {
     MPI_Op max_cown_op;
 	MPI_Offset assigned_chunks;
     double cown_ratio;
+	size_t hdr_reserve;	// Additional reserve space in the file header
 #ifdef PNETCDF_PROFILING
 	NC_zip_timers profile;
 	MPI_Offset sendsize;

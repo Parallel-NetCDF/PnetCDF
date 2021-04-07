@@ -21,7 +21,7 @@
 /* This is the name of the data file we will create. */
 #define FILE_NAME "debug.nc"
 
-#define NZIPDRIVER 4
+#define NZIPDRIVER 3
 
 #define N 20
 

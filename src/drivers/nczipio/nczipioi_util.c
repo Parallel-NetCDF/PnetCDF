@@ -119,7 +119,16 @@ int nczipioi_extract_hint (NC_zip *nczipp, MPI_Info info) {
 		if (strcmp (value, "1") == 0) { nczipp->exact_cown = 1; }
 	}
 
+	// Additional reserved space in file header
+	nczipp->hdr_reserve = 1048576;	// 1 MiB default
+	MPI_Info_get (info, "nc_zip_hdr_reserve", MPI_MAX_INFO_VAL - 1, value, &flag);
+	if (flag) { nczipp->hdr_reserve = atoi (value); }
+
 	// Reserve space for records
+	nczipp->default_recnalloc = NC_ZIP_DEFAULT_REC_ALLOC;
+	MPI_Info_get (info, "nc_zip_nrec", MPI_MAX_INFO_VAL - 1, value, &flag);
+	if (flag) { nczipp->default_recnalloc = atoi (value); }
+
 	nczipp->default_recnalloc = NC_ZIP_DEFAULT_REC_ALLOC;
 	MPI_Info_get (info, "nc_zip_nrec", MPI_MAX_INFO_VAL - 1, value, &flag);
 	if (flag) { nczipp->default_recnalloc = atoi (value); }
@@ -197,6 +206,10 @@ int nczipioi_export_hint (NC_zip *nczipp, MPI_Info info) {
 	} else {
 		MPI_Info_set (info, "nc_zip_exact_cown", "0");
 	}
+
+	// Additional reserved space in file header
+	sprintf (value, "%lld", nczipp->hdr_reserve);
+	MPI_Info_set (info, "nc_zip_hdr_reserve", value);
 
 	// Reserve space for records
 	sprintf (value, "%lld", nczipp->default_recnalloc);

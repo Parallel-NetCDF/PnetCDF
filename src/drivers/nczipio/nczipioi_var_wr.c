@@ -476,6 +476,7 @@ int nczipioi_save_nvar (NC_zip *nczipp, int nvar, int *varids) {
 		// Metadata offset
 		for (vid = 0; vid < nvar; vid++) {
 			varp = nczipp->vars.data + varids[vid];
+			// Reserve space for _metaoffset
 			if (varp->metaoff < 0) {
 				err = nczipp->driver->put_att (nczipp->ncp, varp->varid, "_metaoffset", NC_INT64, 1,
 											   &(varp->metaoff), MPI_LONG_LONG);

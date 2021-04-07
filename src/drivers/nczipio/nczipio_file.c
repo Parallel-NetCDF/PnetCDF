@@ -353,7 +353,9 @@ int nczipio_enddef (void *ncdp) {
 			rsize += ((8 + 16) + 4 + 8 + 4);  // Atts
 		}
 	}
-	rsize *= 2;	 // 2 times for future expension
+	//rsize *= 2;	 // 2 times for future expension
+	// Add additional reserve size
+	rsize += nczipp->hdr_reserve;
 
 	err = nczipp->driver->_enddef (nczipp->ncp, rsize, 0, 0, 0);
 	if (err != NC_NOERR) return err;
