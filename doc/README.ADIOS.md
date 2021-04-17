@@ -22,14 +22,13 @@ PnetCDF requires an [ADIOS library](https://www.olcf.ornl.gov/center-projects/ad
     make install
     ```
 * To build PnetCDF with ADIOS support
-  + Add `--enable-adios` option at the configure command line. Option
-    `--with-adios` can be used to specify the installation path of ADIOS.
-    For example,
+  + Add `--with-adios` option at the configure command line. Option
+    `--with-adios` can also be used to specify the installation path of ADIOS
+    if it is not in the standard locations. For example,
     ```
     gzip -dc pnetcdf-1.12.0.tar.gz | tar -xf -
     cd pnetcdf-1.12.0
     ./configure --prefix=/PnetCDF/install/path \
-                --enable-adios \
                 --with-adios=/ADIOS/install/path
     ```
 

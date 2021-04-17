@@ -12,10 +12,11 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Update configure options
-  + Remove `--enable-netcdf4` and `--enable-adios`, as there are already
-    options `--with-netcdf4` and `--with-adios`. According to autoconf manual,
-    `--enable-feature` is for internal packages and `--with-feature` is for
-    external.
+  + Retire configure options `--enable-netcdf4` and `--enable-adios`, as there
+    are already options `--with-netcdf4` and `--with-adios`. According to the
+    autoconf manual, `--enable-feature` is for internal packages and
+    `--with-feature` is for external.  Adding `--with-feature` is equivalent to
+    enabling the feature.
 
 * New constants
   + none

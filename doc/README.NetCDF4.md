@@ -41,14 +41,13 @@ Example build instructions for HDF5 and NetCDF-4 are given below.
   + Note NetCDF-4 library built with PnetCDF feature enabled, i.e. option
     `--enable-pnetcf`, is not supported.
 * To build PnetCDF with NetCDF-4 support
-  + Add `--enable-netcdf4` option at the configure command line. Option
-    `--with-netcdf` can be used to specify the installation path of NetCDF-4.
-    For example,
+  + Add `--with-netcdf4` option at the configure command line. Option
+    `--with-netcdf` can also be used to specify the installation path of
+    NetCDF-4 if it is not in the standard localtions. For example,
     ```
     gzip -dc pnetcdf-1.11.0.tar.gz | tar -xf -
     cd pnetcdf-1.11.0
     ./configure --prefix=/PnetCDF/install/path \
-                --enable-netcdf4 \
                 --with-netcdf4=/NetCDF4/install/path
     ```
 
