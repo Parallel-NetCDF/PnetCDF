@@ -2,9 +2,9 @@ language: c
 
 arch:
   - amd64
-  # - ppc64le
-  # - s390x
-  # - arm64
+  - ppc64le
+  - s390x
+  - arm64
 
 os:
   - linux
@@ -13,19 +13,8 @@ os:
 env:
   global:
    - MAKEFLAGS="-j8"
-   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-   # via the "travis encrypt" command using the project repo's public key
-   # - secure: "JLc2CesDa4NcxX6lg7w0hQFZkTWPhqiRYRgKFLRer+usrhQKyMTJDTgq8E5Pd8h2PZJrRmecF0XOGl0kL2pj8nu6HAW8Ht7A16rUC6sHcu0uG4e5D63dxxyXHP9OyhCKXR/5AwXhM/dAAU5Dp/I70i6POniYCDboq4JK6o4zw87aN9yRJ+OYHC86lCsovZcYuogDVAjwWBxgeQIWxQD35cA+SM5P0zstUnBrXwjY5lWCj62t+avIKp7eTIh0FwYcj/5JR0q+GoGwN9/YFpdINirAgOiCQDI08ngXCRCrD1gCQq80vxLVvjDhlFoAHI/063QlxOwsIhxcWhyAxrf+xk5iNTiI/89seBDZR/34aAigAJpZ6HkMPWOm4NSBxnIrAvfg6LqFljRzzhSkRhp2an3YvDTmLXE5iWWMCK0+DCfmeBLqCviq5bD8vmMcPqKKUR14f98oxl9kzC0cp6iGwPbdK1RlaomZY5X4Ya93lKDeQbcW/jWu/5Qnjhn8fezqIbe5CIuG4id77URLn5tt62wInCD9wlNvZ0hc7znd3mFWMpDXfvQXrhnDdG2QRYwc3J7lhWY8aJZuooh2HxIM1OsxCGWURcQBEWYFpkXHNWCWPKl3Gy0Xva1BrlPDIXDJoDjaqSBNV6dqHR65Pcl4UkOK1/d/kuM7U2V8q/Rox9I="
 
 addons:
-  # coverity_scan:
-  #   project:
-  #     name: "Parallel-NetCDF/PnetCDF"
-  #     description: "PnetCDF nightly build submitted via Travis CI / Coverity Scan"
-  #   notification_email: wkliao@eecs.northwestern.edu
-  #   build_command_prepend: ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes
-  #   build_command: make tests
-  #   branch_pattern: test_travis_ci
   apt:
     packages:
       - gfortran
@@ -39,12 +28,12 @@ addons:
     # apt-package-whitelist can be found in
     # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
 
+
 before_install:
-  # - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+  - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
   - test -n $CC && unset CC
   - if [ $TRAVIS_OS_NAME == osx ]; then brew update; fi
   - if [ $TRAVIS_OS_NAME == osx ]; then brew install mpich; fi
-  # - if [ $TRAVIS_OS_NAME == osx ]; then brew install open-mpi; fi # no bottle available
   - autoconf --version
   - automake --version
   - if [ $TRAVIS_OS_NAME = linux ]; then libtool --version ; else libtool -V ; fi
@@ -52,14 +41,17 @@ before_install:
   - autoreconf -i
 
 script:
-  - ./configure --silent
+  # - ./configure --silent
   # - if [[ "${TRAVIS_OS_NAME}" = "linux" ]] ; then make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--silent --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared --enable-debug pnc_ac_debug=yes" ; fi
   # - if [[ "${TRAVIS_OS_NAME}" = "osx" ]] ; then make -s V=1 LIBTOOLFLAGS=--silent check ; fi
   # - make -s V=1 LIBTOOLFLAGS=--silent check
   # - make -s V=1 LIBTOOLFLAGS=--silent ptest
-  - if [[ "${TRAVIS_OS_NAME}" = "linux" ]] ; then make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes CFLAGS=-O3 CXXFLAGS=-O3 FCFLAGS=-O3 FFLAGS=-O3" ; fi
-  - if [[ "${TRAVIS_OS_NAME}" = "osx" ]] ; then make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes CFLAGS=-O3" ; fi
-
+  # - if [[ "${TRAVIS_OS_NAME}" = "linux" ]] ; then make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes CFLAGS=-O3 CXXFLAGS=-O3 FCFLAGS=-O3 FFLAGS=-O3" ; fi
+  # - if [[ "${TRAVIS_OS_NAME}" = "osx" ]] ; then make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes CFLAGS=-O3" ; fi
+  - ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes CFLAGS=-O3 CXXFLAGS=-O3 FCFLAGS=-O3 FFLAGS=-O3
+  - make -j4
+  - make check
+  - cat src/utils/ncvalidator/*.log
 
 after_success:
   - make -s distclean
@@ -74,7 +66,5 @@ notifications:
 # to build all branches
 branches:
   only:
-   - master
-   - /.*/
-
-
+  - master
+  - /.*/
