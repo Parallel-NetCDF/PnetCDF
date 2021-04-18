@@ -48,9 +48,9 @@ script:
   # - make -s V=1 LIBTOOLFLAGS=--silent ptest
   # - if [[ "${TRAVIS_OS_NAME}" = "linux" ]] ; then make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes CFLAGS=-O3 CXXFLAGS=-O3 FCFLAGS=-O3 FFLAGS=-O3" ; fi
   # - if [[ "${TRAVIS_OS_NAME}" = "osx" ]] ; then make distcheck -s V=1 LIBTOOLFLAGS=--silent DISTCHECK_CONFIGURE_FLAGS="--enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes CFLAGS=-O3" ; fi
-  - ./configure --enable-debug --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes CFLAGS=-O3 CXXFLAGS=-O3 FCFLAGS=-O3 FFLAGS=-O3
+  - ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes CFLAGS=-O3 CXXFLAGS=-O3 FCFLAGS=-O3 FFLAGS=-O3
   - make -j4
-  - make check
+  - make check PNETCDF_DEBUG=1
 
 after_success:
   - make -s distclean
