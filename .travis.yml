@@ -51,7 +51,7 @@ script:
   - ./configure --enable-profiling --enable-subfiling --enable-thread-safe --enable-burst_buffering --enable-shared pnc_ac_debug=yes CFLAGS=-O3 CXXFLAGS=-O3 FCFLAGS=-O3 FFLAGS=-O3
   - make -j4
   - make check
-  - cat src/utils/ncvalidator/*.log
+  - cat test/*/*.log examples/*/*.log src/utils/*/*.log
 
 after_success:
   - make -s distclean
