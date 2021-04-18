@@ -293,6 +293,8 @@ ncmpi_strerror(int err)
             return "Unrecognized burst buffering log file format.";
         case NC_EFLUSHED:
             return "Nonblocking requests already flushed.";
+        case NC_EADIOS:
+            return "unknown ADIOS error.";
 
         default:
             /* check netCDF-3 and netCDF-4 errors */
@@ -617,6 +619,8 @@ ncmpi_strerrno(int err)
         case (NC_EAUTH):			return "NC_EAUTH";
         case (NC_ENOTFOUND):			return "NC_ENOTFOUND";
         case (NC_ECANTREMOVE):			return "NC_ECANTREMOVE";
+        case (NC_EINTERNAL):			return "NC_EINTERNAL";
+        case (NC_EPNETCDF):			return "NC_EPNETCDF";
         case (NC_EHDFERR):			return "NC_EHDFERR";
         case (NC_ECANTREAD):			return "NC_ECANTREAD";
         case (NC_ECANTWRITE):			return "NC_ECANTWRITE";
@@ -646,12 +650,13 @@ ncmpi_strerrno(int err)
         case (NC_EBADCHUNK):			return "NC_EBADCHUNK";
         case (NC_ENOTBUILT):			return "NC_ENOTBUILT";
         case (NC_EDISKLESS):			return "NC_EDISKLESS";
-        case (NC_EFILTER):			return "NC_EFILTER";
         case (NC_ECANTEXTEND):			return "NC_ECANTEXTEND";
         case (NC_EMPI):				return "NC_EMPI";
+        case (NC_EFILTER):			return "NC_EFILTER";
         case (NC_ERCFILE):			return "NC_ERCFILE";
         case (NC_ENULLPAD):			return "NC_ENULLPAD";
         case (NC_EINMEMORY):			return "NC_EINMEMORY";
+        case (NC_ENOFILTER):			return "NC_ENOFILTER";
 /*
         case (NC_EURL):				return "NC_EURL";
         case (NC_ECONSTRAINT):			return "NC_ECONSTRAINT";
@@ -684,15 +689,19 @@ ncmpi_strerrno(int err)
         case (NC_ENULLSTART):			return "NC_ENULLSTART";
         case (NC_ENULLCOUNT):			return "NC_ENULLCOUNT";
         case (NC_EINVAL_CMODE):			return "NC_EINVAL_CMODE";
-        case (NC_EINVAL_OMODE):			return "NC_EINVAL_OMODE";
-        case (NC_EPENDING):			return "NC_EPENDING";
-        case (NC_EMAX_REQ):			return "NC_EMAX_REQ";
         case (NC_ETYPESIZE):			return "NC_ETYPESIZE";
         case (NC_ETYPE_MISMATCH):		return "NC_ETYPE_MISMATCH";
         case (NC_ETYPESIZE_MISMATCH):		return "NC_ETYPESIZE_MISMATCH";
         case (NC_ESTRICTCDF2):			return "NC_ESTRICTCDF2";
         case (NC_ENOTRECVAR):			return "NC_ENOTRECVAR";
         case (NC_ENOTFILL):			return "NC_ENOTFILL";
+        case (NC_EINVAL_OMODE):			return "NC_EINVAL_OMODE";
+        case (NC_EPENDING):			return "NC_EPENDING";
+        case (NC_EMAX_REQ):			return "NC_EMAX_REQ";
+        case (NC_EBADLOG):			return "NC_EBADLOG";
+        case (NC_EFLUSHED):			return "NC_EFLUSHED";
+        case (NC_EADIOS):			return "NC_EADIOS";
+
         case (NC_EMULTIDEFINE):			return "NC_EMULTIDEFINE";
         case (NC_EMULTIDEFINE_OMODE):		return "NC_EMULTIDEFINE_OMODE";
         case (NC_EMULTIDEFINE_DIM_NUM):		return "NC_EMULTIDEFINE_DIM_NUM";
