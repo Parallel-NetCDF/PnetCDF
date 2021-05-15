@@ -1,7 +1,4 @@
-#
-# Copyright (C) 2013, Northwestern University and Argonne National Laboratory
-# See COPYRIGHT notice in top-level directory.
-#
+## PnetCDF subfiling feature test
 
 In order to use the subfiling module, pnetcdf must be configured with
 "--enable-subfiling" option.
@@ -92,3 +89,5 @@ variables:
 		var0_0:_PnetCDF_SubFiling.subfile_index = 1 ;
 }
 ```
+
+* See COPYRIGHT notice in top-level directory.
