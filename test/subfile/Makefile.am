@@ -50,7 +50,7 @@ CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/test_subfile.bb.nc.subfile_0.nc \
              $(TESTOUTDIR)/test_subfile.bb.nc.subfile_1.nc
 
-EXTRA_DIST = README seq_runs.sh parallel_run.sh
+EXTRA_DIST = README.md seq_runs.sh parallel_run.sh
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
