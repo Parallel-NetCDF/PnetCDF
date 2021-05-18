@@ -301,15 +301,15 @@ ncbbio_iput_var(void             *ncdp,
 }
 
 int
-ncbbio_buffer_attach(void       *ncdp,
-                     MPI_Offset  bufsize)
+ncbbio_buffer_attach(__attribute__((unused)) void       *ncdp,
+                     __attribute__((unused)) MPI_Offset  bufsize)
 {
     /* bput calls iput in burst buffer driver */
     return NC_NOERR;
 }
 
 int
-ncbbio_buffer_detach(void *ncdp)
+ncbbio_buffer_detach(__attribute__((unused)) void *ncdp)
 {
     /* bput calls iput in burst buffer driver */
     return NC_NOERR;

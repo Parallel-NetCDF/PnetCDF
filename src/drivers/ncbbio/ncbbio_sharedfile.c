@@ -33,7 +33,7 @@
 int ncbbio_sharedfile_open(MPI_Comm           comm,
                            char              *path,
                            int                flag,
-                           MPI_Info           info,
+                           __attribute__((unused)) MPI_Info           info,
                            NC_bb_sharedfile **fh)
 {
     int err;
@@ -152,7 +152,7 @@ int ncbbio_sharedfile_pwrite(NC_bb_sharedfile *f,
     // Write directly if not sharing
     if (f->nchanel == 1) {
         wsize = 0;
-        while (wsize < count) {
+        while ((size_t)wsize < count) {
             ioret = pwrite(f->fd, (char*)buf + wsize, count - wsize,
                            offset + wsize);
             if (ioret < 0) {
@@ -259,7 +259,7 @@ int ncbbio_sharedfile_write(NC_bb_sharedfile *f,
         ssize_t ioret;
         off_t wsize;
         wsize = 0;
-        while (wsize < count) {
+        while ((size_t)wsize < count) {
             ioret = write(f->fd, (char*)buf + wsize, count - wsize);
             if (ioret < 0) {
                 err = ncmpii_error_posix2nc("write");
@@ -325,7 +325,7 @@ int ncbbio_sharedfile_pread(NC_bb_sharedfile *f,
     // Read directly if not sharing
     if (f->nchanel == 1) {
         rsize = 0;
-        while (rsize < count) {
+        while ((size_t)rsize < count) {
             ioret = pread(f->fd, (char*)buf + rsize, count - rsize, offset + rsize);
             if (ioret < 0) {
                 err = ncmpii_error_posix2nc("read");
@@ -430,7 +430,7 @@ int ncbbio_sharedfile_read(NC_bb_sharedfile *f,
         ssize_t ioret;
         off_t rsize;
         rsize = 0;
-        while (rsize < count) {
+        while ((size_t)rsize < count) {
             ioret = read(f->fd, (char*)buf + rsize, count - rsize);
             if (ioret < 0) {
                 err = ncmpii_error_posix2nc("read");
