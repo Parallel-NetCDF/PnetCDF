@@ -239,8 +239,8 @@ int ncbbio_log_create(NC_bb* ncbbp,
      * Header consists of a fixed-size info and variable size basename
      */
     headersize = sizeof(NC_bb_metadataheader) + strlen(basename) + 1 + SIZEOF_INT + procname_len + 1;
-    if (headersize % 4 != 0) {
-        headersize += 4 - (headersize % 4);
+    if (headersize % 16 != 0) {
+        headersize += 16 - (headersize % 16);
     }
     headerp = (NC_bb_metadataheader*)ncbbio_log_buffer_alloc(&(ncbbp->metadata),
                                                              headersize);
