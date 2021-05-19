@@ -2384,6 +2384,9 @@ if test "x${TESTMPIRUN}" = x ; then
    dnl set default to "mpiexec -n NP"
    UD_MPI_PATH_PROGS([TESTMPIRUN], [mpiexec mpirun srun])
    if test "x${TESTMPIRUN}" != x ; then
+      if test "x${TESTSEQRUN}" = x ; then
+         TESTSEQRUN="$TESTMPIRUN -n 1"
+      fi
       TESTMPIRUN="$TESTMPIRUN -n NP"
    fi
 fi
