@@ -28,6 +28,8 @@ addons:
     # apt-package-whitelist can be found in
     # https://github.com/travis-ci/apt-package-whitelist/blob/master/ubuntu-precise
 
+before_script:
+  - for i in {1..4}; do echo "$(sleep 500)" ; done &
 
 before_install:
   - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
@@ -40,7 +42,6 @@ before_install:
   - mpichversion
   - autoreconf -i
   - cat /etc/hosts
-  - for i in {1..4}; do echo "$(sleep 500)" ; done &
 
 script:
   # - ./configure --silent
