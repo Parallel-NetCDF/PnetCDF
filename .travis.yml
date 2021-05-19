@@ -39,6 +39,8 @@ before_install:
   - if [ $TRAVIS_OS_NAME = linux ]; then libtool --version ; else libtool -V ; fi
   - mpichversion
   - autoreconf -i
+  - cat /etc/hosts
+  - sudo echo '127.0.0.1   localhost localhost.localdomain' | sudo tee -a /etc/hosts
 
 script:
   # - ./configure --silent
