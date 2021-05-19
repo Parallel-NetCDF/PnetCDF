@@ -40,7 +40,7 @@ before_install:
   - mpichversion
   - autoreconf -i
   - cat /etc/hosts
-  - sudo echo '127.0.0.1   localhost localhost.localdomain' | sudo tee -a /etc/hosts
+  - for i in {1..4}; do echo "$(sleep 500)" ; done &
 
 script:
   # - ./configure --silent
