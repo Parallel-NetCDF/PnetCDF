@@ -99,7 +99,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
      * (Buffer size) = max((largest size of single record), min((size of data log), (size specified in hint)))
      */
     databuffersize = ncbbp->datalogsize;
-    if (ncbbp->flushbuffersize > 0 && databuffersize > ncbbp->flushbuffersize){
+    if (ncbbp->flushbuffersize > 0 && databuffersize > (size_t)(ncbbp->flushbuffersize)){
         databuffersize = ncbbp->flushbuffersize;
     }
     /* Without enabling large_req, we can not post requests larger than 2GiB */
@@ -109,12 +109,12 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
     }
 #endif
     /* We assume user will not issue single request larger than 2GiB wwithout enabling large_req */
-    if (databuffersize < ncbbp->maxentrysize){
+    if (databuffersize < (size_t)(ncbbp->maxentrysize)){
         databuffersize = ncbbp->maxentrysize;
     }
 
 #ifdef PNETCDF_PROFILING
-    if (ncbbp->max_buffer < databuffersize){
+    if ((size_t)(ncbbp->max_buffer) < databuffersize){
         ncbbp->max_buffer = databuffersize;
     }
 #endif
@@ -306,7 +306,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
 #endif
 
                     /* Replay event with non-blocking call */
-                    if (entryp->esize == sizeof(NC_bb_metadataentry) + entryp->ndims * SIZEOF_MPI_OFFSET * num){
+                    if ((size_t)(entryp->esize) == sizeof(NC_bb_metadataentry) + entryp->ndims * SIZEOF_MPI_OFFSET * num){
                         err = ncbbp->ncmpio_driver->iput_varn(ncbbp->ncp, entryp->varid, num, starts, NULL, (void*)(databufferoff), -1, buftype, reqids + j, NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
                     }
                     else{

@@ -26,10 +26,10 @@
  * INOUT   ncbbp:   NC_bb object holding the log structure
  */
 int ncbbio_log_create(NC_bb* ncbbp,
-                      MPI_Info info)
+                      __attribute__((unused)) MPI_Info info)
 {
     int i, rank, np, err, flag, masterrank, procname_len;
-    char logbase[PATH_MAX], basename[PATH_MAX];
+    char logbase[NC_LOG_MAX_PATH], basename[NC_LOG_MAX_PATH];
     char procname[MPI_MAX_PROCESSOR_NAME];
     char *abspath, *fname, *path, *fdir = NULL;
     char *logbasep = ".";
@@ -239,8 +239,8 @@ int ncbbio_log_create(NC_bb* ncbbp,
      * Header consists of a fixed-size info and variable size basename
      */
     headersize = sizeof(NC_bb_metadataheader) + strlen(basename) + 1 + SIZEOF_INT + procname_len + 1;
-    if (headersize % 4 != 0) {
-        headersize += 4 - (headersize % 4);
+    if (headersize % 16 != 0) {
+        headersize += 16 - (headersize % 16);
     }
     headerp = (NC_bb_metadataheader*)ncbbio_log_buffer_alloc(&(ncbbp->metadata),
                                                              headersize);
