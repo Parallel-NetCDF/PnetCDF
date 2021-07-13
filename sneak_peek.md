@@ -87,4 +87,5 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Clarifications
-  + none
+  + Nonblocking APIs have yet been updated to support subfiling feature.
+
