@@ -130,7 +130,7 @@ ncmpio_create(MPI_Comm     comm,
                     err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_set_size");
                 }
                 else {
-                    TRACE_IO(MPI_File_close)(fh);
+                    TRACE_IO(MPI_File_close)(&fh);
                     if (mpireturn != MPI_SUCCESS) {
                         int errorclass;
                         MPI_Error_class(mpireturn, &errorclass);
