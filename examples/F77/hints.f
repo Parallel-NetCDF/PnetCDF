@@ -184,7 +184,7 @@
       ! note that set the above values to 1 to disable the alignment
 
       ! create a new file for writing
-      cmode = NF_CLOBBER + NF_64BIT_DATA
+      cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
       err = nfmpi_create(MPI_COMM_WORLD, filename, cmode, info, ncid)
       call check(err, 'In nfmpi_create : ')
       call MPI_Info_free(info, err)

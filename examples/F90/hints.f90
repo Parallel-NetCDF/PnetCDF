@@ -182,7 +182,7 @@
       ! note that set the above values to 1 to disable the alignment
 
       ! create a new file for writing
-      cmode = NF90_CLOBBER + NF90_64BIT_DATA
+      cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
       err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode, info, ncid)
       call check(err, 'In nf90mpi_create : ')
       call MPI_Info_free(info, err)
