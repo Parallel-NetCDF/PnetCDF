@@ -208,8 +208,10 @@ ncmpio_create(MPI_Comm     comm,
     /* chunk size for reading header, set to default before check hints */
     ncp->chunk = NC_DEFAULT_CHUNKSIZE;
 
-    /* calculate the true header size (not-yet aligned) */
-    ncp->xsz = ncmpio_hdr_len_NC(ncp);
+    /* calculate the true header size (not-yet aligned)
+     * No need to do this now.
+     * ncp->xsz = ncmpio_hdr_len_NC(ncp);
+     */
 
     /* initialize unlimited_id as no unlimited dimension yet defined */
     ncp->dims.unlimited_id = -1;
