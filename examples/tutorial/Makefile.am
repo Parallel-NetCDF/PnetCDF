@@ -11,8 +11,8 @@ SUFFIXES = .o .c .f .f90 .F90
 AM_DEFAULT_SOURCE_EXT = .c
 AM_CPPFLAGS = -I$(top_builddir)/src/include
 
-AM_FFLAGS = -I$(top_builddir)/src/binding/f77
-AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/binding/f90
+AM_FFLAGS = -I$(top_builddir)/src/binding/f77 $(FFIXEDFORMFLAG)
+AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/binding/f90 $(FFREEFORMFLAG)
 LDADD  = ${top_builddir}/src/libs/libpnetcdf.la
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 

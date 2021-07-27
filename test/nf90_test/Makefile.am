@@ -16,7 +16,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src/include \
               -I$(top_builddir)/src/binding/f77
 
 AM_FCFLAGS  = $(FC_MODINC)$(top_builddir)/src/binding/f90 \
-              $(FC_MODINC)../common
+              $(FC_MODINC)../common $(FFREEFORMFLAG)
 AM_CFLAGS   =
 
 LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la

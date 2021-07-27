@@ -11,7 +11,7 @@ SUFFIXES = .o .f90
 AM_DEFAULT_SOURCE_EXT = .f90
 
 AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/binding/f90 \
-             $(FC_MODINC)../common
+             $(FC_MODINC)../common $(FFREEFORMFLAG)
 
 LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@

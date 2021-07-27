@@ -15,7 +15,7 @@ AM_CPPFLAGS  = -I$(top_builddir)/src/include \
                -I$(top_builddir)/src/binding/f77 \
                -I$(top_srcdir)/src/binding/f77
 AM_CFLAGS =
-AM_FFLAGS =
+AM_FFLAGS = $(FFIXEDFORMFLAG)
 
 LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@

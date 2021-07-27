@@ -34,12 +34,12 @@ TESTPROGRAMS = large_files \
 if HAS_FORTRAN
    TESTPROGRAMS += bigrecords
    bigrecords_SOURCES = bigrecords.f
-   AM_FFLAGS = -I$(top_builddir)/src/binding/f77
+   AM_FFLAGS = -I$(top_builddir)/src/binding/f77 $(FFIXEDFORMFLAG)
 if HAVE_MPI_MOD
    TESTPROGRAMS += tst_flarge
    tst_flarge_SOURCES = tst_flarge.f90
    AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/binding/f90 \
-                $(FC_MODINC)../common
+                $(FC_MODINC)../common $(FFREEFORMFLAG)
 endif
 endif
 
