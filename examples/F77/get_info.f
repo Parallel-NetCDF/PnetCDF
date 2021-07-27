@@ -42,7 +42,7 @@
         include "pnetcdf.inc"
 
         character*256 filename, cmd
-        integer ncid, rank, info, omode, err, ierr, get_args
+        integer ncid, rank, info, cmode, err, ierr, get_args
         integer*8 malloc_size, sum_size
         logical verbose
         integer dummy
@@ -63,15 +63,14 @@
         call MPI_Bcast(filename, 256, MPI_CHARACTER, 0,
      +                 MPI_COMM_WORLD, err)
 
-        omode = IOR(NF_CLOBBER, NF_64BIT_OFFSET)
-        err = nfmpi_create(MPI_COMM_WORLD, filename, omode,
+        cmode = IOR(NF_CLOBBER, NF_64BIT_OFFSET)
+        err = nfmpi_create(MPI_COMM_WORLD, filename, cmode,
      +                     MPI_INFO_NULL, ncid)
-        if (err .ne. NF_NOERR) call handle_err('nfmpi_open',err)
-
+        if (err .ne. NF_NOERR) call handle_err('nfmpi_create',err)
 
         err = nfmpi_inq_file_info(ncid, info)
-        if (err .ne. NF_NOERR) call handle_err('nfmpi_inq_file_info',
-     +                                          err)
+        if (err .ne. NF_NOERR)
+     +      call handle_err('nfmpi_inq_file_info', err)
 
         err = nfmpi_close(ncid)
         if (err .ne. NF_NOERR) call handle_err('nfmpi_close',err)
