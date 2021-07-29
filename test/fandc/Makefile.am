@@ -31,15 +31,17 @@ TESTPROGRAMS = pnctest \
                csnap
 
 if HAS_FORTRAN
-TESTPROGRAMS += pnf_test pnctestf fixedform
-pnf_test_SOURCES = pnf_test.f
-pnctestf_SOURCES = pnctestf.f
-fixedform_SOURCES = fixedform.f90
-fixedform_FCFLAGS = $(FFIXEDFORMFLAG) $(FC_MODINC)$(top_builddir)/src/binding/f90 $(FC_MODINC)$(srcdir)/../common -I$(top_builddir)/src/binding/f77
+   TESTPROGRAMS += pnf_test pnctestf fixedform
+   pnf_test_SOURCES = pnf_test.f
+   pnf_test_FFLAGS = $(FFIXEDFORMFLAG) $(AM_FFLAGS)
+   pnctestf_SOURCES = pnctestf.f
+   pnctestf_FFLAGS = $(FFIXEDFORMFLAG) $(AM_FFLAGS)
+   fixedform_SOURCES = fixedform.f90
+   fixedform_FCFLAGS = $(FFIXEDFORMFLAG) $(AM_FCFLAGS) $(AM_FFLAGS)
 if HAVE_F77_SUPPORT_FREEFORM
-TESTPROGRAMS += freeform
-freeform_SOURCES = freeform.f
-freeform_FFLAGS = $(FFREEFORMFLAG) -I$(top_builddir)/src/binding/f77
+   TESTPROGRAMS += freeform
+   freeform_SOURCES = freeform.f
+   freeform_FFLAGS = $(FFREEFORMFLAG) $(AM_FFLAGS)
 endif
 endif
 
