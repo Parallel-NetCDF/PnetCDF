@@ -52,7 +52,13 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Other updates:
-  + none
+  + IBM XLF compiler on Summit at OLCF requires -qfixed compile flag when
+    compiling Fortran programs written in fixed form. Thus, the fixed form flag
+    detected at configure time has been added to AM_FFLAGS when compiling fixed
+    form programs. Similarly, the free form flag has been added to AM_FCFLAGS
+    when compiling free form programs. This issue affects only the test and
+    example Fortran programs. The PnetCDF library is intact.
+    See [PR #73](https://github.com/Parallel-NetCDF/PnetCDF/pull/73)
 
 * Bug fixes
   + When calling MPI_File_close, fh argument fh should be a pointer.
