@@ -331,10 +331,15 @@ ncmpio_igetput_varm(NC               *ncp,
          * in an increasing order of variable begin offsets. The best is when
          * user makes varn API calls in an increasing order of variable begin
          * offsets, i.e. fixed-size variables first followed by record
-         * variables and in an increasing order of variables IDs.
+         * variables and in an increasing order of variables IDs. If the
+         * pending requests consist of multiple records, then keep the list
+         * sorted based on the starting offsets of inidvidual records.
          */
+        MPI_Offset req_off = varp->begin;
+        if (IS_RECVAR(varp)) req_off += ncp->recsize * start[0];
+
         for (i=ncp->numLeadPutReqs-1; i>=0; i--) {
-            if (ncp->put_lead_list[i].varp->begin <= varp->begin)
+            if (ncp->put_lead_list[i].varp->begin <= req_off)
                 break;
             /* make space for new lead request */
             ncp->put_lead_list[i+1] = ncp->put_lead_list[i];
