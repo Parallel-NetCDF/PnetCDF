@@ -37,7 +37,7 @@ Requirements:
         - autotools (autoconfig, automake, libtool, m4, etc.)
         - Optional: (for PnetCDF developers)
              - either yacc or bison
-	     - either lex or flex
+             - either lex or flex
       These are usually part of your operating system's development tools.
     - To build PnetCDF with NetCDF-4 feature, you will need the following
       additional libraries:

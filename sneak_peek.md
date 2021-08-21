@@ -6,7 +6,8 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New optimization
-  + none
+  + Improve the performance for the case when posting nonblocking requests of
+    more than one record. See commit a00f5d2 and its comments.
 
 * New Limitations
   + none
