@@ -386,15 +386,13 @@ ncmpio_inq_misc(void       *ncdp,
         mpireturn = MPI_Info_dup(ncp->mpiinfo, info_used);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Info_dup");
-#if 0
+
         /* PnetCDF hints have been added to ncp->mpiinfo at ncmpi_enddef.
          *
-         * Note some MPI libraries, such as MPICH 3.3.1 and prior, fail to
-         * preserve user hints that are not recognized by the MPI libraries,
-         * which can result in the PnetCDF hints undefined in the info object
-         * returend from MPI_File_get_info(). We need to check if this is the
-         * case and add the PnbetCDF hints explicitly to the info object
-         * brefore returning it to user.
+         * Note MPI implementations may choose to ignore unrecognized hints and
+         * MPI_File_get_info() may returns no PnetCDF hints. We need to add the
+         * PnbetCDF hints explicitly to the info object brefore returning it to
+         * user.
          */
 
         sprintf(value, "%lld", ncp->h_align);
@@ -428,7 +426,6 @@ ncmpio_inq_misc(void       *ncdp,
         MPI_Info_set(*info_used, "nc_num_subfiles", value);
 #else
         MPI_Info_set(*info_used, "pnetcdf_subfiling", "disable");
-#endif
 #endif
     }
 
