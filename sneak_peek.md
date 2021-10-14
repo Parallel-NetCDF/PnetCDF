@@ -60,6 +60,8 @@ This is essentially a placeholder for the next release note ...
     when compiling free form programs. This issue affects only the test and
     example Fortran programs. The PnetCDF library is intact.
     See [PR #73](https://github.com/Parallel-NetCDF/PnetCDF/pull/73)
+  + Add all PnetCDF I/O hints to the inquired MPI info object returned by
+    ncmpi_inq_file_info(). See commit f0e65cf.
 
 * Bug fixes
   + When calling MPI_File_close, fh argument fh should be a pointer.
