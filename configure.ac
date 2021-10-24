@@ -194,6 +194,7 @@ AC_ARG_WITH(mpi,
         --with-mpi=no should not be used. Abort.
       -----------------------------------------------------------------------])
    elif test "x${withval}" = x ; then
+      # when "--with-mpi=" is used
       AC_MSG_ERROR(--with-mpi is set but the value is NULL)
    elif test "x${withval}" != xyes && test ! -d "${withval}" ; then
       # user may use --with-mpi without an argument, which results in withval
@@ -204,6 +205,11 @@ AC_ARG_WITH(mpi,
    MPI_INSTALL=${withval}
    ]
 )
+if test "x$MPI_INSTALL" = xyes ; then
+   # when "--with-mpi" is used
+   MPI_INSTALL=
+fi
+
 dnl MPI_INSTALL will be referred in UD_MPI_PATH_PROGS and UD_MPI_PATH_PROG
 dnl defined in acinclude.m4
 
