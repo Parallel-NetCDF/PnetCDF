@@ -1,0 +1,48 @@
+name: ubuntu_mpich
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - '**.md'
+      - '**.txt'
+      - 'docs/**'
+
+jobs:
+    build:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v2
+        - name: Set up dependencies
+          run: |
+            sudo apt-get update
+            sudo apt-get install automake autoconf libtool libtool-bin m4
+            # mpi
+            sudo apt-get install mpich
+            # zlib
+            sudo apt-get install zlib1g-dev     
+            autoconf --version
+            automake --version   
+            libtool --version
+            gcc --version
+        - name: Test PnetCDF base
+          run: |
+            WORKDIR=$(pwd)
+            autoreconf -i
+            ./configure
+            make -j 64
+            make -j 64 tests
+            make check
+            make ptests
+            make distcheck
+        - name: Print log
+          if: steps.TestPnetCDFbase.outcome=='failure'
+          run: |
+            WORKDIR=$(pwd)
+            cat ${WORKDIR}/config.log
+        - name: Cleanup
+          run: |
+            WORKDIR=$(pwd)
+            make -s distclean
