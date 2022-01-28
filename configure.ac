@@ -2405,23 +2405,26 @@ fi
 # Note on Theta @ALCF, CPATH is set for Intel Compiler and when gcc is used to
 # compile the above utility programs, errors can occur. See doc/README.CRAY for
 # more information. Below we use the same C compiler as MPICC.
+AC_ARG_VAR(SEQ_CC, [C compiler to build sequential utility programs, @<:@default: gcc@:>@])
 if test "x$SEQ_CC" = x ; then
-   if test "x$ac_cv_mpicc_base" = xGCC ; then
+   # if test "x$ac_cv_mpicc_base" = xGCC ; then
+   #    AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
+   # elif test "x$ac_cv_mpicc_base" = xCLANG ; then
+   #    AC_PATH_PROG([SEQ_CC], [clang], [$MPICC])
+   # elif test "x$ac_cv_mpicc_base" = xICC ; then
+   #    AC_PATH_PROG([SEQ_CC], [icc], [$MPICC])
+   # elif test "x$ac_cv_mpicc_base" = xPGCC ; then
+   #    AC_PATH_PROG([SEQ_CC], [pgcc], [$MPICC])
+   # elif test "x$ac_cv_mpicc_base" = xXLC ; then
+   #    AC_PATH_PROG([SEQ_CC], [xlc], [$MPICC])
+   # elif test "x$ac_cv_mpicc_base" = xFCCPX ; then
+   #    AC_PATH_PROG([SEQ_CC], [fccpx], [$MPICC])
+   # fi
+   if test "x$ac_cv_mpi_compiler_base_MPICC" = x ; then
+      # gcc should be available on most of the machines today
       AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
-   elif test "x$ac_cv_mpicc_base" = xCLANG ; then
-      AC_PATH_PROG([SEQ_CC], [clang], [$MPICC])
-   elif test "x$ac_cv_mpicc_base" = xICC ; then
-      AC_PATH_PROG([SEQ_CC], [icc], [$MPICC])
-   elif test "x$ac_cv_mpicc_base" = xPGCC ; then
-      AC_PATH_PROG([SEQ_CC], [pgcc], [$MPICC])
-   elif test "x$ac_cv_mpicc_base" = xXLC ; then
-      AC_PATH_PROG([SEQ_CC], [xlc], [$MPICC])
-   elif test "x$ac_cv_mpicc_base" = xFCCPX ; then
-      AC_PATH_PROG([SEQ_CC], [fccpx], [$MPICC])
-   fi
-   # gcc should be available on most of the machines today
-   if test "x$SEQ_CC" = x ; then
-      AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
+   else
+      SEQ_CC=$ac_cv_mpi_compiler_base_MPICC
    fi
 fi
 AC_MSG_CHECKING([C compiler for serial utility programs])
