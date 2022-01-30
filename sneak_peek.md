@@ -64,6 +64,9 @@ This is essentially a placeholder for the next release note ...
     ncmpi_inq_file_info(). See commit f0e65cf.
 
 * Bug fixes
+  + Fix configure bug of setting environment variable SEQ_CC to the sequential
+    CC extracted from MPICC. Add configure help message for environment
+    variable SEQ_CC. See commit 4978f6d.
   + When calling MPI_File_close, fh argument fh should be a pointer.
     See 3e331a6
   + When using an MPI implementation whose Fortran feature was disabled, the
