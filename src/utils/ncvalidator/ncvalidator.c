@@ -2586,24 +2586,16 @@ int main(int argc, char **argv)
             }
         }
     }
-    else { /* no record variable */
-        long long expect_fsize;
-        if (ncp->vars.ndefined == 0)
-            expect_fsize = ncp->xsz;
-        else {
-#ifdef VAR_BEGIN_IN_ARBITRARY_ORDER
-            /* find max end offset among all varaibles */
+    else { /* either there is no record variable or no record is written */
+	/* Assuming variables' begins do not follow their define order, find
+         * max end offset among all fixed-size varaibles.
+         */
+        long long expect_fsize = ncp->xsz;
+	for (i=0; i<ncp->vars.ndefined; i++) {
             long long var_end;
-            expect_fsize = ncp->xsz;
-            for (i=0; i<ncp->vars.ndefined; i++) {
-                var_end = ncp->vars.value[i]->begin + ncp->vars.value[i]->len;
-                expect_fsize = MAX(expect_fsize, var_end);
-            }
-#else
-            /* find the size of last fixed-size variable */
-            expect_fsize = ncp->vars.value[ncp->vars.ndefined-1]->begin +
-                           ncp->vars.value[ncp->vars.ndefined-1]->len;
-#endif
+            if (IS_RECVAR(ncp->vars.value[i])) continue;
+            var_end = ncp->vars.value[i]->begin + ncp->vars.value[i]->len;
+            expect_fsize = MAX(expect_fsize, var_end);
         }
         if (expect_fsize < ncfilestat.st_size) {
             if (verbose) printf("Error:\n");
