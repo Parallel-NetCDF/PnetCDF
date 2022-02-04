@@ -64,11 +64,13 @@ This is essentially a placeholder for the next release note ...
     ncmpi_inq_file_info(). See commit f0e65cf.
 
 * Bug fixes
+  + Fix ncvalidator bug for the case when there is no record written but both
+    fixed-size and record variables are defined. See commit b34bfcd.
   + Fix configure bug of setting environment variable SEQ_CC to the sequential
     CC extracted from MPICC. Add configure help message for environment
     variable SEQ_CC. See commit 4978f6d. Thanks to Carl Ponder for reporting.
   + When calling MPI_File_close, fh argument fh should be a pointer.
-    See 3e331a6
+    See commit 3e331a6
   + When using an MPI implementation whose Fortran feature was disabled, the
     MPI Fortran constants and datatypes may not be defined in the header file
     mpi.h. This is the case for Open MPI (tested with 4.0.2). PnetCDF used some
