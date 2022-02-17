@@ -45,17 +45,14 @@
         swapn(b2, nelems, esize);                                        \
     }                                                                    \
     for (indx=0; indx<nelems; indx++) {                                  \
-        double diff, ratio;                                              \
+        double abs_b1, abs_b2, abs_max, diff, ratio;                     \
         if ( b1[indx] == b2[indx] ) continue;                            \
-        if ( b1[indx] > b2[indx] ) {                                     \
-            diff = b1[indx] - b2[indx];                                  \
-            if (b2[indx] == 0) ratio = INFINITY;                         \
-            else ratio = (double)b1[indx] / (double)b2[indx] - 1.0;      \
-        } else {                                                         \
-            diff = b2[indx] - b1[indx];                                  \
-            if (b1[indx] == 0) ratio = INFINITY;                         \
-            else ratio = (double)b2[indx] / (double)b1[indx] - 1.0;      \
-        }                                                                \
+        abs_b1 = (b1[indx] >= 0) ? b1[indx] : -b1[indx];                 \
+        abs_b2 = (b2[indx] >= 0) ? b2[indx] : -b2[indx];                 \
+        abs_max = (abs_b1 > abs_b2) ? abs_b1 : abs_b2;                   \
+        diff = b1[indx] - b2[indx];                                      \
+        diff = (diff >= 0) ? diff : -diff;                               \
+        ratio = diff /  abs_max;                                         \
         if (diff <= tolerance_difference || ratio <= tolerance_ratio)    \
             continue;                                                    \
         /* fail to meet both tolerance errors */                         \

@@ -139,17 +139,14 @@
         }                                                                    \
     } else {                                                                 \
         for (pos=0; pos<varsize; pos++) {                                    \
-            double diff, ratio;                                              \
+            double abs_b1, abs_b2, abs_max, diff, ratio;                     \
             if ( b1[pos] == b2[pos] ) continue;                              \
-            if ( b1[pos] > b2[pos] ) {                                       \
-                diff  = b1[pos] - b2[pos];                                   \
-                if (b2[pos] == 0) ratio = INFINITY;                          \
-                else ratio = (double)b1[pos] / (double)b2[pos] - 1.0;        \
-            } else {                                                         \
-                diff  = b2[pos] - b1[pos];                                   \
-                if (b1[pos] == 0) ratio = INFINITY;                          \
-                else ratio = (double)b2[pos] / (double)b1[pos] - 1.0;        \
-            }                                                                \
+            abs_b1 = (b1[pos] >= 0) ? b1[pos] : -b1[pos];                    \
+            abs_b2 = (b2[pos] >= 0) ? b2[pos] : -b2[pos];                    \
+            abs_max = (abs_b1 > abs_b2) ? abs_b1 : abs_b2;                   \
+            diff = b1[pos] - b2[pos];                                        \
+            diff = (diff >= 0) ? diff : -diff;                               \
+            ratio = diff /  abs_max;                                         \
             if (diff <= tolerance_difference || ratio <= tolerance_ratio)    \
                 continue;                                                    \
             /* fail to meet both tolerance errors */                         \
