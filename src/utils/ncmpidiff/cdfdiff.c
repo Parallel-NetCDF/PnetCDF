@@ -20,6 +20,7 @@
 #include <string.h> /* strtok(), strdup(), strlen(), strerror(), strcmp(), memcmp() */
 #include <sys/types.h> /* lseek() */
 #include <unistd.h> /* getopt(), lseek() */
+#include <math.h>   /* INFINITY */
 
 /* include subroutines from ncvalidator.c for reading file header */
 #define BUILD_CDFDIFF
@@ -47,22 +48,35 @@
         double diff, ratio;                                              \
         if ( b1[indx] == b2[indx] ) continue;                            \
         if ( b1[indx] > b2[indx] ) {                                     \
-            diff  = b1[indx] - b2[indx];                                 \
-            ratio = (double)b1[indx] / (double)b2[indx] - 1.0;           \
+            diff = b1[indx] - b2[indx];                                  \
+            if (b2[indx] == 0) ratio = INFINITY;                         \
+            else ratio = (double)b1[indx] / (double)b2[indx] - 1.0;      \
         } else {                                                         \
-            diff  = b2[indx] - b1[indx];                                 \
-            ratio = (double)b2[indx] / (double)b1[indx] - 1.0;           \
+            diff = b2[indx] - b1[indx];                                  \
+            if (b1[indx] == 0) ratio = INFINITY;                         \
+            else ratio = (double)b2[indx] / (double)b1[indx] - 1.0;      \
         }                                                                \
-        if (diff <= error_difference || ratio <= error_ratio)            \
+        if (diff <= tolerance_difference || ratio <= tolerance_ratio)    \
             continue;                                                    \
         /* fail to meet both tolerance errors */                         \
-        error_difference = diff;                                         \
-        error_ratio      = ratio;                                        \
         worst = chunk_off + indx;                                        \
         worst1 = b1[indx];                                               \
         worst2 = b2[indx];                                               \
     }                                                                    \
     chunk_off += nelems;                                                 \
+}
+
+#define PRINTF_VAR_DIFF(itype) {                                         \
+    int esize = sizeof(itype);                                           \
+    itype *b1 = (itype*)str[0];                                          \
+    itype *b2 = (itype*)str[1];                                          \
+    if (esize > 1 && is_little_endian) {                                 \
+        swapn(b1, 1, esize);                                             \
+        swapn(b2, 1, esize);                                             \
+    }                                                                    \
+    worst1 = (double)b1[0];                                              \
+    worst2 = (double)b2[0];                                              \
+    printf("%g vs %g (difference = %e)\n", worst1,worst2,worst1-worst2); \
 }
 
 #define SWAP2B(a) ( (((a) & 0xff) << 8) | \
@@ -206,7 +220,7 @@ int main(int argc, char **argv)
     long long numVarDIFF=0, numHeadDIFF=0, numDIFF;
     long long r, worst, chunk_off, numrecs;
     double tolerance_difference, tolerance_ratio;
-    double error_difference, error_ratio, worst1, worst2;
+    double worst1, worst2;
     void *buf[2] = {NULL, NULL};
     struct vspec var_list;
     NC *ncp[2];
@@ -266,6 +280,11 @@ int main(int argc, char **argv)
 
     if (argc - optind != 2) usage(argv[0]);
 
+    if (verbose && check_tolerance) {
+        printf("Tolerance absolute difference = %e\n", tolerance_difference);
+        printf("Tolerance ratio    difference = %e\n", tolerance_ratio);
+    }
+
     if (check_header == 0 && check_variable_list == 0) {
         /* variable list is not provided, check header and all variables */
         check_entire_file = 1;
@@ -286,6 +305,8 @@ int main(int argc, char **argv)
                     __LINE__, argv[optind+i], strerror(errno));
             exit(1);
         }
+        if (verbose && i == 0) printf("First  file: %s\n", argv[optind+i]);
+        if (verbose && i == 1) printf("Second file: %s\n", argv[optind+i]);
 
         /* read file format signature, first 8 bytes of file */
         rlen = read(fd[i], signature, 8);
@@ -438,9 +459,30 @@ int main(int argc, char **argv)
                     if (str[0][m] != str[1][m])
                         break;
                 isDiff = m / len_nctype(attr[0]->xtype);
-                if (!quiet)
-                    printf("DIFF: global attribute \"%s\" of type \"%s\" diff at element %d\n",
+                if (!quiet) {
+                    printf("DIFF: global attribute \"%s\" of type \"%s\" at element %d of value ",
                             attr[0]->name, get_type(attr[0]->xtype), isDiff);
+                    if (attr[0]->xtype == NC_CHAR) {
+                        char *_val[2];
+                        _val[0] = (char*) calloc(attr[0]->nelems + 1, 1);
+                        _val[1] = (char*) calloc(attr[1]->nelems + 1, 1);
+                        strncpy(_val[0], str[0], attr[0]->nelems);
+                        strncpy(_val[1], str[1], attr[1]->nelems);
+                        printf("\"%s\" vs \"%s\"\n", _val[0], _val[1]);
+                        free(_val[0]);
+                        free(_val[1]);
+                    }
+                    else if (attr[0]->xtype == NC_BYTE)   PRINTF_VAR_DIFF(signed char)
+                    else if (attr[0]->xtype == NC_UBYTE)  PRINTF_VAR_DIFF(unsigned char)
+                    else if (attr[0]->xtype == NC_SHORT)  PRINTF_VAR_DIFF(short)
+                    else if (attr[0]->xtype == NC_USHORT) PRINTF_VAR_DIFF(unsigned short)
+                    else if (attr[0]->xtype == NC_INT)    PRINTF_VAR_DIFF(int)
+                    else if (attr[0]->xtype == NC_UINT)   PRINTF_VAR_DIFF(unsigned int)
+                    else if (attr[0]->xtype == NC_FLOAT)  PRINTF_VAR_DIFF(float)
+                    else if (attr[0]->xtype == NC_DOUBLE) PRINTF_VAR_DIFF(double)
+                    else if (attr[0]->xtype == NC_INT64)  PRINTF_VAR_DIFF(long long)
+                    else if (attr[0]->xtype == NC_UINT64) PRINTF_VAR_DIFF(unsigned long long)
+                }
                 numHeadDIFF++;
             }
             else if (verbose)
@@ -686,7 +728,7 @@ cmp_vars:
                             break;
                     isDiff = m / len_nctype(attr[0]->xtype);
                     if (!quiet)
-                        printf("DIFF: variable \"%s\" attribute \"%s\" of type \"%s\" diff at element %d\n",
+                        printf("DIFF: variable \"%s\" attribute \"%s\" of type \"%s\" at element %d\n",
                                var[0]->name, attr[0]->name, get_type(attr[0]->xtype), isDiff);
                     numHeadDIFF++;
                 }
@@ -883,8 +925,6 @@ cmp_vars:
         }
         assert(varsize[0] == varsize[1]);
 
-        error_difference = tolerance_difference;
-        error_ratio = tolerance_ratio;
         worst = -1;
         chunk_off = 0; /* array index offset for this chunk */
         numrecs = (isRecVar[0]) ? ncp[0]->numrecs : 1;
@@ -947,17 +987,17 @@ cmp_vars:
 
                     /* difference found */
                     if (!quiet) {
+                        char *str[2];
+                        str[0] = (char*) buf[0];
+                        str[1] = (char*) buf[1];
                         if (ndims[0] == 0) { /* scalar variable */
-                            printf("DIFF: scalar variable \"%s\" of type \"%s\"\n",
+                            printf("DIFF: scalar variable \"%s\" of type \"%s\" of value ",
                                    var_name, get_type(xtype[0]));
                         }
                         else {
-                            char *str[2];
                             int _i;
                             long long pos, *diffStart;
 
-                            str[0] = (char*) buf[0];
-                            str[1] = (char*) buf[1];
                             /* find the array index of first element in difference */
                             for (m=0; m<rdLen[0]; m++)
                                 if (str[0][m] != str[1][m])
@@ -977,9 +1017,25 @@ cmp_vars:
                                    var_name, get_type(xtype[0]), diffStart[0]);
                             for (_i=1; _i<var[0]->ndims; _i++)
                                 printf(", %lld", diffStart[_i]);
-                            printf("]\n");
+                            printf("] of value ");
                             free(diffStart);
+
+                            pos = m / var[0]->xsz;
+                            pos *= var[0]->xsz;
+                            str[0] += pos;
+                            str[1] += pos;
                         }
+                        if (xtype[0] == NC_CHAR) printf("%s vs %s\n", str[0], str[1]);
+                        else if (xtype[0] == NC_BYTE)   PRINTF_VAR_DIFF(signed char)
+                        else if (xtype[0] == NC_UBYTE)  PRINTF_VAR_DIFF(unsigned char)
+                        else if (xtype[0] == NC_SHORT)  PRINTF_VAR_DIFF(short)
+                        else if (xtype[0] == NC_USHORT) PRINTF_VAR_DIFF(unsigned short)
+                        else if (xtype[0] == NC_INT)    PRINTF_VAR_DIFF(int)
+                        else if (xtype[0] == NC_UINT)   PRINTF_VAR_DIFF(unsigned int)
+                        else if (xtype[0] == NC_FLOAT)  PRINTF_VAR_DIFF(float)
+                        else if (xtype[0] == NC_DOUBLE) PRINTF_VAR_DIFF(double)
+                        else if (xtype[0] == NC_INT64)  PRINTF_VAR_DIFF(long long)
+                        else if (xtype[0] == NC_UINT64) PRINTF_VAR_DIFF(unsigned long long)
                     }
                     worst = 0;
                     numVarDIFF++;
@@ -1000,8 +1056,8 @@ cmp_vars:
 
         /* diff is found when check_tolerance = 1 */
         if (ndims[0] == 0) { /* scalar variable */
-            printf("DIFF (tolerance): scalar variable \"%s\" of type \"%s\" of value %f vs %f\n",
-                   var_name, get_type(xtype[0]), worst1, worst2);
+            printf("DIFF (tolerance): scalar variable \"%s\" of type \"%s\" of value %g vs %g (difference = %e)\n",
+                   var_name, get_type(xtype[0]), worst1, worst2, worst1-worst2);
         } else {
             int _i;
             long long pos, *diffStart;
@@ -1017,14 +1073,14 @@ cmp_vars:
                 printf("DIFF: variable \"%s\" of type \"%s\" first at element [%lld",
                        var_name, get_type(xtype[0]), diffStart[0]);
             else
-                printf("DIFF (tolerance): variable \"%s\" of type \"%s\" max at element [%lld",
+                printf("DIFF (tolerance): variable \"%s\" of type \"%s\" at element [%lld",
                        var_name, get_type(xtype[0]), diffStart[0]);
             for (_i=1; _i<ndims[0]; _i++)
                 printf(", %lld", diffStart[_i]);
             if (worst == -1)
                 printf("]\n");
             else
-                printf("] of value %f vs %f\n", worst1, worst2);
+                printf("] of value %g vs %g (difference = %e)\n", worst1, worst2, worst1-worst2);
             free(diffStart);
         }
         numVarDIFF++;

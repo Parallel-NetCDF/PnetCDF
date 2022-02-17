@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>   /* INFINITY */
 
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -46,65 +47,79 @@
 
 
 #define OOM_ERROR { \
-    fprintf(stderr, "Error: calloc() out of memory at line %d\n",__LINE__); \
+    fprintf(stderr, "Error: calloc() out of memory at line %d\n",__LINE__);  \
     exit(1); \
 }
 
-#define HANDLE_ERROR {                                                    \
-    if (err != NC_NOERR) {                                                \
-        fprintf(stderr, "Error at line %d of file %s (%s)\n", __LINE__,   \
-               __FILE__, ncmpi_strerror(err));                            \
-        MPI_Abort(MPI_COMM_WORLD, -1);                                    \
-        exit(-1);                                                         \
-    }                                                                     \
+#define HANDLE_ERROR {                                                       \
+    if (err != NC_NOERR) {                                                   \
+        fprintf(stderr, "Error at line %d of file %s (%s)\n", __LINE__,      \
+               __FILE__, ncmpi_strerror(err));                               \
+        MPI_Abort(MPI_COMM_WORLD, -1);                                       \
+        exit(-1);                                                            \
+    }                                                                        \
 }
 
-#define CHECK_GLOBAL_ATT_DIFF(type, func) {                            \
-    int pos;                                                           \
-    type *b1, *b2;                                                     \
-    b1 = (type *)calloc(attlen[0] * 2, sizeof(type));                  \
-    if (!b1) OOM_ERROR                                                 \
-    b2 = b1 + attlen[0];                                               \
-    err = func(ncid[0], NC_GLOBAL, name[0], b1);                       \
-    HANDLE_ERROR                                                       \
-    err = func(ncid[1], NC_GLOBAL, name[0], b2);                       \
-    HANDLE_ERROR                                                       \
-    for (pos=0; pos<attlen[0]; pos++) {                                \
-        if (b1[pos] != b2[pos]) {                                      \
-            printf("DIFF: global attribute \"%s\" of type \"%s\" differs first at element %d\n",  \
-                    name[0], get_type(xtype[0]), pos);                 \
-            numHeadDIFF++;                                             \
-            break;                                                     \
-        }                                                              \
-    }                                                                  \
-    if (pos == attlen[0] && verbose)                                   \
-        printf("\tSAME: attribute contents\n");                        \
-    free(b1);                                                          \
-    break;                                                             \
+#define CHECK_GLOBAL_ATT_DIFF(type, func) {                                  \
+    int pos;                                                                 \
+    type *b1, *b2;                                                           \
+    b1 = (type *)calloc((attlen[0] + 1) * 2, sizeof(type));                  \
+    if (!b1) OOM_ERROR                                                       \
+    b2 = b1 + attlen[0] + 1;                                                 \
+    err = func(ncid[0], NC_GLOBAL, name[0], b1);                             \
+    HANDLE_ERROR                                                             \
+    err = func(ncid[1], NC_GLOBAL, name[0], b2);                             \
+    HANDLE_ERROR                                                             \
+    for (pos=0; pos<attlen[0]; pos++) {                                      \
+        if (b1[pos] != b2[pos]) {                                            \
+            char str[128], msg[1024];                                        \
+            sprintf(msg, "DIFF: global attribute \"%s\" of type \"%s\" at element %d of value ", \
+                    name[0], get_type(xtype[0]), pos);                       \
+            if (xtype[0] == NC_CHAR)                                         \
+                sprintf(str, "\"%s\" vs \"%s\"\n", b1, b2);                  \
+            else                                                             \
+                sprintf(str, "%g vs %g (difference = %e)\n", b1,b2,b1-b2);   \
+            strcat(msg, str);                                                \
+            printf("%s", msg);                                               \
+            numHeadDIFF++;                                                   \
+            break;                                                           \
+        }                                                                    \
+    }                                                                        \
+    if (pos == attlen[0] && verbose)                                         \
+        printf("\tSAME: attribute contents\n");                              \
+    free(b1);                                                                \
+    break;                                                                   \
 }
 
-#define CHECK_VAR_ATT_DIFF(type, func) {                               \
-    int pos;                                                           \
-    type *b1, *b2;                                                     \
-    b1 = (type *)calloc(attlen[0] * 2, sizeof(type));                  \
-    if (!b1) OOM_ERROR                                                 \
-    b2 = b1 + attlen[0];                                               \
-    err = func(ncid[0], varid[0], attrname, b1);                       \
-    HANDLE_ERROR                                                       \
-    err = func(ncid[1], varid[1], attrname, b2);                       \
-    HANDLE_ERROR                                                       \
-    for (pos=0; pos<attlen[0]; pos++) {                                \
-        if (b1[pos] != b2[pos]) {                                      \
-            printf("DIFF: variable \"%s\" attribute \"%s\" of type \"%s\" first at element %d\n",  \
-                    name[0], attrname, get_type(xtype[0]), pos);       \
-            numHeadDIFF++;                                             \
-            break;                                                     \
-        }                                                              \
-    }                                                                  \
-    if (pos == attlen[0] && verbose)                                   \
-        printf("\t\tSAME: attribute contents\n");                      \
-    free(b1);                                                          \
-    break;                                                             \
+#define CHECK_VAR_ATT_DIFF(type, func) {                                     \
+    int pos;                                                                 \
+    type *b1, *b2;                                                           \
+    b1 = (type *)calloc(attlen[0] * 2, sizeof(type));                        \
+    if (!b1) OOM_ERROR                                                       \
+    b2 = b1 + attlen[0];                                                     \
+    err = func(ncid[0], varid[0], attrname, b1);                             \
+    HANDLE_ERROR                                                             \
+    err = func(ncid[1], varid[1], attrname, b2);                             \
+    HANDLE_ERROR                                                             \
+    for (pos=0; pos<attlen[0]; pos++) {                                      \
+        if (b1[pos] != b2[pos]) {                                            \
+            char str[128], msg[1024];                                        \
+            sprintf(msg, "DIFF: variable \"%s\" attribute \"%s\" of type \"%s\" at element %d of value ", \
+                    name[0], attrname, get_type(xtype[0]), pos);             \
+            if (xtype[0] == NC_CHAR)                                         \
+                sprintf(str, "\"%s\" vs \"%s\"\n", b1, b2);                  \
+            else                                                             \
+                sprintf(str, "%g vs %g (difference = %e)\n", b1,b2,b1-b2);   \
+            strcat(msg, str);                                                \
+            printf("%s", msg);                                               \
+            numHeadDIFF++;                                                   \
+            break;                                                           \
+        }                                                                    \
+    }                                                                        \
+    if (pos == attlen[0] && verbose)                                         \
+        printf("\t\tSAME: attribute contents\n");                            \
+    free(b1);                                                                \
+    break;                                                                   \
 }
 
 #define CHECK_VAR_DIFF(type, func) {                                         \
@@ -123,55 +138,56 @@
                 break;                                                       \
         }                                                                    \
     } else {                                                                 \
-        double error_difference = tolerance_difference;                      \
-        double error_ratio = tolerance_ratio;                                \
         for (pos=0; pos<varsize; pos++) {                                    \
             double diff, ratio;                                              \
             if ( b1[pos] == b2[pos] ) continue;                              \
             if ( b1[pos] > b2[pos] ) {                                       \
                 diff  = b1[pos] - b2[pos];                                   \
-                ratio = (double)b1[pos] / (double)b2[pos] - 1.0;             \
+                if (b2[pos] == 0) ratio = INFINITY;                          \
+                else ratio = (double)b1[pos] / (double)b2[pos] - 1.0;        \
             } else {                                                         \
                 diff  = b2[pos] - b1[pos];                                   \
-                ratio = (double)b2[pos] / (double)b1[pos] - 1.0;             \
+                if (b1[pos] == 0) ratio = INFINITY;                          \
+                else ratio = (double)b2[pos] / (double)b1[pos] - 1.0;        \
             }                                                                \
-            if (diff <= error_difference || ratio <= error_ratio)            \
+            if (diff <= tolerance_difference || ratio <= tolerance_ratio)    \
                 continue;                                                    \
             /* fail to meet both tolerance errors */                         \
-            error_difference = diff;                                         \
-            error_ratio      = ratio;                                        \
-            worst            = pos;                                          \
+            worst = pos;                                                     \
         }                                                                    \
     }                                                                        \
     if (pos != varsize || worst != -1) { /* diff is found */                 \
+        double v1, v2;                                                       \
         if (ndims[0] == 0) { /* scalar variable */                           \
             if (worst == -1)                                                 \
                 printf("DIFF: scalar variable \"%s\" of type \"%s\"\n",      \
                        name[0], get_type(xtype[0]));                         \
-            else                                                             \
-                printf("DIFF (tolerance): scalar variable \"%s\" of type \"%s\" of value %f vs %f\n", \
-                       name[0], get_type(xtype[0]), (double)b1[worst], (double)b2[worst]);            \
+            else {                                                           \
+                v1 = b1[worst];                                              \
+                v2 = b2[worst];                                              \
+                printf("DIFF (tolerance): scalar variable \"%s\" of type \"%s\" of value %g vs %g (difference = %e)\n", \
+                       name[0], get_type(xtype[0]), v1, v2, v1-v2);          \
+            }                                                                \
         } else {                                                             \
             int _i;                                                          \
             MPI_Offset *diffStart;                                           \
             diffStart = (MPI_Offset*) malloc(ndims[0] * sizeof(MPI_Offset)); \
             if (worst != -1) pos = worst;                                    \
+            v1 = b1[pos];                                                    \
+            v2 = b2[pos];                                                    \
             for (_i=ndims[0]-1; _i>=0; _i--) {                               \
                 diffStart[_i] = pos % shape[_i] + start[_i];                 \
                 pos /= shape[_i];                                            \
             }                                                                \
             if (worst == -1)                                                 \
-                printf("DIFF: variable \"%s\" of type \"%s\" first at element [%lld", \
+                printf("DIFF: variable \"%s\" of type \"%s\" at element [%lld", \
                        name[0], get_type(xtype[0]), diffStart[0]);           \
             else                                                             \
-                printf("DIFF (tolerance): variable \"%s\" of type \"%s\" max at element [%lld", \
+                printf("DIFF (tolerance): variable \"%s\" of type \"%s\" at element [%lld", \
                        name[0], get_type(xtype[0]), diffStart[0]);           \
             for (_i=1; _i<ndims[0]; _i++)                                    \
                 printf(", %lld", diffStart[_i]);                             \
-            if (worst == -1)                                                 \
-                printf("]\n");                                               \
-            else                                                             \
-                printf("] of value %f vs %f\n", (double)b1[worst], (double)b2[worst]); \
+            printf("] of value %g vs %g (difference = %e)\n", v1,v2,v1-v2);  \
             free(diffStart);                                                 \
         }                                                                    \
         numVarDIFF++;                                                        \
@@ -349,6 +365,11 @@ int main(int argc, char **argv)
 
     if (argc - optind != 2) usage(rank, argv[0]);
 
+    if (verbose && check_tolerance && rank == 0) {
+        printf("Tolerance absolute difference = %e\n", tolerance_difference);
+        printf("Tolerance ratio    difference = %e\n", tolerance_ratio);
+    }
+
     if (check_header == 0 && check_variable_list == 0) {
         /* variable list is not provided, check header and all variables */
         check_entire_file = 1;
@@ -364,6 +385,11 @@ int main(int argc, char **argv)
 
     /* open files and retrieve headers into memory buffers */
     for (i=0; i<2; i++) { /* i=0 for 1st file, i=1 for 2nd file */
+        if (verbose && rank == 0) {
+            if (i == 0) printf("First  file: %s\n", argv[optind+i]);
+            if (i == 1) printf("Second file: %s\n", argv[optind+i]);
+        }
+
         /* file format version */
         err = ncmpi_inq_file_format(argv[optind+i], &fmt[i]);
         HANDLE_ERROR
