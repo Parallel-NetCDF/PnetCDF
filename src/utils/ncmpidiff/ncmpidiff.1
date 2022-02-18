@@ -56,12 +56,13 @@ space).
 .IP "\fB-t\fP diff,ratio"
 Compare variables element-wisely with tolerance (diff and ratio separated by
 comma without space).  \fIdiff\fP is the absolute value of element-wise
-difference of any two variables.  \fIratio\fP is the relative element-wise
-ratio, for instance, MAX(x,y) / MIN(x,y) - 1, where x is an array element from
-a variable in the first file and y is the corresponding array element of the
-same variable in the second file. Note when this option is used, the comparison
-will compare the entire variables and reports the element with the largest
-difference that fails to meet the both tolerance requirements.
+difference of  two variables with the same name but stored in the two input
+files.  \fIratio\fP is the relative element-wise difference ratio defined as
+|x - y|/max(|x|, |y|), where x is an array element from a variable in the first
+file and y is the corresponding array element of the same variable in the
+second file. |x| represents the absolute value of x. Note when this option is
+used, the output reports only the first array element that fails to meet both
+tolerance requirements.
 
 .SH EXIT STATUS
 An exit status of 0 means no differences were found, and 1 means some

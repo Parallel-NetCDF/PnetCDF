@@ -151,6 +151,7 @@
                 continue;                                                    \
             /* fail to meet both tolerance errors */                         \
             worst = pos;                                                     \
+            break;                                                           \
         }                                                                    \
     }                                                                        \
     if (pos != varsize || worst != -1) { /* diff is found */                 \

@@ -56,9 +56,10 @@
         if (diff <= tolerance_difference || ratio <= tolerance_ratio)    \
             continue;                                                    \
         /* fail to meet both tolerance errors */                         \
-        worst = chunk_off + indx;                                        \
+        worst = chunk_off + indx; /* mark a difference is found */       \
         worst1 = b1[indx];                                               \
         worst2 = b2[indx];                                               \
+        break;                                                           \
     }                                                                    \
     chunk_off += nelems;                                                 \
 }
@@ -966,7 +967,7 @@ cmp_vars:
                 remainLen -= rdLen[0];
 
                 /* compare contents of chunks */
-                if (check_tolerance) {
+                if (check_tolerance && worst == -1) {
                          if (xtype[0] == NC_CHAR)   CHECK_VAR_DIFF(char)
                     else if (xtype[0] == NC_BYTE)   CHECK_VAR_DIFF(signed char)
                     else if (xtype[0] == NC_UBYTE)  CHECK_VAR_DIFF(unsigned char)
@@ -978,6 +979,10 @@ cmp_vars:
                     else if (xtype[0] == NC_DOUBLE) CHECK_VAR_DIFF(double)
                     else if (xtype[0] == NC_INT64)  CHECK_VAR_DIFF(long long)
                     else if (xtype[0] == NC_UINT64) CHECK_VAR_DIFF(unsigned long long)
+                    if (worst != -1) {
+                        r = numrecs; /* break both loops k and r */
+                        break;
+                    }
                 }
                 else { /* if (check_tolerance) */
                     if (memcmp(buf[0], buf[1], rdLen[0]) == 0) continue;
