@@ -50,14 +50,18 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Updated utility program
-  + none
-
-* Other updates:
   + Replace the definition of "difference ratio" used in utility programs
     cdfdiff and ncmpidiff with formula "|x - y| / max(|x|, |y|)" where |x|
-    means the absolute value of x. See commit 9b165ceb.
-  + Utility programs cdfdiff and ncmpidiff now report the values of variable
-    elements that are different and their differences. See commit 75d20e6.
+    means the absolute value of x. See issue #78 and commit 9b165ceb.
+  + Utility programs cdfdiff and ncmpidiff now report only the first variable
+    elements that are different or fail to meet the tolerances. They also now
+    print the values of variable elements and their differences. See commits
+    75d20e6 and 58d2d178.
+  + Use the same user-provided tolerance difference and tolerance ratio
+    (through command-line option '-t') to check all variables. See issue #78
+    and commit 75d20e6.
+
+* Other updates:
   + IBM XLF compiler on Summit at OLCF requires -qfixed compile flag when
     compiling Fortran programs written in fixed form. Thus, the fixed form flag
     detected at configure time has been added to AM_FFLAGS when compiling fixed
@@ -69,7 +73,6 @@ This is essentially a placeholder for the next release note ...
     ncmpi_inq_file_info(). See commit f0e65cf.
 
 * Bug fixes
-  + Fix to keep tolerance difference and ratio constants. See commit 75d20e6.
   + Fix ncvalidator bug for the case when there is no record written but both
     fixed-size and record variables are defined. See commit b34bfcd.
   + Fix configure bug of setting environment variable SEQ_CC to the sequential
