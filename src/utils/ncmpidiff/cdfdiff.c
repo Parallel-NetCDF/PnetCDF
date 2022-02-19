@@ -142,7 +142,8 @@ usage(char *progname)
   [-h]             Compare header information only, no variables\n\
   [-v var1[,...]]  Compare variable(s) <var1>,... only\n\
   [-t diff,ratio]  Tolerance: diff is absolute element-wise difference\n\
-                   and ratio is relative element-wise ratio\n\
+                   and ratio is relative element-wise difference defined\n\
+                   as |x - y|/max(|x|, |y|)\n\
   file1 file2      File names of two input netCDF files to be compared\n\
   *PnetCDF library version PNETCDF_RELEASE_VERSION of PNETCDF_RELEASE_DATE\n"
 
