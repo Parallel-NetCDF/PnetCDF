@@ -111,6 +111,11 @@ This is essentially a placeholder for the next release note ...
 * New test program
   + none
 
+* Issues with NetCDF library
+  + Test program [test/nc4/tst_rec_vars.c](test/nc4/tst_rec_vars.c) fails to
+    run when using NetCDF 4.8.0 and 4.8.1. Thanks Bruno Pagani for reporting.
+    See [issue #72](https://github.com/Parallel-NetCDF/PnetCDF/issues/72).
+
 * Conformity with NetCDF library
   + none
 
