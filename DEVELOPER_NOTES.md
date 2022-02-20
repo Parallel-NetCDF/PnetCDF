@@ -250,7 +250,7 @@
    netCDF release.
    1. Error codes (pnetcdf.h v.s. netcdf.h)
    2. Error strings (error.c v.s. netcdf-c/libdispatch/derror.c)
-   3. `src/drivers/include/utf8proc.h     v.s. netcdf-c/include/utf8proc.h`
+   3. `src/drivers/include/utf8proc.h     v.s. netcdf-c/libdispatch/utf8proc.h`
    4. `src/drivers/common/utf8proc.c      v.s. netcdf-c/libdispatch/utf8proc.c`
    5. `src/drivers/common/utf8proc_data.h v.s. netcdf-c/libdispatch/utf8proc_data.h`
 
