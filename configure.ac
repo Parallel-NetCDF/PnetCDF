@@ -1827,11 +1827,23 @@ if test "x$enable_netcdf4" = xyes ; then
    AC_MSG_CHECKING([whether NetCDF version is 4.6.2 or later])
    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <netcdf_meta.h>
-#if (NC_VERSION_MAJOR*1000000 + NC_VERSION_MINOR*1000 + NC_VERSION_PATCH < 4006002)
+#define VER_NUM (NC_VERSION_MAJOR*1000000 + NC_VERSION_MINOR*1000 + NC_VERSION_PATCH)
+#if (VER_NUM < 4006002)
 #error NetCDF version is older than 4.6.2
 #endif
    ]])], [netcdf_ge_4_6_2=yes], [netcdf_ge_4_6_2=no])
    AC_MSG_RESULT([$netcdf_ge_4_6_2])
+
+   dnl Check if NetCDF version is 4.8.0 or 4.8.1
+   AC_MSG_CHECKING([whether NetCDF version is 4.8.0 or 4.8.1])
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <netcdf_meta.h>
+#define VER_NUM (NC_VERSION_MAJOR*1000000 + NC_VERSION_MINOR*1000 + NC_VERSION_PATCH)
+#if (VER_NUM != 4008000) && (VER_NUM != 4008001)
+#error NetCDF version is neither 4.8.0 nor 4.8.1
+#endif
+   ]])], [netcdf_480_481=yes], [netcdf_480_481=no])
+   AC_MSG_RESULT([$netcdf_480_481])
 
    dnl Check if NetCDF is built with parallel I/O enabled
    AC_MSG_CHECKING([whether NetCDF library is built with parallel I/O enabled])
@@ -2064,7 +2076,7 @@ if test "x$enable_netcdf4" = xyes ; then
 fi
 AC_SUBST(ENABLE_NETCDF4)
 AM_CONDITIONAL(ENABLE_NETCDF4, [test x$enable_netcdf4 = xyes])
-
+AM_CONDITIONAL(NETCDF_480_481, [test x$netcdf_480_481 = xyes])
 
 AC_ARG_ENABLE([erange-fill],
    [AS_HELP_STRING([--disable-erange-fill],

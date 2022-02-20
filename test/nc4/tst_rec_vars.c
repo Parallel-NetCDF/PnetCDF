@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
 
     err = ncmpi_inq_dimlen(ncid, dimid[0], start); CHECK_ERR
     if (start[0] != (MPI_Offset)nprocs){
-        printf("Error at line %d of %s: expect dim X len %lld but got %lld\n",
+        printf("Error at line %d of %s: expect NC_UNLIMITED dimension X of len %lld but got %lld\n",
                 __LINE__,__FILE__,(MPI_Offset)nprocs,start[0]);
         nerrs++;
     }

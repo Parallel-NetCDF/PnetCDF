@@ -34,11 +34,15 @@ TESTPROGRAMS = simple_xy \
                noclobber \
                tst_zero_req \
                notsupport \
-               tst_rec_vars \
                tst_2_rec_dims \
                tst_get_put_size \
                pres_temp_4D \
                rd_compressed
+
+if NETCDF_480_481
+else
+   TESTPROGRAMS += tst_rec_vars
+endif
 
 M4_SRCS  = put_get_all_kinds.m4 interoperability_rd.m4 interoperability_wr.m4
 
