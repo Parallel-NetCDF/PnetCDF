@@ -386,6 +386,13 @@
       integer NF_ERCFILE
       integer NF_ENULLPAD
       integer NF_EINMEMORY
+      integer NF_ENOFILTER
+      integer NF_ENCZARR
+      integer NF_ES3
+      integer NF_EEMPTY
+      integer NF_EOBJECT
+      integer NF_ENOOBJECT
+      integer NF_EPLUGIN
 
       PARAMETER (NF_EHDFERR      = -101)  ! Error at HDF5 layer.
       PARAMETER (NF_ECANTREAD    = -102)  ! Can't read.
@@ -422,6 +429,13 @@
       PARAMETER (NF_ERCFILE      = -133)  ! RC file failure
       PARAMETER (NF_ENULLPAD     = -134)  ! Header Bytes not Null-Byte padded
       PARAMETER (NF_EINMEMORY    = -135)  ! In-memory file error
+      PARAMETER (NF_ENOFILTER    = -136)  ! Filter not defined on variable.
+      PARAMETER (NF_ENCZARR      = -137)  ! Error at NCZarr layer.
+      PARAMETER (NF_ES3          = -138)  ! Generic S3 error
+      PARAMETER (NF_EEMPTY       = -139)  ! Attempt to read empty NCZarr map key
+      PARAMETER (NF_EOBJECT      = -140)  ! Some object exists when it should not
+      PARAMETER (NF_ENOOBJECT    = -141)  ! Some object not found
+      PARAMETER (NF_EPLUGIN      = -142)  ! Unclassified failure in accessing a dynamically loaded plugin
 
 !
 ! PnetCDF error codes start here

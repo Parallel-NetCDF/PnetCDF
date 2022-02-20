@@ -243,7 +243,14 @@
     NF90_EFILTER        = NF_EFILTER       , & ! Filter operation failed.
     NF90_ERCFILE        = NF_ERCFILE       , & ! RC file failure.
     NF90_ENULLPAD       = NF_ENULLPAD      , & ! Header Bytes not Null-Byte padded
-    NF90_EINMEMORY      = NF_EINMEMORY         ! In-memory file error
+    NF90_EINMEMORY      = NF_EINMEMORY     , & ! In-memory file error
+    NF90_ENOFILTER      = NF_ENOFILTER     , & ! Filter not defined on variable.
+    NF90_ENCZARR        = NF_ENCZARR       , & ! Error at NCZarr layer.
+    NF90_ES3            = NF_ES3           , & ! Generic S3 error
+    NF90_EEMPTY         = NF_EEMPTY        , & ! Attempt to read empty NCZarr map key
+    NF90_EOBJECT        = NF_EOBJECT       , & ! Some object exists when it should not
+    NF90_ENOOBJECT      = NF_ENOOBJECT     , & ! Some object not found
+    NF90_EPLUGIN        = NF_EPLUGIN           ! Unclassified failure in accessing a dynamically loaded plugin
 
   ! This is the position of NC_NETCDF4 in cmode, counting from the
   ! right, starting (uncharacteristically for fortran) at 0. It's needed

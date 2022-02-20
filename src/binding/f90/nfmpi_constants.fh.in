@@ -247,7 +247,14 @@
       NF_EFILTER        = -132, & ! Filter operation failed.
       NF_ERCFILE        = -133, & ! RC file failure
       NF_ENULLPAD       = -134, & ! Header Bytes not Null-Byte padded
-      NF_EINMEMORY      = -135    ! In-memory file error
+      NF_EINMEMORY      = -135, & ! In-memory file error
+      NF_ENOFILTER      = -136, & ! Filter not defined on variable.
+      NF_ENCZARR        = -137, & ! Error at NCZarr layer.
+      NF_ES3            = -138, & ! Generic S3 error
+      NF_EEMPTY         = -139, & ! Attempt to read empty NCZarr map key
+      NF_EOBJECT        = -140, & ! Some object exists when it should not
+      NF_ENOOBJECT      = -141, & ! Some object not found
+      NF_EPLUGIN        = -142    ! Unclassified failure in accessing a dynamically loaded plugin
 
 ! PnetCDF error codes start here
       integer, parameter, public :: &
