@@ -453,15 +453,15 @@ nc_strerror(int ncerr1)
       case NC_EIO:
 	 return "NetCDF: I/O failure";
       case NC_ENODATA:
-	 return "NetCDF: Variable has no data in DAP request";
+	 return "NetCDF: Variable has no data";
       case NC_EDAPSVC:
 	 return "NetCDF: DAP server error";
       case NC_EDAS:
 	 return "NetCDF: Malformed or inaccessible DAP DAS";
       case NC_EDDS:
-	 return "NetCDF: Malformed or inaccessible DAP DDS";
+	 return "NetCDF: Malformed or inaccessible DAP2 DDS or DAP4 DMR response";
       case NC_EDATADDS:
-	 return "NetCDF: Malformed or inaccessible DAP DATADDS";
+	 return "NetCDF: Malformed or inaccessible DAP2 DATADDS or DAP4 DAP response";
       case NC_EDAPURL:
 	 return "NetCDF: Malformed URL";
       case NC_EDAPCONSTRAINT:
@@ -476,6 +476,10 @@ nc_strerror(int ncerr1)
 	 return "NetCDF: file not found";
       case NC_ECANTREMOVE:
 	 return "NetCDF: cannot delete file";
+      case NC_EINTERNAL:
+	 return "NetCDF: internal library error; Please contact Unidata support";
+      case NC_EPNETCDF:
+	 return "NetCDF: PnetCDF error";
       case NC_EHDFERR:
 	 return "NetCDF: HDF error";
       case NC_ECANTREAD:
@@ -495,7 +499,7 @@ nc_strerror(int ncerr1)
       case NC_ENOCOMPOUND:
 	 return "NetCDF: Can't create HDF5 compound type";
       case NC_EATTEXISTS:
-	 return "NetCDF: Attempt to create attribute that alread exists";
+	 return "NetCDF: Attempt to create attribute that already exists";
       case NC_ENOTNC4:
 	 return "NetCDF: Attempting netcdf-4 operation on netcdf-3 file";
       case NC_ESTRICTNC3:
@@ -536,17 +540,31 @@ nc_strerror(int ncerr1)
       case NC_EDISKLESS:
 	 return "NetCDF: Error in using diskless access";
       case NC_EFILTER:
-	 return "NetCDF: Filter error: bad id or parameters or filter library non-existent";
+	 return "NetCDF: Filter error: bad id or parameters or duplicate filter";
+      case NC_ENOFILTER:
+	 return "NetCDF: Filter error: unimplemented filter encountered";
       case NC_ECANTEXTEND:
-	 return "NetCDF: Attempt to extend dataset during NC_INDEPENDENT I/O operation. Use nc_var_par_access to set mode NC_COLLECTIVE before extending variable.";
+	return "NetCDF: Attempt to extend dataset during NC_INDEPENDENT I/O operation. Use nc_var_par_access to set mode NC_COLLECTIVE before extending variable.";
       case NC_EMPI:
-	 return "MPI operation failed";
+	 return "NetCDF: MPI operation failed.";
       case NC_ERCFILE:
 	 return "NetCDF: RC File Failure.";
-      case NC_ENULLPAD:
-	 return "NetCDF: File fails strict Null-Byte Header check.";
-      case NC_EINMEMORY:
-	 return "NetCDF: In-memory File operation failed.";
+     case NC_ENULLPAD:
+       return "NetCDF: File fails strict Null-Byte Header check.";
+     case NC_EINMEMORY:
+       return "NetCDF: In-memory File operation failed.";
+      case NC_ENCZARR:
+	 return "NetCDF: NCZarr error";
+      case NC_ES3:
+	 return "NetCDF: AWS S3 error";
+      case NC_EEMPTY:
+	 return "NetCDF: Attempt to read empty NCZarr map key";
+      case NC_EOBJECT:
+	 return "NetCDF: Some object exists when it should not";
+      case NC_ENOOBJECT:
+	 return "NetCDF: Some object not found";
+      case NC_EPLUGIN:
+	 return "NetCDF: Unclassified failure in accessing a dynamically loaded plugin";
       default:
 	 return nc_unknown_err_msg;
    }
