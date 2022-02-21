@@ -52,6 +52,7 @@ Northwestern University and Argonne National Laboratory.
   popular systems.
 
 ### Current build status
+* Github Actions [![ubuntu_mpich](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_mpich.yml/badge.svg)](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_mpich.yml)
 * [Travis CI ![Build Status](https://travis-ci.org/Parallel-NetCDF/PnetCDF.svg?branch=master)](https://travis-ci.org/Parallel-NetCDF/PnetCDF)
 * [Coverity Scan ![Build Status](https://scan.coverity.com/projects/15801/badge.svg)](https://scan.coverity.com/projects/parallel-netcdf-pnetcdf)
 
