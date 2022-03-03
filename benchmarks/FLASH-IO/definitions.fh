@@ -24,7 +24,7 @@
 
 ! labels for the hydro variables, for storage in the HDF output files
 ! the abundance labels are defined in the nuclear burner
-      character*4 varnam(nvar-nuc2)
+      character(len=4) :: varnam(nvar-nuc2)
 
       data varnam /'dens', &
                   'velx',  &

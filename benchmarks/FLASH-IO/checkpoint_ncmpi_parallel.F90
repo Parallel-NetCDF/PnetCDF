@@ -192,6 +192,7 @@
 !
 !---------------------------------------------------------------------------
 
+      use mpi
       use pnetcdf
 
 #include "common.fh"
@@ -218,16 +219,16 @@
 
 ! create a character variable to hold the string representation of the block
 ! number.  Note this is set to be 4 characters long (i.e. max = 9999).
-      character*4   fnum_string
-      character*512 filename
-      character*8   str
+      character(len=4)   :: fnum_string
+      character(len=512) :: filename
+      character(len=8)   :: str
 
 ! create a temporary array to hold the 4 character variable names
 ! this will include those defined in definitions.fh and network_common.fh
-      character*4 unklabels(nvar)
+      character(len=4) :: unklabels(nvar)
 
 ! storage for the current date and time
-        character date_string*40
+        character(len=40) :: date_string
 
       character(len=4) :: ionam(ionmax), record_label
 

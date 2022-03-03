@@ -5,6 +5,7 @@
 ! performance.
 !
 
+      use mpi
 ! #ifndef MPI_OFFSET
 ! #define MPI_OFFSET MPI_INTEGER8
 ! #endif
@@ -141,14 +142,14 @@
 ! get the file striping information from the MPI info objects
 ! ---------------------------------------------------------------------------
       subroutine get_file_striping(info, striping_factor, striping_unit)
+          use mpi
           implicit none
-          include 'mpif.h'
           integer, intent(in)  :: info
           integer, intent(out) :: striping_factor
           integer, intent(out) :: striping_unit
 
           ! local variables
-          character*(MPI_MAX_INFO_VAL) key, value
+          character(len=MPI_MAX_INFO_VAL) :: key, value
           integer                      i, nkeys, valuelen, ierr
           logical                      flag
 
@@ -181,7 +182,7 @@
           integer, intent(in) :: info_used
 
           ! local variables
-          character*(MPI_MAX_INFO_VAL) key, value
+          character(len=MPI_MAX_INFO_VAL) :: key, value
           integer nkeys, i, err
           logical flag
 
@@ -205,6 +206,7 @@
 !---------------------------------------------------------------------------
       subroutine report_io_performance(verbose, local_blocks, time_io, &
                                        chk_io, corner_io, nocorner_io)
+       use mpi
        use pnetcdf
 #include "common.fh"
 
