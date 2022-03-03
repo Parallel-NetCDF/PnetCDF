@@ -8,7 +8,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUFFIXES = .o .F90
+SUFFIXES = .o .F90 .fh
 
 FC = $(MPIF90)
 
@@ -39,12 +39,19 @@ flash_benchmark_io_SOURCES = get_mfluid_property.F90 \
                              checkpoint_ncmpi_parallel.F90 \
                              plotfile_ncmpi_parallel.F90
 
-EXTRA_DIST = block_boundary_data.fh \
-             common.fh \
-             definitions.fh \
-             numfluids.fh \
-             physicaldata.fh \
-             tree.fh \
+HEADER_FILES = physicaldata.fh \
+               numfluids.fh  \
+               block_boundary_data.fh \
+               definitions.fh \
+               tree.fh \
+               common.fh
+
+get_mfluid_property.o: get_mfluid_property.F90 $(HEADER_FILES)
+checkpoint_ncmpi_parallel.o: checkpoint_ncmpi_parallel.F90 $(HEADER_FILES)
+plotfile_ncmpi_parallel.o: plotfile_ncmpi_parallel.F90 $(HEADER_FILES)
+flash_benchmark_io.o: flash_benchmark_io.F90 $(HEADER_FILES)
+
+EXTRA_DIST = $(HEADER_FILES) \
              README \
              configure.ac \
              parallel_run.sh
