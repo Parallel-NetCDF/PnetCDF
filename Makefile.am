@@ -42,12 +42,12 @@ else
 endif
 
 ptest:
-	for d in $(PTEST_SUBDIRS) ; do \
+	@for d in $(PTEST_SUBDIRS) ; do \
 		$(MAKE) $(MFLAGS) -C $$d ptest $$* || exit 1 ; \
 	done
 
 ptests:
-	for d in $(PTEST_SUBDIRS) ; do \
+	@for d in $(PTEST_SUBDIRS) ; do \
 		$(MAKE) $(MFLAGS) -C $$d ptests $$* || exit 1 ; \
 	done
 
@@ -113,7 +113,7 @@ install-data-hook:
 
 # For VPATH build (parallel build), try delete all sub-directories
 distclean-local:
-	if [ "$(abs_builddir)" != "$(abs_srcdir)" ] ; then \
+	@if [ "$(abs_builddir)" != "$(abs_srcdir)" ] ; then \
 	   for d in $(DIST_SUBDIRS) ; do \
 	       rmdir $$d || true ; \
 	   done ; \

@@ -70,21 +70,21 @@ ptest ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
-	$(TESTS_ENVIRONMENT) \
+	@$(TESTS_ENVIRONMENT) \
 	$(srcdir)/parallel_run.sh 4 || exit 1
 
 ptest8: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 8 MPI processes"
 	@echo "==========================================================="
-	$(TESTS_ENVIRONMENT) \
+	@$(TESTS_ENVIRONMENT) \
 	$(srcdir)/parallel_run.sh 8 || exit 1
 
 ptest3: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 3 MPI processes"
 	@echo "==========================================================="
-	$(TESTS_ENVIRONMENT) \
+	@$(TESTS_ENVIRONMENT) \
 	$(srcdir)/parallel_run.sh 3 || exit 1
 
 ptests: ptest3 ptest4 ptest8

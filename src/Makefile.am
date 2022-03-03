@@ -14,7 +14,7 @@ DIST_SUBDIRS = include dispatchers drivers binding packaging libs utils
 
 # For VPATH build (parallel build), try delete all sub-directories
 distclean-local:
-	for d in $(DIST_SUBDIRS) ; do \
+	@for d in $(DIST_SUBDIRS) ; do \
 	    if [ "$$d" = "." ] ; then continue ; fi ; \
 	    if [ -d $$d/.deps ] ; then rmdir $$d/.deps || true ; fi ; \
 	done ; \

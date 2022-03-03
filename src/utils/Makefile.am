@@ -20,7 +20,7 @@ EXTRA_DIST = pnetcdf-config.in
 
 # For VPATH build (parallel build), try delete all sub-directories
 distclean-local:
-	for d in $(DIST_SUBDIRS) ; do \
+	@for d in $(DIST_SUBDIRS) ; do \
 	   if [ -d $$d/.deps ] ; then rmdir $$d/.deps || true ; fi ; \
 	done ; \
 	if [ "$(abs_builddir)" != "$(abs_srcdir)" ] ; then \
