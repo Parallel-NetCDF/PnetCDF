@@ -199,7 +199,7 @@ typedef struct {
 static
 void* thread_func(void *arg)
 {
-    char filename[256];
+    char filename[512];
     int i, id, nprocs, err, nerrs=0, ncid, *ret, dimid[2], varid[2];
     int *ibuf;
     double *dbuf;

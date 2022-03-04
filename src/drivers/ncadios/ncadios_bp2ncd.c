@@ -96,7 +96,7 @@ int ncd_dataset (NC_ad* ncid
     int err;
     char *name = ptr_var_header->name;
     char *path = ptr_var_header->path;
-    char fullname[256],dimname[256];
+    char fullname[256],dimname[512];
     enum ADIOS_DATATYPES type = ptr_var_header->type;
     struct adios_dimension_struct_v1 *dims = ptr_var_header->dims;
     int maxrank = 0, i,j, valid=-1, nc_dimid=-1, retval=0;
@@ -229,7 +229,7 @@ int ncd_dataset (NC_ad* ncid
                 if ( dims->dimension.var_id!=0
                         ||time_flag == adios_flag_yes) {
                     if (dims->dimension.rank!=0) {
-                        sprintf(dimname,"%s_%zu",fullname,rank);
+                        sprintf(dimname,"%s_%zd",fullname,rank);
                         dimids[rank]=-1;
                         ncadiosi_inq_dimid(ncid, dimname, &dimids[rank]);
                         if (dimids [rank] <= 0)
@@ -296,7 +296,7 @@ int ncd_dataset (NC_ad* ncid
                     }
                 }
                 else {
-                    sprintf(dimname,"%s_%zu", fullname,rank);
+                    sprintf(dimname,"%s_%zd", fullname,rank);
                     ncadiosi_inq_dimid(ncid,dimname,&nc_dimid);
                     if (nc_dimid<0)
                         retval = ncadiosi_def_dim ( ncid, dimname, dims->dimension.rank, &nc_dimid);
@@ -320,7 +320,7 @@ int ncd_dataset (NC_ad* ncid
         }
         for (rank = 0; rank < maxrank; rank++) {
             if (verbose>0)
-                fprintf(stderr, "\tdimension info[%zu]: c(%zu) s(%zu)\n"
+                fprintf(stderr, "\tdimension info[%zd]: c(%zd) s(%zd)\n"
                         ,rank,count_dims[rank], start_dims[rank]);
         }
         if (time_idx == 0 && dimids[time_idx]!=0) {

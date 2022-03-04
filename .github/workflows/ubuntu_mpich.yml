@@ -37,8 +37,7 @@ jobs:
           run: |
             WORKDIR=$(pwd)
             autoreconf -i
-            ./configure
-            make -j 64
+            ./configure --enable-burst_buffering --enable-subfiling --enable-shared --enable-debug --enable-thread-safe --with-pthread CFLAGS="-Wall -Wstrict-prototypes"
             make -j 64 tests
             make check
             make ptests
