@@ -60,63 +60,119 @@
     }                                                                        \
 }
 
+#define CHECK_GLOBAL_ATT_DIFF_CHAR {                                         \
+    int pos;                                                                 \
+    char *b1 = (char *)calloc((attlen[0] + 1) * 2, sizeof(char));            \
+    char *b2 = b1 + attlen[0] + 1;                                           \
+    if (!b1) OOM_ERROR                                                       \
+    err = ncmpi_get_att_text(ncid[0], NC_GLOBAL, name[0], b1);               \
+    HANDLE_ERROR                                                             \
+    err = ncmpi_get_att_text(ncid[1], NC_GLOBAL, name[0], b2);               \
+    HANDLE_ERROR                                                             \
+    for (pos=0; pos<attlen[0]; pos++) {                                      \
+        if (b1[pos] != b2[pos]) break;                                       \
+    }                                                                        \
+    if (pos != attlen[0]) {                                                  \
+        char str[128], msg[1024];                                            \
+        sprintf(msg, "DIFF: global ");                                       \
+        sprintf(str, "attribute \"%s\" of type NC_CHAR at element %d of ",   \
+                name[0], pos);                                               \
+        strcat(msg, str);                                                    \
+        sprintf(str, "value \"%s\" vs \"%s\"\n", b1, b2);                    \
+        strcat(msg, str);                                                    \
+        printf("%s", msg);                                                   \
+        numHeadDIFF++;                                                       \
+    }                                                                        \
+    else if (verbose)                                                        \
+        printf("\t\tSAME: attribute contents\n");                            \
+    free(b1);                                                                \
+    break;                                                                   \
+}
+
 #define CHECK_GLOBAL_ATT_DIFF(type, func) {                                  \
     int pos;                                                                 \
-    type *b1, *b2;                                                           \
-    b1 = (type *)calloc((attlen[0] + 1) * 2, sizeof(type));                  \
+    type *b1 = (type *)calloc((attlen[0] + 1) * 2, sizeof(type));            \
+    type *b2 = b1 + attlen[0] + 1;                                           \
     if (!b1) OOM_ERROR                                                       \
-    b2 = b1 + attlen[0] + 1;                                                 \
     err = func(ncid[0], NC_GLOBAL, name[0], b1);                             \
     HANDLE_ERROR                                                             \
     err = func(ncid[1], NC_GLOBAL, name[0], b2);                             \
     HANDLE_ERROR                                                             \
     for (pos=0; pos<attlen[0]; pos++) {                                      \
-        if (b1[pos] != b2[pos]) {                                            \
-            char str[128], msg[1024];                                        \
-            sprintf(msg, "DIFF: global attribute \"%s\" of type \"%s\" at element %d of value ", \
-                    name[0], get_type(xtype[0]), pos);                       \
-            if (xtype[0] == NC_CHAR)                                         \
-                sprintf(str, "\"%s\" vs \"%s\"\n", b1, b2);                  \
-            else                                                             \
-                sprintf(str, "%g vs %g (difference = %e)\n", b1,b2,b1-b2);   \
-            strcat(msg, str);                                                \
-            printf("%s", msg);                                               \
-            numHeadDIFF++;                                                   \
-            break;                                                           \
-        }                                                                    \
+        if (b1[pos] != b2[pos]) break;                                       \
     }                                                                        \
-    if (pos == attlen[0] && verbose)                                         \
-        printf("\tSAME: attribute contents\n");                              \
+    if (pos != attlen[0]) {                                                  \
+        char str[128], msg[1024];                                            \
+        sprintf(msg, "DIFF: global ");                                       \
+        sprintf(str, "attribute \"%s\" of type \"%s\" at element %d of ",    \
+                name[0], get_type(xtype[0]), pos);                           \
+        strcat(msg, str);                                                    \
+        sprintf(str, "value %g vs %g (difference = %e)\n",                   \
+                (double)b1[pos],(double)b2[pos],(double)(b1[pos]-b2[pos]));  \
+        strcat(msg, str);                                                    \
+        printf("%s", msg);                                                   \
+        numHeadDIFF++;                                                       \
+    }                                                                        \
+    else if (verbose)                                                        \
+        printf("\t\tSAME: attribute contents\n");                            \
+    free(b1);                                                                \
+    break;                                                                   \
+}
+
+#define CHECK_VAR_ATT_DIFF_CHAR {                                            \
+    int pos;                                                                 \
+    char *b1 = (char *)calloc((attlen[0] + 1) * 2, sizeof(char));            \
+    char *b2 = b1 + attlen[0] + 1;                                           \
+    if (!b1) OOM_ERROR                                                       \
+    err = ncmpi_get_att_text(ncid[0], varid[0], attrname, b1);               \
+    HANDLE_ERROR                                                             \
+    err = ncmpi_get_att_text(ncid[1], varid[1], attrname, b2);               \
+    HANDLE_ERROR                                                             \
+    for (pos=0; pos<attlen[0]; pos++) {                                      \
+        if (b1[pos] != b2[pos]) break;                                       \
+    }                                                                        \
+    if (pos != attlen[0]) {                                                  \
+        char str[1024], msg[1024];                                           \
+        sprintf(msg, "DIFF: variable \"%s\" ", name[0]);                     \
+        sprintf(str, "attribute \"%s\" of type NC_CHAR at element %d of ",   \
+                attrname, pos);                                              \
+        strcat(msg, str);                                                    \
+        sprintf(str, "value \"%s\" vs \"%s\"\n", b1, b2);                    \
+        strcat(msg, str);                                                    \
+        printf("%s", msg);                                                   \
+        numHeadDIFF++;                                                       \
+    }                                                                        \
+    else if (verbose)                                                        \
+        printf("\t\tSAME: attribute contents\n");                            \
     free(b1);                                                                \
     break;                                                                   \
 }
 
 #define CHECK_VAR_ATT_DIFF(type, func) {                                     \
     int pos;                                                                 \
-    type *b1, *b2;                                                           \
-    b1 = (type *)calloc(attlen[0] * 2, sizeof(type));                        \
+    type *b1 = (type *)calloc((attlen[0] + 1) * 2, sizeof(type));            \
+    type *b2 = b1 + attlen[0] + 1;                                           \
     if (!b1) OOM_ERROR                                                       \
-    b2 = b1 + attlen[0];                                                     \
     err = func(ncid[0], varid[0], attrname, b1);                             \
     HANDLE_ERROR                                                             \
     err = func(ncid[1], varid[1], attrname, b2);                             \
     HANDLE_ERROR                                                             \
     for (pos=0; pos<attlen[0]; pos++) {                                      \
-        if (b1[pos] != b2[pos]) {                                            \
-            char str[128], msg[1024];                                        \
-            sprintf(msg, "DIFF: variable \"%s\" attribute \"%s\" of type \"%s\" at element %d of value ", \
-                    name[0], attrname, get_type(xtype[0]), pos);             \
-            if (xtype[0] == NC_CHAR)                                         \
-                sprintf(str, "\"%s\" vs \"%s\"\n", b1, b2);                  \
-            else                                                             \
-                sprintf(str, "%g vs %g (difference = %e)\n", b1,b2,b1-b2);   \
-            strcat(msg, str);                                                \
-            printf("%s", msg);                                               \
-            numHeadDIFF++;                                                   \
-            break;                                                           \
-        }                                                                    \
+        if (b1[pos] != b2[pos]) break;                                       \
     }                                                                        \
-    if (pos == attlen[0] && verbose)                                         \
+    if (pos != attlen[0]) {                                                  \
+        char str[1024], msg[1024];                                           \
+        sprintf(msg, "DIFF: variable \"%s\" ", name[0]);                     \
+        sprintf(str, "attribute \"%s\" of type \"%s\" at element %d of ",    \
+                attrname, get_type(xtype[0]), pos);                          \
+        strcat(msg, str);                                                    \
+        sprintf(str, "value %g vs %g (difference = %e)\n",                   \
+                (double)b1[pos],(double)b2[pos],(double)(b1[pos]-b2[pos]));  \
+        strcat(msg, str);                                                    \
+        printf("%s", msg);                                                   \
+        numHeadDIFF++;                                                       \
+    }                                                                        \
+    else if (verbose)                                                        \
         printf("\t\tSAME: attribute contents\n");                            \
     free(b1);                                                                \
     break;                                                                   \
@@ -520,7 +576,7 @@ int main(int argc, char **argv)
 
             /* compare attribute contents */
             switch (xtype[0]) {
-                case NC_CHAR:   CHECK_GLOBAL_ATT_DIFF(char,   ncmpi_get_att_text);
+                case NC_CHAR:   CHECK_GLOBAL_ATT_DIFF_CHAR
                 case NC_SHORT:  CHECK_GLOBAL_ATT_DIFF(short,  ncmpi_get_att_short);
                 case NC_INT:    CHECK_GLOBAL_ATT_DIFF(int,    ncmpi_get_att_int);
                 case NC_FLOAT:  CHECK_GLOBAL_ATT_DIFF(float,  ncmpi_get_att_float);
@@ -741,7 +797,7 @@ cmp_vars:
 
                 /* compare attribute contents */
                 switch (xtype[0]) {
-                    case NC_CHAR:   CHECK_VAR_ATT_DIFF(char,   ncmpi_get_att_text);
+                    case NC_CHAR:   CHECK_VAR_ATT_DIFF_CHAR
                     case NC_SHORT:  CHECK_VAR_ATT_DIFF(short,  ncmpi_get_att_short);
                     case NC_INT:    CHECK_VAR_ATT_DIFF(int,    ncmpi_get_att_int);
                     case NC_FLOAT:  CHECK_VAR_ATT_DIFF(float,  ncmpi_get_att_float);
