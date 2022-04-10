@@ -1,4 +1,4 @@
-name: ubuntu_mpich
+name: ubuntu_openmpi
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
             sudo apt-get update
             sudo apt-get install automake autoconf libtool libtool-bin m4
             # mpi
-            sudo apt-get install mpich
+            sudo apt-get install openmpi-bin
             # zlib
             sudo apt-get install zlib1g-dev
             autoconf --version
@@ -47,6 +47,7 @@ jobs:
                         --enable-debug \
                         --enable-thread-safe \
                         --with-pthread \
+                        TESTMPIRUN="mpiexec --oversubscribe -n NP" \
                         TESTOUTDIR=/dev/shm/pnetcdf_output
             make -j 8 tests
         - name: Print config.log
