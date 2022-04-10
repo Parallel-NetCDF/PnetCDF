@@ -2405,6 +2405,42 @@ fn_exit:
 
 /* End Of get NC */
 
+/* File system types recognized by ROMIO in MPICH 4.0.0 */
+static const char* fstypes[] = {"ufs", "nfs", "xfs", "pvfs2", "gpfs", "panfs", "lustre", "daos", "testfs", "ime", "quobyte", NULL};
+
+/* Return a pointer to filename by removing the file system type prefix name if
+ * there is any.  For example, when filename = "lustre:/home/foo/testfile.nc",
+ * remove "lustre:" to return a pointer to "/home/foo/testfile.nc", so the name
+ * can be used in POSIX open() calls.
+ */
+static char*
+remove_file_system_type_prefix(const char *filename)
+{
+    char *prefix, *colon, *ret_filename;
+
+    if (filename == NULL) return NULL;
+
+    ret_filename = (char*)filename;
+    prefix = strdup(filename);
+
+    colon = strchr(prefix, ':');
+    if (colon != NULL) { /* there is a prefix end with : */
+        int i=0;
+        *colon = '\0';
+        /* check if prefix is one of recognized file system types */
+        while (fstypes[i] != NULL) {
+            if (!strcmp(prefix, fstypes[i])) { /* found */
+                ret_filename += colon - prefix + 1;
+                break;
+            }
+            i++;
+        }
+    }
+    free(prefix);
+
+    return ret_filename;
+}
+
 static int
 check_signature(char *filename)
 {
@@ -2522,9 +2558,7 @@ int main(int argc, char **argv)
      * For example, when filename = "lustre:/home/foo/testfile.nc", remove
      * "lustre:" to make path = "/home/foo/testfile.nc" in open() below
      */
-    path = strchr(filename, ':');
-    if (path == NULL) path = filename; /* no prefix */
-    else              path++;
+    path = remove_file_system_type_prefix(filename);
 
     /* check file signature */
     fmt = check_signature(path);
@@ -2587,11 +2621,11 @@ int main(int argc, char **argv)
         }
     }
     else { /* either there is no record variable or no record is written */
-	/* Assuming variables' begins do not follow their define order, find
+        /* Assuming variables' begins do not follow their define order, find
          * max end offset among all fixed-size varaibles.
          */
         long long expect_fsize = ncp->xsz;
-	for (i=0; i<ncp->vars.ndefined; i++) {
+        for (i=0; i<ncp->vars.ndefined; i++) {
             long long var_end;
             if (IS_RECVAR(ncp->vars.value[i])) continue;
             var_end = ncp->vars.value[i]->begin + ncp->vars.value[i]->len;

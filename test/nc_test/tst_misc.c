@@ -48,13 +48,12 @@ main(int argc, char **argv)
     if (rank == 0) printf("%-66s ------ ", cmd_str);
     free(cmd_str);
 
-    /* remove the file system type prefix name if there is any.
-     * For example, when filename = "lustre:/home/foo/testfile.nc", remove
-     * "lustre:" to make path = "/home/foo/testfile.nc" in open() below
+    /* remove the file system type prefix name if there is any.  For example,
+     * when filename = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
+     * path pointing to "/home/foo/testfile.nc", so it can be used in POSIX
+     * fopen() below
      */
-    path = strchr(filename, ':');
-    if (path == NULL) path = filename; /* no prefix */
-    else              path++;
+    path = remove_file_system_type_prefix(filename);
 
 /*
    printf("\n*** Testing some extra stuff.\n");
