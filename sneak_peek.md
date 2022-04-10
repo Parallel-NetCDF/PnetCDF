@@ -48,7 +48,18 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Other updates:
-  + none
+  + In all prior versions, the file name was checked whether it contains
+    character ':'. The prefix name ending with ':' is considered by ROMIO as
+    the file system type name. The prefix name, if found, is then stripped, so
+    the file name can be used in the successive POSIX function calls. However,
+    the prefix was not checked against the file system type names recognized
+    by ROMIO. Starting from this release, the prefix is checked against the
+    known file system type names to ROMIO. If the prefix is not one of the
+    recognized types, e.g.  "ufs", "nfs", "xfs", "pvfs2", "gpfs", "panfs",
+    "lustre", "daos", "testfs", "ime", or "quobyte", then the prefix name is
+    not stripped. This change is for in case when the file name contains ':',
+    but it is not for specifying the file system type.
+    See [PR #79](https://github.com/Parallel-NetCDF/PnetCDF/pull/79)
 
 * Bug fixes
   + none
