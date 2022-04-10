@@ -1185,13 +1185,12 @@ ncmpi_inq_file_format(const char *filename,
 
     *formatp = NC_FORMAT_UNKNOWN;
 
-    /* remove the file system type prefix name if there is any.
-     * For example, when filename = "lustre:/home/foo/testfile.nc", remove
-     * "lustre:" to make path = "/home/foo/testfile.nc" in open() below
+    /* remove the file system type prefix name if there is any.  For example,
+     * when filename = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
+     * path pointing to "/home/foo/testfile.nc", so it can be used in POSIX
+     * open() below
      */
-    path = strchr(filename, ':');
-    if (path == NULL) path = filename; /* no prefix */
-    else              path++;
+    path = ncmpii_remove_file_system_type_prefix(filename);
 
     /* must include config.h on 32-bit machines, as AC_SYS_LARGEFILE is called
      * at the configure time and it defines _FILE_OFFSET_BITS to 64 if large

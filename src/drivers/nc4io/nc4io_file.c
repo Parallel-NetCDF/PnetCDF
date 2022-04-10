@@ -61,13 +61,12 @@ nc4io_create(MPI_Comm     comm,
     int err, ncidtmp;
     NC_nc4 *nc4p;
 
-    /* remove the file system type prefix name if there is any.
-     * For example, path=="lustre:/home/foo/testfile.nc",
-     * use "/home/foo/testfile.nc" when calling nc_create_par()
+    /* remove the file system type prefix name if there is any.  For example,
+     * when path = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
+     * filename pointing to "/home/foo/testfile.nc", so it can be used in
+     * nc_create_par() below
      */
-    filename = strchr(path, ':');
-    if (filename == NULL) filename = (char*)path; /* no prefix */
-    else                  filename++;
+    filename = ncmpii_remove_file_system_type_prefix(path);
 
     /* add NC_MPIIO in case NetCDF 4.6.1 and earlier is used.
      * NC_MPIIO is ignored in 4.6.2 and after.
@@ -120,13 +119,12 @@ nc4io_open(MPI_Comm     comm,
     int err, ncidtmp;
     NC_nc4 *nc4p;
 
-    /* remove the file system type prefix name if there is any.
-     * For example, path=="lustre:/home/foo/testfile.nc",
-     * use "/home/foo/testfile.nc" when calling nc_open_par()
+    /* remove the file system type prefix name if there is any.  For example,
+     * when path = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
+     * filename pointing to "/home/foo/testfile.nc", so it can be used in
+     * nc_open_par() below
      */
-    filename = strchr(path, ':');
-    if (filename == NULL) filename = (char*)path; /* no prefix */
-    else                  filename++;
+    filename = ncmpii_remove_file_system_type_prefix(path);
 
     /* add NC_MPIIO in case NetCDF 4.6.1 and earlier is used.
      * NC_MPIIO is ignored in 4.6.2 and after.

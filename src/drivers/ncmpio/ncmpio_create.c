@@ -70,12 +70,11 @@ ncmpio_create(MPI_Comm     comm,
     mpiomode = MPI_MODE_RDWR | MPI_MODE_CREATE;
 
     /* remove the file system type prefix name if there is any.  For example,
-     * path=="lustre:/home/foo/testfile.nc", use "/home/foo/testfile.nc" when
-     * calling access()
+     * when path = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
+     * filename pointing to "/home/foo/testfile.nc", so it can be used in POSIX
+     * access() below
      */
-    filename = strchr(path, ':');
-    if (filename == NULL) filename = (char*)path; /* no prefix */
-    else                  filename++;
+    filename = ncmpii_remove_file_system_type_prefix(path);
 
 #ifdef HAVE_ACCESS
     /* if access() is available, use it to check whether file already exists

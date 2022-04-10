@@ -2723,13 +2723,12 @@ APIFunc(get_file_version)(char *filename, int *version)
    if (!version || !filename)
       return NC_EINVAL;
 
-    /* remove the file system type prefix name if there is any.
-     * For example, when filename = "lustre:/home/foo/testfile.nc", remove
-     * "lustre:" to make path = "/home/foo/testfile.nc" in open() below
-     */
-    path = strchr(filename, ':');
-    if (path == NULL) path = filename; /* no prefix */
-    else              path++;
+   /* remove the file system type prefix name if there is any.  For example,
+    * when filename = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
+    * path pointing to "/home/foo/testfile.nc", so it can be used in POSIX
+    * open() below
+    */
+   path = remove_file_system_type_prefix(filename);
 
    /* Figure out if this is a netcdf or hdf5 file. */
    fd = open(path, O_RDONLY, 0600);

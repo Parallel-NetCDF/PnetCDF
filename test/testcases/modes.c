@@ -41,13 +41,13 @@ int check_modes(char *filename)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* delete the file and ignore error */
-    /* remove the file system type prefix name if there is any.
-     * For example, when filename = "lustre:/home/foo/testfile.nc", remove
-     * "lustre:" to make path = "/home/foo/testfile.nc" in open() below
+
+    /* remove the file system type prefix name if there is any.  For example,
+     * when filename = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
+     * path pointing to "/home/foo/testfile.nc", so it can be used in POSIX
+     * unlink() and access() below
      */
-    path = strchr(filename, ':');
-    if (path == NULL) path = filename; /* no prefix */
-    else              path++;
+    path = remove_file_system_type_prefix(filename);
 
     if (rank == 0) unlink(path);
     MPI_Barrier(MPI_COMM_WORLD);

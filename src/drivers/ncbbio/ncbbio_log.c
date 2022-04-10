@@ -73,29 +73,17 @@ int ncbbio_log_create(NC_bb* ncbbp,
 
     /* Read environment variable for burst buffer path */
 
-    /* Remove romio driver specifier form the beginning of path */
-    path = strchr(ncbbp->path, ':');
-    if (path == NULL) {
-        /* No driver specifier, use full path */
-        path = ncbbp->path;
-    }
-    else {
-        /* Skip until after the first ':' */
-        path += 1;
-    }
+    /* remove the file system type prefix name if there is any.  For example,
+     * when ncbbp->path = "lustre:/home/foo/testfile.nc", remove "lustre:" to
+     * make path pointing to "/home/foo/testfile.nc", so it can be used in
+     * POSIX realpath() below
+     */
+    path = ncmpii_remove_file_system_type_prefix(ncbbp->path);
 
     /* Determine log base */
     if (ncbbp->logbase[0] != '\0') {
-        /* We don't need driver specifier in logbase as well */
-        logbasep = strchr(ncbbp->logbase, ':');
-        if (logbasep == NULL) {
-            /* No driver specifier, use full path */
-            logbasep = ncbbp->logbase;
-        }
-        else {
-            /* Skip until after the first ':' */
-            logbasep += 1;
-        }
+        /* remove the file system type prefix name if there is any */
+        logbasep = ncmpii_remove_file_system_type_prefix(ncbbp->logbase);
     }
     else {
         i = strlen(path);

@@ -88,13 +88,12 @@ int main(int argc, char **argv) {
 
     /* rank 0 creates a NETCDF4 file */
     if (rank == 0) {
-        /* remove the file system type prefix name if there is any.
-         * For example, when filename = "lustre:/home/foo/testfile.nc", remove
-         * "lustre:" to make path = "/home/foo/testfile.nc" in open() below
+        /* remove the file system type prefix name if there is any.  For example,
+         * when filename = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
+         * path pointing to "/home/foo/testfile.nc", so it can be used in
+         * create_nc4() below
          */
-        char *path = strchr(filename, ':');
-        if (path == NULL) path = filename; /* no prefix */
-        else              path++;
+        char *path = remove_file_system_type_prefix(filename);
 
         err = create_nc4(path);
         if (err) {

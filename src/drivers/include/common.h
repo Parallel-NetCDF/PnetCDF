@@ -242,5 +242,7 @@ extern char *strdup(const char *s);
 extern int strcasecmp(const char *s1, const char *s2);
 #endif
 
+char* ncmpii_remove_file_system_type_prefix(const char *filename);
+
 #endif
 
