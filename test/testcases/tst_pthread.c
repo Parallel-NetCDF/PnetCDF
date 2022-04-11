@@ -21,6 +21,7 @@
 #include <string.h>
 #include <libgen.h> /* basename() */
 #include <unistd.h> /* _POSIX_BARRIERS, unlink() */
+#include <errno.h>
 
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -34,14 +35,20 @@
 #define NY 5
 #define NX 4
 
+#define ERRNO_HANDLE(errno) {                                   \
+    if (errno != 0) {                                           \
+        fprintf(stderr,"Error: %s (file=%s line=%d func=%s)\n", \
+                strerror(errno),__FILE__,__LINE__,__func__);    \
+        goto err_out;                                           \
+    }                                                           \
+}
+
 #if !defined(_POSIX_BARRIERS) || _POSIX_BARRIERS <= 0
 /* According to opengroup.org, barriers are defined in the optional part of
  * POSIX standard. For example, Mac OSX does not have pthread_barrier. If
  * barriers were implemented, the _POSIX_BARRIERS macro is defined as a
  * positive number.
  */
-
-#include <errno.h>
 
 typedef int pthread_barrierattr_t;
 typedef struct {
@@ -55,48 +62,69 @@ static int pthread_barrier_init(pthread_barrier_t           *barrier,
                                 const pthread_barrierattr_t *attr,
                                 unsigned int                 count)
 {
+    int err;
+
     if (count == 0) {
         errno = EINVAL;
-        return -1;
+        return errno;
     }
 
-    if (pthread_mutex_init(&barrier->mutex, 0) < 0)
-        return -1;
+    err = pthread_mutex_init(&barrier->mutex, 0)
+    ERRNO_HANDLE(err)
 
-    if (pthread_cond_init(&barrier->cond, 0) < 0) {
-        pthread_mutex_destroy(&barrier->mutex);
-        return -1;
-    }
-    pthread_mutex_lock(&barrier->mutex);
+    err = pthread_cond_init(&barrier->cond, 0);
+    ERRNO_HANDLE(err)
+
+    err = pthread_mutex_lock(&barrier->mutex);
+    ERRNO_HANDLE(err)
+
     barrier->numThreads = count;
     barrier->count = 0;
-    pthread_mutex_unlock(&barrier->mutex);
 
-    return 0;
+    err = pthread_mutex_unlock(&barrier->mutex);
+    ERRNO_HANDLE(err)
+
+err_out:
+    return err;
 }
 
 static int pthread_barrier_destroy(pthread_barrier_t *barrier)
 {
-    pthread_cond_destroy(&barrier->cond);
-    pthread_mutex_destroy(&barrier->mutex);
-    return 0;
+    int err;
+
+    err = pthread_cond_destroy(&barrier->cond);
+    ERRNO_HANDLE(err)
+
+    err = pthread_mutex_destroy(&barrier->mutex);
+    ERRNO_HANDLE(err)
+
+err_out:
+    return err;
 }
 
 static int pthread_barrier_wait(pthread_barrier_t *barrier)
 {
-    int ret;
-    pthread_mutex_lock(&barrier->mutex);
+    int err, ret;
+
+    err = pthread_mutex_lock(&barrier->mutex);
+    ERRNO_HANDLE(err)
+
     ++(barrier->count);
     if (barrier->count >= barrier->numThreads) {
         barrier->count = 0;
-        pthread_cond_broadcast(&barrier->cond);
+        err = pthread_cond_broadcast(&barrier->cond);
+        ERRNO_HANDLE(err)
         ret = 1;
     } else {
-        pthread_cond_wait(&barrier->cond, &barrier->mutex);
+        err = pthread_cond_wait(&barrier->cond, &barrier->mutex);
+        ERRNO_HANDLE(err)
         ret = 0;
     }
-    pthread_mutex_unlock(&barrier->mutex);
-    return ret;
+    err = pthread_mutex_unlock(&barrier->mutex);
+    ERRNO_HANDLE(err)
+
+err_out:
+    return (err < 0) ? err : ret;
 }
 #endif
 
@@ -113,7 +141,7 @@ static
 void* thread_func(void *arg)
 {
     char filename[512];
-    int i, id, nprocs, cmode, err, nerrs=0, ncid, *ret, dimid[2], varid[2];
+    int i, id, nprocs, cmode, err=0, nerrs=0, ncid, *ret, dimid[2], varid[2];
     int *ibuf;
     double *dbuf;
     MPI_Offset start[2], count[2];
@@ -176,7 +204,9 @@ void* thread_func(void *arg)
 
     /* synchronize all threads within each process to ensure all threads to
      * finish their file writes */
-    pthread_barrier_wait(&barr);
+    err = pthread_barrier_wait(&barr);
+    if (err != PTHREAD_BARRIER_SERIAL_THREAD && err != 0)
+        ERRNO_HANDLE(err)
 
     /* each thread opens a different file (round-robin shift), reads variables
      * and check contents */
@@ -237,9 +267,13 @@ void* thread_func(void *arg)
 
     // unlink(filename);
 
+err_out:
+    if (err < 0) nerrs++;
+
     /* return number of errors encountered */
     ret = (int*)malloc(sizeof(int));
     *ret = nerrs;
+
     return ret; /* same as pthread_exit(ret); */
 }
 #endif
@@ -306,32 +340,29 @@ int main(int argc, char **argv) {
     }
 
     /* initialize thread barrier */
-    pthread_barrier_init(&barr, NULL, NTHREADS);
+    err = pthread_barrier_init(&barr, NULL, NTHREADS);
+    ERRNO_HANDLE(err)
 
     /* create threads, each calls thread_func() */
     for (i=0; i<NTHREADS; i++) {
         thread_arg t_arg[NTHREADS]; /* must be unique to each thread */
         t_arg[i].id = i + rank * NTHREADS;
         sprintf(t_arg[i].fname, "%s",filename);
-        if (pthread_create(&threads[i], NULL, thread_func, &t_arg[i])) {
-            fprintf(stderr, "Error in %s line %d creating thread %d\n",
-                    __FILE__, __LINE__, i);
-            nerrs++;
-        }
+        err = pthread_create(&threads[i], NULL, thread_func, &t_arg[i]);
+        ERRNO_HANDLE(err)
     }
 
     /* wait for all threads to finish */
     for (i=0; i<NTHREADS; i++) {
         void *ret;
-        if (pthread_join(threads[i], (void**)&ret)) {
-            fprintf(stderr, "Error in %s line %d joining thread %d\n",
-                    __FILE__, __LINE__, i);
-        }
+        err = pthread_join(threads[i], (void**)&ret);
+        ERRNO_HANDLE(err)
         nerrs += *(int*)ret;
         free(ret);
     }
 
-    pthread_barrier_destroy(&barr);
+    err = pthread_barrier_destroy(&barr);
+    ERRNO_HANDLE(err)
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -353,6 +384,7 @@ int main(int argc, char **argv) {
     if (rank == 0) printf(SKIP_STR);
 #endif
 
+err_out:
     MPI_Finalize();
     return (nerrs > 0);
 }
