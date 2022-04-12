@@ -44,7 +44,6 @@ jobs:
                         --enable-burst_buffering \
                         --enable-subfiling \
                         --enable-shared \
-                        --enable-debug \
                         --enable-thread-safe \
                         --with-pthread \
                         TESTMPIRUN="mpiexec --oversubscribe -n NP" \
@@ -55,11 +54,14 @@ jobs:
           run: |
             WORKDIR=$(pwd)
             cat ${WORKDIR}/config.log
-        - name: Test PnetCDF
+        - name: make check
           run: |
-            WORKDIR=$(pwd)
             make check
+        - name: make ptests
+          run: |
             make ptests
+        - name: make distcheck
+          run: |
             make distcheck DISTCHECK_CONFIGURE_FLAGS="--silent TESTOUTDIR=/dev/shm/pnetcdf_output"
         - name: Print log files
           if: ${{ always() }}
