@@ -191,9 +191,33 @@ fi
 if test "x${TESTOUTDIR}" = x ; then
     dnl set default to current directory
     TESTOUTDIR=.
+else
+   FSTYPE_PREFIX=`echo ${TESTOUTDIR} | cut -d: -f1`
+   if test $FSTYPE_PREFIX = $TESTOUTDIR ; then
+      # no name prefix end with ':'
+      FSTYPE_PREFIX=
+   else
+      # check if name prefix is one of file system types known to ROMIO
+      romio_known_fstypes=(ufs nfs xfs pvfs2 gpfs panfs lustre daos testfs ime quobyte)
+      known_fstype=
+      for pre in $romio_known_fstypes ; do
+          if test "$FSTYPE_PREFIX" = $pre ; then
+             known_fstype=$pre
+             break
+          fi
+      done
+      if test "x$known_fstype" = x ; then
+         FSTYPE_PREFIX=
+      else
+         FSTYPE_PREFIX+=":"
+         # remove name prefix from test output directory name
+         TESTOUTDIR=${TESTOUTDIR#"$FSTYPE_PREFIX"}
+      fi
+   fi
 fi
 AC_SUBST(TESTMPIRUN)
 AC_SUBST(TESTOUTDIR)
+AC_SUBST(FSTYPE_PREFIX)
 
 AM_CONDITIONAL(BUILD_BENCHMARKS_IN_PNETCDF, [test yes = no])
 
