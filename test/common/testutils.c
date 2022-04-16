@@ -265,27 +265,22 @@ static const char* fstypes[] = {"ufs", "nfs", "xfs", "pvfs2", "gpfs", "panfs", "
  */
 char* remove_file_system_type_prefix(const char *filename)
 {
-    char *prefix, *colon, *ret_filename;
+    char *ret_filename = (char*)filename;
 
     if (filename == NULL) return NULL;
 
-    ret_filename = (char*)filename;
-    prefix = strdup(filename);
-
-    colon = strchr(prefix, ':');
-    if (colon != NULL) { /* there is a prefix end with : */
-        int i=0;
-        *colon = '\0';
+    if (strchr(filename, ':') != NULL) { /* there is a prefix end with ':' */
         /* check if prefix is one of recognized file system types */
+        int i=0;
         while (fstypes[i] != NULL) {
-            if (!strcmp(prefix, fstypes[i])) { /* found */
-                ret_filename += colon - prefix + 1;
+            int prefix_len = strlen(fstypes[i]);
+            if (!strncmp(filename, fstypes[i], prefix_len)) { /* found */
+                ret_filename += prefix_len + 1;
                 break;
             }
             i++;
         }
     }
-    free(prefix);
 
     return ret_filename;
 }
