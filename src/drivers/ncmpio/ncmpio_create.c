@@ -39,7 +39,7 @@ ncmpio_create(MPI_Comm     comm,
               void       **ncpp)
 {
     char *env_str, *filename;
-    int rank, mpiomode, err, mpireturn, default_format, file_exist = 1;
+    int rank, nprocs, mpiomode, err, mpireturn, default_format, file_exist = 1;
     MPI_File fh;
     MPI_Info info_used;
     NC *ncp=NULL;
@@ -66,6 +66,7 @@ ncmpio_create(MPI_Comm     comm,
 
     /* Handle file clobber --------------------------------------------------*/
     MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &nprocs);
 
     mpiomode = MPI_MODE_RDWR | MPI_MODE_CREATE;
 
@@ -89,7 +90,8 @@ ncmpio_create(MPI_Comm     comm,
         /* check if file exists: NC_EEXIST is returned if the file already
          * exists and NC_NOCLOBBER mode is used in ncmpi_create */
 #ifdef HAVE_ACCESS
-        TRACE_COMM(MPI_Bcast)(&file_exist, 1, MPI_INT, 0, comm);
+        if (nprocs > 1)
+            TRACE_COMM(MPI_Bcast)(&file_exist, 1, MPI_INT, 0, comm);
         if (file_exist) DEBUG_RETURN_ERROR(NC_EEXIST)
 #else
         /* add MPI_MODE_EXCL mode for MPI_File_open to check file existence */
@@ -141,7 +143,8 @@ ncmpio_create(MPI_Comm     comm,
             if (errno == ENOENT) errno = 0; /* reset errno */
         }
         /* all processes must wait here until file deletion is completed */
-        TRACE_COMM(MPI_Bcast)(&err, 1, MPI_INT, 0, comm);
+        if (nprocs > 1)
+            TRACE_COMM(MPI_Bcast)(&err, 1, MPI_INT, 0, comm);
         if (err != NC_NOERR) return err;
     }
 
@@ -159,7 +162,8 @@ ncmpio_create(MPI_Comm     comm,
              * errno to see if it set to EEXIST. Note usually rank 0 makes the
              * file open call and can be the only one having errno set.
              */
-            TRACE_COMM(MPI_Bcast)(&errno, 1, MPI_INT, 0, comm);
+            if (nprocs > 1)
+                TRACE_COMM(MPI_Bcast)(&errno, 1, MPI_INT, 0, comm);
             if (errno == EEXIST) DEBUG_RETURN_ERROR(NC_EEXIST)
         }
 #endif
