@@ -102,9 +102,9 @@ new_id_PNCList(int *new_id, PNC *pncp)
 #ifdef ENABLE_THREAD_SAFE
     perr = pthread_mutex_unlock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_unlock")
-#endif
 
 err_out:
+#endif
     return (err != NC_NOERR) ? err : perr;
 }
 
@@ -126,9 +126,9 @@ del_from_PNCList(int ncid)
 #ifdef ENABLE_THREAD_SAFE
     perr = pthread_mutex_unlock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_unlock")
-#endif
 
 err_out:
+#endif
     return perr;
 }
 
@@ -153,9 +153,9 @@ PNC_check_id(int ncid, PNC **pncp)
 #ifdef ENABLE_THREAD_SAFE
     perr = pthread_mutex_unlock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_unlock")
-#endif
 
 err_out:
+#endif
     return (err != NC_NOERR) ? err : perr;
 }
 
@@ -1790,9 +1790,9 @@ ncmpi_set_default_format(int format, int *old_formatp)
 #ifdef ENABLE_THREAD_SAFE
     perr = pthread_mutex_unlock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_unlock")
-#endif
 
 err_out:
+#endif
     return (err != NC_NOERR) ? err : perr;
 }
 
@@ -1817,9 +1817,9 @@ ncmpi_inq_default_format(int *formatp)
 #ifdef ENABLE_THREAD_SAFE
     perr = pthread_mutex_unlock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_unlock")
-#endif
 
 err_out:
+#endif
     return perr;
 }
 
@@ -1852,9 +1852,9 @@ ncmpi_inq_files_opened(int *num,    /* cannot be NULL */
 #ifdef ENABLE_THREAD_SAFE
     perr = pthread_mutex_unlock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_unlock")
-#endif
 
 err_out:
+#endif
     return perr;
 }
 
