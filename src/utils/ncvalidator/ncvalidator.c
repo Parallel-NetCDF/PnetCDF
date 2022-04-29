@@ -34,6 +34,12 @@
 static int verbose, trace;
 static int repair;
 static const char nada[4] = {0, 0, 0, 0};
+/*
+ * static const char *fmt_limit = "https://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations";
+ * static const char *off_limit = "http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations";
+ */
+static const char *fmt_limit = "https://docs.unidata.ucar.edu/nug/current/file_structure_and_performance.html#classic_format_limitations";
+static const char *off_limit = "https://docs.unidata.ucar.edu/nug/current/file_structure_and_performance.html#offset_format_limitations";
 
 #ifndef MAX
 #define MAX(mm,nn) (((mm) > (nn)) ? (mm) : (nn))
@@ -1950,9 +1956,9 @@ val_NC_check_vlens(NC *ncp)
             DUMP_DIMS(varp)
             printf("\n");
             if (ncp->format == 1)
-                printf("\tSee: https://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations\n");
+                printf("\tSee: %s\n", fmt_limit);
             else if (ncp->format == 2)
-                printf("\tSee: http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations\n");
+                printf("\tSee: %s\n", off_limit);
         }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
@@ -1967,9 +1973,9 @@ val_NC_check_vlens(NC *ncp)
             DUMP_DIMS(varp)
             printf("\n");
             if (ncp->format == 1)
-                printf("\tSee: https://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations\n");
+                printf("\tSee: %s\n", fmt_limit);
             else if (ncp->format == 2)
-                printf("\tSee: http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations\n");
+                printf("\tSee: %s\n", off_limit);
         }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
@@ -1984,9 +1990,9 @@ val_NC_check_vlens(NC *ncp)
             printf("\tInput file contains 1 large fixed-size variables and %lld record variables\n", rec_vars_count);
             printf("\tCDF-%d format allows only one large fixed-size variable which must be defined last and there is no record variable\n",ncp->format);
             if (ncp->format == 1)
-                printf("\tSee: https://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations\n");
+                printf("\tSee: %s\n", fmt_limit);
             else if (ncp->format == 2)
-                printf("\tSee: http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations\n");
+                printf("\tSee: %s\n", off_limit);
         }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
@@ -2019,8 +2025,7 @@ val_NC_check_vlens(NC *ncp)
 
     /* For CDF-2, no record variable can require more than 2^32 - 4 bytes of
      * storage for each record's worth of data, unless it is the last record
-     * variable. See
-     * http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations
+     * variable.
      */
     if (large_rec_vars_count > 1) { /* only one "too-large" variable allowed */
         if (verbose) {
@@ -2037,9 +2042,9 @@ val_NC_check_vlens(NC *ncp)
             printf("\n");
             printf("\tCDF-%d format allows only one large record variable\n",ncp->format);
             if (ncp->format == 1)
-                printf("\tSee: https://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations\n");
+                printf("\tSee: %s\n", fmt_limit);
             else if (ncp->format == 2)
-                printf("\tSee: http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations\n");
+                printf("\tSee: %s\n", off_limit);
         }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
@@ -2054,9 +2059,9 @@ val_NC_check_vlens(NC *ncp)
             printf("\n");
             printf("\tCDF-%d format allows only one large record variable and it must be defined last\n",ncp->format);
             if (ncp->format == 1)
-                printf("\tSee: https://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#classic_format_limitations\n");
+                printf("\tSee: %s\n", fmt_limit);
             else if (ncp->format == 2)
-                printf("\tSee: http://www.unidata.ucar.edu/software/netcdf/docs/file_structure_and_performance.html#offset_format_limitations\n");
+                printf("\tSee: %s\n", off_limit);
         }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
