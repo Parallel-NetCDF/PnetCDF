@@ -12,7 +12,7 @@ VALIDATOR=ncvalidator
 
 BAD_FILES="${ENULLPAD_FILES} ${EMAXVARS_FILES} ${EUNLIMIT_FILES} ${ENOTNC_FILES} ${EVARSIZE_FILES} ${TST_HDF5_FILES}"
 for i in ${BAD_FILES} ; do
-    # echo "${TESTSEQRUN} ./${VALIDATOR} -q ${srcdir}/$i"
-    ${TESTSEQRUN} ./${VALIDATOR} -q ${srcdir}/$i
+    # echo "${TESTSEQRUN} ./${VALIDATOR} ${srcdir}/$i"
+    ${TESTSEQRUN} ./${VALIDATOR} ${srcdir}/$i
 done
 

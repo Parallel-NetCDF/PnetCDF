@@ -23,11 +23,11 @@ for i in ${BAD_FILES} ; do
        echo "Failed: input test file ${srcdir}/$i does not exit"
        exit 1
     fi
-    ${TESTSEQRUN} ./${VALIDATOR} -q ${srcdir}/$i
+    ${TESTSEQRUN} ./${VALIDATOR} ${srcdir}/$i
     ret=$?
     # capture exit status of VALIDATOR command
     if [ ${ret} -ne 1 ]; then
-       echo "Failed: ${VALIDATOR} -q ${srcdir}/$i"
+       echo "Failed: ${VALIDATOR} ${srcdir}/$i"
        exit 1
     fi
 done
