@@ -45,7 +45,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Updated utility program
-  + none
+  + ncvalidator - Add printing of the dimension size of a variable when its
+    size is larger than the limitation allowed by the file format. See commit
+    5584d44.
 
 * Other updates:
   + In all prior versions, the file name was checked whether it contains
