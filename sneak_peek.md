@@ -73,7 +73,7 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
-  + none
+  + test/testcases/flexible_var.c - test flexible var API
 
 * Issues with NetCDF library
   + none
