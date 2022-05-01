@@ -24,6 +24,24 @@
     } \
 }
 
+#define CHECK_ERROUT { \
+    if (err != NC_NOERR) { \
+        nerrs++; \
+        printf("Error at line %d in %s: (%s)\n", \
+        __LINE__,__FILE__,ncmpi_strerrno(err)); \
+        goto err_out; \
+    } \
+}
+
+#define CHECK_FATAL_ERR { \
+    if (err != NC_NOERR) { \
+        nerrs++; \
+        printf("Error at line %d in %s: (%s)\n", \
+        __LINE__,__FILE__,ncmpi_strerrno(err)); \
+        MPI_Abort(MPI_COMM_WORLD, -1); \
+    } \
+}
+
 #define EXP_ERR(exp) { \
     if (err != exp) { \
         nerrs++; \
