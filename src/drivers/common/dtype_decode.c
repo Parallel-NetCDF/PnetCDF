@@ -516,7 +516,28 @@ ncmpii_buftype_decode(int               ndims,
     for (i=0; i<ndims; i++)
         fnelems *= count[i];
 
-    if (bufcount == -1) { /* the subroutine is called from a high-level API */
+    if (bufcount == -1) {
+        /* This is called from a high-level API, buftype must be the I/O
+         * buffer's data type, a predefined MPI datatype.
+         */
+#if 0
+        /* The same error will also be captured in ncmpio_pack_xbuf(),
+         * ncmpio_unpack_xbuf(), ncmpii_putn_xxx(), or ncmpii_getn_NC_xxx().
+         */
+        if (buftype != MPI_CHAR                &&
+            buftype != MPI_SIGNED_CHAR         &&
+            buftype != MPI_UNSIGNED_CHAR       &&
+            buftype != MPI_SHORT               &&
+            buftype != MPI_UNSIGNED_SHORT      &&
+            buftype != MPI_INT                 &&
+            buftype != MPI_UNSIGNED            &&
+            buftype != MPI_LONG                &&
+            buftype != MPI_FLOAT               &&
+            buftype != MPI_DOUBLE              &&
+            buftype != MPI_LONG_LONG_INT       &&
+            buftype != MPI_UNSIGNED_LONG_LONG)
+            DEBUG_RETURN_ERROR(NC_EBADTYPE)
+#endif
         *nelems   = fnelems;
         *etype    = buftype; /* buftype is an MPI primitive data type */
         MPI_Type_size(buftype, esize);
