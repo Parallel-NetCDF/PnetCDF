@@ -74,6 +74,7 @@ This is essentially a placeholder for the next release note ...
 
 * New test program
   + test/testcases/flexible_var.c - test flexible var API
+  + test/testcases/flexible_api.f - test flexible API when bufcount == -1
 
 * Issues with NetCDF library
   + none
