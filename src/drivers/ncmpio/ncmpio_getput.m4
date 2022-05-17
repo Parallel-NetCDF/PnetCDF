@@ -147,6 +147,13 @@ put_varm(NC               *ncp,
         buftype = itype;
     }
 
+    /* When bufcount is -1, then this is called from a high-level API. Thus,
+     * buftype is an MPI primitive data type. If this is called from a Fortran
+     * program, buftype will be Fortran MPI datatype, e.g. MPI_INTEGER. buftype
+     * must be translated to C datatype, itype.
+     */
+    if (bufcount == -1) buftype = itype;
+
     /* because bnelems will be used as the argument "count" in MPI-IO
      * write calls and the argument "count" is of type int */
     if (bnelems > INT_MAX) {
@@ -396,6 +403,13 @@ get_varm(NC               *ncp,
         bufcount = bnelems;
         buftype = itype;
     }
+
+    /* When bufcount is -1, then this is called from a high-level API. Thus,
+     * buftype is an MPI primitive data type. If this is called from a Fortran
+     * program, buftype will be Fortran MPI datatype, e.g. MPI_INTEGER. buftype
+     * must be translated to C datatype, itype.
+     */
+    if (bufcount == -1) buftype = itype;
 
     /* because bnelems will be used as the argument "count" in MPI-IO
      * write calls and the argument "count" is of type int */

@@ -169,8 +169,14 @@ ncmpio_igetput_varm(NC               *ncp,
          * buftype. itype is the MPI element type in internal representation.
          * In addition, it means the user buf is contiguous.
          */
-        itype = buftype;
+        int isderived;
+        err = ncmpii_dtype_decode(buftype, &itype, NULL, NULL, &isderived, NULL);
+        if (err != NC_NOERR) goto fn_exit;
+        if (itype == MPI_DATATYPE_NULL || isderived)
+            DEBUG_RETURN_ERROR(NC_EUNSPTETYPE)
+
         MPI_Type_size(itype, &isize); /* buffer element size */
+        buftype = itype;
     }
     else if (buftype == MPI_DATATYPE_NULL) {
         /* In this case, bufcount is ignored and the internal buffer data type
