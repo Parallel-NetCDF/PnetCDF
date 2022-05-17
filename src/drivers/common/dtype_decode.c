@@ -482,7 +482,7 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
 /* Obtain the following metadata about buftype:
  * etype:    element data type (MPI primitive type) in buftype
  * bufcount: If it is -1, then this is called from a high-level API and in
- *           this case buftype will be an MPI primitive data type.
+ *           this case buftype will be an MPI predefined data type.
  *           If bufcount is not -1, then this is called from a flexible API.
  * nelems:   number of etypes in user buffer
  * xnbytes:  number of bytes (in external data representation) to read/write
@@ -502,7 +502,7 @@ ncmpii_buftype_decode(int               ndims,
                       MPI_Offset       *xnbytes,  /* out */
                       int              *isContig) /* out */
 {
-    int i, xsz, err;
+    int i, xsz, err, isderived=0;
     MPI_Offset fnelems;
 
     err = ncmpii_xlen_nc_type(xtype, &xsz);
@@ -520,27 +520,12 @@ ncmpii_buftype_decode(int               ndims,
         /* This is called from a high-level API, buftype must be the I/O
          * buffer's data type, a predefined MPI datatype.
          */
-#if 0
-        /* The same error will also be captured in ncmpio_pack_xbuf(),
-         * ncmpio_unpack_xbuf(), ncmpii_putn_xxx(), or ncmpii_getn_NC_xxx().
-         */
-        if (buftype != MPI_CHAR                &&
-            buftype != MPI_SIGNED_CHAR         &&
-            buftype != MPI_UNSIGNED_CHAR       &&
-            buftype != MPI_SHORT               &&
-            buftype != MPI_UNSIGNED_SHORT      &&
-            buftype != MPI_INT                 &&
-            buftype != MPI_UNSIGNED            &&
-            buftype != MPI_LONG                &&
-            buftype != MPI_FLOAT               &&
-            buftype != MPI_DOUBLE              &&
-            buftype != MPI_LONG_LONG_INT       &&
-            buftype != MPI_UNSIGNED_LONG_LONG)
-            DEBUG_RETURN_ERROR(NC_EBADTYPE)
-#endif
+        err = ncmpii_dtype_decode(buftype, etype, NULL, NULL, &isderived, NULL);
+        if (err != NC_NOERR) return err;
+        if (*etype == MPI_DATATYPE_NULL || isderived)
+            DEBUG_RETURN_ERROR(NC_EUNSPTETYPE)
+        MPI_Type_size(*etype, esize);
         *nelems   = fnelems;
-        *etype    = buftype; /* buftype is an MPI primitive data type */
-        MPI_Type_size(buftype, esize);
         *xnbytes  = *nelems * xsz;
         *isContig = 1;
     }
@@ -557,7 +542,6 @@ ncmpii_buftype_decode(int               ndims,
         *isContig = 1;
     }
     else { /* This is called from a flexible API */
-        int isderived;
         /* check some metadata of the MPI derived datatype */
         err = ncmpii_dtype_decode(buftype, etype, esize, nelems, &isderived,
                                   isContig);
