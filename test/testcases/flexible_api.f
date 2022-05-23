@@ -43,7 +43,7 @@
           integer err, ierr, nerrs, nprocs, rank, i, j
           integer cmode, ncid, varid, dimid(2), ghost_len, get_args
           integer*8 nx, ny, global_nx, global_ny
-          integer*8 starts(2), counts(2), bufcount
+          integer*8 starts(2), counts(2), bufcount, one
           PARAMETER(nx=5, ny=4, ghost_len=3)
           integer buf(nx+2*ghost_len, ny+2*ghost_len)
           integer subarray, req(1), st(1)
@@ -140,20 +140,31 @@
           err = nfmpi_put_vara_all(ncid, varid, starts, counts, buf,
      +                             bufcount, subarray)
           call check(err, 'In nfmpi_put_vara_all: ')
-          call MPI_Type_free(subarray, err)
 
-          ! test blocking and nonblocking APIs when bufcount argument is 1
-          ! and buftype argument is a predefined MPI datatype
+          ! flush in case burst buffering is enabled
+          err = nfmpi_flush(ncid)
+          call check(err, 'In nfmpi_flush: ')
 
-          bufcount = -1
+          ! test blocking and nonblocking APIs when buftype argument is
+          ! a predefined MPI datatype
+          bufcount = counts(1) * counts(2)
+          one = 1
 
           err = nfmpi_put_vara_all(ncid, varid, starts, counts, buf,
      +                             bufcount, MPI_INTEGER)
           call check(err, 'In nfmpi_put_vara_all: ')
 
+          ! flush in case burst buffering is enabled
+          err = nfmpi_flush(ncid)
+          call check(err, 'In nfmpi_flush: ')
+
           err = nfmpi_put_var1_all(ncid, varid, starts, buf,
-     +                             bufcount, MPI_INTEGER)
+     +                             one, MPI_INTEGER)
           call check(err, 'In nfmpi_put_var1_all: ')
+
+          ! flush in case burst buffering is enabled
+          err = nfmpi_flush(ncid)
+          call check(err, 'In nfmpi_flush: ')
 
           err = nfmpi_iput_vara(ncid, varid, starts, counts, buf,
      +                          bufcount, MPI_INTEGER, req)
@@ -162,12 +173,84 @@
           err = nfmpi_wait_all(ncid, 1, req, st)
           call check(err, 'In nfmpi_wait_all:')
 
+          ! flush in case burst buffering is enabled
+          err = nfmpi_flush(ncid)
+          call check(err, 'In nfmpi_flush: ')
+
+          err = nfmpi_iput_var1(ncid, varid, starts, buf,
+     +                          one, MPI_INTEGER, req)
+          call check(err, 'In nfmpi_iput_var1: ')
+
+          err = nfmpi_wait_all(ncid, 1, req, st)
+          call check(err, 'In nfmpi_wait_all:')
+
+          ! flush in case burst buffering is enabled
+          err = nfmpi_flush(ncid)
+          call check(err, 'In nfmpi_flush: ')
+
+          err = nfmpi_get_vara_all(ncid, varid, starts, counts, buf,
+     +                             bufcount, MPI_INTEGER)
+          call check(err, 'In nfmpi_get_vara_all: ')
+
+          err = nfmpi_get_var1_all(ncid, varid, starts, buf,
+     +                             one, MPI_INTEGER)
+          call check(err, 'In nfmpi_get_var1_all: ')
+
+          err = nfmpi_iget_vara(ncid, varid, starts, counts, buf,
+     +                          bufcount, MPI_INTEGER, req)
+          call check(err, 'In nfmpi_iget_vara: ')
+
+          err = nfmpi_wait_all(ncid, 1, req, st)
+          call check(err, 'In nfmpi_wait_all:')
+
+          err = nfmpi_iget_var1(ncid, varid, starts, buf,
+     +                          one, MPI_INTEGER, req)
+          call check(err, 'In nfmpi_iget_var1: ')
+
+          err = nfmpi_wait_all(ncid, 1, req, st)
+          call check(err, 'In nfmpi_wait_all:')
+
+          ! test blocking and nonblocking APIs when bufcount argument is
+          ! -1 and buftype argument is a predefined MPI datatype
+          bufcount = -1
+
+          err = nfmpi_put_vara_all(ncid, varid, starts, counts, buf,
+     +                             bufcount, MPI_INTEGER)
+          call check(err, 'In nfmpi_put_vara_all: ')
+
+          ! flush in case burst buffering is enabled
+          err = nfmpi_flush(ncid)
+          call check(err, 'In nfmpi_flush: ')
+
+          err = nfmpi_put_var1_all(ncid, varid, starts, buf,
+     +                             bufcount, MPI_INTEGER)
+          call check(err, 'In nfmpi_put_var1_all: ')
+
+          ! flush in case burst buffering is enabled
+          err = nfmpi_flush(ncid)
+          call check(err, 'In nfmpi_flush: ')
+
+          err = nfmpi_iput_vara(ncid, varid, starts, counts, buf,
+     +                          bufcount, MPI_INTEGER, req)
+          call check(err, 'In nfmpi_iput_vara: ')
+
+          err = nfmpi_wait_all(ncid, 1, req, st)
+          call check(err, 'In nfmpi_wait_all:')
+
+          ! flush in case burst buffering is enabled
+          err = nfmpi_flush(ncid)
+          call check(err, 'In nfmpi_flush: ')
+
           err = nfmpi_iput_var1(ncid, varid, starts, buf,
      +                          bufcount, MPI_INTEGER, req)
           call check(err, 'In nfmpi_iput_var1: ')
 
           err = nfmpi_wait_all(ncid, 1, req, st)
           call check(err, 'In nfmpi_wait_all:')
+
+          ! flush in case burst buffering is enabled
+          err = nfmpi_flush(ncid)
+          call check(err, 'In nfmpi_flush: ')
 
           err = nfmpi_get_vara_all(ncid, varid, starts, counts, buf,
      +                             bufcount, MPI_INTEGER)
@@ -194,6 +277,8 @@
           ! close the file
           err = nfmpi_close(ncid)
           call check(err, 'In nfmpi_close: ')
+
+          call MPI_Type_free(subarray, err)
 
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
