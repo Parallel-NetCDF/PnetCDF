@@ -163,16 +163,7 @@ ncmpio_igetput_varm(NC               *ncp,
     xtype = ncmpii_nc2mpitype(varp->xtype);
     MPI_Type_size(xtype, &xsize);
 
-    if (bufcount == -1) { /* buftype is an MPI primitive data type */
-        /* In this case, this subroutine is called from a high-level API.
-         * buftype is one of the MPI primitive data type. We set itype to
-         * buftype. itype is the MPI element type in internal representation.
-         * In addition, it means the user buf is contiguous.
-         */
-        itype = buftype;
-        MPI_Type_size(itype, &isize); /* buffer element size */
-    }
-    else if (buftype == MPI_DATATYPE_NULL) {
+    if (buftype == MPI_DATATYPE_NULL) {
         /* In this case, bufcount is ignored and the internal buffer data type
          * match the external variable data type. No data conversion will be
          * done. In addition, it means buf is contiguous. Hereinafter, buftype
@@ -180,6 +171,15 @@ ncmpio_igetput_varm(NC               *ncp,
          */
         itype = xtype;
         isize = xsize;
+    }
+    else if (bufcount == -1) {
+        /* In this case, this subroutine is called from a high-level API and
+         * buftype must be one of the MPI predefined datatype. We set itype to
+         * buftype. itype is the MPI element type in internal representation.
+         * In addition, it means the user buf is contiguous.
+         */
+        itype = buftype;
+        MPI_Type_size(itype, &isize); /* buffer element size */
     }
     else { /* (bufcount > 0) */
         /* When bufcount > 0, this subroutine is called from a flexible API. If

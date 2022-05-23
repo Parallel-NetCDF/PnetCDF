@@ -3,7 +3,16 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
 * New features
-  + none
+  + Flexible APIs now can be used as high-level APIs, when argument bufcount
+    is -1 and buftype is an MPI predefined data type. For example,
+    ```
+    ncmpi_put_vara_all(ncid, varid, start, count, buf, -1, MPI_FLOAT);
+    ```
+    is equivalent to
+    ```
+    ncmpi_put_vara_float_all(ncid, varid, start, count, buf);
+    ```
+    See [PR #82](https://github.com/Parallel-NetCDF/PnetCDF/pull/82).
 
 * New optimization
   + none
@@ -61,7 +70,7 @@ This is essentially a placeholder for the next release note ...
     "lustre", "daos", "testfs", "ime", or "quobyte", then the prefix name is
     not stripped. This change is for in case when the file name contains ':',
     but it is not for specifying the file system type.
-    See [PR #79](https://github.com/Parallel-NetCDF/PnetCDF/pull/79)
+    See [PR #79](https://github.com/Parallel-NetCDF/PnetCDF/pull/79).
 
 * Bug fixes
   + none
@@ -74,6 +83,7 @@ This is essentially a placeholder for the next release note ...
 
 * New test program
   + test/testcases/flexible_var.c - test flexible var API
+  + test/testcases/flexible_api.f - test flexible API when bufcount == -1
 
 * Issues with NetCDF library
   + none

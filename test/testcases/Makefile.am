@@ -109,13 +109,15 @@ if HAS_FORTRAN
                    attrf \
                    buftype_freef \
                    put_parameter \
-                   test_vardf
+                   test_vardf \
+                   flexible_api
 
        varn_intf_SOURCES = varn_intf.f
            attrf_SOURCES = attrf.f
    buftype_freef_SOURCES = buftype_freef.f
    put_parameter_SOURCES = put_parameter.f
       test_vardf_SOURCES = test_vardf.F
+    flexible_api_SOURCES = flexible_api.f
 if HAVE_MPI_MOD
    TESTPROGRAMS += inq_num_varsf \
                    inq_recsizef \

@@ -332,12 +332,14 @@ $returnType   = "int";
 #		'get_att_uchar-3'	=> 'in:addnull',
 #		'get_att_uchar-4'	=> 'out:charBufferOut',
 
-	'get_var1' => '2:3',
+	'get_var1' => '2:3:6',
 		'get_var1-2'		=> 'in:IntIndexIn',
 		'get_var1-3'		=> 'in:reorderOffsetArr:1',
-	'get_var1_all' => '2:3',
+		'get_var1-6'		=> 'in:datatypeArr',
+	'get_var1_all' => '2:3:6',
 		'get_var1_all-2'	=> 'in:IntIndexIn',
 		'get_var1_all-3'	=> 'in:reorderOffsetArr:1',
+		'get_var1_all-6'	=> 'in:datatypeArr',
 	'get_var1_text' => '2:3:4',
 		'get_var1_text-2'	=> 'in:IntIndexIn',
 		'get_var1_text-4'	=> 'out:charBufferOut',
@@ -383,10 +385,12 @@ $returnType   = "int";
 		'get_var1_longlong_all-2'	=> 'in:IntIndexIn',
 		'get_var1_longlong_all-3'	=> 'in:reorderOffsetArr:1',
 
-	'get_var' => '2',
+	'get_var' => '2:5',
 		'get_var-2'		=> 'in:IntIndexIn',
-	'get_var_all' => '2',
+		'get_var-5'     	=> 'in:datatypeArr',
+	'get_var_all' => '2:5',
 		'get_var_all-2'		=> 'in:IntIndexIn',
+		'get_var_all-5' 	=> 'in:datatypeArr',
 	'get_var_text' => '2:3',
 		'get_var_text-2'	=> 'in:IntIndexIn',
 		'get_var_text-3'	=> 'out:charBufferOut',
@@ -418,14 +422,16 @@ $returnType   = "int";
 	'get_var_longlong_all' => '2',
 		'get_var_longlong_all-2'	=> 'in:IntIndexIn',
 
-	'get_vara' => '2:3:4',
+	'get_vara' => '2:3:4:7',
 		'get_vara-2'		=> 'in:IntIndexIn',
 		'get_vara-3'		=> 'in:reorderOffsetArr:2',
 		'get_vara-4'		=> 'in:reorderOffsetArr',
-	'get_vara_all' => '2:3:4',
+		'get_vara-7'    	=> 'in:datatypeArr',
+	'get_vara_all' => '2:3:4:7',
 		'get_vara_all-2'	=> 'in:IntIndexIn',
 		'get_vara_all-3'	=> 'in:reorderOffsetArr:2',
 		'get_vara_all-4'	=> 'in:reorderOffsetArr',
+		'get_vara_all-7' 	=> 'in:datatypeArr',
 	'get_vara_text' => '2:3:4:5',
 		'get_vara_text-2'	=> 'in:IntIndexIn',
 		'get_vara_text-3'	=> 'in:reorderOffsetArr:2',
@@ -485,16 +491,18 @@ $returnType   = "int";
 		'get_vara_longlong_all-3'	=> 'in:reorderOffsetArr:2',
 		'get_vara_longlong_all-4'	=> 'in:reorderOffsetArr',
 
-	'get_vars' => '2:3:4:5',
+	'get_vars' => '2:3:4:5:8',
 		'get_vars-2'		=> 'in:IntIndexIn',
 		'get_vars-3'		=> 'in:reorderOffsetArr:3',
 		'get_vars-4'		=> 'in:reorderOffsetArr',
 		'get_vars-5'		=> 'in:reorderOffsetArr',
-	'get_vars_all' => '2:3:4:5',
+		'get_vars-8'    	=> 'in:datatypeArr',
+	'get_vars_all' => '2:3:4:5:8',
 		'get_vars_all-2'	=> 'in:IntIndexIn',
 		'get_vars_all-3'	=> 'in:reorderOffsetArr:3',
 		'get_vars_all-4'	=> 'in:reorderOffsetArr',
 		'get_vars_all-5'	=> 'in:reorderOffsetArr',
+		'get_vars_all-8' 	=> 'in:datatypeArr',
 	'get_vars_text' => '2:3:4:5:6',
 		'get_vars_text-2'	=> 'in:IntIndexIn',
 		'get_vars_text-3'	=> 'in:reorderOffsetArr:3',
@@ -568,18 +576,20 @@ $returnType   = "int";
 		'get_vars_longlong_all-4'	=> 'in:reorderOffsetArr',
 		'get_vars_longlong_all-5'	=> 'in:reorderOffsetArr',
 
-	'get_varm' => '2:3:4:5:6',
+	'get_varm' => '2:3:4:5:6:9',
 		'get_varm-2'		=> 'in:IntIndexIn',
 		'get_varm-3'		=> 'in:reorderOffsetArr:4',
 		'get_varm-4'		=> 'in:reorderOffsetArr',
 		'get_varm-5'		=> 'in:reorderOffsetArr',
 		'get_varm-6'		=> 'in:reorderOffsetArr',
-	'get_varm_all' => '2:3:4:5:6',
+		'get_varm-9'    	=> 'in:datatypeArr',
+	'get_varm_all' => '2:3:4:5:6:9',
 		'get_varm_all-2'	=> 'in:IntIndexIn',
 		'get_varm_all-3'	=> 'in:reorderOffsetArr:4',
 		'get_varm_all-4'	=> 'in:reorderOffsetArr',
 		'get_varm_all-5'	=> 'in:reorderOffsetArr',
 		'get_varm_all-6'	=> 'in:reorderOffsetArr',
+		'get_varm_all-9' 	=> 'in:datatypeArr',
 	'get_varm_text' => '2:3:4:5:6:7',
 		'get_varm_text-2'	=> 'in:IntIndexIn',
 		'get_varm_text-3'	=> 'in:reorderOffsetArr:4',
@@ -805,12 +815,14 @@ $returnType   = "int";
 #		'put_att_uchar-3'	=> 'in:charBufferIn',
 #		'put_att_uchar-5'	=> 'in:intToOffset',
 
-	'put_var1' => '2:3',
+	'put_var1' => '2:3:6',
 		'put_var1-2'		=> 'in:IntIndexIn',
 		'put_var1-3'		=> 'in:reorderOffsetArr:1',
-	'put_var1_all' => '2:3',
+		'put_var1-6'    	=> 'in:datatypeArr',
+	'put_var1_all' => '2:3:6',
 		'put_var1_all-2'	=> 'in:IntIndexIn',
 		'put_var1_all-3'	=> 'in:reorderOffsetArr:1',
+		'put_var1_all-6' 	=> 'in:datatypeArr',
 	'put_var1_text' => '2:3:4',
 		'put_var1_text-2'	=> 'in:IntIndexIn',
 		'put_var1_text-3'	=> 'in:reorderOffsetArr:1',
@@ -856,6 +868,12 @@ $returnType   = "int";
 		'put_var1_longlong_all-2'	=> 'in:IntIndexIn',
 		'put_var1_longlong_all-3'	=> 'in:reorderOffsetArr:1',
 
+	'put_var' => '2:5',
+		'put_var-2'		=> 'in:IntIndexIn',
+		'put_var-5'     	=> 'in:datatypeArr',
+	'put_var_all' => '2:5',
+		'put_var_all-2'		=> 'in:IntIndexIn',
+		'put_var_all-5' 	=> 'in:datatypeArr',
 	'put_var_text' => '2:3',
 		'put_var_text-2'	=> 'in:IntIndexIn',
 		'put_var_text-3'	=> 'in:charBufferIn',
@@ -887,16 +905,16 @@ $returnType   = "int";
 	'put_var_longlong_all' => '2',
 		'put_var_longlong_all-2'	=> 'in:IntIndexIn',
 
-	'put_var' => '2',
-		'put_var-2'		=> 'in:IntIndexIn',
-	'put_vara' => '2:3:4',
+	'put_vara' => '2:3:4:7',
 		'put_vara-2'		=> 'in:IntIndexIn',
 		'put_vara-3'		=> 'in:reorderOffsetArr:2',
 		'put_vara-4'		=> 'in:reorderOffsetArr',
-	'put_vara_all' => '2:3:4',
+		'put_vara-7'     	=> 'in:datatypeArr',
+	'put_vara_all' => '2:3:4:7',
 		'put_vara_all-2'	=> 'in:IntIndexIn',
 		'put_vara_all-3'	=> 'in:reorderOffsetArr:2',
 		'put_vara_all-4'	=> 'in:reorderOffsetArr',
+		'put_vara_all-7' 	=> 'in:datatypeArr',
 	'put_vara_text' => '2:3:4:5',
 		'put_vara_text-2'	=> 'in:IntIndexIn',
 		'put_vara_text-3'	=> 'in:reorderOffsetArr:2',
@@ -956,16 +974,18 @@ $returnType   = "int";
 		'put_vara_longlong_all-3'	=> 'in:reorderOffsetArr:2',
 		'put_vara_longlong_all-4'	=> 'in:reorderOffsetArr',
 
-	'put_vars' => '2:3:4:5',
+	'put_vars' => '2:3:4:5:8',
 		'put_vars-2'		=> 'in:IntIndexIn',
 		'put_vars-3'		=> 'in:reorderOffsetArr:3',
 		'put_vars-4'		=> 'in:reorderOffsetArr',
 		'put_vars-5'		=> 'in:reorderOffsetArr',
-	'put_vars_all' => '2:3:4:5',
+		'put_vars-8'     	=> 'in:datatypeArr',
+	'put_vars_all' => '2:3:4:5:8',
 		'put_vars_all-2'	=> 'in:IntIndexIn',
 		'put_vars_all-3'	=> 'in:reorderOffsetArr:3',
 		'put_vars_all-4'	=> 'in:reorderOffsetArr',
 		'put_vars_all-5'	=> 'in:reorderOffsetArr',
+		'put_vars_all-8' 	=> 'in:datatypeArr',
 	'put_vars_text' => '2:3:4:5:6',
 		'put_vars_text-2'	=> 'in:IntIndexIn',
 		'put_vars_text-3'	=> 'in:reorderOffsetArr:3',
@@ -1039,18 +1059,20 @@ $returnType   = "int";
 		'put_vars_longlong_all-4'	=> 'in:reorderOffsetArr',
 		'put_vars_longlong_all-5'	=> 'in:reorderOffsetArr',
 
-	'put_varm' => '2:3:4:5:6',
+	'put_varm' => '2:3:4:5:6:9',
 		'put_varm-2'		=> 'in:IntIndexIn',
 		'put_varm-3'		=> 'in:reorderOffsetArr:4',
 		'put_varm-4'		=> 'in:reorderOffsetArr',
 		'put_varm-5'		=> 'in:reorderOffsetArr',
 		'put_varm-6'		=> 'in:reorderOffsetArr',
-	'put_varm_all' => '2:3:4:5:6',
+		'put_varm-9'     	=> 'in:datatypeArr',
+	'put_varm_all' => '2:3:4:5:6:9',
 		'put_varm_all-2'	=> 'in:IntIndexIn',
 		'put_varm_all-3'	=> 'in:reorderOffsetArr:4',
 		'put_varm_all-4'	=> 'in:reorderOffsetArr',
 		'put_varm_all-5'	=> 'in:reorderOffsetArr',
 		'put_varm_all-6'	=> 'in:reorderOffsetArr',
+		'put_varm_all-9' 	=> 'in:datatypeArr',
 	'put_varm_text' => '2:3:4:5:6:7',
 		'put_varm_text-2'	=> 'in:IntIndexIn',
 		'put_varm_text-3'	=> 'in:reorderOffsetArr:4',
@@ -1138,11 +1160,16 @@ $returnType   = "int";
 		'put_varm_longlong_all-5'	=> 'in:reorderOffsetArr',
 		'put_varm_longlong_all-6'	=> 'in:reorderOffsetArr',
 
-	'get_varn' => '2:4:5',
+	'get_varn' => '2:4:5:8',
 		'get_varn-2'		=> 'in:IntIndexIn',
 		'get_varn-4'		=> 'in:reorderOffsetArr1DTo2D:true',
-		'get_varn-4'		=> 'in:reorderOffsetArr1DTo2D:true',
 		'get_varn-5'		=> 'in:reorderOffsetArr1DTo2D',
+		'get_varn-8'     	=> 'in:datatypeArr',
+	'get_varn_all' => '2:4:5:8',
+		'get_varn_all-2'	=> 'in:IntIndexIn',
+		'get_varn_all-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'get_varn_all-5'	=> 'in:reorderOffsetArr1DTo2D',
+		'get_varn_all-8'     	=> 'in:datatypeArr',
 	'get_varn_text' => '2:4:5:6',
 		'get_varn_text-2'	=> 'in:IntIndexIn',
 		'get_varn_text-4'	=> 'in:reorderOffsetArr1DTo2D:true',
@@ -1173,10 +1200,6 @@ $returnType   = "int";
 		'get_varn_longlong-4'	=> 'in:reorderOffsetArr1DTo2D:true',
 		'get_varn_longlong-5'	=> 'in:reorderOffsetArr1DTo2D',
 
-	'get_varn_all' => '2:4:5',
-		'get_varn_all-2'		=> 'in:IntIndexIn',
-		'get_varn_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
-		'get_varn_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'get_varn_text_all' => '2:4:5:6',
 		'get_varn_text_all-2'		=> 'in:IntIndexIn',
 		'get_varn_text_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
@@ -1207,10 +1230,16 @@ $returnType   = "int";
 		'get_varn_longlong_all-4'	=> 'in:reorderOffsetArr1DTo2D:true',
 		'get_varn_longlong_all-5'	=> 'in:reorderOffsetArr1DTo2D',
 
-	'put_varn' => '2:4:5',
+	'put_varn' => '2:4:5:8',
 		'put_varn-2'		=> 'in:IntIndexIn',
 		'put_varn-4'		=> 'in:reorderOffsetArr1DTo2D:true',
 		'put_varn-5'		=> 'in:reorderOffsetArr1DTo2D',
+		'put_varn-8'     	=> 'in:datatypeArr',
+	'put_varn_all' => '2:4:5:8',
+		'put_varn_all-2'	=> 'in:IntIndexIn',
+		'put_varn_all-4'	=> 'in:reorderOffsetArr1DTo2D:true',
+		'put_varn_all-5'	=> 'in:reorderOffsetArr1DTo2D',
+		'put_varn_all-8'     	=> 'in:datatypeArr',
 	'put_varn_text' => '2:4:5:6',
 		'put_varn_text-2'	=> 'in:IntIndexIn',
 		'put_varn_text-4'	=> 'in:reorderOffsetArr1DTo2D:true',
@@ -1241,10 +1270,6 @@ $returnType   = "int";
 		'put_varn_longlong-4'	=> 'in:reorderOffsetArr1DTo2D:true',
 		'put_varn_longlong-5'	=> 'in:reorderOffsetArr1DTo2D',
 
-	'put_varn_all' => '2:4:5',
-		'put_varn_all-2'		=> 'in:IntIndexIn',
-		'put_varn_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
-		'put_varn_all-5'		=> 'in:reorderOffsetArr1DTo2D',
 	'put_varn_text_all' => '2:4:5:6',
 		'put_varn_text_all-2'		=> 'in:IntIndexIn',
 		'put_varn_text_all-4'		=> 'in:reorderOffsetArr1DTo2D:true',
@@ -1275,18 +1300,23 @@ $returnType   = "int";
 		'put_varn_longlong_all-4'	=> 'in:reorderOffsetArr1DTo2D:true',
 		'put_varn_longlong_all-5'	=> 'in:reorderOffsetArr1DTo2D',
 
-	'get_vard' => '2',
+	'get_vard' => '2:6',
 		'get_vard-2'		=> 'in:IntIndexIn',
-	'put_vard' => '2',
+		'get_vard-6'     	=> 'in:datatypeArr',
+	'put_vard' => '2:6',
 		'put_vard-2'		=> 'in:IntIndexIn',
-	'get_vard_all' => '2',
+		'put_vard-6'     	=> 'in:datatypeArr',
+	'get_vard_all' => '2:6',
 		'get_vard_all-2'	=> 'in:IntIndexIn',
-	'put_vard_all' => '2',
+		'get_vard_all-6'     	=> 'in:datatypeArr',
+	'put_vard_all' => '2:6',
 		'put_vard_all-2'	=> 'in:IntIndexIn',
+		'put_vard_all-6'     	=> 'in:datatypeArr',
 
-	'iget_var1' => '2:3:7',
+	'iget_var1' => '2:3:6:7',
 		'iget_var1-2'		=> 'in:IntIndexIn',
 		'iget_var1-3'		=> 'in:reorderOffsetArr:1',
+		'iget_var1-6'     	=> 'in:datatypeArr',
 		'iget_var1-7'		=> 'out:intToFint',
 	'iget_var1_text' => '2:3:4:5',
 		'iget_var1_text-2'	=> 'in:IntIndexIn',
@@ -1318,8 +1348,9 @@ $returnType   = "int";
 		'iget_var1_longlong-3'	=> 'in:reorderOffsetArr:1',
 		'iget_var1_longlong-5'	=> 'out:intToFint',
 
-	'iget_var' => '2:6',
+	'iget_var' => '2:5:6',
 		'iget_var-2'		=> 'in:IntIndexIn',
+		'iget_var-5'     	=> 'in:datatypeArr',
 		'iget_var-6'		=> 'out:intToFint',
 	'iget_var_text' => '2:3:4',
 		'iget_var_text-2'	=> 'in:IntIndexIn',
@@ -1344,10 +1375,11 @@ $returnType   = "int";
 		'iget_var_longlong-2'	=> 'in:IntIndexIn',
 		'iget_var_longlong-4'	=> 'out:intToFint',
 
-	'iget_vara' => '2:3:4:8',
+	'iget_vara' => '2:3:4:7:8',
 		'iget_vara-2'		=> 'in:IntIndexIn',
 		'iget_vara-3'		=> 'in:reorderOffsetArr:2',
 		'iget_vara-4'		=> 'in:reorderOffsetArr',
+		'iget_vara-7'     	=> 'in:datatypeArr',
 		'iget_vara-8',		=> 'out:intToFint',
 	'iget_vara_text' => '2:3:4:5:6',
 		'iget_vara_text-2'	=> 'in:IntIndexIn',
@@ -1386,11 +1418,12 @@ $returnType   = "int";
 		'iget_vara_longlong-4'	=> 'in:reorderOffsetArr',
 		'iget_vara_longlong-6'	=> 'out:intToFint',
 
-	'iget_vars' => '2:3:4:5:9',
+	'iget_vars' => '2:3:4:5:8:9',
 		'iget_vars-2'		=> 'in:IntIndexIn',
 		'iget_vars-3'		=> 'in:reorderOffsetArr:3',
 		'iget_vars-4'		=> 'in:reorderOffsetArr',
 		'iget_vars-5'		=> 'in:reorderOffsetArr',
+		'iget_vars-8'     	=> 'in:datatypeArr',
 		'iget_vars-9'		=> 'out:intToFint',
 	'iget_vars_text' => '2:3:4:5:6:7',
 		'iget_vars_text-2'	=> 'in:IntIndexIn',
@@ -1436,12 +1469,13 @@ $returnType   = "int";
 		'iget_vars_longlong-5'	=> 'in:reorderOffsetArr',
 		'iget_vars_longlong-7'	=> 'out:intToFint',
 
-	'iget_varm' => '2:3:4:5:6:10',
+	'iget_varm' => '2:3:4:5:6:9:10',
 		'iget_varm-2'		=> 'in:IntIndexIn',
 		'iget_varm-3'		=> 'in:reorderOffsetArr:4',
 		'iget_varm-4'		=> 'in:reorderOffsetArr',
 		'iget_varm-5'		=> 'in:reorderOffsetArr',
 		'iget_varm-6'		=> 'in:reorderOffsetArr',
+		'iget_varm-9'     	=> 'in:datatypeArr',
 		'iget_varm-10'		=> 'out:intToFint',
 	'iget_varm_text' => '2:3:4:5:6:7:8',
 		'iget_varm_text-2'	=> 'in:IntIndexIn',
@@ -1494,9 +1528,10 @@ $returnType   = "int";
 		'iget_varm_longlong-6'	=> 'in:reorderOffsetArr',
 		'iget_varm_longlong-8'	=> 'out:intToFint',
 
-	'iput_var1' => '2:3:7',
+	'iput_var1' => '2:3:6:7',
 		'iput_var1-2'		=> 'in:IntIndexIn',
 		'iput_var1-3'		=> 'in:reorderOffsetArr:1',
+		'iput_var1-6'     	=> 'in:datatypeArr',
 		'iput_var1-7'		=> 'out:intToFint',
 	'iput_var1_text' => '2:3:4:5',
 		'iput_var1_text-2'	=> 'in:IntIndexIn',
@@ -1528,8 +1563,9 @@ $returnType   = "int";
 		'iput_var1_longlong-3'	=> 'in:reorderOffsetArr:1',
 		'iput_var1_longlong-5'	=> 'out:intToFint',
 
-	'iput_var' => '2:6',
+	'iput_var' => '2:5:6',
 		'iput_var-2'		=> 'in:IntIndexIn',
+		'iput_var-5'     	=> 'in:datatypeArr',
 		'iput_var-6'		=> 'out:intToFint',
 	'iput_var_text' => '2:3:4',
 		'iput_var_text-2'	=> 'in:IntIndexIn',
@@ -1554,10 +1590,11 @@ $returnType   = "int";
 		'iput_var_longlong-2'	=> 'in:IntIndexIn',
 		'iput_var_longlong-4'	=> 'out:intToFint',
 
-	'iput_vara' => '2:3:4:8',
+	'iput_vara' => '2:3:4:7:8',
 		'iput_vara-2'		=> 'in:IntIndexIn',
 		'iput_vara-3'		=> 'in:reorderOffsetArr:2',
 		'iput_vara-4'		=> 'in:reorderOffsetArr',
+		'iput_vara-7'     	=> 'in:datatypeArr',
 		'iput_vara-8'		=> 'out:intToFint',
 	'iput_vara_text' => '2:3:4:5:6',
 		'iput_vara_text-2'	=> 'in:IntIndexIn',
@@ -1596,11 +1633,12 @@ $returnType   = "int";
 		'iput_vara_longlong-4'	=> 'in:reorderOffsetArr',
 		'iput_vara_longlong-6'	=> 'out:intToFint',
 
-	'iput_vars' => '2:3:4:5:9',
+	'iput_vars' => '2:3:4:5:8:9',
 		'iput_vars-2'		=> 'in:IntIndexIn',
 		'iput_vars-3'		=> 'in:reorderOffsetArr:3',
 		'iput_vars-4'		=> 'in:reorderOffsetArr',
 		'iput_vars-5'		=> 'in:reorderOffsetArr',
+		'iput_vars-8'     	=> 'in:datatypeArr',
 		'iput_vars-9'		=> 'out:intToFint',
 	'iput_vars_text' => '2:3:4:5:6:7',
 		'iput_vars_text-2'	=> 'in:IntIndexIn',
@@ -1646,12 +1684,13 @@ $returnType   = "int";
 		'iput_vars_longlong-5'	=> 'in:reorderOffsetArr',
 		'iput_vars_longlong-7'	=> 'out:intToFint',
 
-	'iput_varm' => '2:3:4:5:6:10',
+	'iput_varm' => '2:3:4:5:6:9:10',
 		'iput_varm-2'		=> 'in:IntIndexIn',
 		'iput_varm-3'		=> 'in:reorderOffsetArr:4',
 		'iput_varm-4'		=> 'in:reorderOffsetArr',
 		'iput_varm-5'		=> 'in:reorderOffsetArr',
 		'iput_varm-6'		=> 'in:reorderOffsetArr',
+		'iput_varm-9'     	=> 'in:datatypeArr',
 		'iput_varm-10'		=> 'out:intToFint',
 	'iput_varm_text' => '2:3:4:5:6:7:8',
 		'iput_varm_text-2'	=> 'in:IntIndexIn',
@@ -1704,10 +1743,11 @@ $returnType   = "int";
 		'iput_varm_longlong-6'	=> 'in:reorderOffsetArr',
 		'iput_varm_longlong-8'	=> 'out:intToFint',
 
-	'iget_varn' => '2:4:5:9',
+	'iget_varn' => '2:4:5:8:9',
 		'iget_varn-2'		=> 'in:IntIndexIn',
 		'iget_varn-4'		=> 'in:reorderOffsetArr1DTo2D:true',
 		'iget_varn-5'		=> 'in:reorderOffsetArr1DTo2D',
+		'iget_varn-8'     	=> 'in:datatypeArr',
 		'iget_varn-9'		=> 'out:intToFint',
 	'iget_varn_text' => '2:4:5:6:7',
 		'iget_varn_text-2'	=> 'in:IntIndexIn',
@@ -1746,10 +1786,11 @@ $returnType   = "int";
 		'iget_varn_longlong-5'	=> 'in:reorderOffsetArr1DTo2D',
 		'iget_varn_longlong-7'	=> 'out:intToFint',
 
-	'iput_varn' => '2:4:5:9',
+	'iput_varn' => '2:4:5:8:9',
 		'iput_varn-2'		=> 'in:IntIndexIn',
 		'iput_varn-4'		=> 'in:reorderOffsetArr1DTo2D:true',
 		'iput_varn-5'		=> 'in:reorderOffsetArr1DTo2D',
+		'iput_varn-8'     	=> 'in:datatypeArr',
 		'iput_varn-9'		=> 'out:intToFint',
 	'iput_varn_text' => '2:4:5:6:7',
 		'iput_varn_text-2'	=> 'in:IntIndexIn',
@@ -1788,10 +1829,11 @@ $returnType   = "int";
 		'iput_varn_longlong-5'	=> 'in:reorderOffsetArr1DTo2D',
 		'iput_varn_longlong-7'	=> 'out:intToFint',
 
-	'bput_varn' => '2:4:5:9',
+	'bput_varn' => '2:4:5:8:9',
 		'bput_varn-2'		=> 'in:IntIndexIn',
 		'bput_varn-4'		=> 'in:reorderOffsetArr1DTo2D:true',
 		'bput_varn-5'		=> 'in:reorderOffsetArr1DTo2D',
+		'bput_varn-8'     	=> 'in:datatypeArr',
 		'bput_varn-9'		=> 'out:intToFint',
 	'bput_varn_text' => '2:4:5:6:7',
 		'bput_varn_text-2'	=> 'in:IntIndexIn',
@@ -1830,9 +1872,10 @@ $returnType   = "int";
 		'bput_varn_longlong-5'	=> 'in:reorderOffsetArr1DTo2D',
 		'bput_varn_longlong-7'	=> 'out:intToFint',
 
-	'bput_var1' => '2:3:7',
+	'bput_var1' => '2:3:6:7',
 		'bput_var1-2'		=> 'in:IntIndexIn',
 		'bput_var1-3'		=> 'in:reorderOffsetArr:1',
+		'bput_var1-6'     	=> 'in:datatypeArr',
 		'bput_var1-7'		=> 'out:intToFint',
 	'bput_var1_text' => '2:3:4:5',
 		'bput_var1_text-2'	=> 'in:IntIndexIn',
@@ -1864,8 +1907,9 @@ $returnType   = "int";
 		'bput_var1_longlong-3'	=> 'in:reorderOffsetArr:1',
 		'bput_var1_longlong-5'	=> 'out:intToFint',
 
-	'bput_var' => '2:6',
+	'bput_var' => '2:5:6',
 		'bput_var-2'		=> 'in:IntIndexIn',
+		'bput_var-5'     	=> 'in:datatypeArr',
 		'bput_var-6'		=> 'out:intToFint',
 	'bput_var_text' => '2:3:4',
 		'bput_var_text-2'	=> 'in:IntIndexIn',
@@ -1890,10 +1934,11 @@ $returnType   = "int";
 		'bput_var_longlong-2'	=> 'in:IntIndexIn',
 		'bput_var_longlong-4'	=> 'out:intToFint',
 
-	'bput_vara' => '2:3:4:8',
+	'bput_vara' => '2:3:4:7:8',
 		'bput_vara-2'		=> 'in:IntIndexIn',
 		'bput_vara-3'		=> 'in:reorderOffsetArr:2',
 		'bput_vara-4'		=> 'in:reorderOffsetArr',
+		'bput_vara-7'     	=> 'in:datatypeArr',
 		'bput_vara-8'		=> 'out:intToFint',
 	'bput_vara_text' => '2:3:4:5:6',
 		'bput_vara_text-2'	=> 'in:IntIndexIn',
@@ -1932,11 +1977,12 @@ $returnType   = "int";
 		'bput_vara_longlong-4'	=> 'in:reorderOffsetArr',
 		'bput_vara_longlong-6'	=> 'out:intToFint',
 
-	'bput_vars' => '2:3:4:5:9',
+	'bput_vars' => '2:3:4:5:8:9',
 		'bput_vars-2'		=> 'in:IntIndexIn',
 		'bput_vars-3'		=> 'in:reorderOffsetArr:3',
 		'bput_vars-4'		=> 'in:reorderOffsetArr',
 		'bput_vars-5'		=> 'in:reorderOffsetArr',
+		'bput_vars-8'     	=> 'in:datatypeArr',
 		'bput_vars-9'		=> 'out:intToFint',
 	'bput_vars_text' => '2:3:4:5:6:7',
 		'bput_vars_text-2'	=> 'in:IntIndexIn',
@@ -1982,12 +2028,13 @@ $returnType   = "int";
 		'bput_vars_longlong-5'	=> 'in:reorderOffsetArr',
 		'bput_vars_longlong-7'	=> 'out:intToFint',
 
-	'bput_varm' => '2:3:4:5:6:10',
+	'bput_varm' => '2:3:4:5:6:9:10',
 		'bput_varm-2'		=> 'in:IntIndexIn',
 		'bput_varm-3'		=> 'in:reorderOffsetArr:4',
 		'bput_varm-4'		=> 'in:reorderOffsetArr',
 		'bput_varm-5'		=> 'in:reorderOffsetArr',
 		'bput_varm-6'		=> 'in:reorderOffsetArr',
+		'bput_varm-9'     	=> 'in:datatypeArr',
 		'bput_varm-10'		=> 'out:intToFint',
 	'bput_varm_text' => '2:3:4:5:6:7:8',
 		'bput_varm_text-2'	=> 'in:IntIndexIn',
@@ -2251,6 +2298,50 @@ sub intToFintArr_ctof {
     }
     $free($lname);
     \n";
+}
+
+# ---------------------------------------------------------------------------
+# F2C converts a Fortran MPI predefined datatype to a C datatype
+# usage is
+#    'get_var1-6'  => 'in:datatypeArr',
+#
+sub datatypeArr_in_decl {
+    my $count = $_[0];
+    print $OUTFD "    MPI_Datatype l$count=MPI_Type_f2c(*v$count);\n";
+}
+sub datatypeArr_out_decl {
+}
+sub datatypeArr_ftoc {
+    my $count = $_[0];
+    my $prev = $count - 1;
+    print $OUTFD "
+    if (l$count != MPI_DATATYPE_NULL && *v$prev == -1) {
+        /* When bufcount == -1, buftype must be a predefine MPI datatype.
+         * Convert Fortran MPI predefined datatype to C datatype.
+         */
+             if (l$count == MPI_CHARACTER)        l$count = MPI_CHAR;
+        else if (l$count == MPI_INTEGER1)         l$count = MPI_SIGNED_CHAR;
+        else if (l$count == MPI_INTEGER2)         l$count = MPI_SHORT;
+        else if (l$count == MPI_INTEGER)          l$count = MPI_INT;
+        else if (l$count == MPI_INTEGER4)         l$count = MPI_INT;
+        else if (l$count == MPI_INTEGER8)         l$count = MPI_LONG_LONG_INT;
+        else if (l$count == MPI_REAL)             l$count = MPI_FLOAT;
+        else if (l$count == MPI_DOUBLE_PRECISION) l$count = MPI_DOUBLE;
+        else
+            return NC_EINVAL; /* not supported memory datatype */
+    }\n";
+}
+sub datatypeArr_out_ftoc {
+}
+sub datatypeArr_in_arg {
+    my $count = $_[0];
+    print $OUTFD "l$count";
+}
+sub datatypeArr_out_arg {
+}
+sub datatypeArr_in_ctof {
+}
+sub datatypeArr_ctof {
 }
 
 # ---------------------------------------------------------------------------

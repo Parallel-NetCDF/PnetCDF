@@ -336,6 +336,19 @@ APINAME($1,$2,$3,$4)(int ncid,
         err = check_start_count_stride(pncp, varid, IS_READ($1), api_kind,
                                        IndexArgs($2));')
 
+    ifelse(`$3',`',`
+    /* when bufcount == -1, buftype must be an MPI predefined datatype */
+    if (err == NC_NOERR &&
+        buftype != MPI_DATATYPE_NULL && bufcount == -1 &&
+        buftype != MPI_CHAR          &&
+        buftype != MPI_SIGNED_CHAR   && buftype != MPI_UNSIGNED_CHAR      &&
+        buftype != MPI_SHORT         && buftype != MPI_UNSIGNED_SHORT     &&
+        buftype != MPI_INT           && buftype != MPI_UNSIGNED           &&
+        buftype != MPI_FLOAT         && buftype != MPI_DOUBLE             &&
+        buftype != MPI_LONG_LONG_INT && buftype != MPI_UNSIGNED_LONG_LONG &&
+        buftype != MPI_LONG)
+        err = NC_EINVAL;')
+
     ifelse(`$4',`',`/* for independent API, return now if error encountered */
     if (err != NC_NOERR) return err;
     ifelse(`$3',`',`
@@ -465,7 +478,20 @@ NAPINAME($1,$2,$3)(int                ncid,
                                            api, starts[i], count, NULL);
             if (err != NC_NOERR) break;
         }
+        if (err != NC_NOERR) goto err_check;
     }
+
+    ifelse(`$2',`',`
+    /* when bufcount == -1, buftype must be an MPI predefined datatype */
+    if (buftype != MPI_DATATYPE_NULL && bufcount == -1 &&
+        buftype != MPI_CHAR          &&
+        buftype != MPI_SIGNED_CHAR   && buftype != MPI_UNSIGNED_CHAR      &&
+        buftype != MPI_SHORT         && buftype != MPI_UNSIGNED_SHORT     &&
+        buftype != MPI_INT           && buftype != MPI_UNSIGNED           &&
+        buftype != MPI_FLOAT         && buftype != MPI_DOUBLE             &&
+        buftype != MPI_LONG_LONG_INT && buftype != MPI_UNSIGNED_LONG_LONG &&
+        buftype != MPI_LONG)
+        err = NC_EINVAL;')
 
 err_check:
     ifelse(`$3',`',`/* for independent API, return now if error encountered */
@@ -577,6 +603,19 @@ MAPINAME($1,$2,$3,$4)(int                ncid,
             err = check_start_count_stride(pncp, varids[i], IS_READ($1),
                                            api_kind, MStartCount($2), stride);
             if (err != NC_NOERR) break;
+        }')
+        ifelse(`$3',`',`
+        /* when bufcounts[i] == -1, buftypes[i] must be an MPI predefined datatype */
+        if (buftypes[i] != MPI_DATATYPE_NULL && bufcounts[i] == -1 &&
+            buftypes[i] != MPI_CHAR          &&
+            buftypes[i] != MPI_SIGNED_CHAR   && buftypes[i] != MPI_UNSIGNED_CHAR      &&
+            buftypes[i] != MPI_SHORT         && buftypes[i] != MPI_UNSIGNED_SHORT     &&
+            buftypes[i] != MPI_INT           && buftypes[i] != MPI_UNSIGNED           &&
+            buftypes[i] != MPI_FLOAT         && buftypes[i] != MPI_DOUBLE             &&
+            buftypes[i] != MPI_LONG_LONG_INT && buftypes[i] != MPI_UNSIGNED_LONG_LONG &&
+            buftypes[i] != MPI_LONG) {
+            err = NC_EINVAL;
+            break;
         }')
     }
 
@@ -695,6 +734,18 @@ IAPINAME($1,$2,$3)(int ncid,
 
     ifelse(`$3',`',`if (buftype != MPI_DATATYPE_NULL && bufcount == 0) return NC_NOERR;')
 
+    ifelse(`$3',`',`
+    /* when bufcount == -1, buftype must be an MPI predefined datatype */
+    if (buftype != MPI_DATATYPE_NULL && bufcount == -1 &&
+        buftype != MPI_CHAR          &&
+        buftype != MPI_SIGNED_CHAR   && buftype != MPI_UNSIGNED_CHAR      &&
+        buftype != MPI_SHORT         && buftype != MPI_UNSIGNED_SHORT     &&
+        buftype != MPI_INT           && buftype != MPI_UNSIGNED           &&
+        buftype != MPI_FLOAT         && buftype != MPI_DOUBLE             &&
+        buftype != MPI_LONG_LONG_INT && buftype != MPI_UNSIGNED_LONG_LONG &&
+        buftype != MPI_LONG)
+        return NC_EINVAL;')
+
     ifelse(`$1',`bput',`reqMode |= IO_MODE($1) | FLEX_MODE($3);',`
     reqMode = IO_MODE($1) | NB_MODE($1) | FLEX_MODE($3);')
 
@@ -792,6 +843,18 @@ INAPINAME($1,$2)(int                ncid,
 
     ifelse(`$2',`',`if (buftype != MPI_DATATYPE_NULL && bufcount == 0) return NC_NOERR;')
 
+    ifelse(`$2',`',`
+    /* when bufcount == -1, buftype must be an MPI predefined datatype */
+    if (buftype != MPI_DATATYPE_NULL && bufcount == -1 &&
+        buftype != MPI_CHAR          &&
+        buftype != MPI_SIGNED_CHAR   && buftype != MPI_UNSIGNED_CHAR      &&
+        buftype != MPI_SHORT         && buftype != MPI_UNSIGNED_SHORT     &&
+        buftype != MPI_INT           && buftype != MPI_UNSIGNED           &&
+        buftype != MPI_FLOAT         && buftype != MPI_DOUBLE             &&
+        buftype != MPI_LONG_LONG_INT && buftype != MPI_UNSIGNED_LONG_LONG &&
+        buftype != MPI_LONG)
+        return NC_EINVAL;')
+
     ifelse(`$1',`bput',`reqMode |= IO_MODE($1) | FLEX_MODE($2);',`
     reqMode = IO_MODE($1) | NB_MODE($1) | FLEX_MODE($2);')
 
@@ -863,6 +926,18 @@ ncmpi_$1_vard$2(int           ncid,
     if (err != NC_NOERR) return err;
 
     err = sanity_check(pncp, varid, IO_TYPE($1), MPI_DATATYPE_NULL, IS_COLL($2));
+
+    /* when bufcount == -1, buftype must be an MPI predefined datatype */
+    if (err == NC_NOERR &&
+        buftype != MPI_DATATYPE_NULL && bufcount == -1 &&
+        buftype != MPI_CHAR          &&
+        buftype != MPI_SIGNED_CHAR   && buftype != MPI_UNSIGNED_CHAR      &&
+        buftype != MPI_SHORT         && buftype != MPI_UNSIGNED_SHORT     &&
+        buftype != MPI_INT           && buftype != MPI_UNSIGNED           &&
+        buftype != MPI_FLOAT         && buftype != MPI_DOUBLE             &&
+        buftype != MPI_LONG_LONG_INT && buftype != MPI_UNSIGNED_LONG_LONG &&
+        buftype != MPI_LONG)
+        err = NC_EINVAL;
 
     ifelse(`$2',`',
     `/* for independent API, return now if error encountered or zero request */

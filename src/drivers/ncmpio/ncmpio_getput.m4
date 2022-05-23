@@ -147,6 +147,13 @@ put_varm(NC               *ncp,
         buftype = itype;
     }
 
+    /* When bufcount is -1, this is called from a high-level API. In this case,
+     * buftype must be an MPI predefined data type. If this is called from a
+     * Fortran program, buftype has already been converted to its corresponding
+     * C type, e.g. MPI_INTEGER is converted to MPI_INT.
+     * if (bufcount == -1) assert(buftype == itype);
+     */
+
     /* because bnelems will be used as the argument "count" in MPI-IO
      * write calls and the argument "count" is of type int */
     if (bnelems > INT_MAX) {
@@ -396,6 +403,13 @@ get_varm(NC               *ncp,
         bufcount = bnelems;
         buftype = itype;
     }
+
+    /* When bufcount is -1, this is called from a high-level API. In this case,
+     * buftype must be an MPI predefined data type. If this is called from a
+     * Fortran program, buftype has already been converted to its corresponding
+     * C type, e.g. MPI_INTEGER is converted to MPI_INT.
+     * if (bufcount == -1) assert(buftype == itype);
+     */
 
     /* because bnelems will be used as the argument "count" in MPI-IO
      * write calls and the argument "count" is of type int */

@@ -69,8 +69,8 @@
 }
 
 #define INIT_PUT_BUF_GHOST(Y, X, G, buf) \
-    for (i=0; i<Y; i++) { \
-        for (j=0; j<X; j++) { \
+    for (i=0; i<Y+2*G; i++) { \
+        for (j=0; j<X+2*G; j++) { \
             if (i < G || G+Y <= i || j < G || G+X <= j) \
                 buf[i][j] = -1; \
             else \
