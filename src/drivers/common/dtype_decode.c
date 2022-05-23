@@ -502,7 +502,7 @@ ncmpii_buftype_decode(int               ndims,
                       MPI_Offset       *xnbytes,  /* out */
                       int              *isContig) /* out */
 {
-    int i, xsz, err, isderived=0;
+    int i, xsz, err;
     MPI_Offset fnelems;
 
     err = ncmpii_xlen_nc_type(xtype, &xsz);
@@ -516,20 +516,7 @@ ncmpii_buftype_decode(int               ndims,
     for (i=0; i<ndims; i++)
         fnelems *= count[i];
 
-    if (bufcount == -1) {
-        /* This is called from a high-level API, buftype must be the I/O
-         * buffer's data type, a predefined MPI datatype.
-         */
-        err = ncmpii_dtype_decode(buftype, etype, NULL, NULL, &isderived, NULL);
-        if (err != NC_NOERR) return err;
-        if (*etype == MPI_DATATYPE_NULL || isderived)
-            DEBUG_RETURN_ERROR(NC_EUNSPTETYPE)
-        MPI_Type_size(*etype, esize);
-        *nelems   = fnelems;
-        *xnbytes  = *nelems * xsz;
-        *isContig = 1;
-    }
-    else if (buftype == MPI_DATATYPE_NULL) {
+    if (buftype == MPI_DATATYPE_NULL) {
         /* This is called from a flexible API and buftype is set by user to
          * MPI_DATATYPE_NULL. In this case, bufcount is ignored and set by
          * this subroutine to a number match count[], and etype to match the
@@ -541,9 +528,20 @@ ncmpii_buftype_decode(int               ndims,
         *xnbytes  = *nelems * xsz;
         *isContig = 1;
     }
+    else if (bufcount == -1) {
+        /* This is called from a high-level API, buftype must be a predefined
+         * MPI datatype. This requirement has already been checked in
+         * src/dispatchers/var_getput.m4
+         */
+        MPI_Type_size(buftype, esize);
+        *etype    = buftype;
+        *nelems   = fnelems;
+        *xnbytes  = *nelems * xsz;
+        *isContig = 1;
+    }
     else { /* This is called from a flexible API */
         /* check some metadata of the MPI derived datatype */
-        err = ncmpii_dtype_decode(buftype, etype, esize, nelems, &isderived,
+        err = ncmpii_dtype_decode(buftype, etype, esize, nelems, NULL,
                                   isContig);
         if (err != NC_NOERR) return err;
 
