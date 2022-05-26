@@ -187,7 +187,8 @@ typedef struct NC_attrarray {
 
 /* Begin defined in attr.c --------------------------------------------------*/
 extern int
-ncmpio_new_NC_attr(char *name, nc_type xtype, MPI_Offset nelems, NC_attr **attrp);
+ncmpio_new_NC_attr(char *name, size_t name_len, nc_type xtype,
+                   MPI_Offset nelems, NC_attr **attrp);
 
 extern int
 ncmpio_NC_findattr(const NC_attrarray *ncap, const char *uname);
@@ -257,7 +258,7 @@ extern void
 ncmpio_free_NC_var(NC_var *varp);
 
 extern NC_var *
-ncmpio_new_NC_var(char *name, int ndims);
+ncmpio_new_NC_var(char *name, size_t name_len, int ndims);
 
 extern void
 ncmpio_free_NC_vararray(NC_vararray *ncap);

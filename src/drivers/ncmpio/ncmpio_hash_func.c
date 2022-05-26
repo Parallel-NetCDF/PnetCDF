@@ -26,7 +26,8 @@
 int ncmpio_jenkins_one_at_a_time_hash(const char *str_name)
 {
     unsigned int i, hash=0;
-    for (i=0; i<strlen(str_name); ++i) {
+    size_t len = strlen(str_name);
+    for (i=0; i<len; ++i) {
         hash += (unsigned int)str_name[i];
         hash += (hash << 10);
         hash ^= (hash >> 6);
@@ -112,8 +113,9 @@ int ncmpio_Pearson_hash(const char *str_name)
     for (i=len; i>0; ) hash = T[hash ^ str_name[--i]];
     return (int)hash;
 #else
-    unsigned int i, hash=strlen(str_name);
-    for (i=0; i<strlen(str_name); ++i)
+    size_t len=strlen(str_name);
+    unsigned int i, hash=len;
+    for (i=0; i<len; ++i)
         hash ^= str_name[i];
 
     return (int)((hash ^ (hash>>10) ^ (hash>>20)) & (HASH_TABLE_SIZE-1));

@@ -494,7 +494,7 @@ hdr_get_nc_type(bufferinfo *gbp, nc_type *xtypep)
 
 /*----< hdr_get_NC_name() >--------------------------------------------------*/
 static int
-hdr_get_NC_name(bufferinfo *gbp, char **namep)
+hdr_get_NC_name(bufferinfo *gbp, char **namep, size_t *name_len)
 {
     /* netCDF file format:
      *  ...
@@ -507,7 +507,8 @@ hdr_get_NC_name(bufferinfo *gbp, char **namep)
      * NON_NEG    = <non-negative INT> |  // CDF-1 and CDF-2
      *              <non-negative INT64>  // CDF-5
      */
-    int err=NC_NOERR, nchars, padding, bufremain, strcount;
+    int err=NC_NOERR, padding, bufremain, strcount;
+    size_t nchars;
     char *cpos;
 
     *namep = NULL;
@@ -518,20 +519,21 @@ hdr_get_NC_name(bufferinfo *gbp, char **namep)
         err = hdr_get_uint32(gbp, &tmp);
         if (err != NC_NOERR) return err;
         if (tmp > NC_MAX_NAME) DEBUG_RETURN_ERROR(NC_EMAXNAME)
-        nchars = (int)tmp;
+        nchars = (size_t)tmp;
     }
     else {
         uint64 tmp;
         err = hdr_get_uint64(gbp, &tmp);
         if (err != NC_NOERR) return err;
         if (tmp > NC_MAX_NAME) DEBUG_RETURN_ERROR(NC_EMAXNAME)
-        nchars = (int)tmp;
+        nchars = (size_t)tmp;
     }
+    *name_len = nchars;
 
     /* Allocate a NC_string structure large enough to hold nchars characters.
      * Note nchars is strlen(namestring) without terminal character.
      */
-    *namep = (char*) NCI_Malloc((size_t)nchars + 1);
+    *namep = (char*) NCI_Malloc(nchars + 1);
     if (*namep == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     (*namep)[nchars] = '\0'; /* add terminal character */
 
@@ -622,6 +624,7 @@ hdr_get_NC_dim(bufferinfo *gbp, int unlimited_id, NC_dim **dimpp)
      *              <non-negative INT64>  // CDF-5
      */
     int err, status=NC_NOERR;
+    size_t name_len;
     char *name;
     NC_dim *dimp;
     MPI_Offset dim_length;
@@ -629,7 +632,7 @@ hdr_get_NC_dim(bufferinfo *gbp, int unlimited_id, NC_dim **dimpp)
     *dimpp = NULL;
 
     /* get name */
-    err = hdr_get_NC_name(gbp, &name);
+    err = hdr_get_NC_name(gbp, &name, &name_len);
     if (err == NC_ENULLPAD) status = NC_ENULLPAD; /* non-fatal error */
     else if (err != NC_NOERR) return err;
 
@@ -662,7 +665,7 @@ hdr_get_NC_dim(bufferinfo *gbp, int unlimited_id, NC_dim **dimpp)
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     dimp->name     = name;
-    dimp->name_len = strlen(name);
+    dimp->name_len = name_len;
     dimp->size     = dim_length;
 
     *dimpp = dimp;
@@ -862,13 +865,14 @@ hdr_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp)
      *           <non-negative INT64>  // CDF-5
      */
     int err, status=NC_NOERR;
+    size_t name_len;
     char *name;
     nc_type type;
     MPI_Offset nelems;
     NC_attr *attrp;
 
     /* get name */
-    err = hdr_get_NC_name(gbp, &name);
+    err = hdr_get_NC_name(gbp, &name, &name_len);
     if (err == NC_ENULLPAD) status = NC_ENULLPAD; /* non-fatal error */
     else if (err != NC_NOERR) return err;
 
@@ -896,7 +900,7 @@ hdr_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp)
     }
 
     /* allocate space for attribute object, name will be assigned in attrp */
-    err = ncmpio_new_NC_attr(name, type, nelems, &attrp);
+    err = ncmpio_new_NC_attr(name, name_len, type, nelems, &attrp);
     if (err != NC_NOERR) {
         NCI_Free(name);
         return err;
@@ -1025,11 +1029,12 @@ hdr_get_NC_var(bufferinfo  *gbp,
      *               <non-negative INT64>  // CDF-5
      */
     int dim, ndims, err, status=NC_NOERR;
+    size_t name_len;
     char *name;
     NC_var *varp;
 
     /* get name */
-    err = hdr_get_NC_name(gbp, &name);
+    err = hdr_get_NC_name(gbp, &name, &name_len);
     if (err == NC_ENULLPAD) status = NC_ENULLPAD; /* non-fatal error */
     else if (err != NC_NOERR) return err;
 
@@ -1064,7 +1069,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
     }
 
     /* allocate space for NC_var object */
-    varp = ncmpio_new_NC_var(name, ndims);
+    varp = ncmpio_new_NC_var(name, name_len, ndims);
     if (varp == NULL) {
         NCI_Free(name);
         DEBUG_RETURN_ERROR(NC_ENOMEM)

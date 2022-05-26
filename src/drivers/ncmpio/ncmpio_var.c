@@ -54,7 +54,7 @@ ncmpio_free_NC_var(NC_var *varp)
 
 /*----< ncmpio_new_NC_var() >------------------------------------------------*/
 NC_var *
-ncmpio_new_NC_var(char *name, int ndims)
+ncmpio_new_NC_var(char *name, size_t name_len, int ndims)
 {
     NC_var *varp;
 
@@ -68,7 +68,7 @@ ncmpio_new_NC_var(char *name, int ndims)
     }
 
     varp->name     = name;         /* name has been malloc-ed */
-    varp->name_len = strlen(name); /* name has been NULL checked */
+    varp->name_len = name_len;     /* name has been NULL checked */
     varp->ndims    = ndims;
 
     return varp;
@@ -87,7 +87,7 @@ dup_NC_var(const NC_var *rvarp)
     strcpy(name, rvarp->name);
 
     /* allocate a NC_var object */
-    varp = ncmpio_new_NC_var(name, rvarp->ndims);
+    varp = ncmpio_new_NC_var(name, rvarp->name_len, rvarp->ndims);
     if (varp == NULL ) return NULL;
 
     varp->xtype = rvarp->xtype;
@@ -354,7 +354,7 @@ ncmpio_def_var(void       *ncdp,
     if (err != NC_NOERR) goto err_check;
 
     /* allocate a new NC_var object */
-    varp = ncmpio_new_NC_var(nname, ndims);
+    varp = ncmpio_new_NC_var(nname, strlen(nname), ndims);
     if (varp == NULL) {
         DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
         goto err_check;

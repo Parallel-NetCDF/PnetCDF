@@ -40,8 +40,8 @@ dup_NC_dim(const NC_dim *rdimp, NC_dim **dimp)
     if (*dimp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     (*dimp)->size     = rdimp->size;
-    (*dimp)->name_len = strlen(rdimp->name)+1;
-    (*dimp)->name     = (char*) NCI_Malloc((*dimp)->name_len);
+    (*dimp)->name_len = rdimp->name_len;
+    (*dimp)->name     = (char*) NCI_Malloc((*dimp)->name_len + 1);
     if ((*dimp)->name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     strcpy((*dimp)->name, rdimp->name);
 
