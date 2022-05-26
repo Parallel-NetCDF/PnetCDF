@@ -77,6 +77,7 @@ x_len_NC_attrV(nc_type    xtype,
  */
 int
 ncmpio_new_NC_attr(char        *name,
+                   size_t       name_len,
                    nc_type      xtype,
                    MPI_Offset   nelems,
                    NC_attr    **attrp)
@@ -89,7 +90,7 @@ ncmpio_new_NC_attr(char        *name,
     (*attrp)->nelems   = nelems;
     (*attrp)->xvalue   = NULL;
     (*attrp)->name     = name;
-    (*attrp)->name_len = strlen(name);
+    (*attrp)->name_len = name_len;
 
     if (nelems > 0) {
         /* obtain 4-byte aligned size of space to store the values */
@@ -124,11 +125,13 @@ dup_NC_attr(const NC_attr *rattrp, NC_attr **attrp)
     char *name;
 
     /* rattrp->name has already been normalized */
-    name = (char*) NCI_Malloc(strlen(rattrp->name)+1);
+    name = (char*) NCI_Malloc(rattrp->name_len + 1);
     if (name == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-    strcpy(name, rattrp->name);
+    strncpy(name, rattrp->name, rattrp->name_len);
+    name[rattrp->name_len] = '\0';
 
-    return ncmpio_new_NC_attr(name, rattrp->xtype, rattrp->nelems, attrp);
+    return ncmpio_new_NC_attr(name, rattrp->name_len, rattrp->xtype,
+                              rattrp->nelems, attrp);
 }
 
 /* attrarray */
@@ -632,7 +635,8 @@ err_check:
         attrp->nelems = iattrp->nelems;
     }
     else { /* attribute does not exist in ncdp_out */
-        err = ncmpio_new_NC_attr(nname, iattrp->xtype, iattrp->nelems, &attrp);
+        err = ncmpio_new_NC_attr(nname, iattrp->name_len, iattrp->xtype,
+                                 iattrp->nelems, &attrp);
         if (err != NC_NOERR) return err;
 
 #ifndef SEARCH_NAME_LINEARLY
@@ -1073,7 +1077,7 @@ err_check:
         attrp->nelems = nelems;
     }
     else { /* attribute does not exist in ncid */
-        err = ncmpio_new_NC_attr(nname, xtype, nelems, &attrp);
+        err = ncmpio_new_NC_attr(nname, strlen(nname), xtype, nelems, &attrp);
         if (err != NC_NOERR) return err;
 
 #ifndef SEARCH_NAME_LINEARLY
