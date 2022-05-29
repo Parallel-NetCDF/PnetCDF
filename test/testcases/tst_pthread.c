@@ -31,6 +31,10 @@
 #ifdef ENABLE_THREAD_SAFE
 #include <pthread.h>
 
+#ifndef PTHREAD_BARRIER_SERIAL_THREAD
+#define PTHREAD_BARRIER_SERIAL_THREAD   1
+#endif
+
 #define NTHREADS 6
 #define NY 5
 #define NX 4
@@ -69,7 +73,7 @@ static int pthread_barrier_init(pthread_barrier_t           *barrier,
         return errno;
     }
 
-    err = pthread_mutex_init(&barrier->mutex, 0)
+    err = pthread_mutex_init(&barrier->mutex, 0);
     ERRNO_HANDLE(err)
 
     err = pthread_cond_init(&barrier->cond, 0);

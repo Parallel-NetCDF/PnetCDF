@@ -71,6 +71,10 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
+#ifndef PTHREAD_BARRIER_SERIAL_THREAD
+#define PTHREAD_BARRIER_SERIAL_THREAD   1
+#endif
+
 #define NTHREADS 6
 #define NY 5
 #define NX 4
