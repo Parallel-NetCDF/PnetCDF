@@ -23,7 +23,8 @@ AC_ARG_ENABLE([coverage],
               [],[enable_coverage=no])
 
 if test "$enable_coverage" = "yes" ; then
-    if test "$ac_cv_prog_gcc" = "yes" ; then
+    # In AC_PROG_CC, if using the GNU C compiler, set shell variable GCC to yes.
+    if test "$GCC" = "yes" ; then
         CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
         LIBS="$LIBS -lgcov"
         if test "x${WRAPPER_CFLAGS}" = "x" ; then
