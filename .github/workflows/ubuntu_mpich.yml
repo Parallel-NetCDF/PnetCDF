@@ -44,7 +44,7 @@ jobs:
                         --with-file-system=ufs \
                         --with-device=ch3:nemesis \
                         --with-hwloc=embedded \
-                        --with-pm=hydra \
+                        --with-pm=gforker \
                         CC=gcc FC=gfortran
             make -s LIBTOOLFLAGS=--silent V=1 -j8 install
             cd ${WORKDIR}
@@ -81,6 +81,7 @@ jobs:
             make ptests
         - name: make distcheck
           run: |
+            WORKDIR=$(pwd)
             make distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --with-mpi=${WORKDIR}/MPICH"
         - name: Cleanup
           if: ${{ always() }}
