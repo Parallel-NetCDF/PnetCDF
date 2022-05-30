@@ -10,12 +10,15 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 outfile=`basename $1`
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 # disable safe mode, as large tests already run slow
 export PNETCDF_SAFE_MODE=0
 
 ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
-rm -f ${TESTOUTDIR}/$outfile.nc
+rm -f ${OUTDIR}/$outfile.nc
 
 # echo ""
 
@@ -27,5 +30,5 @@ if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
 
    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
 
-   rm -f ${TESTOUTDIR}/$outfile.nc
+   rm -f ${OUTDIR}/$outfile.nc
 fi

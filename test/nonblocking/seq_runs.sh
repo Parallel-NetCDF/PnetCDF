@@ -12,6 +12,9 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 ${TESTSEQRUN} ./mcoll_perf ${TESTOUTDIR}/testfile
 # seq is not available on FreeBSD otherwise we can use: for j in `seq 0 9`
 for j in 0 1 2 3 4 5 6 7 8 9 ; do
@@ -32,3 +35,9 @@ if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
         ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/testfile.2.4.$j.nc ${TESTOUTDIR}/testfile_bb.2.4.$j.nc
     done
 fi
+
+for j in 0 1 2 3 4 5 6 7 8 9 ; do
+    rm -f ${OUTDIR}/testfile.2.4.$j.nc
+    rm -f ${OUTDIR}/testfile_bb.2.4.$j.nc
+done
+

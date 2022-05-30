@@ -10,6 +10,9 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "TESTPROGRAMS=${TESTPROGRAMS}"
@@ -46,9 +49,11 @@ for i in ${TESTPROGRAMS} ; do
 
         if test "x${ENABLE_NETCDF4}" = x1 ; then
            # echo "test netCDF-4 feature"
-           ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc4 4
-           # Validator does not support nc4
+           ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
+           # Validator does not support NetCDF-4 format
         fi
     done
+    rm -f ${OUTDIR}/$i.nc
+    rm -f ${OUTDIR}/$i.bb.nc
 done
 

@@ -7,6 +7,9 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "check_PROGRAMS=${check_PROGRAMS}"
@@ -24,5 +27,7 @@ for i in ${check_PROGRAMS} ; do
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
         ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
     done
+    rm -f ${OUTDIR}/$i.nc
+    rm -f ${OUTDIR}/$i.nc.cdf4
 done
 

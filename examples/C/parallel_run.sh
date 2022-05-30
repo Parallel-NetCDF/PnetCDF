@@ -10,6 +10,9 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "check_PROGRAMS=${check_PROGRAMS}"
@@ -30,6 +33,7 @@ for i in ${check_PROGRAMS} ; do
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 
         if test $i = get_vara ; then
+           # get_vara reads the file 'put_vara.nc' created by put_vara
            ${MPIRUN} ./$i -q ${TESTOUTDIR}/put_vara.nc
         else
            ${MPIRUN} ./$i -q ${TESTOUTDIR}/$i.nc
@@ -79,6 +83,15 @@ for i in ${check_PROGRAMS} ; do
            ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc4 4
            # Validator does not support nc4
         fi
+
     done
+    # delete output file
+    if test $i = get_vara ; then
+       rm -f ${OUTDIR}/put_vara.nc
+       rm -f ${OUTDIR}/put_vara.bb.nc
+    elif test $i != put_vara ; then
+       rm -f ${OUTDIR}/$i.nc
+       rm -f ${OUTDIR}/$i.bb.nc
+    fi
 done
 

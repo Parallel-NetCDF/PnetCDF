@@ -10,6 +10,9 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "TESTPROGRAMS=${TESTPROGRAMS}"
@@ -27,7 +30,7 @@ for i in ${TESTPROGRAMS} ; do
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 
         export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
-        rm -f ${TESTOUTDIR}/$i.nc
+        rm -f ${OUTDIR}/$i.nc
         ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
         unset PNETCDF_HINTS
 
@@ -35,12 +38,15 @@ for i in ${TESTPROGRAMS} ; do
         ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
 
         export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable;nc_burst_buf_shared_logs=enable"
-        rm -f ${TESTOUTDIR}/$i.nc
+        rm -f ${OUTDIR}/$i.nc
         ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
         unset PNETCDF_HINTS
 
         # echo "--- validating file ${TESTOUTDIR}/$i.nc"
         ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
     done
+    rm -f ${OUTDIR}/$i.nc
+    rm -f ${OUTDIR}/$i.nc*.data
+    rm -f ${OUTDIR}/$i.nc*.meta
 done
 

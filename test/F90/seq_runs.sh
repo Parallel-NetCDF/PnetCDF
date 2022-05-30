@@ -12,6 +12,7 @@ NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 
 ${TESTSEQRUN} ./tst_io ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_io1.nc
+# remove file system type prefix if there is any
 OUTDIR=$(echo $TESTOUTDIR | cut -d: -f2)
 mv ${OUTDIR}/tst_io1.nc ${OUTDIR}/tst_io1.nc0
 
@@ -23,5 +24,7 @@ if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
 
     # echo "--- ncmpidiff tst_io1.nc0 tst_io1.nc ---"
     ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/tst_io1.nc0 ${TESTOUTDIR}/tst_io1.nc
-
 fi
+rm -f ${OUTDIR}/tst_io1.nc0
+rm -f ${OUTDIR}/tst_io1.nc
+

@@ -14,6 +14,9 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "check_PROGRAMS=${check_PROGRAMS}"
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 # let NTHREADS=$1*6-1
 NTHREADS=`expr $1 \* 6 - 1`
 
@@ -39,6 +42,7 @@ for i in ${check_PROGRAMS} ; do
            ${MPIRUN} ./tst_pthread ${TESTOUTDIR}/tst_pthread.nc
            for k in `seq 0 ${NTHREADS}` ; do
                ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_pthread.nc.$k
+               rm -f ${OUTDIR}/tst_pthread.nc.$k
            done
            continue
         fi
@@ -92,5 +96,7 @@ for i in ${check_PROGRAMS} ; do
            # Validator does not support nc4
         fi
     done
+    rm -f ${OUTDIR}/$i.nc*
+    rm -f ${OUTDIR}/$i.bb.nc*
 done
 

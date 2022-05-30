@@ -10,6 +10,9 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 # echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
 if test ${PNETCDF_DEBUG} = 1 ; then
    safe_modes="0 1"
@@ -47,5 +50,9 @@ for i in ${TESTPROGRAMS} ; do
            ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$i.nc.subfile_0.nc ${TESTOUTDIR}/$i.bb.nc.subfile_0.nc
         fi
     done
+    rm -f ${OUTDIR}/$i.nc
+    rm -f ${OUTDIR}/$i.nc.subfile_0.nc
+    rm -f ${OUTDIR}/$i.bb.nc
+    rm -f ${OUTDIR}/$i.bb.nc.subfile_0.nc
 done
 

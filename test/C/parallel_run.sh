@@ -10,6 +10,9 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 
@@ -50,4 +53,7 @@ for j in ${safe_modes} ; do
        # Validator does not support nc4
     fi
 done
+
+rm -f ${OUTDIR}/*.nc
+rm -f ${OUTDIR}/*.nc4
 
