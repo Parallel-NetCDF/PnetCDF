@@ -44,9 +44,10 @@ jobs:
                         --with-file-system=ufs \
                         --with-device=ch3:nemesis \
                         --with-hwloc=embedded \
-                        --with-pm=gforker \
+                        --with-pm=hydra \
                         CC=gcc FC=gfortran
             make -s LIBTOOLFLAGS=--silent V=1 -j8 install
+            make -s distclean
             cd ${WORKDIR}
         - name: Build PnetCDF
           run: |
