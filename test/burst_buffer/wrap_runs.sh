@@ -10,6 +10,9 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 outfile=`basename $1`
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 # echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
 if test ${PNETCDF_DEBUG} = 1 ; then
    safe_modes="0 1"
@@ -25,4 +28,8 @@ for j in ${safe_modes} ; do
     unset PNETCDF_HINTS
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
 done
+
+rm -f ${OUTDIR}/$outfile.nc
+rm -f ${OUTDIR}/$outfile.nc_0_0.data
+rm -f ${OUTDIR}/$outfile.nc_0_0.meta
 

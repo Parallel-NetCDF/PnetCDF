@@ -9,10 +9,14 @@ set -e
 
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 # disable safe mode, as large tests already run slow
 export PNETCDF_SAFE_MODE=0
 
 for i in ${TESTPROGRAMS}; do
     ${TESTSEQRUN} ./$i            ${TESTOUTDIR}/$i.nc
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
+    rm -f ${OUTDIR}/$i.nc
 done

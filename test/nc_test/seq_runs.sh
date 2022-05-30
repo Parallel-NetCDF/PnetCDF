@@ -9,31 +9,36 @@ set -e
 
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 # tst_nofill.c creates two files: tst_nofill.nc.fill and tst_nofill.nc.nofill
 ${TESTSEQRUN} ./tst_nofill    ${TESTOUTDIR}/tst_nofill.nc
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_nofill.nc.fill
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_nofill.nc.nofill
-
+rm -f ${OUTDIR}/tst_nofill.nc
+rm -f ${OUTDIR}/tst_nofill.nc.fill
+rm -f ${OUTDIR}/tst_nofill.nc.nofill
 
 # disable safe mode, as nc_test already runs slow
 export PNETCDF_SAFE_MODE=0
 
-rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
+rm -f ${OUTDIR}/tooth-fairy.nc ${OUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
 ${TESTSEQRUN} ./nc_test    -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
-rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
+rm -f ${OUTDIR}/tooth-fairy.nc ${OUTDIR}/scratch.nc ${OUTDIR}/test.nc
 ${TESTSEQRUN} ./nc_test -2 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
 if test "${ENABLE_NETCDF4}" = 1 ; then
-   rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
+   rm -f ${OUTDIR}/tooth-fairy.nc ${OUTDIR}/scratch.nc ${OUTDIR}/test.nc
    ${TESTSEQRUN} ./nc_test -4 -d ${TESTOUTDIR}
    # Validator does not support nc4
    #${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 fi
 
-rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
+rm -f ${OUTDIR}/tooth-fairy.nc ${OUTDIR}/scratch.nc ${OUTDIR}/test.nc
 ${TESTSEQRUN} ./nc_test -5 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
@@ -43,16 +48,17 @@ if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
     # echo "---- testing burst buffering"
 
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
-    rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
+    rm -f ${OUTDIR}/tooth-fairy.nc ${OUTDIR}/scratch.nc ${OUTDIR}/test.nc
     ${TESTSEQRUN} ./nc_test    -d ${TESTOUTDIR}
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
-    rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
+    rm -f ${OUTDIR}/tooth-fairy.nc ${OUTDIR}/scratch.nc ${OUTDIR}/test.nc
     ${TESTSEQRUN} ./nc_test -2 -d ${TESTOUTDIR}
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
-    rm -f ${TESTOUTDIR}/tooth-fairy.nc ${TESTOUTDIR}/scratch.nc ${TESTOUTDIR}/test.nc
+    rm -f ${OUTDIR}/tooth-fairy.nc ${OUTDIR}/scratch.nc ${OUTDIR}/test.nc
     ${TESTSEQRUN} ./nc_test -5 -d ${TESTOUTDIR}
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
+    rm -f ${OUTDIR}/tooth-fairy.nc ${OUTDIR}/scratch.nc ${OUTDIR}/test.nc
 fi
 

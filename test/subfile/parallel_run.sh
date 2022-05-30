@@ -10,6 +10,9 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "check_PROGRAMS=${check_PROGRAMS}"
@@ -59,5 +62,11 @@ for i in ${check_PROGRAMS} ; do
            ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$i.nc.subfile_1.nc ${TESTOUTDIR}/$i.bb.nc.subfile_1.nc
         fi
     done
+    rm -f ${OUTDIR}/$i.nc
+    rm -f ${OUTDIR}/$i.nc.subfile_0.nc
+    rm -f ${OUTDIR}/$i.nc.subfile_1.nc
+    rm -f ${OUTDIR}/$i.bb.nc
+    rm -f ${OUTDIR}/$i.bb.nc.subfile_0.nc
+    rm -f ${OUTDIR}/$i.bb.nc.subfile_1.nc
 done
 

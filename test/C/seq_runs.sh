@@ -10,6 +10,9 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 if test ${PNETCDF_DEBUG} = 1 ; then
    safe_modes="0 1"
 else
@@ -47,4 +50,5 @@ for j in ${safe_modes} ; do
     fi
     # echo ""
 done
-
+rm -f ${OUTDIR}/*.nc
+rm -f ${OUTDIR}/*.nc4

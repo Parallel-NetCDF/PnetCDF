@@ -10,6 +10,9 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
 MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "check_PROGRAMS=${check_PROGRAMS}"
@@ -23,7 +26,7 @@ for i in ${check_PROGRAMS} ; do
 
     # echo "--- validating file ${TESTOUTDIR}/$i.nc"
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
-    rm -f ${TESTOUTDIR}/$i.nc
+    rm -f ${OUTDIR}/$i.nc
     # echo ""
 
     if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
@@ -36,6 +39,6 @@ for i in ${check_PROGRAMS} ; do
        ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.bb.nc
     fi
 
-    rm -f ${TESTOUTDIR}/$i.bb.nc
+    rm -f ${OUTDIR}/$i.bb.nc
 done
 
