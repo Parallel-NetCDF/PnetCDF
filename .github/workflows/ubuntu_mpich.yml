@@ -16,10 +16,6 @@ on:
       - '**.1'
       - 'docs/**'
 
-env:
-  HWLOC_XMLFILE: $(pwd)/hwloc.xml
-  HYDRA_HOST_FILE: $(pwd)/hostfile
-
 jobs:
     build:
       runs-on: ubuntu-latest
@@ -46,6 +42,9 @@ jobs:
             make -s LIBTOOLFLAGS=--silent V=1 -j8 install
             make -s distclean
             cd ${WORKDIR}
+        - name: Generate hwloc XML file
+          run: |
+            WORKDIR=$(pwd)
             ${WORKDIR}/hwloc/bin/lstopo --of xml hwloc.xml
         - name: Build MPICH
           run: |
@@ -79,6 +78,8 @@ jobs:
                         --enable-shared \
                         --enable-thread-safe \
                         --with-pthread \
+                     --disable-fortran \
+                     --disable-cxx \
                         --with-mpi=${WORKDIR}/MPICH
             make -j 8 tests
         - name: Print config.log
@@ -98,8 +99,10 @@ jobs:
         - name: make ptests
           run: |
             WORKDIR=$(pwd)
+            echo "HYDRA_HOST_FILE=${WORKDIR}/hostfile" >> $GITHUB_ENV
             echo "----- HYDRA_HOST_FILE = $HYDRA_HOST_FILE"
             cat ${HYDRA_HOST_FILE}
+            echo "HWLOC_XMLFILE=${WORKDIR}/hwloc.xml" >> $GITHUB_ENV
             echo "----- HWLOC_XMLFILE = $HWLOC_XMLFILE"
             cat ${HWLOC_XMLFILE}
             make ptests
