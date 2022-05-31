@@ -56,7 +56,7 @@ jobs:
             cd mpich-4.0.2
             ./configure --prefix=${WORKDIR}/MPICH \
                         --silent \
-                        --enable-fortran \
+                     --disable-fortran \
                         --enable-romio \
                         --with-file-system=ufs \
                         --with-device=ch3:nemesis \
