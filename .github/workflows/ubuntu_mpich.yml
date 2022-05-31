@@ -59,7 +59,7 @@ jobs:
                      --disable-fortran \
                         --enable-romio \
                         --with-file-system=ufs \
-                        --with-device=ch4 \
+                        --with-device=ch3:nemesis \
                         --with-hwloc=embedded \
                         --with-pm=hydra \
                         CC=gcc FC=gfortran
