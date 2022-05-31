@@ -18,6 +18,7 @@ on:
 
 env:
   HWLOC_XMLFILE: $(pwd)/hwloc.xml
+  HYDRA_HOST_FILE: $(pwd)/hostfile
 
 jobs:
     build:
@@ -97,7 +98,10 @@ jobs:
         - name: make ptests
           run: |
             WORKDIR=$(pwd)
+            echo "----- HYDRA_HOST_FILE = $HYDRA_HOST_FILE"
+            cat ${HYDRA_HOST_FILE}
             echo "----- HWLOC_XMLFILE = $HWLOC_XMLFILE"
+            cat ${HWLOC_XMLFILE}
             make ptests
         - name: make distcheck
           run: |
