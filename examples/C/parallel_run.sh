@@ -46,6 +46,7 @@ for i in ${check_PROGRAMS} ; do
            # each MPI process created 6 threads
            for k in `seq 0 ${NTHREADS}` ; do
                ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc.$k
+               rm -f ${OUTDIR}/$i.nc.$k
            done
            continue
         fi
