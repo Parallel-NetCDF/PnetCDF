@@ -16,6 +16,9 @@ on:
       - '**.1'
       - 'docs/**'
 
+env:
+  HWLOC_XMLFILE: $(pwd)/hwloc.xml
+
 jobs:
     build:
       runs-on: ubuntu-latest
@@ -94,7 +97,7 @@ jobs:
         - name: make ptests
           run: |
             WORKDIR=$(pwd)
-            HWLOC_XMLFILE=${WORKDIR}/hwloc.xml
+            echo "----- HWLOC_XMLFILE = $HWLOC_XMLFILE"
             make ptests
         - name: make distcheck
           run: |
