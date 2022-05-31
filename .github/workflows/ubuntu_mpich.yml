@@ -59,7 +59,7 @@ jobs:
                      --disable-fortran \
                         --enable-romio \
                         --with-file-system=ufs \
-                        --with-device=ch3:nemesis \
+                        --with-device=ch4 \
                         --with-hwloc=embedded \
                         --with-pm=hydra \
                         CC=gcc FC=gfortran
@@ -100,10 +100,12 @@ jobs:
           run: |
             WORKDIR=$(pwd)
             echo "HYDRA_HOST_FILE=${WORKDIR}/hostfile" >> $GITHUB_ENV
-            echo "----- HYDRA_HOST_FILE = $HYDRA_HOST_FILE"
+            echo "----- HYDRA_HOST_FILE = ${{ env.HYDRA_HOST_FILE }}"
+            HYDRA_HOST_FILE=${WORKDIR}/hostfile
             cat ${HYDRA_HOST_FILE}
             echo "HWLOC_XMLFILE=${WORKDIR}/hwloc.xml" >> $GITHUB_ENV
-            echo "----- HWLOC_XMLFILE = $HWLOC_XMLFILE"
+            echo "----- HWLOC_XMLFILE = ${{ env.HWLOC_XMLFILE }}"
+            HWLOC_XMLFILE=${WORKDIR}/hwloc.xml
             cat ${HWLOC_XMLFILE}
             make ptests
         - name: make distcheck
