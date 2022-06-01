@@ -59,11 +59,11 @@ jobs:
                      --disable-fortran \
                         --enable-romio \
                         --with-file-system=ufs \
-                        --with-device=ch3:nemesis \
+                        --with-device=ch4 \
                         --with-hwloc=embedded \
                         --with-pm=hydra \
                         CC=gcc FC=gfortran
-            make -s LIBTOOLFLAGS=--silent V=1 -j8 install
+            make -s -j8 install
             make -s distclean
             cd ${WORKDIR}
         - name: Build PnetCDF
