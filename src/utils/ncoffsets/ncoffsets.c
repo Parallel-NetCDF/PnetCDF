@@ -2080,14 +2080,14 @@ int main(int argc, char *argv[])
             printf("\t%6s %s:\n", type_str, varp->name->cp);
         } else {
             size *= varp->dsizes[0];
-            lineLen = strlen(varp->name->cp) + 2;
+            lineLen = varp->name->nchars + 2;
             ndims = MIN(varp->ndims, MAX_PRINT_NDIMS);
             for (j=0; j<ndims; j++) {
                 dimp = ncp->dims.value[varp->dimids[j]];
-                lineLen += strlen(dimp->name->cp) + 2;
+                lineLen += dimp->name->nchars + 2;
             }
             dimp = ncp->dims.value[varp->dimids[varp->ndims-1]];
-            lineLen += strlen(dimp->name->cp) + 2 + 5; /* ", " and "..., " */
+            lineLen += dimp->name->nchars + 2 + 5; /* ", " and "..., " */
             line = (char*)malloc(lineLen);
             sprintf(line,"%s(", varp->name->cp);
             ndims = varp->ndims;
@@ -2172,14 +2172,14 @@ int main(int argc, char *argv[])
             printf("\t%6s %s:", type_str, varp->name->cp);
         } else {
             size *= varp->dsizes[0];
-            lineLen = strlen(varp->name->cp) + 2;
+            lineLen = varp->name->nchars + 2;
             ndims = MIN(varp->ndims, MAX_PRINT_NDIMS);
             for (j=0; j<ndims; j++) {
                 dimp = ncp->dims.value[varp->dimids[j]];
-                lineLen += strlen(dimp->name->cp) + 2;
+                lineLen += dimp->name->nchars + 2;
             }
             dimp = ncp->dims.value[varp->dimids[varp->ndims-1]];
-            lineLen += strlen(dimp->name->cp) + 2 + 5; /* ", " and "..., " */
+            lineLen += dimp->name->nchars + 2 + 5; /* ", " and "..., " */
             line = (char*)malloc(lineLen);
             sprintf(line,"%s(", varp->name->cp);
             ndims = varp->ndims;
