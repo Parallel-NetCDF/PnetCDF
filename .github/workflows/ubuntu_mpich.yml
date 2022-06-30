@@ -29,23 +29,6 @@ jobs:
             automake --version
             libtool --version
             gcc --version
-        - name: Build hwloc
-          run: |
-            WORKDIR=$(pwd)
-            mkdir -p ${WORKDIR}/hwloc
-            cd ${WORKDIR}/hwloc
-            curl -sLO https://download.open-mpi.org/release/hwloc/v2.7/hwloc-2.7.1.tar.gz
-            gzip -dc hwloc-2.7.1.tar.gz | tar -xf -
-            cd hwloc-2.7.1
-            ./configure --prefix=${WORKDIR}/hwloc \
-                        --silent
-            make -s LIBTOOLFLAGS=--silent V=1 -j8 install
-            make -s distclean
-            cd ${WORKDIR}
-        - name: Generate hwloc XML file
-          run: |
-            WORKDIR=$(pwd)
-            ${WORKDIR}/hwloc/bin/lstopo --of xml hwloc.xml
         - name: Build MPICH
           run: |
             WORKDIR=$(pwd)
@@ -63,8 +46,6 @@ jobs:
                         --enable-romio \
                         --with-file-system=ufs \
                         --with-device=ch3:sock \
-                        --with-hwloc=embedded \
-                        --with-pm=hydra \
                         --enable-fortran \
                         CC=gcc FC=gfortran
             make -s -j8 install
@@ -100,14 +81,6 @@ jobs:
         - name: make ptests
           run: |
             WORKDIR=$(pwd)
-            echo "HYDRA_HOST_FILE=${WORKDIR}/hostfile" >> $GITHUB_ENV
-            echo "----- HYDRA_HOST_FILE = ${{ env.HYDRA_HOST_FILE }}"
-            HYDRA_HOST_FILE=${WORKDIR}/hostfile
-            cat ${HYDRA_HOST_FILE}
-            echo "HWLOC_XMLFILE=${WORKDIR}/hwloc.xml" >> $GITHUB_ENV
-            echo "----- HWLOC_XMLFILE = ${{ env.HWLOC_XMLFILE }}"
-            HWLOC_XMLFILE=${WORKDIR}/hwloc.xml
-            cat ${HWLOC_XMLFILE}
             make ptests
         - name: make distcheck
           run: |
