@@ -51,18 +51,21 @@ jobs:
             WORKDIR=$(pwd)
             mkdir -p ${WORKDIR}/MPICH
             cd ${WORKDIR}/MPICH
-            git clone -q https://github.com/pmodels/mpich.git
-            cd mpich
-            git submodule update --init
-            ./autogen.sh
+            # git clone -q https://github.com/pmodels/mpich.git
+            # cd mpich
+            # git submodule update --init
+            # ./autogen.sh
+            wget -q https://www.mpich.org/static/downloads/4.0.2/mpich-4.0.2.tar.gz
+            gzip -dc mpich-4.0.2.tar.gz | tar -xf -
+            cd mpich-4.0.2
             ./configure --prefix=${WORKDIR}/MPICH \
                         --silent \
-                     --disable-fortran \
                         --enable-romio \
                         --with-file-system=ufs \
                         --with-device=ch3:sock \
                         --with-hwloc=embedded \
                         --with-pm=hydra \
+                        --enable-fortran \
                         CC=gcc FC=gfortran
             make -s -j8 install
             cd ${WORKDIR}
@@ -78,8 +81,6 @@ jobs:
                         --enable-shared \
                         --enable-thread-safe \
                         --with-pthread \
-                     --disable-fortran \
-                     --disable-cxx \
                         --with-mpi=${WORKDIR}/MPICH
             make -j 8 tests
         - name: Print config.log
