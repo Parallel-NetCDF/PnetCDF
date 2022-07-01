@@ -25,18 +25,34 @@ jobs:
           run: |
             sudo apt-get update
             sudo apt-get install automake autoconf libtool libtool-bin m4
-            # mpi
-            sudo apt-get install mpich
-            # zlib
-            sudo apt-get install zlib1g-dev
             autoconf --version
             automake --version
             libtool --version
             gcc --version
+        - name: Build MPICH
+          run: |
+            WORKDIR=$(pwd)
+            mkdir -p ${WORKDIR}/MPICH
+            cd ${WORKDIR}/MPICH
+            # git clone -q https://github.com/pmodels/mpich.git
+            # cd mpich
+            # git submodule update --init
+            # ./autogen.sh
+            wget -q https://www.mpich.org/static/downloads/4.0.2/mpich-4.0.2.tar.gz
+            gzip -dc mpich-4.0.2.tar.gz | tar -xf -
+            cd mpich-4.0.2
+            ./configure --prefix=${WORKDIR}/MPICH \
+                        --silent \
+                        --enable-romio \
+                        --with-file-system=ufs \
+                        --with-device=ch3:sock \
+                        --enable-fortran \
+                        CC=gcc FC=gfortran
+            make -s -j8 install
+            cd ${WORKDIR}
         - name: Build PnetCDF
           run: |
             WORKDIR=$(pwd)
-            mkdir -p /dev/shm/pnetcdf_output
             autoreconf -i
             ./configure --enable-option-checking=fatal \
                         --enable-profiling \
@@ -46,7 +62,7 @@ jobs:
                         --enable-shared \
                         --enable-thread-safe \
                         --with-pthread \
-                        TESTOUTDIR=/dev/shm/pnetcdf_output
+                        --with-mpi=${WORKDIR}/MPICH
             make -j 8 tests
         - name: Print config.log
           if: ${{ failure() }}
@@ -56,20 +72,23 @@ jobs:
         - name: make check
           run: |
             make check
+        - name: Print log files
+          if: ${{ failure() }}
+          run: |
+            WORKDIR=$(pwd)
+            cat ${WORKDIR}/src/utils/ncvalidator/*.log
+            cat ${WORKDIR}/test/*/*.log
         - name: make ptests
           run: |
+            WORKDIR=$(pwd)
             make ptests
         - name: make distcheck
           run: |
-            make distcheck DISTCHECK_CONFIGURE_FLAGS="--silent TESTOUTDIR=/dev/shm/pnetcdf_output"
-        - name: Print log files
-          if: ${{ always() }}
-          run: |
             WORKDIR=$(pwd)
-            cat ${WORKDIR}/test/*/*.log
+            make distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --with-mpi=${WORKDIR}/MPICH"
         - name: Cleanup
           if: ${{ always() }}
           run: |
             make -s distclean
-            rm -rf /dev/shm/pnetcdf_output
+            rm -rf ${WORKDIR}/MPICH
 
