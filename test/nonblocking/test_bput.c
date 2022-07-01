@@ -142,6 +142,17 @@ int main(int argc, char **argv) {
             }
         }
     }
+
+    /* Try calling a bput after buffer detached. Expecting error */
+    start[0] = 0; start[1] = 0;
+    count[0] = 1; count[1] = 1;
+    err = ncmpi_bput_vara_float(ncid, varid, start, count, &var[0][0], &req[0]);
+    if (err != NC_ENULLABUF) {
+        nerrs++;
+        printf("Error at line %d in %s: expect error code NC_ENULLABUF but got %s\n",
+               __LINE__,__FILE__,ncmpi_strerrno(err)); \
+    }
+
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
