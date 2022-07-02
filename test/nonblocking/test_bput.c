@@ -19,7 +19,7 @@
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
-    int i, j, ncid, dimid[2], varid, err, nerrs=0, rank, nprocs;
+    int i, j, ncid, dimid[2], varid, err, nerrs=0, rank, nprocs, bb_enabled;
     int req[2], status[2];
     float  var[4][6];
     char filename[256];
@@ -55,6 +55,20 @@ int main(int argc, char **argv) {
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_DATA, info, &ncid); CHECK_ERR
     MPI_Info_free(&info);
+
+    {
+        int flag;
+        char hint[MPI_MAX_INFO_VAL];
+        MPI_Info infoused;
+
+        ncmpi_inq_file_info(ncid, &infoused);
+        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
+        if (flag && strcasecmp(hint, "enable") == 0)
+            bb_enabled = 1;
+        else
+            bb_enabled = 0;
+        MPI_Info_free(&infoused);
+    }
 
     /* define a variable of a 6 x 4 integer array in the nc file */
     err = ncmpi_def_dim(ncid, "Y", 6, &dimid[0]); CHECK_ERR
@@ -143,14 +157,12 @@ int main(int argc, char **argv) {
         }
     }
 
-    /* Try calling a bput after buffer detached. Expecting error */
-    start[0] = 0; start[1] = 0;
-    count[0] = 1; count[1] = 1;
-    err = ncmpi_bput_vara_float(ncid, varid, start, count, &var[0][0], &req[0]);
-    if (err != NC_ENULLABUF) {
-        nerrs++;
-        printf("Error at line %d in %s: expect error code NC_ENULLABUF but got %s\n",
-               __LINE__,__FILE__,ncmpi_strerrno(err)); \
+    if (!bb_enabled) {
+        /* Try calling a bput after buffer detached. Expecting error */
+        start[0] = 0; start[1] = 0;
+        count[0] = 1; count[1] = 1;
+        err = ncmpi_bput_vara_float(ncid, varid, start, count, &var[0][0], &req[0]);
+        EXP_ERR(NC_ENULLABUF)
     }
 
     err = ncmpi_close(ncid); CHECK_ERR
