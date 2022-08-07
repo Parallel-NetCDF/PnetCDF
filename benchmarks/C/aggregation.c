@@ -736,7 +736,7 @@ int main(int argc, char** argv) {
     /* report the PnetCDF internal heap memory allocation high water mark */
     err = ncmpi_inq_malloc_max_size(&malloc_size);
     if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_MAX, 0, MPI_COMM_WORLD);
         if (rank == 0)
             printf("Max heap memory allocated by PnetCDF internally is %.2f MiB\n",
                    (float)sum_size/1048576);
