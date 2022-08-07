@@ -291,6 +291,7 @@ int benchmark_write(char       *filename,
 
     timing[3] = timing[4] = 0;
     for (n=0; n<cfg->num_records; n++) {
+        start_t = MPI_Wtime();
         k = v = 0;
         start[0] = n;
         count[0] = 1;
@@ -452,6 +453,7 @@ int benchmark_read(char       *filename,
 
     timing[2] = timing[3] = 0;
     for (n=0; n<cfg->num_records; n++) {
+        start_t = MPI_Wtime();
         k = v = 0;
         start[0] = n;
         count[0] = 1;
