@@ -360,7 +360,7 @@ int benchmark_write(char       *filename,
     err = ncmpi_inq_put_size(ncid, &cfg->w_size); ERR(err)
 
     /* get all the hints used */
-    err = ncmpi_get_file_info(ncid, &cfg->w_info_used); ERR(err)
+    err = ncmpi_inq_file_info(ncid, &cfg->w_info_used); ERR(err)
 
     err = ncmpi_close(ncid); ERR(err)
 
@@ -512,7 +512,7 @@ int benchmark_read(char       *filename,
     err = ncmpi_inq_get_size(ncid, &cfg->r_size); ERR(err)
 
     /* get all the hints used */
-    err = ncmpi_get_file_info(ncid, &cfg->r_info_used); ERR(err)
+    err = ncmpi_inq_file_info(ncid, &cfg->r_info_used); ERR(err)
 
     err = ncmpi_close(ncid); ERR(err)
 
@@ -681,7 +681,7 @@ int main(int argc, char** argv) {
             printf("Write bandwidth           = %16.4f GiB/s\n", bw/max_t[0]);
             printf("-------------------------------------------------------\n");
         }
-        if (enable_write) {
+        if (enable_read) {
             bw = sum_r_size / 1048576.0;
             printf("Total read  amount        = %13lld    B\n", sum_r_size);
             printf("            amount        = %16.4f MiB\n", bw);
@@ -697,8 +697,8 @@ int main(int argc, char** argv) {
             printf("-------------------------------------------------------\n");
         }
     }
-    MPI_Info_free(&cfg.w_info_used);
-    MPI_Info_free(&cfg.r_info_used);
+    if (enable_write) MPI_Info_free(&cfg.w_info_used);
+    if (enable_read)  MPI_Info_free(&cfg.r_info_used);
 
     /* check if there is any PnetCDF internal malloc residue */
     MPI_Offset malloc_size, sum_size;
