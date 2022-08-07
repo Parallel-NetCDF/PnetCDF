@@ -17,35 +17,35 @@
 #include <pnetcdf.h>
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This program writes a series of 2D variables with data partitioning patterns
- * of block-block, *-cyclic, block-*, and *-block, round-robinly. The block-*
- * partitioning case writes 1st half followed by 2nd half. The same partitioning
- * patterns are used for read. In both cases, nonblocking APIs are used to
- * evaluate the performance.
+ * This program writes a series of 2D variables with optional data partitioning
+ * patterns: block-block, *-cyclic, block-*, and *-block. The same partitioning
+ * patterns are used for read after write. In both cases, nonblocking APIs are
+ * used to evaluate the performance.
  *
  * The compile and run commands are given below, together with an ncmpidump of
- * the output file. In this example, NVARS = 5.
+ * the output file.
  *
  *    % mpicc -O2 -o aggregation aggregation.c -lpnetcdf
  *
- *    % mpiexec -l -n 4 ./aggregation 5 /pvfs2/wkliao/testfile.nc
+ *    % mpiexec -n 4 ./aggregation -l 5 /pvfs2/wkliao/testfile.nc
  *
  *    % ncmpidump /pvfs2/wkliao/testfile.nc
  *      netcdf testfile {
  *      // file format: CDF-5 (big variables)
  *      dimensions:
- *              Block_BLOCK_Y = 10 ;
- *              Block_BLOCK_X = 10 ;
- *              Star_Y = 5 ;
- *              Cyclic_X = 20 ;
- *              Block_Y = 20 ;
- *              Star_X = 5 ;
+ *              Block_Block_Y = 10 ;
+ *              Block_Block_X = 10 ;
+ *              Star_Cyclic_Y = 5 ;
+ *              Star_Cyclic_X = 20 ;
+ *              Block_Star_Y = 20 ;
+ *              Block_Star_X = 5 ;
+ *              Star_Block_Y = 5 ;
+ *              Star_Block_X = 20 ;
  *      variables:
- *              int block_block_var_0(Block_BLOCK_Y, Block_BLOCK_X) ;
- *              float star_cyclic_var_1(Star_Y, Cyclic_X) ;
- *              short block_star_var_2(Block_Y, Star_X) ;
- *              double star_block_var_3(Star_Y, Cyclic_X) ;
- *              int block_block_var_4(Block_BLOCK_Y, Block_BLOCK_X) ;
+ *              float block_block_var_0(Block_Block_Y, Block_Block_X) ;
+ *              float star_cyclic_var_1(Star_Cyclic_Y, Star_Cyclic_X) ;
+ *              float block_star_var_2(Block_Star_Y, Block_Star_X) ;
+ *              float star_block_var_3(Star_Block_Y, Star_Block_X) ;
  *      data:
  *
  *       block_block_var_0 =
@@ -95,27 +95,40 @@
  *        0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3,
  *        0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3,
  *        0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3 ;
- *
- *       block_block_var_4 =
- *        0, 0, 0, 0, 0, 2, 2, 2, 2, 2,
- *        0, 0, 0, 0, 0, 2, 2, 2, 2, 2,
- *        0, 0, 0, 0, 0, 2, 2, 2, 2, 2,
- *        0, 0, 0, 0, 0, 2, 2, 2, 2, 2,
- *        0, 0, 0, 0, 0, 2, 2, 2, 2, 2,
- *        1, 1, 1, 1, 1, 3, 3, 3, 3, 3,
- *        1, 1, 1, 1, 1, 3, 3, 3, 3, 3,
- *        1, 1, 1, 1, 1, 3, 3, 3, 3, 3,
- *        1, 1, 1, 1, 1, 3, 3, 3, 3, 3,
- *        1, 1, 1, 1, 1, 3, 3, 3, 3, 3 ;
  *      }
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#define NVARS 5
+#define ERR(e) { \
+    if ((e) != NC_NOERR) { \
+        printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(e)); \
+        nerrs++; \
+    } \
+}
 
-#define ERR(e) {if((e)!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(e));nerrs++;}}
+#define DBG_PRINT(pattern, i, j) { \
+    printf("%s i=%d j=%d: start=%lld %lld count=%lld %lld\n", \
+           pattern, i, j, start[0], start[1], count[0], count[1]); \
+}
+
+#define XTYPE NC_FLOAT
 
 static int debug;
+
+typedef struct {
+    int nvars;
+    int block_block;
+    int star_cyclic;
+    int block_star;
+    int star_block;
+    MPI_Offset len;
+    MPI_Offset w_size;
+    MPI_Offset r_size;
+    MPI_Offset header_size;
+    MPI_Offset header_extent;
+    MPI_Info w_info_used;
+    MPI_Info r_info_used;
+} config;
 
 /*----< print_info() >------------------------------------------------------*/
 static
@@ -139,17 +152,16 @@ void print_info(MPI_Info *info_used)
 /*----< benchmark_write() >---------------------------------------------------*/
 static
 int benchmark_write(char       *filename,
-                    MPI_Offset  len,
-                    MPI_Offset *w_size,
-                    MPI_Info   *w_info_used,
+                    config     *cfg,
                     double     *timing)  /* [6] */
 {
-    int i, j, k, rank, nprocs, nerrs=0, err, num_reqs;
-    int ncid, cmode, varid[NVARS], dimid[6], *reqs, *sts, psizes[2];
-    void *buf[NVARS];
+    int i, j, k, v, rank, nprocs, nerrs=0, err, num_reqs, nvars;
+    int ncid, cmode, *varid, *reqs, *sts, psizes[2];
+    int bb_dimids[2], sc_dimids[2], bs_dimids[2], sb_dimids[2];
+    double **buf;
     double start_t, end_t;
     MPI_Comm comm=MPI_COMM_WORLD;
-    MPI_Offset gsizes[2], start[2], count[2];
+    MPI_Offset gsizes[2], start[2], count[2], lenlen;
     MPI_Info info=MPI_INFO_NULL;
 
     MPI_Comm_rank(comm, &rank);
@@ -163,32 +175,22 @@ int benchmark_write(char       *filename,
     /* disable the fixed-size variable alignments */
     MPI_Info_set(info, "nc_var_align_size", "1");
 
+    nvars = 0;
+    if (cfg->block_block) nvars++;
+    if (cfg->star_cyclic) nvars++;
+    if (cfg->block_star) nvars++;
+    if (cfg->star_block) nvars++;
+    nvars *= cfg->nvars;
+
+    varid = (int*) malloc(nvars * sizeof(int));
+
     /* initialize I/O buffer */
-    for (i=0; i<NVARS; i++) {
-        if (i % 4 == 0) {
-            int *int_b = (int*) malloc(len * len * sizeof(int));
-            assert(int_b != NULL);
-            for (j=0; j<len*len; j++) int_b[j] = rank;
-            buf[i] = (void*)int_b;
-        }
-        else if (i % 4 == 1) {
-            float *flt_b = (float*) malloc(len * len * sizeof(float));
-            assert(flt_b != NULL);
-            for (j=0; j<len*len; j++) flt_b[j] = rank;
-            buf[i] = (void*)flt_b;
-        }
-        else if (i % 4 == 2) {
-            short *shr_b = (short*) malloc(len * len * sizeof(short));
-            assert(shr_b != NULL);
-            for (j=0; j<len*len; j++) shr_b[j] = rank;
-            buf[i] = (void*)shr_b;
-        }
-        else {
-            double *dbl_b = (double*) malloc(len * len * sizeof(double));
-            assert(dbl_b != NULL);
-            for (j=0; j<len*len; j++) dbl_b[j] = rank;
-            buf[i] = (void*)dbl_b;
-        }
+    lenlen = cfg->len * cfg->len;
+    buf = (double**) malloc(nvars * sizeof(double*));
+    for (i=0; i<nvars; i++) {
+        buf[i] = (double*) malloc(lenlen * sizeof(double*));
+        assert(buf[i] != NULL);
+        for (j=0; j<lenlen; j++) buf[i][j] = (double)rank;
     }
     MPI_Barrier(comm);
     timing[0] = MPI_Wtime();
@@ -203,121 +205,142 @@ int benchmark_write(char       *filename,
     psizes[0] = psizes[1] = 0;
     MPI_Dims_create(nprocs, 2, psizes);
 
-    gsizes[0] = len * psizes[0];
-    gsizes[1] = len * psizes[1];
-
-    err = ncmpi_def_dim(ncid, "Block_BLOCK_Y",  gsizes[0],  &dimid[0]); ERR(err)
-    err = ncmpi_def_dim(ncid, "Block_BLOCK_X",  gsizes[1],  &dimid[1]); ERR(err)
-    err = ncmpi_def_dim(ncid, "Star_Y",         len,        &dimid[2]); ERR(err)
-    err = ncmpi_def_dim(ncid, "Cyclic_X",       len*nprocs, &dimid[3]); ERR(err)
-    err = ncmpi_def_dim(ncid, "Block_Y",        len*nprocs, &dimid[4]); ERR(err)
-    err = ncmpi_def_dim(ncid, "Star_X",         len,        &dimid[5]); ERR(err)
+    /* define dimensions */
+    if (cfg->block_block) {
+        gsizes[0] = cfg->len * psizes[0];
+        gsizes[1] = cfg->len * psizes[1];
+        err = ncmpi_def_dim(ncid, "Block_Block_Y", gsizes[0], &bb_dimids[0]);
+        ERR(err)
+        err = ncmpi_def_dim(ncid, "Block_Block_X", gsizes[1], &bb_dimids[1]);
+        ERR(err)
+    }
+    if (cfg->star_cyclic) {
+        gsizes[0] = cfg->len;
+        gsizes[1] = cfg->len * nprocs;
+        err = ncmpi_def_dim(ncid, "Star_Cyclic_Y", gsizes[0], &sc_dimids[0]);
+        ERR(err)
+        err = ncmpi_def_dim(ncid, "Star_Cyclic_X", gsizes[1], &sc_dimids[1]);
+        ERR(err)
+    }
+    if (cfg->block_star) {
+        gsizes[0] = cfg->len * nprocs;
+        gsizes[1] = cfg->len;
+        err = ncmpi_def_dim(ncid, "Block_Star_Y",  gsizes[0], &bs_dimids[0]);
+        ERR(err)
+        err = ncmpi_def_dim(ncid, "Block_Star_X",  gsizes[1], &bs_dimids[1]);
+        ERR(err)
+    }
+    if (cfg->star_block) {
+        gsizes[0] = cfg->len;
+        gsizes[1] = cfg->len * nprocs;
+        err = ncmpi_def_dim(ncid, "Star_Block_Y",  gsizes[0], &sb_dimids[0]);
+        ERR(err)
+        err = ncmpi_def_dim(ncid, "Star_Block_X",  gsizes[1], &sb_dimids[1]);
+        ERR(err)
+    }
 
     /* define variables */
-    num_reqs = 0;
-    for (i=0; i<NVARS; i++) {
-        char var_name[32];
-        if (i % 4 == 0) {
+    v = num_reqs = 0;
+    for (i=0; i<cfg->nvars; i++) {
+        char name[32];
+        if (cfg->block_block) {
             /* variables are block-block partitioned */
-            sprintf(var_name,"block_block_var_%d",i);
-            err = ncmpi_def_var(ncid, var_name, NC_INT, 2, dimid, &varid[i]);
+            sprintf(name,"block_block_var_%d",v);
+            err = ncmpi_def_var(ncid, name, XTYPE, 2, bb_dimids, &varid[v++]);
             ERR(err)
-            num_reqs++; /* complete in 1 nonblocking call */
+            num_reqs++;
         }
-        else if (i % 4 == 1) {
+        if (cfg->star_cyclic) {
             /* variables are *-cyclic partitioned */
-            sprintf(var_name,"star_cyclic_var_%d",i);
-            err = ncmpi_def_var(ncid, var_name, NC_FLOAT, 2, dimid+2, &varid[i]);
+            sprintf(name,"star_cyclic_var_%d",v);
+            err = ncmpi_def_var(ncid, name, XTYPE, 2, sc_dimids, &varid[v++]);
             ERR(err)
-            num_reqs += len; /* complete in len nonblocking calls */
+            num_reqs += cfg->len;
         }
-        else if (i % 4 == 2) {
+        if (cfg->block_star) {
             /* variables are block-* partitioned */
-            sprintf(var_name,"block_star_var_%d",i);
-            err = ncmpi_def_var(ncid, var_name, NC_SHORT, 2, dimid+4, &varid[i]);
+            sprintf(name,"block_star_var_%d",v);
+            err = ncmpi_def_var(ncid, name, XTYPE, 2, bs_dimids, &varid[v++]);
             ERR(err)
-            num_reqs += 2; /* write 1st half followed by 2nd half */
+            num_reqs++;
         }
-        else {
+        if (cfg->star_block) {
             /* variables are *-block partitioned */
-            sprintf(var_name,"star_block_var_%d",i);
-            err = ncmpi_def_var(ncid, var_name, NC_DOUBLE, 2, dimid+2, &varid[i]);
+            sprintf(name,"star_block_var_%d",v);
+            err = ncmpi_def_var(ncid, name, XTYPE, 2, sb_dimids, &varid[v++]);
             ERR(err)
-            num_reqs++; /* complete in 1 nonblocking call */
+            num_reqs++;
         }
     }
+    assert(v == nvars);
     reqs = (int*) malloc(num_reqs * sizeof(int));
+    sts  = (int*) malloc(num_reqs * sizeof(int));
 
     err = ncmpi_enddef(ncid); ERR(err)
+    err = ncmpi_inq_header_size(ncid, &cfg->header_size); ERR(err)
+    err = ncmpi_inq_header_extent(ncid, &cfg->header_extent); ERR(err)
     end_t = MPI_Wtime();
     timing[2] = end_t - start_t;
     start_t = end_t;
 
-    k = 0;
-    for (i=0; i<NVARS; i++) {
-        if (i % 4 == 0) {
-            int *int_b = (int*) buf[i];
-            start[0] = len * (rank % psizes[0]);
-            start[1] = len * ((rank / psizes[1]) % psizes[1]);
-            count[0] = len;
-            count[1] = len;
-            err = ncmpi_iput_vara_int(ncid, varid[i], start, count, int_b,
-                                      &reqs[k++]);
-            ERR(err)
-            if (debug) printf("block-block %d: start=%lld %lld count=%lld %lld\n",i,start[0],start[1],count[0],count[1]);
-        }
-        else if (i % 4 == 1) {
-            float *flt_b = (float*) buf[i];
-            start[0] = 0;
-            count[0] = len;
-            count[1] = 1;
-            for (j=0; j<len; j++) {
-                start[1] = rank + (MPI_Offset)j * nprocs;
-                err = ncmpi_iput_vara_float(ncid, varid[i], start, count,
-                                            flt_b, &reqs[k++]);
-                ERR(err)
-                flt_b += len;
-                if (debug) printf("*-cyclic i=%d j=%d: start=%lld %lld count=%lld %lld\n",i,j,start[0],start[1],count[0],count[1]);
-            }
-        }
-        else if (i % 4 == 2) {
-            short *shr_b = (short*) buf[i];
-            start[0] = len * rank;
-            start[1] = 0;
-            count[0] = len;
-            count[1] = len/2;
-            err = ncmpi_iput_vara_short(ncid, varid[i], start, count,
-                                        shr_b, &reqs[k++]);
-            ERR(err)
-            if (debug) printf("block-* i=0 start=%lld %lld count=%lld %lld\n",start[0],start[1],count[0],count[1]);
-
-            shr_b += len * (len/2);
-            start[1] = len/2;
-            count[1] = len - len/2;
-            err = ncmpi_iput_vara_short(ncid, varid[i], start, count,
-                                        shr_b, &reqs[k++]);
-            ERR(err)
-            if (debug) printf("block-* i=1 start=%lld %lld count=%lld %lld\n",start[0],start[1],count[0],count[1]);
-        }
-        else {
-            double *dbl_b = (double*) buf[i];
-            start[0] = 0;
-            start[1] = len * rank;
-            count[0] = len;
-            count[1] = len;
-            err = ncmpi_iput_vara_double(ncid, varid[i], start, count, dbl_b,
+    k = v = 0;
+    for (i=0; i<cfg->nvars; i++) {
+        if (cfg->block_block) {
+            start[0] = cfg->len * (rank % psizes[0]);
+            start[1] = cfg->len * ((rank / psizes[1]) % psizes[1]);
+            count[0] = cfg->len;
+            count[1] = cfg->len;
+            err = ncmpi_iput_vara_double(ncid, varid[v], start, count, buf[v],
                                          &reqs[k++]);
             ERR(err)
-            if (debug) printf("*-block %d: start=%lld %lld count=%lld %lld\n",i,start[0],start[1],count[0],count[1]);
+            if (debug) DBG_PRINT("block-block", i, 0)
+            v++;
+        }
+        if (cfg->star_cyclic) {
+            double *ptr = buf[v];
+            start[0] = 0;
+            start[1] = rank;
+            count[0] = cfg->len;
+            count[1] = 1;
+            for (j=0; j<cfg->len; j++) {
+                err = ncmpi_iput_vara_double(ncid, varid[v], start, count,
+                                             ptr, &reqs[k++]);
+                ERR(err)
+                ptr += cfg->len;
+                start[1] += nprocs;
+                if (debug) DBG_PRINT("*-cyclic", i, j)
+            }
+            v++;
+        }
+        if (cfg->block_star) {
+            start[0] = cfg->len * rank;
+            start[1] = 0;
+            count[0] = cfg->len;
+            count[1] = cfg->len;
+            err = ncmpi_iput_vara_double(ncid, varid[v], start, count,
+                                         buf[v], &reqs[k++]);
+            ERR(err)
+            if (debug) DBG_PRINT("block-*", i, 0)
+            v++;
+        }
+        if (cfg->star_block) {
+            start[0] = 0;
+            start[1] = cfg->len * rank;
+            count[0] = cfg->len;
+            count[1] = cfg->len;
+            err = ncmpi_iput_vara_double(ncid, varid[v], start, count, buf[v],
+                                         &reqs[k++]);
+            ERR(err)
+            if (debug) DBG_PRINT("*-block", i, 0)
+            v++;
         }
     }
-    num_reqs = k;
+    assert(nvars == v);
+    assert(num_reqs == k);
 
     end_t = MPI_Wtime();
     timing[3] = end_t - start_t;
     start_t = end_t;
-
-    sts = (int*) malloc(num_reqs * sizeof(int));
 
 #ifdef USE_INDEP_MODE
     err = ncmpi_begin_indep_data(ncid);          ERR(err)
@@ -334,10 +357,10 @@ int benchmark_write(char       *filename,
     start_t = end_t;
 
     /* get the true I/O amount committed */
-    err = ncmpi_inq_put_size(ncid, w_size); ERR(err)
+    err = ncmpi_inq_put_size(ncid, &cfg->w_size); ERR(err)
 
     /* get all the hints used */
-    err = ncmpi_get_file_info(ncid, w_info_used); ERR(err)
+    err = ncmpi_get_file_info(ncid, &cfg->w_info_used); ERR(err)
 
     err = ncmpi_close(ncid); ERR(err)
 
@@ -347,7 +370,9 @@ int benchmark_write(char       *filename,
 
     free(sts);
     free(reqs);
-    for (i=0; i<NVARS; i++) free(buf[i]);
+    free(varid);
+    for (i=0; i<nvars; i++) free(buf[i]);
+    free(buf);
 
     return nerrs;
 }
@@ -355,36 +380,36 @@ int benchmark_write(char       *filename,
 /*----< benchmark_read() >---------------------------------------------------*/
 static
 int benchmark_read(char       *filename,
-                   MPI_Offset  len,
-                   MPI_Offset *r_size,
-                   MPI_Info   *r_info_used,
+                   config     *cfg,
                    double     *timing)  /* [5] */
 {
-    int i, j, k, rank, nprocs, s_rank, nerrs=0, err, num_reqs;
-    int ncid, varid[NVARS], *reqs, *sts, psizes[2];
-    void *buf[NVARS];
+    int i, j, k, v, rank, nprocs, nerrs=0, err, num_reqs, nvars;
+    int ncid, *reqs, *sts, psizes[2];
+    double **buf;
     double start_t, end_t;
     MPI_Comm comm=MPI_COMM_WORLD;
-    MPI_Offset start[2], count[2];
+    MPI_Offset start[2], count[2], lenlen;
     MPI_Info info=MPI_INFO_NULL;
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
-    s_rank = (rank + nprocs / 2 ) % nprocs;
 
+    lenlen = cfg->len * cfg->len;
     psizes[0] = psizes[1] = 0;
     MPI_Dims_create(nprocs, 2, psizes);
 
+    nvars = 0;
+    if (cfg->block_block) nvars++;
+    if (cfg->star_cyclic) nvars++;
+    if (cfg->block_star) nvars++;
+    if (cfg->star_block) nvars++;
+    nvars *= cfg->nvars;
+
     /* allocate I/O buffer */
-    for (i=0; i<NVARS; i++) {
-        if (i % 4 == 0)
-            buf[i] = malloc(len * len * sizeof(int));
-        else if (i % 4 == 1)
-            buf[i] = (float*) malloc(len * len * sizeof(float));
-        else if (i % 4 == 2)
-            buf[i] = (short*) malloc(len * len * sizeof(short));
-        else
-            buf[i] = (double*) malloc(len * len * sizeof(double));
+    buf = (double**) malloc(nvars * sizeof(double*));
+    for (i=0; i<nvars; i++) {
+        buf[i] = (double*) malloc(lenlen * sizeof(double*));
+        assert(buf[i] != NULL);
     }
     MPI_Barrier(comm);
     timing[0] = MPI_Wtime();
@@ -397,87 +422,77 @@ int benchmark_read(char       *filename,
     /* Note that PnetCDF read the file in chunks of size 256KB, thus the read
      * amount may be more than the file header size
      */
-    if (debug) {
-        MPI_Offset h_size, h_extent;
-        ncmpi_inq_header_size(ncid, &h_size);
-        ncmpi_inq_header_extent(ncid, &h_extent);
-        printf("File header size=%lld extent=%lld\n",h_size,h_extent);
-    }
+    err = ncmpi_inq_header_size(ncid, &cfg->header_size); ERR(err)
+    err = ncmpi_inq_header_extent(ncid, &cfg->header_extent); ERR(err)
 
     num_reqs = 0;
-    for (i=0; i<NVARS; i++) {
-        varid[i] = i;
-        if (i % 4 == 0)
+    for (i=0; i<cfg->nvars; i++) {
+        if (cfg->block_block)
             num_reqs++; /* complete in 1 nonblocking call */
-        else if (i % 4 == 1)
-            num_reqs += len; /* complete in len nonblocking calls */
-        else if (i % 4 == 2)
-            num_reqs += 2; /* write 1st half followed by 2nd half */
-        else
+        if (cfg->star_cyclic)
+            num_reqs += cfg->len; /* complete in cfg->len nonblocking calls */
+        if (cfg->block_star)
+            num_reqs++; /* complete in 1 nonblocking call */
+        if (cfg->star_block)
             num_reqs++; /* complete in 1 nonblocking call */
     }
     reqs = (int*) malloc(num_reqs * sizeof(int));
+    sts  = (int*) malloc(num_reqs * sizeof(int));
 
-    k = 0;
-    for (i=0; i<NVARS; i++) {
-        if (i % 4 == 0) {
-            int *int_b = (int*) buf[i];
-            start[0] = len * (s_rank % psizes[0]);
-            start[1] = len * ((s_rank / psizes[1]) % psizes[1]);
-            count[0] = len;
-            count[1] = len;
-            err = ncmpi_iget_vara_int(ncid, varid[i], start, count, int_b,
-                                      &reqs[k++]);
-            ERR(err)
-        }
-        else if (i % 4 == 1) {
-            float *flt_b = (float*) buf[i];
-            start[0] = 0;
-            count[0] = len;
-            count[1] = 1;
-            for (j=0; j<len; j++) {
-                start[1] = s_rank + (MPI_Offset)j * nprocs;
-                err = ncmpi_iget_vara_float(ncid, varid[i], start, count,
-                                            flt_b, &reqs[k++]);
-                ERR(err)
-                flt_b += len;
-            }
-        }
-        else if (i % 4 == 2) {
-            short *shr_b = (short*) buf[i];
-            start[0] = len * s_rank;
-            start[1] = 0;
-            count[0] = len;
-            count[1] = len/2;
-            err = ncmpi_iget_vara_short(ncid, varid[i], start, count,
-                                        shr_b, &reqs[k++]);
-            ERR(err)
-
-            shr_b += len * (len/2);
-            start[1] = len/2;
-            count[1] = len - len/2;
-            err = ncmpi_iget_vara_short(ncid, varid[i], start, count,
-                                        shr_b, &reqs[k++]);
-            ERR(err)
-        }
-        else {
-            double *dbl_b = (double*) buf[i];
-            start[0] = 0;
-            start[1] = len * s_rank;
-            count[0] = len;
-            count[1] = len;
-            err = ncmpi_iget_vara_double(ncid, varid[i], start, count, dbl_b,
+    k = v = 0;
+    for (i=0; i<cfg->nvars; i++) {
+        if (cfg->block_block) {
+            start[0] = cfg->len * (rank % psizes[0]);
+            start[1] = cfg->len * ((rank / psizes[1]) % psizes[1]);
+            count[0] = cfg->len;
+            count[1] = cfg->len;
+            err = ncmpi_iget_vara_double(ncid, v, start, count, buf[v],
                                          &reqs[k++]);
             ERR(err)
+            v++;
+        }
+        if (cfg->star_cyclic) {
+            double *ptr = buf[v];
+            start[0] = 0;
+            start[1] = rank;
+            count[0] = cfg->len;
+            count[1] = 1;
+            for (j=0; j<cfg->len; j++) {
+                err = ncmpi_iget_vara_double(ncid, v, start, count, ptr,
+                                             &reqs[k++]);
+                ERR(err)
+                ptr += cfg->len;
+                start[1] += nprocs;
+            }
+            v++;
+        }
+        if (cfg->block_star) {
+            start[0] = cfg->len * rank;
+            start[1] = 0;
+            count[0] = cfg->len;
+            count[1] = cfg->len;
+            err = ncmpi_iget_vara_double(ncid, v, start, count, buf[v],
+                                         &reqs[k++]);
+            ERR(err)
+            v++;
+        }
+        if (cfg->star_block) {
+            start[0] = 0;
+            start[1] = cfg->len * rank;
+            count[0] = cfg->len;
+            count[1] = cfg->len;
+            err = ncmpi_iget_vara_double(ncid, v, start, count, buf[v],
+                                         &reqs[k++]);
+            ERR(err)
+            v++;
         }
     }
-    num_reqs = k;
+    assert(nvars == v);
+    assert(num_reqs == k);
 
     end_t = MPI_Wtime();
     timing[2] = end_t - start_t;
     start_t = end_t;
-
-    sts = (int*) malloc(num_reqs * sizeof(int));
 
 #ifdef USE_INDEP_MODE
     err = ncmpi_begin_indep_data(ncid);          ERR(err)
@@ -494,10 +509,10 @@ int benchmark_read(char       *filename,
     start_t = end_t;
 
     /* get the true I/O amount committed */
-    err = ncmpi_inq_get_size(ncid, r_size); ERR(err)
+    err = ncmpi_inq_get_size(ncid, &cfg->r_size); ERR(err)
 
     /* get all the hints used */
-    err = ncmpi_get_file_info(ncid, r_info_used); ERR(err)
+    err = ncmpi_get_file_info(ncid, &cfg->r_info_used); ERR(err)
 
     err = ncmpi_close(ncid); ERR(err)
 
@@ -507,7 +522,8 @@ int benchmark_read(char       *filename,
 
     free(sts);
     free(reqs);
-    for (i=0; i<NVARS; i++) free(buf[i]);
+    for (i=0; i<nvars; i++) free(buf[i]);
+    free(buf);
 
     return nerrs;
 }
@@ -516,12 +532,21 @@ static void
 usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-h] | [-q] [-d] [-l len] [file_name]\n"
+    "Usage: %s [-h|-q|-d|-r|-w|-b|-c|-i|-j|-l len|-n num|file_name]\n"
     "       [-h] Print help\n"
     "       [-q] Quiet mode\n"
     "       [-d] Debug mode\n"
+    "       [-r]  read-only benchmark\n"
+    "       [-w] write-only benchmark\n"
+    "       [-b] block-block partitioning pattern\n"
+    "       [-c] *-cyclic    partitioning pattern\n"
+    "       [-i] block-*     partitioning pattern\n"
+    "       [-j] *-block     partitioning pattern\n"
     "       [-l len]: local variable of size len x len (default 10)\n"
-    "       [filename]: output netCDF file name (default ./testfile.nc)\n";
+    "       [-n num]: number of variables each pattern (default 1)\n"
+    "       [filename]: output netCDF file name (default ./testfile.nc)\n\n"
+    " When both -r and -w are not set, write and read benchmarks are enabled\n"
+    " When none of pattern options is set, all patterns are enabled\n";
     fprintf(stderr, help, argv0);
 }
 
@@ -530,25 +555,48 @@ int main(int argc, char** argv) {
     extern int optind;
     extern char *optarg;
     char filename[256];
-    int i, rank, nprocs, verbose=1, nerrs=0;
+    int i, rank, nprocs, verbose=1, nerrs=0, enable_read, enable_write;
+    int nvars, block_block, star_cyclic, block_star, star_block;
     double timing[11], max_t[11];
-    MPI_Offset len=0, w_size=0, r_size=0, sum_w_size, sum_r_size;
+    MPI_Offset len=0, sum_w_size, sum_r_size;
     MPI_Comm comm=MPI_COMM_WORLD;
-    MPI_Info w_info_used, r_info_used;
+    config cfg;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
 
+    nvars = 1;
+    block_block = 0;
+    star_cyclic = 0;
+    block_star  = 0;
+    star_block  = 0;
+    enable_read   = 0;
+    enable_write  = 0;
+
     /* get command-line arguments */
     debug = 0;
-    while ((i = getopt(argc, argv, "hqdl:")) != EOF)
+    while ((i = getopt(argc, argv, "hqdbcijrwl:n:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
                       break;
             case 'd': debug = 1;
                       break;
+            case 'b': block_block = 1;
+                      break;
+            case 'c': star_cyclic = 1;
+                      break;
+            case 'i': block_star = 1;
+                      break;
+            case 'j': star_block = 1;
+                      break;
+            case 'r': enable_read = 1;
+                      break;
+            case 'w': enable_write = 1;
+                      break;
             case 'l': len = atoi(optarg);
+                      break;
+            case 'n': nvars = atoi(optarg);
                       break;
             case 'h':
             default:  if (rank==0) usage(argv[0]);
@@ -560,51 +608,97 @@ int main(int argc, char** argv) {
 
     len = (len <= 0) ? 10 : len;
 
-    nerrs += benchmark_write(filename, len, &w_size, &w_info_used, timing);
-    nerrs += benchmark_read (filename, len, &r_size, &r_info_used, timing+6);
+    if (block_block == 0 && star_cyclic == 0 && block_star == 0 &&
+        star_block == 0)
+        block_block = star_cyclic = block_star = star_block = 1;
+
+    cfg.nvars       = nvars;
+    cfg.block_block = block_block;
+    cfg.star_cyclic = star_cyclic;
+    cfg.block_star  = block_star;
+    cfg.star_block  = star_block;
+    cfg.len         = len;
+
+    if (enable_read == 0 && enable_write == 0)
+        enable_read = enable_write = 1;
+
+    if (enable_write)
+        nerrs += benchmark_write(filename, &cfg, timing);
+    if (enable_read)
+        nerrs += benchmark_read (filename, &cfg, timing+6);
 
     MPI_Reduce(&timing, &max_t,     11, MPI_DOUBLE, MPI_MAX, 0, comm);
-    MPI_Reduce(&w_size, &sum_w_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
-    MPI_Reduce(&r_size, &sum_r_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
+    MPI_Reduce(&cfg.w_size, &sum_w_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
+    MPI_Reduce(&cfg.r_size, &sum_r_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
     if (verbose && rank == 0) {
-        double bw = sum_w_size;
-        bw /= 1048576.0;
-        print_info(&w_info_used);
+        double bw;
         printf("-----------------------------------------------------------\n");
-        printf("Write %d variables using nonblocking APIs\n", NVARS);
-        printf("In each process, the local variable size is %lld x %lld\n", len,len);
-        printf("Total write amount        = %13lld    B\n", sum_w_size);
-        printf("            amount        = %16.4f MiB\n", bw);
-        printf("            amount        = %16.4f GiB\n", bw/1024);
-        printf("Max file open/create time = %16.4f sec\n", max_t[1]);
-        printf("Max PnetCDF define   time = %16.4f sec\n", max_t[2]);
-        printf("Max nonblocking post time = %16.4f sec\n", max_t[3]);
-        printf("Max nonblocking wait time = %16.4f sec\n", max_t[4]);
-        printf("Max file close       time = %16.4f sec\n", max_t[5]);
-        printf("Max open-to-close    time = %16.4f sec\n", max_t[0]);
-        printf("Write bandwidth           = %16.4f MiB/s\n", bw/max_t[0]);
-        bw /= 1024.0;
-        printf("Write bandwidth           = %16.4f GiB/s\n", bw/max_t[0]);
-
-        bw = sum_r_size;
-        bw /= 1048576.0;
+        print_info(&cfg.w_info_used);
         printf("-----------------------------------------------------------\n");
-        printf("Read  %d variables using nonblocking APIs\n", NVARS);
-        printf("In each process, the local variable size is %lld x %lld\n", len,len);
-        printf("Total read  amount        = %13lld    B\n", sum_r_size);
-        printf("            amount        = %16.4f MiB\n", bw);
-        printf("            amount        = %16.4f GiB\n", bw/1024);
-        printf("Max file open/create time = %16.4f sec\n", max_t[7]);
-        printf("Max nonblocking post time = %16.4f sec\n", max_t[8]);
-        printf("Max nonblocking wait time = %16.4f sec\n", max_t[9]);
-        printf("Max file close       time = %16.4f sec\n", max_t[10]);
-        printf("Max open-to-close    time = %16.4f sec\n", max_t[6]);
-        printf("Read  bandwidth           = %16.4f MiB/s\n", bw/max_t[6]);
-        bw /= 1024.0;
-        printf("Read  bandwidth           = %16.4f GiB/s\n", bw/max_t[6]);
+        nvars = 0;
+        if (cfg.block_block) {
+            printf("benchmarking block-block partitioning pattern: enabled\n");
+            nvars++;
+        }
+        if (cfg.star_cyclic) {
+            printf("benchmarking *-cyclic partitioning pattern:    enabled\n");
+            nvars++;
+        }
+        if (cfg.block_star) {
+            printf("benchmarking block-* partitioning pattern:     enabled\n");
+            nvars++;
+        }
+        if (cfg.star_block) {
+            printf("benchmarking *-block partitioning pattern:     enabled\n");
+            nvars++;
+        }
+        printf("-----------------------------------------------------------\n");
+        nvars *= cfg.nvars;
+        printf("Output NetCDF file name: %s\n", filename);
+        printf("Output NetCDF file header size:         %lld B\n", cfg.header_size);
+        printf("Output NetCDF file header extent:       %lld B\n", cfg.header_extent);
+        printf("Total number of variables:              %d\n", nvars);
+        if (XTYPE == NC_FLOAT)
+            printf("Data type of variables in output file:  NC_FLOAT\n");
+        else if (XTYPE == NC_DOUBLE)
+            printf("Data type of variables in output file:  NC_DOUBLE\n");
+        printf("Data type of variables in memory:       double\n");
+        printf("Local 2D variable size in each process: %lld x %lld\n",len,len);
+        printf("-----------------------------------------------------------\n");
+        if (enable_write) {
+            bw = sum_w_size / 1048576.0;
+            printf("Total write amount        = %13lld    B\n", sum_w_size);
+            printf("            amount        = %16.4f MiB\n", bw);
+            printf("            amount        = %16.4f GiB\n", bw/1024);
+            printf("Max file open/create time = %16.4f sec\n", max_t[1]);
+            printf("Max PnetCDF define   time = %16.4f sec\n", max_t[2]);
+            printf("Max nonblocking post time = %16.4f sec\n", max_t[3]);
+            printf("Max nonblocking wait time = %16.4f sec\n", max_t[4]);
+            printf("Max file close       time = %16.4f sec\n", max_t[5]);
+            printf("Max open-to-close    time = %16.4f sec\n", max_t[0]);
+            printf("Write bandwidth           = %16.4f MiB/s\n", bw/max_t[0]);
+            bw /= 1024.0;
+            printf("Write bandwidth           = %16.4f GiB/s\n", bw/max_t[0]);
+            printf("-------------------------------------------------------\n");
+        }
+        if (enable_write) {
+            bw = sum_r_size / 1048576.0;
+            printf("Total read  amount        = %13lld    B\n", sum_r_size);
+            printf("            amount        = %16.4f MiB\n", bw);
+            printf("            amount        = %16.4f GiB\n", bw/1024);
+            printf("Max file open/create time = %16.4f sec\n", max_t[7]);
+            printf("Max nonblocking post time = %16.4f sec\n", max_t[8]);
+            printf("Max nonblocking wait time = %16.4f sec\n", max_t[9]);
+            printf("Max file close       time = %16.4f sec\n", max_t[10]);
+            printf("Max open-to-close    time = %16.4f sec\n", max_t[6]);
+            printf("Read  bandwidth           = %16.4f MiB/s\n", bw/max_t[6]);
+            bw /= 1024.0;
+            printf("Read  bandwidth           = %16.4f GiB/s\n", bw/max_t[6]);
+            printf("-------------------------------------------------------\n");
+        }
     }
-    MPI_Info_free(&w_info_used);
-    MPI_Info_free(&r_info_used);
+    MPI_Info_free(&cfg.w_info_used);
+    MPI_Info_free(&cfg.r_info_used);
 
     /* check if there is any PnetCDF internal malloc residue */
     MPI_Offset malloc_size, sum_size;
@@ -614,6 +708,14 @@ int main(int argc, char** argv) {
         if (rank == 0 && sum_size > 0)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
+    }
+    /* report the PnetCDF internal heap memory allocation high water mark */
+    err = ncmpi_inq_malloc_max_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0)
+            printf("Max heap memory allocated by PnetCDF internally is %.2f MiB\n",
+                   (float)sum_size/1048576);
     }
 
     MPI_Finalize();
