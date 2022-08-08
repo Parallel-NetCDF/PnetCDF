@@ -650,7 +650,7 @@ int main(int argc, char** argv) {
     if (enable_read)
         nerrs += benchmark_read (filename, &cfg, timing+6);
 
-    MPI_Reduce(&timing, &max_t,     11, MPI_DOUBLE, MPI_MAX, 0, comm);
+    MPI_Reduce(&timing,     &max_t,     11, MPI_DOUBLE, MPI_MAX, 0, comm);
     MPI_Reduce(&cfg.w_size, &sum_w_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
     MPI_Reduce(&cfg.r_size, &sum_r_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
     if (verbose && rank == 0) {
@@ -680,6 +680,7 @@ int main(int argc, char** argv) {
         printf("Output NetCDF file name: %s\n", filename);
         printf("Output NetCDF file header size:         %lld B\n", cfg.header_size);
         printf("Output NetCDF file header extent:       %lld B\n", cfg.header_extent);
+        printf("Number of MPI processes:                %d\n", nprocs);
         printf("Total number of variables:              %d\n", nvars);
         if (XTYPE == NC_FLOAT)
             printf("Data type of variables in output file:  NC_FLOAT\n");
@@ -691,33 +692,25 @@ int main(int argc, char** argv) {
         printf("-----------------------------------------------------------\n");
         if (enable_write) {
             bw = sum_w_size / 1048576.0;
-            printf("Total write amount        = %13lld    B\n", sum_w_size);
-            printf("            amount        = %16.4f MiB\n", bw);
-            printf("            amount        = %16.4f GiB\n", bw/1024);
+            printf("Total write amount        = %11lld B = %9.2f MiB = %6.2f GiB\n", sum_w_size, bw, bw/1024);
             printf("Max file open/create time = %16.4f sec\n", max_t[1]);
             printf("Max PnetCDF define   time = %16.4f sec\n", max_t[2]);
             printf("Max nonblocking post time = %16.4f sec\n", max_t[3]);
             printf("Max nonblocking wait time = %16.4f sec\n", max_t[4]);
             printf("Max file close       time = %16.4f sec\n", max_t[5]);
             printf("Max open-to-close    time = %16.4f sec\n", max_t[0]);
-            printf("Write bandwidth           = %16.4f MiB/s\n", bw/max_t[0]);
-            bw /= 1024.0;
-            printf("Write bandwidth           = %16.4f GiB/s\n", bw/max_t[0]);
+            printf("Write bandwidth           = %14.2f MiB/s = %9.2f GiB/s\n", bw/max_t[0], bw/1024.0/max_t[0]);
             printf("-------------------------------------------------------\n");
         }
         if (enable_read) {
             bw = sum_r_size / 1048576.0;
-            printf("Total read  amount        = %13lld    B\n", sum_r_size);
-            printf("            amount        = %16.4f MiB\n", bw);
-            printf("            amount        = %16.4f GiB\n", bw/1024);
+            printf("Total read  amount        = %11lld B = %9.2f MiB = %6.2f GiB\n", sum_r_size, bw, bw/1024);
             printf("Max file open/create time = %16.4f sec\n", max_t[7]);
             printf("Max nonblocking post time = %16.4f sec\n", max_t[8]);
             printf("Max nonblocking wait time = %16.4f sec\n", max_t[9]);
             printf("Max file close       time = %16.4f sec\n", max_t[10]);
             printf("Max open-to-close    time = %16.4f sec\n", max_t[6]);
-            printf("Read  bandwidth           = %16.4f MiB/s\n", bw/max_t[6]);
-            bw /= 1024.0;
-            printf("Read  bandwidth           = %16.4f GiB/s\n", bw/max_t[6]);
+            printf("Read  bandwidth           = %14.2f MiB/s = %9.2f GiB/s\n", bw/max_t[0], bw/1024.0/max_t[0]);
             printf("-------------------------------------------------------\n");
         }
     }
