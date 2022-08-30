@@ -73,7 +73,8 @@ TESTPROGRAMS = ncmpi_vars_null_stride \
                test_fillvalue \
                error_precedence \
                tst_free_comm \
-               flexible_var
+               flexible_var \
+	       test_get_varn
 
 M4_SRCS      = put_all_kinds.m4 \
                erange_fill.m4 \
