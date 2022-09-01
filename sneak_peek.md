@@ -82,6 +82,7 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
+  + test/testcases/test_get_varn.c - test get_varn API. See PR #90.
   + test/testcases/flexible_var.c - test flexible var API
   + test/testcases/flexible_api.f - test flexible API when bufcount == -1
 
