@@ -1,5 +1,16 @@
+/*
+ *  Copyright (C) 2022, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ *
+ *  Test ncmpi_get_varn_double_all() using E3SM-IO pattern.
+ *  See Pull Request #90
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <libgen.h> /* basename() */
+
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -11,8 +22,6 @@
 
 #define NDIMS 3
 
-#define ERR { if (err != NC_NOERR) { printf("Error at line = %d: %s\n", __LINE__, ncmpi_strerror(err)); nerrs++; } }
-
 int main(int argc, char** argv)
 {
     int i, j, rank, nprocs, err, nerrs = 0;
@@ -21,7 +30,7 @@ int main(int argc, char** argv)
     float *fbuffer;
     MPI_Offset r_len, **starts = NULL, **counts = NULL;
     MPI_Offset st[3], ct[3];
-    char         filename[256];
+    char filename[256];
     int dimids[3];
 
     MPI_Init(&argc, &argv);
@@ -34,28 +43,33 @@ int main(int argc, char** argv)
         return 1;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else               strcpy(filename, "testfile.nc");
+    else           strcpy(filename, "testfile.nc");
     MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
 
-    if (nprocs != 4) {
-        if (rank == 0)
-            printf("Error: this program is intended to run on 4 processes\n");
-        MPI_Finalize();
-        return 1;
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for get_varn ", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
     }
 
-/*        original test case read from a file like this:
- *        % ncdump -h lnfm.nc
- *              netcdf lnfm {
- *              dimensions:
- *                time = UNLIMITED ; // (3 currently)
- *                lat = 94 ;
- *                 lon = 192 ;
- *               variables:
- *                float lnfm(time, lat, lon) ;
- *              }
+#ifdef DEBUG
+    if (nprocs != 4 && rank == 0)
+        printf("Warning: %s is designed to run on 4 process\n",argv[0]);
+#endif
+
+/*    original test case read from a file like this:
+ *    % ncdump -h lnfm.nc
+ *        netcdf lnfm {
+ *        dimensions:
+ *          time = UNLIMITED ; // (3 currently)
+ *          lat = 94 ;
+ *          lon = 192 ;
+ *        variables:
+ *          float lnfm(time, lat, lon) ;
+ *        }
  */
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_WRITE|NC_FORMAT_CDF5, MPI_INFO_NULL, &ncid); CHECK_ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA, MPI_INFO_NULL, &ncid); CHECK_ERR
     err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimids[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "lat", 94, &dimids[1]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "lon", 192, &dimids[2]); CHECK_ERR
@@ -67,24 +81,25 @@ int main(int argc, char** argv)
     st[2] = 0;
 
     ct[0] = 2;
-    ct[1] = 1;
-    ct[2] = 1;
-    float scramble[1024];
+    ct[1] = 94;
+    ct[2] = 192;
+    float *scramble = (float*) calloc(ct[0]*ct[1]*ct[2], sizeof(float));
 
     err = ncmpi_put_vara_float_all(ncid, varid, st, ct, scramble); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
+    free(scramble);
 
     /* now we can finally exercise the read path of this record varable */
 
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
-    ERR
+    CHECK_ERR
 
     /* pick 2 requests for 4 processes */
     /* num_reqs = 1; => works fine*/
     num_reqs = 2;
 
-    starts    = (MPI_Offset**) malloc(num_reqs*         sizeof(MPI_Offset*));
-    counts    = (MPI_Offset**) malloc(num_reqs*         sizeof(MPI_Offset*));
+    starts    = (MPI_Offset**) malloc(num_reqs*       sizeof(MPI_Offset*));
+    counts    = (MPI_Offset**) malloc(num_reqs*       sizeof(MPI_Offset*));
     starts[0] = (MPI_Offset*)  calloc(num_reqs*NDIMS, sizeof(MPI_Offset));
     counts[0] = (MPI_Offset*)  calloc(num_reqs*NDIMS, sizeof(MPI_Offset));
     for (i = 1; i < num_reqs; i++) {
@@ -95,14 +110,14 @@ int main(int argc, char** argv)
     /* assign specific starts and counts */
     if (num_reqs > 0){
         if (rank == 1) {
-            starts[0][0] = 0; starts[0][1] = 0; starts[0][2] = 1;
+            starts[0][0] = 0; starts[0][1] = 0;  starts[0][2] = 1;
             counts[0][0] = 1; counts[0][1] = 93; counts[0][2] = 1;
         }
     }
 
-    if(num_reqs > 1){
+    if (num_reqs > 1){
         if (rank == 1) {
-            starts[1][0] = 1; starts[1][1] = 0; starts[1][2] = 1;
+            starts[1][0] = 1; starts[1][1] = 0;  starts[1][2] = 1;
             counts[1][0] = 1; counts[1][1] = 93; counts[1][2] = 2;
         }
     }
@@ -123,17 +138,19 @@ int main(int argc, char** argv)
     varid = 0; /* only one variable in lnfm.nc */
     err = ncmpi_get_varn_double_all(ncid, varid, num_reqs, starts, counts, buffer);
     /* err = ncmpi_get_varn_float_all(ncid, varid, num_reqs, starts, counts, fbuffer); */
-    ERR
+    CHECK_ERR
 
     err = ncmpi_close(ncid);
-    ERR
+    CHECK_ERR
 
+#ifdef DEBUG
     if (rank == 3) {
         printf("Dumping some double type data read by rank 3 (count = 10) ...\n");
-        for (i = 0; i < (r_len > 10)?10:r_len; i++)
+        for (i = 0; i < ((r_len > 10)?10:r_len); i++)
             printf("%lf, ", buffer[i]);
         printf("\n");
     }
+#endif
 
     free(buffer);
     free(fbuffer);
@@ -143,7 +160,24 @@ int main(int argc, char** argv)
     free(starts);
     free(counts);
 
-     MPI_Finalize();
+    /* check if PnetCDF freed all internal malloc */
+    MPI_Offset malloc_size, sum_size;
+    err = ncmpi_inq_malloc_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
+        if (malloc_size > 0) ncmpi_inq_malloc_list();
+    }
 
-    return nerrs;
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    if (rank == 0) {
+        if (nerrs) printf(FAIL_STR,nerrs);
+        else       printf(PASS_STR);
+    }
+
+    MPI_Finalize();
+    return (nerrs > 0);
 }
+
