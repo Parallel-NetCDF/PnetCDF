@@ -21,7 +21,10 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Update configure options
-  + none
+  + `--enable-install-examples` to install example programs under folder
+    `${prefix}/pnetcdf_examples` along with run script files. An example is
+    `${prefix}/pnetcdf_examples/C/run_c_examples.sh`. The default of this
+    option is `disabled`.
 
 * New constants
   + none

@@ -30,6 +30,12 @@ check_PROGRAMS = collective_write \
                  fill_mode \
                  SimpleXyWr
 
+if INSTALL_EXAMPLES
+   example_execbin_PROGRAMS = $(check_PROGRAMS)
+   example_execbindir = $(exec_prefix)/pnetcdf_examples/CXX
+   example_execbin_SCRIPTS = run_cxx_examples.sh
+endif
+
 # parallel runs only
 # TESTS = $(check_PROGRAMS)
 
@@ -49,7 +55,7 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(NC_FILES) a.out
 
-EXTRA_DIST = parallel_run.sh
+EXTRA_DIST = parallel_run.sh run_cxx_examples.sh
 
 ptest ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="
@@ -77,6 +83,11 @@ ptest2 ptest6 ptest10:
 
 # build check targets but not invoke
 tests-local: all $(check_PROGRAMS)
+
+install-exec-hook:
+	@if test "x$(example_execbindir)" != x ; then \
+	$(SED_I) -e 's|check_PROGRAMS|$(check_PROGRAMS)|g ; s|TESTOUTDIR|$(TESTOUTDIR)|g ; s|TESTMPIRUN|$(TESTMPIRUN)|g ; s|SED_CMD|$(SED)|g ; s|ENABLE_BURST_BUFFER|$(ENABLE_BURST_BUFFER)|g ; s|ENABLE_NETCDF4|$(ENABLE_NETCDF4)|g' $(DESTDIR)$(example_execbindir)/run_cxx_examples.sh ; \
+	fi
 
 .PHONY: ptest ptests ptest2 ptest3 ptest4 ptest6 ptest8 ptest10
 

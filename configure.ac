@@ -182,6 +182,13 @@ AC_ARG_ENABLE(echo,
    [set -x]
 )
 
+AC_ARG_ENABLE(install-examples,
+   [AS_HELP_STRING([--enable-install-examples],
+                   [Install example programs under $prefix/examples. @<:@default: disabled@:>@])],
+   [install_examples=yes], [install_examples=no]
+)
+AM_CONDITIONAL(INSTALL_EXAMPLES, [test x$install_examples = xyes])
+
 MPI_INSTALL=
 AC_ARG_WITH(mpi,
    [AS_HELP_STRING([--with-mpi=DIR],

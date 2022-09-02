@@ -39,6 +39,12 @@ check_PROGRAMS = collective_write \
                  vard_mvars \
                  time_var
 
+if INSTALL_EXAMPLES
+   example_execbin_PROGRAMS = $(check_PROGRAMS)
+   example_execbindir = $(exec_prefix)/pnetcdf_examples/C
+   example_execbin_SCRIPTS = run_c_examples.sh
+endif
+
 if ENABLE_THREAD_SAFE
    check_PROGRAMS += pthread
 endif
@@ -64,7 +70,7 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(NC_FILES) $(TESTOUTDIR)/pthread.nc.* $(TESTOUTDIR)/testfile.nc
 
-EXTRA_DIST = parallel_run.sh
+EXTRA_DIST = parallel_run.sh run_c_examples.sh
 
 ptest ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="
@@ -94,4 +100,9 @@ ptest2 ptest6 ptest10:
 tests-local: all $(check_PROGRAMS)
 
 .PHONY: ptest ptests ptest2 ptest3 ptest4 ptest6 ptest8 ptest10
+
+install-exec-hook:
+	@if test "x$(example_execbindir)" != x ; then \
+	$(SED_I) -e 's|check_PROGRAMS|$(check_PROGRAMS)|g ; s|TESTOUTDIR|$(TESTOUTDIR)|g ; s|TESTMPIRUN|$(TESTMPIRUN)|g ; s|SED_CMD|$(SED)|g ; s|ENABLE_BURST_BUFFER|$(ENABLE_BURST_BUFFER)|g ; s|ENABLE_NETCDF4|$(ENABLE_NETCDF4)|g' $(DESTDIR)$(example_execbindir)/run_c_examples.sh ; \
+	fi
 
