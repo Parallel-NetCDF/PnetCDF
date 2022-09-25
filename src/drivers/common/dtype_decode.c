@@ -481,9 +481,9 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
 /*----< ncmpii_buftype_decode() >--------------------------------------------*/
 /* Obtain the following metadata about buftype:
  * etype:    element data type (MPI primitive type) in buftype
- * bufcount: If it is -1, then this is called from a high-level API and in
- *           this case buftype will be an MPI predefined data type.
- *           If bufcount is not -1, then this is called from a flexible API.
+ * bufcount: If it is NC_COUNT_IGNORE, then this is called from a high-level
+ *           API and in this case buftype must be an MPI predefined data type.
+ *           Otherwise, this is called from a flexible API.
  * nelems:   number of etypes in user buffer
  * xnbytes:  number of bytes (in external data representation) to read/write
  *           from/to the file
@@ -528,7 +528,7 @@ ncmpii_buftype_decode(int               ndims,
         *xnbytes  = *nelems * xsz;
         *isContig = 1;
     }
-    else if (bufcount == -1) {
+    else if (bufcount == NC_COUNT_IGNORE) {
         /* This is called from a high-level API, buftype must be a predefined
          * MPI datatype. This requirement has already been checked in
          * src/dispatchers/var_getput.m4

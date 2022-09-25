@@ -172,7 +172,7 @@ ncmpio_igetput_varm(NC               *ncp,
         itype = xtype;
         isize = xsize;
     }
-    else if (bufcount == -1) {
+    else if (bufcount == NC_COUNT_IGNORE) {
         /* In this case, this subroutine is called from a high-level API and
          * buftype must be one of the MPI predefined datatype. We set itype to
          * buftype. itype is the MPI element type in internal representation.
@@ -583,17 +583,17 @@ define(`IGETPUT_API',dnl
  * count  NOT NULL (allocated in dispatcher when api is NC_VAR or NC_VAR1)
  * stride can be NULL only when api is NC_VAR, NC_VAR1, or NC_VARA
  * imap   can be NULL only when api is NC_VAR, NC_VAR1, NC_VARA, or NC_VARS
- * bufcount is >= 0 when called from a flexible API, is -1 when called from a
- *         high-level API and in this case buftype is an MPI primitive
- *         datatype.
- * buftype is an MPI primitive data type (corresponding to the internal data
- *         type of buf, e.g. short in ncmpi_put_short is mapped to MPI_SHORT)
- *         if called from a high-level APIs. When called from a flexible API
- *         it can be an MPI derived data type or MPI_DATATYPE_NULL. If it is
- *         MPI_DATATYPE_NULL, then it means the data type of buf in memory
- *         matches the variable external data type. In this case, bufcount is
- *         ignored.
- * reqMode indicates modes (NC_REQ_COLL/NC_REQ_INDEP/NC_REQ_WR etc.)
+ * bufcount If NC_COUNT_IGNORE, then this is called from a high-level API
+ *          and buftype must be an MPI primitive data type. Otherwise,
+ *          this is called from a flexible API.
+ * buftype  is an MPI primitive data type (corresponding to the internal data
+ *          type of buf, e.g. short in ncmpi_put_short is mapped to MPI_SHORT)
+ *          if called from a high-level APIs. When called from a flexible API
+ *          it can be an MPI derived data type or MPI_DATATYPE_NULL. If it is
+ *          MPI_DATATYPE_NULL, then it means the data type of buf in memory
+ *          matches the variable external data type. In this case, bufcount is
+ *          ignored.
+ * reqMode  indicates modes (NC_REQ_COLL/NC_REQ_INDEP/NC_REQ_WR etc.)
  */
 int
 ncmpio_i$1_var(void             *ncdp,

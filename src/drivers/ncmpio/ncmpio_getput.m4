@@ -103,7 +103,7 @@ dnl
      7. free up temp buffers (lbuf, cbuf, xbuf if != buf)
 */
 
-/*----< put_varm() >------------------------------------------------------*/
+/*----< put_varm() >---------------------------------------------------------*/
 static int
 put_varm(NC               *ncp,
          NC_var           *varp,
@@ -112,9 +112,9 @@ put_varm(NC               *ncp,
          const MPI_Offset *stride,  /* can be NULL */
          const MPI_Offset *imap,    /* can be NULL */
          void             *buf,
-         MPI_Offset        bufcount,  /* -1: from high-level API */
+         MPI_Offset        bufcount,
          MPI_Datatype      buftype,
-         int               reqMode)   /* WR/RD/COLL/INDEP */
+         int               reqMode) /* WR/RD/COLL/INDEP */
 {
     void *xbuf=NULL;
     int mpireturn, err=NC_NOERR, status=NC_NOERR, nelems=0, buftype_is_contig;
@@ -126,9 +126,9 @@ put_varm(NC               *ncp,
 
     /* decode buftype to obtain the followings:
      * itype:    element data type (MPI primitive type) in buftype
-     * bufcount: If it is -1, then this is called from a high-level API and in
-     *           this case buftype will be an MPI primitive data type.
-     *           If it is >=0, then this is called from a flexible API.
+     * bufcount: If NC_COUNT_IGNORE, then this is called from a high-level API
+     *           and buftype must be an MPI predefined primitive data type.
+     *           Otherwise, this is called from a flexible API.
      * bnelems:  number of itypes in user buffer, buf. It is also the number
      *           of array elements to be written to file.
      * nbytes:   number of bytes (in external data representation) to write to
@@ -147,11 +147,11 @@ put_varm(NC               *ncp,
         buftype = itype;
     }
 
-    /* When bufcount is -1, this is called from a high-level API. In this case,
-     * buftype must be an MPI predefined data type. If this is called from a
-     * Fortran program, buftype has already been converted to its corresponding
-     * C type, e.g. MPI_INTEGER is converted to MPI_INT.
-     * if (bufcount == -1) assert(buftype == itype);
+    /* When bufcount is NC_COUNT_IGNORE, this is called from a high-level API.
+     * In this case, buftype must be an MPI predefined data type. If this is
+     * called from a Fortran program, buftype has already been converted to its
+     * corresponding C type, e.g. MPI_INTEGER is converted to MPI_INT.
+     * if (bufcount == NC_COUNT_IGNORE) assert(buftype == itype);
      */
 
     /* because bnelems will be used as the argument "count" in MPI-IO
@@ -230,7 +230,7 @@ put_varm(NC               *ncp,
     }
     else {
         /* we can safely use bufcount and buftype in MPI File read/write */
-        nelems = (bufcount == -1) ? bnelems : (int)bufcount;
+        nelems = (bufcount == NC_COUNT_IGNORE) ? bnelems : (int)bufcount;
         xtype = buftype;
     }
 
@@ -361,7 +361,7 @@ err_check:
     return status;
 }
 
-/*----< get_varm() >------------------------------------------------------*/
+/*----< get_varm() >---------------------------------------------------------*/
 static int
 get_varm(NC               *ncp,
          NC_var           *varp,
@@ -370,9 +370,9 @@ get_varm(NC               *ncp,
          const MPI_Offset *stride,  /* can be NULL */
          const MPI_Offset *imap,    /* can be NULL */
          void             *buf,
-         MPI_Offset        bufcount,  /* -1: from high-level API */
+         MPI_Offset        bufcount,
          MPI_Datatype      buftype,
-         int               reqMode)   /* WR/RD/COLL/INDEP */
+         int               reqMode) /* WR/RD/COLL/INDEP */
 {
     void *xbuf=NULL;
     int err=NC_NOERR, status=NC_NOERR, coll_indep, xtype_is_contig=1;
@@ -383,9 +383,9 @@ get_varm(NC               *ncp,
 
     /* decode buftype to see if we can use buf to read from file.
      * itype:    element data type (MPI primitive type) in buftype
-     * bufcount: If it is -1, then this is called from a high-level API and in
-     *           this case buftype will be an MPI primitive data type.
-     *           If it is >=0, then this is called from a flexible API.
+     * bufcount: If NC_COUNT_IGNORE, then this is called from a high-level API
+     *           and buftype must be an MPI predefined primitive data type.
+     *           Otherwise, this is called from a flexible API.
      * bnelems:  number of itypes in user buffer, buf. It is also the number
      *           of array elements to be read from file.
      * nbytes:   number of bytes (in external data representation) to
@@ -404,11 +404,11 @@ get_varm(NC               *ncp,
         buftype = itype;
     }
 
-    /* When bufcount is -1, this is called from a high-level API. In this case,
-     * buftype must be an MPI predefined data type. If this is called from a
-     * Fortran program, buftype has already been converted to its corresponding
-     * C type, e.g. MPI_INTEGER is converted to MPI_INT.
-     * if (bufcount == -1) assert(buftype == itype);
+    /* When bufcount is NC_COUNT_IGNORE, this is called from a high-level API.
+     * In this case, buftype must be an MPI predefined data type. If this is
+     * called from a Fortran program, buftype has already been converted to
+     * its corresponding C type, e.g. MPI_INTEGER is converted to MPI_INT.
+     * if (bufcount == NC_COUNT_IGNORE) assert(buftype == itype);
      */
 
     /* because bnelems will be used as the argument "count" in MPI-IO
@@ -470,7 +470,7 @@ get_varm(NC               *ncp,
     }
     else {
         /* we can safely use bufcount and buftype in MPI File read/write */
-        nelems = (bufcount == -1) ? bnelems : (int)bufcount;
+        nelems = (bufcount == NC_COUNT_IGNORE) ? bnelems : (int)bufcount;
         xtype = buftype;
     }
 
@@ -555,21 +555,21 @@ dnl
 define(`GETPUT_API',dnl
 `dnl
 /*----< ncmpio_$1_var() >----------------------------------------------------*/
-/* start  can be NULL only when api is NC_VAR
- * count  can be NULL only when api is NC_VAR or NC_VAR1
- * stride can be NULL only when api is NC_VAR, NC_VAR1, or NC_VARA
- * imap   can be NULL only when api is NC_VAR, NC_VAR1, NC_VARA, or NC_VARS
- * bufcount is >= 0 when called from a flexible API, is -1 when called from a
- *         high-level API and in this case buftype is an MPI primitive
- *         datatype.
- * buftype is an MPI primitive data type (corresponding to the internal data
- *         type of buf, e.g. short in ncmpi_put_short is mapped to MPI_SHORT)
- *         if called from a high-level APIs. When called from a flexible API
- *         it can be an MPI derived data type or MPI_DATATYPE_NULL. If it is
- *         MPI_DATATYPE_NULL, then it means the data type of buf in memory
- *         matches the variable external data type. In this case, bufcount is
- *         ignored.
- * reqMode indicates modes (NC_REQ_COLL/NC_REQ_INDEP/NC_REQ_WR etc.)
+/* start    can be NULL only when api is NC_VAR
+ * count    can be NULL only when api is NC_VAR or NC_VAR1
+ * stride   can be NULL only when api is NC_VAR, NC_VAR1, or NC_VARA
+ * imap     can be NULL only when api is NC_VAR, NC_VAR1, NC_VARA, or NC_VARS
+ * bufcount If NC_COUNT_IGNORE, then this is called from a high-level API
+ *          and buftype must be an MPI primitive data type. Otherwise,
+ *          this is called from a flexible API.
+ * buftype  if an MPI primitive data type (corresponding to the internal data
+ *          type of buf, e.g. short in ncmpi_put_short is mapped to MPI_SHORT)
+ *          if called from a high-level APIs. When called from a flexible API
+ *          it can be an MPI derived data type or MPI_DATATYPE_NULL. If it is
+ *          MPI_DATATYPE_NULL, then it means the data type of buf in memory
+ *          matches the variable external data type. In this case, bufcount is
+ *          ignored.
+ * reqMode  indicates modes (NC_REQ_COLL/NC_REQ_INDEP/NC_REQ_WR etc.)
  */
 int
 ncmpio_$1_var(void             *ncdp,

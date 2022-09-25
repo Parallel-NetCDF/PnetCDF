@@ -108,11 +108,11 @@ igetput_varn(NC                *ncp,
     xtype = ncmpii_nc2mpitype(varp->xtype);
     MPI_Type_size(xtype, &xsize);
 
-    if (bufcount == -1) { /* buftype is an MPI primitive data type */
+    if (bufcount == NC_COUNT_IGNORE) {
         /* In this case, this subroutine is called from a high-level API.
-         * buftype is one of the MPI primitive data type. We set itype to
-         * buftype. itype is the MPI element type in internal representation.
-         * In addition, it means the user buf is contiguous.
+         * buftype is one of the MPI predefined primitive data type. We set
+         * itype to buftype. itype is the MPI element type in internal
+         * representation. In addition, it means the user buf is contiguous.
          */
         itype = buftype;
         MPI_Type_size(itype, &isize); /* buffer element size */
