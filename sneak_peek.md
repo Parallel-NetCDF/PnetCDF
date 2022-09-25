@@ -4,15 +4,16 @@ This is essentially a placeholder for the next release note ...
 
 * New features
   + Flexible APIs now can be used as high-level APIs, when argument bufcount
-    is -1 and buftype is an MPI predefined data type. For example,
+    is NC_COUNT_IGNORE and buftype is an MPI predefined data type. See
+    [PR #82](https://github.com/Parallel-NetCDF/PnetCDF/pull/82). Below is an
+    example of writing from a memory buffer of type float.
     ```
-    ncmpi_put_vara_all(ncid, varid, start, count, buf, -1, MPI_FLOAT);
+    ncmpi_put_vara_all(ncid, varid, start, count, buf, NC_COUNT_IGNORE, MPI_FLOAT);
     ```
     is equivalent to
     ```
     ncmpi_put_vara_float_all(ncid, varid, start, count, buf);
     ```
-    See [PR #82](https://github.com/Parallel-NetCDF/PnetCDF/pull/82).
 
 * New optimization
   + none
@@ -27,7 +28,10 @@ This is essentially a placeholder for the next release note ...
     option is `disabled`.
 
 * New constants
-  + none
+  + NC_COUNT_IGNORE - This is used in flexible APIs. When argument bufcount is
+    NC_COUNT_IGNORE, buftype must be a predefine MPI datatype and the APIs
+    operate as the high-level APIs. Fortran equivalents are NF_COUNT_IGNORE and
+    NF90_COUNT_IGNORE.
 
 * New APIs
   + none

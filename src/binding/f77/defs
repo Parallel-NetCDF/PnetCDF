@@ -2120,9 +2120,9 @@ sub datatypeArr_ftoc {
     my $count = $_[0];
     my $prev = $count - 1;
     print $OUTFD "
-    if (l$count != MPI_DATATYPE_NULL && *v$prev == -1) {
-        /* When bufcount == -1, buftype must be a predefine MPI datatype.
-         * Convert Fortran MPI predefined datatype to C datatype.
+    if (l$count != MPI_DATATYPE_NULL && *v$prev == NC_COUNT_IGNORE) {
+        /* When bufcount == NC_COUNT_IGNORE, buftype must be a predefine MPI
+         * datatype. Convert Fortran MPI predefined datatype to C datatype.
          */
              if (l$count == MPI_CHARACTER)        l$count = MPI_CHAR;
         else if (l$count == MPI_INTEGER1)         l$count = MPI_SIGNED_CHAR;

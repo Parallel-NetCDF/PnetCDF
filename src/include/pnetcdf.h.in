@@ -575,6 +575,11 @@ by the desired type. */
 /* invalid nonblocking request ID and zero-length request */
 #define NC_REQ_NULL -1
 
+/* For flexible APIs, when argument bufcount is NC_COUNT_IGNORE and buftype is
+ * a predefine MPI datatype, the APIs operate as the high-level APIs.
+ */
+#define NC_COUNT_IGNORE -1
+
 /* indicate to flush all pending non-blocking requests */
 #define NC_REQ_ALL     -1
 #define NC_GET_REQ_ALL -2

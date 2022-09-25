@@ -337,9 +337,9 @@ APINAME($1,$2,$3,$4)(int ncid,
                                        IndexArgs($2));')
 
     ifelse(`$3',`',`
-    /* when bufcount == -1, buftype must be an MPI predefined datatype */
+    /* when bufcount == NC_COUNT_IGNORE, buftype must be an MPI predefined datatype */
     if (err == NC_NOERR &&
-        buftype != MPI_DATATYPE_NULL && bufcount == -1 &&
+        buftype != MPI_DATATYPE_NULL && bufcount == NC_COUNT_IGNORE &&
         buftype != MPI_CHAR          &&
         buftype != MPI_SIGNED_CHAR   && buftype != MPI_UNSIGNED_CHAR      &&
         buftype != MPI_SHORT         && buftype != MPI_UNSIGNED_SHORT     &&
@@ -482,8 +482,8 @@ NAPINAME($1,$2,$3)(int                ncid,
     }
 
     ifelse(`$2',`',`
-    /* when bufcount == -1, buftype must be an MPI predefined datatype */
-    if (buftype != MPI_DATATYPE_NULL && bufcount == -1 &&
+    /* when bufcount == NC_COUNT_IGNORE, buftype must be an MPI predefined datatype */
+    if (buftype != MPI_DATATYPE_NULL && bufcount == NC_COUNT_IGNORE &&
         buftype != MPI_CHAR          &&
         buftype != MPI_SIGNED_CHAR   && buftype != MPI_UNSIGNED_CHAR      &&
         buftype != MPI_SHORT         && buftype != MPI_UNSIGNED_SHORT     &&
@@ -605,8 +605,8 @@ MAPINAME($1,$2,$3,$4)(int                ncid,
             if (err != NC_NOERR) break;
         }')
         ifelse(`$3',`',`
-        /* when bufcounts[i] == -1, buftypes[i] must be an MPI predefined datatype */
-        if (buftypes[i] != MPI_DATATYPE_NULL && bufcounts[i] == -1 &&
+        /* when bufcounts[i] == NC_COUNT_IGNORE, buftypes[i] must be an MPI predefined datatype */
+        if (buftypes[i] != MPI_DATATYPE_NULL && bufcounts[i] == NC_COUNT_IGNORE &&
             buftypes[i] != MPI_CHAR          &&
             buftypes[i] != MPI_SIGNED_CHAR   && buftypes[i] != MPI_UNSIGNED_CHAR      &&
             buftypes[i] != MPI_SHORT         && buftypes[i] != MPI_UNSIGNED_SHORT     &&
@@ -735,8 +735,8 @@ IAPINAME($1,$2,$3)(int ncid,
     ifelse(`$3',`',`if (buftype != MPI_DATATYPE_NULL && bufcount == 0) return NC_NOERR;')
 
     ifelse(`$3',`',`
-    /* when bufcount == -1, buftype must be an MPI predefined datatype */
-    if (buftype != MPI_DATATYPE_NULL && bufcount == -1 &&
+    /* when bufcount == NC_COUNT_IGNORE, buftype must be an MPI predefined datatype */
+    if (buftype != MPI_DATATYPE_NULL && bufcount == NC_COUNT_IGNORE &&
         buftype != MPI_CHAR          &&
         buftype != MPI_SIGNED_CHAR   && buftype != MPI_UNSIGNED_CHAR      &&
         buftype != MPI_SHORT         && buftype != MPI_UNSIGNED_SHORT     &&
@@ -844,8 +844,8 @@ INAPINAME($1,$2)(int                ncid,
     ifelse(`$2',`',`if (buftype != MPI_DATATYPE_NULL && bufcount == 0) return NC_NOERR;')
 
     ifelse(`$2',`',`
-    /* when bufcount == -1, buftype must be an MPI predefined datatype */
-    if (buftype != MPI_DATATYPE_NULL && bufcount == -1 &&
+    /* when bufcount == NC_COUNT_IGNORE, buftype must be an MPI predefined datatype */
+    if (buftype != MPI_DATATYPE_NULL && bufcount == NC_COUNT_IGNORE &&
         buftype != MPI_CHAR          &&
         buftype != MPI_SIGNED_CHAR   && buftype != MPI_UNSIGNED_CHAR      &&
         buftype != MPI_SHORT         && buftype != MPI_UNSIGNED_SHORT     &&
@@ -927,9 +927,9 @@ ncmpi_$1_vard$2(int           ncid,
 
     err = sanity_check(pncp, varid, IO_TYPE($1), MPI_DATATYPE_NULL, IS_COLL($2));
 
-    /* when bufcount == -1, buftype must be an MPI predefined datatype */
+    /* when bufcount == NC_COUNT_IGNORE, buftype must be an MPI predefined datatype */
     if (err == NC_NOERR &&
-        buftype != MPI_DATATYPE_NULL && bufcount == -1 &&
+        buftype != MPI_DATATYPE_NULL && bufcount == NC_COUNT_IGNORE &&
         buftype != MPI_CHAR          &&
         buftype != MPI_SIGNED_CHAR   && buftype != MPI_UNSIGNED_CHAR      &&
         buftype != MPI_SHORT         && buftype != MPI_UNSIGNED_SHORT     &&
