@@ -105,6 +105,29 @@ int check_EEDGE(const MPI_Offset *start,
     return NC_NOERR;
 }
 
+#ifdef PNETCDF_DEBUG
+#define DEBUG_PRINT_EEDGE(dim) {                                            \
+    if (err != NC_NOERR) {                                                  \
+        char *_env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");              \
+        if (_env_str != NULL && *_env_str != '0') {                         \
+            char name[1024];                                                \
+            int _rank;                                                      \
+            MPI_Comm_rank(MPI_COMM_WORLD, &_rank);                          \
+            pncp->driver->inq_var(pncp->ncp, varid, name, NULL, NULL,       \
+                                  NULL, NULL, NULL, NULL, NULL);            \
+            if (stride != NULL)                                             \
+                fprintf(stderr, "Rank %d: NC_EEDGE variable %s: shape[%d]=%lld but start[%d]=%lld count[%d]=%lld stride[%d]=%lld\n", \
+                _rank, name, dim, shape[dim], dim, start[dim], dim, count[dim], dim, stride[dim]); \
+            else                                                            \
+                fprintf(stderr, "Rank %d: NC_EEDGE variable %s: shape[%d]=%lld but start[%d]=%lld count[%d]=%lld\n", \
+                _rank, name, dim, shape[dim], dim, start[dim], dim, count[dim]); \
+        }                                                                   \
+    }                                                                       \
+}
+#else
+#define DEBUG_PRINT_EEDGE(dim)
+#endif
+
 /*----< check_start_count_stride() >-----------------------------------------*/
 static
 int check_start_count_stride(PNC              *pncp,
@@ -182,6 +205,7 @@ int check_start_count_stride(PNC              *pncp,
             /* read cannot go beyond current numrecs */
             if (isRead) {
                 err = check_EEDGE(start, count, stride, shape);
+                DEBUG_PRINT_EEDGE(0)
                 if (err != NC_NOERR) return err;
             }
             firstDim = 1; /* skip checking the record dimension */
@@ -196,6 +220,7 @@ int check_start_count_stride(PNC              *pncp,
                 err = check_EEDGE(start+i, count+i, NULL, shape+i);
             else
                 err = check_EEDGE(start+i, count+i, stride+i, shape+i);
+            DEBUG_PRINT_EEDGE(i)
             if (err != NC_NOERR) return err;
         }
 
