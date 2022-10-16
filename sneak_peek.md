@@ -80,7 +80,8 @@ This is essentially a placeholder for the next release note ...
     See [PR #79](https://github.com/Parallel-NetCDF/PnetCDF/pull/79).
 
 * Bug fixes
-  + none
+  + ncmpidiff -  when checking the dimensions defined in the second files
+    whether they are defined in the first file. See 88cd9c1.
 
 * New example programs
   + none
