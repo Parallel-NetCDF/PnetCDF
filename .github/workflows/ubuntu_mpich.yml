@@ -24,35 +24,80 @@ jobs:
         - name: Set up dependencies
           run: |
             sudo apt-get update
-            sudo apt-get install automake autoconf libtool libtool-bin m4
-            autoconf --version
-            automake --version
-            libtool --version
+            sudo apt-get install m4
             gcc --version
+        - name: Build autoconf
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            VERSION=2.71
+            echo "Install autoconf ${VERSION} in ${GITHUB_WORKSPACE}/AUTOTOOLS"
+            rm -rf AUTOTOOLS
+            mkdir AUTOTOOLS
+            cd AUTOTOOLS
+            wget -q https://ftp.gnu.org/gnu/autoconf/autoconf-${VERSION}.tar.gz
+            gzip -dc autoconf-${VERSION}.tar.gz | tar -xf -
+            cd autoconf-${VERSION}
+            ./configure --prefix=${GITHUB_WORKSPACE}/AUTOTOOLS --silent
+            make -s -j 8 install
+            make -s distclean
+        - name: Build automake
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            VERSION=1.16.5
+            echo "Install automake ${VERSION} in ${GITHUB_WORKSPACE}/AUTOTOOLS"
+            cd AUTOTOOLS
+            wget -q https://ftp.gnu.org/gnu/automake/automake-${VERSION}.tar.gz
+            gzip -dc automake-${VERSION}.tar.gz | tar -xf -
+            cd automake-${VERSION}
+            ./configure --prefix=${GITHUB_WORKSPACE}/AUTOTOOLS --silent
+            make -s -j 8 install
+            make -s distclean
+        - name: Build libtool
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            VERSION=2.4.6
+            echo "Install libtool ${VERSION} in ${GITHUB_WORKSPACE}/AUTOTOOLS"
+            cd AUTOTOOLS
+            wget -q https://ftp.gnu.org/gnu/libtool/libtool-${VERSION}.tar.gz
+            gzip -dc libtool-${VERSION}.tar.gz | tar -xf -
+            cd libtool-${VERSION}
+            ./configure --prefix=${GITHUB_WORKSPACE}/AUTOTOOLS --silent
+            make -s -j 8 install
+            make -s distclean
         - name: Build MPICH
           run: |
-            WORKDIR=$(pwd)
-            mkdir -p ${WORKDIR}/MPICH
-            cd ${WORKDIR}/MPICH
+            cd ${GITHUB_WORKSPACE}
+            VERSION=4.0.2
+            echo "Install MPICH ${VERSION} in ${GITHUB_WORKSPACE}/MPICH"
+            rm -rf ${GITHUB_WORKSPACE}/MPICH
+            mkdir -p ${GITHUB_WORKSPACE}/MPICH
+            cd ${GITHUB_WORKSPACE}/MPICH
             # git clone -q https://github.com/pmodels/mpich.git
             # cd mpich
             # git submodule update --init
             # ./autogen.sh
-            wget -q https://www.mpich.org/static/downloads/4.0.2/mpich-4.0.2.tar.gz
-            gzip -dc mpich-4.0.2.tar.gz | tar -xf -
-            cd mpich-4.0.2
-            ./configure --prefix=${WORKDIR}/MPICH \
+            wget -q https://www.mpich.org/static/downloads/${VERSION}/mpich-${VERSION}.tar.gz
+            gzip -dc mpich-${VERSION}.tar.gz | tar -xf -
+            cd mpich-${VERSION}
+            ./configure --prefix=${GITHUB_WORKSPACE}/MPICH \
                         --silent \
                         --enable-romio \
                         --with-file-system=ufs \
                         --with-device=ch3:sock \
                         --enable-fortran \
                         CC=gcc FC=gfortran
-            make -s -j8 install
-            cd ${WORKDIR}
+            make -s LIBTOOLFLAGS=--silent V=1 -j8 install
+            make -s distclean
         - name: Build PnetCDF
           run: |
-            WORKDIR=$(pwd)
+            cd ${GITHUB_WORKSPACE}
+            export PATH="${GITHUB_WORKSPACE}/AUTOTOOLS/bin:${GITHUB_WORKSPACE}/MPICH/bin:${PATH}"
+            which autoconf
+            autoconf --version
+            which automake
+            automake --version
+            which libtool
+            libtool --version
             autoreconf -i
             ./configure --enable-option-checking=fatal \
                         --enable-profiling \
@@ -62,33 +107,31 @@ jobs:
                         --enable-shared \
                         --enable-thread-safe \
                         --with-pthread \
-                        --with-mpi=${WORKDIR}/MPICH
+                        --with-mpi=${GITHUB_WORKSPACE}/MPICH
             make -j 8 tests
         - name: Print config.log
           if: ${{ failure() }}
           run: |
-            WORKDIR=$(pwd)
-            cat ${WORKDIR}/config.log
+            cat ${GITHUB_WORKSPACE}/config.log
         - name: make check
           run: |
             make check
         - name: Print log files
           if: ${{ failure() }}
           run: |
-            WORKDIR=$(pwd)
-            cat ${WORKDIR}/src/utils/ncvalidator/*.log
-            cat ${WORKDIR}/test/*/*.log
+            cat ${GITHUB_WORKSPACE}/src/utils/ncvalidator/*.log
+            cat ${GITHUB_WORKSPACE}/test/*/*.log
         - name: make ptests
           run: |
-            WORKDIR=$(pwd)
+            cd ${GITHUB_WORKSPACE}
             make ptests
         - name: make distcheck
           run: |
-            WORKDIR=$(pwd)
-            make distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --with-mpi=${WORKDIR}/MPICH"
+            cd ${GITHUB_WORKSPACE}
+            make distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --with-mpi=${GITHUB_WORKSPACE}/MPICH"
         - name: Cleanup
           if: ${{ always() }}
           run: |
             make -s distclean
-            rm -rf ${WORKDIR}/MPICH
+            rm -rf ${GITHUB_WORKSPACE}/MPICH
 
