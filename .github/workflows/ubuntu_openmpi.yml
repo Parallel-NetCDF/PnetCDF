@@ -24,20 +24,62 @@ jobs:
         - name: Set up dependencies
           run: |
             sudo apt-get update
-            sudo apt-get install automake autoconf libtool libtool-bin m4
+            sudo apt-get install m4
             # mpi
             sudo apt-get install openmpi-bin
             # zlib
             sudo apt-get install zlib1g-dev
-            autoconf --version
-            automake --version
-            libtool --version
             gcc --version
+        - name: Build autoconf
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            VERSION=2.71
+            echo "Install autoconf ${VERSION} in ${GITHUB_WORKSPACE}/AUTOTOOLS"
+            rm -rf AUTOTOOLS
+            mkdir AUTOTOOLS
+            cd AUTOTOOLS
+            wget -q https://ftp.gnu.org/gnu/autoconf/autoconf-${VERSION}.tar.gz
+            gzip -dc autoconf-${VERSION}.tar.gz | tar -xf -
+            cd autoconf-${VERSION}
+            ./configure --prefix=${GITHUB_WORKSPACE}/AUTOTOOLS --silent
+            make -s -j 8 install
+            make -s distclean
+        - name: Build automake
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            VERSION=1.16.5
+            echo "Install automake ${VERSION} in ${GITHUB_WORKSPACE}/AUTOTOOLS"
+            cd AUTOTOOLS
+            wget -q https://ftp.gnu.org/gnu/automake/automake-${VERSION}.tar.gz
+            gzip -dc automake-${VERSION}.tar.gz | tar -xf -
+            cd automake-${VERSION}
+            ./configure --prefix=${GITHUB_WORKSPACE}/AUTOTOOLS --silent
+            make -s -j 8 install
+            make -s distclean
+        - name: Build libtool
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            VERSION=2.4.6
+            echo "Install libtool ${VERSION} in ${GITHUB_WORKSPACE}/AUTOTOOLS"
+            cd AUTOTOOLS
+            wget -q https://ftp.gnu.org/gnu/libtool/libtool-${VERSION}.tar.gz
+            gzip -dc libtool-${VERSION}.tar.gz | tar -xf -
+            cd libtool-${VERSION}
+            ./configure --prefix=${GITHUB_WORKSPACE}/AUTOTOOLS --silent
+            make -s -j 8 install
+            make -s distclean
         - name: Build PnetCDF
           run: |
-            WORKDIR=$(pwd)
-            mkdir -p /dev/shm/pnetcdf_output
+            cd ${GITHUB_WORKSPACE}
+            export PATH="${GITHUB_WORKSPACE}/AUTOTOOLS/bin:${GITHUB_WORKSPACE}/MPICH/bin:${PATH}"
+            which autoconf
+            autoconf --version
+            which automake
+            automake --version
+            which libtool
+            libtool --version
             autoreconf -i
+            mkdir -p /dev/shm/pnetcdf_output
             ./configure --enable-option-checking=fatal \
                         --enable-profiling \
                         pnc_ac_debug=yes \
@@ -52,8 +94,7 @@ jobs:
         - name: Print config.log
           if: ${{ failure() }}
           run: |
-            WORKDIR=$(pwd)
-            cat ${WORKDIR}/config.log
+            cat ${GITHUB_WORKSPACE}/config.log
         - name: make check
           run: |
             make check
@@ -66,8 +107,7 @@ jobs:
         - name: Print log files
           if: ${{ always() }}
           run: |
-            WORKDIR=$(pwd)
-            cat ${WORKDIR}/test/*/*.log
+            cat ${GITHUB_WORKSPACE}/test/*/*.log
         - name: Cleanup
           if: ${{ always() }}
           run: |

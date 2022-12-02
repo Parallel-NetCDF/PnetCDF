@@ -12,8 +12,9 @@ dnl When using svn, we use SVN keyword Revision to copy the unique revision
 dnl number as a stamp into configure script.
 dnl AC_REVISION([$Revision$])dnl
 
-dnl autoconf v2.69 was released in 2012-04-24
-AC_PREREQ([2.69])
+dnl autoconf v2.70 and later is required. See https://github.com/Parallel-NetCDF/PnetCDF/issues/94
+dnl autoconf v2.71 was released in 2021-01-28
+AC_PREREQ([2.71])
 AC_INIT([PnetCDF],[1.12.3],[parallel-netcdf@mcs.anl.gov],[pnetcdf],[https://parallel-netcdf.github.io])
 
 dnl config.h.in will be created by autoreconf (autoheader)
@@ -40,8 +41,9 @@ dnl Note getting command line should be done before calling AM_INIT_AUTOMAKE
 dnl as AM_INIT_AUTOMAKE modifies command line $*
 CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
 
+dnl automake version 1.16.5 was released in 2021-10-03
 dnl AM_INIT_AUTOMAKE([subdir-objects])
-AM_INIT_AUTOMAKE([1.13])
+AM_INIT_AUTOMAKE([1.16.5])
 dnl enable silent rules by default
 AM_SILENT_RULES([yes])
 
@@ -430,7 +432,7 @@ dnl AC_PROG_RANLIB
 
 dnl libtool v2.4.6 was released in 2015-02-15
 dnl Travis CI only has v2.4.2
-LT_PREREQ([2.4.2])
+LT_PREREQ([2.4.6])
 dnl LT_INIT([dlopen disable-shared])
 dnl LT_INIT([dlopen])
 LT_INIT([disable-shared])
