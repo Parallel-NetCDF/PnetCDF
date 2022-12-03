@@ -66,6 +66,13 @@ This is essentially a placeholder for the next release note ...
     5584d44.
 
 * Other updates:
+  + Upgrade autotool version requirement to autoconf 2.71, automake 1.16.5, and
+    libtool 2.4.6.
+    See [PR #95](https://github.com/Parallel-NetCDF/PnetCDF/pull/95)
+    Thanks to Blaise Bourdin for pointing out in
+    [Issue #94](https://github.com/Parallel-NetCDF/PnetCDF/issues/94)
+    that configure failed when using Intel OneAPI 2022.2.0 compilers. The fix
+    is to use autoconf 2.70 and newer.
   + In all prior versions, the file name was checked whether it contains
     character ':'. The prefix name ending with ':' is considered by ROMIO as
     the file system type name. The prefix name, if found, is then stripped, so
