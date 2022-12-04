@@ -20,6 +20,10 @@ if ENABLE_BURST_BUFFER
    SUBDIRS += ncbbio
 endif
 
+if ENABLE_CHUNKING
+   SUBDIRS += ncchunkio
+endif
+
 if ENABLE_ADIOS
    SUBDIRS += ncadios
 endif

@@ -141,6 +141,9 @@ dnl AH_TEMPLATE([ENABLE_IN_PLACE_SWAP], [Define if to enable in-place byte swap]
 dnl AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],[Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 AH_TEMPLATE([ENABLE_NETCDF4],           [Define if to enable NetCDF-4 support])
+AH_TEMPLATE([ENABLE_CHUNKING],          [Define if to enable chunked storage layout and chunking feature])
+AH_TEMPLATE([ENABLE_ZLIB],              [Define if to enable zlib chunking method])
+AH_TEMPLATE([ENABLE_SZ],                [Define if to enable sz chunking method])
 AH_TEMPLATE([ENABLE_ADIOS],             [Define if to enable ADIOS BP read feature])
 AH_TEMPLATE([HDF5_VER_GE_1_10_4],       [Define if HDF5 version is at least 1.10.4])
 AH_TEMPLATE([NETCDF_GE_4_5_0],          [Define if NetCDF version is at least 4.5.0])
@@ -2506,6 +2509,129 @@ fi
 AC_SUBST(ENABLE_BURST_BUFFER)
 AM_CONDITIONAL(ENABLE_BURST_BUFFER, [test x$enable_bbdriver = xyes])
 
+AC_ARG_ENABLE([chunking],
+   [AS_HELP_STRING([--enable-chunking],
+                   [Enable chunked chunking driver support. @<:@default: disabled@:>@])],
+   [enable_chunking=${enableval}], [enable_chunking=no]
+)
+
+ENABLE_CHUNKING=0
+if test "x$enable_chunking" = "xyes" ; then
+   AC_DEFINE(ENABLE_CHUNKING)
+   ENABLE_CHUNKING=1
+fi
+AC_SUBST(ENABLE_CHUNKING)
+AM_CONDITIONAL(ENABLE_CHUNKING, [test x$enable_chunking = xyes])
+
+AC_ARG_ENABLE([zlib],
+   [AS_HELP_STRING([--enable-zlib],
+                   [Enable zlib chunking method support. @<:@default: disabled@:>@])],
+   [enable_zlib=${enableval}], [enable_zlib=no]
+)
+
+ENABLE_ZLIB=0
+if test "x$enable_zlib" = "xyes" ; then
+   AC_DEFINE(ENABLE_ZLIB)
+   ENABLE_ZLIB=1
+fi
+AC_SUBST(ENABLE_ZLIB)
+AM_CONDITIONAL(ENABLE_ZLIB, [test x$enable_zlib = xyes])
+
+if test "x$enable_zlib" = "xyes" ; then
+   ZLIB_INSTALL=""
+   AC_ARG_WITH(zlib,
+       [AS_HELP_STRING([--with-zlib=/path/to/implementation],
+                       [installation prefix for zlib implementation])],
+       if test "x${withval}" = xyes; then
+          AC_MSG_ERROR(--with-zlib is set but the value is NULL)
+       else
+          ZLIB_INSTALL=${withval}
+       fi
+   )
+
+   if test "x${ZLIB_INSTALL}" != x ; then
+      CPPFLAGS+=" -I${ZLIB_INSTALL}/include"
+      LDFLAGS+=" -L${ZLIB_INSTALL}/lib"
+      LIBS+=" -lz"
+   fi
+
+   LIBS+=" -lm -ldl"
+
+   have_zlib=no
+   AC_MSG_CHECKING(ZLIB library)
+   AC_SEARCH_LIBS([deflate], [z], [have_zlib=yes], [have_zlib=no])
+   if test "x${have_zlib}" = xyes; then
+      AC_CHECK_HEADERS([zlib.h], [], [have_zlib=no])
+   fi
+
+   if test "x${have_zlib}" = xno; then
+      AC_MSG_ERROR([
+      ------------------------------------------------------------
+      The ZLIB library and header file are required to build
+      PnetCDF with ZLIB chunking support. Use option
+         --with-zlib=/path/to/implementation
+      to specify the location of ZLIB build.
+      Stopping ...
+      Check 'config.log' for more information.
+      ------------------------------------------------------------])
+   fi
+fi
+
+AC_ARG_ENABLE([sz],
+   [AS_HELP_STRING([--enable-sz],
+                   [Enable sz chunking method support. @<:@default: disabled@:>@])],
+   [enable_sz=${enableval}], [enable_sz=no]
+)
+
+ENABLE_SZ=0
+if test "x$enable_sz" = "xyes" ; then
+   AC_DEFINE(ENABLE_SZ)
+   ENABLE_SZ=1
+fi
+AC_SUBST(ENABLE_SZ)
+AM_CONDITIONAL(ENABLE_SZ, [test x$enable_sz = xyes])
+
+
+if test "x$enable_sz" = "xyes" ; then
+   SZ_INSTALL=""
+   AC_ARG_WITH(sz,
+       [AS_HELP_STRING([--with-sz=/path/to/implementation],
+                       [installation prefix for sz implementation])],
+       if test "x${withval}" = xyes; then
+          AC_MSG_ERROR(--with-sz is set but the value is NULL)
+       else
+          SZ_INSTALL=${withval}
+       fi
+   )
+
+   if test "x${SZ_INSTALL}" != x ; then
+      CPPFLAGS+=" -I${SZ_INSTALL}/include"
+      LDFLAGS+=" -L${SZ_INSTALL}/lib"
+      LIBS+=" -lSZ -lzstd"
+   fi
+
+   LIBS+=" -lm -ldl"
+
+   have_sz=no
+   AC_MSG_CHECKING(SZ library)
+   AC_SEARCH_LIBS([deflate], [z], [have_sz=yes], [have_sz=no])
+   if test "x${have_sz}" = xyes; then
+      AC_CHECK_HEADERS([sz.h], [], [have_sz=no])
+   fi
+
+   if test "x${have_sz}" = xno; then
+      AC_MSG_ERROR([
+      ------------------------------------------------------------
+      The SZ library and header file are required to build
+      PnetCDF with SZ chunking support. Use option
+         --with-sz=/path/to/implementation
+      to specify the location of SZ build.
+      Stopping ...
+      Check 'config.log' for more information.
+      ------------------------------------------------------------])
+   fi
+fi
+
 ADIOS_INSTALL=""
 AC_ARG_WITH(adios,
    [AS_HELP_STRING([--with-adios@<:@=DIR@:>@],
@@ -2827,6 +2953,7 @@ AC_CONFIG_FILES(Makefile \
                 src/drivers/nc4io/Makefile \
                 src/drivers/ncadios/Makefile \
                 src/drivers/ncbbio/Makefile \
+                src/drivers/ncchunkio/Makefile \
                 src/drivers/ncfoo/Makefile \
                 src/binding/Makefile \
                 src/binding/cxx/Makefile \
