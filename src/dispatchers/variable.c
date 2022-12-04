@@ -235,6 +235,45 @@ err_check:
     return NC_NOERR;
 }
 
+#ifdef ENABLE_COMPRESSION
+/*----< ncmpi_var_set_chunk() >----------------------------------------------------*/
+/* This is a collective subroutine. */
+int ncmpi_var_set_chunk (int         ncid,    /* IN:  file ID */
+                         int         varid,
+                         int        *chunk_dim)
+{
+    int err;
+    int ndim;
+
+    err = ncmpi_inq_varndims(ncid,varid, &ndim);
+    if (err != NC_NOERR) return err;
+
+    return ncmpi_put_att_int(ncid, varid, "_chunkdim", NC_INT, ndim, chunk_dim);
+}
+/*----< ncmpi_var_get_chunk() >----------------------------------------------------*/
+int ncmpi_var_get_chunk (int         ncid,    /* IN:  file ID */
+                         int         varid,
+                         int        *chunk_dim)
+{
+    return ncmpi_get_att_int(ncid, varid, "_chunkdim", chunk_dim);
+}
+/*----< ncmpi_var_set_filter() >----------------------------------------------------*/
+/* This is a collective subroutine. */
+int ncmpi_var_set_filter (int         ncid,    /* IN:  file ID */
+                          int         varid,
+                          int         filter)
+{
+    return ncmpi_put_att_int(ncid, varid, "_filter", NC_INT, 1, &filter);
+}
+/*----< ncmpi_var_get_filter() >----------------------------------------------------*/
+int ncmpi_var_get_filter (int         ncid,    /* IN:  file ID */
+                          int         varid,
+                          int        *filter)
+{
+    return ncmpi_get_att_int(ncid, varid, "_filter", filter);
+}
+#endif
+
 /*----< ncmpi_def_var_fill() >-----------------------------------------------*/
 /* this API is collective, and must be called in define mode */
 int

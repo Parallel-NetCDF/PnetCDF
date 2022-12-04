@@ -794,6 +794,20 @@ extern int
 ncmpi_def_var(int ncid, const char *name, nc_type xtype, int ndims,
               const int *dimidsp, int *varidp);
 
+#ifdef ENABLE_COMPRESSION
+#define NC_FILTER_NONE	0
+#define NC_FILTER_DEFLATE	2
+#define NC_FILTER_SZ	3
+extern int
+ncmpi_var_set_chunk (int ncid, int varid, int *chunk_dim);
+extern int
+ncmpi_var_get_chunk (int ncid, int varid, int *chunk_dim);
+extern int
+ncmpi_var_set_filter (int ncid, int varid, int filter);
+extern int
+ncmpi_var_get_filter (int ncid, int varid, int *filter);
+#endif
+
 extern int
 ncmpi_rename_dim(int ncid, int dimid, const char *name);
 
