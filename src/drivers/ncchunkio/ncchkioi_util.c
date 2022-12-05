@@ -135,7 +135,7 @@ int ncchkioi_extract_hint (NC_chk *ncchkp, MPI_Info info) {
 
 	// Default filter
 	ncchkp->default_filter = NC_CHK_FILTER_NONE;
-	MPI_Info_get (info, "nc_chk_driver", MPI_MAX_INFO_VAL - 1, value, &flag);
+	MPI_Info_get (info, "nc_chunk_default_filter", MPI_MAX_INFO_VAL - 1, value, &flag);
 	if (flag) {
 		if (strcmp (value, "none") == 0) {
 			ncchkp->default_filter = NC_CHK_FILTER_NONE;
