@@ -794,7 +794,7 @@ extern int
 ncmpi_def_var(int ncid, const char *name, nc_type xtype, int ndims,
               const int *dimidsp, int *varidp);
 
-#ifdef ENABLE_COMPRESSION
+#ifdef ENABLE_CHUNKING
 #define NC_FILTER_NONE	0
 #define NC_FILTER_DEFLATE	2
 #define NC_FILTER_SZ	3
