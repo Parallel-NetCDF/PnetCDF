@@ -24,6 +24,7 @@ endif
 noinst_LTLIBRARIES = libncchkio.la
 
 M4FLAGS += -I${top_srcdir}/m4
+M4FLAGS += -I${top_srcdir}/src/drivers/ncchunkio
 if ENABLE_ERANGE_FILL
 M4FLAGS += -DERANGE_FILL
 endif
