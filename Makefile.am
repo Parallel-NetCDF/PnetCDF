@@ -21,6 +21,8 @@ EXTRA_DIST = COPYRIGHT \
              README \
              RELEASE_NOTES \
              m4/foreach.m4 \
+             m4/foreach_idx.m4 \
+             m4/list_len.m4 \
              m4/utils.m4
 
 # Below is a trick to build all test executables, without running them
