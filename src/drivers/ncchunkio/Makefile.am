@@ -91,7 +91,7 @@ BUILT_SOURCES = $(M4_SRCS:.m4=.c) $(M4H_SRCS:.m4h=.h)
 
 CLEANFILES = $(M4_SRCS:.m4=.c) $(M4H_SRCS:.m4h=.h) core core.* *.gcda *.gcno *.gcov gmon.out
 
-EXTRA_DIST = $(M4_HFILES) $(M4_SRCS) $(M4H_SRCS)
+EXTRA_DIST = $(M4_HFILES) $(M4_SRCS) $(M4H_SRCS) ncchkioi_profile_timers.m4
 
 tests-local: all
 
