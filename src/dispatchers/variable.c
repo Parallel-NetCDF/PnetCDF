@@ -272,6 +272,37 @@ int ncmpi_var_get_filter (int         ncid,    /* IN:  file ID */
 {
     return ncmpi_get_att_int(ncid, varid, "_filter", filter);
 }
+#else
+/*----< ncmpi_var_set_chunk() >----------------------------------------------------*/
+/* This is a collective subroutine. */
+int ncmpi_var_set_chunk (int         ncid,    /* IN:  file ID */
+                         int         varid,
+                         int        *chunk_dim)
+{
+    return NC_ENOTBUILT;
+}
+/*----< ncmpi_var_get_chunk() >----------------------------------------------------*/
+int ncmpi_var_get_chunk (int         ncid,    /* IN:  file ID */
+                         int         varid,
+                         int        *chunk_dim)
+{
+    return NC_ENOTBUILT;
+}
+/*----< ncmpi_var_set_filter() >----------------------------------------------------*/
+/* This is a collective subroutine. */
+int ncmpi_var_set_filter (int         ncid,    /* IN:  file ID */
+                          int         varid,
+                          int         filter)
+{
+    return NC_ENOTBUILT;
+}
+/*----< ncmpi_var_get_filter() >----------------------------------------------------*/
+int ncmpi_var_get_filter (int         ncid,    /* IN:  file ID */
+                          int         varid,
+                          int        *filter)
+{
+    return NC_ENOTBUILT;
+}
 #endif
 
 /*----< ncmpi_def_var_fill() >-----------------------------------------------*/
