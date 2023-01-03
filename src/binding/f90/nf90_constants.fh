@@ -100,6 +100,9 @@
   ! NULL request for non-blocking I/O APIs
   INTEGER, PARAMETER, PUBLIC :: NF90_REQ_NULL = NF_REQ_NULL
 
+  ! Ignore bufcount argument in flexible APIs
+  INTEGER, PARAMETER, PUBLIC :: NF90_COUNT_IGNORE = NF_COUNT_IGNORE
+
   ! indicate to flush all pending non-blocking requests
   INTEGER, PARAMETER, PUBLIC :: NF90_REQ_ALL     = NF_REQ_ALL
   INTEGER, PARAMETER, PUBLIC :: NF90_GET_REQ_ALL = NF_GET_REQ_ALL

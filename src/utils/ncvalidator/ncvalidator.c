@@ -977,6 +977,7 @@ static int
 hdr_get_name(int          fd,
              bufferinfo  *gbp,
              char       **namep,
+             size_t      *name_len,
              const char  *loc)
 {
     /* netCDF file format:
@@ -1005,6 +1006,7 @@ hdr_get_name(int          fd,
         if (verbose) printf("\t%s: Failed to read name string length\n", loc);
         return err;
     }
+    *name_len = nchars;
 
     *namep = (char*) malloc((size_t)nchars + 1);
     if (*namep == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
@@ -1070,13 +1072,13 @@ static int
 val_get_NC_dim(int fd, bufferinfo *gbp, NC_dim **dimpp, NC_dimarray *ncap) {
     int err, status=NC_NOERR;
     char *name=NULL;
-    size_t err_addr;
+    size_t err_addr, name_len;
     long long dim_length;
     NC_dim *dimp;
 
     *dimpp = NULL;
 
-    status = hdr_get_name(fd, gbp, &name, "Dimension");
+    status = hdr_get_name(fd, gbp, &name, &name_len, "Dimension");
     if (status != NC_NOERR && status != NC_ENULLPAD) {
         if (name != NULL) free(name);
         return status;
@@ -1106,7 +1108,7 @@ val_get_NC_dim(int fd, bufferinfo *gbp, NC_dim **dimpp, NC_dimarray *ncap) {
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
     dimp->name     = name;
-    dimp->name_len = strlen(name);
+    dimp->name_len = name_len;
     dimp->size     = dim_length;
 
     *dimpp = dimp;
@@ -1361,6 +1363,7 @@ x_len_NC_attrV(nc_type    xtype,
 
 static int
 new_NC_attr(char        *name,
+            size_t       name_len,
             nc_type      xtype,
             long long   nelems,
             NC_attr    **attrp)
@@ -1373,7 +1376,7 @@ new_NC_attr(char        *name,
     (*attrp)->nelems   = nelems;
     (*attrp)->xvalue   = NULL;
     (*attrp)->name     = name;
-    (*attrp)->name_len = strlen(name);
+    (*attrp)->name_len = name_len;
 
     if (nelems > 0) {
         long long xsz = x_len_NC_attrV(xtype, nelems);
@@ -1396,12 +1399,12 @@ val_get_NC_attr(int          fd,
 {
     char *name=NULL, xloc[1024];
     int err, status=NC_NOERR;
-    size_t err_addr;
+    size_t err_addr, name_len;
     nc_type xtype;
     long long nelems;
     NC_attr *attrp;
 
-    status = hdr_get_name(fd, gbp, &name, loc);
+    status = hdr_get_name(fd, gbp, &name, &name_len, loc);
     if (status != NC_NOERR && status != NC_ENULLPAD) {
         if (name != NULL) free(name);
         return status;
@@ -1423,7 +1426,7 @@ val_get_NC_attr(int          fd,
         return err;
     }
 
-    err = new_NC_attr(name, xtype, nelems, &attrp);
+    err = new_NC_attr(name, name_len, xtype, nelems, &attrp);
     if(err != NC_NOERR) {
         if (name != NULL) free(name);
         return err;
@@ -1557,7 +1560,7 @@ val_get_NC_attrarray(int           fd,
 
 /*----< ncmpio_new_NC_var() >------------------------------------------------*/
 static NC_var *
-val_new_NC_var(char *name, int ndims)
+val_new_NC_var(char *name, size_t name_len, int ndims)
 {
     NC_var *varp;
 
@@ -1571,7 +1574,7 @@ val_new_NC_var(char *name, int ndims)
     }
 
     varp->name     = name;
-    varp->name_len = strlen(name);
+    varp->name_len = name_len;
     varp->ndims    = ndims;
     varp->xsz      = 0;
     varp->len      = 0;
@@ -1626,12 +1629,12 @@ val_get_NC_var(int          fd,
      */
     char *name=NULL, xloc[1024];
     int dim, dimid, err, status=NC_NOERR;
-    size_t err_addr;
+    size_t err_addr, name_len;
     long long ndims;
     NC_var *varp;
 
     /* read variable name */
-    err = hdr_get_name(fd, gbp, &name, loc);
+    err = hdr_get_name(fd, gbp, &name, &name_len, loc);
     if (err != NC_NOERR && err != NC_ENULLPAD) {
         if (name != NULL) free(name);
         return err;
@@ -1663,7 +1666,7 @@ val_get_NC_var(int          fd,
     if (trace) printf("\t\tnumber of dimensions = %lld\n", ndims);
 
     /* allocate variable object */
-    varp = val_new_NC_var(name, ndims);
+    varp = val_new_NC_var(name, name_len, ndims);
     if (varp == NULL) {
         if (name != NULL) free(name);
         DEBUG_RETURN_ERROR(NC_ENOMEM)

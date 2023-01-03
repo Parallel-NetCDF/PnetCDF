@@ -33,7 +33,13 @@ check_PROGRAMS = nonblocking_write \
                  vard_int \
                  time_var
 
-EXTRA_DIST = utils.F90
+if INSTALL_EXAMPLES
+   example_execbin_PROGRAMS = $(check_PROGRAMS)
+   example_execbindir = $(exec_prefix)/pnetcdf_examples/F77
+   example_execbin_SCRIPTS = run_f77_examples.sh
+endif
+
+EXTRA_DIST = utils.F90 run_f77_examples.sh
 
 utils.o: $(srcdir)/utils.F90
 	$(FC) $(FC_DEFS) $(AM_FCFLAGS) $(FCFLAGS) -c -o $@ $<
@@ -85,6 +91,11 @@ ptest2 ptest6 ptest10:
 
 # build check targets but not invoke
 tests-local: all $(check_PROGRAMS)
+
+install-exec-hook:
+	@if test "x$(example_execbindir)" != x ; then \
+	$(SED_I) -e 's|check_PROGRAMS|$(check_PROGRAMS)|g ; s|TESTOUTDIR|$(TESTOUTDIR)|g ; s|TESTMPIRUN|$(TESTMPIRUN)|g ; s|SED_CMD|$(SED)|g ; s|ENABLE_BURST_BUFFER|$(ENABLE_BURST_BUFFER)|g ; s|ENABLE_NETCDF4|$(ENABLE_NETCDF4)|g' $(DESTDIR)$(example_execbindir)/run_f77_examples.sh ; \
+	fi
 
 .PHONY: ptest ptests ptest2 ptest3 ptest4 ptest6 ptest8 ptest10
 

@@ -4,15 +4,16 @@ This is essentially a placeholder for the next release note ...
 
 * New features
   + Flexible APIs now can be used as high-level APIs, when argument bufcount
-    is -1 and buftype is an MPI predefined data type. For example,
+    is NC_COUNT_IGNORE and buftype is an MPI predefined data type. See
+    [PR #82](https://github.com/Parallel-NetCDF/PnetCDF/pull/82). Below is an
+    example of writing from a memory buffer of type float.
     ```
-    ncmpi_put_vara_all(ncid, varid, start, count, buf, -1, MPI_FLOAT);
+    ncmpi_put_vara_all(ncid, varid, start, count, buf, NC_COUNT_IGNORE, MPI_FLOAT);
     ```
     is equivalent to
     ```
     ncmpi_put_vara_float_all(ncid, varid, start, count, buf);
     ```
-    See [PR #82](https://github.com/Parallel-NetCDF/PnetCDF/pull/82).
 
 * New optimization
   + none
@@ -21,10 +22,16 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Update configure options
-  + none
+  + `--enable-install-examples` to install example programs under folder
+    `${prefix}/pnetcdf_examples` along with run script files. An example is
+    `${prefix}/pnetcdf_examples/C/run_c_examples.sh`. The default of this
+    option is `disabled`.
 
 * New constants
-  + none
+  + NC_COUNT_IGNORE - This is used in flexible APIs. When argument bufcount is
+    NC_COUNT_IGNORE, buftype must be a predefine MPI datatype and the APIs
+    operate as the high-level APIs. Fortran equivalents are NF_COUNT_IGNORE and
+    NF90_COUNT_IGNORE.
 
 * New APIs
   + none
@@ -59,6 +66,13 @@ This is essentially a placeholder for the next release note ...
     5584d44.
 
 * Other updates:
+  + Upgrade autotool version requirement to autoconf 2.71, automake 1.16.5, and
+    libtool 2.4.6.
+    See [PR #95](https://github.com/Parallel-NetCDF/PnetCDF/pull/95)
+    Thanks to Blaise Bourdin for pointing out in
+    [Issue #94](https://github.com/Parallel-NetCDF/PnetCDF/issues/94)
+    that configure failed when using Intel OneAPI 2022.2.0 compilers. The fix
+    is to use autoconf 2.70 and newer.
   + In all prior versions, the file name was checked whether it contains
     character ':'. The prefix name ending with ':' is considered by ROMIO as
     the file system type name. The prefix name, if found, is then stripped, so
@@ -73,7 +87,8 @@ This is essentially a placeholder for the next release note ...
     See [PR #79](https://github.com/Parallel-NetCDF/PnetCDF/pull/79).
 
 * Bug fixes
-  + none
+  + ncmpidiff -  when checking the dimensions defined in the second files
+    whether they are defined in the first file. See 88cd9c1.
 
 * New example programs
   + none
@@ -82,6 +97,7 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
+  + test/testcases/test_get_varn.c - test get_varn API. See PR #90.
   + test/testcases/flexible_var.c - test flexible var API
   + test/testcases/flexible_api.f - test flexible API when bufcount == -1
 

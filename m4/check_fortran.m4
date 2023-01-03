@@ -510,20 +510,14 @@ EOF
                         ac_cv_ctype_fortran=yes
 		        break
 		    fi
-	        else
-		    AC_MSG_ERROR([Could not link conftestf.o and conftest.o])
 	        fi
-	    else
-		AC_MSG_ERROR([Could not compile conftestf.f])
 	    fi
-	else
-	    AC_MSG_ERROR([Could not compile conftest.c])
 	fi
     done
     ${RM} -f conftest*
 
     if test "$ac_cv_ctype_fortran" = no ; then
-        AC_MSG_RESULT(no correspond data type in C)
+        AC_MSG_ERROR(no correspond data type in C)
     fi
     unset ac_cv_ctype_fortran
 ])

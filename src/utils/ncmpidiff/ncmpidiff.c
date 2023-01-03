@@ -643,13 +643,14 @@ int main(int argc, char **argv)
         /* check dimensions in 2nd file but not in 1st file */
         for (i=0; i<ndims[1]; i++) {
             int dimid;
-            err = ncmpi_inq_dim(ncid[1], i, name[1], &dimlen[1]);
+            /* inquire dimension name from 2nd file */
+            err = ncmpi_inq_dimname(ncid[1], i, name[1]);
             HANDLE_ERROR
-            /* find the dim with the same name from ncid[0] */
-            if (ncmpi_inq_dimid(ncid[1], name[0], &dimid) == NC_EBADDIM) {
+            /* check if the dim name exists in the 1st file */
+            if (ncmpi_inq_dimid(ncid[0], name[1], &dimid) == NC_EBADDIM) {
                 if (!quiet)
                     printf("DIFF: dimension \"%s\" defined in %s not found in %s\n",
-                           name[0],argv[optind+1],argv[optind]);
+                           name[1],argv[optind+1],argv[optind]);
                 numHeadDIFF++;
             }
         }

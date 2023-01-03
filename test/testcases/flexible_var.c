@@ -13,7 +13,8 @@
  *
  * The global 2D array is not partitioned.
  *
- * The local buffer on each process has ghost cells surrounded along both dimensions.
+ * The local buffer on each process has ghost cells surrounded along both
+ * dimensions.
  *
  * The compile and run commands are given below.
  *
@@ -269,9 +270,9 @@ int main(int argc, char** argv)
     CHECK_GET_BUF_GHOST(NY, NX, GHOST, buf_ghost)
 
     /*----------------------------------------------------------------------*/
-    /*---- test using bufcount == -1 with no ghost cells -------------------*/
+    /*---- test using bufcount == NC_COUNT_IGNORE with no ghost cells ------*/
     /*----------------------------------------------------------------------*/
-    bufcount = -1;
+    bufcount = NC_COUNT_IGNORE;
 
     /* initiate put buffer contents, no ghost cells */
     INIT_PUT_BUF(NY, NX, buf)
@@ -412,9 +413,9 @@ int main(int argc, char** argv)
     CHECK_GET_BUF_GHOST(NY, NX, GHOST, buf_ghost)
 
     /*----------------------------------------------------------------------*/
-    /*---- test using bufcount == -1 with no ghost cells -------------------*/
+    /*---- test using bufcount == NC_COUNT_IGNORE with no ghost cells ------*/
     /*----------------------------------------------------------------------*/
-    bufcount = -1;
+    bufcount = NC_COUNT_IGNORE;
 
     /* initiate put buffer contents, no ghost cells */
     INIT_PUT_BUF(NY, NX, buf)

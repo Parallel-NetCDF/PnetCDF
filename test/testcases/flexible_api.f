@@ -3,8 +3,8 @@
 !   See COPYRIGHT notice in top-level directory.
 !
 ! This program tests if PnetCDF handles Fortran predefine datatypes when
-! bufcount argument in the flexible APIs is -1 and buftype argument is a
-! predefined MPI datatype
+! bufcount argument in the flexible APIs is NF_COUNT_IGNORE and buftype
+! argument is a predefined MPI datatype
 !
        INTEGER FUNCTION XTRIM(STRING)
            CHARACTER*(*) STRING
@@ -211,8 +211,8 @@
           call check(err, 'In nfmpi_wait_all:')
 
           ! test blocking and nonblocking APIs when bufcount argument is
-          ! -1 and buftype argument is a predefined MPI datatype
-          bufcount = -1
+          ! NF_COUNT_IGNORE and buftype argument is a predefined MPI datatype
+          bufcount = NF_COUNT_IGNORE
 
           err = nfmpi_put_vara_all(ncid, varid, starts, counts, buf,
      +                             bufcount, MPI_INTEGER)
@@ -294,7 +294,7 @@
 
           if (rank .eq. 0) then
               msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//
-     +              ' for bufcount=-1 & buftype predefined'
+     +              ' for bufcount=NF_COUNT_IGNORE & buftype predefined'
               call pass_fail(nerrs, msg)
           endif
 
