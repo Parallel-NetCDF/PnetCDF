@@ -33,9 +33,10 @@ jobs:
         - uses: actions/checkout@v3
         - name: Set up dependencies
           run: |
-            brew instal gcc@10
+            brew instal gcc
             which gcc
             gcc --version
+            brew instal gfortran
             which gfortran
             gfortran --version
             brew instal automake autoconf libtool m4
