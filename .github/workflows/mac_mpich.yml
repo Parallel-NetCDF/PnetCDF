@@ -33,10 +33,6 @@ jobs:
         - uses: actions/checkout@v3
         - name: Set up dependencies
           run: |
-            which gcc
-            gcc --version
-            which gfortran
-            gfortran --version
             brew instal gcc@10
             which gcc
             gcc --version
