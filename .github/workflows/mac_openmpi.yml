@@ -2,7 +2,7 @@ name: Mac with OpenMPI
 
 on:
   push:
-    branches: [ master, dev ]
+    branches: [ master, test_github_actions ]
     paths-ignore:
       - '**/*.md'
       - '**/*.txt'
@@ -11,7 +11,7 @@ on:
       - '**/*.png'
       - 'docs/*'
   pull_request:
-    branches: [ master, dev ]
+    branches: [ master, test_github_actions ]
     paths-ignore:
       - '**/*.md'
       - '**/*.txt'
@@ -37,6 +37,7 @@ jobs:
         - name: Build PnetCDF
           run: |
             cd ${GITHUB_WORKSPACE}
+            autoreconf -i
             mkdir -p pnetcdf_output
             ./configure --enable-option-checking=fatal \
                         --enable-profiling \
