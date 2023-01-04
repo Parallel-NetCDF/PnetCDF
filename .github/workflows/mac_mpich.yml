@@ -37,6 +37,10 @@ jobs:
             which gcc
             gcc --version
             ls -l /usr/local/bin/gfortran*
+            version=12
+            ln -fs /usr/local/bin/gfortran-${version} /usr/local/bin/gfortran
+            ln -fs /usr/local/bin/gcc-${version} /usr/local/bin/gcc
+            ln -fs /usr/local/bin/g++-${version} /usr/local/bin/g++
             which gfortran
             gfortran --version
             brew instal automake autoconf libtool m4
