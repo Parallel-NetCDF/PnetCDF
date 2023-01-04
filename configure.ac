@@ -1664,6 +1664,18 @@ AC_ARG_ENABLE([thread-safe],
 )
 ENABLE_THREAD_SAFE=0
 if test "x${thread_safe}" = xyes ; then
+   if test "x${ax_cv_mpi_compiler_vendor}" = xMPICH ; then
+      AX_COMPARE_VERSION([${ax_cv_mpi_compiler_version}],[ge],[4.0.3])
+      if test "$ax_compare_version" = "false" ; then
+         AC_MSG_ERROR([
+         -----------------------------------------------------------------------
+           Thread-safety feature, --enable-thread-safe, requires MPICH version
+           4.0.3 and later. The version of provided MPICH is $ax_cv_mpi_compiler_version.
+           See bug fix in https://github.com/pmodels/mpich/pull/5954
+           Abort.
+         -----------------------------------------------------------------------])
+      fi
+   fi
    AC_DEFINE(ENABLE_THREAD_SAFE)
    ENABLE_THREAD_SAFE=1
 fi

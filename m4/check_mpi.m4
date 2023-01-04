@@ -260,20 +260,28 @@ AC_DEFUN([CHECK_MPI_VERSION],[
    # `echo $version_str | ${GREP} MVAPICH2_VERSION`. Instead, we can use
    # version=`${GREP} MPICH_VERSION <<< "$version_str" | cut -d' ' -d'"' -f2`
 
+   ax_cv_mpi_compiler_vendor=
+   ax_cv_mpi_compiler_version=
    # Note MVAPICH2's mpi.h also defines MPICH_VERSION, so this check must be
    # done before MPICH.
    if test -f saved_conftest.i ; then
       if test "x$ac_cv_have_decl_MVAPICH2_VERSION" = xyes ; then
          mvapich2_version=`${GREP} MVAPICH2_VERSION saved_conftest.i | cut -d' ' -d'"' -f2`
          AC_MSG_RESULT(MVAPICH2 $mvapich2_version)
+         ax_cv_mpi_compiler_vendor=MVAPICH2
+         ax_cv_mpi_compiler_version=$mvapich2_version
          unset mvapich2_version
       elif test "x$ac_cv_have_decl_MPICH_VERSION" = xyes ; then
          mpich_version=`${GREP} MPICH_VERSION saved_conftest.i | cut -d' ' -d'"' -f2`
          AC_MSG_RESULT(MPICH $mpich_version)
+         ax_cv_mpi_compiler_vendor=MPICH
+         ax_cv_mpi_compiler_version=$mpich_version
          unset mpich_version
       elif test "x$ac_cv_have_decl_MPICH2_VERSION" = xyes ; then
          mpich2_version=`${GREP} MPICH2_VERSION saved_conftest.i | cut -d' ' -d'"' -f2`
          AC_MSG_RESULT(MPICH2 $mpich2_version)
+         ax_cv_mpi_compiler_vendor=MPICH2
+         ax_cv_mpi_compiler_version=$mpich2_version
          unset mpich2_version
       elif test "x$ac_cv_have_decl_OMPI_MAJOR_VERSION" = xyes ; then
          # AC_COMPUTE_INT([OMPI_MAJOR], [OMPI_MAJOR_VERSION], [[#include <mpi.h>]])
@@ -284,6 +292,8 @@ AC_DEFUN([CHECK_MPI_VERSION],[
          OMPI_RELEASE=`${GREP} OMPI_RELEASE_VERSION saved_conftest.i | cut -d' ' -f3`
          ompi_version="${OMPI_MAJOR}.${OMPI_MINOR}.${OMPI_RELEASE}"
          AC_MSG_RESULT(OpenMPI $ompi_version)
+         ax_cv_mpi_compiler_vendor=OpenMPI
+         ax_cv_mpi_compiler_version=$ompi_version
          unset OMPI_MAJOR
          unset OMPI_MINOR
          unset OMPI_RELEASE
