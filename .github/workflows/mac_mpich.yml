@@ -36,7 +36,7 @@ jobs:
             brew instal gcc
             which gcc
             gcc --version
-            brew instal gfortran
+            ls -l /usr/local/bin/gfortran*
             which gfortran
             gfortran --version
             brew instal automake autoconf libtool m4

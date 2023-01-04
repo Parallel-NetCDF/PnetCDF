@@ -2,7 +2,7 @@ name: Mac OSX with OpenMPI
 
 on:
   push:
-    branches: [ master, test_github_actions ]
+    branches: [ master ]
     paths-ignore:
       - '**/*.md'
       - '**/*.txt'
@@ -11,7 +11,7 @@ on:
       - '**/*.png'
       - 'docs/*'
   pull_request:
-    branches: [ master, test_github_actions ]
+    branches: [ master ]
     paths-ignore:
       - '**/*.md'
       - '**/*.txt'
