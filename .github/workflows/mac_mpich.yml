@@ -69,7 +69,10 @@ jobs:
                         --enable-romio \
                         --with-file-system=ufs \
                         --with-device=ch3:sock \
-                        CC=gcc FC=gfortran
+                        CC=gcc \
+                        FC=gfortran \
+                        FFLAGS=-fallow-argument-mismatch \
+                        FCFLAGS=-fallow-argument-mismatch
             make -s LIBTOOLFLAGS=--silent V=1 -j 4 install > qout 2>&1
             make -s -j 4 distclean >> qout 2>&1
         - name: Build PnetCDF
