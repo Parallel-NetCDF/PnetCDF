@@ -41,6 +41,19 @@ jobs:
             ln -fs /usr/local/bin/gfortran-${version} /usr/local/bin/gfortran
             ln -fs /usr/local/bin/gcc-${version} /usr/local/bin/gcc
             ln -fs /usr/local/bin/g++-${version} /usr/local/bin/g++
+            # link lib dir for previous GCC versions to avoid missing .dylib issues
+            for (( i=12; i>4; i-- ))
+            do
+              gcc_lib_path="/usr/local/opt/gcc/lib/gcc/$i"
+              if [ -d $gcc_lib_path ]; then
+                echo "found $gcc_lib_path"
+                for (( j=$i; j>4; j-- ))
+                do
+                  ln -fs /usr/local/opt/gcc/lib/gcc/$i /usr/local/opt/gcc/lib/gcc/$j
+                done
+                break
+              fi
+            done
             which gfortran
             gfortran --version
             brew instal automake autoconf libtool m4
