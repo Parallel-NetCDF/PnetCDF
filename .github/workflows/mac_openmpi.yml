@@ -1,0 +1,88 @@
+name: Mac OSX with OpenMPI
+
+on:
+  push:
+    branches: [ master, test_github_actions ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - '**/*.1'
+      - '**/*.jpg'
+      - '**/*.png'
+      - 'docs/*'
+  pull_request:
+    branches: [ master, test_github_actions ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - '**/*.1'
+      - '**/*.jpg'
+      - '**/*.png'
+      - 'docs/*'
+
+jobs:
+    build:
+      runs-on: macos-latest
+      timeout-minutes: 60
+      steps:
+        - uses: actions/checkout@v3
+        - name: Set up dependencies
+          run: |
+            brew instal automake autoconf libtool m4 open-mpi zlib
+            echo "---- location of OpenMPI C compiler ----"
+            which mpicc
+        - name: Build PnetCDF
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            export TMPDIR=/tmp
+            autoreconf -i
+            mkdir -p pnetcdf_output
+            ./configure --enable-option-checking=fatal \
+                        --enable-profiling \
+                        pnc_ac_debug=yes \
+                        --enable-burst_buffering \
+                        --enable-subfiling \
+                        --enable-shared \
+                        --enable-thread-safe \
+                        --with-pthread \
+                        TESTMPIRUN="mpiexec --oversubscribe -n NP" \
+                        TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output
+            make -j 8 tests
+        - name: Print config.log
+          if: ${{ always() }}
+          run: |
+            cat ${GITHUB_WORKSPACE}/config.log
+        - name: make check
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            export TMPDIR=/tmp
+            make check
+        - name: Print test log files
+          if: ${{ always() }}
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            fname=`find src test examples benchmarks -type f -name "*.log"`
+            for f in $fname ; do \
+               bname=`basename $f` ; \
+               if test "x$bname" != xconfig.log ; then \
+                  echo "-------- dump $f ----------------------------" ; \
+                  cat $f ; \
+               fi ; \
+            done
+        - name: make ptests
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            export TMPDIR=/tmp
+            make ptests
+        - name: make distcheck
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            export TMPDIR=/tmp
+            make -j 8 distcheck DISTCHECK_CONFIGURE_FLAGS="--silent"
+        - name: Cleanup
+          if: ${{ always() }}
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            make -s distclean
+            rm -rf pnetcdf_output
+
