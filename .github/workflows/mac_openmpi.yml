@@ -34,6 +34,7 @@ jobs:
         - name: Build PnetCDF
           run: |
             cd ${GITHUB_WORKSPACE}
+            export TMPDIR=/tmp
             autoreconf -i
             mkdir -p pnetcdf_output
             ./configure --enable-option-checking=fatal \
@@ -54,6 +55,7 @@ jobs:
         - name: make check
           run: |
             cd ${GITHUB_WORKSPACE}
+            export TMPDIR=/tmp
             make check
         - name: Print test log files
           if: ${{ always() }}
@@ -70,10 +72,12 @@ jobs:
         - name: make ptests
           run: |
             cd ${GITHUB_WORKSPACE}
+            export TMPDIR=/tmp
             make ptests
         - name: make distcheck
           run: |
             cd ${GITHUB_WORKSPACE}
+            export TMPDIR=/tmp
             make -j 8 distcheck DISTCHECK_CONFIGURE_FLAGS="--silent"
         - name: Cleanup
           if: ${{ always() }}
