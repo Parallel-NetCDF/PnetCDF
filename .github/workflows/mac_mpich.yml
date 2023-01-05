@@ -21,9 +21,7 @@ on:
       - 'docs/*'
 
 env:
-   MPICH_VERSION: 4.0.2
-   HDF5_VERSION: 1.13.3
-   NETCDF_VERSION: 4.9.0
+   MPICH_VERSION: 4.0.3
 
 jobs:
     build:
@@ -73,8 +71,8 @@ jobs:
                         FC=gfortran \
                         FFLAGS=-fallow-argument-mismatch \
                         FCFLAGS=-fallow-argument-mismatch
-            make -s LIBTOOLFLAGS=--silent V=1 -j 4 install > qout 2>&1
-            make -s -j 4 distclean >> qout 2>&1
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 install > qout 2>&1
+            make -s -j 8 distclean >> qout 2>&1
         - name: Build PnetCDF
           run: |
             cd ${GITHUB_WORKSPACE}
@@ -97,6 +95,7 @@ jobs:
             cat ${GITHUB_WORKSPACE}/config.log
         - name: make check
           run: |
+            cd ${GITHUB_WORKSPACE}
             make check
         - name: Print test log files
           if: ${{ always() }}
@@ -112,13 +111,17 @@ jobs:
             done
         - name: make ptests
           run: |
+            cd ${GITHUB_WORKSPACE}
             make ptests
         - name: make distcheck
           run: |
-            make distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --with-mpi=${GITHUB_WORKSPACE}/MPICH"
+            cd ${GITHUB_WORKSPACE}
+            make -j 8 distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --with-mpi=${GITHUB_WORKSPACE}/MPICH"
         - name: Cleanup
           if: ${{ always() }}
           run: |
+            cd ${GITHUB_WORKSPACE}
             make -s distclean
             rm -rf ${GITHUB_WORKSPACE}/pnetcdf_output
+            rm -rf ${GITHUB_WORKSPACE}/MPICH
 

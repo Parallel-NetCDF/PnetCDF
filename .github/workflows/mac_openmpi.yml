@@ -2,7 +2,7 @@ name: Mac OSX with OpenMPI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, test_github_actions ]
     paths-ignore:
       - '**/*.md'
       - '**/*.txt'
@@ -11,7 +11,7 @@ on:
       - '**/*.png'
       - 'docs/*'
   pull_request:
-    branches: [ master ]
+    branches: [ master, test_github_actions ]
     paths-ignore:
       - '**/*.md'
       - '**/*.txt'
@@ -20,20 +20,17 @@ on:
       - '**/*.png'
       - 'docs/*'
 
-env:
-   MPICH_VERSION: 4.0.2
-   HDF5_VERSION: 1.13.3
-   NETCDF_VERSION: 4.9.0
-
 jobs:
     build:
-      runs-on: macos-13
+      runs-on: macos-latest
       timeout-minutes: 60
       steps:
         - uses: actions/checkout@v3
         - name: Set up dependencies
           run: |
             brew instal automake autoconf libtool m4 open-mpi zlib
+            echo "---- location of OpenMPI C compiler ----"
+            which mpicc
         - name: Build PnetCDF
           run: |
             cd ${GITHUB_WORKSPACE}
@@ -56,6 +53,7 @@ jobs:
             cat ${GITHUB_WORKSPACE}/config.log
         - name: make check
           run: |
+            cd ${GITHUB_WORKSPACE}
             make check
         - name: Print test log files
           if: ${{ always() }}
@@ -71,13 +69,16 @@ jobs:
             done
         - name: make ptests
           run: |
+            cd ${GITHUB_WORKSPACE}
             make ptests
         - name: make distcheck
           run: |
-            make distcheck DISTCHECK_CONFIGURE_FLAGS="--silent"
+            cd ${GITHUB_WORKSPACE}
+            make -j 8 distcheck DISTCHECK_CONFIGURE_FLAGS="--silent"
         - name: Cleanup
           if: ${{ always() }}
           run: |
+            cd ${GITHUB_WORKSPACE}
             make -s distclean
-            rm -rf ${GITHUB_WORKSPACE}/pnetcdf_output
+            rm -rf pnetcdf_output
 
