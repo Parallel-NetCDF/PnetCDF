@@ -266,19 +266,19 @@ AC_DEFUN([CHECK_MPI_VERSION],[
    # done before MPICH.
    if test -f saved_conftest.i ; then
       if test "x$ac_cv_have_decl_MVAPICH2_VERSION" = xyes ; then
-         mvapich2_version=`${GREP} MVAPICH2_VERSION saved_conftest.i | cut -d' ' -d'"' -f2`
+         mvapich2_version=`${GREP} " MVAPICH2_VERSION " saved_conftest.i | cut -d' ' -d'"' -f2`
          AC_MSG_RESULT(MVAPICH2 $mvapich2_version)
          ax_cv_mpi_compiler_vendor=MVAPICH2
          ax_cv_mpi_compiler_version=$mvapich2_version
          unset mvapich2_version
       elif test "x$ac_cv_have_decl_MPICH_VERSION" = xyes ; then
-         mpich_version=`${GREP} MPICH_VERSION saved_conftest.i | cut -d' ' -d'"' -f2`
+         mpich_version=`${GREP} " MPICH_VERSION " saved_conftest.i | cut -d' ' -d'"' -f2`
          AC_MSG_RESULT(MPICH $mpich_version)
          ax_cv_mpi_compiler_vendor=MPICH
          ax_cv_mpi_compiler_version=$mpich_version
          unset mpich_version
       elif test "x$ac_cv_have_decl_MPICH2_VERSION" = xyes ; then
-         mpich2_version=`${GREP} MPICH2_VERSION saved_conftest.i | cut -d' ' -d'"' -f2`
+         mpich2_version=`${GREP} " MPICH2_VERSION " saved_conftest.i | cut -d' ' -d'"' -f2`
          AC_MSG_RESULT(MPICH2 $mpich2_version)
          ax_cv_mpi_compiler_vendor=MPICH2
          ax_cv_mpi_compiler_version=$mpich2_version
