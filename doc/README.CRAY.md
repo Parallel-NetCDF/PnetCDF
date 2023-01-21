@@ -85,9 +85,9 @@
 
 ### Historical notes before upgrade to CDT/19.06
 
-* Building PnetCDF on the Cray XC40 (tested on Cori @ NERSC and Theta @ ALCF)
-  http://www.nersc.gov/systems/cori/
-  https://www.alcf.anl.gov/theta
+* Building PnetCDF on the Cray XC40, tested on
+  [Cori @ NERSC](http://www.nersc.gov/systems/cori) and
+  [Theta @ ALCF](https://www.alcf.anl.gov/theta)
   ```console
   ./configure --prefix=/path/to/install \
               cross_compiling="yes" \
@@ -102,7 +102,9 @@
 
   * On April 29, 2019, The default gcc module version 7.0.3 is loaded on Cori,
     which causes `make` process to fail with an error message of
+    ```console
     /usr/bin/ld: attempted static link of dynamic object `/opt/gcc/7.3.0/snos/lib/../lib64/libstdc++.so'
+    ```
     This problem can be resolved by unloading the new gcc module before running
     the configure command, i.e.
     ```console
@@ -119,11 +121,9 @@
               CFLAGS="" CXXFLAGS="" FFLAGS="" FCFLAGS="" \
               --enable-shared LDFLAGS=-dynamic
   ```
-
   See further information about "Shared and Dynamic Libraries" from the
   following NERSC web site:
   http://www.nersc.gov/users/computational-systems/edison/running-jobs/shared-and-dynamic-libraries/
-
 
 * Note on compiling utility programs ncoffsets and cdfdiff.
   Error messages as shown below may appear, when the environment is set to use
@@ -134,8 +134,8 @@
                    from src/utils/ncoffsets/ncoffsets.c:16:
   /theta-archive/intel/compilers_and_libraries_2019.5.281/linux/compiler/include/stdint.h:43:54: error: missing binary operator before token "("
        defined(__has_include_next) && __has_include_next(<stdint.h>)
-  ```
                                                         ^
+  ```
   There are two ways to resolve this problem.
   1. Add "SEQ_CC=icc" to your make command line, i.e.
      make SEQ_CC=icc
@@ -306,17 +306,17 @@ The "nc_test" test will exhaust the available MPI datatypes on the X1.  Your
 application might see this error:
 
 ```console
-   MPI has run out of internal datatype entries.
-   Please set the environment variable MPI_TYPE_MAX for additional space.
-   The current value of MPI_TYPE_MAX is 2098
+MPI has run out of internal datatype entries.
+Please set the environment variable MPI_TYPE_MAX for additional space.
+The current value of MPI_TYPE_MAX is 2098
 ```
 I did as asked and nc_test completed with MPI_TYPE_MAX set to 4096
 
 If you run on the login node, expect to see a lot of these messages:
 
 ```console
-  Process [nc_test] 89345 generated trap, but has signal 8 held or ignored
-        epc 0x1219bb4 ra 0x1219b94 badvaddr 0x40004f0004000020
+Process [nc_test] 89345 generated trap, but has signal 8 held or ignored
+      epc 0x1219bb4 ra 0x1219b94 badvaddr 0x40004f0004000020
 ```
 
 The messages don't *appear* to impact the program results, and additionally do
