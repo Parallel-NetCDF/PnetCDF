@@ -9,8 +9,8 @@ various of APIs as well as access patterns.
      same partitioning patterns are used for read. In both cases, nonblocking
      APIs are used to evaluate the performance.
    + Parameters:
-         * `NVARS`: a defined C macro, the number of variables
-         * `len`:   dimension size of local variables, len x len
+     * `NVARS`: a defined C macro, the number of variables
+     * `len`:   dimension size of local variables, len x len
    + Write and read performance are measured and reported separately.
 
 * C/write_block_read_column.c
