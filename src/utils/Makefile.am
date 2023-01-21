@@ -16,7 +16,7 @@ endif
 # The script shows the end users how pnetcdf is built
 bin_SCRIPTS = pnetcdf-config
 
-EXTRA_DIST = pnetcdf-config.in
+EXTRA_DIST = pnetcdf-config.in README.md
 
 # For VPATH build (parallel build), try delete all sub-directories
 distclean-local:
