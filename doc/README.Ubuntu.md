@@ -1,7 +1,7 @@
 ## Build PnetCDF on Ubuntu
 
 The following waning message may occur during "make". It is safe to ignore.
-See http://gnu-automake.7480.n7.nabble.com/bug-20082-new-warning-from-ar-on-rawhide-systems-td21769.html
+* See http://gnu-automake.7480.n7.nabble.com/bug-20082-new-warning-from-ar-on-rawhide-systems-td21769.html
 ```console
 ar: `u' modifier ignored since `D' is the default (see `U')
 ```
