@@ -27,13 +27,13 @@ Northwestern University and Argonne National Laboratory.
 * Use the source codes in this repository only if you are interested in
   contributing the project and we welcome and appreciate any contribution.
 * To clone this repository, run command
-  ```
+  ```console
   git clone https://github.com/Parallel-NetCDF/PnetCDF.git
   ```
   This will create a new folder named `PnetCDF`.
 * Before running configure command to build PnetCDF, please run commands below
   first.
-  ```
+  ```console
   cd PnetCDF
   autoreconf -i
   ```
