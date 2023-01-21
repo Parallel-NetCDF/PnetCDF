@@ -52,7 +52,7 @@ plotfile_ncmpi_parallel.o: plotfile_ncmpi_parallel.F90 $(HEADER_FILES)
 flash_benchmark_io.o: flash_benchmark_io.F90 $(HEADER_FILES)
 
 EXTRA_DIST = $(HEADER_FILES) \
-             README \
+             README.md \
              configure.ac \
              parallel_run.sh
 
