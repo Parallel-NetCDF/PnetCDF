@@ -1,53 +1,42 @@
-#
-# Copyright (C) 2017, Northwestern University and Argonne National Laboratory
-# See COPYRIGHT notice in top-level directory.
-#
-# $Id$
-
------------------------------------------------------------------------------
- Using Burst Buffers in PnetCDF
------------------------------------------------------------------------------
+## Using Burst Buffers in PnetCDF
 Burst buffer driver implements a log-based I/O aggregation for write requests.
 It is designed to work on a wide range of burst buffer architecture.
 
------------------------------------------------------------------------------
- Publication
------------------------------------------------------------------------------
+### Publication
 For detailed description of the implementation of the burst buffer feature,
 please refer to:
 
-Kai-Yuan Hou, Reda Al-Bahrani, Esteban Rangel, Ankit Agrawal, Robert Latham, 
-Robert Ross, Alok Choudhary, and Wei-keng Liao. Integration of Burst Buffer 
-in High-Level Parallel I/O Library for Exascale Computing Era. In the 
-Workshop on Parallel Data Storage & Data Intensive Scalable Computing Systems, 
-held in conjunction with the International Conference for High Performance 
-Computing, Networking, Storage and Analysis, November 2018.
-http://cucis.ece.northwestern.edu/publications/pdf/HAR18.pdf
+* Kai-Yuan Hou, Reda Al-Bahrani, Esteban Rangel, Ankit Agrawal, Robert Latham,
+  Robert Ross, Alok Choudhary, and Wei-keng Liao. Integration of Burst Buffer
+  in High-Level Parallel I/O Library for Exascale Computing Era. In the
+  Workshop on Parallel Data Storage & Data Intensive Scalable Computing
+  Systems, held in conjunction with the International Conference for High
+  Performance Computing, Networking, Storage and Analysis, November 2018.
+  http://cucis.ece.northwestern.edu/publications/pdf/HAR18.pdf
 
------------------------------------------------------------------------------
- Build PnetCDF with burst buffer feature
------------------------------------------------------------------------------
+### Build PnetCDF with burst buffer feature
 Add "--enable-burst-buffering" to your configure command line, e.g.
+```console
     ./configure --prefix=/path/to/install --enable-burst-buffering
+```
 
------------------------------------------------------------------------------
- Running applications to make use of burst buffers
------------------------------------------------------------------------------
+### Running applications to make use of burst buffers
 The burst buffer feature is enabled by setting the PnetCDF I/O hint,
-nc_burst_buf, in an MPI info object and passing it to file creation and
+`nc_burst_buf`, in an MPI info object and passing it to file creation and
 opening, for instance by adding the following line in the MPI program.
+```c
     MPI_Info_set(info, "nc_burst_buf", "enable");
-
-The hint can also be set through the environment variable PNETCDF_HINTS at the
-run time.
+```
+The hint can also be set through the environment variable `PNETCDF_HINTS` at
+the run time.
+```console
     export PNETCDF_HINTS="nc_burst_buf=enable"
+```
 
------------------------------------------------------------------------------
- PnetCDF I/O hints for burst buffer controls
------------------------------------------------------------------------------
+### PnetCDF I/O hints for burst buffer controls
 
 Below is a list of supported hints.
-
+```
 Hint key                        Values          Default  Description
 ---------                       ------          -------  -----------
 nc_burst_buf                    enable/disable  disable  Enabling/disabling
@@ -73,11 +62,10 @@ nc_burst_buf_flush_buffer_size  <integer>       0        Amount of memory per
                                                          that it is larger than
                                                          any individual I/O
                                                          requests.
+```
 
------------------------------------------------------------------------------
- Example job script using DataWarp on Cori @NERSC
------------------------------------------------------------------------------
-
+### Example job script using DataWarp on Cori @NERSC
+```console
 #!/bin/bash
 #SBATCH -p regular
 #SBATCH -N 1
@@ -88,15 +76,13 @@ nc_burst_buf_flush_buffer_size  <integer>       0        Amount of memory per
 #
 export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${DW_JOB_PRIVATE};nc_burst_buf_del_on_close=disable"
 srun -n 1 ./a.out
-
-Note in this example, hint nc_burst_buf_dirname is set to the DataWarp path
+```
+Note in this example, hint `nc_burst_buf_dirname` is set to the DataWarp path
 automatically by the job scheduler SLURM. See more information about the
 DataWarp usage in:
 http://www.nersc.gov/users/computational-systems/cori/burst-buffer
 
------------------------------------------------------------------------------
- Burst buffering design in PnetCDF
------------------------------------------------------------------------------
+### Burst buffering design in PnetCDF
 
 The burst buffer driver is a wrapper driver of the ncmpio (MPI-IO) driver. All
 variable write APIs are intercepted and their requests are saved (cached) in
@@ -109,16 +95,14 @@ accommodate all data cached in burst buffer, flushing will be done in multiple
 rounds.
 
 The data stored in the burst buffer is flushed (log-replayed) when:
-    (1) the NetCDF file is closed,
-    (2) a read request is made to a variable written before,
-    (3) ncmpi_wait/ncmpi_wait_all is called
-    (4) ncmpi_flush is called, or
-    (5) ncmpi_close is called.
+1. the NetCDF file is closed,
+2. a read request is made to a variable written before,
+3. `ncmpi_wait`/`ncmpi_wait_all` is called
+4. `ncmpi_flush` is called, or
+5. `ncmpi_close` is called.
 
 
------------------------------------------------------------------------------
- Known issues
------------------------------------------------------------------------------
+### Known issues
 
 1. Burst buffering delays file writes until log-replay time. If an error occurs
    to an individual request, it will be reported at the flushing time and only
@@ -126,24 +110,21 @@ The data stored in the burst buffer is flushed (log-replayed) when:
 
 2. Partial flushing is not supported. Any flushing calls will flush the entire
    cached data to the destination file system.  Thus, cancelling nonblocking
-   write requests may result in getting the error code NC_EFLUSHED, which means
-   it is too late to cancel as the requests have been flushed.
+   write requests may result in getting the error code `NC_EFLUSHED`, which
+   means it is too late to cancel as the requests have been flushed.
 
 3. Sequential consistency is not guaranteed. The burst buffer driver does not
    consider the order of write requests when flushing.  As a result, if the
    application write to the same file location multiple times without flushing,
    the resulting NetCDF file can contain either value regardless the order the
-   write requests were made. Users must call ncmpi_flush in order to ensure the
+   write requests were made. Users must call `ncmpi_flush` in order to ensure the
    desired consistency.  For example, after the first write to a variable, a
    flush must be explicitly called before the second write to the same
    variable.
 
-
------------------------------------------------------------------------------
- Metadata file format
- (file format using the Backus Normal Form (BNF) grammar notation)
------------------------------------------------------------------------------
-
+### Metadata file format
+The file format uses the Backus Normal Form (BNF) grammar notation.
+```c
 metadata_file	= header [entry ...]	// two sections: header and entry
 header		= magic format big_endian is_external num_ranks rank_id max_ndims num_entries entry_begin basename proc_name
 magic		= "PnetCDF" VERSION	// case sensitive 8-byte string
@@ -225,15 +206,20 @@ NEGONE		= -1		// 4-byte integer in native representation
 NEGTWO		= -2		// 4-byte integer in native representation
 NEGTHREE	= -3		// 4-byte integer in native representation
 NEGFOUR		= -4		// 4-byte integer in native representation
-
+```
 * Metadata log file size:
-	header size = 80 bytes + strlen(basename) + strlen(proc_name)
-        each entry size = 48 bytes + ndims * 24 bytes
+```
+    header size = 80 bytes + strlen(basename) + strlen(proc_name)
+    each entry size = 48 bytes + ndims * 24 bytes
+```
 
------------------------------------------------------------------------------
-data file format
------------------------------------------------------------------------------
-
+### data file format
+```
 data_file	= magic [entry ...]
 magic		= "PnetCDF" VERSION	// case sensitive 8-byte string
 entry		= <data>
+```
+
+* Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+  See COPYRIGHT notice in top-level directory.
+

@@ -1,12 +1,4 @@
-#
-# Copyright (C) 2017, Northwestern University and Argonne National Laboratory
-# See COPYRIGHT notice in top-level directory.
-#
-# $Id$
-
----------------------------------------------
-Note on parallel I/O data consistency
----------------------------------------------
+## Note on parallel I/O data consistency
 
 PnetCDF follows the same parallel I/O data consistency as MPI-IO standard.
 Refer the URL below for more information.
@@ -30,9 +22,7 @@ If NC_SHARE is not set, then users are responsible for their desired data
 consistency. To enforce a stronger consistency, users can explicitly call
 ncmpi_sync(). In ncmpi_sync(), MPI_File_sync() and MPI_Barrier() are called.
 
----------------------------------------------
-Note on header consistency in memory and file
----------------------------------------------
+### Note on header consistency in memory and file
 In data mode, changes to file header can happen in the following scenarios.
   1. Renaming variables, dimensions, or attributes, when users make calls to
      ncmpi_rename_var(), ncmpi_rename_dim(), or ncmpi_rename_att().
@@ -80,4 +70,7 @@ Some facts in PnetCDF implementation:
 
 5. rename() and put_att() are not allowed to be called independently in data
    mode.
+
+* Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+  See COPYRIGHT notice in top-level directory.
 

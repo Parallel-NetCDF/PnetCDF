@@ -9,20 +9,20 @@
 SUBDIRS = pnetcdf-api
 DIST_SUBDIRS = $(SUBDIRS)
 
-EXTRA_DIST = README.CRAY \
-             README.Fujitsu \
-             README.INTEL \
-             README.IBM \
-             README.K-Computer \
-             README.LINUX \
-             README.SGI \
-             README.SX \
-             README.Ubuntu \
-             README.consistency \
-             README.large_files \
+EXTRA_DIST = README.CRAY.md \
+             README.Fujitsu.md \
+             README.INTEL.md \
+             README.IBM.md \
+             README.K-Computer.md \
+             README.LINUX.md \
+             README.SGI.md \
+             README.SX.md \
+             README.Ubuntu.md \
+             README.consistency.md \
+             README.large_files.md \
              README.NetCDF4.md \
              README.ADIOS.md \
-             README.burst_buffering \
+             README.burst_buffering.md \
              pbs.script
 
 # For VPATH build (parallel build), try delete all sub-directories

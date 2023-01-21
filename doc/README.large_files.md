@@ -1,16 +1,11 @@
-#
-# Copyright (C) 2017, Northwestern University and Argonne National Laboratory
-# See COPYRIGHT notice in top-level directory.
-#
-# $Id$
+## Note on Large-file Support
 
 For latest information of large-file support, please visit PnetCDF home page:
 https://parallel-netcdf.github.io and refer to the Section "A Note About Large
 File Support".
 
 
-==== BACKGROUND
-
+### BACKGROUND
 The classic NetCDF file format (CDF-1) uses a 4-byte value to hold the
 offset into the file where one can find a variable's data
 
@@ -28,8 +23,7 @@ file format.  We (the PnetCDF developers) will make our best effort to keep our
 implementation compatible with the serial netcdf implementation. Please report
 any incompatibilities to the developers at parallel-netcdf@mcs.anl.gov.
 
-==== PRELIMINARIES
-
+### PRELIMINARIES
 First, it is important that your MPI-IO implementation uses an 8 byte type to
 represent the 'MPI_Offset'. Starting from 1.9.0, PnetCDF requires the
 underneath MPI library's MPI_Offset to be of 8-byte size.
@@ -41,8 +35,7 @@ automatically add the right options to the compiler to make this happen.
 Run configure as you normally would.  Let the developers know if configure says
 your 'off_t' is 4 bytes.  Proceed to compile and install the library.
 
-==== USAGE
-
+### USAGE
 By default, PnetCDF will create CDF-1 formatted files. This will ensure that
 datasets created by our library will be compatible with the large body of
 applications which expect NetCDF files to be CDF-1 formatted.
@@ -54,4 +47,7 @@ interface)
 The PnetCDF library will detect the format of the dataset. There are no
 special options needed to read back files created with the
 NC_64BIT_OFFSET or NC_64BIT_DATA flag set.
+
+* Copyright (C) 2017, Northwestern University and Argonne National Laboratory
+  See COPYRIGHT notice in top-level directory.
 
