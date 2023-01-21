@@ -24,9 +24,8 @@
   + https://wiki.mpich.org/mpich/index.php/Frequently_Asked_Questions#Q:_I_get_compile_errors_saying_.22SEEK_SET_is_.23defined_but_must_not_be_for_the_C.2B.2B_binding_of_MPI.22
 
 * If you encountered the following error when using mpiicc compiler, add
-  ```console
   "CPP="mpiicc -E"" to your configure command line should resolve the problem.
-
+  ```console
   configure: error: in pnetcdf-1.11.0': configure: error: C preprocessor "mpiicc" fails sanity check See config.log' for more details
   ```
   + See issue [#43](https://github.com/Parallel-NetCDF/PnetCDF/issues/43).
