@@ -25,3 +25,6 @@ various of APIs as well as access patterns.
    + This benchmark is algorithmically identical to its I/O kernel.
    + This distribution contains only PnetCDF I/O method.
 
+Copyright (C) 2012, Northwestern University and Argonne National Laboratory.
+See COPYRIGHT notice in top-level directory.
+

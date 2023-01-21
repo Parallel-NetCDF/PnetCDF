@@ -349,6 +349,6 @@ with C, C++, F77, and F90 versions.
   + This examples shows how to enumerate all variables, dimensions, and
     attributes from a BP file
 
-* Copyright (C) 2012, Northwestern University and Argonne National Laboratory
-  See COPYRIGHT notice in top-level directory.
+Copyright (C) 2012, Northwestern University and Argonne National Laboratory.
+See COPYRIGHT notice in top-level directory.
 

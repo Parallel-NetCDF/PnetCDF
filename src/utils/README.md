@@ -42,3 +42,5 @@
 * `pnetcdf_version` prints the version information of PnetCDF library and the
   configure command line used to build the library
 
+Copyright (C) 2012, Northwestern University and Argonne National Laboratory.
+See COPYRIGHT notice in top-level directory.
