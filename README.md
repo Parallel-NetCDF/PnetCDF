@@ -13,7 +13,7 @@ Northwestern University and Argonne National Laboratory.
 * https://parallel-netcdf.github.io
 
 ### PnetCDF official software releases
-* All official released versions can be found in
+* All **official released versions** can be found in
   https://parallel-netcdf.github.io/wiki/Download.html
 * Note the ["releases"](https://github.com/Parallel-NetCDF/PnetCDF/releases)
   link on this page above contains only tagged versions. They are by no means
@@ -39,9 +39,9 @@ Northwestern University and Argonne National Laboratory.
   ```
   Several files, e.g. configure and Makefile.in, will be created for running the
   configure command. The minimum versions of GNU autotools required are:
-  + [autoconfig](https://www.gnu.org/software/autoconf/autoconf.html) version 2.69
-  + [automake](https://www.gnu.org/software/automake) version 1.13
-  + [libtool](https://www.gnu.org/software/libtool) version 2.4.2
+  + [autoconfig](https://www.gnu.org/software/autoconf/autoconf.html) version 2.70
+  + [automake](https://www.gnu.org/software/automake) version 1.16.5
+  + [libtool](https://www.gnu.org/software/libtool) version 2.4.6
   + [m4](https://www.gnu.org/software/m4/m4.html) version 1.4.17
 
 ### Build instructions and recipes
@@ -56,8 +56,8 @@ Northwestern University and Argonne National Laboratory.
 [![OpenMPI](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_openmpi.yml/badge.svg)](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_openmpi.yml)
 
 ### PnetCDF user guide
-* C references: http://cucis.ece.northwestern.edu/projects/PnetCDF/doc/pnetcdf-c
-* Questions & Answers: http://cucis.ece.northwestern.edu/projects/PnetCDF/faq.html
+* [C API references](http://cucis.ece.northwestern.edu/projects/PnetCDF/doc/pnetcdf-c)
+* [Questions & Answers](http://cucis.ece.northwestern.edu/projects/PnetCDF/faq.html)
 
 ### Mailing List
 * parallel-netcdf@mcs.anl.gov

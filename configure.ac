@@ -13,8 +13,8 @@ dnl number as a stamp into configure script.
 dnl AC_REVISION([$Revision$])dnl
 
 dnl autoconf v2.70 and later is required. See https://github.com/Parallel-NetCDF/PnetCDF/issues/94
-dnl autoconf v2.71 was released in 2021-01-28
-AC_PREREQ([2.71])
+dnl autoconf v2.70 was released in 2021-01-28
+AC_PREREQ([2.70])
 AC_INIT([PnetCDF],[1.12.3],[parallel-netcdf@mcs.anl.gov],[pnetcdf],[https://parallel-netcdf.github.io])
 
 dnl config.h.in will be created by autoreconf (autoheader)
