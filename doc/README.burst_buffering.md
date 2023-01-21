@@ -208,10 +208,8 @@ NEGTHREE	= -3		// 4-byte integer in native representation
 NEGFOUR		= -4		// 4-byte integer in native representation
 ```
 * Metadata log file size:
-```
-    header size = 80 bytes + strlen(basename) + strlen(proc_name)
-    each entry size = 48 bytes + ndims * 24 bytes
-```
+  + header size = 80 bytes + strlen(basename) + strlen(proc_name)
+  + each entry size = 48 bytes + ndims * 24 bytes
 
 ### data file format
 ```
