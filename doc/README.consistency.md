@@ -71,6 +71,6 @@ Some facts in PnetCDF implementation:
 5. rename() and put_att() are not allowed to be called independently in data
    mode.
 
-* Copyright (C) 2017, Northwestern University and Argonne National Laboratory
-  See COPYRIGHT notice in top-level directory.
+Copyright (C) 2017, Northwestern University and Argonne National Laboratory.
+See COPYRIGHT notice in top-level directory.
 

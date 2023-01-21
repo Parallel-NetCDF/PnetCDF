@@ -218,6 +218,6 @@ magic		= "PnetCDF" VERSION	// case sensitive 8-byte string
 entry		= <data>
 ```
 
-* Copyright (C) 2017, Northwestern University and Argonne National Laboratory
-  See COPYRIGHT notice in top-level directory.
+Copyright (C) 2017, Northwestern University and Argonne National Laboratory.
+See COPYRIGHT notice in top-level directory.
 

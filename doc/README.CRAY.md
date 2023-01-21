@@ -326,7 +326,6 @@ Fortran codes should use '-eh' so that the Cray ftn compiler will use 1 byte
 for int*1 and 2 bytes for int*2.  Otherwise, our Fortran bindings will pass
 incorrect values to the C routines.
 
-* Copyright (C) 2017, Northwestern University and Argonne National Laboratory
-  See COPYRIGHT notice in top-level directory.
-
+Copyright (C) 2017, Northwestern University and Argonne National Laboratory.
+See COPYRIGHT notice in top-level directory.
 

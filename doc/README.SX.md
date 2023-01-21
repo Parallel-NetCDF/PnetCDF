@@ -37,5 +37,5 @@
 * Rene Redler <redler@ccrl-nece.de>
 * Joachim Worringen <joachim@ccrl-nece.de>
 
-* Copyright (C) 2017, Northwestern University and Argonne National Laboratory
-  See COPYRIGHT notice in top-level directory.
+Copyright (C) 2017, Northwestern University and Argonne National Laboratory.
+See COPYRIGHT notice in top-level directory.

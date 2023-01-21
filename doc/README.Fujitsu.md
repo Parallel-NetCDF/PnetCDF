@@ -60,6 +60,6 @@ necessary to prevent the failure of building PnetCDF Fortran interfaces, due to
 Fujitsu Fortran compiler requires no "-L" for linking internal libraries.
 Adding "-L." to force the linker to use this flag.
 
-* Copyright (C) 2017, Northwestern University and Argonne National Laboratory
-  See COPYRIGHT notice in top-level directory.
+Copyright (C) 2017, Northwestern University and Argonne National Laboratory.
+See COPYRIGHT notice in top-level directory.
 

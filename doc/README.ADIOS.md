@@ -128,6 +128,5 @@ The following features are not supported because the availability of APIs is dif
 * ADIOS does not support collective I/O on reading. As a result, PnetCDF will always perform independent read even if collective API is called.
 * Opening some of the BP files in big-endian on a little-endian machine may cause an error (ex. output file of ADIOS examples/C/attributes/attributes_write). This is caused by a bug in ADIOS library before (and including) version 1.13.1. When linking against ADIOS version before and including 1.13.1, PnetCDF will disable tests related to the bug. For details about the bug, please refer to https://github.com/ornladios/ADIOS/issues/195
 
-Copyright (C) 2018, Northwestern University and Argonne National Laboratory
-
+Copyright (C) 2018, Northwestern University and Argonne National Laboratory.
 See COPYRIGHT notice in the top-level directory.

@@ -72,6 +72,6 @@ and set the MPICC, MPICXX, and LDFLAGS environment variables to the followings.
    exit
   ```
 
-* Copyright (C) 2017, Northwestern University and Argonne National Laboratory
-  See COPYRIGHT notice in top-level directory.
+Copyright (C) 2017, Northwestern University and Argonne National Laboratory.
+See COPYRIGHT notice in top-level directory.
 

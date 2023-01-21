@@ -48,6 +48,6 @@ The PnetCDF library will detect the format of the dataset. There are no
 special options needed to read back files created with the
 NC_64BIT_OFFSET or NC_64BIT_DATA flag set.
 
-* Copyright (C) 2017, Northwestern University and Argonne National Laboratory
-  See COPYRIGHT notice in top-level directory.
+Copyright (C) 2017, Northwestern University and Argonne National Laboratory.
+See COPYRIGHT notice in top-level directory.
 

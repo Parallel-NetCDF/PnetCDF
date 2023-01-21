@@ -334,6 +334,6 @@ configure --build powerpc32-unknown-gnu --host powerpc-suse-linux  \
    setenv CXXFLAGS -q64
   ```
 
-* Copyright (C) 2017, Northwestern University and Argonne National Laboratory
-  See COPYRIGHT notice in top-level directory.
+Copyright (C) 2017, Northwestern University and Argonne National Laboratory.
+See COPYRIGHT notice in top-level directory.
 

@@ -32,6 +32,6 @@ ar: `u' modifier ignored since `D' is the default (see `U')
    collect2: error: ld returned 1 exit status
   ```
 
-* Copyright (C) 2017, Northwestern University and Argonne National Laboratory
-  See COPYRIGHT notice in top-level directory.
+Copyright (C) 2017, Northwestern University and Argonne National Laboratory.
+See COPYRIGHT notice in top-level directory.
 

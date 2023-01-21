@@ -134,7 +134,6 @@ different.
   are simply the size of data passed between PnetCDF and NetCDF, not the actual
   size read from or written to the file system.
 
-Copyright (C) 2018, Northwestern University and Argonne National Laboratory
-
+Copyright (C) 2018, Northwestern University and Argonne National Laboratory.
 See COPYRIGHT notice in top-level directory.
 

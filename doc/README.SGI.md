@@ -38,6 +38,6 @@ issues not directly related to the library:
   latest MIPSpro compiler release fixes this issue, so upgrade if
   possible.
 
-* Copyright (C) 2017, Northwestern University and Argonne National Laboratory
-  See COPYRIGHT notice in top-level directory.
+Copyright (C) 2017, Northwestern University and Argonne National Laboratory.
+See COPYRIGHT notice in top-level directory.
 

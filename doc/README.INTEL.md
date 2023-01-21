@@ -30,6 +30,6 @@
   ```
   + See issue [#43](https://github.com/Parallel-NetCDF/PnetCDF/issues/43).
 
-* Copyright (C) 2017, Northwestern University and Argonne National Laboratory
-  See COPYRIGHT notice in top-level directory.
+Copyright (C) 2017, Northwestern University and Argonne National Laboratory.
+See COPYRIGHT notice in top-level directory.
 
