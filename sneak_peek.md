@@ -64,6 +64,8 @@ This is essentially a placeholder for the next release note ...
   + ncvalidator - Add printing of the dimension size of a variable when its
     size is larger than the limitation allowed by the file format. See commit
     5584d44.
+  + Add file src/utils/README.md which gives short descriptions of the utility
+    programs and collapsible bullets to display their manual pages.
 
 * Other updates:
   + Upgrade autotool version requirement to autoconf 2.71, automake 1.16.5, and
