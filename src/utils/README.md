@@ -714,14 +714,13 @@
  
  OPTIONS
         -v var1[,...]
-               The output will include data values for the specified variables.
-               One or more variables must be specified by name in the comma-de-
-               limited  list  following this option.  The list must be a single
-               argument to the command, hence cannot contain  blanks  or  other
-               white  space  characters.   The  named  variables  must be valid
-               netCDF variables in the input file.  The default,  without  this
-               option  is  to include data values for all variables in the out-
-               put.
+               The output will only display  the  offset  information  for  the
+               specified variables. Names of one or more variables must be pro-
+               vided in the comma-delimited list which must not contain  blanks
+               or  other  white  space  characters. The named variables must be
+               valid netCDF variables in the input  file.  The  default,  i.e.,
+               without  this  option,  is to display the offset information for
+               all variables stored in the input file.
  
         -s     Print the variable size in bytes. For record variables, only the
                size of one record is printed.
