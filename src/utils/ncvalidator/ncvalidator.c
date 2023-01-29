@@ -6,10 +6,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>  /* open() */
-#include <sys/stat.h>   /* open() */
+#include <sys/types.h>  /* open(), fstat() */
+#include <sys/stat.h>   /* open(), fstat() */
 #include <fcntl.h>      /* open() */
-#include <unistd.h>     /* read(), getopt() */
+#include <unistd.h>     /* read(), getopt(), fstat() */
 #include <string.h>     /* strcpy(), strncpy() */
 #include <inttypes.h>   /* check for Endianness, uint32_t*/
 #include <assert.h>
@@ -2637,7 +2637,7 @@ int main(int argc, char **argv)
     /* class file format: CDF-1, 2 or 5 */
     fmt = ncp->format;
 
-    /* check data size */
+    /* check file size */
     if (-1 == fstat(fd, &ncfilestat)) {
         if (verbose) printf("Error at line %d fstat (%s)\n",__LINE__,strerror(errno));
         status = NC_EFILE;
@@ -2647,10 +2647,10 @@ int main(int argc, char **argv)
         long long expect_fsize;
         expect_fsize = ncp->begin_rec + ncp->recsize * ncp->numrecs;
         if (expect_fsize < ncfilestat.st_size) {
-            if (verbose) printf("Error: file size (%lld) is larger than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
-            if (verbose) printf("\tbegin_rec=%lld recsize=%lld numrecs=%lld ncfilestat.st_size=%lld\n",ncp->begin_rec, ncp->recsize, ncp->numrecs, (long long) ncfilestat.st_size);
-            status = NC_EFILE;
-            goto prog_exit;
+            if (verbose) {
+                printf("Warning: file size (%lld) is larger than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
+                printf("\tbegin_rec=%lld recsize=%lld numrecs=%lld ncfilestat.st_size=%lld\n",ncp->begin_rec, ncp->recsize, ncp->numrecs, (long long) ncfilestat.st_size);
+            }
         }
         else if (expect_fsize > ncfilestat.st_size) {
             /* if file header are valid and the only error is the file size
@@ -2674,10 +2674,10 @@ int main(int argc, char **argv)
             expect_fsize = MAX(expect_fsize, var_end);
         }
         if (expect_fsize < ncfilestat.st_size) {
-            if (verbose) printf("Error:\n");
-            if (verbose) printf("\tfile size (%lld) is larger than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
-            status = NC_EFILE;
-            goto prog_exit;
+            if (verbose) {
+                printf("Warning:\n");
+                printf("\tfile size (%lld) is larger than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
+            }
         }
         else if (expect_fsize > ncfilestat.st_size) {
             /* if file header are valid and the only error is the file size
