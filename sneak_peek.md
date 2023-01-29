@@ -61,6 +61,17 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Updated utility program
+  + ncvalidator - When the file size is larger and smaller than expected, the
+    file may still be a valid netCDF file.
+    * When larger, this can happen if opening an existing file that contains no
+      variable. Deleting a global attribute reduces the file header size. The
+      file is still a valid netCDF file. PR #99 detects this mismatch and
+      truncates the file size to the header size.
+    * When smaller, this can happen if the last variable is partially written.
+      The expected file size is calculated based on the full sizes of all
+      variables. The file is still a valid netCDF file.
+    * In the former case, PR #99 changes ncvalidator to report a warning,
+      rather than an error.
   + ncvalidator - Add printing of the dimension size of a variable when its
     size is larger than the limitation allowed by the file format. See commit
     5584d44.
@@ -99,6 +110,7 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
+  + test/testcases/tst_del_attr.c - test delete attributes. See PR #99.
   + test/testcases/test_get_varn.c - test get_varn API. See PR #90.
   + test/testcases/flexible_var.c - test flexible var API
   + test/testcases/flexible_api.f - test flexible API when bufcount == -1
