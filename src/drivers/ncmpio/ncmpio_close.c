@@ -176,29 +176,31 @@ ncmpio_close(void *ncdp)
 
         MPI_Comm_rank(ncp->comm, &rank);
         if (rank == 0) {
-            int fd;
-
             /* ignore all errors, as unexpected file size if not a fatal error */
-            fd = open(ncp->path, O_RDWR, 0666);
+#ifdef HAVE_TRUNCATE
+            int fd = open(ncp->path, O_RDWR, 0666);
             if (fd != -1) {
                 /* obtain file size */
                 off_t file_size = lseek(fd, 0, SEEK_END);
-
                 /* truncate file size to header size, if larger than header */
-                if (file_size > ncp->xsz) {
-#ifdef HAVE_TRUNCATE
+                if (file_size > ncp->xsz)
                     ftruncate(fd, ncp->xsz);
-#else
-                    /* call MPI_File_set_size() to truncate the file */
-                    MPI_File fh;
-                    err = MPI_File_open(MPI_COMM_SELF, ncp->path, MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
-                    if (err == MPI_SUCCESS)
-                        MPI_File_set_size(fh, ncp->xsz);
-                    MPI_File_close(&fh);
-#endif
-                }
                 close(fd);
             }
+#else
+            MPI_File fh;
+            err = MPI_File_open(MPI_COMM_SELF, ncp->path, MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
+            if (err == MPI_SUCCESS) {
+                /* obtain file size */
+                MPI_Offset *file_size;
+                MPI_File_seek(fh, 0, MPI_SEEK_END);
+                MPI_File_get_position(fh, &file_size);
+                /* truncate file size to header size, if larger than header */
+                if (file_size > ncp->xsz)
+                    MPI_File_set_size(fh, ncp->xsz);
+                MPI_File_close(&fh);
+            }
+#endif
         }
         MPI_Barrier(ncp->comm);
     }
