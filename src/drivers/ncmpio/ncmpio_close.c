@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <sys/types.h> /* open(), lseek() */
+#include <sys/stat.h>  /* open() */
+#include <fcntl.h>     /* open() */
+#include <unistd.h>    /* truncate(), lseek() */
 #include <errno.h>
 
 #include <mpi.h>
@@ -162,6 +166,42 @@ ncmpio_close(void *ncdp)
     /* calling MPI_File_close() */
     err = ncmpio_close_files(ncp, 0);
     if (status == NC_NOERR) status = err;
+
+    /* file is open for write and no variable has been defined */
+    if (!NC_readonly(ncp) && ncp->vars.ndefined == 0) {
+        int rank;
+
+        /* wait until all processes close the file */
+        MPI_Barrier(ncp->comm);
+
+        MPI_Comm_rank(ncp->comm, &rank);
+        if (rank == 0) {
+            int fd;
+
+            /* ignore all errors, as unexpected file size if not a fatal error */
+            fd = open(ncp->path, O_RDWR, 0666);
+            if (fd != -1) {
+                /* obtain file size */
+                off_t file_size = lseek(fd, 0, SEEK_END);
+
+                /* truncate file size to header size, if larger than header */
+                if (file_size > ncp->xsz) {
+#ifdef HAVE_TRUNCATE
+                    ftruncate(fd, ncp->xsz);
+#else
+                    /* call MPI_File_set_size() to truncate the file */
+                    MPI_File fh;
+                    err = MPI_File_open(MPI_COMM_SELF, ncp->path, MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
+                    if (err == MPI_SUCCESS)
+                        MPI_File_set_size(fh, ncp->xsz);
+                    MPI_File_close(&fh);
+#endif
+                }
+                close(fd);
+            }
+        }
+        MPI_Barrier(ncp->comm);
+    }
 
     /* free up space occupied by the header metadata */
     ncmpio_free_NC(ncp);
