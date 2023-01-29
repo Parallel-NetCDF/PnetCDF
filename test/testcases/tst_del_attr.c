@@ -1,8 +1,6 @@
 /*
- *  Copyright (C) 2015, Northwestern University and Argonne National Laboratory
+ *  Copyright (C) 2023, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
- *
- *  $Id$
  */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -17,11 +15,18 @@
  *    % mpiexec -l -n 1 check_type testfile.nc
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h> /* open(), lseek() */
+#include <sys/stat.h>  /* open() */
+#include <fcntl.h>     /* open() */
+#include <unistd.h>    /* lseek() */
 #include <string.h>
-#include <strings.h> /* strcasecmp() */
-#include <libgen.h> /* basename() */
+#include <strings.h>   /* strcasecmp() */
+#include <libgen.h>    /* basename() */
+#include <errno.h>    /* basename() */
+
 #include <pnetcdf.h>
 
 #include <testutils.h>
@@ -50,7 +55,10 @@ tst_fmt(char *filename, int cmode)
                            "attr_NC_INT64",
                            "attr_NC_UINT64"};
     char buf[1024];
-    int i, j, err, nerrs=0, ncid, max_type;
+    int i, j, err, nerrs=0, rank, ncid, max_type;
+    MPI_Offset header_size;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (cmode == 0 || cmode == NC_64BIT_OFFSET || cmode & NC_CLASSIC_MODEL)
         max_type = NC_DOUBLE;
@@ -78,8 +86,14 @@ tst_fmt(char *filename, int cmode)
         err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
         err = ncmpi_redef(ncid); CHECK_ERR
 
-        err = ncmpi_del_att(ncid, NC_GLOBAL, attr_name[i]); CHECK_ERR
+        err = ncmpi_del_att(ncid, NC_GLOBAL, attr_name[i]);
         ATTR_EXP_ERR(NC_NOERR, attr_name[i])
+
+        /* call enddef to recalculate the header size */
+        err = ncmpi_enddef(ncid); CHECK_ERR
+
+        /* obtained updated header size */
+        err = ncmpi_inq_header_size(ncid, &header_size); CHECK_ERR
 
         err = ncmpi_close(ncid); CHECK_ERR
 
@@ -87,8 +101,27 @@ tst_fmt(char *filename, int cmode)
          * expected, i.e. larger than if no attribute is ever created. It is
          * not a fatal error. The file is still a valid NetCDF file. We should
          * expect running ncvalidator to print a warning message, such as
-         * "file size (80) is larger than expected (48)!"
+         * "file size (80) is larger than expected (48)!" See the fix in PR 99.
          */
+
+        if (rank == 0) {
+            off_t file_size;
+            int fd = open(filename, O_RDONLY, 0666);
+
+            if (fd == -1) {
+                printf("Error: file open %s (%s)\n",filename,strerror(errno));
+                return 1;
+            }
+
+            /* obtain file size */
+            file_size = lseek(fd, 0, SEEK_END);
+
+            if (file_size != header_size)
+                printf("Warning: expected file size %lld but got %lu\n",
+                       header_size, file_size);
+
+            close(fd);
+        }
     }
     return nerrs;
 }
