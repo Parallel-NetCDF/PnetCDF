@@ -6,7 +6,7 @@
   reports the first difference to the standard output.
   </li>
   <li> <details>
-  <summary>Manual page (click to expand></summary>
+  <summary>Manual page (click to expand)</summary>
   
 ```
  ncmpidiff(1)                   PnetCDF utilities                  ncmpidiff(1)
@@ -78,7 +78,7 @@
  DATE
         February 21, 2022
 ```
-</details>
+</details></li>
 </ul>
 
 ### cdfdiff
@@ -88,7 +88,7 @@
   The classic file formats include CDF-1, CDF-2, and CDF-5.
   </li>
   <li> <details>
-  <summary>Manual page (click to expand></summary>
+  <summary>Manual page (click to expand)</summary>
   
 ```
  cdfdiff(1)                     PnetCDF utilities                    cdfdiff(1)
@@ -159,7 +159,7 @@
  DATE
         February 21, 2022
 ```
-</details>
+</details></li>
 </ul>
   
 
@@ -169,7 +169,7 @@
   standard output.
   </li>
   <li> <details>
-  <summary>Manual page (click to expand></summary>
+  <summary>Manual page (click to expand)</summary>
 
 ```
  ncmpidump(1)                   PnetCDF utilities                  ncmpidump(1)
@@ -358,7 +358,7 @@
         `record' order, that is with the all the values for `record'  variables
         together that have the same value of the record dimension. 
 ```
-</details>
+</details></li>
 </ul>
 
 ### ncmpigen
@@ -367,7 +367,7 @@
   create a netCDF file.
   </li>
   <li> <details>
-  <summary>Manual page (click to expand></summary>
+  <summary>Manual page (click to expand)</summary>
 
 ```
  ncmpigen(1)                    PnetCDF utilities                   ncmpigen(1)
@@ -682,7 +682,7 @@
         NetCDF and CDL do not yet support a type corresponding to a 64-bit  in-
         teger.
 ```
-</details>
+</details></li>
 </ul>
 
 ### ncoffsets
@@ -691,7 +691,7 @@
   given netCDF file.
   </li>
   <li> <details>
-  <summary>Manual page (click to expand></summary>
+  <summary>Manual page (click to expand)</summary>
 
 ```
  ncoffsets(1)                   PnetCDF utilities                  ncoffsets(1)
@@ -792,7 +792,7 @@
  DATE
         February 21, 2022
 ```
-</details>
+</details></li>
 </ul>
 
 ### ncvalidator
@@ -801,7 +801,7 @@
   classic CDF file formats.
   </li>
   <li> <details>
-  <summary>Manual page (click to expand></summary>
+  <summary>Manual page (click to expand)</summary>
 
 ```
  ncvalidator(1)                 PnetCDF utilities                ncvalidator(1)
@@ -853,7 +853,7 @@
  DATE
         February 21, 2022
 ```
-</details>
+</details></li>
 </ul>
 
 ### pnetcdf-config
@@ -862,7 +862,7 @@
   PnetCDF library.
   </li>
   <li> <details>
-  <summary>Manual page (click to expand></summary>
+  <summary>Manual page (click to expand)</summary>
 
 ```
 pnetcdf-config is a utility program to display the build and installation
@@ -907,7 +907,7 @@ Available values for OPTION include:
   --release-date              Date of PnetCDF source was released
   --config-date               Date of PnetCDF library was configured
 ```
-</details>
+</details></li>
 </ul>
 
 ### pnetcdf_version
@@ -916,7 +916,7 @@ Available values for OPTION include:
   configure command line used to build the library
   </li>
   <li> <details>
-  <summary>Manual page (click to expand></summary>
+  <summary>Manual page (click to expand)</summary>
 
 ```
  pnetcdf_version(1)             PnetCDF utilities            pnetcdf_version(1)
@@ -964,7 +964,7 @@ Available values for OPTION include:
  DATE
         February 21, 2022
 ```
-</details>
+</details></li>
 </ul>
 
 Copyright (C) 2012, Northwestern University and Argonne National Laboratory.
