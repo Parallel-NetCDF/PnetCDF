@@ -1,12 +1,12 @@
 #!/bin/bash  -l
 
 #SBATCH --job-name=pnetcdf_test
-#SBATCH --qos=regular
-#SBATCH -t 00:10:00
+#SBATCH --qos=debug
+#SBATCH -t 00:05:00
 #SBATCH --nodes=1
 #SBATCH -o out.%j
 #SBATCH -e out.%j
-#SBATCH --constraint=knl,quad,cache
+#SBATCH --constraint=cpu
 #SBATCH --tasks-per-node=4
 
 cd $PWD
