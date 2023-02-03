@@ -3,6 +3,8 @@
 
 CPPFLAGS = -I$(PNETCDF_DIR)/include -I../common
 CFLAGS = $(CPPFLAGS)
+FFLAGS = -ffixed-form
+FCFLAGS = -fallow-argument-mismatch
 LDFLAGS = -L$(PNETCDF_DIR)/lib
 LDLIBS = testutils.o -lpnetcdf
 
@@ -127,16 +129,16 @@ examples_F77_src = ../../examples/F77/block_cyclic.f \
 EXAMPLE_PROGS += $(examples_F77_src:../../examples/F77/%.f=%.exe77)
 
 %.o: ../../examples/F77/%.f
-	$(FC) $(CFLAGS) -c $< -o $@
+	$(FC) $(CFLAGS) $(FFLAGS) $(FCFLAGS) -c $< -o $@
 
 %.o: ../F90/%.f90
-	$(FC) $(CFLAGS) -c $< -o $@
+	$(FC) $(CFLAGS) $(FCFLAGS) -c $< -o $@
 
 .o.exe77:
-	$(FC) $(CFLAGS) -o $@ $< utils.o $(LDFLAGS) $(LDLIBS)
+	$(FC) $(CFLAGS) $(FCFLAGS) -o $@ $< utils.o $(LDFLAGS) $(LDLIBS)
 
 .o.exe90:
-	$(FC) $(CFLAGS) -o $@ $< testutilsf.o $(LDFLAGS) $(LDLIBS)
+	$(FC) $(CFLAGS) $(FCFLAGS) -o $@ $< testutilsf.o $(LDFLAGS) $(LDLIBS)
 
 all: env_check testutils.o testutilsf.o utils.o $(TEST_PROGS) $(EXAMPLE_PROGS) batch.sh interactive.sh
 
@@ -166,10 +168,10 @@ testutils.o: ../common/testutils.c
 	$(CC) $(CFLAGS) -I../common -c $< -o $@
 
 testutilsf.o: ../common/testutilsf.F90
-	$(FC) $(CFLAGS) -c $< -o $@
+	$(FC) $(CFLAGS) $(FCFLAGS) -c $< -o $@
 
 utils.o: ../../examples/F77/utils.F90
-	$(FC) $(CFLAGS) -c $< -o $@
+	$(FC) $(CFLAGS) $(FCFLAGS) -c $< -o $@
 
 interactive.sh: interactive.sh.in makefile
 	@sed -e "s|__TEST_PROGS__|$(TEST_PROGS)|" $< > $@
