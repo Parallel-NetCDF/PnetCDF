@@ -10,6 +10,7 @@ on:
       - '**/*.jpg'
       - '**/*.png'
       - 'docs/*'
+      - 'test/test_installed/*'
   pull_request:
     branches: [ master, test_github_actions ]
     paths-ignore:
@@ -19,6 +20,7 @@ on:
       - '**/*.jpg'
       - '**/*.png'
       - 'docs/*'
+      - 'test/test_installed/*'
 
 jobs:
     build:

@@ -8,6 +8,7 @@ on:
       - '**/*.txt'
       - '**/*.1'
       - 'docs/*'
+      - 'test/test_installed/*'
   pull_request:
     branches: master
     paths-ignore:
@@ -15,6 +16,7 @@ on:
       - '**/*.txt'
       - '**/*.1'
       - 'docs/*'
+      - 'test/test_installed/*'
 
 jobs:
     build:
