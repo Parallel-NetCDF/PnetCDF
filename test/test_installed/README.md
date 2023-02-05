@@ -365,5 +365,8 @@ distribution. All test programs are designed to run on 4 MPI processes.
   *** TESTING F90 examples/F90/put_varn_real.exe90                   ------ pass
   *** TESTING F90 examples/F90/transpose.exe90                       ------ pass
   *** TESTING F90 examples/F90/vard_int.exe90                        ------ pass
+
+  Total number of tested programs: 105
+
   ```
   </details>

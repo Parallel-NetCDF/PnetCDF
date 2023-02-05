@@ -15,13 +15,17 @@ set -e
 
 OUT_DIR=__OUT_DIR__
 
+NP=4
+num_pass=0
+
 for exec in __TEST_PROGS__ ; do
    OUTFILE="$OUT_DIR/$exec.nc"
    if test "x$exec" = xpres_temp_4D_rd ; then
       OUTFILE="$OUT_DIR/pres_temp_4D_wr.nc"
    fi
-   CMD="__RUN_CMD__ -n 4 $exec $OUTFILE"
+   CMD="__RUN_CMD__ -n $NP $exec $OUTFILE"
    eval "$CMD"
+   num_pass=$(expr $num_pass + 1)
 done
 
 for exec in __EXAMPLE_PROGS__ ; do
@@ -29,7 +33,7 @@ for exec in __EXAMPLE_PROGS__ ; do
    if test "x$exec" = xget_vara ; then
       OUTFILE="$OUT_DIR/put_vara.nc"
    fi
-   CMD="__RUN_CMD__ -n 4 $exec -q $OUTFILE"
+   CMD="__RUN_CMD__ -n $NP $exec -q $OUTFILE"
    eval "$CMD"
    extension="${exec##*.}"
    if test "x$extension" = xexe90 ; then
@@ -39,5 +43,9 @@ for exec in __EXAMPLE_PROGS__ ; do
    else
       printf '*** TESTING C   %-50s ------ pass\n' "examples/C/$exec"
    fi
+   num_pass=$(expr $num_pass + 1)
 done
+
+printf '\nTotal number of tested programs: %d\n\n' "$num_pass"
+
 
