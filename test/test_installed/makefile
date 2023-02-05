@@ -1,10 +1,9 @@
-.SUFFIXES: .exe77 .exe90
-.PRECIOUS: %.o
+.SUFFIXES: .o .exe77 .exe90 .77o .90o
+.PRECIOUS: %.o %.77o %.90o
 
 CPPFLAGS = -I$(PNETCDF_DIR)/include -I../common
 CFLAGS = $(CPPFLAGS)
-FFLAGS = -ffixed-form
-FCFLAGS = -fallow-argument-mismatch
+FCFLAGS = -w -fallow-argument-mismatch
 LDFLAGS = -L$(PNETCDF_DIR)/lib
 LDLIBS = testutils.o -lpnetcdf
 
@@ -128,19 +127,42 @@ examples_F77_src = ../../examples/F77/block_cyclic.f \
                    ../../examples/F77/vard_int.f
 EXAMPLE_PROGS += $(examples_F77_src:../../examples/F77/%.f=%.exe77)
 
-%.o: ../../examples/F77/%.f
-	$(FC) $(CFLAGS) $(FFLAGS) $(FCFLAGS) -c $< -o $@
+%.77o: ../../examples/F77/%.f
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -c $< -o $@
 
-%.o: ../F90/%.f90
-	$(FC) $(CFLAGS) $(FCFLAGS) -c $< -o $@
+examples_F90_src = ../../examples/F90/block_cyclic.f90 \
+                   ../../examples/F90/column_wise.f90 \
+                   ../../examples/F90/fill_mode.f90 \
+                   ../../examples/F90/flexible_api.f90 \
+                   ../../examples/F90/get_info.f90 \
+                   ../../examples/F90/hints.f90 \
+                   ../../examples/F90/nonblocking_write.f90 \
+                   ../../examples/F90/put_var.f90 \
+                   ../../examples/F90/put_varn_int.f90 \
+                   ../../examples/F90/put_varn_real.f90 \
+                   ../../examples/F90/transpose.f90 \
+                   ../../examples/F90/vard_int.f90
+EXAMPLE_PROGS += $(examples_F90_src:../../examples/F90/%.f90=%.exe90)
 
-.o.exe77:
-	$(FC) $(CFLAGS) $(FCFLAGS) -o $@ $< utils.o $(LDFLAGS) $(LDLIBS)
+all: env_check testutils.o utils.o $(TEST_PROGS) $(EXAMPLE_PROGS) batch.sh interactive.sh
 
-.o.exe90:
-	$(FC) $(CFLAGS) $(FCFLAGS) -o $@ $< testutilsf.o $(LDFLAGS) $(LDLIBS)
+f90tst_parallel.exe90: ../F90/f90tst_parallel.f90 testutilsf.o
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -o $@ $< testutilsf.o $(LDFLAGS) -lpnetcdf
+f90tst_parallel2.exe90: ../F90/f90tst_parallel2.f90 testutilsf.o
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -o $@ $< testutilsf.o $(LDFLAGS) -lpnetcdf
+f90tst_parallel3.exe90: ../F90/f90tst_parallel3.f90 testutilsf.o
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -o $@ $< testutilsf.o $(LDFLAGS) -lpnetcdf
+f90tst_parallel4.exe90: ../F90/f90tst_parallel4.f90 testutilsf.o
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -o $@ $< testutilsf.o $(LDFLAGS) -lpnetcdf
 
-all: env_check testutils.o testutilsf.o utils.o $(TEST_PROGS) $(EXAMPLE_PROGS) batch.sh interactive.sh
+%.90o: ../../examples/F90/%.f90
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -c $< -o $@
+
+.77o.exe77:
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -o $@ $< utils.o $(LDFLAGS) -lpnetcdf
+
+.90o.exe90:
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -o $@ $< utils.o $(LDFLAGS) -lpnetcdf
 
 env_check:
 	@if test "x$(CC)" = x ; then \
@@ -168,10 +190,10 @@ testutils.o: ../common/testutils.c
 	$(CC) $(CFLAGS) -I../common -c $< -o $@
 
 testutilsf.o: ../common/testutilsf.F90
-	$(FC) $(CFLAGS) $(FCFLAGS) -c $< -o $@
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -c $< -o $@
 
-utils.o: ../../examples/F77/utils.F90
-	$(FC) $(CFLAGS) $(FCFLAGS) -c $< -o $@
+utils.o: ../../examples/F90/utils.F90
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -c $< -o $@
 
 interactive.sh: interactive.sh.in makefile
 	@sed -e "s|__TEST_PROGS__|$(TEST_PROGS)|" $< > $@
@@ -186,5 +208,5 @@ batch.sh: batch.sh.in makefile
 	@sed -i -e "s|__OUT_DIR__|$(OUT_DIR)|" $@
 
 clean:
-	rm -f *.o $(TEST_PROGS) $(EXAMPLE_PROGS) batch.sh interactive.sh
+	rm -f *.o *.77o *.90o $(TEST_PROGS) $(EXAMPLE_PROGS) batch.sh interactive.sh
 

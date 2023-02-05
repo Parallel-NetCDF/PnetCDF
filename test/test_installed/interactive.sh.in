@@ -4,31 +4,29 @@ set -e
 
 OUT_DIR=__OUT_DIR__
 
-for exec in __TEST_PROGS__
-do
+for exec in __TEST_PROGS__ ; do
    OUTFILE="$OUT_DIR/$exec.nc"
-   if test $exec = pres_temp_4D_rd ; then
+   if test "x$exec" = xpres_temp_4D_rd ; then
       OUTFILE="$OUT_DIR/pres_temp_4D_wr.nc"
    fi
    CMD="__RUN_CMD__ -n 4 $exec $OUTFILE"
-   $CMD
+   eval "$CMD"
 done
 
-for exec in __EXAMPLE_PROGS__
-do
+for exec in __EXAMPLE_PROGS__ ; do
    OUTFILE="$OUT_DIR/$exec.nc"
-   if test $exec = get_vara ; then
+   if test "x$exec" = xget_vara ; then
       OUTFILE="$OUT_DIR/put_vara.nc"
    fi
    CMD="__RUN_CMD__ -n 4 $exec -q $OUTFILE"
-   $CMD
+   eval "$CMD"
    extension="${exec##*.}"
-   if test $extension = exe90 ; then
-      printf '*** TESTING F90 %-50s ------ pass\n' "$exec"
-   elif test $extension = exe77 ; then
-      printf '*** TESTING F77 %-50s ------ pass\n' "$exec"
+   if test "x$extension" = xexe90 ; then
+      printf '*** TESTING F90 %-50s ------ pass\n' "examples/F90/$exec"
+   elif test "x$extension" = xexe77 ; then
+      printf '*** TESTING F77 %-50s ------ pass\n' "examples/F77/$exec"
    else
-      printf '*** TESTING C   %-50s ------ pass\n' "$exec"
+      printf '*** TESTING C   %-50s ------ pass\n' "examples/C/$exec"
    fi
 done
 
