@@ -255,11 +255,11 @@ distribution. All test programs are designed to run on 4 MPI processes.
   ```console
   login02::test_installed(1:00pm) #1097 sbatch batch.sh
   Submitted batch job 5291610
-  login02::test_installed(1:00pm) #1098 sqs
+  login02::test_installed(1:01pm) #1098 sqs
   JOBID            ST USER      NAME          NODES TIME_LIMIT       TIME  SUBMIT_TIME          QOS             START_TIME           FEATURES       NODELIST(REASON
   5291610          R  wkliao    pnetcdf_test  1           5:00       0:44  2023-02-05T13:00:17  debug           2023-02-05T13:00:33  cpu            nid005504      
 
-  login02::test_installed(1:00pm) #1097 cat out.5291610
+  login02::test_installed(1:04pm) #1099 cat out.5291610
   *** TESTING C   pres_temp_4D_wr for writing classic file           ------ pass
   *** TESTING C   pres_temp_4D_rd for reading classic file           ------ pass
   *** TESTING C   header_consistency for header consistency          ------ pass
