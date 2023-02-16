@@ -19,7 +19,7 @@ on:
       - 'test/test_installed/*'
 
 env:
-   MPICH_VERSION: 4.0.3
+   MPICH_VERSION: 4.1
 
 jobs:
     build:
