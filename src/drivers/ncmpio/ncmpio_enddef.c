@@ -741,7 +741,8 @@ off_compare(const void *a, const void *b)
 int
 ncmpio_NC_check_voffs(NC *ncp)
 {
-    int i, num_fix_vars;
+    int i, num_fix_vars, prev;
+    MPI_Offset prev_off;
 
     if (ncp->vars.ndefined == 0) return NC_NOERR;
 
@@ -849,8 +850,8 @@ check_rec_var:
     /* Loop through vars, first pass is for non-record variables */
     if (num_fix_vars == 0) goto check_rec_var;
 
-    int prev = 0;
-    MPI_Offset prev_off = ncp->begin_var;
+    prev = 0;
+    prev_off = ncp->begin_var;
 
     for (i=0; i<ncp->vars.ndefined; i++) {
         NC_var *varp = ncp->vars.value[i];
