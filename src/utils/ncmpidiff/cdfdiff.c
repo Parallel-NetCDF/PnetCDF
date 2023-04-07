@@ -64,6 +64,34 @@
     chunk_off += nelems;                                                 \
 }
 
+#define CHECK_VAR_DIFF_UNSIGNED(itype) {                                 \
+    int indx, esize, nelems;                                             \
+    itype *b1 = (itype*)buf[0];                                          \
+    itype *b2 = (itype*)buf[1];                                          \
+    esize = sizeof(itype);                                               \
+    nelems = rdLen[0] / esize;                                           \
+    if (esize > 1 && is_little_endian) {                                 \
+        swapn(b1, nelems, esize);                                        \
+        swapn(b2, nelems, esize);                                        \
+    }                                                                    \
+    for (indx=0; indx<nelems; indx++) {                                  \
+        double abs_max, diff, ratio;                                     \
+        if ( b1[indx] == b2[indx] ) continue;                            \
+        abs_max = (b1[indx] > b2[indx]) ? b1[indx] : b2[indx];           \
+        diff = b1[indx] - b2[indx];                                      \
+        diff = (diff >= 0) ? diff : -diff;                               \
+        ratio = diff /  abs_max;                                         \
+        if (diff <= tolerance_difference || ratio <= tolerance_ratio)    \
+            continue;                                                    \
+        /* fail to meet both tolerance errors */                         \
+        worst = chunk_off + indx; /* mark a difference is found */       \
+        worst1 = b1[indx];                                               \
+        worst2 = b2[indx];                                               \
+        break;                                                           \
+    }                                                                    \
+    chunk_off += nelems;                                                 \
+}
+
 #define PRINTF_VAR_DIFF(itype) {                                         \
     int esize = sizeof(itype);                                           \
     itype *b1 = (itype*)str[0];                                          \
@@ -971,15 +999,15 @@ cmp_vars:
                 if (check_tolerance && worst == -1) {
                          if (xtype[0] == NC_CHAR)   CHECK_VAR_DIFF(char)
                     else if (xtype[0] == NC_BYTE)   CHECK_VAR_DIFF(signed char)
-                    else if (xtype[0] == NC_UBYTE)  CHECK_VAR_DIFF(unsigned char)
+                    else if (xtype[0] == NC_UBYTE)  CHECK_VAR_DIFF_UNSIGNED(unsigned char)
                     else if (xtype[0] == NC_SHORT)  CHECK_VAR_DIFF(short)
-                    else if (xtype[0] == NC_USHORT) CHECK_VAR_DIFF(unsigned short)
+                    else if (xtype[0] == NC_USHORT) CHECK_VAR_DIFF_UNSIGNED(unsigned short)
                     else if (xtype[0] == NC_INT)    CHECK_VAR_DIFF(int)
-                    else if (xtype[0] == NC_UINT)   CHECK_VAR_DIFF(unsigned int)
+                    else if (xtype[0] == NC_UINT)   CHECK_VAR_DIFF_UNSIGNED(unsigned int)
                     else if (xtype[0] == NC_FLOAT)  CHECK_VAR_DIFF(float)
                     else if (xtype[0] == NC_DOUBLE) CHECK_VAR_DIFF(double)
                     else if (xtype[0] == NC_INT64)  CHECK_VAR_DIFF(long long)
-                    else if (xtype[0] == NC_UINT64) CHECK_VAR_DIFF(unsigned long long)
+                    else if (xtype[0] == NC_UINT64) CHECK_VAR_DIFF_UNSIGNED(unsigned long long)
                     if (worst != -1) {
                         r = numrecs; /* break both loops k and r */
                         break;
