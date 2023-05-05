@@ -8,7 +8,7 @@
 ! This program tests if one can get the number of record variables and
 ! fixed-size variables correctly. It first defines some number of
 ! fixed-size and record variables and then calls the APIs
-!     ncmpi_inq_num_rec_vars() and ncmpi_inq_num_fix_vars()
+!     nf90mpi_inq_num_rec_vars() and nf90mpi_inq_num_fix_vars()
 ! to verify if the numbers are correct.
 !
 ! The compile and run commands are given below. This program is to be
@@ -125,7 +125,38 @@
           err = nf90mpi_enddef(ncid)
           call check(err, 'In nf90mpi_enddef: ')
 
-          ! inquire the numbers of variables (record and fixed-size
+          ! inquire the numbers of variables (record and fixed-size)
+          err = nf90mpi_inquire(ncid, nVariables=nvars)
+          call check(err, 'In nf90mpi_inquire: ')
+          err = nf90mpi_inq_num_rec_vars(ncid, num_rec_vars)
+          call check(err, 'In nf90mpi_inq_num_rec_vars: ')
+          err = nf90mpi_inq_num_fix_vars(ncid, num_fix_vars)
+          call check(err, 'In nf90mpi_inq_num_fix_vars: ')
+
+          ! check if the numbers of variables are expected
+          nerrs = 0
+          if (nvars .NE. 7) then
+              write(6,*) "Error: expecting 7 number of variables defined, but got ", nvars
+              nerrs = nerrs + 1
+          endif
+          if (num_rec_vars .NE. 4) then
+              write(6,*) "Error: expecting 4 number of recond variables defined, but got ", nvars
+              nerrs = nerrs + 1
+          endif
+          if (num_fix_vars .NE. 3) then
+              write(6,*) "Error: expecting 3 number of fixed-size variables defined, but got ", nvars
+              nerrs = nerrs + 1
+          endif
+
+          err = nf90mpi_close(ncid)
+          call check(err, 'In nf90mpi_close: ')
+
+          ! open the file just now created
+          err = nf90mpi_open(MPI_COMM_WORLD, filename, NF90_NOWRITE, &
+                               MPI_INFO_NULL, ncid)
+          call check(err, 'In nf90mpi_open: ')
+
+          ! inquire the numbers of variables (record and fixed-size)
           err = nf90mpi_inquire(ncid, nVariables=nvars)
           call check(err, 'In nf90mpi_inquire: ')
           err = nf90mpi_inq_num_rec_vars(ncid, num_rec_vars)

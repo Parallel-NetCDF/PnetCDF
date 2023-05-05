@@ -111,6 +111,14 @@ tst_fmt(char *filename, int cmode)
 
     err = ncmpi_close(ncid); CHECK_ERR
 
+    /* open the file for reading --------------------------------------------*/
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
+    CHECK_ERR
+
+    nerrs += check_num_vars(ncid, 7, 4, 3);
+
+    err = ncmpi_close(ncid); CHECK_ERR
+
     return nerrs;
 }
 
