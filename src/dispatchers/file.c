@@ -786,6 +786,7 @@ ncmpi_open(MPI_Comm    comm,
     pncp->ndims      = 0;
     pncp->unlimdimid = -1;
     pncp->nvars      = 0;
+    pncp->nrec_vars  = 0;
     pncp->vars       = NULL;
     pncp->flag       = 0;
     pncp->ncp        = ncp;
@@ -846,6 +847,7 @@ ncmpi_open(MPI_Comm    comm,
                 if (err != NC_NOERR) break; /* loop i */
             }
         }
+        if (pncp->vars[i].recdim >= 0) pncp->nrec_vars++;
     }
     if (err != NC_NOERR) { /* error happens in loop i */
         assert(i < pncp->nvars);
