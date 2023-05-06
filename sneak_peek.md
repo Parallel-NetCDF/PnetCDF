@@ -100,6 +100,8 @@ This is essentially a placeholder for the next release note ...
     See [PR #79](https://github.com/Parallel-NetCDF/PnetCDF/pull/79).
 
 * Bug fixes
+  + Fix ncmpi_inq_num_rec_vars and ncmpi_inq_num_fix_vars when opening an
+    existing file. See PR #103.
   + ncmpidiff -  when checking the dimensions defined in the second files
     whether they are defined in the first file. See 88cd9c1.
 
