@@ -17,10 +17,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>  /* strcpy(), strchr() */
-#ifdef HAVE_ACCESS
-#include <unistd.h>  /* access() */
-#endif
+#include <string.h>    /* strcpy(), strchr() */
+#include <sys/types.h> /* lstat() */
+#include <sys/stat.h>  /* lstat() */
+#include <unistd.h>    /* lstat(), access(), unlink() */
 #include <errno.h>
 
 #include <mpi.h>
@@ -39,7 +39,8 @@ ncmpio_create(MPI_Comm     comm,
               void       **ncpp)
 {
     char *env_str, *filename;
-    int rank, nprocs, mpiomode, err, mpireturn, default_format, file_exist = 1;
+    int rank, nprocs, mpiomode, err, mpireturn, default_format, file_exist=1;
+    int use_trunc=1;
     MPI_File fh;
     MPI_Info info_used;
     NC *ncp=NULL;
@@ -77,7 +78,21 @@ ncmpio_create(MPI_Comm     comm,
      */
     filename = ncmpii_remove_file_system_type_prefix(path);
 
-#ifdef HAVE_ACCESS
+#ifdef HAVE_LSTAT
+    struct stat st_buf;
+    /* call lstat() to check the file if exists and if is a symbolic link */
+    if (rank == 0) {
+        if (lstat(filename, &st_buf) == -1) file_exist = 0;
+        errno = 0; /* reset errno */
+
+        /* If the file is a regular file, not a symbolic link, then we can
+         * delete the file first and later create it when calling
+         * MPI_File_open(). If the file is a symbolic link, then we cannot
+         * delete the file, as the link will be gone.
+         */
+        if (S_ISREG(st_buf.st_mode)) use_trunc = 0;
+    }
+#elif defined HAVE_ACCESS
     /* if access() is available, use it to check whether file already exists
      * rank 0 calls access() and broadcasts file_exist */
     if (rank == 0) {
@@ -105,41 +120,62 @@ ncmpio_create(MPI_Comm     comm,
          */
         err = NC_NOERR;
         if (rank == 0 && file_exist) {
-#ifdef HAVE_TRUNCATE
-            err = truncate(filename, 0);
-            if (err < 0 && errno != ENOENT) /* ignore ENOENT: file not exist */
-                DEBUG_ASSIGN_ERROR(err, NC_EFILE) /* other error */
-            else
-                err = NC_NOERR;
+            if (!use_trunc) { /* delete the file */
+#ifdef HAVE_UNLINK
+                /* unlink() is likely faster then truncate() */
+                err = unlink(filename);
+                if (err < 0 && errno != ENOENT) /* ignore ENOENT: file not exist */
+                    DEBUG_ASSIGN_ERROR(err, NC_EFILE) /* other error */
+                else
+                    err = NC_NOERR;
 #else
-            /* call MPI_File_set_size() to truncate the file. Note this can
-             * be expensive.
-             */
-            err = NC_NOERR;
-            TRACE_IO(MPI_File_open)(MPI_COMM_SELF, (char *)path, MPI_MODE_RDWR,
-                                    MPI_INFO_NULL, &fh);
-            if (mpireturn != MPI_SUCCESS) {
-                int errorclass;
-                MPI_Error_class(mpireturn, &errorclass);
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_open");
-            }
-            else {
-                TRACE_IO(MPI_File_set_size)(fh, 0);
+                err = NC_NOERR;
+                TRACE_IO(MPI_File_delete)((char *)path, MPI_INFO_NULL);
                 if (mpireturn != MPI_SUCCESS) {
                     int errorclass;
                     MPI_Error_class(mpireturn, &errorclass);
-                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_set_size");
+                    if (errorclass != MPI_ERR_NO_SUCH_FILE) /* ignore file not exist */
+                        err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_delete");
+                }
+#endif
+            }
+            else { /* file is not a regular file, truncate it to zero size */
+#ifdef HAVE_TRUNCATE
+                err = truncate(filename, 0); /* can be expensive */
+                if (err < 0 && errno != ENOENT) /* ignore ENOENT: file not exist */
+                    DEBUG_ASSIGN_ERROR(err, NC_EFILE) /* other error */
+                else
+                    err = NC_NOERR;
+#else
+                /* call MPI_File_set_size() to truncate the file. Note this can
+                 * be expensive.
+                 */
+                err = NC_NOERR;
+                TRACE_IO(MPI_File_open)(MPI_COMM_SELF, (char *)path, MPI_MODE_RDWR,
+                                        MPI_INFO_NULL, &fh);
+                if (mpireturn != MPI_SUCCESS) {
+                    int errorclass;
+                    MPI_Error_class(mpireturn, &errorclass);
+                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_open");
                 }
                 else {
-                    TRACE_IO(MPI_File_close)(&fh);
+                    TRACE_IO(MPI_File_set_size)(fh, 0); /* can be expensive */
                     if (mpireturn != MPI_SUCCESS) {
                         int errorclass;
                         MPI_Error_class(mpireturn, &errorclass);
-                        err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_close");
+                        err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_set_size");
+                    }
+                    else {
+                        TRACE_IO(MPI_File_close)(&fh);
+                        if (mpireturn != MPI_SUCCESS) {
+                            int errorclass;
+                            MPI_Error_class(mpireturn, &errorclass);
+                            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_close");
+                        }
                     }
                 }
-            }
 #endif
+            }
             if (errno == ENOENT) errno = 0; /* reset errno */
         }
         /* all processes must wait here until file deletion is completed */
@@ -224,7 +260,7 @@ ncmpio_create(MPI_Comm     comm,
 
     /* Extract PnetCDF specific I/O hints from user_info and set default hint
      * values into info_used. Note some MPI libraries, such as MPICH 3.3.1 and
-     * priors fail to preserve user hints that are not recogniozed by the MPI
+     * priors fail to preserve user hints that are not recognized by the MPI
      * libraries.
      */
     ncmpio_set_pnetcdf_hints(ncp, user_info, info_used);
