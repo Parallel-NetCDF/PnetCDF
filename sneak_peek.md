@@ -112,6 +112,7 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
+  + test/testcases/tst_symlink.c - test NC_CLOBBER on a symbolic link.
   + test/testcases/tst_del_attr.c - test delete attributes. See PR #99.
   + test/testcases/test_get_varn.c - test get_varn API. See PR #90.
   + test/testcases/flexible_var.c - test flexible var API

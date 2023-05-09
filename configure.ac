@@ -1150,6 +1150,14 @@ else
    AC_LIBSOURCE([strcasecmp.c])
    AC_LIBOBJ([strcasecmp])
 fi
+AC_CHECK_DECL([symlink], [], [], [[#include <unistd.h>]])
+if test "x$ac_cv_have_decl_symlink" = xyes ; then
+   AC_CHECK_FUNCS([symlink])
+fi
+
+AM_CONDITIONAL(TEST_SYMLINK, [test "x$ac_cv_func_unlink" = xyes &&
+                              test "x$ac_cv_func_symlink" = xyes &&
+                              test "x$ac_cv_func_lstat" = xyes])
 
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],

@@ -91,6 +91,10 @@ nodist_iput_all_kinds_SOURCES = iput_all_kinds.c
 nodist_error_precedence_SOURCES = error_precedence.c
 nodist_null_args_SOURCES = null_args.c
 
+if TEST_SYMLINK
+   TESTPROGRAMS += tst_symlink
+endif
+
 if ENABLE_ERANGE_FILL
    M4FLAGS += -DERANGE_FILL
    TESTPROGRAMS += erange_fill
