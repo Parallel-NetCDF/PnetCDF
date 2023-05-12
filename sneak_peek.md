@@ -134,5 +134,12 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Clarifications
-  + none
+  + Using NC_CLOBBER in ncmpi_create() can be expensive if the file already
+    exists. If the existing file is a regular file, then PnetCDF will delete it
+    with a call to unlink() first and re-created it later. Calling unlink() on
+    may be expensive for some parallel file systems. If the existing file is a
+    symbolic link, then PnetCDF will call truncate() or MPI_File_set_size() to
+    truncate the file size to zero. Calling truncate() may also be very
+    expensive on some file systems, e.g. Lustre. Sporadically a long time spent
+    on unlink() and truncate() was observed on Perlmutter.
 

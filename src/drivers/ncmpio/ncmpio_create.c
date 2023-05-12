@@ -17,11 +17,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>    /* strcpy(), strchr() */
-#include <sys/types.h> /* lstat() */
-#include <sys/stat.h>  /* lstat() */
-#include <unistd.h>    /* lstat(), access(), unlink() */
 #include <errno.h>
+#include <string.h>    /* strcpy(), strchr() */
+
+#if defined(HAVE_LSTAT) || defined(HAVE_ACCESS) || defined(HAVE_OPEN) || defined(HAVE_UNLINK) || defined(HAVE_CLOSE)
+#include <sys/types.h> /* lstat(), open() */
+#include <sys/stat.h>  /* lstat(), open() */
+#include <unistd.h>    /* lstat(), access(), unlink(), open(), close() */
+#include <fcntl.h>     /* open() */
+#endif
 
 #include <mpi.h>
 
@@ -78,6 +82,7 @@ ncmpio_create(MPI_Comm     comm,
      */
     filename = ncmpii_remove_file_system_type_prefix(path);
 
+    /* Check if the file already exists, if lstat() or access() is available */
 #ifdef HAVE_LSTAT
     struct stat st_buf;
     /* call lstat() to check the file if exists and if is a symbolic link */
@@ -87,8 +92,13 @@ ncmpio_create(MPI_Comm     comm,
 
         /* If the file is a regular file, not a symbolic link, then we can
          * delete the file first and later create it when calling
-         * MPI_File_open(). If the file is a symbolic link, then we cannot
-         * delete the file, as the link will be gone.
+         * MPI_File_open() with MPI_MODE_CREATE. It is OK to delete and then
+         * re-create the file if the file is a regular file. If there are other
+         * files symbolically linked to this file, then their links will still
+         * point to this file after it is re-created.
+         *
+         * If the file is a symbolic link, then we cannot delete the file, as
+         * the link will be gone.
          */
         if (S_ISREG(st_buf.st_mode)) use_trunc = 0;
     }
@@ -122,7 +132,9 @@ ncmpio_create(MPI_Comm     comm,
         if (rank == 0 && file_exist) {
             if (!use_trunc) { /* delete the file */
 #ifdef HAVE_UNLINK
-                /* unlink() is likely faster then truncate() */
+                /* unlink() is likely faster then truncate(), but may be still
+                 * expensive
+                 */
                 err = unlink(filename);
                 if (err < 0 && errno != ENOENT) /* ignore ENOENT: file not exist */
                     DEBUG_ASSIGN_ERROR(err, NC_EFILE) /* other error */
@@ -146,6 +158,15 @@ ncmpio_create(MPI_Comm     comm,
                     DEBUG_ASSIGN_ERROR(err, NC_EFILE) /* other error */
                 else
                     err = NC_NOERR;
+#elif defined HAVE_OPEN
+                int fd = open(filename, O_TRUNC | O_WRONLY);
+                if (fd < 0)
+                    DEBUG_ASSIGN_ERROR(err, NC_EFILE)
+                else {
+                    err = close(fd);
+                    if (err < 0)
+                        DEBUG_ASSIGN_ERROR(err, NC_EFILE)
+                }
 #else
                 /* call MPI_File_set_size() to truncate the file. Note this can
                  * be expensive.

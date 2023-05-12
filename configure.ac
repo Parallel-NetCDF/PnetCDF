@@ -1127,6 +1127,12 @@ AC_CHECK_DECL([lstat], [], [], [[#include <sys/types.h>
 if test "x$ac_cv_have_decl_lstat" = xyes ; then
    AC_CHECK_FUNCS([lstat])
 fi
+AC_CHECK_DECL([open], [], [], [[#include <sys/types.h>
+                                #include <sys/stat.h>
+                                #include <fcntl.h>]])
+if test "x$ac_cv_have_decl_open" = xyes ; then
+   AC_CHECK_FUNCS([open])
+fi
 AC_CHECK_DECL([access], [], [], [[#include <unistd.h>]])
 if test "x$ac_cv_have_decl_access" = xyes ; then
    AC_CHECK_FUNCS([access])
