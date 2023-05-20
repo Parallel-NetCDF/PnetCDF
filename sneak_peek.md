@@ -52,7 +52,11 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New PnetCDF hint
-  + none
+  + nc_header_collective -- to instruct PnetCDF to call MPI collective APIs to
+    read and write the file header. The default is "false", meaning the file
+    header is only read/written by rank 0, using MPI independent read and write
+    APIs. When set to "true", collective APIs will be used with all other
+    processes making zero-size requests.
 
 * New run-time environment variables
   + none

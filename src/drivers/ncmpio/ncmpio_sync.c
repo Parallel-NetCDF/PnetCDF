@@ -67,10 +67,12 @@ ncmpio_write_numrecs(NC         *ncp,
 {
     int rank, mpireturn, err;
     MPI_File fh;
+    MPI_Status mpistatus;
 
-    /* root process writes numrecs in file */
     MPI_Comm_rank(ncp->comm, &rank);
-    if (rank > 0) return NC_NOERR;
+    if (!fIsSet(ncp->flags, NC_HCOLL) && rank > 0)
+        /* Only root process writes numrecs in file */
+        return NC_NOERR;
 
     /* return now if there is no record variabled defined */
     if (ncp->vars.num_rec_vars == 0) return NC_NOERR;
@@ -79,10 +81,15 @@ ncmpio_write_numrecs(NC         *ncp,
     if (NC_indep(ncp))
         fh = ncp->independent_fh;
 
+    if (rank > 0 && fIsSet(ncp->flags, NC_HCOLL)) {
+        /* other processes participate the collective call */
+        TRACE_IO(MPI_File_write_at_all)(fh, 0, NULL, 0, MPI_BYTE, &mpistatus);
+        return NC_NOERR;
+    }
+
     if (new_numrecs > ncp->numrecs || NC_ndirty(ncp)) {
         int len;
         char pos[8], *buf=pos;
-        MPI_Status mpistatus;
 
         /* update ncp->numrecs */
         if (new_numrecs > ncp->numrecs) ncp->numrecs = new_numrecs;
@@ -110,8 +117,12 @@ ncmpio_write_numrecs(NC         *ncp,
         memset(&mpistatus, 0, sizeof(MPI_Status));
 #endif
         /* root's file view always includes the entire file header */
-        TRACE_IO(MPI_File_write_at)(fh, NC_NUMRECS_OFFSET, (void*)pos, len,
-                                    MPI_BYTE, &mpistatus);
+        if (fIsSet(ncp->flags, NC_HCOLL))
+            TRACE_IO(MPI_File_write_at_all)(fh, NC_NUMRECS_OFFSET, (void*)pos,
+                                            len, MPI_BYTE, &mpistatus);
+        else
+            TRACE_IO(MPI_File_write_at)(fh, NC_NUMRECS_OFFSET, (void*)pos,
+                                        len, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
             if (err == NC_EFILE) DEBUG_RETURN_ERROR(NC_EWRITE)

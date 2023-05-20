@@ -322,6 +322,7 @@ hdr_len_NC_vararray(const NC_vararray *ncap,
 static int
 hdr_fetch(bufferinfo *gbp) {
     int rank, err=NC_NOERR, mpireturn;
+    MPI_Status mpistatus;
 
     assert(gbp->base != NULL);
 
@@ -329,7 +330,6 @@ hdr_fetch(bufferinfo *gbp) {
     if (rank == 0) {
         char *readBuf;
         size_t slack, readLen;
-        MPI_Status mpistatus;
 
         /* any leftover data in the buffer */
         slack = gbp->size - (gbp->pos - gbp->base);
@@ -357,8 +357,12 @@ hdr_fetch(bufferinfo *gbp) {
 
         /* fileview is already entire file visible and MPI_File_read_at does
            not change the file pointer */
-        TRACE_IO(MPI_File_read_at)(gbp->collective_fh, gbp->offset, readBuf,
-                                   readLen, MPI_BYTE, &mpistatus);
+        if (gbp->rw_mode == 1) /* collective read */
+            TRACE_IO(MPI_File_read_at_all)(gbp->collective_fh, gbp->offset, readBuf,
+                                           readLen, MPI_BYTE, &mpistatus);
+        else
+            TRACE_IO(MPI_File_read_at)(gbp->collective_fh, gbp->offset, readBuf,
+                                       readLen, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at");
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD)
@@ -382,6 +386,11 @@ hdr_fetch(bufferinfo *gbp) {
         /* only root process reads file header, keeps track of current read
          * file pointer location */
         gbp->offset += readLen;
+    }
+    else if (gbp->rw_mode == 1) { /* collective read */
+        /* other processes participate the collective call */
+        TRACE_IO(MPI_File_read_at_all)(gbp->collective_fh, 0, NULL,
+                                       0, MPI_BYTE, &mpistatus);
     }
 
     if (gbp->safe_mode == 1) {
@@ -1322,6 +1331,7 @@ ncmpio_hdr_get_NC(NC *ncp)
     getbuf.get_size      = 0;
     getbuf.offset        = 0;   /* read from start of the file */
     getbuf.safe_mode     = ncp->safe_mode;
+    getbuf.rw_mode       = (fIsSet(ncp->flags, NC_HCOLL)) ? 1 : 0;
 
     /* CDF-5's minimum header size is 4 bytes more than CDF-1 and CDF-2's */
     getbuf.size = _RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );

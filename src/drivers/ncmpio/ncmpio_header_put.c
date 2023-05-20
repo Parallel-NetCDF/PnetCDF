@@ -446,6 +446,7 @@ ncmpio_hdr_put_NC(NC *ncp, void *buf)
     putbuf.base          = buf;
     putbuf.size          = ncp->xsz;
     putbuf.safe_mode     = ncp->safe_mode;
+    putbuf.rw_mode       = (fIsSet(ncp->flags, NC_HCOLL)) ? 1 : 0;
 
     /* netCDF file format:
      * netcdf_file  = header  data
@@ -506,6 +507,7 @@ int ncmpio_write_header(NC *ncp)
 {
     int rank, status=NC_NOERR, mpireturn, err;
     MPI_File fh;
+    MPI_Status mpistatus;
 
     /* Write the entire header to the file. This function may be called from
      * a rename API. In that case, we cannot just change the variable name in
@@ -525,7 +527,6 @@ int ncmpio_write_header(NC *ncp)
 
     MPI_Comm_rank(ncp->comm, &rank);
     if (rank == 0) { /* only root writes to file header */
-        MPI_Status mpistatus;
         size_t bufLen = _RNDUP(ncp->xsz, X_ALIGN);
         void *buf = NCI_Malloc(bufLen); /* header's write buffer */
 
@@ -545,7 +546,11 @@ int ncmpio_write_header(NC *ncp)
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 #endif
-        TRACE_IO(MPI_File_write_at)(fh, 0, buf, (int)ncp->xsz, MPI_BYTE, &mpistatus);
+        if (fIsSet(ncp->flags, NC_HCOLL)) /* collective write */
+            TRACE_IO(MPI_File_write_at_all)(fh, 0, buf, (int)ncp->xsz, MPI_BYTE, &mpistatus);
+        else
+            TRACE_IO(MPI_File_write_at)(fh, 0, buf, (int)ncp->xsz, MPI_BYTE, &mpistatus);
+
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
             if (status == NC_NOERR) {
@@ -563,6 +568,10 @@ int ncmpio_write_header(NC *ncp)
 #endif
         }
         NCI_Free(buf);
+    }
+    else if (fIsSet(ncp->flags, NC_HCOLL)) { /* collective write */
+        /* other processes participate the collective call */
+        TRACE_IO(MPI_File_write_at_all)(fh, 0, NULL, 0, MPI_BYTE, &mpistatus);
     }
 
     if (ncp->safe_mode == 1) {
