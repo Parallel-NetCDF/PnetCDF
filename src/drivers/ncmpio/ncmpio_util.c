@@ -162,6 +162,18 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
     MPI_Info_set(info_used, "pnetcdf_subfiling", "disable");
     MPI_Info_set(info_used, "nc_num_subfiles", "0");
 #endif
+
+    if (user_info != MPI_INFO_NULL) {
+        /* read/write file header using MPI collective APIs */
+        MPI_Info_get(user_info, "nc_header_collective", MPI_MAX_INFO_VAL-1, value,
+                     &flag);
+        if (flag) {
+            if (strcasecmp(value, "true") == 0)
+                fSet((ncp)->flags, NC_HCOLL);
+        }
+    }
+    if (!flag) strcpy(value, "false");
+    MPI_Info_set(info_used, "nc_header_collective", value);
 }
 
 /*----< ncmpio_first_offset() >-----------------------------------------------*/

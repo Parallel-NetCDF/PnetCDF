@@ -340,6 +340,7 @@ typedef struct NC_buf {
 #define NC_HSYNC  0x200000  /* synchronise whole header on change */
 #define NC_NDIRTY 0x400000  /* numrecs has changed */
 #define NC_HDIRTY 0x800000  /* header info has changed */
+#define NC_HCOLL  0x000001  /* write header collectively */
 struct NC {
     int           ncid;         /* file ID */
     int           flags;        /* various modes, i.e. define/data, fill,
@@ -444,6 +445,7 @@ typedef struct bufferinfo {
     int         size;     /* allocated size of the buffer */
     int         version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
     int         safe_mode;/* 0: disabled, 1: enabled */
+    int         rw_mode;  /* 0: independent, 1: collective */
     char       *base;     /* beginning of read/write buffer */
     char       *pos;      /* current position in buffer */
     char       *end;      /* end position of buffer */

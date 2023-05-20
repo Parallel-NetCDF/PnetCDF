@@ -512,8 +512,12 @@ write_NC(NC *ncp)
         /* write the header extent, not just header size, because NetCDF file
          * format specification requires null byte padding for header.
          */
-        TRACE_IO(MPI_File_write_at)(ncp->collective_fh, 0, buf,
-                                    header_wlen, MPI_BYTE, &mpistatus);
+        if (fIsSet(ncp->flags, NC_HCOLL))
+            TRACE_IO(MPI_File_write_at_all)(ncp->collective_fh, 0, buf,
+                                            header_wlen, MPI_BYTE, &mpistatus);
+        else
+            TRACE_IO(MPI_File_write_at)(ncp->collective_fh, 0, buf,
+                                        header_wlen, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
             /* write has failed, which is more serious than inconsistency */
@@ -528,6 +532,11 @@ write_NC(NC *ncp)
             ncp->put_size += header_wlen;
 #endif
         }
+    }
+    else if (fIsSet(ncp->flags, NC_HCOLL)) {
+        /* other processes participate the collective call */
+        TRACE_IO(MPI_File_write_at_all)(ncp->collective_fh, 0, NULL,
+                                        0, MPI_BYTE, &mpistatus);
     }
 
 fn_exit:
@@ -1022,6 +1031,11 @@ ncmpio__enddef(void       *ncdp,
     MPI_Info_set(ncp->mpiinfo, "nc_var_align_size", value);
     sprintf(value, "%lld", ncp->r_align);
     MPI_Info_set(ncp->mpiinfo, "nc_record_align_size", value);
+
+    if (fIsSet(ncp->flags, NC_HCOLL))
+        MPI_Info_set(ncp->mpiinfo, "nc_header_collective", "true");
+    else
+        MPI_Info_set(ncp->mpiinfo, "nc_header_collective", "false");
 
 #ifdef ENABLE_SUBFILING
     sprintf(value, "%d", ncp->num_subfiles);
