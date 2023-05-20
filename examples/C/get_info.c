@@ -15,7 +15,7 @@
  *
  *    Example standard output:
 
-    MPI File Info: nkeys = 18
+    MPI File Info: nkeys = 27
     MPI File Info: [ 0] key =            cb_buffer_size, value = 16777216
     MPI File Info: [ 1] key =             romio_cb_read, value = automatic
     MPI File Info: [ 2] key =            romio_cb_write, value = automatic
@@ -30,10 +30,19 @@
     MPI File Info: [11] key =        ind_wr_buffer_size, value = 524288
     MPI File Info: [12] key =             romio_ds_read, value = automatic
     MPI File Info: [13] key =            romio_ds_write, value = automatic
-    MPI File Info: [14] key =            cb_config_list, value = *:1
-    MPI File Info: [15] key =      nc_header_align_size, value = 512
-    MPI File Info: [16] key =         nc_var_align_size, value = 512
-    MPI File Info: [17] key = nc_header_read_chunk_size, value = 0
+    MPI File Info: [14] key =  romio_synchronized_flush, value = disabled
+    MPI File Info: [15] key =            cb_config_list, value = *:1
+    MPI File Info: [16] key =     romio_filesystem_type, value = UFS: Generic ROMIO driver for all UNIX-like file systems
+    MPI File Info: [17] key =     romio_aggregator_list, value = 0
+    MPI File Info: [18] key =      nc_header_align_size, value = 512
+    MPI File Info: [19] key =         nc_var_align_size, value = 4
+    MPI File Info: [20] key =      nc_record_align_size, value = 4
+    MPI File Info: [21] key = nc_header_read_chunk_size, value = 262144
+    MPI File Info: [22] key =          nc_in_place_swap, value = auto
+    MPI File Info: [23] key =              nc_ibuf_size, value = 16777216
+    MPI File Info: [24] key =         pnetcdf_subfiling, value = disable
+    MPI File Info: [25] key =           nc_num_subfiles, value = 0
+    MPI File Info: [26] key =      nc_header_collective, value = false
  */
 
 #include <stdio.h>
