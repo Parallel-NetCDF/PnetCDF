@@ -29,6 +29,9 @@ fi
 
 for i in ${check_PROGRAMS} ; do
     for j in ${safe_modes} ; do
+        if test "$j" = 1 ; then # test only in safe mode
+           export PNETCDF_HINTS="nc_header_collective=true"
+        fi
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 
@@ -57,7 +60,8 @@ for i in ${check_PROGRAMS} ; do
 
         if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
            # echo "test burst buffering feature"
-           export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
+           saved_PNETCDF_HINTS=${PNETCDF_HINTS}
+           export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
            if test $i = get_vara ; then
               ${MPIRUN} ./$i -q ${TESTOUTDIR}/put_vara.bb.nc
            else
@@ -66,7 +70,7 @@ for i in ${check_PROGRAMS} ; do
            if test $? = 0 ; then
               echo "PASS: CXX parallel run on $1 processes --------------- $i"
            fi
-           unset PNETCDF_HINTS
+           export PNETCDF_HINTS=${saved_PNETCDF_HINTS}
 
            if test $i != get_vara ; then
               # echo "--- validating file ${TESTOUTDIR}/$i.bb.nc"

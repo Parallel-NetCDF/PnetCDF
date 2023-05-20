@@ -29,6 +29,9 @@ fi
 
 for i in ${check_PROGRAMS} ; do
     for j in ${safe_modes} ; do
+        if test "$j" = 1 ; then # test only in safe mode
+           export PNETCDF_HINTS="nc_header_collective=true"
+        fi
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 
@@ -80,7 +83,8 @@ for i in ${check_PROGRAMS} ; do
 
         if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
            # echo "test burst buffering feature"
-           export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
+           saved_PNETCDF_HINTS=${PNETCDF_HINTS}
+           export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
            if test $i = "pnetcdf-read-from-master" ; then
               ${MPIRUN} ./$i ${TESTOUTDIR}/pnetcdf-write-from-master.bb.nc
            elif test $i = "pnetcdf-read-nfiles" ; then
@@ -103,7 +107,7 @@ for i in ${check_PROGRAMS} ; do
                  echo "PASS:  C  parallel run on $1 processes --------------- $i"
               fi
            fi
-           unset PNETCDF_HINTS
+           export PNETCDF_HINTS=${saved_PNETCDF_HINTS}
 
            if test $i = "pnetcdf-write-nfiles" ; then
               ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.bb.nc.0-4.nc

@@ -26,21 +26,25 @@ fi
 
 for i in ${TESTPROGRAMS} ; do
     for j in ${safe_modes} ; do
+        if test "$j" = 1 ; then # test only in safe mode
+           export PNETCDF_HINTS="nc_header_collective=true"
+        fi
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 
-        export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
+        saved_PNETCDF_HINTS=${PNETCDF_HINTS}
+        export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
         rm -f ${OUTDIR}/$i.nc
         ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
-        unset PNETCDF_HINTS
+        export PNETCDF_HINTS=${saved_PNETCDF_HINTS}
 
         # echo "--- validating file ${TESTOUTDIR}/$i.nc"
         ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
 
-        export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable;nc_burst_buf_shared_logs=enable"
+        export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable;nc_burst_buf_shared_logs=enable"
         rm -f ${OUTDIR}/$i.nc
         ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
-        unset PNETCDF_HINTS
+        export PNETCDF_HINTS=${saved_PNETCDF_HINTS}
 
         # echo "--- validating file ${TESTOUTDIR}/$i.nc"
         ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
