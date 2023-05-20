@@ -92,8 +92,10 @@ tst_fmt(char *filename, int cmode)
         /* call enddef to recalculate the header size */
         err = ncmpi_enddef(ncid); CHECK_ERR
 
-        /* obtained updated header size */
-        err = ncmpi_inq_header_size(ncid, &header_size); CHECK_ERR
+        if (!(cmode & NC_NETCDF4)) {
+            /* obtained updated header size */
+            err = ncmpi_inq_header_size(ncid, &header_size); CHECK_ERR
+        }
 
         err = ncmpi_close(ncid); CHECK_ERR
 
@@ -116,7 +118,7 @@ tst_fmt(char *filename, int cmode)
             /* obtain file size */
             file_size = lseek(fd, 0, SEEK_END);
 
-            if (file_size != header_size)
+            if (!(cmode & NC_NETCDF4) && file_size != header_size)
                 printf("Warning: expected file size %lld but got %lu\n",
                        header_size, file_size);
 
