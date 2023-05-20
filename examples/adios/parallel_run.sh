@@ -25,6 +25,9 @@ fi
 
 for i in ${check_PROGRAMS} ; do
     for j in ${safe_modes} ; do
+        if test "$j" = 1 ; then # test only in safe mode
+           export PNETCDF_HINTS="nc_header_collective=true"
+        fi
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
         if test "$i" = read_metadata ; then
