@@ -47,8 +47,8 @@ tst_fmt(char *fname, int cmode)
     err = ncmpi_create(comm, fname, cmode, info, &ncid); EXP_ERR(exp_err)
     if (err == NC_ENOTBUILT) goto fn_exit;
 
-    MPI_Comm_free(&comm);
-    MPI_Info_free(&info);
+    MPI_Comm_free(&comm); comm = MPI_COMM_NULL;
+    MPI_Info_free(&info); info = MPI_INFO_NULL;
 
     err = ncmpi_close(ncid); CHECK_ERR
 
