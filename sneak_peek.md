@@ -56,7 +56,8 @@ This is essentially a placeholder for the next release note ...
     read and write the file header. The default is "false", meaning the file
     header is only read/written by rank 0, using MPI independent read and write
     APIs. When set to "true", collective APIs will be used with all other
-    processes making zero-size requests.
+    processes making zero-size requests. See
+    [PR #104](https://github.com/Parallel-NetCDF/PnetCDF/pull/104).
 
 * New run-time environment variables
   + none
@@ -69,8 +70,9 @@ This is essentially a placeholder for the next release note ...
     file may still be a valid netCDF file.
     * When larger, this can happen if opening an existing file that contains no
       variable. Deleting a global attribute reduces the file header size. The
-      file is still a valid netCDF file. PR #99 detects this mismatch and
-      truncates the file size to the header size.
+      file is still a valid netCDF file.
+      [PR #99](https://github.com/Parallel-NetCDF/PnetCDF/pull/99) detects
+      this mismatch and truncates the file size to the header size.
     * When smaller, this can happen if the last variable is partially written.
       The expected file size is calculated based on the full sizes of all
       variables. The file is still a valid netCDF file.
@@ -105,7 +107,8 @@ This is essentially a placeholder for the next release note ...
 
 * Bug fixes
   + Fix ncmpi_inq_num_rec_vars and ncmpi_inq_num_fix_vars when opening an
-    existing file. See PR #103.
+    existing file. See
+    [PR #103](https://github.com/Parallel-NetCDF/PnetCDF/pull/103).
   + ncmpidiff -  when checking the dimensions defined in the second files
     whether they are defined in the first file. See 88cd9c1.
 
@@ -117,8 +120,10 @@ This is essentially a placeholder for the next release note ...
 
 * New test program
   + test/testcases/tst_symlink.c - test NC_CLOBBER on a symbolic link.
-  + test/testcases/tst_del_attr.c - test delete attributes. See PR #99.
-  + test/testcases/test_get_varn.c - test get_varn API. See PR #90.
+  + test/testcases/tst_del_attr.c - test delete attributes. See
+    [PR #99](https://github.com/Parallel-NetCDF/PnetCDF/pull/99).
+  + test/testcases/test_get_varn.c - test get_varn API. See
+    [PR #90](https://github.com/Parallel-NetCDF/PnetCDF/pull/90).
   + test/testcases/flexible_var.c - test flexible var API
   + test/testcases/flexible_api.f - test flexible API when bufcount == -1
 
