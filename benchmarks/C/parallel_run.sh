@@ -32,7 +32,12 @@ for i in ${check_PROGRAMS} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 
-        ${MPIRUN} ./$i -q -l 10 ${TESTOUTDIR}/$i.nc
+        OPTS=
+        if test "$i" = "aggregation" ; then
+           OPTS="-b -c -i -j"
+        fi
+        echo "${MPIRUN} ./$i -q ${OPTS} -l 10 ${TESTOUTDIR}/$i.nc"
+        ${MPIRUN} ./$i -q ${OPTS} -l 10 ${TESTOUTDIR}/$i.nc
         if test $? = 0 ; then
            echo "PASS:  C  parallel run on $1 processes --------------- $i"
         fi
