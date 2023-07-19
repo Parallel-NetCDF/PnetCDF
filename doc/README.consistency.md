@@ -15,6 +15,7 @@ MPI_File_sync() after each MPI I/O calls.
   * For PnetCDF collective APIs, an MPI_Barrier() will also be called right
     after MPI_File_sync().
   * For independent APIs, there is no need for calling MPI_Barrier().
+
 Users are warned that the I/O performance when using NC_SHARE flag could become
 significantly slower than not using it.
 
