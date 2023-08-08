@@ -4,22 +4,23 @@
  *  See COPYRIGHT notice in top-level directory.
  *
  *********************************************************************/
-/* $Id$ */
 
-/*    This example is similar to collective_write.c but using nonblocking APIs.
- *    It creates a netcdf file in CD-5 format and writes a number of
- *    3D integer non-record variables. The measured write bandwidth is reported
- *    at the end. Usage: (for example)
+/*    This example is similar to collective_write.c but using nonblocking APIs,
+ *    iput or bput (default is iput). It creates a netcdf file in CD-5 format
+ *    and writes a number of 3D integer non-record variables. The measured
+ *    write bandwidth is reported at the end.
+ *
  *    To compile:
  *        mpicc -O2 nonblocking_write.c -o nonblocking_write -lpnetcdf
+ *
  *    To run:
- *        mpiexec -n num_processes ./nonblocking_write [filename] [len]
+ *        mpiexec -n num_processes ./nonblocking_write -l len file_name
  *    where len decides the size of each local array, which is len x len x len.
- *    So, each non-record variable is of size len*len*len * nprocs * sizeof(int)
+ *    Each global variable is of size len*len*len * nprocs * sizeof(int).
  *    All variables are partitioned among all processes in a 3D
  *    block-block-block fashion. Below is an example standard output from
  *    command:
- *        mpiexec -n 32 ./nonblocking_write /pvfs2/wkliao/testfile.nc 100
+ *        mpiexec -n 32 ./nonblocking_write /pvfs2/wkliao/testfile.nc -l 100
  *
  *    MPI hint: cb_nodes        = 2
  *    MPI hint: cb_buffer_size  = 16777216
@@ -39,8 +40,11 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define NDIMS    3
-#define NUM_VARS 10
+#define NTIMES     4
+#define NDIMS      3
+#define SCA_NVARS  5
+#define FIX_NVARS  5
+#define REC_NVARS 10
 
 static int verbose;
 
@@ -50,11 +54,12 @@ static void
 usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-h] | [-q] [-l len] [file_name]\n"
+    "Usage: %s [-h | -q | -b | -l len] [file_name]\n"
     "       [-h] Print help\n"
     "       [-q] Quiet mode (reports when fail)\n"
+    "       [-b] Use bput APIs instead of iput APIs (default iput)\n"
     "       [-l len] size of each dimension of the local array\n"
-    "       [filename] output netCDF file name\n";
+    "       [file_name] output netCDF file name\n";
     fprintf(stderr, help, argv0);
 }
 
@@ -119,14 +124,16 @@ int main(int argc, char **argv)
 {
     extern int optind;
     extern char *optarg;
-    int i, j, err, nerrs=0;
-    int nprocs, len=0, *buf[NUM_VARS], bufsize, rank;
+    int i, j, k, err, nerrs=0, use_bput=0;
+    int nprocs, len=0, bufsize, rank;
+    int sca_buf[SCA_NVARS], *fix_buf[FIX_NVARS], *rec_buf[REC_NVARS];
     int gsizes[NDIMS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
     char filename[256], str[512];
-    int ncid, dimids[NDIMS], varids[NUM_VARS], req[NUM_VARS], st[NUM_VARS];
-    MPI_Offset starts[NDIMS], counts[NDIMS], write_size, sum_write_size;
-    MPI_Offset bbufsize;
+    int ncid, dimids[NDIMS+1];
+    int sca_var[SCA_NVARS], fix_var[FIX_NVARS], rec_var[REC_NVARS], *req, *st;
+    MPI_Offset starts[NDIMS+1], counts[NDIMS+1], write_size, sum_write_size;
+    MPI_Offset header_size, bbufsize, put_size, sum_put_size;
     MPI_Info info, info_used;
 
     MPI_Init(&argc,&argv);
@@ -136,9 +143,11 @@ int main(int argc, char **argv)
     verbose = 1;
 
     /* get command-line arguments */
-    while ((i = getopt(argc, argv, "hql:")) != EOF)
+    while ((i = getopt(argc, argv, "hqbl:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
+                      break;
+            case 'b': use_bput = 1;
                       break;
             case 'l': len = atoi(optarg);
                       break;
@@ -155,23 +164,30 @@ int main(int argc, char **argv)
     for (i=0; i<NDIMS; i++) psizes[i] = 0;
 
     MPI_Dims_create(nprocs, NDIMS, psizes);
-    starts[0] = rank % psizes[0];
-    starts[1] = (rank / psizes[1]) % psizes[1];
-    starts[2] = (rank / (psizes[0] * psizes[1])) % psizes[2];
+    starts[0] = 0;
+    starts[1] = rank % psizes[0];
+    starts[2] = (rank / psizes[1]) % psizes[1];
+    starts[3] = (rank / (psizes[0] * psizes[1])) % psizes[2];
 
+    counts[0] = 1;
     bufsize = 1;
     for (i=0; i<NDIMS; i++) {
-        gsizes[i] = len * psizes[i];
-        starts[i] *= len;
-        counts[i]  = len;
-        bufsize   *= len;
+        gsizes[i]   = len * psizes[i];
+        starts[i]  *= len;
+        bufsize    *= len;
+        counts[i+1] = len;
     }
 
     /* allocate buffer and initialize with some non-zero numbers */
-    for (i=0; i<NUM_VARS; i++) {
-        buf[i] = (int *) malloc(bufsize * sizeof(int));
-        for (j=0; j<bufsize; j++) buf[i][j] = rank * i + 123 + j;
+    for (i=0; i<FIX_NVARS; i++) {
+        fix_buf[i] = (int *) malloc(bufsize * sizeof(int));
+        for (j=0; j<bufsize; j++) fix_buf[i][j] = rank * i + 123 + j;
     }
+    for (i=0; i<REC_NVARS; i++) {
+        rec_buf[i] = (int *) malloc(bufsize * sizeof(int));
+        for (j=0; j<bufsize; j++) rec_buf[i][j] = rank * i + 123 + j;
+    }
+    for (j=0; j<SCA_NVARS; j++) sca_buf[j] = rank + j;
 
     MPI_Barrier(MPI_COMM_WORLD);
     write_timing = MPI_Wtime();
@@ -193,17 +209,36 @@ int main(int argc, char **argv)
 
     MPI_Info_free(&info);
 
+    req = (int*) malloc((SCA_NVARS + FIX_NVARS + REC_NVARS) * sizeof(int));
+    st  = (int*) malloc((SCA_NVARS + FIX_NVARS + REC_NVARS) * sizeof(int));
+
     /* define dimensions */
+    err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimids[0]);
+    ERR
     for (i=0; i<NDIMS; i++) {
         sprintf(str, "%c", 'x'+i);
-        err = ncmpi_def_dim(ncid, str, gsizes[i], &dimids[i]);
+        err = ncmpi_def_dim(ncid, str, gsizes[i], &dimids[i+1]);
         ERR
     }
 
-    /* define variables */
-    for (i=0; i<NUM_VARS; i++) {
-        sprintf(str, "var%d", i);
-        err = ncmpi_def_var(ncid, str, NC_INT, NDIMS, dimids, &varids[i]);
+    /* define scalar variables */
+    for (i=0; i<SCA_NVARS; i++) {
+        sprintf(str, "scalar_var_%d", i);
+        err = ncmpi_def_var(ncid, str, NC_INT, 0, NULL, &sca_var[i]);
+        ERR
+    }
+
+    /* define fix-sized variables */
+    for (i=0; i<FIX_NVARS; i++) {
+        sprintf(str, "fix_var_%d", i);
+        err = ncmpi_def_var(ncid, str, NC_INT, NDIMS, dimids+1, &fix_var[i]);
+        ERR
+    }
+
+    /* define record variables */
+    for (i=0; i<REC_NVARS; i++) {
+        sprintf(str, "rec_var_%d", i);
+        err = ncmpi_def_var(ncid, str, NC_INT, NDIMS+1, dimids, &rec_var[i]);
         ERR
     }
 
@@ -211,71 +246,127 @@ int main(int argc, char **argv)
     err = ncmpi_enddef(ncid);
     ERR
 
-    /* get all the hints used */
+    /* get all the MPI-IO and PnetCDF hints used */
     err = ncmpi_inq_file_info(ncid, &info_used);
     ERR
 
-    /* write one variable at a time using iput */
-    for (i=0; i<NUM_VARS; i++) {
-        err = ncmpi_iput_vara_int(ncid, varids[i], starts, counts, buf[i], &req[i]);
+    if (!use_bput) {
+        k = 0;
+
+        /* only rank 0 writes scalar variables using iput */
+        if (rank == 0) {
+            for (i=0; i<SCA_NVARS; i++) {
+                err = ncmpi_iput_var_int(ncid, sca_var[i], &sca_buf[i], &req[k++]);
+                ERR
+            }
+        }
+
+        /* write one fix-sized variable at a time using iput */
+        for (i=0; i<FIX_NVARS; i++) {
+            err = ncmpi_iput_vara_int(ncid, fix_var[i], starts+1, counts+1, fix_buf[i], &req[k++]);
+            ERR
+        }
+
+        /* write one record variable at a time using iput */
+        for (j=0; j<NTIMES; j++) {
+            starts[0] = j;
+            for (i=0; i<REC_NVARS; i++) {
+                err = ncmpi_iput_vara_int(ncid, rec_var[i], starts, counts, rec_buf[i], &req[k++]);
+                ERR
+            }
+
+            /* wait for the nonblocking I/O to complete */
+            err = ncmpi_wait_all(ncid, k, req, st);
+            ERR
+            for (i=0; i<k; i++) {
+                if (st[i] != NC_NOERR)
+                    printf("Error at line %d in %s: nonblocking write fails on request %d (%s)\n",
+                    __LINE__,__FILE__,i, ncmpi_strerror(st[i]));
+            }
+            k = 0;
+        }
+    }
+    else { /* write using bput */
+
+        /* bbufsize must be max of data type converted before and after */
+        bbufsize = (SCA_NVARS + bufsize * (FIX_NVARS + REC_NVARS)) * sizeof(int);
+        err = ncmpi_buffer_attach(ncid, bbufsize);
+        ERR
+
+        k = 0;
+
+        /* only rank 0 writes scalar variables time using bput */
+        if (rank == 0) {
+            for (i=0; i<SCA_NVARS; i++) {
+                err = ncmpi_bput_var_int(ncid, sca_var[i], &sca_buf[i], &req[k++]);
+                ERR
+            }
+        }
+
+        /* write one fix_sized variable at a time using bput */
+        for (i=0; i<FIX_NVARS; i++) {
+            err = ncmpi_bput_vara_int(ncid, fix_var[i], starts+1, counts+1, fix_buf[i], &req[k++]);
+            ERR
+            /* can safely change contents of fix_buf[i] here */
+        }
+
+        /* write one record variable at a time using bput */
+        for (j=0; j<NTIMES; j++) {
+            starts[0] = j;
+            for (i=0; i<REC_NVARS; i++) {
+                err = ncmpi_bput_vara_int(ncid, rec_var[i], starts, counts, rec_buf[i], &req[k++]);
+                ERR
+            }
+
+            /* wait for the nonblocking I/O to complete */
+            err = ncmpi_wait_all(ncid, k, req, st);
+            ERR
+            for (i=0; i<k; i++) {
+                if (st[i] != NC_NOERR)
+                    printf("Error at line %d in %s: nonblocking write fails on request %d (%s)\n",
+                    __LINE__,__FILE__,i, ncmpi_strerror(st[i]));
+            }
+            k = 0;
+        }
+
+        /* detach the temporary buffer */
+        err = ncmpi_buffer_detach(ncid);
         ERR
     }
 
-    /* wait for the nonblocking I/O to complete */
-    err = ncmpi_wait_all(ncid, NUM_VARS, req, st);
-    ERR
-    for (i=0; i<NUM_VARS; i++) {
-        if (st[i] != NC_NOERR)
-            printf("Error at line %d in %s: nonblocking write fails on request %d (%s)\n",
-            __LINE__,__FILE__,i, ncmpi_strerror(st[i]));
-    }
-
-    /* write one variable at a time using bput */
-
-    /* bbufsize must be max of data type converted before and after */
-    bbufsize = bufsize * NUM_VARS * sizeof(int);
-    err = ncmpi_buffer_attach(ncid, bbufsize);
-    ERR
-
-    for (i=0; i<NUM_VARS; i++) {
-        err = ncmpi_bput_vara_int(ncid, varids[i], starts, counts, buf[i], &req[i]);
-        ERR
-        /* can safely change contents or free up the buf[i] here */
-    }
-
-    /* wait for the nonblocking I/O to complete */
-    err = ncmpi_wait_all(ncid, NUM_VARS, req, st);
-    ERR
-    for (i=0; i<NUM_VARS; i++) {
-        if (st[i] != NC_NOERR)
-            printf("Error at line %d in %s: nonblocking write fails on request %d (%s)\n",
-            __LINE__,__FILE__,i, ncmpi_strerror(st[i]));
-    }
-
-    /* detach the temporary buffer */
-    err = ncmpi_buffer_detach(ncid);
-    ERR
-
-    MPI_Offset put_size;
     ncmpi_inq_put_size(ncid, &put_size);
-    MPI_Allreduce(MPI_IN_PLACE, &put_size, 1, MPI_OFFSET, MPI_SUM, MPI_COMM_WORLD);
+    ncmpi_inq_header_size(ncid, &header_size);
 
     /* close the file */
     err = ncmpi_close(ncid);
     ERR
 
+    for (i=0; i<FIX_NVARS; i++) free(fix_buf[i]);
+    for (i=0; i<REC_NVARS; i++) free(rec_buf[i]);
+
+    free(req);
+    free(st);
+
     write_timing = MPI_Wtime() - write_timing;
 
-    write_size = bufsize * NUM_VARS * sizeof(int);
-    for (i=0; i<NUM_VARS; i++) free(buf[i]);
+    write_size = bufsize * (FIX_NVARS + NTIMES * REC_NVARS) + SCA_NVARS;
+    write_size *= sizeof(int);
 
     MPI_Reduce(&write_size,   &sum_write_size,   1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&put_size,     &sum_put_size,     1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Reduce(&write_timing, &max_write_timing, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+
+    /* rank 0 also writes header and updates the record number in header NTIME times */
+    sum_write_size += header_size + NTIMES * 8;
 
     if (rank == 0 && verbose) {
         printf("\n");
-        printf("Total amount writes to variables only   (exclude header) = %lld bytes\n", sum_write_size);
-        printf("Total amount writes reported by pnetcdf (include header) = %lld bytes\n", put_size);
+        if (use_bput)
+            printf("Using PnetCDF nonblocking bput APIs\n");
+        else
+            printf("Using PnetCDF nonblocking iput APIs\n");
+        printf("Total amount writes                     (include header) = %lld bytes\n", sum_write_size);
+        printf("Total amount writes reported by pnetcdf (include header) = %lld bytes\n", sum_put_size);
         printf("\n");
         float subarray_size = (float)bufsize*sizeof(int)/1048576.0;
         print_info(&info_used);
