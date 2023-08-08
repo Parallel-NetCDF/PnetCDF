@@ -124,7 +124,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     extern char *optarg;
-    int i, j, k, err, nerrs=0, use_bput=0;
+    int i, j, k, err, nerrs=0, debug=0, use_bput=0;
     int nprocs, len=0, bufsize, rank;
     int sca_buf[SCA_NVARS], *fix_buf[FIX_NVARS], *rec_buf[REC_NVARS];
     int gsizes[NDIMS], psizes[NDIMS];
@@ -164,28 +164,37 @@ int main(int argc, char **argv)
     for (i=0; i<NDIMS; i++) psizes[i] = 0;
 
     MPI_Dims_create(nprocs, NDIMS, psizes);
+    if (rank == 0 && verbose && debug)
+        printf("Process DIMS psizes=%2lld %2lld %2lld\n",
+               psizes[0],psizes[1],psizes[2]);
+
     starts[0] = 0;
-    starts[1] = rank % psizes[0];
-    starts[2] = (rank / psizes[1]) % psizes[1];
-    starts[3] = (rank / (psizes[0] * psizes[1])) % psizes[2];
+    starts[1] = (rank / (psizes[1] * psizes[2])) % psizes[0];
+    starts[2] = (rank / psizes[2]) % psizes[1];
+    starts[3] = rank % psizes[2];
 
     counts[0] = 1;
     bufsize = 1;
     for (i=0; i<NDIMS; i++) {
-        gsizes[i]   = len * psizes[i];
-        starts[i]  *= len;
-        bufsize    *= len;
-        counts[i+1] = len;
+        gsizes[i]    = len * psizes[i];
+        bufsize     *= len;
+        starts[i+1] *= len;
+        counts[i+1]  = len;
     }
+
+    if (verbose && debug)
+        printf("%2d: starts=%2lld %2lld %2lld %2lld counts=%2lld %2lld %2lld %2lld\n",
+               rank, starts[0], starts[1], starts[2], starts[3],
+                     counts[0], counts[1], counts[2], counts[3]);
 
     /* allocate buffer and initialize with some non-zero numbers */
     for (i=0; i<FIX_NVARS; i++) {
         fix_buf[i] = (int *) malloc(bufsize * sizeof(int));
-        for (j=0; j<bufsize; j++) fix_buf[i][j] = rank * i + 123 + j;
+        for (j=0; j<bufsize; j++) fix_buf[i][j] = rank;
     }
     for (i=0; i<REC_NVARS; i++) {
         rec_buf[i] = (int *) malloc(bufsize * sizeof(int));
-        for (j=0; j<bufsize; j++) rec_buf[i][j] = rank * i + 123 + j;
+        for (j=0; j<bufsize; j++) rec_buf[i][j] = rank;
     }
     for (j=0; j<SCA_NVARS; j++) sca_buf[j] = rank + j;
 
@@ -216,7 +225,7 @@ int main(int argc, char **argv)
     err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimids[0]);
     ERR
     for (i=0; i<NDIMS; i++) {
-        sprintf(str, "%c", 'x'+i);
+        sprintf(str, "%c", 'z'-i);
         err = ncmpi_def_dim(ncid, str, gsizes[i], &dimids[i+1]);
         ERR
     }
@@ -362,9 +371,9 @@ int main(int argc, char **argv)
     if (rank == 0 && verbose) {
         printf("\n");
         if (use_bput)
-            printf("Using PnetCDF nonblocking bput APIs\n");
+            printf("Using PnetCDF nonblocking APIs: bput\n");
         else
-            printf("Using PnetCDF nonblocking iput APIs\n");
+            printf("Using PnetCDF nonblocking APIs: iput\n");
         printf("Total amount writes                     (include header) = %lld bytes\n", sum_write_size);
         printf("Total amount writes reported by pnetcdf (include header) = %lld bytes\n", sum_put_size);
         printf("\n");
