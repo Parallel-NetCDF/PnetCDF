@@ -111,8 +111,6 @@
            pattern, i, j, start[0], start[1], count[0], count[1]); \
 }
 
-#define XTYPE NC_FLOAT
-
 static int debug;
 
 typedef struct {
@@ -123,6 +121,7 @@ typedef struct {
     int block_star;
     int star_block;
     int blocking_io;
+    int double_xtype;
     MPI_Offset len;
     MPI_Offset w_size;
     MPI_Offset r_size;
@@ -166,6 +165,7 @@ int benchmark_write(char       *filename,
     MPI_Offset bb_gsizes[3], sc_gsizes[3], bs_gsizes[3], sb_gsizes[3];
     MPI_Offset start[3], count[3], stride[3], lenlen;
     MPI_Info info=MPI_INFO_NULL;
+    nc_type xtype = (cfg->double_xtype) ? NC_DOUBLE : NC_FLOAT;
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
@@ -254,28 +254,28 @@ int benchmark_write(char       *filename,
         if (cfg->block_block) {
             /* variables are block-block partitioned */
             sprintf(name,"block_block_var_%d",v);
-            err = ncmpi_def_var(ncid, name, XTYPE, 3, bb_dimids, &varid[v++]);
+            err = ncmpi_def_var(ncid, name, xtype, 3, bb_dimids, &varid[v++]);
             ERR(err)
             num_reqs++;
         }
         if (cfg->star_cyclic) {
             /* variables are *-cyclic partitioned */
             sprintf(name,"star_cyclic_var_%d",v);
-            err = ncmpi_def_var(ncid, name, XTYPE, 3, sc_dimids, &varid[v++]);
+            err = ncmpi_def_var(ncid, name, xtype, 3, sc_dimids, &varid[v++]);
             ERR(err)
             num_reqs++;
         }
         if (cfg->block_star) {
             /* variables are block-* partitioned */
             sprintf(name,"block_star_var_%d",v);
-            err = ncmpi_def_var(ncid, name, XTYPE, 3, bs_dimids, &varid[v++]);
+            err = ncmpi_def_var(ncid, name, xtype, 3, bs_dimids, &varid[v++]);
             ERR(err)
             num_reqs++;
         }
         if (cfg->star_block) {
             /* variables are *-block partitioned */
             sprintf(name,"star_block_var_%d",v);
-            err = ncmpi_def_var(ncid, name, XTYPE, 3, sb_dimids, &varid[v++]);
+            err = ncmpi_def_var(ncid, name, xtype, 3, sb_dimids, &varid[v++]);
             ERR(err)
             num_reqs++;
         }
@@ -627,6 +627,7 @@ usage(char *argv0)
     "       [-c] *-cyclic    partitioning pattern\n"
     "       [-i] block-*     partitioning pattern\n"
     "       [-j] *-block     partitioning pattern\n"
+    "       [-m] use double type in both memory buffer and file\n"
     "       [-l len]: local variable of size len x len (default 10)\n"
     "       [-n num]: number of variables each pattern (default 1)\n"
     "       [-t num]: number of time records (default 1)\n"
@@ -643,7 +644,7 @@ int main(int argc, char** argv) {
     char filename[256];
     int i, rank, nprocs, verbose=1, nerrs=0, enable_read, enable_write;
     int nvars, block_block, star_cyclic, block_star, star_block, num_records;
-    int blocking_io;
+    int blocking_io, double_xtype;
     double timing[11], max_t[11];
     MPI_Offset len=0, sum_w_size, sum_r_size;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -662,10 +663,11 @@ int main(int argc, char** argv) {
     enable_write = 0;
     num_records  = 1;
     blocking_io  = 0;
+    double_xtype = 0;
 
     /* get command-line arguments */
     debug = 0;
-    while ((i = getopt(argc, argv, "hqdbcijrwxl:n:t:")) != EOF)
+    while ((i = getopt(argc, argv, "hqdbcijmrwxl:n:t:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
                       break;
@@ -678,6 +680,8 @@ int main(int argc, char** argv) {
             case 'i': block_star = 1;
                       break;
             case 'j': star_block = 1;
+                      break;
+            case 'm': double_xtype = 1;
                       break;
             case 'x': blocking_io = 1;
                       break;
@@ -713,6 +717,7 @@ int main(int argc, char** argv) {
     cfg.len         = len;
     cfg.num_records = num_records;
     cfg.blocking_io = blocking_io;
+    cfg.double_xtype = double_xtype;
 
     if (enable_read == 0 && enable_write == 0)
         enable_read = enable_write = 1;
@@ -754,10 +759,10 @@ int main(int argc, char** argv) {
         printf("Output NetCDF file header extent:       %lld B\n", cfg.header_extent);
         printf("Number of MPI processes:                %d\n", nprocs);
         printf("Total number of variables:              %d\n", nvars);
-        if (XTYPE == NC_FLOAT)
-            printf("Data type of variables in output file:  NC_FLOAT\n");
-        else if (XTYPE == NC_DOUBLE)
+        if (cfg.double_xtype)
             printf("Data type of variables in output file:  NC_DOUBLE\n");
+        else
+            printf("Data type of variables in output file:  NC_FLOAT\n");
         printf("Data type of variables in memory:       double\n");
         printf("Local 2D variable size in each process: %lld x %lld\n",len,len);
         printf("Number of time records:                 %d\n",num_records);
