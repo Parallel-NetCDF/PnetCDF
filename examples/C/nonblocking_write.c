@@ -54,9 +54,10 @@ static void
 usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-h | -q | -b | -l len] [file_name]\n"
+    "Usage: %s [-h | -q | -c | -b | -l len] [file_name]\n"
     "       [-h] Print help\n"
     "       [-q] Quiet mode (reports when fail)\n"
+    "       [-c] Allocate all write buffers in a contiguous space (default no)\n"
     "       [-b] Use bput APIs instead of iput APIs (default iput)\n"
     "       [-l len] size of each dimension of the local array\n"
     "       [file_name] output netCDF file name\n";
@@ -124,9 +125,9 @@ int main(int argc, char **argv)
 {
     extern int optind;
     extern char *optarg;
-    int i, j, k, err, nerrs=0, debug=0, use_bput=0;
+    int i, j, k, err, nerrs=0, debug=0, use_contig_buf=0, use_bput=0;
     int nprocs, len=0, bufsize, rank;
-    int sca_buf[SCA_NVARS], *fix_buf[FIX_NVARS], *rec_buf[REC_NVARS];
+    int *sca_buf, *fix_buf[FIX_NVARS], *rec_buf[REC_NVARS];
     int gsizes[NDIMS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
     char filename[256], str[512];
@@ -143,9 +144,11 @@ int main(int argc, char **argv)
     verbose = 1;
 
     /* get command-line arguments */
-    while ((i = getopt(argc, argv, "hqbl:")) != EOF)
+    while ((i = getopt(argc, argv, "hqcbl:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
+                      break;
+            case 'c': use_contig_buf = 1;
                       break;
             case 'b': use_bput = 1;
                       break;
@@ -187,16 +190,39 @@ int main(int argc, char **argv)
                rank, starts[0], starts[1], starts[2], starts[3],
                      counts[0], counts[1], counts[2], counts[3]);
 
-    /* allocate buffer and initialize with some non-zero numbers */
+    /* allocate buffers */
+    if (use_contig_buf) {
+        /* all write buffers are allocated in a single contiguous space */
+        size_t total_bufsize;
+
+        total_bufsize = SCA_NVARS + (FIX_NVARS + REC_NVARS) * bufsize;
+        sca_buf = (int*) malloc(total_bufsize * sizeof(int));
+
+        fix_buf[0] = sca_buf + SCA_NVARS;
+        for (i=1; i<FIX_NVARS; i++)
+            fix_buf[i] = fix_buf[i-1] + bufsize;
+
+        rec_buf[0] = fix_buf[FIX_NVARS-1] + bufsize;
+        for (i=1; i<REC_NVARS; i++)
+            rec_buf[i] = rec_buf[i-1] + bufsize;
+    }
+    else {
+        /* allocate individual buffers separately */
+        sca_buf = (int*) malloc(SCA_NVARS * sizeof(int));
+        for (i=0; i<FIX_NVARS; i++)
+            fix_buf[i] = (int *) malloc(bufsize * sizeof(int));
+        for (i=0; i<REC_NVARS; i++)
+            rec_buf[i] = (int *) malloc(bufsize * sizeof(int));
+    }
+
+    /* initialize buffer contents */
+    for (j=0; j<SCA_NVARS; j++) sca_buf[j] = rank + j;
     for (i=0; i<FIX_NVARS; i++) {
-        fix_buf[i] = (int *) malloc(bufsize * sizeof(int));
         for (j=0; j<bufsize; j++) fix_buf[i][j] = rank;
     }
     for (i=0; i<REC_NVARS; i++) {
-        rec_buf[i] = (int *) malloc(bufsize * sizeof(int));
         for (j=0; j<bufsize; j++) rec_buf[i][j] = rank;
     }
-    for (j=0; j<SCA_NVARS; j++) sca_buf[j] = rank + j;
 
     MPI_Barrier(MPI_COMM_WORLD);
     write_timing = MPI_Wtime();
@@ -205,6 +231,11 @@ int main(int argc, char **argv)
      * variables */
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_var_align_size", "1");
+
+    /* Optional: disable PnetCDF internal buffering for noncontiguous user
+     * buffers */
+    if (!use_contig_buf)
+        MPI_Info_set(info, "nc_ibuf_size", "0");
 
     /* create the file */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,
@@ -350,9 +381,13 @@ int main(int argc, char **argv)
     err = ncmpi_close(ncid);
     ERR
 
-    for (i=0; i<FIX_NVARS; i++) free(fix_buf[i]);
-    for (i=0; i<REC_NVARS; i++) free(rec_buf[i]);
-
+    if (use_contig_buf)
+        free(sca_buf);
+    else {
+        free(sca_buf);
+        for (i=0; i<FIX_NVARS; i++) free(fix_buf[i]);
+        for (i=0; i<REC_NVARS; i++) free(rec_buf[i]);
+    }
     free(req);
     free(st);
 
@@ -374,6 +409,10 @@ int main(int argc, char **argv)
             printf("Using PnetCDF nonblocking APIs: bput\n");
         else
             printf("Using PnetCDF nonblocking APIs: iput\n");
+        if (use_contig_buf)
+            printf("All write buffers are in a contiguous space\n");
+        else
+            printf("All write buffers are allocated separately\n");
         printf("Total amount writes                     (include header) = %lld bytes\n", sum_write_size);
         printf("Total amount writes reported by pnetcdf (include header) = %lld bytes\n", sum_put_size);
         printf("\n");
