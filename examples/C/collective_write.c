@@ -148,6 +148,10 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
         bufsize   *= len;
     }
 
+    if (verbose)
+        printf("%2d: starts=%3lld %3lld %3lld count=%3lld %3lld %3lld\n",
+               rank, starts[0],starts[1],starts[2],counts[0],counts[1],counts[2]);
+
     /* allocate buffer and initialize with non-zero numbers */
     for (i=0; i<NUM_VARS; i++) {
         buf[i] = (int *) malloc(bufsize * sizeof(int));

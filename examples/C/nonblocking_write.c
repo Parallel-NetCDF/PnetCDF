@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     extern int optind;
     extern char *optarg;
     int i, j, k, err, nerrs=0, debug=0, use_contig_buf=0, use_bput=0;
-    int nprocs, len=0, bufsize, rank;
+    int nprocs, len=0, nelems, rank;
     int *sca_buf, *fix_buf[FIX_NVARS], *rec_buf[REC_NVARS];
     int gsizes[NDIMS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
@@ -177,10 +177,10 @@ int main(int argc, char **argv)
     starts[3] = rank % psizes[2];
 
     counts[0] = 1;
-    bufsize = 1;
+    nelems = 1;
     for (i=0; i<NDIMS; i++) {
         gsizes[i]    = len * psizes[i];
-        bufsize     *= len;
+        nelems      *= len;
         starts[i+1] *= len;
         counts[i+1]  = len;
     }
@@ -193,35 +193,36 @@ int main(int argc, char **argv)
     /* allocate buffers */
     if (use_contig_buf) {
         /* all write buffers are allocated in a single contiguous space */
-        size_t total_bufsize;
+        size_t total_nelems;
 
-        total_bufsize = SCA_NVARS + (FIX_NVARS + REC_NVARS) * bufsize;
-        sca_buf = (int*) malloc(total_bufsize * sizeof(int));
+        total_nelems = SCA_NVARS + (FIX_NVARS + REC_NVARS) * nelems;
+
+        sca_buf = (int*) malloc(total_nelems * sizeof(int));
 
         fix_buf[0] = sca_buf + SCA_NVARS;
         for (i=1; i<FIX_NVARS; i++)
-            fix_buf[i] = fix_buf[i-1] + bufsize;
+            fix_buf[i] = fix_buf[i-1] + nelems;
 
-        rec_buf[0] = fix_buf[FIX_NVARS-1] + bufsize;
+        rec_buf[0] = fix_buf[FIX_NVARS-1] + nelems;
         for (i=1; i<REC_NVARS; i++)
-            rec_buf[i] = rec_buf[i-1] + bufsize;
+            rec_buf[i] = rec_buf[i-1] + nelems;
     }
     else {
         /* allocate individual buffers separately */
         sca_buf = (int*) malloc(SCA_NVARS * sizeof(int));
         for (i=0; i<FIX_NVARS; i++)
-            fix_buf[i] = (int *) malloc(bufsize * sizeof(int));
+            fix_buf[i] = (int *) malloc(nelems * sizeof(int));
         for (i=0; i<REC_NVARS; i++)
-            rec_buf[i] = (int *) malloc(bufsize * sizeof(int));
+            rec_buf[i] = (int *) malloc(nelems * sizeof(int));
     }
 
     /* initialize buffer contents */
     for (j=0; j<SCA_NVARS; j++) sca_buf[j] = rank + j;
     for (i=0; i<FIX_NVARS; i++) {
-        for (j=0; j<bufsize; j++) fix_buf[i][j] = rank;
+        for (j=0; j<nelems; j++) fix_buf[i][j] = rank;
     }
     for (i=0; i<REC_NVARS; i++) {
-        for (j=0; j<bufsize; j++) rec_buf[i][j] = rank;
+        for (j=0; j<nelems; j++) rec_buf[i][j] = rank;
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -329,7 +330,7 @@ int main(int argc, char **argv)
     else { /* write using bput */
 
         /* bbufsize must be max of data type converted before and after */
-        bbufsize = (SCA_NVARS + bufsize * (FIX_NVARS + REC_NVARS)) * sizeof(int);
+        bbufsize = (SCA_NVARS + nelems * (FIX_NVARS + REC_NVARS)) * sizeof(int);
         err = ncmpi_buffer_attach(ncid, bbufsize);
         ERR
 
@@ -393,7 +394,7 @@ int main(int argc, char **argv)
 
     write_timing = MPI_Wtime() - write_timing;
 
-    write_size = bufsize * (FIX_NVARS + NTIMES * REC_NVARS) + SCA_NVARS;
+    write_size = nelems * (FIX_NVARS + NTIMES * REC_NVARS) + SCA_NVARS;
     write_size *= sizeof(int);
 
     MPI_Reduce(&write_size,   &sum_write_size,   1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -416,7 +417,7 @@ int main(int argc, char **argv)
         printf("Total amount writes                     (include header) = %lld bytes\n", sum_write_size);
         printf("Total amount writes reported by pnetcdf (include header) = %lld bytes\n", sum_put_size);
         printf("\n");
-        float subarray_size = (float)bufsize*sizeof(int)/1048576.0;
+        float subarray_size = (float)nelems*sizeof(int)/1048576.0;
         print_info(&info_used);
         printf("Local array size %d x %d x %d integers, size = %.2f MB\n",len,len,len,subarray_size);
         sum_write_size /= 1048576.0;
