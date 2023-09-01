@@ -413,7 +413,7 @@ int benchmark_read(char       *filename,
                    config     *cfg,
                    double     *timing)  /* [5] */
 {
-    int i, j, k, v, n, rank, nprocs, nerrs=0, err, num_reqs, nvars;
+    int i, k, v, n, rank, nprocs, nerrs=0, err, num_reqs, nvars;
     int ncid, dimid, *reqs, *sts, psizes[2];
     double **buf;
     double start_t, end_t;
