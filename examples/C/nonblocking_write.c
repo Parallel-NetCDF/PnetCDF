@@ -40,7 +40,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define NTIMES     4
+#define NTIMES     2
 #define NDIMS      3
 #define SCA_NVARS  5
 #define FIX_NVARS  5
@@ -168,7 +168,7 @@ int main(int argc, char **argv)
 
     MPI_Dims_create(nprocs, NDIMS, psizes);
     if (rank == 0 && verbose && debug)
-        printf("Process DIMS psizes=%2lld %2lld %2lld\n",
+        printf("Process DIMS psizes=%2d %2d %2d\n",
                psizes[0],psizes[1],psizes[2]);
 
     starts[0] = 0;
@@ -199,21 +199,19 @@ int main(int argc, char **argv)
 
         sca_buf = (int*) malloc(total_nelems * sizeof(int));
 
-        fix_buf[0] = sca_buf + SCA_NVARS;
-        for (i=1; i<FIX_NVARS; i++)
-            fix_buf[i] = fix_buf[i-1] + nelems;
+        for (i=0; i<FIX_NVARS; i++)
+            fix_buf[i] = sca_buf + SCA_NVARS + nelems * i;
 
-        rec_buf[0] = fix_buf[FIX_NVARS-1] + nelems;
-        for (i=1; i<REC_NVARS; i++)
-            rec_buf[i] = rec_buf[i-1] + nelems;
+        for (i=0; i<REC_NVARS; i++)
+            rec_buf[i] = sca_buf + SCA_NVARS + FIX_NVARS * nelems + nelems * i;
     }
     else {
-        /* allocate individual buffers separately */
-        sca_buf = (int*) malloc(SCA_NVARS * sizeof(int));
+        /* allocate individual buffers separately +1 ensure non-contiguity*/
+        sca_buf = (int*) malloc((SCA_NVARS+1) * sizeof(int));
         for (i=0; i<FIX_NVARS; i++)
-            fix_buf[i] = (int *) malloc(nelems * sizeof(int));
+            fix_buf[i] = (int *) malloc((nelems+1) * sizeof(int));
         for (i=0; i<REC_NVARS; i++)
-            rec_buf[i] = (int *) malloc(nelems * sizeof(int));
+            rec_buf[i] = (int *) malloc((nelems+1) * sizeof(int));
     }
 
     /* initialize buffer contents */
@@ -233,10 +231,9 @@ int main(int argc, char **argv)
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_var_align_size", "1");
 
-    /* Optional: disable PnetCDF internal buffering for noncontiguous user
-     * buffers */
-    if (!use_contig_buf)
-        MPI_Info_set(info, "nc_ibuf_size", "0");
+    /* disable PnetCDF internal buffering */
+    MPI_Info_set(info, "nc_ibuf_size", "0");
+    MPI_Info_set(info, "nc_in_place_swap", "enable");
 
     /* create the file */
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,
