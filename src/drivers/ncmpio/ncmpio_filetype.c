@@ -137,13 +137,10 @@ type_create_subarray64(int               ndims,
     }
 
     if (tag == 0) {
-        int gsizes[24], *sizes, *subsizes, *starts;
+        int *sizes, *subsizes, *starts;
         /* none of dimensions > 2^31-1, we can safely use
          * MPI_Type_create_subarray */
-        if (ndims <= 8) /* avoid malloc */
-            sizes = gsizes;
-        else
-            sizes = (int*) NCI_Malloc((size_t)ndims * 3 * SIZEOF_INT);
+        sizes = (int*) NCI_Malloc((size_t)ndims * 3 * SIZEOF_INT);
         subsizes = sizes    + ndims;
         starts   = subsizes + ndims;
         for (i=0; i<ndims; i++) {
@@ -156,7 +153,7 @@ type_create_subarray64(int               ndims,
         if (mpireturn != MPI_SUCCESS)
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_subarray");
 
-        if (ndims > 8) NCI_Free(sizes);
+        NCI_Free(sizes);
         return err;
     }
 
