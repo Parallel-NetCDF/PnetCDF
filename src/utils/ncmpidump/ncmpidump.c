@@ -582,10 +582,10 @@ do_ncdump(const char *path, struct fspec* specp)
                                 var.fillval = NC_FILL_DOUBLE;
                                 break;
                             case NC_INT64:
-                                var.fillval = NC_FILL_INT64;
+                                var.fillval = (double)NC_FILL_INT64;
                                 break;
                             case NC_UINT64:
-                                var.fillval = NC_FILL_UINT64;
+                                var.fillval = (double)NC_FILL_UINT64;
                                 break;
                             default:
                                 break;
