@@ -513,18 +513,18 @@ define(`GETF_CheckBND',
 ')dnl
 
 dnl
-dnl For GET APIs boudnary check for when $1 is either 'longlong' or 'ulonglong'
+dnl For GET APIs boudnary check for when $2 is either 'longlong' or 'ulonglong'
 dnl
 define(`GETF_CheckBND2',
-       `ifelse(index(`$1',`u'), 0,
-`if (xx == Upcase($1)_MAX)      *ip = Upcase($1)_MAX;',dnl for unsigned type
-`if (xx == Upcase($1)_MAX)      *ip = Upcase($1)_MAX;
-	else if (xx == Upcase($1)_MIN) *ip = Upcase($1)_MIN;')
-	else if (xx > (double)Upcase($1)_MAX || xx < Dmin($1)) {
-            ifdef(`ERANGE_FILL',`*ip = FillDefaultValue($1);')
+       `ifelse(index(`$2',`u'), 0,
+`if (xx == ($1)Upcase($2)_MAX)      *ip = Upcase($2)_MAX;',dnl for unsigned type
+`if (xx == ($1)Upcase($2)_MAX)      *ip = Upcase($2)_MAX;
+	else if (xx == Upcase($2)_MIN) *ip = Upcase($2)_MIN;')
+	else if (xx > (double)Upcase($2)_MAX || xx < Dmin($2)) {
+            ifdef(`ERANGE_FILL',`*ip = FillDefaultValue($2);')
             DEBUG_RETURN_ERROR(NC_ERANGE)
         }
-	else *ip = ($1)xx;')
+	else *ip = ($2)xx;')
 
 /*
  * Primitive numeric conversion functions.
@@ -541,12 +541,12 @@ APIPrefix`x_get_'NC_TYPE($1)_$2(const void *xp, $2 *ip)
 {
 	ix_$1 xx;
 	get_ix_$1(xp, &xx);
-	ifelse(`$1', `float',  `ifelse(`$2',  `longlong', GETF_CheckBND2($2),
-	                               `$2', `ulonglong', GETF_CheckBND2($2),
+	ifelse(`$1', `float',  `ifelse(`$2',  `longlong', GETF_CheckBND2($1,$2),
+	                               `$2', `ulonglong', GETF_CheckBND2($1,$2),
 	                               `$2',    `double', `*ip = ($2)xx;',
 				                          GETF_CheckBND($2))',
-	       `$1', `double', `ifelse(`$2',  `longlong', GETF_CheckBND2($2),
-	                               `$2', `ulonglong', GETF_CheckBND2($2),
+	       `$1', `double', `ifelse(`$2',  `longlong', GETF_CheckBND2($1,$2),
+	                               `$2', `ulonglong', GETF_CheckBND2($1,$2),
 				                          GETF_CheckBND($2))',
 	       `*ip = ($2)xx;')
 	return NC_NOERR;
@@ -609,7 +609,7 @@ APIPrefix`x_put_'NC_TYPE($1)_$2(void *xp, const $2 *ip, void *fillp)
     int err=NC_NOERR;
     ix_$1 xx = FillDefaultValue($1);
 
-    ifelse(`$2', `double', `if (*ip > Xmax($1) || *ip < DXmin($1)) {
+    ifelse(`$2', `double', `if (*ip > (double)Xmax($1) || *ip < DXmin($1)) {
         FillValue($1, &xx)
         DEBUG_ASSIGN_ERROR(err, NC_ERANGE)
     } ifdef(`ERANGE_FILL',`else')',
