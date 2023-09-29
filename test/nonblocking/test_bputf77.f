@@ -19,13 +19,13 @@
           implicit none
           include "mpif.h"
           include "pnetcdf.inc"
-          integer err
+          integer err, ierr
           character message*(*)
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
               write(6,*) message//' '//nfmpi_strerror(err)
-              call MPI_Abort(MPI_COMM_WORLD, -1, err)
+              call MPI_Abort(MPI_COMM_WORLD, -1, ierr)
           endif
       end ! subroutine check
 
@@ -34,17 +34,19 @@
       include "mpif.h"
       include "pnetcdf.inc"
 
-      logical verbose
+      logical verbose, using_bb
       integer i, j, ncid, varid, err, ierr, rank, nprocs, info
-      integer no_err, cmode, get_args, XTRIM
+      integer no_err, cmode, get_args, XTRIM, idx
       integer dimid(2), req(2), status(2)
       integer*8 start(2)
       integer*8 count(2)
       integer*8 stride(2)
       integer*8 imap(2)
-      integer*8 bufsize, dim_size
+      integer*8 dim_size, bufsize, inq_bufsize
       real  var(6,4)
       character*256 filename, cmd, msg
+      integer*8 usage, acc_usage
+      character*512 hints
 
       call MPI_INIT(ierr)
       call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierr)
@@ -65,6 +67,12 @@
           print*,'Warning: ',cmd(1:XTRIM(cmd)),
      +           ' is designed to run on 1 process'
       endif
+
+      call getenv("PNETCDF_HINTS", hints)
+      idx = index(hints, "nc_burst_buf=enable")
+
+      using_bb = .FALSE.
+      if (idx > 0) using_bb = .TRUE.
 
       call MPI_Info_create(info, ierr)
       ! call MPI_Info_set(info, "romio_pvfs2_posix_write","enable",ierr)
@@ -106,8 +114,29 @@
 
       ! bufsize must be max of data type converted before and after
       bufsize = 4*6*8
+      acc_usage = 0
       err = nfmpi_buffer_attach(ncid, bufsize)
       call check(err, 'Error at nfmpi_buffer_attach ')
+
+      if (.NOT. using_bb) then
+          err = nfmpi_inq_buffer_size(ncid, inq_bufsize)
+          call check(err, 'Error at nfmpi_inq_buffer_size ')
+
+          if (inq_bufsize .NE. bufsize) then
+              print*,"Error: expect bufsize ",bufsize,"but got ",
+     +               inq_bufsize
+              call MPI_Abort(MPI_COMM_WORLD, -1, ierr)
+          end if
+
+          err = nfmpi_inq_buffer_usage(ncid, usage)
+          call check(err, 'Error at nfmpi_inq_buffer_usage ')
+
+          if (.NOT. using_bb .AND. usage .NE. acc_usage) then
+              print*,"Error: expect buf usage ",acc_usage," but got ",
+     +               usage
+              call MPI_Abort(MPI_COMM_WORLD, -1, ierr)
+          end if
+      end if
 
       ! write var to the NC variable in the matrix transposed way
       count(1)  = 2
@@ -129,6 +158,19 @@
      +                           imap, var(1,1), req(1))
       call check(err, 'Error at nfmpi_bput_varm_real ')
 
+      acc_usage = acc_usage + count(1) * count(2) * 8
+
+      if (.NOT. using_bb) then
+          err = nfmpi_inq_buffer_usage(ncid, usage)
+          call check(err, 'Error at nfmpi_inq_buffer_usage ')
+
+          if (usage .NE. acc_usage) then
+              print*,"Error: expect buf usage ",acc_usage," but got ",
+     +               usage
+              call MPI_Abort(MPI_COMM_WORLD, -1, ierr)
+          end if
+      end if
+
       ! write the second two columns of the NC variable in the matrix transposed way
       start(1)  = 3
       start(2)  = 1
@@ -136,8 +178,31 @@
      +                           imap, var(1,3), req(2))
       call check(err, 'Error at nfmpi_bput_varm_real ')
 
+      acc_usage = acc_usage + count(1) * count(2) * 8
+
+      if (.NOT. using_bb) then
+          err = nfmpi_inq_buffer_usage(ncid, usage)
+          call check(err, 'Error at nfmpi_inq_buffer_usage ')
+
+          if (usage .NE. acc_usage) then
+              print*,"Error: expect buf usage ",acc_usage," but got ",
+     +               usage
+              call MPI_Abort(MPI_COMM_WORLD, -1, ierr)
+          end if
+      end if
+
       err = nfmpi_wait_all(ncid, 2, req, status)
       call check(err, 'Error at nfmpi_wait_all ')
+
+      if (.NOT. using_bb) then
+          err = nfmpi_inq_buffer_usage(ncid, usage)
+          call check(err, 'Error at nfmpi_inq_buffer_usage ')
+
+          if (usage .NE. 0) then
+              print*,"Error: expect buf usage 0 but got ",usage
+              call MPI_Abort(MPI_COMM_WORLD, -1, ierr)
+          end if
+      end if
 
       ! check each bput status
       do i = 1, 2
@@ -148,6 +213,12 @@
 
       err = nfmpi_buffer_detach(ncid)
       call check(err, 'Error at nfmpi_buffer_detach ')
+
+      err = nfmpi_inq_buffer_size(ncid, inq_bufsize)
+      if (err .NE. NF_ENULLABUF) then
+          print*,"Error: unexpected error code ",err
+          call MPI_Abort(MPI_COMM_WORLD, -1, ierr)
+      end if
 
       ! the output from command "ncmpidump -v var test.nc" should be:
       !      var =
