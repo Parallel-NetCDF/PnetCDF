@@ -738,7 +738,7 @@ NBVAR(bput, 7, EightByteInt, integer, int8, `:,:,:,:,:,:,:', INTENTV)
      integer (kind=MPI_OFFSET_KIND), intent(out) :: buf_size
      integer                                     :: nf90mpi_inq_buffer_size
 
-     nf90mpi_inq_buffer_size = nfmpi_inq_buffer_usage(ncid, buf_size)
+     nf90mpi_inq_buffer_size = nfmpi_inq_buffer_size(ncid, buf_size)
    end function nf90mpi_inq_buffer_size
 
    function nf90mpi_buffer_detach(ncid)
