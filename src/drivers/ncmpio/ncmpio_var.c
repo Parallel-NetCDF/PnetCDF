@@ -105,8 +105,10 @@ dup_NC_var(const NC_var *rvarp)
     /* copy the contents of shape may not be necessary, as one must call
      * compute_var_shape() to recompute it after a new variable is created
      */
-    memcpy(varp->shape,  rvarp->shape,  (size_t)rvarp->ndims * SIZEOF_MPI_OFFSET);
-    memcpy(varp->dsizes, rvarp->dsizes, (size_t)rvarp->ndims * SIZEOF_MPI_OFFSET);
+    if (rvarp->ndims > 0) { /* skip memcpy if ndims == 0 (scalar variables) */
+        memcpy(varp->shape,  rvarp->shape,  (size_t)rvarp->ndims * SIZEOF_MPI_OFFSET);
+        memcpy(varp->dsizes, rvarp->dsizes, (size_t)rvarp->ndims * SIZEOF_MPI_OFFSET);
+    }
     varp->xsz   = rvarp->xsz;
     varp->len   = rvarp->len;
     varp->begin = rvarp->begin;
@@ -507,13 +509,14 @@ ncmpio_inq_var(void       *ncdp,
 #endif
             *ndimsp = varp->ndims;
     }
-    if (dimids != NULL) {
+    if (dimids != NULL) { /* copy dim IDs for non-scalar */
 #ifdef ENABLE_SUBFILING
         /* varp->dimids_org is already set during open or enddef */
-        if (varp->num_subfiles > 1)
+        if (varp->num_subfiles > 1 && varp->ndims_org > 0)
             memcpy(dimids, varp->dimids_org, (size_t)varp->ndims_org * SIZEOF_INT);
         else
 #endif
+        if (varp->ndims > 0)
             memcpy(dimids, varp->dimids, (size_t)varp->ndims * SIZEOF_INT);
     }
     if (nattsp != NULL) *nattsp = varp->attrs.ndefined;
