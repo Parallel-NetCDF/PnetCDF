@@ -220,9 +220,11 @@ hdr_put_NC_attr(bufferinfo    *pbp,
         status = ncmpix_put_uint64((void**)(&pbp->pos), (uint64)attrp->nelems);
     if (status != NC_NOERR) return status;
 
-    /* copy [values ...] */
-    status = hdr_put_NC_attrV(pbp, attrp);
-    if (status != NC_NOERR) return status;
+    if (attrp->nelems > 0) { /* attribute is allowed to be of size zero */
+        /* copy [values ...] */
+        status = hdr_put_NC_attrV(pbp, attrp);
+        if (status != NC_NOERR) return status;
+    }
 
     return NC_NOERR;
 }
