@@ -132,7 +132,7 @@ ncmpio_add_record_requests(NC_lead_req      *lead_list,
 int
 ncmpio_igetput_varm(NC               *ncp,
                     NC_var           *varp,
-                    const MPI_Offset  start[],  /* not NULL */
+                    const MPI_Offset  start[],  /* not NULL, if not scalar */
                     const MPI_Offset  count[],  /* not NULL */
                     const MPI_Offset  stride[], /* may be NULL */
                     const MPI_Offset  imap[],   /* may be NULL */
@@ -504,7 +504,11 @@ ncmpio_igetput_varm(NC               *ncp,
         MPI_Type_dup(buftype, &lead_req->buftype);
 
     /* allocate a single array for non-leads to store start/count/stride */
-    if (stride == NULL) {
+    if (varp->ndims == 0) { /* scalar variable, start may be NULL */
+        lead_req->start = NULL;
+        req->start = NULL;
+    }
+    else if (stride == NULL) {
         size_t memChunk = varp->ndims * SIZEOF_MPI_OFFSET;
         if (IS_RECVAR(varp) && count[0] > 1)
             lead_req->start = (MPI_Offset*) NCI_Malloc(memChunk * 2 * count[0]);
