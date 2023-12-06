@@ -256,8 +256,9 @@ int ncbbio_log_create(NC_bb* ncbbp,
     headerp->entry_begin = ncbbp->metadata.nused;
     headerp->basenamelen = strlen(basename);
 
-    /* Process anme */
-    *(int*)((char*)headerp->basename + headerp->basenamelen + 1) = procname_len;
+    /* Process name */
+    memcpy((char*)headerp->basename + headerp->basenamelen + 1,
+           &procname_len, sizeof(int));
     strncpy((char*)headerp->basename + headerp->basenamelen + 5,
             procname, procname_len + 1);
 
