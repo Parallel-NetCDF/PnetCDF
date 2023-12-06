@@ -127,7 +127,7 @@
 ! netCDF plotfile -- corners
 !---------------------------------------------------------------------------
       time_begin = MPI_Wtime()
-      corner_io = plotfile_ncmpi_par(0,0.e0,.true.)
+      corner_io = plotfile_ncmpi_par(0, DBLE(0.0), .true.)
       time_io(3) = MPI_Wtime() - time_begin
 
       call report_io_performance(verbose, local_blocks, time_io, chk_io, &
