@@ -40,7 +40,10 @@ tst_fmt(char *fname, int cmode)
 
     /* create MPI I/O hints */
     MPI_Info_create(&info);
-    MPI_Info_set(info, "romio_no_indep_rw", "true");
+
+    if (! (cmode & NC_NETCDF4))
+        /* this hint may cause H5Fflush() to hang */
+        MPI_Info_set(info, "romio_no_indep_rw", "true");
 
     /* create a file */
     cmode |= NC_CLOBBER;
