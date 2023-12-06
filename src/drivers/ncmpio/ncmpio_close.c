@@ -183,22 +183,34 @@ ncmpio_close(void *ncdp)
                 /* obtain file size */
                 off_t file_size = lseek(fd, 0, SEEK_END);
                 /* truncate file size to header size, if larger than header */
-                if (file_size > ncp->xsz)
-                    ftruncate(fd, ncp->xsz);
+                if (file_size > ncp->xsz && ftruncate(fd, ncp->xsz) < 0) {
+                    err = ncmpii_error_posix2nc("ftruncate");
+                    if (status == NC_NOERR) status = err;
+                }
                 close(fd);
             }
 #else
             MPI_File fh;
-            err = MPI_File_open(MPI_COMM_SELF, ncp->path, MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
-            if (err == MPI_SUCCESS) {
+            int mpireturn;
+            mpireturn = MPI_File_open(MPI_COMM_SELF, ncp->path, MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
+            if (mpireturn == MPI_SUCCESS) {
                 /* obtain file size */
                 MPI_Offset *file_size;
                 MPI_File_seek(fh, 0, MPI_SEEK_END);
                 MPI_File_get_position(fh, &file_size);
                 /* truncate file size to header size, if larger than header */
-                if (file_size > ncp->xsz)
-                    MPI_File_set_size(fh, ncp->xsz);
+                if (file_size > ncp->xsz} {
+                    mpireturn = MPI_File_set_size(fh, ncp->xsz);
+                    if (mpireturn != MPI_SUCCESS) {
+                        err = ncmpii_error_mpi2nc(mpireturn,"MPI_File_set_size");
+                        if (status == NC_NOERR) status = err;
+                    }
+                }
                 MPI_File_close(&fh);
+            }
+            else {
+                err = ncmpii_error_mpi2nc(mpireturn,"MPI_File_open");
+                if (status == NC_NOERR) status = err;
             }
 #endif
         }
