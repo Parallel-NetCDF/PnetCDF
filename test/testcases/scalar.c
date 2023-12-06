@@ -85,6 +85,78 @@ tst_fmt(char *filename, int cmode)
     return nerrs;
 }
 
+#define WAIT_CHECK { \
+    CHECK_ERR \
+    err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL); \
+    CHECK_ERR \
+}
+
+static int
+tst_fmt_nb(char *filename, int cmode)
+{
+    int err, nerrs=0, ncid, varid, buf;
+    MPI_Offset start[1], count[1], stride[1], imap[1];
+
+    /* No test NetCDF-4 as nonblocking APIs are not defined in NetCDF-4 */
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | cmode,
+                       MPI_INFO_NULL, &ncid); CHECK_ERR
+
+    /* define a scalar variable of integer type */
+    err = ncmpi_def_var(ncid, "scalar_var", NC_INT, 0, NULL, &varid); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
+
+    buf = 1;
+    start[0] = 1;
+    count[0] = 2;
+    stride[0] = 2;
+    imap[0] = 2;
+
+    /* put */
+    err = ncmpi_iput_var1_int(ncid, varid, NULL,  &buf, NULL); WAIT_CHECK
+    err = ncmpi_iput_var1_int(ncid, varid, start, &buf, NULL); WAIT_CHECK
+
+    err = ncmpi_iput_vara_int(ncid, varid, start, count, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iput_vara_int(ncid, varid, NULL, count, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iput_vara_int(ncid, varid, start, NULL, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iput_vara_int(ncid, varid, NULL, NULL, &buf, NULL); WAIT_CHECK
+
+    err = ncmpi_iput_vars_int(ncid, varid, start, count, stride, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iput_vars_int(ncid, varid, NULL, count, stride, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iput_vars_int(ncid, varid, start, NULL, stride, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iput_vars_int(ncid, varid, start, count, NULL, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iput_vars_int(ncid, varid, NULL, NULL, NULL, &buf, NULL); WAIT_CHECK
+
+    err = ncmpi_iput_varm_int(ncid, varid, start, count, stride, imap, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iput_varm_int(ncid, varid, NULL, NULL, NULL, NULL, &buf, NULL); WAIT_CHECK
+
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
+
+    err = ncmpi_inq_varid(ncid, "scalar_var", &varid); CHECK_ERR
+
+    /* get */
+    err = ncmpi_iget_var1_int(ncid, varid, NULL,  &buf, NULL); WAIT_CHECK
+    err = ncmpi_iget_var1_int(ncid, varid, start, &buf, NULL); WAIT_CHECK
+
+    err = ncmpi_iget_vara_int(ncid, varid, start, count, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iget_vara_int(ncid, varid, NULL, count, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iget_vara_int(ncid, varid, start, NULL, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iget_vara_int(ncid, varid, NULL, NULL, &buf, NULL); WAIT_CHECK
+
+    err = ncmpi_iget_vars_int(ncid, varid, start, count, stride, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iget_vars_int(ncid, varid, NULL, count, stride, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iget_vars_int(ncid, varid, start, NULL, stride, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iget_vars_int(ncid, varid, start, count, NULL, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iget_vars_int(ncid, varid, NULL, NULL, NULL, &buf, NULL); WAIT_CHECK
+
+    err = ncmpi_iget_varm_int(ncid, varid, start, count, stride, imap, &buf, NULL); WAIT_CHECK
+    err = ncmpi_iget_varm_int(ncid, varid, NULL, NULL, NULL, NULL, &buf, NULL); WAIT_CHECK
+
+    err = ncmpi_close(ncid); CHECK_ERR
+    return nerrs;
+}
+
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
@@ -121,6 +193,12 @@ int main(int argc, char **argv)
         free(hint_value);
     }
 
+    /* test nonblocking APIs */
+    nerrs += tst_fmt_nb(filename, 0);
+    nerrs += tst_fmt_nb(filename, NC_64BIT_OFFSET);
+    nerrs += tst_fmt_nb(filename, NC_64BIT_DATA);
+
+    /* test blocking APIs */
     nerrs += tst_fmt(filename, 0);
     nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
     if (!bb_enabled) {
