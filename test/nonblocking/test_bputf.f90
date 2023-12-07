@@ -56,7 +56,7 @@
                  ' is designed to run on 1 process'
       endif
 
-      call getenv("PNETCDF_HINTS", hints)
+      call get_env("PNETCDF_HINTS", hints)
       idx = index(hints, "nc_burst_buf=enable")
 
       using_bb = .FALSE.

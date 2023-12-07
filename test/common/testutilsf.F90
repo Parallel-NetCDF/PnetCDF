@@ -67,3 +67,12 @@
           endif
       end subroutine pass_fail
 
+      subroutine get_env(hint_str, value)
+          character(len=*) hint_str, value
+#ifdef NAGFOR
+          call Get_Environment_Variable(hint_str, Value=value)
+#else
+          call getenv(hint_str, value)
+#endif
+      end subroutine get_env
+
