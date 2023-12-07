@@ -77,7 +77,7 @@
           integer err, nprocs, rank, ierr, get_args, dummy
           integer cmode, ncid, rec_varid, fix_varid, dimid(2)
           integer no_fill, old_mode
-          integer(kind=4) fill_value
+          integer*4 fill_value
           integer(kind=MPI_OFFSET_KIND) nx, ny, global_nx, global_ny
           integer(kind=MPI_OFFSET_KIND) starts(2), counts(2)
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
