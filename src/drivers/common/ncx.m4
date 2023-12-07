@@ -878,13 +878,37 @@ typedef long ix_int;
 #endif
 
 
+#if USHORT_MAX == X_UINT_MAX
+typedef ushort ix_uint;
+#define SIZEOF_IX_UINT SIZEOF_USHORT
+#define IX_UINT_MAX USHORT_MAX
+#elif UINT_MAX  >= X_UINT_MAX
+typedef uint ix_uint;
+#define SIZEOF_IX_UINT SIZEOF_UINT
+#define IX_UINT_MAX UINT_MAX
+#elif ULONG_MAX  >= X_UINT_MAX
+typedef ulong ix_uint;
+#define SIZEOF_IX_UINT SIZEOF_ULONG
+#define IX_UINT_MAX ULONG_MAX
+#else
+#error "ix_uint implementation"
+#endif
+
+
 static void
 get_ix_int(const void *xp, ix_int *ip)
 {
 #ifdef WORDS_BIGENDIAN
     memcpy(ip, xp, 4);
 #else
-    ix_int tmp;
+
+    /* must use unsigned type to do byte swap. Otherwise, we may get error
+     * message below when using "-fsanitize=undefined" compile flag:
+     * runtime error: left shift of 1618607871 by 8 places cannot be
+     * represented in type 'int'
+     */
+
+    ix_uint tmp;
     memcpy(&tmp, xp, 4);
     *ip = SWAP4(tmp);
 #endif
@@ -896,8 +920,16 @@ put_ix_int(void *xp, const ix_int *ip)
 #ifdef WORDS_BIGENDIAN
     memcpy(xp, ip, 4);
 #else
-    ix_int xtmp, itmp = *ip;
-    xtmp = SWAP4(itmp);
+
+    /* must use unsigned type to do byte swap. Otherwise, we may get error
+     * message below when using "-fsanitize=undefined" compile flag:
+     * runtime error: left shift of 1618607871 by 8 places cannot be
+     * represented in type 'int'
+     */
+
+    ix_uint xtmp;
+    memcpy(&xtmp, ip, 4);
+    xtmp = SWAP4(xtmp);
     memcpy(xp, &xtmp, 4);
 #endif
 }
@@ -961,23 +993,6 @@ NCX_PUT1F(int, double)
 
 
 /* external NC_UINT ---------------------------------------------------------*/
-
-#if USHORT_MAX == X_UINT_MAX
-typedef ushort ix_uint;
-#define SIZEOF_IX_UINT SIZEOF_USHORT
-#define IX_UINT_MAX USHORT_MAX
-#elif UINT_MAX  >= X_UINT_MAX
-typedef uint ix_uint;
-#define SIZEOF_IX_UINT SIZEOF_UINT
-#define IX_UINT_MAX UINT_MAX
-#elif ULONG_MAX  >= X_UINT_MAX
-typedef ulong ix_uint;
-#define SIZEOF_IX_UINT SIZEOF_ULONG
-#define IX_UINT_MAX ULONG_MAX
-#else
-#error "ix_uint implementation"
-#endif
-
 
 static void
 get_ix_uint(const void *xp, ix_uint *ip)
