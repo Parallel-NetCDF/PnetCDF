@@ -238,12 +238,16 @@ ac_user_MPICC=$MPICC
 ac_user_MPICXX=$MPICXX
 ac_user_MPIF77=$MPIF77
 ac_user_MPIF90=$MPIF90
-if test "x$MPICC"  = x && test "x$CC"  != x ; then ac_user_MPICC=$CC   ; fi
-if test "x$MPICXX" = x && test "x$CXX" != x ; then ac_user_MPICXX=$CXX ; fi
-if test "x$MPIF77" = x && test "x$F77" != x ; then ac_user_MPIF77=$F77 ; fi
-if test "x$MPIF77" = x && test "x$FC"  != x ; then ac_user_MPIF77=$FC  ; fi
-if test "x$MPIF90" = x && test "x$F90" != x ; then ac_user_MPIF90=$F90 ; fi
-if test "x$MPIF90" = x && test "x$FC"  != x ; then ac_user_MPIF90=$FC  ; fi
+if test "x$MPI_INSTALL" = x ; then
+   # Use CC, CXX, F77, FC, F90 only when --with-mpi is not used and the
+   # following MPI environment variables are not set
+   if test "x$MPICC"  = x && test "x$CC"  != x ; then ac_user_MPICC=$CC   ; fi
+   if test "x$MPICXX" = x && test "x$CXX" != x ; then ac_user_MPICXX=$CXX ; fi
+   if test "x$MPIF77" = x && test "x$F77" != x ; then ac_user_MPIF77=$F77 ; fi
+   if test "x$MPIF77" = x && test "x$FC"  != x ; then ac_user_MPIF77=$FC  ; fi
+   if test "x$MPIF90" = x && test "x$F90" != x ; then ac_user_MPIF90=$F90 ; fi
+   if test "x$MPIF90" = x && test "x$FC"  != x ; then ac_user_MPIF90=$FC  ; fi
+fi
 
 CANDIDATE_MPICC="${MPICC} mpicc mpicc_r"
 CANDIDATE_MPICXX="${MPICXX} mpicxx mpic++ mpiCC mpcxx mpc++ mpicxx_r mpiCC_r mpcxx_r mpic++_r mpc++_r"
@@ -393,10 +397,20 @@ dnl print out MPI version and vendor information
 CHECK_MPI_VERSION
 
 dnl PnetCDF requires MPI-IO support and MPI-IO was first introduced in MPI 2.0
+if test "x$mpi_version" = x ; then
+   AC_MSG_ERROR([
+   -----------------------------------------------------------------------
+     PnetCDF requires an MPI library that supports MPI standard version
+     2.0 and later. However, such information cannot be detected from the
+     supplied MPI C compiler:
+     $MPICC
+     Abort.
+   -----------------------------------------------------------------------])
+fi
 if test "$mpi_version" -lt "2" ; then
    AC_MSG_ERROR([
    -----------------------------------------------------------------------
-     PnetCDF requires the MPI library that supports MPI standard version
+     PnetCDF requires an MPI library that supports MPI standard version
      2.0 and later. The supplied MPI library only supports MPI $mpi_version.
      Abort.
    -----------------------------------------------------------------------])
