@@ -30,7 +30,7 @@ jobs:
         - uses: actions/checkout@v3
         - name: Set up dependencies
           run: |
-            brew instal automake autoconf libtool m4 open-mpi zlib
+            brew install gcc automake autoconf libtool m4 open-mpi zlib
             echo "---- location of OpenMPI C compiler ----"
             which mpicc
         - name: Build PnetCDF
