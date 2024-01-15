@@ -186,6 +186,7 @@ esac])dnl
 #
 # Known flags:
 # NAGWare: -mismatch
+# gfortran: -fallow-argument-mismatch
 #
 AC_DEFUN([_ACX_FC_MISMATCH],
   [_AC_FORTRAN_ASSERT()dnl
@@ -202,7 +203,7 @@ be called with different argument types])
       call foo1(a)
       call foo1(b)
       call foo1(c)]])])
-      for acx_flag in '' -mismatch; do
+      for acx_flag in '' -mismatch -fallow-argument-mismatch; do
         _AC_LANG_PREFIX[]FLAGS="${acx_save_[]_AC_LANG_PREFIX[]FLAGS} $acx_flag"
         AC_COMPILE_IFELSE([], [acx_cache_var=$acx_flag])
         test "x$acx_cache_var" != xunknown && break
