@@ -20,6 +20,23 @@ AM_FFLAGS = $(FFIXEDFORMFLAG)
 LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
+# suppress warning messages when using NAG Fortran compiler
+if NAGFORT
+  # suppresses warning messages about unused external procedures
+  AM_FFLAGS += -w=uep
+
+  # suppresses extension warnings for obsolete but common extensions to Fortran
+  # 77 - these are TAB format, byte-length specifiers, Hollerith constants
+  # and D lines;
+  AM_FFLAGS += -w=x77
+
+  # suppresses warning messages about variables set but never referenced;
+  AM_FFLAGS += -w=unreffed
+
+  # suppresses warning messages about unused PARAMETERs;
+  AM_FFLAGS += -w=uparam
+endif
+
 M4FLAGS += -I${top_srcdir}/m4
 
 if HAVE_F77_GNU_INT
