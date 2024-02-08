@@ -51,7 +51,6 @@
           integer array_of_starts(2)
           integer*8 malloc_size, sum_size
           logical verbose
-          integer dummy
 
           call MPI_Init(err)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
