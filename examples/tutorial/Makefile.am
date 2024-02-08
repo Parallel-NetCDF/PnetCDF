@@ -16,6 +16,22 @@ AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/binding/f90 $(FFREEFORMFLAG)
 LDADD  = ${top_builddir}/src/libs/libpnetcdf.la
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
+# suppress warning messages when using NAG Fortran compiler
+if NAGFORT
+  # suppresses warning messages about unused external procedures
+  AM_FFLAGS += -w=uep
+  AM_FCFLAGS += -w=uep
+
+  # suppresses extension warnings for obsolete but common extensions to Fortran
+  # 77 - these are TAB format, byte-length specifiers, Hollerith constants
+  # and D lines;
+  AM_FFLAGS += -w=x77
+
+  # suppresses warning messages about variables set but never referenced;
+  AM_FFLAGS += -w=unreffed
+  AM_FCFLAGS += -w=unreffed
+endif
+
 check_PROGRAMS = pnetcdf-write-from-master \
                  pnetcdf-read-from-master \
                  pnetcdf-write-nfiles \

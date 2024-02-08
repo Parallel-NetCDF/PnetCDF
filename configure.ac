@@ -1023,6 +1023,7 @@ if test "x${has_fortran}" = xyes && test "x${ax_cv_fc_compiler_vendor}" = xnag ;
    ACX_F77_MISMATCH([AS_VAR_APPEND([FFLAGS], [" $acx_cv_f77_mismatch_flag"])])
    ACX_FC_MISMATCH([AS_VAR_APPEND([FCFLAGS], [" $acx_cv_fc_mismatch_flag"])])
 fi
+AM_CONDITIONAL(NAGFORT, [test x$ax_cv_fc_compiler_vendor = xnag])
 
 if test "x$enable_shared" = xyes ; then
    dnl Call LT_OUTPUT to produce file ./libtool which is used later in

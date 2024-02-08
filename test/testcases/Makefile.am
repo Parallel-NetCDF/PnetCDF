@@ -34,6 +34,26 @@ if DECL_MPI_OFFSET
    AM_FCFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
 endif
 
+# suppress warning messages when using NAG Fortran compiler
+if NAGFORT
+  # suppresses warning messages about unused external procedures
+  AM_FFLAGS += -w=uep
+  AM_FCFLAGS += -w=uep
+
+  # suppresses extension warnings for obsolete but common extensions to Fortran
+  # 77 - these are TAB format, byte-length specifiers, Hollerith constants
+  # and D lines;
+  AM_FFLAGS += -w=x77
+
+  # suppresses warning messages about variables set but never referenced;
+  AM_FFLAGS += -w=unreffed
+  AM_FCFLAGS += -w=unreffed
+
+  # suppresses warning messages about unused PARAMETERs;
+  AM_FFLAGS += -w=uparam
+  AM_FCFLAGS += -w=uparam
+endif
+
 TESTPROGRAMS = ncmpi_vars_null_stride \
                vectors \
                collective_error \

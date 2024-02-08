@@ -14,6 +14,18 @@ AM_FCFLAGS = ${FC_MODINC}$(top_builddir)/src/binding/f90 $(FFREEFORMFLAG)
 LDADD  = ${top_builddir}/src/libs/libpnetcdf.la utils.o
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
+# suppress warning messages when using NAG Fortran compiler
+if NAGFORT
+  # suppresses warning messages about unused external procedures
+  AM_FCFLAGS += -w=uep
+
+  # suppresses warning messages about variables set but never referenced;
+  AM_FCFLAGS += -w=unreffed
+
+  # suppresses warning messages about unused PARAMETERs;
+  AM_FCFLAGS += -w=uparam
+endif
+
 check_PROGRAMS = nonblocking_write \
                  column_wise \
                  block_cyclic \

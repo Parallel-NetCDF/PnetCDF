@@ -29,6 +29,18 @@ AM_FCFLAGS += $(FC_DEFINE)N_DIM=3
 AM_FCFLAGS += $(FC_DEFINE)MAXBLOCKS=100
 AM_FCFLAGS += $(FC_DEFINE)IONMAX=13
 
+# suppress warning messages when using NAG Fortran compiler
+if NAGFORT
+  # suppresses warning messages about unused external procedures
+  AM_FCFLAGS += -w=uep
+
+  # suppresses warning messages about variables set but never referenced;
+  AM_FCFLAGS += -w=unreffed
+
+  # suppresses warning messages about unused PARAMETERs;
+  AM_FCFLAGS += -w=uparam
+endif
+
 check_PROGRAMS = flash_benchmark_io
 
 noinst_PROGRAMS = $(check_PROGRAMS)
