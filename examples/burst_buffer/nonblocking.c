@@ -7,14 +7,15 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example shows how to nonblocking IO with burst buffer driver.
- * It is same as using without the burst buffer driver with the only exception that
+ * This example shows how to nonblocking IO with burst buffer driver.  It is
+ * same as using without the burst buffer driver with the only exception that
  * we may not be able to cancel nonblocking requests
- * In this example, every process write its rank to n-th cell in 3 1 X N variables.
- * N is the number of processes.
+ * In this example, every process write its rank to n-th cell in three 1 X N
+ * variables.  N is the number of processes.
  * We will try to cancel the write operations on variable A, and C
- * While we can cancel the request for variable A, we can not do so for variable C
- * because it is already flushed to PFS when we wait on request of variable B
+ * While we can cancel the request for variable A, we can not do so for
+ * variable C because it has already been flushed when we wait on request of
+ * variable B
  *
  *    To compile:
  *        mpicc -O2 nonblocking.c -o nonblocking -lpnetcdf

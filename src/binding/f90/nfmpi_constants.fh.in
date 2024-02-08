@@ -296,7 +296,7 @@
       NF_EPENDING                 = -236, & ! Pending nonblocking request is found at file close
       NF_EMAX_REQ                 = -237, & ! Size of I/O request exceeds INT_MAX
       NF_EBADLOG                  = -238, & ! Unrecognized log file format
-      NF_EFLUSHED                 = -239, & ! Nonblocking request has already been flushed to the PFS. It is too late to cancel
+      NF_EFLUSHED                 = -239, & ! Nonblocking request has already been flushed. It is too late to cancel
       NF_EADIOS                   = -240    ! ADIOS internal error
 ! header inconsistency error starts in -250
       integer, parameter, public :: &

@@ -547,7 +547,7 @@
       PARAMETER (NF_EPENDING                = -236)   ! Pending nonblocking request is found at file close
       PARAMETER (NF_EMAX_REQ                = -237)   ! Size of I/O request exceeds INT_MAX
       PARAMETER (NF_EBADLOG                 = -238)   ! Unrecognized log file format
-      PARAMETER (NF_EFLUSHED                = -239)   ! Nonblocking request has already been flushed to the PFS. It is too late to cancel
+      PARAMETER (NF_EFLUSHED                = -239)   ! Nonblocking request has already been flushed. It is too late to cancel
       PARAMETER (NF_EADIOS                  = -240)   ! ADIOS internal error
 !
 ! PnetCDF header inconsistency errors start from -250

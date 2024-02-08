@@ -655,7 +655,7 @@ by the desired type. */
 #define NC_EPENDING			(-236) /**< Pending nonblocking request is found at file close */
 #define NC_EMAX_REQ			(-237) /**< Size of I/O request exceeds INT_MAX */
 #define NC_EBADLOG			(-238) /**< Unrecognized log file format */
-#define NC_EFLUSHED			(-239) /**< Nonblocking request has already been flushed to the PFS. It is too late to cancel */
+#define NC_EFLUSHED			(-239) /**< Nonblocking request has already been flushed. It is too late to cancel */
 #define NC_EADIOS			(-240) /**< unknown ADIOS error */
 /* add new error here */
 

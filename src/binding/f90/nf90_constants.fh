@@ -303,7 +303,7 @@
       NF90_EPENDING                 = NF_EPENDING                 , & ! Pending nonblocking request is found at file close
       NF90_EMAX_REQ                 = NF_EMAX_REQ                 , & ! Size of I/O request exceeds INT_MAX
       NF90_EBADLOG                  = NF_EBADLOG                  , & ! Unrecognized log file format
-      NF90_EFLUSHED                 = NF_EFLUSHED                 , & ! Nonblocking request has already been flushed to the PFS. It is too late to cancel
+      NF90_EFLUSHED                 = NF_EFLUSHED                 , & ! Nonblocking request has already been flushed. It is too late to cancel
       NF90_EADIOS                   = NF_EADIOS                   , & ! ADIOS internal error
       NF90_EMULTIDEFINE             = NF_EMULTIDEFINE             , & ! NC definitions inconsistent among processes
       NF90_EMULTIDEFINE_OMODE       = NF_EMULTIDEFINE_OMODE       , & ! inconsistent file open modes
