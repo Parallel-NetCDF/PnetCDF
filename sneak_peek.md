@@ -21,11 +21,27 @@ This is essentially a placeholder for the next release note ...
 * New Limitations
   + none
 
-* Update configure options
+* Configure options
   + `--enable-install-examples` to install example programs under folder
     `${prefix}/pnetcdf_examples` along with run script files. An example is
     `${prefix}/pnetcdf_examples/C/run_c_examples.sh`. The default of this
     option is `disabled`.
+
+* Configure updates:
+  + Upgrade config.guess config.sub to 2024-01-01.
+    See [PR #116](https://github.com/Parallel-NetCDF/PnetCDF/pull/116)
+  + FLASH-IO benchmark - add compile flag "-fallow-argument-mismatch" for GNU
+    Fortran 10 and later.
+    See [PR #114](https://github.com/Parallel-NetCDF/PnetCDF/pull/114)
+  + Handle the case when MPICC env is not set and "--with-mpi" is not used.
+    See commit 6142135.
+  + Upgrade autotools version requirement to autoconf 2.71, automake 1.16.5, and
+    libtool 2.4.6.
+    See [PR #95](https://github.com/Parallel-NetCDF/PnetCDF/pull/95)
+    Thanks to Blaise Bourdin for pointing out in
+    [Issue #94](https://github.com/Parallel-NetCDF/PnetCDF/issues/94)
+    that configure failed when using Intel OneAPI 2022.2.0 compilers. The fix
+    is to use autoconf 2.70 and newer.
 
 * New constants
   + NC_COUNT_IGNORE - This is used in flexible APIs. When argument bufcount is
@@ -85,13 +101,11 @@ This is essentially a placeholder for the next release note ...
     programs and collapsible bullets to display their manual pages.
 
 * Other updates:
-  + Upgrade autotool version requirement to autoconf 2.71, automake 1.16.5, and
-    libtool 2.4.6.
-    See [PR #95](https://github.com/Parallel-NetCDF/PnetCDF/pull/95)
-    Thanks to Blaise Bourdin for pointing out in
-    [Issue #94](https://github.com/Parallel-NetCDF/PnetCDF/issues/94)
-    that configure failed when using Intel OneAPI 2022.2.0 compilers. The fix
-    is to use autoconf 2.70 and newer.
+  + Use unsigned int to do byte swap.
+    See [PR #113](https://github.com/Parallel-NetCDF/PnetCDF/pull/113).
+  + Silence Intel icc compilation warnings: when CFLAGS contains
+    "-Wimplicit-const-int-float-conversion" and "-Wstringop-overread".
+    See [PR #110](https://github.com/Parallel-NetCDF/PnetCDF/pull/110).
   + In all prior versions, the file name was checked whether it contains
     character ':'. The prefix name ending with ':' is considered by ROMIO as
     the file system type name. The prefix name, if found, is then stripped, so
@@ -106,11 +120,15 @@ This is essentially a placeholder for the next release note ...
     See [PR #79](https://github.com/Parallel-NetCDF/PnetCDF/pull/79).
 
 * Bug fixes
+  + Fix Fortran APIs internal call to nfmpi_inq_buffer_size.
+    See [PR #111](https://github.com/Parallel-NetCDF/PnetCDF/pull/111).
   + Fix ncmpi_inq_num_rec_vars and ncmpi_inq_num_fix_vars when opening an
     existing file. See
     [PR #103](https://github.com/Parallel-NetCDF/PnetCDF/pull/103).
   + ncmpidiff -  when checking the dimensions defined in the second files
     whether they are defined in the first file. See 88cd9c1.
+  + Use Fortran subroutine Get_Environment_Variable instead of getenv.
+    See commit a0b8aca, b796759.
 
 * New example programs
   + none
@@ -126,6 +144,10 @@ This is essentially a placeholder for the next release note ...
     [PR #90](https://github.com/Parallel-NetCDF/PnetCDF/pull/90).
   + test/testcases/flexible_var.c - test flexible var API
   + test/testcases/flexible_api.f - test flexible API when bufcount == -1
+  + test/testcases/scalar.c - add tests for scalar variables using nonblocking
+    APIs. See commit 07ff7b1
+  + test/nonblocking/test_bputf.f90, test/nonblocking/test_bputf77.f -
+    add tests of APIs inq_buffer_usage and inq_buffer_size. See commit 94ce438
 
 * Issues with NetCDF library
   + none
