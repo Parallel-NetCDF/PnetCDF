@@ -22,6 +22,9 @@ on:
       - 'docs/*'
       - 'test/test_installed/*'
 
+env:
+   OPENMPI_VERSION: 5.0.2
+
 jobs:
     build:
       runs-on: macos-latest
@@ -30,13 +33,52 @@ jobs:
         - uses: actions/checkout@v3
         - name: Set up dependencies
           run: |
-            brew install gcc automake autoconf libtool m4 open-mpi zlib
-            echo "---- location of OpenMPI C compiler ----"
-            which mpicc
+            brew install gcc
+            which gcc
+            gcc --version
+            ls -l /usr/local/bin/gfortran*
+            version=12
+            ln -fs /usr/local/bin/gfortran-${version} /usr/local/bin/gfortran
+            ln -fs /usr/local/bin/gcc-${version} /usr/local/bin/gcc
+            ln -fs /usr/local/bin/g++-${version} /usr/local/bin/g++
+            # link lib dir for previous GCC versions to avoid missing .dylib issues
+            for (( i=12; i>4; i-- ))
+            do
+              gcc_lib_path="/usr/local/opt/gcc/lib/gcc/$i"
+              if [ -d $gcc_lib_path ]; then
+                echo "found $gcc_lib_path"
+                for (( j=$i; j>4; j-- ))
+                do
+                  ln -fs /usr/local/opt/gcc/lib/gcc/$i /usr/local/opt/gcc/lib/gcc/$j
+                done
+                break
+              fi
+            done
+            which gfortran
+            gfortran --version
+            brew install automake autoconf libtool m4
+        - name: Build OPENMPI
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            rm -rf OPENMPI ; mkdir OPENMPI ; cd OPENMPI
+            VER_MAJOR=${OPENMPI_VERSION%.*}
+            wget -q https://download.open-mpi.org/release/open-mpi/v${VER_MAJOR}/openmpi-${OPENMPI_VERSION}.tar.gz
+            gzip -dc openmpi-${OPENMPI_VERSION}.tar.gz | tar -xf -
+            cd openmpi-${OPENMPI_VERSION}
+            ./configure --prefix=${GITHUB_WORKSPACE}/OPENMPI \
+                        --silent \
+                        --with-io-romio-flags="--with-file-system=ufs" \
+                        --with-pmix=internal \
+                        --with-libevent=internal \
+                        CC=gcc \
+                        FC=gfortran \
+                        FFLAGS=-fallow-argument-mismatch \
+                        FCFLAGS=-fallow-argument-mismatch
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 install > qout 2>&1
+            make -s -j 8 distclean >> qout 2>&1
         - name: Build PnetCDF
           run: |
             cd ${GITHUB_WORKSPACE}
-            export TMPDIR=/tmp
             autoreconf -i
             mkdir -p pnetcdf_output
             ./configure --enable-option-checking=fatal \
@@ -47,7 +89,8 @@ jobs:
                         --enable-shared \
                         --enable-thread-safe \
                         --with-pthread \
-                        TESTMPIRUN="mpiexec --oversubscribe -n NP" \
+                        --with-mpi=${GITHUB_WORKSPACE}/OPENMPI \
+                        TESTMPIRUN="${GITHUB_WORKSPACE}/OPENMPI/bin/mpiexec --oversubscribe -n NP" \
                         TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output
             make -j 8 tests
         - name: Print config.log
@@ -57,7 +100,6 @@ jobs:
         - name: make check
           run: |
             cd ${GITHUB_WORKSPACE}
-            export TMPDIR=/tmp
             make check
         - name: Print test log files
           if: ${{ always() }}
@@ -74,17 +116,16 @@ jobs:
         - name: make ptests
           run: |
             cd ${GITHUB_WORKSPACE}
-            export TMPDIR=/tmp
             make ptests
         - name: make distcheck
           run: |
             cd ${GITHUB_WORKSPACE}
-            export TMPDIR=/tmp
-            make -j 8 distcheck DISTCHECK_CONFIGURE_FLAGS="--silent"
+            make -j 8 distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --with-mpi=${GITHUB_WORKSPACE}/OPENMPI"
         - name: Cleanup
           if: ${{ always() }}
           run: |
             cd ${GITHUB_WORKSPACE}
             make -s distclean
-            rm -rf pnetcdf_output
+            rm -rf ${GITHUB_WORKSPACE}/pnetcdf_output
+            rm -rf ${GITHUB_WORKSPACE}/OPENMPI
 
