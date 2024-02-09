@@ -1025,6 +1025,20 @@ if test "x${has_fortran}" = xyes && test "x${ax_cv_fc_compiler_vendor}" = xnag ;
 fi
 AM_CONDITIONAL(NAGFORT, [test x$ax_cv_fc_compiler_vendor = xnag])
 
+if test "x${has_fortran}" = xyes ; then
+   # check if subroutine Get_Environment_Variable is available
+   AC_MSG_CHECKING([whether subroutine Get_Environment_Variable is available])
+   AC_LANG_PUSH([Fortran])
+   dnl check if can use mpif.h
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
+           character(len=255) value
+           call Get_Environment_Variable("HOME", Value=value)]])],
+      [decl_get_environment_variable=yes],[decl_get_environment_variable=no])
+   AC_LANG_POP([Fortran])
+   AC_MSG_RESULT($decl_get_environment_variable)
+fi
+AM_CONDITIONAL(DECL_GET_ENVIRONMENT_VARIABLE, [test x$decl_get_environment_variable = xyes])
+
 if test "x$enable_shared" = xyes ; then
    dnl Call LT_OUTPUT to produce file ./libtool which is used later in
    dnl. LT_AC_CHECK_SHLIB. Note LT_OUTPUT must be called after all compilers

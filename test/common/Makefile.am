@@ -30,6 +30,10 @@ endif
 AM_FFLAGS  =
 AM_FCFLAGS =
 
+if DECL_GET_ENVIRONMENT_VARIABLE
+   AM_FCFLAGS += $(FC_DEFINE)HAS_GET_ENVIRONMENT_VARIABLE
+endif
+
 if DECL_MPI_OFFSET
    # Do not add to AM_CPPFLAGS, as it will be used by both C and Fortran programs
    # AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET

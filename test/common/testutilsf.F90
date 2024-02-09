@@ -69,7 +69,7 @@
 
       subroutine get_env(hint_str, value)
           character(len=*) hint_str, value
-#ifdef NAGFOR
+#ifdef HAS_GET_ENVIRONMENT_VARIABLE
           call Get_Environment_Variable(hint_str, Value=value)
 #else
           call getenv(hint_str, value)
