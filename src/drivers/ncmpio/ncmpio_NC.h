@@ -416,7 +416,7 @@ struct NC {
 #define NC_ndirty(ncp)     fIsSet((ncp)->flags, NC_NDIRTY)
 #define set_NC_hdirty(ncp)   fSet((ncp)->flags, NC_HDIRTY)
 #define NC_hdirty(ncp)     fIsSet((ncp)->flags, NC_HDIRTY)
-#define NC_doFsync(ncp)    fIsSet((ncp)->iomode, NC_SHARE)
+
 #define NC_doHsync(ncp)    fIsSet((ncp)->flags, NC_HSYNC)
 #define NC_doNsync(ncp)    fIsSet((ncp)->flags, NC_NSYNC)
 

@@ -157,12 +157,6 @@ ncmpio_close(void *ncdp)
     }
 #endif
 
-    /* If the user wants a stronger data consistency by setting NC_SHARE */
-    if (NC_doFsync(ncp)) {
-        err = ncmpio_file_sync(ncp); /* calling MPI_File_sync() */
-        if (status == NC_NOERR) status = err;
-    }
-
     /* calling MPI_File_close() */
     err = ncmpio_close_files(ncp, 0);
     if (status == NC_NOERR) status = err;

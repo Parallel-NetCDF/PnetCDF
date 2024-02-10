@@ -1800,8 +1800,7 @@ err_out:
 
 /*----< ncmpi_inq_default_format() >-----------------------------------------*/
 /* returns a value suitable for a create flag.  Will return one or more of the
- * following values OR-ed together:
- * NC_64BIT_OFFSET, NC_CLOBBER, NC_LOCK, NC_SHARE */
+ * following values OR-ed together: NC_64BIT_OFFSET, NC_CLOBBER */
 int
 ncmpi_inq_default_format(int *formatp)
 {
