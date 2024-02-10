@@ -30,7 +30,7 @@ jobs:
       runs-on: macos-latest
       timeout-minutes: 60
       steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
         - name: Set up dependencies
           run: |
             brew install gcc
