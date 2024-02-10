@@ -33,7 +33,6 @@
  */
 int
 ncmpio_file_sync(NC *ncp) {
-#ifndef DISABLE_FILE_SYNC
     int mpireturn;
 
     if (ncp->independent_fh != MPI_FILE_NULL) {
@@ -49,7 +48,7 @@ ncmpio_file_sync(NC *ncp) {
         return ncmpii_error_mpi2nc(mpireturn, "MPI_File_sync");
 
     TRACE_COMM(MPI_Barrier)(ncp->comm);
-#endif
+
     return NC_NOERR;
 }
 
@@ -205,24 +204,6 @@ ncmpio_sync_numrecs(void *ncdp)
     /* clear numrecs dirty bit */
     fClr(ncp->flags, NC_NDIRTY);
 
-#ifndef DISABLE_FILE_SYNC
-    if (NC_doFsync(ncp)) { /* NC_SHARE is set */
-        int mpierr, mpireturn;
-        if (NC_indep(ncp)) {
-            TRACE_IO(MPI_File_sync)(ncp->independent_fh);
-        }
-        else {
-            TRACE_IO(MPI_File_sync)(ncp->collective_fh);
-        }
-        if (mpireturn != MPI_SUCCESS) {
-            mpierr = ncmpii_error_mpi2nc(mpireturn, "MPI_File_sync");
-            if (status == NC_NOERR) status = mpierr;
-        }
-        TRACE_COMM(MPI_Barrier)(ncp->comm);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, "MPI_Barrier");
-    }
-#endif
     return status;
 }
 
