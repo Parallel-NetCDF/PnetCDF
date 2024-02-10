@@ -74,10 +74,9 @@ Creates a new netCDF dataset at \fIpath\fP collectively by a group of MPI
 processes specified by \fIcomm\fP, returning a netCDF ID in \fIncid\fP.  The
 argument \fIcmode\fP may include the bitwise-or of the following flags:
 \fBnf90_noclobber\fR to protect existing datasets (default is \fBnf90_clobber\fR,
-silently blows them away), \fBnf90_share\fR for stronger metadata data consistency
-control, \fBnf90_64bit_offset\fR to create a file in the 64-bit offset format
-(CDF-2), as opposed to classic format, the default, or \fBnf90_64bit_data\fR to
-create a file in the 64-bit data format (CDF-5).
+silently blows them away), \fBnf90_64bit_offset\fR to create a file in the
+64-bit offset format (CDF-2), as opposed to classic format, the default, or
+\fBnf90_64bit_data\fR to create a file in the 64-bit data format (CDF-5).
 Use either \fBnf90_64bit_offset\fR or \fBnf90_64bit_data\fR.
 The 64-bit offset format allows the creation of very large files with far fewer
 restrictions than netCDF classic format, but can only be read by the netCDF
@@ -115,7 +114,7 @@ Opens an existing netCDF dataset at \fIpath\fP collectively by a group of MPI
 processes specified by \fIcomm\fP, returning a netCDF ID in \fIncid\fP.  The type
 of access is described by the \fImode\fP parameter, which may include the
 bitwise-or of the following flags: \fBnf90_write\fR for read-write access (default
-read-only), \fBnf90_share\fR for stronger metadata data consistency control.
+read-only).
 .sp
 
 The argument \fImode\fP must be consistent among all MPI processes that
@@ -158,11 +157,7 @@ integer, intent(in) :: ncid
 integer :: nf90mpi_sync
 .fi
 .sp
-Unless the
-\fBnf90_share\fR
-bit is set in
-\fBnf90mpi_open(\|)\fR or \fBnf90mpi_create(\|)\fR,
-data written by PnetCDF APIs may be cached by local file system on each compute
+Data written by PnetCDF APIs may be cached by local file system on each compute
 node.  This API flushes cached data by calling MPI_File_sync.
 .RE
 .HP

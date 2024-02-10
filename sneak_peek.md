@@ -22,6 +22,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Configure options
+  + `--disable-file-sync` is now deprecated. This configure option alone does
+    not provide a sufficient data consistency. Users are suggested to call
+    `ncmpi_sync` and `MPI_Barrier` to achieve a desired consistency.
   + `--enable-install-examples` to install example programs under folder
     `${prefix}/pnetcdf_examples` along with run script files. An example is
     `${prefix}/pnetcdf_examples/C/run_c_examples.sh`. The default of this
@@ -53,10 +56,16 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * API syntax changes
-  + none
+  + File open flag NC_SHARE is now deprecated. It is still defined, but takes
+    no effect.
 
 * API semantics updates
-  + none
+  + NC_SHARE alone is not sufficient to provide data consistency for accessing
+    a shared file in parallel and thus is now deprecated.  Because PnetCDF
+    follows the MPI file consistency, which only addresses the case when all
+    file accesses are relative to a specific file handle created from a
+    collective open, NC_SHARE becomes invalid. See doc/README.consistency.md
+    for more information.
 
 * New error code precedence
   + none

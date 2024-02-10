@@ -1,7 +1,25 @@
 ## Note on parallel I/O data consistency
 
-PnetCDF follows the same parallel I/O data consistency as MPI-IO standard.
-Refer the URL below for more information.
+PnetCDF follows the same parallel I/O data consistency as MPI-IO standard,
+quoted below.
+
+```
+Consistency semantics define the outcome of multiple accesses to a single file.
+All file accesses in MPI are relative to a specific file handle created from a
+collective open. MPI provides three levels of consistency:
+  * sequential consistency among all accesses using a single file handle,
+  * sequential consistency among all accesses using file handles created from a
+    single collective open with atomic mode enabled, and
+  * user-imposed consistency among accesses other than the above.
+Sequential consistency means the behavior of a set of operations will be as if
+the operations were performed in some serial order consistent with program
+order; each access appears atomic, although the exact ordering of accesses is
+unspecified. User-imposed consistency may be obtained using program order and
+calls to MPI_FILE_SYNC.
+```
+
+Users are referred to the MPI standard Chapter 14.6 Consistency and Semantics
+for more information.
 http://www.mpi-forum.org/docs/mpi-2.2/mpi22-report/node296.htm#Node296
 
 Readers are also referred to the following paper.
@@ -9,19 +27,27 @@ Rajeev Thakur, William Gropp, and Ewing Lusk, On Implementing MPI-IO Portably
 and with High Performance, in the Proceedings of the 6th Workshop on I/O in
 Parallel and Distributed Systems, pp. 23-32, May 1999.
 
-If users would like PnetCDF to enforce a stronger consistency, they should add
-NC_SHARE flag when open/create the file. By doing so, PnetCDF adds
-MPI_File_sync() after each MPI I/O calls.
-  * For PnetCDF collective APIs, an MPI_Barrier() will also be called right
-    after MPI_File_sync().
-  * For independent APIs, there is no need for calling MPI_Barrier().
+* NC_SHARE has been deprecated in PnetCDF release of 1.13.0.
+  + NC_SHARE is a legacy flag inherited from NetCDF-3, whose purpose is to
+    provide some degree of data consistency for multiple processes concurrently
+    accessing a shared file. To achieve a stronger consistency, user
+    applications are required to also synchronize the processes, such as
+    calling MPI_Barrier, together with nc_sync.
+  + Because PnetCDF follows the MPI file consistency, which only addresses the
+    case when all file accesses are relative to a specific file handle created
+    from a collective open, NC_SHARE becomes invalid. Note that NetCDF-3
+    supports only sequential I/O and thus has no collective file open per se.
 
-Users are warned that the I/O performance when using NC_SHARE flag could become
-significantly slower than not using it.
-
-If NC_SHARE is not set, then users are responsible for their desired data
-consistency. To enforce a stronger consistency, users can explicitly call
-ncmpi_sync(). In ncmpi_sync(), MPI_File_sync() and MPI_Barrier() are called.
+If users would like a stronger consistency, they may consider using the code
+fragment below after each collective write API call (e.g.
+`ncmpi_put_vara_int_all`, `ncmpi_wait_all` `ncmpi_enddef`, `ncmpi_redef`,
+`ncmpio_begin_indep_data`, `ncmpio_end_indep_data`).
+```
+    ncmpi_sync(ncid);
+    MPI_Barrier(comm);
+    ncmpi_sync(ncid);
+```
+Users are warned that the I/O performance could become significantly slower.
 
 ### Note on header consistency in memory and file
 In data mode, changes to file header can happen in the following scenarios.
