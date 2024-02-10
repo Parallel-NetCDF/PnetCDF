@@ -147,8 +147,6 @@ Here lists a few important options:
 			  size when argument count is zero. [default: enabled]
   --enable-doxygen        Enable generation of documentation. [default:
                           disabled]
-  --disable-file-sync     Disable MPI file sync if you know your file system
-                          can provide data consistency. [default: enabled]
   --enable-large-file-test
                           Enable testing for large (>4GB) file/variable I/O.
                           Note "make check" can run very slow. [default:
