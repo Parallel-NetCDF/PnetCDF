@@ -39,15 +39,18 @@ Parallel and Distributed Systems, pp. 23-32, May 1999.
     supports only sequential I/O and thus has no collective file open per se.
 
 If users would like a stronger consistency, they may consider using the code
-fragment below after each collective write API call (e.g.
-`ncmpi_put_vara_int_all`, `ncmpi_wait_all` `ncmpi_enddef`, `ncmpi_redef`,
-`ncmpio_begin_indep_data`, `ncmpio_end_indep_data`).
+fragment below after each collective/independent write API call (e.g.
+`ncmpi_put_vara_int`, `ncmpi_put_vara_int_all`, `ncmpi_wait_all`
+`ncmpi_enddef`, `ncmpi_redef`, `ncmpio_begin_indep_data`,
+`ncmpio_end_indep_data`, etc.).
 ```
     ncmpi_sync(ncid);
     MPI_Barrier(comm);
     ncmpi_sync(ncid);
 ```
 Users are warned that the I/O performance could become significantly slower.
+Note `ncmpi_sync` is a collective call and can be called in either collective
+or independent data mode.
 
 ### Note on header consistency in memory and file
 In data mode, changes to file header can happen in the following scenarios.
