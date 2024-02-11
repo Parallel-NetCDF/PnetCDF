@@ -113,6 +113,11 @@ program f90tst_parallel3
   ! This will be the last collective operation.
   call check(nf90mpi_enddef(ncid))
 
+  ! UnifyFS requires a stronger file consistency
+  call check(nf90mpi_sync(ncid))
+  call MPI_Barrier(MPI_COMM_WORLD, ierr)
+  call check(nf90mpi_sync(ncid))
+
   ! Determine what part of the variable will be written/read for this
   ! processor. It's a checkerboard decomposition.
   count = (/ HALF_NX, HALF_NY /)

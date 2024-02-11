@@ -290,6 +290,11 @@
           err = nf90mpi_enddef(ncid)
           call check(err, 'In nf90mpi_enddef: ')
 
+          ! UnifyFS requires a stronger file consistency
+          err = nf90mpi_sync(ncid)
+          call MPI_Barrier(MPI_COMM_WORLD, err)
+          err = nf90mpi_sync(ncid)
+
           ! now we are in data mode
 
           ! fill 2 records with default fill values
@@ -305,6 +310,11 @@
           recno = 2
           err = nf90mpi_fill_var_rec(ncid, varid2, recno)
           call check(err, 'In nf90mpi_fill_var_rec: varid2, 2 ')
+
+          ! UnifyFS requires a stronger file consistency
+          err = nf90mpi_sync(ncid)
+          call MPI_Barrier(MPI_COMM_WORLD, err)
+          err = nf90mpi_sync(ncid)
 
           ! create a file type for the record variable */
           err = nf90mpi_inq_recsize(ncid, recsize)

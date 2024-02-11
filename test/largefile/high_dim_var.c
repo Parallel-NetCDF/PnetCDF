@@ -78,6 +78,12 @@ int main(int argc, char** argv) {
     err = ncmpi_enddef(ncid); CHECK_ERR
     if (err != NC_NOERR) goto fn_exit;
 
+#ifdef STRONGER_CONSISTENCY
+    ncmpi_sync(ncid);
+    MPI_Barrier(MPI_COMM_WORLD);
+    ncmpi_sync(ncid);
+#endif
+
     nelms = (NRECS > DIMLEN) ? NRECS : DIMLEN;
     for (i=1; i<NDIMS; i++) nelms *= DIMLEN;
     buffer = (short*) malloc(nelms * sizeof(short));
@@ -95,6 +101,12 @@ int main(int argc, char** argv) {
             err = ncmpi_fill_var_rec(ncid, rvarid[i], j); CHECK_ERR
         }
     }
+
+#ifdef STRONGER_CONSISTENCY
+    ncmpi_sync(ncid);
+    MPI_Barrier(MPI_COMM_WORLD);
+    ncmpi_sync(ncid);
+#endif
 
     for (i=0; i<nelms; i++) buffer[i] = i % 32768;
 
@@ -114,6 +126,12 @@ int main(int argc, char** argv) {
         err = ncmpi_put_vars_short_all(ncid, rvarid[i], start, count, stride,
                                        buffer); CHECK_ERR
     }
+
+#ifdef STRONGER_CONSISTENCY
+    ncmpi_sync(ncid);
+    MPI_Barrier(MPI_COMM_WORLD);
+    ncmpi_sync(ncid);
+#endif
 
     /* all processes read and verify */
     if (rank > 0) for (i=0; i<NDIMS; i++) count[i]  = 2;

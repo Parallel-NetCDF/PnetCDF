@@ -512,6 +512,12 @@ int main(int argc, char **argv)
         err = ncmpi_enddef(ncid);
         CHECK_ERR
 
+#ifdef STRONGER_CONSISTENCY
+        ncmpi_sync(ncid);
+        MPI_Barrier(MPI_COMM_WORLD);
+        ncmpi_sync(ncid);
+#endif
+
         if (k == 0) {
             if (rank == 0 && verbose)
                 printf("*** Testing to write 2 non-record variables and 2 record variables by using ncmpi_put_vara_all() ...");
@@ -522,6 +528,12 @@ int main(int argc, char **argv)
                     CHECK_ERR
                 }
             }
+#ifdef STRONGER_CONSISTENCY
+            ncmpi_sync(ncid);
+            MPI_Barrier(MPI_COMM_WORLD);
+            ncmpi_sync(ncid);
+#endif
+
             for (i=0; i<nvars; i++){
                 err = ncmpi_put_vara_all(ncid, varid[i], starts[i], counts[i], buf[i], bufcounts[i], MPI_INT);
                 CHECK_ERR

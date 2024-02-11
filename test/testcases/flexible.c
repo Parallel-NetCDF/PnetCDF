@@ -88,6 +88,12 @@ int main(int argc, char **argv) {
     err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR /* enable fill mode */
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+#ifdef STRONGER_CONSISTENCY
+    ncmpi_sync(ncid);
+    MPI_Barrier(MPI_COMM_WORLD);
+    ncmpi_sync(ncid);
+#endif
+
     /* fill 2 records with default fill values */
     err = ncmpi_fill_var_rec(ncid, varid1, 0); CHECK_ERR
     err = ncmpi_fill_var_rec(ncid, varid1, 1); CHECK_ERR
@@ -95,6 +101,12 @@ int main(int argc, char **argv) {
     err = ncmpi_fill_var_rec(ncid, varid2, 1); CHECK_ERR
     err = ncmpi_fill_var_rec(ncid, varid3, 0); CHECK_ERR
     err = ncmpi_fill_var_rec(ncid, varid3, 1); CHECK_ERR
+
+#ifdef STRONGER_CONSISTENCY
+    ncmpi_sync(ncid);
+    MPI_Barrier(MPI_COMM_WORLD);
+    ncmpi_sync(ncid);
+#endif
 
     /* initialize the contents of the array */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = j+10;

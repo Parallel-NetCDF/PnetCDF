@@ -208,6 +208,12 @@ int main(int argc, char** argv)
     }
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+#ifdef STRONGER_CONSISTENCY
+    ncmpi_sync(ncid);
+    MPI_Barrier(MPI_COMM_WORLD);
+    ncmpi_sync(ncid);
+#endif
+
     if (nprocs < 4) { /* need 4 processes to fill the variables */
         err = ncmpi_fill_var_rec(ncid, vari0001, 0); CHECK_ERR
         err = ncmpi_fill_var_rec(ncid, varr0001, 0); CHECK_ERR
@@ -216,6 +222,12 @@ int main(int argc, char** argv)
         err = ncmpi_fill_var_rec(ncid, varr0002, 0); CHECK_ERR
         err = ncmpi_fill_var_rec(ncid, vard0002, 0); CHECK_ERR
     }
+
+#ifdef STRONGER_CONSISTENCY
+    ncmpi_sync(ncid);
+    MPI_Barrier(MPI_COMM_WORLD);
+    ncmpi_sync(ncid);
+#endif
 
     starts    = (MPI_Offset**) malloc(2 *    sizeof(MPI_Offset*));
     counts    = (MPI_Offset**) malloc(2 *    sizeof(MPI_Offset*));

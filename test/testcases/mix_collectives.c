@@ -69,6 +69,12 @@ int main(int argc, char **argv)
     err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+#ifdef STRONGER_CONSISTENCY
+    ncmpi_sync(ncid);
+    MPI_Barrier(MPI_COMM_WORLD);
+    ncmpi_sync(ncid);
+#endif
+
     for (j=0; j<6; j++) for (i=0; i<4; i++) buf[j][i] = j*4+i + rank*100;
 
     /* now, each of 4 processes makes a call to different kinds of put APIs */

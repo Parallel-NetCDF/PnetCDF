@@ -61,6 +61,12 @@ tst_fmt(char *filename, int cmode)
 
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+#ifdef STRONGER_CONSISTENCY
+    err = ncmpi_sync(ncid); CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+    err = ncmpi_sync(ncid); CHECK_ERR
+#endif
+
     /* initialize I/O buffer */
     for (i=0; i<NY*NX; i++) buf[i] = rank+5;
 
