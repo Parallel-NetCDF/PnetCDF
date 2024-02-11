@@ -1164,10 +1164,6 @@ ncmpio__enddef(void       *ncdp,
         fClr(ncp->ncp_sf->flags, NC_MODE_CREATE | NC_MODE_DEF);
 #endif
 
-    /* If the user sets NC_SHARE, we enforce a stronger data consistency */
-    if (NC_doFsync(ncp))
-        ncmpio_file_sync(ncp); /* calling MPI_File_sync() */
-
     return status;
 }
 

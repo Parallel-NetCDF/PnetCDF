@@ -588,19 +588,6 @@ int ncmpio_write_header(NC *ncp)
         }
     }
 
-    if (NC_doFsync(ncp)) { /* NC_SHARE is set */
-        TRACE_IO(MPI_File_sync)(fh);
-        if (mpireturn != MPI_SUCCESS) {
-            ncmpii_error_mpi2nc(mpireturn,"MPI_File_sync");
-            DEBUG_RETURN_ERROR(NC_EMPI)
-        }
-        TRACE_COMM(MPI_Barrier)(ncp->comm);
-        if (mpireturn != MPI_SUCCESS) {
-            ncmpii_error_mpi2nc(mpireturn,"MPI_Barrier");
-            DEBUG_RETURN_ERROR(NC_EMPI)
-        }
-    }
-
     return status;
 }
 

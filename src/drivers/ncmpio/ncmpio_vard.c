@@ -371,12 +371,6 @@ err_check:
                 }
             }
         }
-
-        if (NC_doFsync(ncp)) { /* NC_SHARE is set */
-            TRACE_IO(MPI_File_sync)(fh);
-            if (fIsSet(reqMode, NC_REQ_COLL))
-                TRACE_COMM(MPI_Barrier)(ncp->comm);
-        }
     }
 
     if (xbuf != NULL && xbuf != buf) NCI_Free(xbuf);

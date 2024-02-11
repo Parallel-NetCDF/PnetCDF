@@ -495,10 +495,9 @@ Creates a new netCDF dataset at ARG(path) collectively by a group of MPI
 processes specified by ARG(comm), returning a netCDF ID in ARG(ncid).  The
 argument ARG(cmode) may <<include>> the bitwise-or of the following flags:
 MACRO(NOCLOBBER) to protect existing datasets (default is MACRO(CLOBBER),
-silently blows them away), MACRO(SHARE) for stronger metadata data consistency
-control, MACRO(64BIT_OFFSET) to create a file in the 64-bit offset format
-(CDF-2), as opposed to classic format, the default, or MACRO(64BIT_DATA) to
-create a file in the 64-bit data format (CDF-5).
+silently blows them away), MACRO(64BIT_OFFSET) to create a file in the
+64-bit offset format (CDF-2), as opposed to classic format, the default, or
+MACRO(64BIT_DATA) to create a file in the 64-bit data format (CDF-5).
 Use either MACRO(64BIT_OFFSET) or MACRO(64BIT_DATA).
 The 64-bit offset format allows the creation of very large files with far fewer
 restrictions than netCDF classic format, but can only be read by the netCDF
@@ -530,7 +529,7 @@ Opens an existing netCDF dataset at ARG(path) collectively by a group of MPI
 processes specified by ARG(comm), returning a netCDF ID in ARG(ncid).  The type
 of access is described by the ARG(mode) parameter, which may <<include>> the
 bitwise-or of the following flags: MACRO(WRITE) for read-write access (default
-read-only), MACRO(SHARE) for stronger metadata data consistency control.
+read-only).
 .sp
 ifelse(DAP,TRUE,
 <<As of NetCDF version 4.1, and if DAP support was enabled
@@ -559,11 +558,7 @@ After a successful call, variable data can be read or written to the dataset.
 .HP
 FDECL(sync, (INCID()))
 .sp
-Unless the
-MACRO(SHARE)
-bit is set in
-FREF(open) or FREF(create),
-data written by PnetCDF APIs may be cached by local file system on each compute
+Data written by PnetCDF APIs may be cached by local file system on each compute
 node.  This <<API>> flushes cached data by calling MPI_File_sync.
 .HP
 FDECL(abort, (INCID()))

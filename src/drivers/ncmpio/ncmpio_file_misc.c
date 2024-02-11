@@ -85,17 +85,6 @@ ncmpio_redef(void *ncdp)
     if (NC_indep(ncp)) /* exit independent mode, if in independent mode */
         ncmpio_end_indep_data(ncp);
 
-#if 0
-    /* header metadata is always sync-ed among all processes, except for
-     * numrecs when in independent data mode. It has been sync-ed above when
-     * calling ncmpio_end_indep_data()
-     */
-    if (NC_doFsync(ncp)) { /* re-read the header from file */
-        int err = ncmpio_read_NC(ncp);
-        if (err != NC_NOERR) return err;
-    }
-#endif
-
     /* duplicate a header to be used in enddef() for checking if header grows */
     ncp->old = dup_NC(ncp);
     if (ncp->old == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
@@ -123,22 +112,8 @@ ncmpio_begin_indep_data(void *ncdp)
         DEBUG_RETURN_ERROR(NC_EINDEP)
         */
 
-    /* we need no MPI_File_sync() here. If users want a stronger data
-     * consistency, they can call ncmpi_sync()
-     */
-#if 0 && !defined(DISABLE_FILE_SYNC)
-    if (!NC_readonly(ncp) && ncp->collective_fh != MPI_FILE_NULL) {
-        /* calling file sync for those already open the file */
-        int err, mpireturn;
-        /* MPI_File_sync() is collective */
-        TRACE_IO(MPI_File_sync)(ncp->collective_fh);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_sync");
-            if (err == NC_NOERR) return err;
-        }
-        TRACE_COMM(MPI_Barrier)(ncp->comm);
-    }
-#endif
+    /* If users want a stronger data consistency, ncmpi_sync() should be called
+     * following this subroutine. */
 
     /* raise independent flag */
     fSet(ncp->flags, NC_MODE_INDEP);
@@ -193,22 +168,6 @@ ncmpio_end_indep_data(void *ncdp)
             status = ncmpio_sync_numrecs(ncp);
             /* the only possible dirty part of the header is numrecs */
         }
-
-#ifndef DISABLE_FILE_SYNC
-        /* calling file sync for those already open the file */
-        if (NC_doFsync(ncp) && ncp->independent_fh != MPI_FILE_NULL) {
-            int mpireturn;
-            /* MPI_File_sync() is collective */
-            TRACE_IO(MPI_File_sync)(ncp->independent_fh);
-            if (mpireturn != MPI_SUCCESS) {
-                int err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_sync");
-                if (status == NC_NOERR) status = err;
-            }
-            TRACE_COMM(MPI_Barrier)(ncp->comm);
-            if (mpireturn != MPI_SUCCESS)
-                return ncmpii_error_mpi2nc(mpireturn, "MPI_Barrier");
-        }
-#endif
     }
 
     fClr(ncp->flags, NC_MODE_INDEP);
@@ -246,11 +205,6 @@ ncmpio_abort(void *ncdp)
              NC_indep(ncp)) {     /* in independent data mode */
             /* exit independent mode, if in independent mode */
             status = ncmpio_end_indep_data(ncp); /* will sync header */
-        }
-
-        if (NC_doFsync(ncp)) {
-            err = ncmpio_file_sync(ncp); /* calling MPI_File_sync() */
-            if (status == NC_NOERR ) status = err;
         }
     }
 

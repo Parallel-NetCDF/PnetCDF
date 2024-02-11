@@ -2105,25 +2105,6 @@ wait_getput(NC         *ncp,
                 /* delay numrecs sync until end_indep, redef or close */
             }
         }
-
-        if (NC_doFsync(ncp)) { /* NC_SHARE is set */
-            int mpireturn;
-            if (coll_indep == NC_REQ_INDEP) {
-                TRACE_IO(MPI_File_sync)(ncp->independent_fh);
-                if (mpireturn != MPI_SUCCESS) {
-                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_sync");
-                    if (status == NC_NOERR) status = err;
-                }
-            }
-            else {
-                TRACE_IO(MPI_File_sync)(ncp->collective_fh);
-                if (mpireturn != MPI_SUCCESS) {
-                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_sync");
-                    if (status == NC_NOERR) status = err;
-                }
-                TRACE_COMM(MPI_Barrier)(ncp->comm);
-            }
-        }
     }
 
     return status;

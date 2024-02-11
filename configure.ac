@@ -130,7 +130,6 @@ AH_TEMPLATE([NF_INT8_IS_C_],            [C type for Fortran INT8])
 AH_TEMPLATE([NF_INT8_T],                [Type for Fortran INT8])
 AH_TEMPLATE([NF_REAL_IS_C_],            [C type for Fortran REAL])
 AH_TEMPLATE([NO_IEEE_FLOAT],            [Does system have IEEE FLOAT])
-AH_TEMPLATE([DISABLE_FILE_SYNC],        [Define if to disable MPI_File_sync])
 dnl AH_TEMPLATE([ENABLE_IN_PLACE_SWAP], [Define if to enable in-place byte swap])
 dnl AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],[Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
@@ -2220,16 +2219,6 @@ fi
 AC_SUBST(LATEX)
 AC_SUBST(DVIPDF)
 AM_CONDITIONAL([HAS_LATEX], [test "x$has_latex" = xyes])
-
-AC_ARG_ENABLE([file-sync],
-    [AS_HELP_STRING([--disable-file-sync],
-                    [Disable MPI file sync if you know your file system can
-                     provide data consistency. @<:@default: enabled@:>@])],
-    [file_sync=${enableval}], [file_sync=yes]
-)
-if test "x${file_sync}" = xno ; then
-    AC_DEFINE(DISABLE_FILE_SYNC)
-fi
 
 AC_ARG_ENABLE([large-single-req],
     [AS_HELP_STRING([--enable-large-single-req],
