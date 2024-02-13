@@ -28,7 +28,7 @@ env:
 jobs:
     build:
       runs-on: macos-latest
-      timeout-minutes: 60
+      timeout-minutes: 90
       steps:
         - uses: actions/checkout@v4
         - name: Set up dependencies
@@ -68,11 +68,11 @@ jobs:
             ./configure --prefix=${GITHUB_WORKSPACE}/OPENMPI \
                         --silent \
                         --with-io-romio-flags="--with-file-system=ufs" \
+                        --with-hwloc=internal \
                         --with-pmix=internal \
                         --with-libevent=internal \
                         CC=gcc \
                         FC=gfortran \
-                        FFLAGS=-fallow-argument-mismatch \
                         FCFLAGS=-fallow-argument-mismatch
             make -s LIBTOOLFLAGS=--silent V=1 -j 8 install > qout 2>&1
             make -s -j 8 distclean >> qout 2>&1
