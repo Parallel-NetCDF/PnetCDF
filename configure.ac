@@ -2503,7 +2503,7 @@ AC_SUBST([FSTYPE_PREFIX])
 # Note on Theta @ALCF, CPATH is set for Intel Compiler and when gcc is used to
 # compile the above utility programs, errors can occur. See doc/README.CRAY for
 # more information. Below we use the same C compiler as MPICC.
-AC_ARG_VAR(SEQ_CC, [C compiler to build sequential utility programs, @<:@default: gcc@:>@])
+AC_ARG_VAR(SEQ_CC, [C compiler for building sequential utility programs, @<:@default: gcc@:>@])
 if test "x$SEQ_CC" = x ; then
    # if test "x$ac_cv_mpicc_base" = xGCC ; then
    #    AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
@@ -2528,6 +2528,13 @@ fi
 AC_MSG_CHECKING([C compiler for serial utility programs])
 AC_MSG_RESULT([$SEQ_CC])
 AC_SUBST(SEQ_CC)
+
+AC_ARG_VAR(SEQ_CFLAGS, [C compile flags for building sequential utility programs, @<:@default: none@:>@])
+AC_SUBST(SEQ_CFLAGS)
+AC_ARG_VAR(SEQ_LDFLAGS, [Linker flags for building sequential utility programs, @<:@default: none@:>@])
+AC_SUBST(SEQ_LIBS)
+AC_ARG_VAR(SEQ_LIBS, [Libraries for building sequential utility programs, @<:@default: none@:>@])
+AC_SUBST(SEQ_LIBS)
 
 dnl Configuration Date
 dnl Note that command 'date' is not portable across Unix platforms
@@ -2731,38 +2738,54 @@ fi
 
 echo "\
 
-   Compilers: MPICC    = ${MPICC}"
+   Compilers: MPICC       = ${MPICC}"
 if test "${has_mpicxx}" = yes ; then
    echo "\
-              MPICXX   = ${MPICXX}"
+              MPICXX      = ${MPICXX}"
 fi
 if test "${has_fortran}" = yes ; then
    echo "\
-              MPIF77   = ${MPIF77}
-              MPIF90   = ${MPIF90}"
+              MPIF77      = ${MPIF77}
+              MPIF90      = ${MPIF90}"
 fi
 if test "x${CPPFLAGS}" != x ; then
    echo "\
-              CPPFLAGS = ${CPPFLAGS}"
+              CPPFLAGS    = ${CPPFLAGS}"
 fi
 echo "\
-              CFLAGS   = ${CFLAGS}"
+              CFLAGS      = ${CFLAGS}"
 if test "${has_mpicxx}" = yes ; then
    echo "\
-              CXXFLAGS = ${CXXFLAGS}"
+              CXXFLAGS    = ${CXXFLAGS}"
 fi
 if test "${has_fortran}" = yes ; then
    echo "\
-              FFLAGS   = ${FFLAGS}
-              FCFLAGS  = ${FCFLAGS}"
+              FFLAGS      = ${FFLAGS}
+              FCFLAGS     = ${FCFLAGS}"
 fi
 if test "x${LDFLAGS}" != x ; then
    echo "\
-              LDFLAGS  = ${LDFLAGS}"
+              LDFLAGS     = ${LDFLAGS}"
 fi
 if test "x${LIBS}" != x ; then
    echo "\
-              LIBS     = ${LIBS}"
+              LIBS        = ${LIBS}"
+fi
+if test "x${SEQ_CC}" != x ; then
+   echo "\
+              SEQ_CC      = ${SEQ_CC}"
+fi
+if test "x${SEQ_CFLAGS}" != x ; then
+   echo "\
+              SEQ_CFLAGS  = ${SEQ_CFLAGS}"
+fi
+if test "x${SEQ_LDFLAGS}" != x ; then
+   echo "\
+              SEQ_LDFLAGS = ${SEQ_LDFLAGS}"
+fi
+if test "x${SEQ_LIBS}" != x ; then
+   echo "\
+              SEQ_LIBS    = ${SEQ_LIBS}"
 fi
 if test "x${enable_netcdf4}" = xyes; then
    echo "\

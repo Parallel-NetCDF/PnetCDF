@@ -22,7 +22,7 @@ XDEFS += -DMPIF90="\"$(MPIF90)\"" -DFCFLAGS="\"$(FCFLAGS)\""
 endif
 
 pnetcdf_version$(EXEEXT): pnetcdf_version.c
-	$(SEQ_CC) $(XDEFS) -o $@ $<
+	$(SEQ_CC) $(SEQ_CFLAGS) $(XDEFS) -o $@ $< $(SEQ_LDFLAGS) $(SEQ_LIBS)
 
 dist_man_MANS = pnetcdf_version.1
 

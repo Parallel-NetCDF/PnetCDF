@@ -203,6 +203,14 @@ Some influential environment variables:
   TESTMPIRUN  MPI run command for "make ptest", [default: mpiexec -n NP]
   TESTOUTDIR  Output file directory for "make check" and "make ptest",
               [default: ./]
+  SEQ_CC      C compiler for building sequential utility programs,
+              [default: gcc]
+  SEQ_CFLAGS  C compile flags for building sequential utility programs,
+              [default: none]
+  SEQ_LDFLAGS Linker flags for building sequential utility programs,
+              [default: none]
+  SEQ_LIBS    Libraries for building sequential utility programs,
+              [default: none]
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.

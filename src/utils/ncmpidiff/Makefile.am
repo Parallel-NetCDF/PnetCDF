@@ -18,7 +18,7 @@ ncmpidiff_LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 cdfdiff_SOURCES = cdfdiff.c
 
 cdfdiff$(EXEEXT): cdfdiff.c Makefile
-	$(SEQ_CC) -I$(top_srcdir)/src/utils/ncvalidator -o $@ $<
+	$(SEQ_CC) $(SEQ_CFLAGS) -I$(top_srcdir)/src/utils/ncvalidator -o $@ $< $(SEQ_LDFLAGS) $(SEQ_LIBS)
 
 $(top_builddir)/src/libs/libpnetcdf.la:
 	set -e; cd $(top_builddir)/src/libs && $(MAKE) $(MFLAGS)
