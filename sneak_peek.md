@@ -29,6 +29,11 @@ This is essentially a placeholder for the next release note ...
     `${prefix}/pnetcdf_examples` along with run script files. An example is
     `${prefix}/pnetcdf_examples/C/run_c_examples.sh`. The default of this
     option is `disabled`.
+  + Add three new environment variables `SEQ_CFLAGS`, `SEQ_LDFLAGS` and
+    `SEQ_LIBS` for setting the compile, link, and library flags, respectively
+    to be used to build the sequential utility programs, i.e. `cdfdiff`,
+    `ncoffsets`, `ncvalidator`, and `pnetcdf_version`.
+    See [PR #122](https://github.com/Parallel-NetCDF/PnetCDF/pull/122)
 
 * Configure updates:
   + Upgrade config.guess config.sub to 2024-01-01.

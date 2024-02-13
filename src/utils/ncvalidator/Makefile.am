@@ -76,7 +76,7 @@ EVARSIZE_FILES = bad_large_fixed_var.nc2 \
 TST_HDF5_FILES = pad_superblock.h5
 
 ncvalidator$(EXEEXT): ncvalidator.c Makefile
-	$(SEQ_CC) -o $@ $<
+	$(SEQ_CC) $(SEQ_CFLAGS) -o $@ $< $(SEQ_LDFLAGS) $(SEQ_LIBS)
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead

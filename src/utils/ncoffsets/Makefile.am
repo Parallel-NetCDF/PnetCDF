@@ -10,7 +10,7 @@ bin_PROGRAMS = ncoffsets
 EXTRA_DIST = ncoffsets.c
 
 ncoffsets$(EXEEXT): ncoffsets.c
-	$(SEQ_CC) -o $@ $<
+	$(SEQ_CC) $(SEQ_CFLAGS) -o $@ $< $(SEQ_LDFLAGS) $(SEQ_LIBS)
 
 dist_man_MANS = ncoffsets.1
 
