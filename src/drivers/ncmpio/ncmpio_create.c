@@ -84,9 +84,11 @@ ncmpio_create(MPI_Comm     comm,
 
     /* Check if the file already exists, if lstat() or access() is available */
 #ifdef HAVE_LSTAT
-    struct stat st_buf;
     /* call lstat() to check the file if exists and if is a symbolic link */
     if (rank == 0) {
+        struct stat st_buf;
+        st_buf.st_mode = 0;
+
         if (lstat(filename, &st_buf) == -1) file_exist = 0;
         errno = 0; /* reset errno */
 
