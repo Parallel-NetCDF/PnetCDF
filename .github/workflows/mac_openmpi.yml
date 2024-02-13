@@ -68,6 +68,7 @@ jobs:
             ./configure --prefix=${GITHUB_WORKSPACE}/OPENMPI \
                         --silent \
                         --with-io-romio-flags="--with-file-system=ufs" \
+                        --with-hwloc=internal \
                         --with-pmix=internal \
                         --with-libevent=internal \
                         CC=gcc \
