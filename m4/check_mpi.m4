@@ -351,10 +351,32 @@ AC_DEFUN([MPI_COMPILER_BASE],[
         cc | CC | ftn | *[[\\/]]cc | *[[\\/]]CC | *[[\\/]]ftn )
            # For Cray PrgEnv-intel, cc is a wrapper of icc
            # For Cray PrgEnv-gnu, cc is a wrapper of gcc
+           #    % cc --version
+           #      gcc-12 (SUSE Linux) 12.3.0
+           #    % cc --version
+           #      Intel(R) oneAPI DPC++/C++ Compiler 2023.2.0 (2023.2.0.20230622)
            eval "$compile_cmd --version" < /dev/null >& conftest.ver
            compile_basename=`head -n1 conftest.ver |cut -d' ' -f1`
            ${RM} -f conftest.ver
-           if test "x${compile_basename}" = x ; then
+           if test "x${compile_basename}" = "xIntel(R)"; then
+              # Intel C/C++ compiler
+              compiler_name=$(basename "$compile_cmd")
+              if test "x${compiler_name}" = xcc ; then
+                 unset cc_basename
+                 AC_CHECK_PROG(cc_basename, icx, [icx])
+                 if test "x$cc_basename" = x ; then
+                    AC_CHECK_PROG(cc_basename, icc, [icc])
+                 fi
+                 compile_basename=$cc_basename
+              else
+                 unset cxx_basename
+                 AC_CHECK_PROG(cxx_basename, icpx, [icpx])
+                 if test "x$cc_basename" = x ; then
+                    AC_CHECK_PROG(cxx_basename, icpc, [icpc])
+                 fi
+                 compile_basename=$cxx_basename
+              fi
+           elif test "x${compile_basename}" = x ; then
               # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
               # Cray cc -V sends the output to stderr.
               eval "$compile_cmd -V" < /dev/null >& conftest.ver
