@@ -286,6 +286,7 @@ err_out:
 int main(int argc, char **argv) {
     char filename[256];
     int  i, err, nerrs=0, rank, providedT;
+    thread_arg t_arg[NTHREADS]; /* must be unique to each thread */
 
 #ifdef ENABLE_THREAD_SAFE
     pthread_t threads[NTHREADS];
@@ -349,7 +350,6 @@ int main(int argc, char **argv) {
 
     /* create threads, each calls thread_func() */
     for (i=0; i<NTHREADS; i++) {
-        thread_arg t_arg[NTHREADS]; /* must be unique to each thread */
         t_arg[i].id = i + rank * NTHREADS;
         sprintf(t_arg[i].fname, "%s",filename);
         err = pthread_create(&threads[i], NULL, thread_func, &t_arg[i]);

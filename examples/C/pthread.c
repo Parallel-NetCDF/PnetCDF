@@ -371,6 +371,7 @@ int main(int argc, char **argv) {
     char filename[256];
     int  i, err, nerrs=0, rank, providedT;
     pthread_t threads[NTHREADS];
+    thread_arg t_arg[NTHREADS]; /* must be unique to each thread */
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &providedT);
 
@@ -419,7 +420,6 @@ int main(int argc, char **argv) {
 
     /* create threads, each calls thread_func() */
     for (i=0; i<NTHREADS; i++) {
-        thread_arg t_arg[NTHREADS]; /* must be unique to each thread */
         t_arg[i].id = i + rank * NTHREADS;
         sprintf(t_arg[i].fname, "%s",filename);
         err = pthread_create(&threads[i], NULL, thread_func, &t_arg[i]);
