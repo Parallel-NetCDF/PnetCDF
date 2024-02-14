@@ -54,11 +54,11 @@ define(`NCT_ITYPE', ``NCT_'Upcase($1)')dnl
 dnl
 
 define(`CheckText', `ifelse(`$1',`text', , `== (NCT_ITYPE($1) == NCT_TEXT)')')dnl
-define(`CheckRange',`ifelse(`$1',`text', `1', `($2 >= $1_min && $2 <= $1_max)')')dnl
+define(`CheckRange',`ifelse(`$1',`text', `1', `($2 >= (double)$1_min && $2 <= (double)$1_max)')')dnl
 define(`IfCheckTextChar', `ifelse(`$1',`text', `if ($2 != NC_CHAR)')')dnl
 define(`CheckNumRange',
        `ifelse(`$1',`text', `1',
-               `inRange3(cdf_format, $2,$3,NCT_ITYPE($1)) && ($2 >= $1_min && $2 <= $1_max)')')dnl
+               `inRange3(cdf_format, $2,$3,NCT_ITYPE($1)) && ($2 >= (double)$1_min && $2 <= (double)$1_max)')')dnl
 
 #include "tests.h"
 

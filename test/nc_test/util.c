@@ -34,8 +34,8 @@ inRange(const double value, const nc_type xtype)
         case NC_UBYTE:  return value >= 0            && value <= X_UCHAR_MAX;
         case NC_USHORT: return value >= 0            && value <= X_USHORT_MAX;
         case NC_UINT:   return value >= 0            && value <= X_UINT_MAX;
-        case NC_INT64:  return value >= X_INT64_MIN  && value <= X_INT64_MAX;
-        case NC_UINT64: return value >= 0            && value <= X_UINT64_MAX;
+        case NC_INT64:  return value >= (double)X_INT64_MIN  && value <= (double)X_INT64_MAX;
+        case NC_UINT64: return value >= 0            && value <= (double)X_UINT64_MAX;
         default:
             assert(0);
             return(0);
@@ -94,8 +94,12 @@ inRange_float(const double value, const nc_type xtype)
         case NC_UBYTE:  min = 0;            max = X_UCHAR_MAX;  break;
         case NC_USHORT: min = 0;            max = X_USHORT_MAX; break;
         case NC_UINT:   min = 0;            max = X_UINT_MAX;   break;
-        case NC_INT64:  min = X_INT64_MIN;  max = X_INT64_MAX;  break;
-        case NC_UINT64: min = 0;            max = X_UINT64_MAX; break;
+        case NC_INT64:  min = (double)X_INT64_MIN;
+                        max = (double)X_INT64_MAX;
+                        break;
+        case NC_UINT64: min = 0;
+                        max = (double)X_UINT64_MAX;
+                        break;
         default: assert(0);
     }
     if (!( value >= min && value <= max)) {
@@ -384,7 +388,7 @@ int dbl2nc ( const double d, const nc_type xtype, void *p)
             break;
         case NC_INT:
             r = floor(0.5+d);
-            if ( r < long_min  ||  r > long_max )  return 2;
+            if ( r < (double)long_min  ||  r > (double)long_max )  return 2;
 #if INT_MAX >= X_INT_MAX
             *((int   *) p) = (int)r;
 #else
@@ -409,12 +413,12 @@ int dbl2nc ( const double d, const nc_type xtype, void *p)
             break;
         case NC_INT64:
             r = floor(0.5+d);
-            if ( r < int64_min  ||  r > int64_max )  return 2;
+            if ( r < (double)int64_min  ||  r > (double)int64_max )  return 2;
             *((long long *) p) = (long long)r;
             break;
         case NC_UINT64:
             r = floor(0.5+d);
-            if ( r < 0.0  ||  r > uint64_max )  return 2;
+            if ( r < 0.0  ||  r > (double)uint64_max )  return 2;
             *((unsigned long long *) p) = (unsigned long long)r;
             break;
         default:
