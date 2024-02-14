@@ -240,6 +240,11 @@ fill_var_rec(NC         *ncp,
         }
     }
 
+    if (NC_doFsync(ncp)) { /* NC_SHARE is set */
+        TRACE_IO(MPI_File_sync)(fh);
+        TRACE_COMM(MPI_Barrier)(ncp->comm);
+    }
+
     return NC_NOERR;
 }
 
@@ -590,6 +595,11 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     if (mpireturn != MPI_SUCCESS)
         if (status == NC_NOERR)
             status = ncmpii_error_mpi2nc(mpireturn, "MPI_File_set_view");
+
+    if (NC_doFsync(ncp)) { /* NC_SHARE is set */
+        TRACE_IO(MPI_File_sync)(fh);
+        TRACE_COMM(MPI_Barrier)(ncp->comm);
+    }
 
     return status;
 }
