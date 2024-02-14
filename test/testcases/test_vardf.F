@@ -308,6 +308,12 @@
           err = nfmpi_enddef(ncid)
           call check(err, 'In nfmpi_enddef: ')
 
+#ifdef STRONGER_CONSISTENCY
+          err = nfmpi_sync(ncid)
+          call MPI_Barrier(MPI_COMM_WORLD, ierr)
+          err = nfmpi_sync(ncid)
+#endif
+
           ! now we are in data mode
 
           ! fill 2 records with default fill values
@@ -323,6 +329,12 @@
           recno = 2
           err = nfmpi_fill_var_rec(ncid, varid2, recno)
           call check(err, 'In nfmpi_fill_var_rec: varid2, 2 ')
+
+#ifdef STRONGER_CONSISTENCY
+          err = nfmpi_sync(ncid)
+          call MPI_Barrier(MPI_COMM_WORLD, ierr)
+          err = nfmpi_sync(ncid)
+#endif
 
           ! create a file type for the record variable */
           err = nfmpi_inq_recsize(ncid, recsize)

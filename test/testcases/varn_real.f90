@@ -113,6 +113,11 @@
           err = nf90mpi_enddef(ncid)
           call check(err, 'In nf90mpi_enddef: ')
 
+          ! UnifyFS requires a stronger file consistency
+          err = nf90mpi_sync(ncid)
+          call MPI_Barrier(MPI_COMM_WORLD, err)
+          err = nf90mpi_sync(ncid)
+
           ! pick arbitrary numbers of requests for 4 processes
           num_reqs = 0
           if (rank .EQ.  0) then
@@ -230,6 +235,11 @@
           call check(err, 'In nf90mpi_put_varn_all: ')
 
           if (nprocs .GT. 4) call MPI_Barrier(MPI_COMM_WORLD, err)
+
+          ! UnifyFS requires a stronger file consistency
+          err = nf90mpi_sync(ncid)
+          call MPI_Barrier(MPI_COMM_WORLD, err)
+          err = nf90mpi_sync(ncid)
 
           ! read a scalar back and check the content
           oneReal = -1.0  ! a scalar
