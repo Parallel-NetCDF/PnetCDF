@@ -120,9 +120,9 @@ define(`CheckText', `ifelse(`$1',`text', , `== (NCT_ITYPE($1) == NCT_TEXT)')')dn
 define(`IfCheckTextChar', `ifelse(`$1',`text', `if ($2 != NC_CHAR)')')dnl
 define(`CheckNumRange',
        `ifelse(`$1',`text', `1',
-               `inRange3(cdf_format, (double)$2,$3,NCT_ITYPE($1)) && ($2 >= $1_min && $2 <= $1_max)')')dnl
+               `inRange3(cdf_format, (double)$2,$3,NCT_ITYPE($1)) && ($2 >= (double)$1_min && $2 <= (double)$1_max)')')dnl
 define(`CheckRange',
-       `ifelse(`$1',`text', `0', `($2 >= $1_min && $2 <= $1_max)')')dnl
+       `ifelse(`$1',`text', `0', `($2 >= (double)$1_min && $2 <= (double)$1_max)')')dnl
 define(`CheckRange3',
        `ifelse(`$1',`text', `1',
                `inRange3(cdf_format, (double)$2,$3,NCT_ITYPE($1))')')dnl
@@ -145,8 +145,8 @@ hash_$1(const int       cdf_format,
 
     value = hash4(cdf_format, type, rank, index, itype);
     ifelse(`$1',`text',`return (text)value;',`
-    if (value > $1_max) return $1_max;
-    else if (value < $1_min) return $1_min;
+    if (value > (double)$1_max) return $1_max;
+    else if (value < (double)$1_min) return $1_min;
     else return ($1)value;')
 }
 ')dnl

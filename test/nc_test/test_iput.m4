@@ -67,7 +67,7 @@ define(`CheckText', `ifelse(`$1',`text', , `== (NCT_ITYPE($1) == NCT_TEXT)')')dn
 define(`IfCheckTextChar', `ifelse(`$1',`text', `if ($2 != NC_CHAR)')')dnl
 define(`CheckNumRange',
        `ifelse(`$1',`text', `1',
-               `inRange3(cdf_format, $2,$3,NCT_ITYPE($1)) && ($2 >= $1_min && $2 <= $1_max)')')dnl
+               `inRange3(cdf_format, $2,$3,NCT_ITYPE($1)) && ($2 >= (double)$1_min && $2 <= (double)$1_max)')')dnl
 define(`CheckRange3',
        `ifelse(`$1',`text', `1',
                `inRange3(cdf_format, $2,$3,NCT_ITYPE($1))')')dnl
@@ -83,17 +83,17 @@ hash2nc(const nc_type var_type, int var_rank, MPI_Offset *index)
 
     switch (var_type) {
         /* no type conversion will happen for NC_CHAR, use in-memory limits */
-        case NC_CHAR:   min = CHAR_MIN;     max = CHAR_MAX;     break;
-        case NC_BYTE:   min = X_BYTE_MIN;   max = X_BYTE_MAX;   break;
-        case NC_SHORT:  min = X_SHORT_MIN;  max = X_SHORT_MAX;  break;
-        case NC_INT:    min = X_INT_MIN;    max = X_INT_MAX;    break;
-        case NC_FLOAT:  min = X_FLOAT_MIN;  max = X_FLOAT_MAX;  break;
-        case NC_DOUBLE: min = X_DOUBLE_MIN; max = X_DOUBLE_MAX; break;
-        case NC_UBYTE:  min = 0;            max = X_UCHAR_MAX;  break;
-        case NC_USHORT: min = 0;            max = X_USHORT_MAX; break;
-        case NC_UINT:   min = 0;            max = X_UINT_MAX;   break;
-        case NC_INT64:  min = X_INT64_MIN;  max = X_INT64_MAX;  break;
-        case NC_UINT64: min = 0;            max = X_UINT64_MAX; break;
+        case NC_CHAR:   min = CHAR_MIN;     max = (double)CHAR_MAX;     break;
+        case NC_BYTE:   min = X_BYTE_MIN;   max = (double)X_BYTE_MAX;   break;
+        case NC_SHORT:  min = X_SHORT_MIN;  max = (double)X_SHORT_MAX;  break;
+        case NC_INT:    min = X_INT_MIN;    max = (double)X_INT_MAX;    break;
+        case NC_FLOAT:  min = X_FLOAT_MIN;  max = (double)X_FLOAT_MAX;  break;
+        case NC_DOUBLE: min = X_DOUBLE_MIN; max = (double)X_DOUBLE_MAX; break;
+        case NC_UBYTE:  min = 0;            max = (double)X_UCHAR_MAX;  break;
+        case NC_USHORT: min = 0;            max = (double)X_USHORT_MAX; break;
+        case NC_UINT:   min = 0;            max = (double)X_UINT_MAX;   break;
+        case NC_INT64:  min = X_INT64_MIN;  max = (double)X_INT64_MAX;  break;
+        case NC_UINT64: min = 0;            max = (double)X_UINT64_MAX; break;
         default:
             return NC_EBADTYPE;
     }

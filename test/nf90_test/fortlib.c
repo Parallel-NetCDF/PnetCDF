@@ -128,7 +128,7 @@ FORTRAN_API void FORT_CALL nc_ignorefpe_(int *doit)
 /* Else leave name alone */
 #endif
 FORTRAN_API double FORT_CALL min_schar_(void) {
-	return SCHAR_MIN;
+	return (double)SCHAR_MIN;
 }
 
 #ifdef F77_NAME_UPPER
@@ -140,7 +140,7 @@ FORTRAN_API double FORT_CALL min_schar_(void) {
 /* Else leave name alone */
 #endif
 FORTRAN_API double FORT_CALL min_short_(void) {
-	return SHRT_MIN;
+	return (double)SHRT_MIN;
 }
 
 #ifdef F77_NAME_UPPER
@@ -152,7 +152,7 @@ FORTRAN_API double FORT_CALL min_short_(void) {
 /* Else leave name alone */
 #endif
 FORTRAN_API double FORT_CALL min_int_(void) {
-	return INT_MIN;
+	return (double)INT_MIN;
 }
 
 #ifdef F77_NAME_UPPER
@@ -164,7 +164,7 @@ FORTRAN_API double FORT_CALL min_int_(void) {
 /* Else leave name alone */
 #endif
 FORTRAN_API double FORT_CALL min_int64_(void) {
-	return INT64_MIN;
+	return (double)INT64_MIN;
 }
 
 #ifdef F77_NAME_UPPER
@@ -176,7 +176,7 @@ FORTRAN_API double FORT_CALL min_int64_(void) {
 /* Else leave name alone */
 #endif
 FORTRAN_API double FORT_CALL max_schar_(void) {
-	return SCHAR_MAX;
+	return (double)SCHAR_MAX;
 }
 
 #ifdef F77_NAME_UPPER
@@ -188,7 +188,7 @@ FORTRAN_API double FORT_CALL max_schar_(void) {
 /* Else leave name alone */
 #endif
 FORTRAN_API double FORT_CALL max_short_(void) {
-	return SHRT_MAX;
+	return (double)SHRT_MAX;
 }
 
 #ifdef F77_NAME_UPPER
@@ -200,7 +200,7 @@ FORTRAN_API double FORT_CALL max_short_(void) {
 /* Else leave name alone */
 #endif
 FORTRAN_API double FORT_CALL max_int_(void) {
-	return INT_MAX;
+	return (double)INT_MAX;
 }
 
 #ifdef F77_NAME_UPPER
@@ -212,7 +212,7 @@ FORTRAN_API double FORT_CALL max_int_(void) {
 /* Else leave name alone */
 #endif
 FORTRAN_API double FORT_CALL max_int64_(void) {
-	return INT64_MAX;
+	return (double)INT64_MAX;
 }
 
 #ifdef F77_NAME_UPPER
@@ -224,7 +224,7 @@ FORTRAN_API double FORT_CALL max_int64_(void) {
 /* Else leave name alone */
 #endif
 FORTRAN_API double FORT_CALL max_float_(void) {
-	return FLT_MAX;
+	return (double)FLT_MAX;
 }
 
 #ifdef F77_NAME_UPPER
@@ -236,7 +236,7 @@ FORTRAN_API double FORT_CALL max_float_(void) {
 /* Else leave name alone */
 #endif
 FORTRAN_API double FORT_CALL max_double_(void) {
-	return DBL_MAX;
+	return (double)DBL_MAX;
 }
 
 #if 0 /* this is implemented in library src now */
