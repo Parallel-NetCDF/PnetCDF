@@ -172,7 +172,9 @@ ncmpio_close(void *ncdp)
         if (rank == 0) {
             /* ignore all errors, as unexpected file size if not a fatal error */
 #ifdef HAVE_TRUNCATE
-            int fd = open(ncp->path, O_RDWR, 0666);
+            /* when calling POSIX I/O, remove file type prefix from file name */
+            char *path = ncmpii_remove_file_system_type_prefix(ncp->path);
+            int fd = open(path, O_RDWR, 0666);
             if (fd != -1) {
                 /* obtain file size */
                 off_t file_size = lseek(fd, 0, SEEK_END);

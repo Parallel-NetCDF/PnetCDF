@@ -33,7 +33,7 @@
 }
 
 int main(int argc, char **argv) {
-    char *filename, *symlink_fname;
+    char *filename, *symlink_fname, *fname;
     int  err, nerrs=0, len, rank, ncid, verbose=0;
     struct stat statbuf;
 
@@ -58,18 +58,23 @@ int main(int argc, char **argv) {
         free(cmd_str);
     }
 
+    /* remove file system type prefix substring */
+    fname = remove_file_system_type_prefix(filename);
+
     symlink_fname = (char*) malloc(strlen(filename) + 10);
-    sprintf(symlink_fname, "%s.symlink", filename);
 
     /* create a regular file and a symbolic link to it */
     err = 0;
     if (rank == 0) {
         FILE *fp;
 
+        /* when calling POSIX I/O, remove file type prefix from file name */
+        sprintf(symlink_fname, "%s.symlink", fname);
+
         /* ensure symlink_fname does not exist */
         unlink(symlink_fname);
 
-        fp = fopen(filename, "w");
+        fp = fopen(fname, "w");
         if (fp == NULL) {
             err = -1;
             ERR_HANDLE("fopen", err)
@@ -78,7 +83,7 @@ int main(int argc, char **argv) {
             err = -1;
             ERR_HANDLE("fclose", err)
         }
-        else if (symlink(filename, symlink_fname) != 0) {
+        else if (symlink(fname, symlink_fname) != 0) {
             /* create a symbolic link to the regular file */
             err = -1;
             ERR_HANDLE("symlink", err)
@@ -92,6 +97,9 @@ int main(int argc, char **argv) {
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
+    /* symlink_fname may have file system type prefix */
+    sprintf(symlink_fname, "%s.symlink", filename);
+
     /* create a file in NC_CLOBBER mode */
     err = ncmpi_create(MPI_COMM_WORLD, symlink_fname, NC_CLOBBER, MPI_INFO_NULL, &ncid);
     CHECK_ERR
@@ -100,6 +108,9 @@ int main(int argc, char **argv) {
     MPI_Barrier(MPI_COMM_WORLD);
 
     if (rank == 0) {
+        /* when calling POSIX I/O, remove file type prefix from file name */
+        sprintf(symlink_fname, "%s.symlink", fname);
+
         /* check if symlink_fname is still a symbolic link */
         err = lstat(symlink_fname, &statbuf);
         ERR_HANDLE("lstat", err)

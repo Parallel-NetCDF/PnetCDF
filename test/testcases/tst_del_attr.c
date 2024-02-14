@@ -108,10 +108,14 @@ tst_fmt(char *filename, int cmode)
 
         if (rank == 0) {
             off_t file_size;
-            int fd = open(filename, O_RDONLY, 0666);
+
+            /* remove file type prefix substring */
+            char *fname = remove_file_system_type_prefix(filename);
+
+            int fd = open(fname, O_RDONLY, 0666);
 
             if (fd == -1) {
-                printf("Error: file open %s (%s)\n",filename,strerror(errno));
+                printf("Error: file open %s (%s)\n",fname,strerror(errno));
                 return 1;
             }
 
