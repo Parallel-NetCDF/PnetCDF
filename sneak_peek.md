@@ -61,10 +61,11 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * API syntax changes
-  + File open flag NC_SHARE is now deprecated. It is still defined, but takes
-    no effect.
+  + none
 
 * API semantics updates
+  + File open flag NC_SHARE is now deprecated. It is still defined, but takes
+    no effect.
   + NC_SHARE alone is not sufficient to provide data consistency for accessing
     a shared file in parallel and thus is now deprecated.  Because PnetCDF
     follows the MPI file consistency, which only addresses the case when all
