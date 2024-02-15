@@ -231,24 +231,7 @@ dnl AC_ARG_VAR(CXXFLAGS, Debugging and optimization options for the C++ compiler
 dnl AC_ARG_VAR(FFLAGS, Debugging and optimization options for the Fortran 77 compiler)
 dnl AC_ARG_VAR(FCFLAGS, Debugging and optimization options for the Fortran 90 compiler)
 
-dnl Check if MPICC, MPICXX, MPIF77, MPIF90 are set by the user.
-dnl If not, set MPICC equal to CC. Similarly, for MPICXX, MPIF77, and MPIF90
-ac_user_MPICC=$MPICC
-ac_user_MPICXX=$MPICXX
-ac_user_MPIF77=$MPIF77
-ac_user_MPIF90=$MPIF90
-if test "x$MPI_INSTALL" = x ; then
-   # Use CC, CXX, F77, FC, F90 only when --with-mpi is not used and the
-   # following MPI environment variables are not set
-   if test "x$MPICC"  = x && test "x$CC"  != x ; then ac_user_MPICC=$CC   ; fi
-   if test "x$MPICXX" = x && test "x$CXX" != x ; then ac_user_MPICXX=$CXX ; fi
-   if test "x$MPIF77" = x && test "x$F77" != x ; then ac_user_MPIF77=$F77 ; fi
-   if test "x$MPIF77" = x && test "x$FC"  != x ; then ac_user_MPIF77=$FC  ; fi
-   if test "x$MPIF90" = x && test "x$F90" != x ; then ac_user_MPIF90=$F90 ; fi
-   if test "x$MPIF90" = x && test "x$FC"  != x ; then ac_user_MPIF90=$FC  ; fi
-fi
-
-CANDIDATE_MPICC="${MPICC} mpicc mpicc_r"
+CANDIDATE_MPICC="mpicc mpicc_r"
 CANDIDATE_MPICXX="${MPICXX} mpicxx mpic++ mpiCC mpcxx mpc++ mpicxx_r mpiCC_r mpcxx_r mpic++_r mpc++_r"
 CANDIDATE_MPIF77="${MPIF77} mpif77 mpif77_r mpf77 mpf77_r"
 CANDIDATE_MPIF90="${MPIF90} mpif90 mpif90_r mpf90 mpf90_r mpif95 mpif95_r mpf95 mpf95_r"
@@ -295,17 +278,38 @@ CANDIDATE_MPICXX="$CANDIDATE_MPICXX mpipgCC mppgCC"
 CANDIDATE_MPIF77="$CANDIDATE_MPIF77 mpipgf77 mppgf77"
 CANDIDATE_MPIF90="$CANDIDATE_MPIF90 mpipgf90 mpipgf95 mppgf90 mppgf95 "
 
-dnl find the full path of MPICC from CANDIDATE_MPICC and MPI_INSTALL
-UD_MSG_DEBUG([ac_user_MPICC=$ac_user_MPICC])
-if test "x${ac_user_MPICC}" = x ; then
-   dnl if MPICC or CC has not been set by users, then search from
+# save MPICC, MPICXX, MPIF77, MPIF90 set by user before modifying them
+ac_user_MPICC=$MPICC
+ac_user_MPICXX=$MPICXX
+ac_user_MPIF77=$MPIF77
+ac_user_MPIF90=$MPIF90
+
+# Logic of checking MPICC (same for MPICXX, MPIF77, MPIF90):
+#   if MPICC environment variable is set
+#   then use MPICC
+#   else if --with-mpi is set
+#        then use CANDIDATE_MPICC to find MPICC in MPI_INSTALL
+#        else use CANDIDATE_MPICC to find MPICC in PATH
+#   if MPICC still not set and CC is set
+#   then set MPICC to CC
+#   else MPICC is not found and error out
+
+dnl Obtain full paths of MPICC
+if test "x${MPICC}" = x ; then
+   dnl if MPICC has not been set by users, then search from
    dnl CANDIDATE_MPICC, and find the full path of MPICC
+   dnl UD_MPI_PATH_PROGS also check MPI compilers in MPI_INSTALL
    UD_MPI_PATH_PROGS([MPICC], [$CANDIDATE_MPICC])
 else
-   dnl check whether user specified MPICC is valid
-   UD_MPI_PATH_PROG([MPICC], [$ac_user_MPICC])
+   dnl check whether user specified MPICC exists
+   UD_MPI_PATH_PROG([MPICC], [$MPICC])
 fi
-UD_MSG_DEBUG([MPICC=$MPICC])
+
+dnl If MPICC is still not set and CC is set, then set MPICC to CC.
+if test "x$MPICC"  = x && test "x$CC"  != x ; then
+   dnl check whether user specified CC exists
+   UD_MPI_PATH_PROG([MPICC], [$CC])
+fi
 
 if test "x${MPICC}" = x ; then
    if test "x$ac_user_MPICC" = x ; then
@@ -459,18 +463,23 @@ AC_ARG_ENABLE(cxx,
 )
 UD_MSG_DEBUG(enable_cxx=$enable_cxx)
 
-dnl If MPICXX or CXX has not been set by users, then
-dnl search from CANDIDATE_MPICXX and find the full path of MPICXX
 if test "x${enable_cxx}" != xno ; then
-   if test "x${ac_user_MPICXX}" = x ; then
-      dnl if MPICXX or CXX has not been set by users, then search from
+   dnl Obtain full paths of MPICXX
+   if test "x${MPICXX}" = x ; then
+      dnl if MPICXX has not been set by users, then search from
       dnl CANDIDATE_MPICXX, and find the full path of MPICXX
+      dnl UD_MPI_PATH_PROGS also check MPI compilers in MPI_INSTALL
       UD_MPI_PATH_PROGS([MPICXX], [$CANDIDATE_MPICXX])
    else
-      dnl check whether user specified MPICXX is valid
-      UD_MPI_PATH_PROG([MPICXX], [$ac_user_MPICXX])
+      dnl check whether user specified MPICXX exists
+      UD_MPI_PATH_PROG([MPICXX], [$MPICXX])
    fi
-   UD_MSG_DEBUG([MPICXX=$MPICXX])
+
+   dnl If MPICXX is still not set and CXX is set, then set MPICXX to CXX.
+   if test "x$MPICXX"  = x && test "x$CXX"  != x ; then
+      dnl check whether user specified CXX exists
+      UD_MPI_PATH_PROG([MPICXX], [$CXX])
+   fi
 
    if test "x${MPICXX}" = x ; then
       if test "x$ac_user_MPICXX" = x ; then
@@ -500,6 +509,7 @@ if test "x${enable_cxx}" != xno ; then
    -----------------------------------------------------------------------])
       fi
    fi
+   UD_MSG_DEBUG([MPICXX=$MPICXX])
 fi
 
 if test "x${enable_cxx}" = xno || test "x${MPICXX}" = x ; then
@@ -597,13 +607,26 @@ if test "x${enable_fortran}" = xno ; then
    has_fortran=no
 else
    has_fortran=yes
-   if test "x${ac_user_MPIF77}" = x ; then
-      dnl if MPIF77 or F77 has not been set by users, then search from
+   dnl Obtain full paths of MPIF77
+   if test "x${MPIF77}" = x ; then
+      dnl if MPIF77 has not been set by users, then search from
       dnl CANDIDATE_MPIF77, and find the full path of MPIF77
+      dnl UD_MPI_PATH_PROGS also check MPI compilers in MPI_INSTALL
       UD_MPI_PATH_PROGS([MPIF77], [$CANDIDATE_MPIF77])
    else
-      dnl check whether user specified MPIF77 is valid
-      UD_MPI_PATH_PROG([MPIF77], [$ac_user_MPIF77])
+      dnl check whether user specified MPIF77 exists
+      UD_MPI_PATH_PROG([MPIF77], [$MPIF77])
+   fi
+
+   dnl If MPIF77 is still not set and F77 is set, then set MPIF77 to F77.
+   if test "x$MPIF77"  = x && test "x$F77"  != x ; then
+      dnl check whether user specified F77 exists
+      UD_MPI_PATH_PROG([MPIF77], [$F77])
+   fi
+   dnl If MPIF77 is still not set and FC is set, then set MPIF77 to FC.
+   if test "x$MPIF77"  = x && test "x$FC"  != x ; then
+      dnl check whether user specified FC exists
+      UD_MPI_PATH_PROG([MPIF77], [$FC])
    fi
 
    if test "x${MPIF77}" = x ; then
@@ -638,13 +661,26 @@ else
 fi
 
 if test "x${has_fortran}" = xyes ; then
-   if test "x${ac_user_MPIF90}" = x ; then
-      dnl if MPIF90 or F90 has not been set by users, then search from
+   dnl Obtain full paths of MPIF90
+   if test "x${MPIF90}" = x ; then
+      dnl if MPIF90 has not been set by users, then search from
       dnl CANDIDATE_MPIF90, and find the full path of MPIF90
+      dnl UD_MPI_PATH_PROGS also check MPI compilers in MPI_INSTALL
       UD_MPI_PATH_PROGS([MPIF90], [$CANDIDATE_MPIF90])
    else
-      dnl check whether user specified MPIF90 is valid
-      UD_MPI_PATH_PROG([MPIF90], [$ac_user_MPIF90])
+      dnl check whether user specified MPIF90 exists
+      UD_MPI_PATH_PROG([MPIF90], [$MPIF90])
+   fi
+
+   dnl If MPIF90 is still not set and F90 is set, then set MPIF90 to F90.
+   if test "x$MPIF90"  = x && test "x$F90"  != x ; then
+      dnl check whether user specified F90 exists
+      UD_MPI_PATH_PROG([MPIF90], [$F90])
+   fi
+   dnl If MPIF90 is still not set and FC is set, then set MPIF90 to FC.
+   if test "x$MPIF90"  = x && test "x$FC"  != x ; then
+      dnl check whether user specified FC exists
+      UD_MPI_PATH_PROG([MPIF90], [$FC])
    fi
 
    if test "x${MPIF90}" = x ; then
