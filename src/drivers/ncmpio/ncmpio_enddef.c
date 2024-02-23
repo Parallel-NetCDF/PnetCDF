@@ -311,10 +311,8 @@ NC_begins(NC *ncp)
         if (ncp->format == 1 && end_var > X_OFF_MAX)
             DEBUG_RETURN_ERROR(NC_EVARSIZE)
 
-        /* this will pad out non-record variables with zero to the
-         * requested alignment.  record variables are a bit trickier.
-         * we don't do anything special with them */
-        ncp->vars.value[i]->begin = D_RNDUP(end_var, ncp->fx_v_align);
+        /* this will pad out non-record variables with the 4-byte alignment */
+        ncp->vars.value[i]->begin = D_RNDUP(end_var, 4);
 
         if (ncp->old != NULL) {
             /* move to the next fixed variable */
@@ -336,19 +334,14 @@ NC_begins(NC *ncp)
 
     /* end_var now is pointing to the end of last non-record variable */
 
-    /* only (re)calculate begin_rec if there is not sufficient
-     * space at end of non-record variables or if start of record
-     * variables is not aligned as requested by ncp->r_align.
-     * If the existing begin_rec is already >= index, then leave the
-     * begin_rec as is (in case some non-record variables are deleted)
+    /* only (re)calculate begin_rec if there is no sufficient space at end of
+     * non-record variables or if the start of record variables is not aligned
+     * as requested by ncp->r_align.
      */
-    if (ncp->begin_rec < end_var ||
-        ncp->begin_rec != D_RNDUP(ncp->begin_rec, ncp->fx_v_align))
-        ncp->begin_rec = D_RNDUP(end_var, ncp->fx_v_align);
-
-    /* expand free space for fixed variable section */
     if (ncp->begin_rec < end_var + ncp->v_minfree)
-        ncp->begin_rec = D_RNDUP(end_var + ncp->v_minfree, ncp->fx_v_align);
+        ncp->begin_rec = end_var + ncp->v_minfree;
+
+    ncp->begin_rec = D_RNDUP(ncp->begin_rec, 4);
 
     /* align the starting offset for record variable section */
     if (ncp->r_align > 1)
@@ -921,11 +914,13 @@ check_rec_var:
 
 /*----< ncmpio__enddef() >---------------------------------------------------*/
 /* This is a collective subroutine.
- * h_minfree  Sets the pad at the end of the "header" section.
+ * h_minfree  Sets the pad at the end of the "header" section, i.e. at least
+ *            this amount of free space includes at the end of header extent.
  * v_align    Controls the alignment of the beginning of the data section for
  *            fixed size variables.
  * v_minfree  Sets the pad at the end of the data section for fixed size
- *            variables.
+ *            variables, i.e. at least this amount of free space between the
+ *            fixed-size variable section and record variable section.
  * r_align    Controls the alignment of the beginning of the data section for
  *            variables which have an unlimited dimension (record variables).
  */
@@ -936,89 +931,83 @@ ncmpio__enddef(void       *ncdp,
                MPI_Offset  v_minfree,
                MPI_Offset  r_align)
 {
-    int i, flag, striping_unit, mpireturn, err=NC_NOERR, status=NC_NOERR;
+    int i, num_fix_vars, mpireturn, err=NC_NOERR, status=NC_NOERR;
     char value[MPI_MAX_INFO_VAL];
-    MPI_Offset all_fix_var_size;
     NC *ncp = (NC*)ncdp;
+
+    /* negative values of h_minfree, v_align, v_minfree, r_align have been
+     * checked at dispatchers.
+     */
 
     /* sanity check for NC_ENOTINDEFINE, NC_EINVAL, NC_EMULTIDEFINE_FNC_ARGS
      * has been done at dispatchers */
     ncp->h_minfree = h_minfree;
     ncp->v_minfree = v_minfree;
 
-    /* calculate a good align size for PnetCDF level hints:
-     * header_align_size and var_align_size based on the MPI-IO hint
-     * striping_unit. This hint can be either supplied by the user or obtained
-     * from MPI-IO (for example, ROMIO's Lustre driver makes a system call to
-     * get the striping parameters of a file).
+    /* calculate a good file extent alignment size based on:
+     *     + hints set by users in the environment variable PNETCDF_HINTS
+     *       nc_header_align_size and nc_var_align_size
+     *     + v_align set in the call to ncmpi__enddef()
+     * Hints set in the environment variable PNETCDF_HINTS have the higher
+     * precedence than the ones set in the API calls.
+     * The precedence of hints and arguments:
+     * 1. hints set in PNETCDF_HINTS environment variable at run time
+     * 2. hints set in the source codes, for example, a call to
+     *    MPI_Info_set("nc_header_align_size", "1048576");
+     * 3. source codes calling ncmpi__enddef(). For example,
+     *    MPI_Offset v_align = 1048576;
+     *    ncmpi__enddef(ncid, 0, v_align, 0, 0);
+     * 4. defaults
+     *       0   for h_minfree
+     *       512 for v_align
+     *       0   for v_minfree
+     *       4   for r_align
      */
-    MPI_Info_get(ncp->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1, value,
-                 &flag);
-    striping_unit = 0;
-    if (flag) {
-        errno = 0;
-        striping_unit = (int)strtol(value,NULL,10);
-        if (errno != 0) striping_unit = 0;
-    }
-    ncp->striping_unit = striping_unit;
-
-    all_fix_var_size = 0;  /* sum of all defined fixed-size variables */
-    for (i=0; i<ncp->vars.ndefined; i++) {
-        if (IS_RECVAR(ncp->vars.value[i])) continue;
-        all_fix_var_size += ncp->vars.value[i]->len;
-    }
 
     /* ncp->h_align, ncp->v_align, ncp->r_align, and ncp->chunk have been
      * set during file create/open */
 
-    if (ncp->h_align == 0) { /* user info does not set nc_header_align_size */
-        if (v_align > 0)
+    num_fix_vars = ncp->vars.ndefined - ncp->vars.num_rec_vars;
+
+    if (ncp->h_align == 0) {   /* hint nc_header_align_size is not set */
+        if (ncp->v_align > 0)  /* hint nc_var_align_size is set */
+            ncp->h_align = ncp->v_align;
+        else if (v_align > 0)  /* v_align is passed from ncmpi__enddef */
             ncp->h_align = v_align;
-        else if (all_fix_var_size > 0 && r_align > 0) /* no fixed-size variable */
-            ncp->h_align = r_align;
-        else if (striping_unit &&
-            all_fix_var_size > FILE_ALIGNMENT_LB * striping_unit)
-            /* if striping_unit is available and file size sufficiently large */
-            ncp->h_align = striping_unit;
-        else
+
+        /* if no fixed-size variables is defined, use r_align */
+        if (ncp->h_align == 0 && num_fix_vars == 0) {
+            if (ncp->r_align > 0)  /* hint nc_record_align_size is set */
+                ncp->h_align = ncp->r_align;
+            else if (r_align > 0)  /* r_align is passed from ncmpi__enddef */
+                ncp->h_align = r_align;
+        }
+        if (ncp->h_align == 0) /* still not set */
             ncp->h_align = FILE_ALIGNMENT_DEFAULT;
     }
     /* else respect user hint */
 
     if (ncp->v_align == 0) { /* user info does not set nc_var_align_size */
-        if (v_align > 0) /* else respect user hint */
+        if (v_align > 0)     /* v_align is passed from ncmpi__enddef */
             ncp->v_align = v_align;
-#ifdef USE_AGGRESSIVE_ALIGN
-        else if (striping_unit &&
-                 all_fix_var_size > FILE_ALIGNMENT_LB * striping_unit)
-            /* if striping_unit is available and file size sufficiently large */
-            ncp->v_align = striping_unit;
-        else
-            ncp->v_align = FILE_ALIGNMENT_DEFAULT;
-#endif
+        /* else ncp->v_align is already set by user/env, ignore the one passed
+         * by the argument v_align of this subroutine.
+         */
     }
 
-    if (ncp->r_align == 0) { /* user info/env does not set nc_record_align_size */
-        if (r_align > 0) /* else respect user hint */
+    if (ncp->r_align == 0) { /* user info does not set nc_record_align_size */
+        if (r_align > 0)     /* r_align is passed from ncmpi__enddef */
             ncp->r_align = r_align;
-#ifdef USE_AGGRESSIVE_ALIGN
-        if (striping_unit)
-            ncp->r_align = striping_unit;
-        else
-            ncp->r_align = FILE_ALIGNMENT_DEFAULT;
-#endif
+        /* else ncp->r_align is already set by user/env, ignore the one passed
+         * by the argument r_align of this subroutine.
+         */
     }
-    /* else ncp->r_align is already set by user/env, ignore the one passed by
-     * the argument r_align of this subroutine.
-     */
 
     /* all CDF formats require 4-bytes alignment */
     if (ncp->h_align == 0)    ncp->h_align = 4;
     else                      ncp->h_align = D_RNDUP(ncp->h_align, 4);
     if (ncp->v_align == 0)    ncp->v_align = 4;
     else                      ncp->v_align = D_RNDUP(ncp->v_align, 4);
-    if (ncp->fx_v_align == 0) ncp->fx_v_align = 4;
-    else                      ncp->fx_v_align = D_RNDUP(ncp->fx_v_align, 4);
     if (ncp->r_align == 0)    ncp->r_align = 4;
     else                      ncp->r_align = D_RNDUP(ncp->r_align, 4);
 
@@ -1027,7 +1016,7 @@ ncmpio__enddef(void       *ncdp,
      */
     sprintf(value, "%lld", ncp->h_align);
     MPI_Info_set(ncp->mpiinfo, "nc_header_align_size", value);
-    sprintf(value, "%lld", ncp->fx_v_align);
+    sprintf(value, "%lld", ncp->v_align);
     MPI_Info_set(ncp->mpiinfo, "nc_var_align_size", value);
     sprintf(value, "%lld", ncp->r_align);
     MPI_Info_set(ncp->mpiinfo, "nc_record_align_size", value);

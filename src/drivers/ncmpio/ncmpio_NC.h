@@ -360,7 +360,6 @@ struct NC {
     int           chunk;       /* chunk size for reading header */
     MPI_Offset    h_align;     /* file alignment for header size */
     MPI_Offset    v_align;     /* alignment of the beginning of fixed-size variables */
-    MPI_Offset    fx_v_align;  /* file alignment for each fixed-size variable */
     MPI_Offset    r_align;     /* file alignment for record variable section */
     MPI_Offset    h_minfree;   /* pad at the end of the header section */
     MPI_Offset    v_minfree;   /* pad at the end of the data section for fixed-size variables */
