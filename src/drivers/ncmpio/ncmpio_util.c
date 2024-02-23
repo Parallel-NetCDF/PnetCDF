@@ -62,9 +62,9 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
         MPI_Info_get(user_info, "nc_var_align_size", MPI_MAX_INFO_VAL-1, value, &flag);
         if (flag) {
             errno = 0;  /* errno must set to zero before calling strtoll */
-            ncp->fx_v_align = strtoll(value, NULL, 10);
-            if (errno != 0) ncp->fx_v_align = 0;
-            else if (ncp->fx_v_align < 0) ncp->fx_v_align = 0;
+            ncp->v_align = strtoll(value, NULL, 10);
+            if (errno != 0) ncp->v_align = 0;
+            else if (ncp->v_align < 0) ncp->v_align = 0;
         }
     }
     if (!flag) sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
