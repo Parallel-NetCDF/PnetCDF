@@ -121,7 +121,8 @@ This is essentially a placeholder for the next release note ...
     size obtained from MPI-IO hint 'striping_unit' may yield an unexpectedly
     large file header extent and cause movement of data sections if new
     metadata is added when the program re-enter the define mode.
-    See [PR #124](https://github.com/Parallel-NetCDF/PnetCDF/pull/124).
+    See [PR #124](https://github.com/Parallel-NetCDF/PnetCDF/pull/124) and
+    [PR #125](https://github.com/Parallel-NetCDF/PnetCDF/pull/125).
   + Use unsigned int to do byte swap.
     See [PR #113](https://github.com/Parallel-NetCDF/PnetCDF/pull/113).
   + Silence Intel icc compilation warnings: when CFLAGS contains
@@ -186,6 +187,12 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Clarifications
+  + Hints nc_header_align_size, nc_var_align_size, and nc_record_align_size are
+    to align the file header extent, starting file offsets of data section, and
+    record variable section, respectively. Note that nc_var_align_size and
+    nc_record_align_siz are not to align individual variables. They are
+    equivalent to arguments v_align and r_align, respevtively in API
+    ncmpi__enddef().
   + Using NC_CLOBBER in ncmpi_create() can be expensive if the file already
     exists. If the existing file is a regular file, then PnetCDF will delete it
     with a call to unlink() first and re-created it later. Calling unlink() on
