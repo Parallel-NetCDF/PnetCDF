@@ -296,7 +296,9 @@ NC_begins(NC *ncp)
     }
 
     /* ncp->begin_var is the aligned starting file offset of the first
-       variable, also the extent of file header */
+     * variable (also data section), which is the extent of file header
+     * (header section). File extent may contain free space for header to grow.
+     */
 
     /* Now calculate the starting file offsets for all variables.
        loop thru vars, first pass is for the 'non-record' vars */
@@ -363,7 +365,9 @@ NC_begins(NC *ncp)
 
     ncp->recsize = 0;
 
-    /* TODO: alignment for record variables (maybe using a new hint) */
+    /* The alignment is only applicable to the section of record variables,
+     * rather than individual record variables.
+     */
 
     /* loop thru vars, second pass is for the 'record' vars,
      * re-calculate the starting offset for each record variable */
@@ -982,7 +986,11 @@ ncmpio__enddef(void       *ncdp,
             else if (r_align > 0)  /* r_align is passed from ncmpi__enddef */
                 ncp->h_align = r_align;
         }
-        if (ncp->h_align == 0) /* still not set */
+        if (ncp->h_align == 0 && ncp->old == NULL)
+            /* h_align is still not set. Set h_align only when creating a new
+             * file. When opening an existing file file, setting h_align here
+             * may unexpectedly grow the file extent.
+             */
             ncp->h_align = FILE_ALIGNMENT_DEFAULT;
     }
     /* else respect user hint */
