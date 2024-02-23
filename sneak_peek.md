@@ -116,6 +116,12 @@ This is essentially a placeholder for the next release note ...
     programs and collapsible bullets to display their manual pages.
 
 * Other updates:
+  + File stripe size is no longer used to set the size of file header extent.
+    Automatically set the size of file header extent using the file striping
+    size obtained from MPI-IO hint 'striping_unit' may yield an unexpectedly
+    large file header extent and cause movement of data sections if new
+    metadata is added when the program re-enter the define mode.
+    See [PR #124](https://github.com/Parallel-NetCDF/PnetCDF/pull/124).
   + Use unsigned int to do byte swap.
     See [PR #113](https://github.com/Parallel-NetCDF/PnetCDF/pull/113).
   + Silence Intel icc compilation warnings: when CFLAGS contains
