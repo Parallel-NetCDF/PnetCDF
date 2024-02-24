@@ -159,6 +159,8 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
+  + test/testcases/tst_redefine.c - test multiple entries of ncmpi__enddef
+    [PR #126](https://github.com/Parallel-NetCDF/PnetCDF/pull/126).
   + test/testcases/tst_symlink.c - test NC_CLOBBER on a symbolic link.
   + test/testcases/tst_del_attr.c - test delete attributes. See
     [PR #99](https://github.com/Parallel-NetCDF/PnetCDF/pull/99).

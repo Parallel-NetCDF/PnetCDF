@@ -95,7 +95,8 @@ TESTPROGRAMS = ncmpi_vars_null_stride \
                tst_free_comm \
                flexible_var \
 	       test_get_varn \
-	       tst_del_attr
+	       tst_del_attr \
+	       tst_redefine
 
 M4_SRCS      = put_all_kinds.m4 \
                erange_fill.m4 \

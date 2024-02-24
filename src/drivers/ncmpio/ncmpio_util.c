@@ -43,42 +43,45 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
      * a file is created, or opened and later adding more metadata or variable
      * data */
 
+    ncp->env_h_align = 0;
     if (user_info != MPI_INFO_NULL) {
         /* aligns the size of header extent of a newly created file */
         MPI_Info_get(user_info, "nc_header_align_size", MPI_MAX_INFO_VAL-1, value,
                      &flag);
         if (flag) {
             errno = 0;  /* errno must set to zero before calling strtoll */
-            ncp->h_align = strtoll(value, NULL, 10);
-            if (errno != 0) ncp->h_align = 0;
-            else if (ncp->h_align < 0) ncp->h_align = 0;
+            ncp->env_h_align = strtoll(value, NULL, 10);
+            if (errno != 0) ncp->env_h_align = 0;
+            else if (ncp->env_h_align < 0) ncp->env_h_align = 0;
         }
     }
     if (!flag) sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
     MPI_Info_set(info_used, "nc_header_align_size", value);
 
+    ncp->env_v_align = 0;
     if (user_info != MPI_INFO_NULL) {
         /* aligns starting file offsets of individual fixed-size variables */
         MPI_Info_get(user_info, "nc_var_align_size", MPI_MAX_INFO_VAL-1, value, &flag);
         if (flag) {
             errno = 0;  /* errno must set to zero before calling strtoll */
-            ncp->v_align = strtoll(value, NULL, 10);
-            if (errno != 0) ncp->v_align = 0;
-            else if (ncp->v_align < 0) ncp->v_align = 0;
+            ncp->env_v_align = strtoll(value, NULL, 10);
+            if (errno != 0) ncp->env_v_align = 0;
+            else if (ncp->env_v_align < 0) ncp->env_v_align = 0;
         }
     }
     if (!flag) sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
     MPI_Info_set(info_used, "nc_var_align_size", value);
 
+    ncp->env_r_align = 0;
     if (user_info != MPI_INFO_NULL) {
         /* aligns starting file offset of the record variable section */
         MPI_Info_get(user_info, "nc_record_align_size", MPI_MAX_INFO_VAL-1, value,
                      &flag);
         if (flag) {
             errno = 0;  /* errno must set to zero before calling strtoll */
-            ncp->r_align = strtoll(value, NULL, 10);
-            if (errno != 0) ncp->r_align = 0;
-            else if (ncp->r_align < 0) ncp->r_align = 0;
+            ncp->env_r_align = strtoll(value, NULL, 10);
+            if (errno != 0) ncp->env_r_align = 0;
+            else if (ncp->env_r_align < 0) ncp->env_r_align = 0;
         }
     }
     if (!flag) sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
