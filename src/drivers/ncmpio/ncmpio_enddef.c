@@ -973,6 +973,11 @@ ncmpio__enddef(void       *ncdp,
 
     num_fix_vars = ncp->vars.ndefined - ncp->vars.num_rec_vars;
 
+    /* reset to hints set at file create/open time */
+    ncp->h_align = ncp->env_h_align;
+    ncp->v_align = ncp->env_v_align;
+    ncp->r_align = ncp->env_r_align;
+
     if (ncp->h_align == 0) {   /* hint nc_header_align_size is not set */
         if (ncp->v_align > 0)  /* hint nc_var_align_size is set */
             ncp->h_align = ncp->v_align;
@@ -986,6 +991,7 @@ ncmpio__enddef(void       *ncdp,
             else if (r_align > 0)  /* r_align is passed from ncmpi__enddef */
                 ncp->h_align = r_align;
         }
+
         if (ncp->h_align == 0 && ncp->old == NULL)
             /* h_align is still not set. Set h_align only when creating a new
              * file. When opening an existing file file, setting h_align here

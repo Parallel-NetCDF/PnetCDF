@@ -341,6 +341,7 @@ typedef struct NC_buf {
 #define NC_NDIRTY 0x400000  /* numrecs has changed */
 #define NC_HDIRTY 0x800000  /* header info has changed */
 #define NC_HCOLL  0x000001  /* write header collectively */
+
 struct NC {
     int           ncid;         /* file ID */
     int           flags;        /* various modes, i.e. define/data, fill,
@@ -361,6 +362,9 @@ struct NC {
     MPI_Offset    h_align;     /* file alignment for header size */
     MPI_Offset    v_align;     /* alignment of the beginning of fixed-size variables */
     MPI_Offset    r_align;     /* file alignment for record variable section */
+    MPI_Offset    env_h_align; /* h_align set in environment variable */
+    MPI_Offset    env_v_align; /* v_align set in environment variable */
+    MPI_Offset    env_r_align; /* r_align set in environment variable */
     MPI_Offset    h_minfree;   /* pad at the end of the header section */
     MPI_Offset    v_minfree;   /* pad at the end of the data section for fixed-size variables */
     MPI_Offset    ibuf_size;   /* packing buffer size for flushing noncontig
