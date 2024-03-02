@@ -290,6 +290,9 @@ ncmpi_create(MPI_Comm    comm,
 #ifdef ENABLE_BURST_BUFFER
     int enable_bb_driver=0;
 #endif
+#ifdef ENABLE_CHUNKING
+    int enable_chk_driver=0;
+#endif
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
@@ -382,6 +385,18 @@ ncmpi_create(MPI_Comm    comm,
             enable_bb_driver = 1;
     }
 #endif
+#ifdef ENABLE_CHUNKING
+    if (combined_info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
+        int flag;
+
+        /* check if nc_chunking is enabled */
+        MPI_Info_get(combined_info, "nc_chunking", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag && strcasecmp(value, "enable") == 0)
+            enable_chk_driver = 1;
+    }
+#endif
 
     /* Use environment variable and cmode to tell the file format
      * which is later used to select the right driver.
@@ -461,6 +476,11 @@ ncmpi_create(MPI_Comm    comm,
 #ifdef ENABLE_BURST_BUFFER
     if (enable_bb_driver)
         driver = ncbbio_inq_driver();
+    else
+#endif
+#ifdef ENABLE_CHUNKING
+    if (enable_chk_driver)
+        driver = ncchkio_inq_driver();
     else
 #endif
         /* default is the driver built on top of MPI-IO */
@@ -557,6 +577,9 @@ ncmpi_open(MPI_Comm    comm,
 #endif
 #ifdef ENABLE_BURST_BUFFER
     int enable_bb_driver=0;
+#endif
+#ifdef ENABLE_CHUNKING
+    int enable_chk_driver=0;
 #endif
 
     MPI_Comm_rank(comm, &rank);
@@ -688,6 +711,18 @@ ncmpi_open(MPI_Comm    comm,
             enable_bb_driver = 1;
     }
 #endif
+#ifdef ENABLE_CHUNKING
+    if (combined_info != MPI_INFO_NULL) {
+        char value[MPI_MAX_INFO_VAL];
+        int flag;
+
+        /* check if nc_chunking is enabled */
+        MPI_Info_get(combined_info, "nc_chunking", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag && strcasecmp(value, "enable") == 0)
+            enable_chk_driver = 1;
+    }
+#endif
 
 #ifdef ENABLE_NETCDF4
     if (format == NC_FORMAT_NETCDF4_CLASSIC || format == NC_FORMAT_NETCDF4) {
@@ -715,6 +750,11 @@ ncmpi_open(MPI_Comm    comm,
 #ifdef ENABLE_BURST_BUFFER
     if (enable_bb_driver)
         driver = ncbbio_inq_driver();
+    else
+#endif
+#ifdef ENABLE_CHUNKING
+    if (enable_chk_driver)
+        driver = ncchkio_inq_driver();
     else
 #endif
     {
