@@ -1,0 +1,368 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- 
+Copyright (C) 2003 Northwertern University and Argonne National
+Laboratory.
+
+Portions of this software were developed by the Unidata Program at the
+University Corporation for Atmospheric Research.
+
+Access and use of this software shall impose the following obligations and
+understandings on the user. The user is granted the right, without any fee or
+cost, to use, copy, modify, alter, enhance and distribute this software, and
+any derivative works thereof, and its supporting documentation for any purpose
+whatsoever, provided that this entire notice appears in all copies of the
+software, derivative works and supporting documentation.  Further, Northwestern
+University and Argonne National Laboratory request that the user credit
+Northwestern University and Argonne National Laboratory in any publications
+that result from the use of this software or in any product that includes this
+software.  The names Northwestern University and Argonne National Laboratory,
+however, may not be used in any advertising or publicity to endorse or promote
+any products or commercial entity unless specific written permission is
+obtained from Northwestern University and Argonne National Laboratory. The user
+also understands that Northwestern University and Argonne National Laboratory
+are not obligated to provide the user with any support, consulting, training or
+assistance of any kind with regard to the use, operation and performance of
+this software nor to provide the user with any updates, revisions, new versions
+or "bug fixes."
+
+THIS SOFTWARE IS PROVIDED BY NORTHWESTERN UNIVERSITY AND ARGONNE NATIONAL
+LABORATORY "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NORTHWESTERN UNIVERSITY
+AND ARGONNE NATIONAL LABORATORY BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS
+ACTION, ARISING OUT OF OR IN CONNECTION WITH THE ACCESS, USE OR PERFORMANCE OF
+THIS SOFTWARE.
+ -->
+<!-- Created by GNU Texinfo 5.2, http://www.gnu.org/software/texinfo/ -->
+<head>
+<title>PnetCDF C Interface Guide: Top</title>
+
+<meta name="description" content="PnetCDF C Interface Guide: Top">
+<meta name="keywords" content="PnetCDF C Interface Guide: Top">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link href="#Top" rel="start" title="Top">
+<link href="Combined-Index.html#Combined-Index" rel="index" title="Combined Index">
+<link href="../dir/index.html" rel="up" title="(dir)">
+<link href="Use-of-the-PnetCDF-Library.html#Use-of-the-PnetCDF-Library" rel="next" title="Use of the PnetCDF Library">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+blockquote.smallquotation {font-size: smaller}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+div.indentedblock {margin-left: 3.2em}
+div.lisp {margin-left: 3.2em}
+div.smalldisplay {margin-left: 3.2em}
+div.smallexample {margin-left: 3.2em}
+div.smallindentedblock {margin-left: 3.2em; font-size: smaller}
+div.smalllisp {margin-left: 3.2em}
+kbd {font-style:oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: inherit; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: inherit; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.nocodebreak {white-space:nowrap}
+span.nolinebreak {white-space:nowrap}
+span.roman {font-family:serif; font-weight:normal}
+span.sansserif {font-family:sans-serif; font-weight:normal}
+ul.no-bullet {list-style: none}
+-->
+</style>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-45938012-1', 'auto');
+  ga('create', 'UA-45937491-1', 'auto', {'name': 'pnetcdfTracker'});
+  ga('create', 'UA-46002884-1', 'auto', {'name': 'parallelnetcdfTracker'});
+
+  ga('send', 'pageview');
+  ga('pnetcdfTracker.send', 'pageview');
+  ga('parallelnetcdfTracker.send', 'pageview');
+</script>
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+<h1 class="settitle" align="center">PnetCDF C Interface Guide</h1>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<a name="Top"></a>
+<div class="header">
+<p>
+Next: <a href="Use-of-the-PnetCDF-Library.html#Use-of-the-PnetCDF-Library" accesskey="n" rel="next">Use of the PnetCDF Library</a>, Previous: <a href="../dir/index.html" accesskey="p" rel="prev">(dir)</a>, Up: <a href="../dir/index.html" accesskey="u" rel="up">(dir)</a> &nbsp; [<a href="Combined-Index.html#Combined-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+<hr>
+<a name="The-PnetCDF-C-Interface-Guide"></a>
+<h1 class="top">The PnetCDF C Interface Guide</h1>
+
+
+
+<table class="menu" border="0" cellspacing="0">
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">Table of contents
+</pre></th></tr><tr><td align="left" valign="top">&bull; <a href="Use-of-the-PnetCDF-Library.html#Use-of-the-PnetCDF-Library" accesskey="1">Use of the PnetCDF Library</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">General guide of using PnetCDF APIs
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Files.html#Files" accesskey="2">Files</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">APIs for operating netCDF files
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Dimensions.html#Dimensions" accesskey="3">Dimensions</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">APIs for dimension objects
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Variables.html#Variables" accesskey="4">Variables</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">APIs for accessing variables
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Attributes.html#Attributes" accesskey="5">Attributes</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">APIs for accessing attributes
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Run_002dtime-Environment-Variables.html#Run_002dtime-Environment-Variables" accesskey="6">Run-time Environment Variables</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Tuning I/O performance, debugging
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Utility-programs.html#Utility-programs" accesskey="7">Utility programs</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">ncmpidiff, cdfdiff, pnetcdf_version, ncoffsets, pnetcdf-config, ncvalidator
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Summary-of-C-Interface.html#Summary-of-C-Interface" accesskey="8">Summary of C Interface</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">List of C APIs
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Summary-of-Fortran-77-Interface.html#Summary-of-Fortran-77-Interface" accesskey="9">Summary of Fortran 77 Interface</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">List of Fortran 77 APIs
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Summary-of-Fortran-90-Interface.html#Summary-of-Fortran-90-Interface">Summary of Fortran 90 Interface</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">List of Fortran 90 APIs
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Error-Codes.html#Error-Codes">Error Codes</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">List of error codes and their meanings
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Combined-Index.html#Combined-Index">Combined Index</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="CDF_002d1-file-format-specification.html#CDF_002d1-file-format-specification">CDF-1 file format specification</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="CDF_002d2-file-format-specification.html#CDF_002d2-file-format-specification">CDF-2 file format specification</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="CDF_002d5-file-format-specification.html#CDF_002d5-file-format-specification">CDF-5 file format specification</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+</pre></th></tr><tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">Use of the PnetCDF Library
+</pre></th></tr><tr><td align="left" valign="top">&bull; <a href="Creating.html#Creating">Creating</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Creating a NetCDF file
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Reading-Known.html#Reading-Known">Reading Known </a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Reading a NetCDF file with known names
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Reading-Unknown.html#Reading-Unknown">Reading Unknown </a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Reading a netCDF file with Unknown Names
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Adding.html#Adding">Adding</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Adding new dimensions, variables, attributes
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Nonblocking-Write.html#Nonblocking-Write">Nonblocking Write</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Nonblocking write to one or more variables
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Nonblocking-Read.html#Nonblocking-Read">Nonblocking Read</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Nonblocking read from one or more variables
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Errors.html#Errors">Errors</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Error handling
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Compiling.html#Compiling">Compiling</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Compiling and linking with the PnetCDF library
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Files
+</pre></th></tr><tr><td align="left" valign="top">&bull; <a href="Interface-Descriptions.html#Interface-Descriptions">Interface Descriptions</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">What&rsquo;s in the Function Documentation
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fstrerror.html#ncmpi_005fstrerror">ncmpi_strerror</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Get error string from error code
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fstrerrno.html#ncmpi_005fstrerrno">ncmpi_strerrno</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Get string name of an error code (1.8.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005flibvers.html#ncmpi_005finq_005flibvers">ncmpi_inq_libvers</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Get netCDF library version
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fcreate.html#ncmpi_005fcreate">ncmpi_create</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Create a file (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fopen.html#ncmpi_005fopen">ncmpi_open</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Open a file (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fredef.html#ncmpi_005fredef">ncmpi_redef</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Put a file into Define Mode (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fenddef.html#ncmpi_005fenddef">ncmpi_enddef</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Leave Define Mode (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005f_005fenddef.html#ncmpi_005f_005fenddef">ncmpi__enddef</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Leave Define Mode with Performance Tuning (1.5.0 and later) (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fclose.html#ncmpi_005fclose">ncmpi_close</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Close a file (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq-Family.html#ncmpi_005finq-Family">ncmpi_inq Family</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Inquire about a file
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fsync.html#ncmpi_005fsync">ncmpi_sync</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Synchronize a file to Disk (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fabort.html#ncmpi_005fabort">ncmpi_abort</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Back Out of Recent Definitions (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fset_005ffill.html#ncmpi_005fset_005ffill">ncmpi_set_fill</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Set fill mode for a file (1.6.1 and later) (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fset_005fdefault_005fformat.html#ncmpi_005fset_005fdefault_005fformat">ncmpi_set_default_format</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Set/change the default output format (1.6.1 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fbegin_005findep_005fdata.html#ncmpi_005fbegin_005findep_005fdata">ncmpi_begin_indep_data</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Enter independent parallel data access mode (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fend_005findep_005fdata.html#ncmpi_005fend_005findep_005fdata">ncmpi_end_indep_data</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Exit independent data mode (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005fput_005fsize.html#ncmpi_005finq_005fput_005fsize">ncmpi_inq_put_size</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Inquire the amount of data written to file so far (1.4.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005fget_005fsize.html#ncmpi_005finq_005fget_005fsize">ncmpi_inq_get_size</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Inquire the amount of data read from file so far (1.4.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005fheader_005fsize.html#ncmpi_005finq_005fheader_005fsize">ncmpi_inq_header_size</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Inquire the size of the file header (1.4.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005fheader_005fextent.html#ncmpi_005finq_005fheader_005fextent">ncmpi_inq_header_extent</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Inquire the file header extent (1.4.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fsync_005fnumrecs.html#ncmpi_005fsync_005fnumrecs">ncmpi_sync_numrecs</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Synchronize the number of records (1.4.0 and later) (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fdelete.html#ncmpi_005fdelete">ncmpi_delete</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Delete a file
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005ffile_005finfo.html#ncmpi_005finq_005ffile_005finfo">ncmpi_inq_file_info</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Obtain the MPI Info object that contains all the I/O hints currently used (1.5.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fget_005ffile_005finfo.html#ncmpi_005fget_005ffile_005finfo">ncmpi_get_file_info</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">(deprecated)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005ffiles_005fopened.html#ncmpi_005finq_005ffiles_005fopened">ncmpi_inq_files_opened</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Reports the number of files that are currently opened (1.5.0 and later)
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Dimensions
+</pre></th></tr><tr><td align="left" valign="top">&bull; <a href="Dimensions-Introduction.html#Dimensions-Introduction">Dimensions Introduction</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Rules for Dimensions
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fdef_005fdim.html#ncmpi_005fdef_005fdim">ncmpi_def_dim</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Create a Dimension (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005fdimid.html#ncmpi_005finq_005fdimid">ncmpi_inq_dimid</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Get a Dimension ID from Its Name
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005fdim-Family.html#ncmpi_005finq_005fdim-Family">ncmpi_inq_dim Family</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Inquire about a Dimension
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005frename_005fdim.html#ncmpi_005frename_005fdim">ncmpi_rename_dim</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Rename a Dimension (collective)
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Variables
+</pre></th></tr><tr><td align="left" valign="top">&bull; <a href="Variable-Introduction.html#Variable-Introduction">Variable Introduction</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">What are Variables?
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Variable-Types.html#Variable-Types">Variable Types</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Floating point, integer, and all that
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fdef_005fvar.html#ncmpi_005fdef_005fvar">ncmpi_def_var</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Create a Variable (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fdef_005fvar_005ffill.html#ncmpi_005fdef_005fvar_005ffill">ncmpi_def_var_fill</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Set fill mode for a Variable (1.6.1 and later) (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005fvar_005ffill.html#ncmpi_005finq_005fvar_005ffill">ncmpi_inq_var_fill</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Inquire fill mode of a Variable (1.6.1 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005ffill_005fvar_005frec.html#ncmpi_005ffill_005fvar_005frec">ncmpi_fill_var_rec</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Fill a record of a record variable (1.6.1 and later) (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005fvarid.html#ncmpi_005finq_005fvarid">ncmpi_inq_varid</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Get a Variable ID from Its Name
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005fvar-Family.html#ncmpi_005finq_005fvar-Family">ncmpi_inq_var Family</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Get Information about a Variable from Its ID
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fput_005fvar1_005f_003ctype_003e.html#ncmpi_005fput_005fvar1_005f_003ctype_003e">ncmpi_put_var1_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Write a Single Data Value
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fput_005fvar_005f_003ctype_003e.html#ncmpi_005fput_005fvar_005f_003ctype_003e">ncmpi_put_var_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Write an Entire Variable
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fput_005fvara_005f_003ctype_003e.html#ncmpi_005fput_005fvara_005f_003ctype_003e">ncmpi_put_vara_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Write an Array of Values
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fput_005fvars_005f_003ctype_003e.html#ncmpi_005fput_005fvars_005f_003ctype_003e">ncmpi_put_vars_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Write a Subsampled Array of Values
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fput_005fvarm_005f_003ctype_003e.html#ncmpi_005fput_005fvarm_005f_003ctype_003e">ncmpi_put_varm_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Write a Mapped Array of Values
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fput_005fvarn_005f_003ctype_003e.html#ncmpi_005fput_005fvarn_005f_003ctype_003e">ncmpi_put_varn_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Write a List of Subarrays of Values (1.4.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fput_005fvard.html#ncmpi_005fput_005fvard">ncmpi_put_vard</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Write an Array of Values using filetype (1.6.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fget_005fvar1_005f_003ctype_003e.html#ncmpi_005fget_005fvar1_005f_003ctype_003e">ncmpi_get_var1_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Read a Single Data Value
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fget_005fvar_005f_003ctype_003e.html#ncmpi_005fget_005fvar_005f_003ctype_003e">ncmpi_get_var_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Read an Entire Variable
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fget_005fvara_005f_003ctype_003e.html#ncmpi_005fget_005fvara_005f_003ctype_003e">ncmpi_get_vara_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Read an Array of Values
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fget_005fvars_005f_003ctype_003e.html#ncmpi_005fget_005fvars_005f_003ctype_003e">ncmpi_get_vars_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Read a Subsampled Array of Values
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fget_005fvarm_005f_003ctype_003e.html#ncmpi_005fget_005fvarm_005f_003ctype_003e">ncmpi_get_varm_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Read a Mapped Array of Values
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fget_005fvarn_005f_003ctype_003e.html#ncmpi_005fget_005fvarn_005f_003ctype_003e">ncmpi_get_varn_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Read a List of Subarrays of Values (1.4.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fget_005fvard.html#ncmpi_005fget_005fvard">ncmpi_get_vard</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">read an Array of Values using filetype (1.6.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Strings.html#Strings">Strings</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Reading and Writing Character String Values
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="Fill-Values.html#Fill-Values">Fill Values</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">What&rsquo;s Written Where there&rsquo;s No Data?
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005frename_005fvar.html#ncmpi_005frename_005fvar">ncmpi_rename_var</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Rename a Variable (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fiput_005fvar_003ckind_003e_005f_003ctype_003e.html#ncmpi_005fiput_005fvar_003ckind_003e_005f_003ctype_003e">ncmpi_iput_var<var>&lt;kind&gt;</var>_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Non-blocking APIs for Writing a Subarray
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005figet_005fvar_003ckind_003e_005f_003ctype_003e.html#ncmpi_005figet_005fvar_003ckind_003e_005f_003ctype_003e">ncmpi_iget_var<var>&lt;kind&gt;</var>_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Non-blocking APIs for Reading a Subarray
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fiput_005fvarn_005f_003ctype_003e.html#ncmpi_005fiput_005fvarn_005f_003ctype_003e">ncmpi_iput_varn_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Non-blocking APIs for Writing a List of Subarrays (1.6.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005figet_005fvarn_005f_003ctype_003e.html#ncmpi_005figet_005fvarn_005f_003ctype_003e">ncmpi_iget_varn_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Non-blocking APIs for Reading a List of Subarrays (1.6.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fbput_005fvar_003ckind_003e_005f_003ctype_003e.html#ncmpi_005fbput_005fvar_003ckind_003e_005f_003ctype_003e">ncmpi_bput_var<var>&lt;kind&gt;</var>_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Non-blocking Buffered-version APIs for Writing a Subarray (1.3.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fbput_005fvarn_005f_003ctype_003e.html#ncmpi_005fbput_005fvarn_005f_003ctype_003e">ncmpi_bput_varn_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Non-blocking Buffered-version APIs for Writing a List of subarrays (1.6.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fwait_002fwait_005fall.html#ncmpi_005fwait_002fwait_005fall">ncmpi_wait/wait_all</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Wait function for Non-blocking APIs
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005fnreqs.html#ncmpi_005finq_005fnreqs">ncmpi_inq_nreqs</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">inquire number of pending nonblocking requests (1.4.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005fbuffer-Family.html#ncmpi_005finq_005fbuffer-Family">ncmpi_inq_buffer Family</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">inquire information about the attached buffer used by buffered put APIs
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fcancel.html#ncmpi_005fcancel">ncmpi_cancel</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">cancel one or more pending nonblocking requests
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Attributes
+</pre></th></tr><tr><td align="left" valign="top">&bull; <a href="Attributes-Introduction.html#Attributes-Introduction">Attributes Introduction</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">What are Attributes?
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fput_005fatt_005f_003ctype_003e.html#ncmpi_005fput_005fatt_005f_003ctype_003e">ncmpi_put_att_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Write an Attribute (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005finq_005fatt-Family.html#ncmpi_005finq_005fatt-Family">ncmpi_inq_att Family</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Get Information about an Attribute
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fget_005fatt_005f_003ctype_003e.html#ncmpi_005fget_005fatt_005f_003ctype_003e">ncmpi_get_att_<var>&lt;type&gt;</var></a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Read an Attribute
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fcopy_005fatt.html#ncmpi_005fcopy_005fatt">ncmpi_copy_att</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Copy an Attribute (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005frename_005fatt.html#ncmpi_005frename_005fatt">ncmpi_rename_att</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Rename an Attribute (collective)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpi_005fdel_005fatt.html#ncmpi_005fdel_005fatt">ncmpi_del_att</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Delete an Attribute (collective)
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Run-time Environment Variables
+</pre></th></tr><tr><td align="left" valign="top">&bull; <a href="PNETCDF_005fSAFE_005fMODE.html#PNETCDF_005fSAFE_005fMODE">PNETCDF_SAFE_MODE</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Enable/disable checking for data consistency (1.4.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="PNETCDF_005fVERBOSE_005fDEBUG_005fMODE.html#PNETCDF_005fVERBOSE_005fDEBUG_005fMODE">PNETCDF_VERBOSE_DEBUG_MODE</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Enable/disable printing verbose debugging messages (1.7.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="PNETCDF_005fHINTS.html#PNETCDF_005fHINTS">PNETCDF_HINTS</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">I/O hints for performance improvement (1.4.0 and later)
+</td></tr>
+<tr><th colspan="3" align="left" valign="top"><pre class="menu-comment">
+Utility programs
+</pre></th></tr><tr><td align="left" valign="top">&bull; <a href="ncmpidiff.html#ncmpidiff">ncmpidiff</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Compare two netCDF files and report differences
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncmpidiff.html#cdfdiff">cdfdiff</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">A serial version of ncmpidiff (1.12.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="pnetcdf_005fversion.html#pnetcdf_005fversion">pnetcdf_version</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Report version information of PnetCDF library (1.5.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncoffsets.html#ncoffsets">ncoffsets</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Report starting/ending file offsets of netCDF variables (1.7.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="ncvalidator.html#ncvalidator">ncvalidator</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Validates a classic netCDF file against CDF file formats (1.9.0 and later)
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="pnetcdf_002dconfig.html#pnetcdf_002dconfig">pnetcdf-config</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Report configure options used to build PnetCDF library (1.8.0 and later)
+</td></tr>
+</table>
+
+<hr>
+<div class="header">
+<p>
+Next: <a href="Use-of-the-PnetCDF-Library.html#Use-of-the-PnetCDF-Library" accesskey="n" rel="next">Use of the PnetCDF Library</a>, Previous: <a href="../dir/index.html" accesskey="p" rel="prev">(dir)</a>, Up: <a href="../dir/index.html" accesskey="u" rel="up">(dir)</a> &nbsp; [<a href="Combined-Index.html#Combined-Index" title="Index" rel="index">Index</a>]</p>
+</div>
+
+
+
+</body>
+</html>
