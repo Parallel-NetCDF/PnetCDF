@@ -24,6 +24,9 @@ else
    safe_modes="0"
 fi
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 for i in ${check_PROGRAMS} ; do
     for j in ${safe_modes} ; do
         if test "$j" = 1 ; then # test only in safe mode

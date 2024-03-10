@@ -19,6 +19,9 @@ else
    safe_modes="0"
 fi
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 # header consistency tests are designed to run on more than one MPI process
 for j in ${safe_modes} ; do
     export PNETCDF_SAFE_MODE=$j

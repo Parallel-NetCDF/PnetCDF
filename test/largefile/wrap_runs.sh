@@ -16,6 +16,9 @@ OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 # disable safe mode, as large tests already run slow
 export PNETCDF_SAFE_MODE=0
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
 rm -f ${OUTDIR}/$outfile.nc

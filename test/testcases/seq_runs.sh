@@ -9,6 +9,9 @@ set -e
 
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 ${TESTSEQRUN} ./tst_version
 
 ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds.nc

@@ -27,6 +27,9 @@ else
    safe_modes="0"
 fi
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 for i in ${check_PROGRAMS} ; do
     # echo "---- exec=$i"
     for j in ${safe_modes} ; do

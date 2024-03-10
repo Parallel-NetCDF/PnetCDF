@@ -12,6 +12,9 @@ VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 # remove file system type prefix if there is any
 OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 # tst_nofill.c creates two files: tst_nofill.nc.fill and tst_nofill.nc.nofill
 ${TESTSEQRUN} ./tst_nofill    ${TESTOUTDIR}/tst_nofill.nc
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_nofill.nc.fill

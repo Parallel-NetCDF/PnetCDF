@@ -7,6 +7,9 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 ${TESTSEQRUN} ./test_inq_format ${srcdir}
 
 # the followings check files with corrupted header

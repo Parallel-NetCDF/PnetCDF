@@ -20,6 +20,9 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # turn off safe mode for large tests
 export PNETCDF_SAFE_MODE=0
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 for i in ${check_PROGRAMS} ; do
     # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
     ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc

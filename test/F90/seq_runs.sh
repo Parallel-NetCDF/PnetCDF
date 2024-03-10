@@ -10,6 +10,9 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 ${TESTSEQRUN} ./tst_io ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_io1.nc
 # remove file system type prefix if there is any

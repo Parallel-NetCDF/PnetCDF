@@ -15,6 +15,9 @@ export PNETCDF_SAFE_MODE=0
 # remove file system type prefix if there is any
 OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 rm -f ${OUTDIR}/test.nc
 rm -f ${OUTDIR}/scratch.nc
 rm -f ${OUTDIR}/tooth-fairy.nc
