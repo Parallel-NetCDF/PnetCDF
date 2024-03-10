@@ -61,7 +61,6 @@ has_fortran="@has_fortran@"
 has_cxx="@has_mpicxx@"
 enable_erange_fill="@ENABLE_ERANGE_FILL@"
 enable_subfiling="@ENABLE_SUBFILING@"
-enable_large_single_req="@ENABLE_LARGE_SINGLE_REQ@"
 enable_null_byte_header_padding="@ENABLE_NULL_BYTE_HEADER_PADDING@"
 enable_relax_coord_bound="@RELAX_COORD_BOUND@"
 is_bigendian="@ac_cv_c_bigendian@"
@@ -174,11 +173,6 @@ if test "x$enable_subfiling" = x1; then
         echo "  --subfiling                 -> enabled"
 else
         echo "  --subfiling                 -> disabled"
-fi
-if test "x$enable_large_single_req" = x1; then
-        echo "  --large-single-req          -> enabled"
-else
-        echo "  --large-single-req          -> disabled"
 fi
 if test "x$enable_null_byte_header_padding" = x1; then
         echo "  --null-byte-header-padding  -> enabled"
@@ -383,14 +377,6 @@ fi
 
     --subfiling)
 if test "x$enable_subfiling" = x1; then
-        echo "enabled"
-else
-        echo "disabled"
-fi
-        ;;
-
-    --large-single-req)
-if test "x$enable_large_single_req" = x1; then
         echo "enabled"
 else
         echo "disabled"
