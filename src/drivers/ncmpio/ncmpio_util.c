@@ -46,13 +46,14 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
     ncp->env_h_align = 0;
     if (user_info != MPI_INFO_NULL) {
         /* aligns the size of header extent of a newly created file */
-        MPI_Info_get(user_info, "nc_header_align_size", MPI_MAX_INFO_VAL-1, value,
-                     &flag);
+        MPI_Info_get(user_info, "nc_header_align_size", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
         if (flag) {
             errno = 0;  /* errno must set to zero before calling strtoll */
             ncp->env_h_align = strtoll(value, NULL, 10);
             if (errno != 0) ncp->env_h_align = 0;
             else if (ncp->env_h_align < 0) ncp->env_h_align = 0;
+            sprintf(value, "%lld", ncp->env_h_align);
         }
     }
     if (!flag) sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
@@ -61,12 +62,14 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
     ncp->env_v_align = 0;
     if (user_info != MPI_INFO_NULL) {
         /* aligns starting file offsets of individual fixed-size variables */
-        MPI_Info_get(user_info, "nc_var_align_size", MPI_MAX_INFO_VAL-1, value, &flag);
+        MPI_Info_get(user_info, "nc_var_align_size", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
         if (flag) {
             errno = 0;  /* errno must set to zero before calling strtoll */
             ncp->env_v_align = strtoll(value, NULL, 10);
             if (errno != 0) ncp->env_v_align = 0;
             else if (ncp->env_v_align < 0) ncp->env_v_align = 0;
+            sprintf(value, "%lld", ncp->env_v_align);
         }
     }
     if (!flag) sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
@@ -75,13 +78,14 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
     ncp->env_r_align = 0;
     if (user_info != MPI_INFO_NULL) {
         /* aligns starting file offset of the record variable section */
-        MPI_Info_get(user_info, "nc_record_align_size", MPI_MAX_INFO_VAL-1, value,
-                     &flag);
+        MPI_Info_get(user_info, "nc_record_align_size", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
         if (flag) {
             errno = 0;  /* errno must set to zero before calling strtoll */
             ncp->env_r_align = strtoll(value, NULL, 10);
             if (errno != 0) ncp->env_r_align = 0;
             else if (ncp->env_r_align < 0) ncp->env_r_align = 0;
+            sprintf(value, "%lld", ncp->env_r_align);
         }
     }
     if (!flag) sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
@@ -89,13 +93,18 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
 
     if (user_info != MPI_INFO_NULL) {
         /* header reading chunk size */
-        MPI_Info_get(user_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1, value,
-                     &flag);
+        MPI_Info_get(user_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
         if (flag) {
+            long int chunk;
             errno = 0;  /* errno must set to zero before calling strtoll */
-            ncp->chunk = (int) strtol(value, NULL, 10);
+            chunk = (int) strtol(value, NULL, 10);
             if (errno != 0) ncp->chunk = 0;
-            else if (ncp->chunk < 0) ncp->chunk = 0;
+            else if (ncp->chunk < 0)
+                ncp->chunk = 0;
+            else if (chunk > INT_MAX) /* limit to INT_MAX */
+                ncp->chunk = INT_MAX;
+            sprintf(value, "%d", ncp->chunk);
         }
     }
     if (!flag) sprintf(value, "%d", NC_DEFAULT_CHUNKSIZE);
@@ -126,12 +135,14 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
 	/* temporal buffer size used to pack noncontiguous aggregated user
          * buffers when calling ncmpi_wait/wait_all, Default 16 MiB
          */
-        MPI_Info_get(user_info, "nc_ibuf_size", MPI_MAX_INFO_VAL-1, value, &flag);
+        MPI_Info_get(user_info, "nc_ibuf_size", MPI_MAX_INFO_VAL-1, value,
+                     &flag);
         if (flag) {
             MPI_Offset ibuf_size;
             errno = 0;  /* errno must set to zero before calling strtoll */
             ibuf_size = strtoll(value, NULL, 10);
             if (errno == 0 && ncp->ibuf_size > 0) ncp->ibuf_size = ibuf_size;
+            sprintf(value, "%lld", ncp->ibuf_size);
         }
     }
     if (!flag) sprintf(value, "%d", NC_DEFAULT_IBUF_SIZE);
@@ -139,7 +150,8 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
 
 #ifdef ENABLE_SUBFILING
     if (user_info != MPI_INFO_NULL) {
-        MPI_Info_get(user_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1, value, &flag);
+        MPI_Info_get(user_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
         if (flag) {
             if (strcasecmp(value, "enable") == 0)
                 ncp->subfile_mode = 1;
@@ -149,12 +161,14 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
     MPI_Info_set(info_used, "pnetcdf_subfiling", value);
 
     if (user_info != MPI_INFO_NULL) {
-        MPI_Info_get(user_info, "nc_num_subfiles", MPI_MAX_INFO_VAL-1, value, &flag);
+        MPI_Info_get(user_info, "nc_num_subfiles", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
         if (flag) {
             errno = 0;
             ncp->num_subfiles = strtoll(value, NULL, 10);
             if (errno != 0) ncp->num_subfiles = 0;
             else if (ncp->num_subfiles < 0) ncp->num_subfiles = 0;
+            sprintf(value, "%d", ncp->num_subfiles);
         }
     }
     if (!flag) strcpy(value, "0");
@@ -168,8 +182,8 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
 
     if (user_info != MPI_INFO_NULL) {
         /* read/write file header using MPI collective APIs */
-        MPI_Info_get(user_info, "nc_header_collective", MPI_MAX_INFO_VAL-1, value,
-                     &flag);
+        MPI_Info_get(user_info, "nc_header_collective", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
         if (flag) {
             if (strcasecmp(value, "true") == 0)
                 fSet((ncp)->flags, NC_HCOLL);
