@@ -39,7 +39,9 @@ for i in ${TESTPROGRAMS} ; do
         continue
 
         if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-           # echo "test burst buffering feature"
+           echo ""
+           echo "---- testing burst buffering"
+
            export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
            ${TESTSEQRUN} ./$i -f ${TESTOUTDIR}/$i.bb.nc -s 2
            unset PNETCDF_HINTS

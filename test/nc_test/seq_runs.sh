@@ -48,7 +48,8 @@ ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 # echo ""
 
 if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-    # echo "---- testing burst buffering"
+    echo ""
+    echo "---- testing burst buffering"
 
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
     rm -f ${OUTDIR}/tooth-fairy.nc ${OUTDIR}/scratch.nc ${OUTDIR}/test.nc

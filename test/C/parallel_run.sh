@@ -39,7 +39,7 @@ for j in ${safe_modes} ; do
     # echo ""
 
     if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-       # echo "test burst buffering feature"
+       # echo "---- test burst buffering feature"
        saved_PNETCDF_HINTS=${PNETCDF_HINTS}
        export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
        ${MPIRUN} ./pres_temp_4D_wr ${TESTOUTDIR}/pres_temp_4D.bb.nc
