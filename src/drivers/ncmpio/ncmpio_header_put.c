@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #endif
 #include <stdio.h>
+#include <limits.h> /* INT_MAX */
 
 #include <mpi.h>
 
@@ -80,7 +81,8 @@ hdr_put_NC_dim(bufferinfo   *pbp,
     /* copy dim_length */
     if (pbp->version < 5) {
         /* TODO: Isn't checking dimension size already done in def_dim()? */
-        if (dimp->size != (uint)dimp->size) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        if (dimp->size > INT_MAX)
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         err = ncmpix_put_uint32((void**)(&pbp->pos), (uint)dimp->size);
     }
     else
@@ -174,7 +176,8 @@ hdr_put_NC_attrV(bufferinfo    *pbp,
     sz = attrp->nelems * xsz;
     padding = attrp->xsz - sz;
 
-    if (sz != (size_t) sz) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+    if (sz > INT_MAX)
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     memcpy(pbp->pos, attrp->xvalue, (size_t)sz);
     pbp->pos = (void *)((char *)pbp->pos + sz);
 
@@ -212,7 +215,7 @@ hdr_put_NC_attr(bufferinfo    *pbp,
 
     /* copy nelems */
     if (pbp->version < 5) {
-        if (attrp->nelems != (uint)attrp->nelems)
+        if (attrp->nelems  > INT_MAX)
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)attrp->nelems);
     }
@@ -365,7 +368,8 @@ hdr_put_NC_var(bufferinfo   *pbp,
      * in CDF-2 and CDF-5, it is a 64-bit integer
      */
     if (pbp->version == 1) {
-        if (varp->begin != (uint)varp->begin) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        if (varp->begin  > INT_MAX)
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)varp->begin);
     }
     else
@@ -473,7 +477,8 @@ ncmpio_hdr_put_NC(NC *ncp, void *buf)
     /* copy numrecs, number of records */
     nrecs = ncp->numrecs;
     if (ncp->format < 5) {
-        if (nrecs != (uint)nrecs) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        if (nrecs  > INT_MAX)
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         status = ncmpix_put_uint32((void**)(&putbuf.pos), (uint)nrecs);
     }
     else {
@@ -535,7 +540,7 @@ int ncmpio_write_header(NC *ncp)
         /* copy header object to write buffer */
         status = ncmpio_hdr_put_NC(ncp, buf);
 
-        if (ncp->xsz != (int)ncp->xsz) {
+        if (ncp->xsz  > INT_MAX) {
             NCI_Free(buf);
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         }
