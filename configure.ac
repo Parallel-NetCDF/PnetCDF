@@ -449,7 +449,7 @@ dnl AC_PROG_RANLIB
 
 dnl libtool v2.4.6 was released in 2015-02-15
 dnl Travis CI only has v2.4.2
-LT_PREREQ([2.4.6])
+LT_PREREQ([2.4.7])
 dnl LT_INIT([dlopen disable-shared])
 dnl LT_INIT([dlopen])
 LT_INIT([disable-shared])
