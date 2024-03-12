@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #endif
 #include <stdio.h>
-#include <limits.h> /* INT_MAX */
 
 #include <mpi.h>
 
@@ -81,7 +80,7 @@ hdr_put_NC_dim(bufferinfo   *pbp,
     /* copy dim_length */
     if (pbp->version < 5) {
         /* TODO: Isn't checking dimension size already done in def_dim()? */
-        if (dimp->size > INT_MAX)
+        if (dimp->size > NC_MAX_INT)
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         err = ncmpix_put_uint32((void**)(&pbp->pos), (uint)dimp->size);
     }
@@ -176,7 +175,7 @@ hdr_put_NC_attrV(bufferinfo    *pbp,
     sz = attrp->nelems * xsz;
     padding = attrp->xsz - sz;
 
-    if (sz > INT_MAX)
+    if (sz > NC_MAX_INT)
         DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     memcpy(pbp->pos, attrp->xvalue, (size_t)sz);
     pbp->pos = (void *)((char *)pbp->pos + sz);
@@ -215,7 +214,7 @@ hdr_put_NC_attr(bufferinfo    *pbp,
 
     /* copy nelems */
     if (pbp->version < 5) {
-        if (attrp->nelems  > INT_MAX)
+        if (attrp->nelems  > NC_MAX_INT)
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)attrp->nelems);
     }
@@ -368,7 +367,7 @@ hdr_put_NC_var(bufferinfo   *pbp,
      * in CDF-2 and CDF-5, it is a 64-bit integer
      */
     if (pbp->version == 1) {
-        if (varp->begin  > INT_MAX)
+        if (varp->begin  > NC_MAX_INT)
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         status = ncmpix_put_uint32((void**)(&pbp->pos), (uint)varp->begin);
     }
@@ -477,7 +476,7 @@ ncmpio_hdr_put_NC(NC *ncp, void *buf)
     /* copy numrecs, number of records */
     nrecs = ncp->numrecs;
     if (ncp->format < 5) {
-        if (nrecs  > INT_MAX)
+        if (nrecs  > NC_MAX_INT)
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         status = ncmpix_put_uint32((void**)(&putbuf.pos), (uint)nrecs);
     }
@@ -540,7 +539,7 @@ int ncmpio_write_header(NC *ncp)
         /* copy header object to write buffer */
         status = ncmpio_hdr_put_NC(ncp, buf);
 
-        if (ncp->xsz  > INT_MAX) {
+        if (ncp->xsz  > NC_MAX_INT) {
             NCI_Free(buf);
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         }

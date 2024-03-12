@@ -10,7 +10,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h> /* INT_MAX */
 #include <assert.h>
 
 #include <pnetcdf.h>
@@ -58,8 +57,8 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
     /* MPI_Offset is usually a signed value, but serial netcdf uses size_t.
      * In 1999 ISO C standard, size_t is an unsigned integer type of at least
      * 16 bit. */
-    if (pncp->format == NC_FORMAT_CDF2) { /* CDF-2 format, max is INT_MAX */
-        if (size > INT_MAX || (size < 0))
+    if (pncp->format == NC_FORMAT_CDF2) { /* CDF-2 format, max is NC_MAX_INT */
+        if (size > NC_MAX_INT || (size < 0))
             err = NC_EDIMSIZE;
     } else if (pncp->format == NC_FORMAT_CDF5) { /* CDF-5 format */
         if (size < 0)
@@ -68,7 +67,7 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
                pncp->format == NC_FORMAT_NETCDF4_CLASSIC) { /* NetCDF-4 format */
         if (size < 0)
             err = NC_EDIMSIZE;
-    } else { /* CDF-1 format, max is INT_MAX */
+    } else { /* CDF-1 format, max is NC_MAX_INT */
         if (size > NC_MAX_INT || (size < 0))
             err = NC_EDIMSIZE;
     }
