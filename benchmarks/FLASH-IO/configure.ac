@@ -146,6 +146,19 @@ fi
 have_pnetcdf=no
 
 AC_LANG_PUSH([Fortran])
+dnl get compiler vendor in ax_cv_fc_compiler_vendor (e.g. gnu, intel)
+AX_COMPILER_VENDOR
+
+if test "x${ax_cv_fc_compiler_vendor}" = xnag ; then
+   # Special treatment for NAG Fortran compiler
+   # Add -mismatch to downgrade consistency checking of procedure argument
+   # lists so that mismatches produce warning messages instead of error
+   # messages
+   ACX_F77_MISMATCH([AS_VAR_APPEND([FFLAGS], [" $acx_cv_f77_mismatch_flag"])])
+   ACX_FC_MISMATCH([AS_VAR_APPEND([FCFLAGS], [" $acx_cv_fc_mismatch_flag"])])
+fi
+AM_CONDITIONAL(NAGFORT, [test x$ax_cv_fc_compiler_vendor = xnag])
+
 FCFLAGS_save=${FCFLAGS}
 LIBS_save=${LIBS}
 if test "x${PNETCDF_INC}" != x ; then
@@ -179,7 +192,7 @@ if test "x${have_pnetcdf}" = xno ; then
     ------------------------------------------------------------])
 fi
 
-LT_PREREQ([2.2])
+LT_PREREQ([2.4.6])
 LT_INIT
 
 AC_ARG_VAR(TESTMPIRUN, [MPI run command for running ptest, , @<:@default: mpiexec@:>@])
