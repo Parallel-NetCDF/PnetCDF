@@ -12,7 +12,6 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-#include <limits.h>  /* INT_MAX */
 #include <assert.h>
 
 #include <mpi.h>
@@ -120,23 +119,45 @@ type_create_subarray64(int               ndims,
                        MPI_Datatype      oldtype,
                        MPI_Datatype     *newtype)
 {
-    int i, err=NC_NOERR, mpireturn, tag, blklens[3] = {1, 1, 1};
+    int i, err=NC_NOERR, mpireturn;
+
+    if (ndims == 0) DEBUG_RETURN_ERROR(NC_EDIMMETA)
+
+#if MPI_VERSION >= 3
+    MPI_Count *sizes, *subsizes, *starts;
+
+    sizes = (MPI_Count*) NCI_Malloc((size_t)ndims * 3 * sizeof(MPI_Count));
+    subsizes = sizes    + ndims;
+    starts   = subsizes + ndims;
+    for (i=0; i<ndims; i++) {
+        sizes[i]    = (MPI_Count)array_of_sizes[i];
+        subsizes[i] = (MPI_Count)array_of_subsizes[i];
+        starts[i]   = (MPI_Count)array_of_starts[i];
+    }
+    mpireturn = MPI_Type_create_subarray_c(ndims, sizes, subsizes, starts,
+                                           order, oldtype, newtype);
+    if (mpireturn != MPI_SUCCESS)
+        err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_subarray_c");
+
+    NCI_Free(sizes);
+    return err;
+
+#else
+    int big_int, blklens[3] = {1, 1, 1};
     MPI_Datatype type1, type2;
     MPI_Aint extent, size, array_size, stride, disps[3];
     MPI_Aint lb;
 
-    if (ndims == 0) DEBUG_RETURN_ERROR(NC_EDIMMETA)
-
     /* check if any of the dimensions is larger than 2^31-1 */
-    tag = 0;
+    big_int = 0;
     for (i=0; i<ndims; i++) {
-        if (array_of_sizes[i] > INT_MAX || array_of_starts[i] > INT_MAX) {
-            tag = 1;
+        if (array_of_sizes[i] > NC_MAX_INT || array_of_starts[i] > NC_MAX_INT) {
+            big_int = 1;
             break;
         }
     }
 
-    if (tag == 0) {
+    if (big_int == 0) {
         int *sizes, *subsizes, *starts;
         /* none of dimensions > 2^31-1, we can safely use
          * MPI_Type_create_subarray */
@@ -156,6 +177,8 @@ type_create_subarray64(int               ndims,
         NCI_Free(sizes);
         return err;
     }
+
+    /* now big_int = 1 */
 
     /* at least one dimension is of size > 2^31-1 and we cannot use
      * MPI_Type_create_subarray() to create the newtype,
@@ -179,9 +202,9 @@ type_create_subarray64(int               ndims,
 
     if (ndims == 1) {
         /* blklens argument in MPI_Type_create_hindexed() is of type int */
-        blklens[1] = (int)array_of_subsizes[0];
-        if (array_of_subsizes[0] != blklens[1]) /* check int overflow */
+        if (array_of_subsizes[0] > NC_MAX_INT) /* check int overflow */
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        blklens[1] = (int)array_of_subsizes[0];
         disps[1] = extent * array_of_starts[0];
 
         /* take advantage of disps argument is of type MPI_Aint */
@@ -205,11 +228,13 @@ type_create_subarray64(int               ndims,
     /* count and blocklength arguments in MPI_Type_create_hvector() are of
      * type int. We need to check for integer overflow */
     int count, blocklength;
+
+    if (array_of_subsizes[ndims-2] > NC_MAX_INT ||
+        array_of_subsizes[ndims-1] > NC_MAX_INT) /* check int overflow */
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
     count = (int)array_of_subsizes[ndims-2];
     blocklength = (int)array_of_subsizes[ndims-1];
-    if (array_of_subsizes[ndims-2] != count ||
-        array_of_subsizes[ndims-1] != blocklength) /* check int overflow */
-        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
     stride = array_of_sizes[ndims-1] * extent;
 
     err = MPI_Type_create_hvector(count, blocklength, stride, oldtype, &type1);
@@ -220,9 +245,10 @@ type_create_subarray64(int               ndims,
 
     /* now iterate through the rest dimensions */
     for (i=ndims-3; i>=0; i--) {
-        count = (int)array_of_subsizes[i];
-        if (array_of_subsizes[i] != count) /* check int overflow */
+        if (array_of_subsizes[i] > NC_MAX_INT) /* check int overflow */
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
+        count = (int)array_of_subsizes[i];
         stride *= array_of_sizes[i+1];
 
         err = MPI_Type_create_hvector(count, 1, stride, type1, &type2);
@@ -261,6 +287,7 @@ type_create_subarray64(int               ndims,
     MPI_Type_free(&type1);
 
     return NC_NOERR;
+#endif
 }
 
 /*----< filetype_create_vara() >--------------------------------------------*/
@@ -302,7 +329,11 @@ filetype_create_vara(const NC         *ncp,
 
     /* previously, request size has been checked and it must > 0 */
     if (IS_RECVAR(varp)) {
+#if MPI_VERSION >= 3
+        MPI_Count blocklength;
+#else
         int blocklength;
+#endif
         MPI_Datatype rectype=MPI_BYTE;
 
 #if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
@@ -310,9 +341,6 @@ filetype_create_vara(const NC         *ncp,
         status = check_recsize_too_big(ncp->recsize);
         if (status != NC_NOERR) return status;
 #endif
-        /* check overflow, because 1st argument of hvector is of type int */
-        if (count[0] != (int) count[0]) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-
         offset += start[0] * ncp->recsize;
 
         if (varp->ndims > 1) {
@@ -330,11 +358,22 @@ filetype_create_vara(const NC         *ncp,
             blocklength = varp->xsz;
         }
 
+#if MPI_VERSION >= 3
+        /* concatenate number of count[0] subarray types into filetype */
+        err = MPI_Type_create_hvector_c(count[0], blocklength, ncp->recsize,
+                                        rectype, &filetype);
+        if (err != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(err, "MPI_Type_create_hvector_c");
+#else
+        /* check overflow, because 1st argument of hvector is of type int */
+        if (count[0] > NC_MAX_INT) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
         /* concatenate number of count[0] subarray types into filetype */
         err = MPI_Type_create_hvector((int)count[0], blocklength, ncp->recsize,
                                       rectype, &filetype);
         if (err != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(err, "MPI_Type_create_hvector");
+#endif
 
         if (rectype != MPI_BYTE) MPI_Type_free(&rectype);
     }
@@ -537,32 +576,41 @@ ncmpio_file_set_view(const NC     *ncp,
     MPI_Comm_rank(ncp->comm, &rank);
     if (rank == 0) {
         /* prepend the whole file header to filetype */
+        MPI_Datatype root_filetype, ftypes[2];
+#if MPI_VERSION >= 3
+        MPI_Count blocklens[2];
+        MPI_Count disps[2];
+#else
         int blocklens[2];
         MPI_Aint disps[2];
-        MPI_Datatype root_filetype, ftypes[2];
-
-        /* first block is the header extent */
-        blocklens[0] = (int)ncp->begin_var;
-            disps[0] = 0;
-           ftypes[0] = MPI_BYTE;
 
         /* check if header size > 2^31 */
-        if (ncp->begin_var > INT_MAX)
+        if (ncp->begin_var > NC_MAX_INT)
             DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+#endif
+
+        /* first block is the header extent */
+        blocklens[0] = ncp->begin_var;
+            disps[0] = 0;
+           ftypes[0] = MPI_BYTE;
 
         /* second block is filetype, the subarray request(s) to the variable */
         blocklens[1] = 1;
             disps[1] = *offset;
            ftypes[1] = filetype;
 
-#if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
-        if (*offset > INT_MAX) {
+#if (MPI_VERSION < 3) && (SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET)
+        if (*offset > NC_MAX_INT) {
             blocklens[1] = 0;
             DEBUG_ASSIGN_ERROR(status, NC_EAINT_TOO_SMALL)
         }
 #endif
 
+#if MPI_VERSION >= 3
+        MPI_Type_create_struct_c(2, blocklens, disps, ftypes, &root_filetype);
+#else
         MPI_Type_create_struct(2, blocklens, disps, ftypes, &root_filetype);
+#endif
         MPI_Type_commit(&root_filetype);
 
         TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, root_filetype, "native",

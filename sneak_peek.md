@@ -14,14 +14,21 @@ This is essentially a placeholder for the next release note ...
     ```
     ncmpi_put_vara_float_all(ncid, varid, start, count, buf);
     ```
+  + PnetCDF now allows a single read/write request from a process of size
+    larger than 2 GiB. Large requests are passed down to the MP-IO library, as
+    many modern MPI-IO implementations can handle such large requests. This
+    feature thus deprecates the configure option `--enable-large-single-req`.
 
 * New optimization
   + none
 
 * New Limitations
-  + none
+  + Hint `nc_header_read_chunk_size` is limited to `NC_MAX_INT`. PnetCDF reads
+    file header in chunks. This hint customizes the chunk size.
 
 * Configure options
+  + `--enable-large-single-req` has been removed, as PnetCDF now allows a
+    single reqd/write request of size larger than 2 GiB.
   + `--disable-file-sync` is now deprecated. This configure option alone does
     not provide a sufficient data consistency. Users are suggested to call
     `ncmpi_sync` and `MPI_Barrier` to achieve a desired consistency.
@@ -146,6 +153,7 @@ This is essentially a placeholder for the next release note ...
     See [PR #79](https://github.com/Parallel-NetCDF/PnetCDF/pull/79).
 
 * Bug fixes
+  + Fix hint values that are actually used. See commit 41e8ef8.
   + Fix residual values of `v_align` and `r_align` when re-entering the define
     mode multiple times.
     See [PR #126](https://github.com/Parallel-NetCDF/PnetCDF/pull/126).
@@ -166,6 +174,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
+  + test/largefile/large_header.c - test file header size larger than 2 GiB.
+  + test/largefile/large_reqs.c - test a single read/write request of size
+    larger than 2 GiB.
   + test/testcases/tst_redefine.c - test multiple entries of `ncmpi__enddef`
     [PR #126](https://github.com/Parallel-NetCDF/PnetCDF/pull/126).
   + test/testcases/tst_symlink.c - test `NC_CLOBBER` on a symbolic link.

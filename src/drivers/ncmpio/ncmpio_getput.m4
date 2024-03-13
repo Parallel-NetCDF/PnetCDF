@@ -33,7 +33,6 @@ dnl
 #include <stdlib.h>
 #endif
 #include <string.h> /* memcpy() */
-#include <limits.h> /* INT_MAX */
 #include <assert.h>
 
 #include <mpi.h>
@@ -117,10 +116,10 @@ put_varm(NC               *ncp,
          int               reqMode) /* WR/RD/COLL/INDEP */
 {
     void *xbuf=NULL;
-    int mpireturn, err=NC_NOERR, status=NC_NOERR, nelems=0, buftype_is_contig;
+    int mpireturn, err=NC_NOERR, status=NC_NOERR, buftype_is_contig;
     int el_size, need_convert, need_swap, in_place_swap, need_swap_back_buf=0;
     int coll_indep, xtype_is_contig=1;
-    MPI_Offset bnelems=0, nbytes=0, offset=0;
+    MPI_Offset nelems=0, bnelems=0, nbytes=0, offset=0;
     MPI_Datatype itype, xtype=MPI_BYTE, imaptype, filetype=MPI_BYTE;
     MPI_File fh;
 
@@ -149,24 +148,18 @@ put_varm(NC               *ncp,
 
     /* When bufcount is NC_COUNT_IGNORE, this is called from a high-level API.
      * In this case, buftype must be an MPI predefined data type. If this is
-     * called from a Fortran program, buftype has already been converted to its
-     * corresponding C type, e.g. MPI_INTEGER is converted to MPI_INT.
+     * called from a Fortran program, buftype has already been converted to
+     * its corresponding C type, e.g. MPI_INTEGER is converted to MPI_INT.
      * if (bufcount == NC_COUNT_IGNORE) assert(buftype == itype);
      */
 
-    /* because bnelems will be used as the argument "count" in MPI-IO
-     * write calls and the argument "count" is of type int */
-    if (bnelems > INT_MAX) {
-        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-        goto err_check;
-    }
-#ifndef ENABLE_LARGE_SINGLE_REQ
-    /* Not all MPI-IO libraries support single requests larger than 2 GiB */
-    if (nbytes > INT_MAX) {
-        DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
-        goto err_check;
-    }
-#endif
+    /* When bnelems > NC_MAX_INT, we construct a datatype to bypass the
+     * limitation of MPI file read/write APIs on the argument "count" of type
+     * int. See ncmpio_read_write() in ncmpio_file_io.c
+     *
+     * Note not all MPI-IO libraries support single requests larger than
+     * NC_MAX_INT. In this case, MPI-IO should report an error.
+     */
 
     if (nbytes == 0) /* this process has nothing to write */
         goto err_check;
@@ -226,11 +219,11 @@ put_varm(NC               *ncp,
     if (buf != xbuf) {
         /* xbuf is a contiguous buffer */
         xtype = ncmpii_nc2mpitype(varp->xtype);
-        nelems = (int)bnelems;
+        nelems = bnelems;
     }
     else {
         /* we can safely use bufcount and buftype in MPI File read/write */
-        nelems = (bufcount == NC_COUNT_IGNORE) ? bnelems : (int)bufcount;
+        nelems = (bufcount == NC_COUNT_IGNORE) ? bnelems : bufcount;
         xtype = buftype;
     }
 
@@ -370,8 +363,8 @@ get_varm(NC               *ncp,
 {
     void *xbuf=NULL;
     int err=NC_NOERR, status=NC_NOERR, coll_indep, xtype_is_contig=1;
-    int nelems=0, el_size, buftype_is_contig, need_swap=0, need_convert=0;
-    MPI_Offset bnelems=0, nbytes=0, offset=0;
+    int el_size, buftype_is_contig, need_swap=0, need_convert=0;
+    MPI_Offset nelems=0, bnelems=0, nbytes=0, offset=0;
     MPI_Datatype itype, xtype=MPI_BYTE, filetype=MPI_BYTE, imaptype=MPI_DATATYPE_NULL;
     MPI_File fh;
 
@@ -405,19 +398,13 @@ get_varm(NC               *ncp,
      * if (bufcount == NC_COUNT_IGNORE) assert(buftype == itype);
      */
 
-    /* because bnelems will be used as the argument "count" in MPI-IO
-     * write calls and the argument "count" is of type int */
-    if (bnelems > INT_MAX) {
-        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-        goto err_check;
-    }
-#ifndef ENABLE_LARGE_SINGLE_REQ
-    /* Not all MPI-IO libraries support single requests larger than 2 GiB */
-    if (nbytes > INT_MAX) {
-        DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
-        goto err_check;
-    }
-#endif
+    /* When bnelems > NC_MAX_INT, we construct a datatype to bypass the
+     * limitation of MPI file read/write APIs on the argument "count" of type
+     * int. See ncmpio_read_write() in ncmpio_file_io.c
+     *
+     * Note not all MPI-IO libraries support single requests larger than
+     * NC_MAX_INT. In this case, MPI-IO should report an error.
+     */
 
     if (nbytes == 0) /* this process has nothing to read */
         goto err_check;
@@ -459,12 +446,12 @@ get_varm(NC               *ncp,
     /* Set nelems and xtype which will be used in MPI read/write */
     if (buf != xbuf) {
         /* xbuf is a contiguous buffer */
-        nelems = (int)bnelems;
+        nelems = bnelems;
         xtype = ncmpii_nc2mpitype(varp->xtype);
     }
     else {
         /* we can safely use bufcount and buftype in MPI File read/write */
-        nelems = (bufcount == NC_COUNT_IGNORE) ? bnelems : (int)bufcount;
+        nelems = (bufcount == NC_COUNT_IGNORE) ? bnelems : bufcount;
         xtype = buftype;
     }
 

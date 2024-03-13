@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #endif
 #include <string.h> /* memcpy() */
-#include <limits.h> /* INT_MAX */
 #include <assert.h>
 
 #include <mpi.h>
@@ -56,9 +55,9 @@ getput_vard(NC               *ncp,
     void *xbuf=NULL;
     int mpireturn, status=NC_NOERR, err=NC_NOERR, xtype_is_contig=1;
     int el_size, buftype_is_contig=0, need_swap_back_buf=0;
-    int nelems=0, need_convert=0, need_swap=0, coll_indep, rw_flag;
+    int need_convert=0, need_swap=0, coll_indep, rw_flag;
     MPI_File fh;
-    MPI_Offset fnelems=0, bnelems=0, offset=0;
+    MPI_Offset nelems=0, fnelems=0, bnelems=0, offset=0;
     MPI_Datatype etype=MPI_DATATYPE_NULL, xtype=MPI_BYTE;
 #if MPI_VERSION >= 3
     MPI_Count filetype_size=0;
@@ -125,14 +124,6 @@ getput_vard(NC               *ncp,
         goto err_check;
     }
 
-#ifndef ENABLE_LARGE_SINGLE_REQ
-    /* Not all MPI-IO libraries support single requests larger than 2 GiB */
-    if (filetype_size > INT_MAX) {
-        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-        goto err_check;
-    }
-#endif
-
     /* get the corresponding MPI datatype of variable external type */
     xtype = ncmpii_nc2mpitype(varp->xtype);
 
@@ -174,12 +165,6 @@ getput_vard(NC               *ncp,
         if (err != NC_NOERR) goto err_check;
 
         bnelems *= bufcount;
-#ifndef ENABLE_LARGE_SINGLE_REQ
-        if (bnelems != (int)bnelems) {
-            DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-            goto err_check;
-        }
-#endif
 
         /* filetype's number of elements must be equal to request's */
         if (fnelems != bnelems) {
@@ -252,7 +237,7 @@ getput_vard(NC               *ncp,
     /* Set nelems and xtype which will be used in MPI read/write */
     if (buf != xbuf) {
         /* xbuf is a malloc-ed contiguous buffer */
-        nelems = (int)bnelems;
+        nelems = bnelems;
     }
     else {
         /* we can safely use bufcount and buftype in MPI File read/write.

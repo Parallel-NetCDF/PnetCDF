@@ -29,7 +29,9 @@ TESTPROGRAMS = large_files \
                large_dims_vars_attrs \
                high_dim_var \
                tst_cdf5_begin \
-               large_coalesce
+               large_coalesce \
+               large_header \
+               large_reqs
 
 if HAS_FORTRAN
    TESTPROGRAMS += bigrecords

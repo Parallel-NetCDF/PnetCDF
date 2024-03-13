@@ -9,10 +9,9 @@
 #endif
 
 #include <stdio.h>
-#include <stdlib.h>   /* strtoll() is first introducted in C99 */
+#include <stdlib.h>   /* strtoll() is first introduced in C99 */
 #include <string.h>   /* strcpy() */
 #include <strings.h>  /* strcasecmp() */
-#include <limits.h>   /* INT_MAX */
 #include <assert.h>
 #include <errno.h>
 #include <mpi.h>
@@ -102,8 +101,8 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
             if (errno != 0) ncp->chunk = 0;
             else if (ncp->chunk < 0)
                 ncp->chunk = 0;
-            else if (chunk > INT_MAX) /* limit to INT_MAX */
-                ncp->chunk = INT_MAX;
+            else if (chunk > NC_MAX_INT) /* limit to NC_MAX_INT */
+                ncp->chunk = NC_MAX_INT;
             sprintf(value, "%d", ncp->chunk);
         }
     }
@@ -379,13 +378,12 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                  void         *buf,    /* user buffer */
                  void         *xbuf)   /* already allocated, in external type */
 {
-    int err=NC_NOERR, position, free_lbuf=0, free_cbuf=0;
+    int err=NC_NOERR, free_lbuf=0, free_cbuf=0;
     void *lbuf=NULL, *cbuf=NULL;
     MPI_Offset ibuf_size;
 
     /* check byte size of buf (internal representation) */
     ibuf_size = nelems * el_size;
-    if (ibuf_size > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
     /* Step 1: if buftype is not contiguous, i.e. a noncontiguous MPI
      * derived datatype, pack buf into a contiguous buffer, lbuf,
@@ -404,13 +402,19 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
 
         if (buf != lbuf) {
             /* pack buf into lbuf based on buftype */
-            if (bufcount > INT_MAX) {
+#if MPI_VERSION >= 3
+            MPI_Count position = 0;
+            MPI_Pack_c(buf, (MPI_Count)bufcount, buftype, lbuf,
+                       (MPI_Count)ibuf_size, &position, MPI_COMM_SELF);
+#else
+            int position = 0;
+            if (bufcount > NC_MAX_INT || ibuf_size > NC_MAX_INT) {
                 if (free_lbuf) NCI_Free(lbuf);
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             }
-            position = 0;
             MPI_Pack(buf, (int)bufcount, buftype, lbuf, (int)ibuf_size,
                      &position, MPI_COMM_SELF);
+#endif
         }
     }
     else /* for contiguous case, we reuse buf */
@@ -433,9 +437,17 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         }
 
         /* pack lbuf to cbuf based on imaptype */
-        position = 0;
+#if MPI_VERSION >= 3
+        MPI_Count position = 0;
+        MPI_Pack_c(lbuf, 1, imaptype, cbuf, (MPI_Count)ibuf_size, &position,
+                   MPI_COMM_SELF);
+#else
+        int position = 0;
+        if (ibuf_size > NC_MAX_INT)
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         MPI_Pack(lbuf, 1, imaptype, cbuf, (int)ibuf_size, &position,
                  MPI_COMM_SELF);
+#endif
         MPI_Type_free(&imaptype);
 
         /* lbuf is no longer needed */
@@ -561,14 +573,13 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                    void         *buf,  /* user buffer */
                    void         *xbuf) /* already allocated, in external type */
 {
-    int err=NC_NOERR, el_size, position, free_lbuf=0, free_cbuf=0;
+    int err=NC_NOERR, el_size, free_lbuf=0, free_cbuf=0;
     void *lbuf=NULL, *cbuf=NULL;
     MPI_Offset ibuf_size;
 
     /* check byte size of buf (internal representation) */
-    MPI_Type_size(itype, &el_size);
+    MPI_Type_size(itype, &el_size); /* itype is MPI primitive datatype */
     ibuf_size = nelems * el_size;
-    if (ibuf_size > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
     /* Step 1: type-convert and byte-swap xbuf to cbuf, and xbuf contains data
      * read from file
@@ -659,24 +670,40 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
     /* unpacked cbuf into lbuf based on imap -------------------------------*/
     if (imaptype != MPI_DATATYPE_NULL) {
         /* unpack cbuf to lbuf based on imaptype */
-        position = 0;
+#if MPI_VERSION >= 3
+        MPI_Count position = 0;
+        MPI_Unpack_c(cbuf, (MPI_Count)ibuf_size, &position, lbuf, 1, imaptype,
+                     MPI_COMM_SELF);
+#else
+        int position = 0;
+        if (ibuf_size > NC_MAX_INT) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
         MPI_Unpack(cbuf, (int)ibuf_size, &position, lbuf, 1, imaptype,
                    MPI_COMM_SELF);
+#endif
         MPI_Type_free(&imaptype);
     }
 
     /* unpacked lbuf into buf based on buftype -----------------------------*/
     if (!buftype_is_contig && lbuf != buf) {
         /* no need unpack when buftype is used in MPI_File_read (lbuf == buf) */
-        if (bufcount > INT_MAX) {
+#if MPI_VERSION >= 3
+        MPI_Count position = 0;
+        MPI_Unpack_c(lbuf, (MPI_Count)ibuf_size, &position, buf,
+                     (MPI_Count)bufcount, buftype, MPI_COMM_SELF);
+#else
+        if (bufcount > NC_MAX_INT) {
             if (err == NC_NOERR)
                 DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
         }
         else {
-            position = 0;
+            int position = 0;
+            if (ibuf_size > NC_MAX_INT)
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             MPI_Unpack(lbuf, (int)ibuf_size, &position, buf, (int)bufcount,
                        buftype, MPI_COMM_SELF);
         }
+#endif
     }
     if (free_cbuf) NCI_Free(cbuf);
     if (free_lbuf) NCI_Free(lbuf);
