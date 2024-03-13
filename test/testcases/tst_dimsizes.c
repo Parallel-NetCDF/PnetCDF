@@ -25,14 +25,24 @@
 
 #include <testutils.h>
 
-#define DIMMAXCLASSIC (NC_MAX_INT - 3)
-#define DIMMAX64OFFSET (NC_MAX_UINT - 3)
+#define DIMMAXCLASSIC NC_MAX_INT
+#define DIMMAX64OFFSET NC_MAX_INT
 #define DIMMAX64DATA NC_MAX_INT64
 
 /*
- * NC_CLASSIC => NC_INT_MAX - 3
- * NC_64BIT_OFFSET => NC_UINT_MAX - 3
- * NC_64BIT_DATA => NC_INT64_MAX
+ * NetCDF file format specification:
+ *   netcdf_file  = header data
+ *   header       = magic numrecs dim_list gatt_list var_list
+ *   dim_list     = ABSENT | NC_DIMENSION nelems [dim ...]
+ *   dim          = name dim_length
+ *   dim_length   = NON_NEG
+ *   NON_NEG      = <non-negative INT>
+ *   INT          = <32-bit signed integer, Bigendian, two's complement>
+ *
+ * Therefore, the max dimension size are:
+ * NC_CLASSIC       Max dimension size is  NC_INT_MAX
+ * NC_64BIT_OFFSET  Max dimension size is  NC_INT_MAX
+ * NC_64BIT_DATA    Max dimension size is  NC_INT64_MAX
  * Note that for NC_64BIT_DATA, the max dimension size is different from netCDF
  * library. This is because PnetCDF uses MPI_Offset for dimension size and
  * MPI_Offset is a signed long long.
@@ -72,7 +82,7 @@ main(int argc, char **argv)
     err = ncmpi_def_dim(ncid, "testdim", dimsize, &dimid); CHECK_ERR
     dimsize = -1;
     err = ncmpi_def_dim(ncid, "testdim1", dimsize, &dimid); EXP_ERR(NC_EDIMSIZE)
-    dimsize = DIMMAXCLASSIC+1;
+    dimsize = (MPI_Offset)DIMMAXCLASSIC+1;
     err = ncmpi_def_dim(ncid, "testdim1", dimsize, &dimid); EXP_ERR(NC_EDIMSIZE)
     err = ncmpi_close(ncid); CHECK_ERR
 
@@ -92,7 +102,7 @@ main(int argc, char **argv)
     err = ncmpi_def_dim(ncid, "testdim", dimsize, &dimid); CHECK_ERR
     dimsize = -1;
     err = ncmpi_def_dim(ncid, "testdim1", dimsize, &dimid); EXP_ERR(NC_EDIMSIZE)
-    dimsize = DIMMAX64OFFSET+1;
+    dimsize = (MPI_Offset)DIMMAX64OFFSET+1;
     err = ncmpi_def_dim(ncid, "testdim1", dimsize, &dimid); EXP_ERR(NC_EDIMSIZE)
     err = ncmpi_close(ncid); CHECK_ERR
 
