@@ -12,6 +12,9 @@ VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 # remove file system type prefix if there is any
 OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 # tst_nofill.c creates two files: tst_nofill.nc.fill and tst_nofill.nc.nofill
 ${TESTSEQRUN} ./tst_nofill    ${TESTOUTDIR}/tst_nofill.nc
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_nofill.nc.fill
@@ -45,7 +48,8 @@ ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 # echo ""
 
 if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-    # echo "---- testing burst buffering"
+    echo ""
+    echo "---- testing burst buffering"
 
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
     rm -f ${OUTDIR}/tooth-fairy.nc ${OUTDIR}/scratch.nc ${OUTDIR}/test.nc

@@ -139,13 +139,13 @@ AH_TEMPLATE([HDF5_VER_GE_1_10_4],       [Define if HDF5 version is at least 1.10
 AH_TEMPLATE([NETCDF_GE_4_5_0],          [Define if NetCDF version is at least 4.5.0])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
-AH_TEMPLATE([ENABLE_LARGE_SINGLE_REQ],  [Define if to enable large single MPI-IO request])
 AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
 AH_TEMPLATE([ENABLE_BURST_BUFFER],      [Define if to enable burst buffer feature])
 AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
 AH_TEMPLATE([ENABLE_THREAD_SAFE],       [Define if to enable thread-safe capability])
 AH_TEMPLATE([ENABLE_REQ_AGGREGATION],   [Define if able to support request aggregation in nonblocking routines])
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
+AH_TEMPLATE([HAVE_MPI_LARGE_COUNT],     [Define if required MPI APIs have arguments of type MPI_Count])
 
 AH_TOP([#ifndef _CONFIG_H
 #define _CONFIG_H])
@@ -1315,6 +1315,26 @@ dnl                 MPI_Type_create_struct \
 dnl                 MPI_Type_create_resized \
 dnl                 MPI_Type_get_extent])
 
+dnl MPI_count was first introduced in MPI 3.0. Check MPI functions that make
+dnl use of MPI_Count.
+have_mpi_large_count_apis=yes
+AC_CHECK_FUNCS([MPI_Type_create_subarray_c \
+                MPI_Type_contiguous_c \
+                MPI_Type_create_hvector_c \
+                MPI_Type_create_struct_c \
+                MPI_Type_create_hindexed_c \
+                MPI_Type_vector_c \
+                MPI_Pack_c \
+                MPI_Unpack_c \
+                MPI_Type_get_true_extent_x \
+                MPI_Type_size_x], [], [have_mpi_large_count_apis=no])
+# If one of the above APIs is not available, have_mpi_large_count_apis will be
+# set to no
+UD_MSG_DEBUG([have_mpi_large_count_apis=$have_mpi_large_count_apis])
+if test "x$have_mpi_large_count_apis" = "xyes" ; then
+   AC_DEFINE(HAVE_MPI_LARGE_COUNT, 1)
+fi
+
 dnl Check presence of MPI COMBINERS. These are of type int.
 dnl These are introduced in MPI 2.0. As PnetCDF requires an MPI library that
 dnl supports MPI-IO and MPI-IO was first introduced in MPI 2.0, checking these
@@ -2256,21 +2276,6 @@ AC_SUBST(LATEX)
 AC_SUBST(DVIPDF)
 AM_CONDITIONAL([HAS_LATEX], [test "x$has_latex" = xyes])
 
-AC_ARG_ENABLE([large-single-req],
-    [AS_HELP_STRING([--enable-large-single-req],
-                    [Enable large (> 2 GiB) single request in individual MPI-IO
-                     calls. Note some MPI-IO libraries may not support this.
-                     @<:@default: disabled@:>@])],
-    [large_single_req=${enableval}], [large_single_req=no]
-)
-ENABLE_LARGE_SINGLE_REQ=0
-if test "x${large_single_req}" = xyes ; then
-    ENABLE_LARGE_SINGLE_REQ=1
-    AC_DEFINE(ENABLE_LARGE_SINGLE_REQ)
-fi
-AM_CONDITIONAL(ENABLE_LARGE_SINGLE_REQ, [test x$large_single_req = xyes])
-AC_SUBST(ENABLE_LARGE_SINGLE_REQ)
-
 AC_ARG_ENABLE([large-file-test],
     [AS_HELP_STRING([--enable-large-file-test],
                     [Enable testing for large (>4GB) file/variable I/O. Note
@@ -2721,10 +2726,6 @@ fi
 if test "x${enable_subfiling}" = xyes; then
    echo "\
               Subfiling support                           - enabled"
-fi
-if test "x${large_single_req}" = xyes ; then
-   echo "\
-              Allow large (> 2GiB) single MPI-IO requests - enabled"
 fi
 if test "x${thread_safe}" = xyes ; then
    echo "\

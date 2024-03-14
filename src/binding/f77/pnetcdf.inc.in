@@ -37,7 +37,6 @@
       parameter (PNETCDF_SUBFILING                = @ENABLE_SUBFILING@)
       parameter (PNETCDF_RELAX_COORD_BOUND        = @RELAX_COORD_BOUND@)
       parameter (PNETCDF_DEBUG_MODE               = @PNETCDF_DEBUG@)
-      parameter (PNETCDF_LARGE_SINGLE_REQ         = @ENABLE_LARGE_SINGLE_REQ@)
       parameter (PNETCDF_NULL_BYTE_HEADER_PADDING = @ENABLE_NULL_BYTE_HEADER_PADDING@)
       parameter (PNETCDF_BYTE_SWAP_IN_PLACE       = @IN_PLACE_SWAP@) ! -1 means auto
       parameter (PNETCDF_BURST_BUFFERING          = @ENABLE_BURST_BUFFER@)

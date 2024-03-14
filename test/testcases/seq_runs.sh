@@ -9,6 +9,9 @@ set -e
 
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 ${TESTSEQRUN} ./tst_version
 
 ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds.nc
@@ -40,7 +43,9 @@ rm -f ${OUT_PATH}/testfile.nc
 # echo ""
 
 if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-   # echo "---- testing burst buffering"
+   echo ""
+   echo "---- testing burst buffering"
+
    # Run using burst buffer driver
    export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
    ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds.bb.nc

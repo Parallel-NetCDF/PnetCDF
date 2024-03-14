@@ -15,6 +15,9 @@ NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 # remove file system type prefix if there is any
 OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 ${TESTSEQRUN} ./mcoll_perf ${TESTOUTDIR}/testfile
 # seq is not available on FreeBSD otherwise we can use: for j in `seq 0 9`
 for j in 0 1 2 3 4 5 6 7 8 9 ; do
@@ -24,7 +27,8 @@ done
 # echo ""
 
 if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-    # echo "---- testing burst buffering"
+    echo ""
+    echo "---- testing burst buffering"
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
     ${TESTSEQRUN} ./mcoll_perf ${TESTOUTDIR}/testfile_bb
     unset PNETCDF_HINTS

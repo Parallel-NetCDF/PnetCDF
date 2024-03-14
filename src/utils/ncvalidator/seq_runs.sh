@@ -18,6 +18,9 @@ if [ ! -f ${VALIDATOR} ]; then
    exit 1
 fi
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 for i in ${BAD_FILES} ; do
     if [ ! -f ${srcdir}/$i ]; then
        echo "Failed: input test file ${srcdir}/$i does not exit"

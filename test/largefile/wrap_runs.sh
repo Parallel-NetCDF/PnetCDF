@@ -16,6 +16,9 @@ OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 # disable safe mode, as large tests already run slow
 export PNETCDF_SAFE_MODE=0
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
 rm -f ${OUTDIR}/$outfile.nc
@@ -23,7 +26,8 @@ rm -f ${OUTDIR}/$outfile.nc
 # echo ""
 
 if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-   # echo "---- testing burst buffering"
+   echo ""
+   echo "---- testing burst buffering"
    export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
    ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
    unset PNETCDF_HINTS

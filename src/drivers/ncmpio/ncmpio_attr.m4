@@ -32,7 +32,6 @@ dnl
 #include <stdlib.h>
 #endif
 #include <string.h>
-#include <limits.h>  /* INT_MAX */
 #include <assert.h>
 
 #include <mpi.h>
@@ -556,11 +555,6 @@ ncmpio_copy_att(void       *ncdp_in,
         goto err_check;
     }
 
-    if (iattrp->xsz != (int)iattrp->xsz) {
-        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-        goto err_check;
-    }
-
     indx = ncmpio_NC_findattr(ncap_out, nname);
 
     if (indx >= 0) { /* name in use in ncap_out */
@@ -995,13 +989,6 @@ ncmpio_put_att(void         *ncdp,
 
     xsz = x_len_NC_attrV(xtype, nelems);
     /* xsz is the total aligned size of this attribute */
-
-#ifndef ENABLE_LARGE_SINGLE_REQ
-    if (xsz > INT_MAX) {
-        DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
-        goto err_check;
-    }
-#endif
 
     /* create a normalized character string */
     err = ncmpii_utf8_normalize(name, &nname);

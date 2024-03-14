@@ -27,7 +27,7 @@ int
 ncmpii_create_imaptype(int               ndims,
                        const MPI_Offset *count,   /* [ndims] */
                        const MPI_Offset *imap,    /* [ndims] */
-                       MPI_Datatype      ptype,   /* element type in buftype */
+                       MPI_Datatype      itype,   /* element type */
                        MPI_Datatype     *imaptype)/* out */
 {
     int dim, el_size, mpireturn;
@@ -55,7 +55,8 @@ ncmpii_create_imaptype(int               ndims,
     if (dim == -1) /* imap is a contiguous layout */
         return NC_NOERR;
 
-    MPI_Type_size(ptype, &el_size);
+    /* itype: element data type (MPI primitive type) */
+    MPI_Type_size(itype, &el_size);
 
     /* We have a true varm call, as imap gives non-contiguous layout.
      * User buffer will be packed (write case) or unpacked (read case)
@@ -66,17 +67,28 @@ ncmpii_create_imaptype(int               ndims,
      * dim is the first dimension (C order, eg. ZYX) that has
      * non-contiguous imap.
      */
-    if (imap_contig_blocklen != (int)imap_contig_blocklen)
+    if (imap_contig_blocklen > NC_MAX_INT || count[dim] > NC_MAX_INT ||
+        imap[dim] > NC_MAX_INT) {
+#ifdef HAVE_MPI_LARGE_COUNT
+        mpireturn = MPI_Type_vector_c(count[dim], imap_contig_blocklen,
+                                      imap[dim], itype, imaptype);
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_error_mpi2nc(mpireturn,"MPI_Type_vector_c");
+            DEBUG_RETURN_ERROR(NC_EMPI)
+        }
+#else
         DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-    if (count[dim] != (int)count[dim] || imap[dim] != (int)imap[dim])
-        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-
-    mpireturn = MPI_Type_vector((int)count[dim], (int)imap_contig_blocklen,
-                                (int)imap[dim], ptype, imaptype);
-    if (mpireturn != MPI_SUCCESS) {
-        ncmpii_error_mpi2nc(mpireturn,"MPI_Type_vector");
-        DEBUG_RETURN_ERROR(NC_EMPI)
+#endif
     }
+    else {
+        mpireturn = MPI_Type_vector((int)count[dim], (int)imap_contig_blocklen,
+                                    (int)imap[dim], itype, imaptype);
+        if (mpireturn != MPI_SUCCESS) {
+            ncmpii_error_mpi2nc(mpireturn,"MPI_Type_vector");
+            DEBUG_RETURN_ERROR(NC_EMPI)
+        }
+    }
+
     mpireturn = MPI_Type_commit(imaptype);
     if (mpireturn != MPI_SUCCESS) {
         ncmpii_error_mpi2nc(mpireturn,"MPI_Type_commit");
@@ -85,14 +97,26 @@ ncmpii_create_imaptype(int               ndims,
 
     for (dim--; dim>=0; dim--) {
         MPI_Datatype tmptype;
-        if (count[dim] != (int)count[dim])
-            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
-        mpireturn = MPI_Type_create_hvector((int)count[dim], 1,
-                    imap[dim]*el_size, *imaptype, &tmptype);
-        if (mpireturn != MPI_SUCCESS) {
-            ncmpii_error_mpi2nc(mpireturn,"MPI_Type_create_hvector");
-            DEBUG_RETURN_ERROR(NC_EMPI)
+        if (count[dim] > NC_MAX_INT) {
+#ifdef HAVE_MPI_LARGE_COUNT
+            mpireturn = MPI_Type_create_hvector_c(count[dim], 1,
+                        imap[dim]*el_size, *imaptype, &tmptype);
+            if (mpireturn != MPI_SUCCESS) {
+                ncmpii_error_mpi2nc(mpireturn,"MPI_Type_create_hvector_c");
+                DEBUG_RETURN_ERROR(NC_EMPI)
+            }
+#else
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+#endif
+        }
+        else {
+            mpireturn = MPI_Type_create_hvector((int)count[dim], 1,
+                        imap[dim]*el_size, *imaptype, &tmptype);
+            if (mpireturn != MPI_SUCCESS) {
+                ncmpii_error_mpi2nc(mpireturn,"MPI_Type_create_hvector");
+                DEBUG_RETURN_ERROR(NC_EMPI)
+            }
         }
 
         mpireturn = MPI_Type_free(imaptype);

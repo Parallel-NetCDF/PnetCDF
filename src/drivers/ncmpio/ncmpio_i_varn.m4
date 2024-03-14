@@ -28,7 +28,6 @@ dnl
 #include <stdlib.h>
 #endif
 #include <string.h> /* memcpy() */
-#include <limits.h> /* INT_MAX */
 #include <assert.h>
 
 #include <mpi.h>
@@ -132,11 +131,6 @@ igetput_varn(NC                *ncp,
          */
         MPI_Offset bnelems=0;
 
-        if (bufcount > INT_MAX) {
-            DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-            goto fn_exit;
-        }
-
         /* itype (primitive MPI data type) from buftype
          * isize is the size of itype in bytes
          * bnelems is the number of itype elements in one buftype
@@ -158,13 +152,6 @@ igetput_varn(NC                *ncp,
 
     /* for nonblocking API, return now if request size is zero */
     if (nbytes == 0) goto fn_exit;
-
-#ifndef ENABLE_LARGE_SINGLE_REQ
-    if (nbytes > INT_MAX) {
-        DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
-        goto fn_exit;
-    }
-#endif
 
     memChunk = varp->ndims * SIZEOF_MPI_OFFSET;
 
@@ -431,7 +418,7 @@ igetput_varn(NC                *ncp,
              * later used in the wait call to unpack xbuf using buftype to buf.
              */
             MPI_Type_dup(buftype, &lead_req->buftype);
-            lead_req->bufcount = (int)bufcount;
+            lead_req->bufcount = bufcount;
         }
     }
 

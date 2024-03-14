@@ -28,7 +28,6 @@ dnl
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-#include <limits.h> /* INT_MAX */
 #include <assert.h>
 
 #include <string.h> /* memcpy() */
@@ -187,10 +186,13 @@ ncmpio_igetput_varm(NC               *ncp,
          */
         MPI_Offset bnelems=0;
 
-        if (bufcount > INT_MAX) {
-            DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-            goto fn_exit;
-        }
+        /* When bufcount > NC_MAX_INT, we construct a datatype to bypass the
+         * limitation of MPI file read/write APIs on the argument "count" of
+         * type int.  See ncmpio_read_write() in ncmpio_file_io.c
+         *
+         * Note not all MPI-IO libraries support single requests larger than
+         * NC_MAX_INT. In this case, MPI-IO should report an error.
+         */
 
         /* itype (primitive MPI data type) from buftype
          * isize is the size of itype in bytes
@@ -210,12 +212,10 @@ ncmpio_igetput_varm(NC               *ncp,
     /* nbytes is the amount of this vara request in bytes */
     nbytes = nelems * xsize;
 
-#ifndef ENABLE_LARGE_SINGLE_REQ
-    if (nbytes > INT_MAX) {
-        DEBUG_ASSIGN_ERROR(err, NC_EMAX_REQ)
-        goto fn_exit;
-    }
-#endif
+    /* Skip checking nbytes against NC_MAX_INT. Note not all MPI-IO libraries
+     * support single requests larger than NC_MAX_INT. In this case, MPI-IO
+     * should report an error.
+     */
 
     /* for nonblocking API, return now if request size is zero */
     if (nbytes == 0) {

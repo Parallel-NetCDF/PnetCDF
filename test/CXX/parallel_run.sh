@@ -24,6 +24,9 @@ else
    safe_modes="0"
 fi
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 for i in ${TESTPROGRAMS} ; do
     for j in ${safe_modes} ; do
         if test "$j" = 1 ; then # test only in safe mode
@@ -38,7 +41,7 @@ for i in ${TESTPROGRAMS} ; do
         # echo ""
 
         if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-           # echo "test burst buffering feature"
+           # echo "---- test burst buffering feature"
            saved_PNETCDF_HINTS=${PNETCDF_HINTS}
            export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
            ${MPIRUN} ./$i ${TESTOUTDIR}/$i.bb.nc

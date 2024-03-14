@@ -102,13 +102,6 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
     if (ncbbp->flushbuffersize > 0 && databuffersize > (size_t)(ncbbp->flushbuffersize)){
         databuffersize = ncbbp->flushbuffersize;
     }
-    /* Without enabling large_req, we can not post requests larger than 2GiB */
-#ifndef ENABLE_LARGE_SINGLE_REQ
-    if (databuffersize > 2147483647){
-        databuffersize = 2147483647;
-    }
-#endif
-    /* We assume user will not issue single request larger than 2GiB wwithout enabling large_req */
     if (databuffersize < (size_t)(ncbbp->maxentrysize)){
         databuffersize = ncbbp->maxentrysize;
     }

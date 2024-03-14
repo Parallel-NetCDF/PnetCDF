@@ -782,14 +782,24 @@ ncmpio_subfile_getput_vars(NC               *ncp,
     /* NOTE: no conversion and byte swap are performed here
        as they are done underneath layer */
     if (!buftype_is_contig && bufcount > 0 && bnelems > 0) {
-        int position=0;
         MPI_Offset outsize = bnelems * bufcount * el_size;
-        if (outsize  != (int)outsize) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-        if (bufcount != (int)bufcount) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         cbuf = NCI_Malloc((size_t)outsize);
-        if (fIsSet(reqMode, NC_REQ_WR))
-            MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)outsize,
-                     &position, MPI_COMM_SELF);
+        if (fIsSet(reqMode, NC_REQ_WR)) {
+#ifdef HAVE_MPI_LARGE_COUNT
+            MPI_Count position=0;
+            MPI_Pack_c(buf, (MPI_Count)bufcount, buftype, cbuf,
+                       (MPI_Count)outsize, &position, MPI_COMM_SELF);
+#else
+            int position=0;
+            if (bufcount > NC_MAX_INT || outsize > NC_MAX_INT) {
+                NCI_Free(cbuf);
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+            }
+            else
+                MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)outsize,
+                         &position, MPI_COMM_SELF);
+#endif
+        }
     }
     else
         cbuf = (void *)buf;

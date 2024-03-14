@@ -154,11 +154,12 @@ fill_var_rec(NC         *ncp,
              NC_var     *varp,
              MPI_Offset  recno) /* record number */
 {
-    int err, mpireturn, rank, nprocs;
+    int err, status=NC_NOERR, mpireturn, rank, nprocs;
     void *buf;
     MPI_Offset var_len, start, count, offset;
     MPI_File fh;
     MPI_Status mpistatus;
+    MPI_Datatype bufType;
 
     MPI_Comm_rank(ncp->comm, &rank);
     MPI_Comm_size(ncp->comm, &nprocs);
@@ -190,7 +191,8 @@ fill_var_rec(NC         *ncp,
     err = fill_var_buf(varp, count, buf);
     if (err != NC_NOERR) {
         NCI_Free(buf);
-        return err;
+        count = 0; /* still participate collective calls below */
+        status = err;
     }
 
     /* calculate the starting file offset for each process */
@@ -206,18 +208,39 @@ fill_var_rec(NC         *ncp,
                                 MPI_INFO_NULL);
 
     count *= varp->xsz;
-    if (count != (int)count) DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-    if (err != NC_NOERR)
+
+    bufType = MPI_BYTE;
+    if (count > NC_MAX_INT) {
+#ifdef HAVE_MPI_LARGE_COUNT
+        mpireturn = MPI_Type_contiguous_c((MPI_Count)count, MPI_BYTE, &bufType);
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous_c");
+            if (status == NC_NOERR) status = err;
+            /* still participate collective write with 0-length request */
+            count = 0;
+        }
+        else {
+            MPI_Type_commit(&bufType);
+            count = 1;
+        }
+#else
+        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+        if (status == NC_NOERR) status = err;
         count = 0; /* participate collective write with 0-length request */
+#endif
+    }
 
     /* write to variable collectively */
-    TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, (int)count, MPI_BYTE,
+    TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, (int)count, bufType,
                                     &mpistatus);
     NCI_Free(buf);
-    if (mpireturn != MPI_SUCCESS)
-        return ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
+    if (bufType != MPI_BYTE) MPI_Type_free(&bufType);
+    if (mpireturn != MPI_SUCCESS) {
+        err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
+        if (status == NC_NOERR) status = err;
+    }
 
-    if (err != NC_NOERR) return err;
+    if (status != NC_NOERR) return status;
 
     if (IS_RECVAR(varp)) { /* update header's number of records in memory */
         /* recno may be differenet among, if safe mode is disabled. In
@@ -229,18 +252,20 @@ fill_var_rec(NC         *ncp,
         MPI_Offset max_numrecs, numrecs=recno+1;
         TRACE_COMM(MPI_Allreduce)(&numrecs, &max_numrecs, 1, MPI_OFFSET,
                                   MPI_MAX, ncp->comm);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
+            if (status == NC_NOERR) status = err;
+        }
 
         /* In collective mode, ncp->numrecs is always sync-ed among processes */
         if (ncp->numrecs < max_numrecs) {
             err = ncmpio_write_numrecs(ncp, max_numrecs);
-            if (err != NC_NOERR) return err;
+            if (status == NC_NOERR) status = err;
             ncp->numrecs = max_numrecs;
         }
     }
 
-    return NC_NOERR;
+    return status;
 }
 
 #ifdef FILL_ONE_VAR_AT_A_TIME
@@ -338,18 +363,23 @@ fill_added_recs(NC *ncp, NC *old_ncp)
 static int
 fillerup_aggregate(NC *ncp, NC *old_ncp)
 {
-    int i, j, k, rank, nprocs, start_vid, recno;
-    int nVarsFill, *blocklengths;
-    int mpireturn, err, status=NC_NOERR;
+    int i, j, k, rank, nprocs, mpireturn, err, status=NC_NOERR;
+    int start_vid, recno, nVarsFill;
     char *buf_ptr, *noFill;
     void *buf;
     size_t nsegs;
     MPI_Offset buf_len, var_len, nrecs, start, *count;
-    MPI_Aint *offset;
-    MPI_Datatype filetype;
+    MPI_Datatype filetype, bufType;
     MPI_File fh;
     MPI_Status mpistatus;
     NC_var *varp;
+
+#ifdef HAVE_MPI_LARGE_COUNT
+    MPI_Count *blocklengths, *offset;
+#else
+    int *blocklengths;
+    MPI_Aint *offset;
+#endif
 
     MPI_Comm_rank(ncp->comm, &rank);
     MPI_Comm_size(ncp->comm, &nprocs);
@@ -393,7 +423,11 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     /* find the number of write segments (upper bound) */
     nsegs = (size_t)(ncp->vars.ndefined + ncp->vars.num_rec_vars * nrecs);
     count  = (MPI_Offset*) NCI_Malloc(nsegs * SIZEOF_MPI_OFFSET);
+#ifdef HAVE_MPI_LARGE_COUNT
+    offset = (MPI_Count*)   NCI_Malloc(nsegs * sizeof(MPI_Count));
+#else
     offset = (MPI_Aint*)   NCI_Malloc(nsegs * SIZEOF_MPI_AINT);
+#endif
 
     /* calculate each segment's offset and count */
     buf_len = 0; /* total write amount, used to allocate buffer */
@@ -481,7 +515,11 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     }
 
     /* allocate one contiguous buffer space for all writes */
+#ifdef HAVE_MPI_LARGE_COUNT
+    blocklengths = (MPI_Count*) NCI_Malloc((size_t)j * sizeof(MPI_Count));
+#else
     blocklengths = (int*) NCI_Malloc((size_t)j * SIZEOF_INT);
+#endif
     buf = NCI_Malloc((size_t)buf_len);
     buf_ptr = (char*)buf;
 
@@ -505,13 +543,17 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         }
 
         count[k] *= varp->xsz;
+#ifdef HAVE_MPI_LARGE_COUNT
+        blocklengths[k] = (MPI_Count)count[k];
+#else
         if (count[k] != (int)count[k]) {
             DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
             if (status == NC_NOERR) status = err;
             continue; /* skip this request */
         }
-        buf_ptr += count[k];
         blocklengths[k] = (int)count[k];
+#endif
+        buf_ptr += count[k];
         k++;
     }
     /* k is the number of valid write requests thus far */
@@ -536,13 +578,17 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
             }
 
             count[k] *= varp->xsz;
+#ifdef HAVE_MPI_LARGE_COUNT
+            blocklengths[k] = (MPI_Count)count[k];
+#else
             if (count[k] != (int)count[k]) {
                 DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
                 if (status == NC_NOERR) status = err;
                 continue; /* skip this request */
             }
-            buf_ptr += count[k];
             blocklengths[k] = (int)count[k];
+#endif
+            buf_ptr += count[k];
             k++;
         }
     }
@@ -554,8 +600,13 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     }
     else {
         /* create fileview: a list of contiguous segment for each variable */
-        mpireturn = MPI_Type_create_hindexed(k, blocklengths, offset, MPI_BYTE,
-                                             &filetype);
+#ifdef HAVE_MPI_LARGE_COUNT
+        mpireturn = MPI_Type_create_hindexed_c(k, blocklengths, offset,
+                                               MPI_BYTE, &filetype);
+#else
+        mpireturn = MPI_Type_create_hindexed(k, blocklengths, offset,
+                                             MPI_BYTE, &filetype);
+#endif
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_hindexed");
             /* return the first encountered error if there is any */
@@ -575,15 +626,32 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
                                 MPI_INFO_NULL);
     if (k > 0) MPI_Type_free(&filetype);
 
-    if (buf_len != (int)buf_len) {
+    bufType = MPI_BYTE;
+    if (buf_len > NC_MAX_INT) {
+#ifdef HAVE_MPI_LARGE_COUNT
+        mpireturn = MPI_Type_contiguous_c((MPI_Count)buf_len, MPI_BYTE,
+                                          &bufType);
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous_c");
+            /* return the first encountered error if there is any */
+            if (status == NC_NOERR) status = err;
+            buf_len = 0;
+        }
+        else {
+            MPI_Type_commit(&bufType);
+            buf_len = 1;
+        }
+#else
         if (status == NC_NOERR) status = NC_EINTOVERFLOW;
-        buf_len = 0; /* skip this write */
+        buf_len = 0; /* participate collective write with 0-length request */
+#endif
     }
 
     /* write to variable collectively */
-    TRACE_IO(MPI_File_write_at_all)(fh, 0, buf, (int)buf_len, MPI_BYTE, &mpistatus);
+    TRACE_IO(MPI_File_write_at_all)(fh, 0, buf, (int)buf_len, bufType, &mpistatus);
 
     NCI_Free(buf);
+    if (bufType != MPI_BYTE) MPI_Type_free(&bufType);
 
     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
                                 MPI_INFO_NULL);

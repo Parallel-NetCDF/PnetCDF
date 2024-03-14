@@ -20,6 +20,9 @@ else
    safe_modes="0"
 fi
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 for j in ${safe_modes} ; do
     export PNETCDF_SAFE_MODE=$j
     # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"

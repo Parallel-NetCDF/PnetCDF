@@ -405,7 +405,7 @@ ncbbio_put_varn(void              *ncdp,
         /* When bufcount > 0, this subroutine is called from a flexible API. If
          * buftype is noncontiguous, we pack buf into cbuf, a contiguous buffer.
          */
-        int isderived, iscontig, elsize, position = 0;
+        int isderived, iscontig, elsize;
         MPI_Offset bnelems=0;
 
         err = ncmpii_dtype_decode(buftype, &itype, &elsize, &bnelems,
@@ -413,12 +413,33 @@ ncbbio_put_varn(void              *ncdp,
         if (err != NC_NOERR) return err;
 
         if (!iscontig) { /* pack only if non-contiguous */
+            int mpireturn;
             bnelems *= elsize;
-            if (bnelems != (int)bnelems) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
-            cbuf = NCI_Malloc(bnelems);
-            MPI_Pack((void*)buf, (int)bufcount, buftype, cbuf, (int)bnelems,
-                     &position, MPI_COMM_SELF);
+            if (bnelems > NC_MAX_INT) {
+#ifdef HAVE_MPI_LARGE_COUNT
+                MPI_Count position=0;
+                cbuf = NCI_Malloc(bnelems);
+                mpireturn = MPI_Pack_c((void*)buf, bufcount, buftype, cbuf,
+                                       bnelems, &position, MPI_COMM_SELF);
+                if (mpireturn != MPI_SUCCESS) {
+                    ncmpii_error_mpi2nc(mpireturn,"MPI_Pack_c");
+                    DEBUG_RETURN_ERROR(NC_EMPI)
+                }
+#else
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+#endif
+            }
+            else {
+                int position=0;
+                cbuf = NCI_Malloc(bnelems);
+                mpireturn = MPI_Pack((void*)buf, (int)bufcount, buftype, cbuf,
+                                     (int)bnelems, &position, MPI_COMM_SELF);
+                if (mpireturn != MPI_SUCCESS) {
+                    ncmpii_error_mpi2nc(mpireturn,"MPI_Pack");
+                    DEBUG_RETURN_ERROR(NC_EMPI)
+                }
+            }
         }
     }
 

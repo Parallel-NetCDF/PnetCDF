@@ -9,10 +9,9 @@
 #endif
 
 #include <stdio.h>
-#include <stdlib.h>   /* strtoll() is first introducted in C99 */
+#include <stdlib.h>   /* strtoll() is first introduced in C99 */
 #include <string.h>   /* strcpy() */
 #include <strings.h>  /* strcasecmp() */
-#include <limits.h>   /* INT_MAX */
 #include <assert.h>
 #include <errno.h>
 #include <mpi.h>
@@ -46,13 +45,14 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
     ncp->env_h_align = 0;
     if (user_info != MPI_INFO_NULL) {
         /* aligns the size of header extent of a newly created file */
-        MPI_Info_get(user_info, "nc_header_align_size", MPI_MAX_INFO_VAL-1, value,
-                     &flag);
+        MPI_Info_get(user_info, "nc_header_align_size", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
         if (flag) {
             errno = 0;  /* errno must set to zero before calling strtoll */
             ncp->env_h_align = strtoll(value, NULL, 10);
             if (errno != 0) ncp->env_h_align = 0;
             else if (ncp->env_h_align < 0) ncp->env_h_align = 0;
+            sprintf(value, "%lld", ncp->env_h_align);
         }
     }
     if (!flag) sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
@@ -61,12 +61,14 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
     ncp->env_v_align = 0;
     if (user_info != MPI_INFO_NULL) {
         /* aligns starting file offsets of individual fixed-size variables */
-        MPI_Info_get(user_info, "nc_var_align_size", MPI_MAX_INFO_VAL-1, value, &flag);
+        MPI_Info_get(user_info, "nc_var_align_size", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
         if (flag) {
             errno = 0;  /* errno must set to zero before calling strtoll */
             ncp->env_v_align = strtoll(value, NULL, 10);
             if (errno != 0) ncp->env_v_align = 0;
             else if (ncp->env_v_align < 0) ncp->env_v_align = 0;
+            sprintf(value, "%lld", ncp->env_v_align);
         }
     }
     if (!flag) sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
@@ -75,13 +77,14 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
     ncp->env_r_align = 0;
     if (user_info != MPI_INFO_NULL) {
         /* aligns starting file offset of the record variable section */
-        MPI_Info_get(user_info, "nc_record_align_size", MPI_MAX_INFO_VAL-1, value,
-                     &flag);
+        MPI_Info_get(user_info, "nc_record_align_size", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
         if (flag) {
             errno = 0;  /* errno must set to zero before calling strtoll */
             ncp->env_r_align = strtoll(value, NULL, 10);
             if (errno != 0) ncp->env_r_align = 0;
             else if (ncp->env_r_align < 0) ncp->env_r_align = 0;
+            sprintf(value, "%lld", ncp->env_r_align);
         }
     }
     if (!flag) sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
@@ -89,13 +92,18 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
 
     if (user_info != MPI_INFO_NULL) {
         /* header reading chunk size */
-        MPI_Info_get(user_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1, value,
-                     &flag);
+        MPI_Info_get(user_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
         if (flag) {
+            long int chunk;
             errno = 0;  /* errno must set to zero before calling strtoll */
-            ncp->chunk = (int) strtol(value, NULL, 10);
+            chunk = (int) strtol(value, NULL, 10);
             if (errno != 0) ncp->chunk = 0;
-            else if (ncp->chunk < 0) ncp->chunk = 0;
+            else if (ncp->chunk < 0)
+                ncp->chunk = 0;
+            else if (chunk > NC_MAX_INT) /* limit to NC_MAX_INT */
+                ncp->chunk = NC_MAX_INT;
+            sprintf(value, "%d", ncp->chunk);
         }
     }
     if (!flag) sprintf(value, "%d", NC_DEFAULT_CHUNKSIZE);
@@ -126,12 +134,14 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
 	/* temporal buffer size used to pack noncontiguous aggregated user
          * buffers when calling ncmpi_wait/wait_all, Default 16 MiB
          */
-        MPI_Info_get(user_info, "nc_ibuf_size", MPI_MAX_INFO_VAL-1, value, &flag);
+        MPI_Info_get(user_info, "nc_ibuf_size", MPI_MAX_INFO_VAL-1, value,
+                     &flag);
         if (flag) {
             MPI_Offset ibuf_size;
             errno = 0;  /* errno must set to zero before calling strtoll */
             ibuf_size = strtoll(value, NULL, 10);
             if (errno == 0 && ncp->ibuf_size > 0) ncp->ibuf_size = ibuf_size;
+            sprintf(value, "%lld", ncp->ibuf_size);
         }
     }
     if (!flag) sprintf(value, "%d", NC_DEFAULT_IBUF_SIZE);
@@ -139,7 +149,8 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
 
 #ifdef ENABLE_SUBFILING
     if (user_info != MPI_INFO_NULL) {
-        MPI_Info_get(user_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1, value, &flag);
+        MPI_Info_get(user_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
         if (flag) {
             if (strcasecmp(value, "enable") == 0)
                 ncp->subfile_mode = 1;
@@ -149,12 +160,14 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
     MPI_Info_set(info_used, "pnetcdf_subfiling", value);
 
     if (user_info != MPI_INFO_NULL) {
-        MPI_Info_get(user_info, "nc_num_subfiles", MPI_MAX_INFO_VAL-1, value, &flag);
+        MPI_Info_get(user_info, "nc_num_subfiles", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
         if (flag) {
             errno = 0;
             ncp->num_subfiles = strtoll(value, NULL, 10);
             if (errno != 0) ncp->num_subfiles = 0;
             else if (ncp->num_subfiles < 0) ncp->num_subfiles = 0;
+            sprintf(value, "%d", ncp->num_subfiles);
         }
     }
     if (!flag) strcpy(value, "0");
@@ -168,8 +181,8 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
 
     if (user_info != MPI_INFO_NULL) {
         /* read/write file header using MPI collective APIs */
-        MPI_Info_get(user_info, "nc_header_collective", MPI_MAX_INFO_VAL-1, value,
-                     &flag);
+        MPI_Info_get(user_info, "nc_header_collective", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
         if (flag) {
             if (strcasecmp(value, "true") == 0)
                 fSet((ncp)->flags, NC_HCOLL);
@@ -365,13 +378,12 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                  void         *buf,    /* user buffer */
                  void         *xbuf)   /* already allocated, in external type */
 {
-    int err=NC_NOERR, position, free_lbuf=0, free_cbuf=0;
+    int err=NC_NOERR, free_lbuf=0, free_cbuf=0;
     void *lbuf=NULL, *cbuf=NULL;
     MPI_Offset ibuf_size;
 
     /* check byte size of buf (internal representation) */
     ibuf_size = nelems * el_size;
-    if (ibuf_size > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
     /* Step 1: if buftype is not contiguous, i.e. a noncontiguous MPI
      * derived datatype, pack buf into a contiguous buffer, lbuf,
@@ -390,13 +402,19 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
 
         if (buf != lbuf) {
             /* pack buf into lbuf based on buftype */
-            if (bufcount > INT_MAX) {
+#ifdef HAVE_MPI_LARGE_COUNT
+            MPI_Count position = 0;
+            MPI_Pack_c(buf, (MPI_Count)bufcount, buftype, lbuf,
+                       (MPI_Count)ibuf_size, &position, MPI_COMM_SELF);
+#else
+            int position = 0;
+            if (bufcount > NC_MAX_INT || ibuf_size > NC_MAX_INT) {
                 if (free_lbuf) NCI_Free(lbuf);
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             }
-            position = 0;
             MPI_Pack(buf, (int)bufcount, buftype, lbuf, (int)ibuf_size,
                      &position, MPI_COMM_SELF);
+#endif
         }
     }
     else /* for contiguous case, we reuse buf */
@@ -419,9 +437,17 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         }
 
         /* pack lbuf to cbuf based on imaptype */
-        position = 0;
+#ifdef HAVE_MPI_LARGE_COUNT
+        MPI_Count position = 0;
+        MPI_Pack_c(lbuf, 1, imaptype, cbuf, (MPI_Count)ibuf_size, &position,
+                   MPI_COMM_SELF);
+#else
+        int position = 0;
+        if (ibuf_size > NC_MAX_INT)
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         MPI_Pack(lbuf, 1, imaptype, cbuf, (int)ibuf_size, &position,
                  MPI_COMM_SELF);
+#endif
         MPI_Type_free(&imaptype);
 
         /* lbuf is no longer needed */
@@ -547,14 +573,13 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                    void         *buf,  /* user buffer */
                    void         *xbuf) /* already allocated, in external type */
 {
-    int err=NC_NOERR, el_size, position, free_lbuf=0, free_cbuf=0;
+    int err=NC_NOERR, el_size, free_lbuf=0, free_cbuf=0;
     void *lbuf=NULL, *cbuf=NULL;
     MPI_Offset ibuf_size;
 
     /* check byte size of buf (internal representation) */
-    MPI_Type_size(itype, &el_size);
+    MPI_Type_size(itype, &el_size); /* itype is MPI primitive datatype */
     ibuf_size = nelems * el_size;
-    if (ibuf_size > INT_MAX) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
     /* Step 1: type-convert and byte-swap xbuf to cbuf, and xbuf contains data
      * read from file
@@ -645,24 +670,40 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
     /* unpacked cbuf into lbuf based on imap -------------------------------*/
     if (imaptype != MPI_DATATYPE_NULL) {
         /* unpack cbuf to lbuf based on imaptype */
-        position = 0;
+#ifdef HAVE_MPI_LARGE_COUNT
+        MPI_Count position = 0;
+        MPI_Unpack_c(cbuf, (MPI_Count)ibuf_size, &position, lbuf, 1, imaptype,
+                     MPI_COMM_SELF);
+#else
+        int position = 0;
+        if (ibuf_size > NC_MAX_INT) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
         MPI_Unpack(cbuf, (int)ibuf_size, &position, lbuf, 1, imaptype,
                    MPI_COMM_SELF);
+#endif
         MPI_Type_free(&imaptype);
     }
 
     /* unpacked lbuf into buf based on buftype -----------------------------*/
     if (!buftype_is_contig && lbuf != buf) {
         /* no need unpack when buftype is used in MPI_File_read (lbuf == buf) */
-        if (bufcount > INT_MAX) {
+#ifdef HAVE_MPI_LARGE_COUNT
+        MPI_Count position = 0;
+        MPI_Unpack_c(lbuf, (MPI_Count)ibuf_size, &position, buf,
+                     (MPI_Count)bufcount, buftype, MPI_COMM_SELF);
+#else
+        if (bufcount > NC_MAX_INT) {
             if (err == NC_NOERR)
                 DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
         }
         else {
-            position = 0;
+            int position = 0;
+            if (ibuf_size > NC_MAX_INT)
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             MPI_Unpack(lbuf, (int)ibuf_size, &position, buf, (int)bufcount,
                        buftype, MPI_COMM_SELF);
         }
+#endif
     }
     if (free_cbuf) NCI_Free(cbuf);
     if (free_lbuf) NCI_Free(lbuf);

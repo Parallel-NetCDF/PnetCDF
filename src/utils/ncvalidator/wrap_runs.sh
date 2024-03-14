@@ -7,6 +7,9 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 for i in ${ENULLPAD_FILES} ; do
     for j in 0 1 ; do
         export PNETCDF_SAFE_MODE=$j

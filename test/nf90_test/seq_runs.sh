@@ -15,6 +15,9 @@ export PNETCDF_SAFE_MODE=0
 # remove file system type prefix if there is any
 OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 rm -f ${OUTDIR}/test.nc
 rm -f ${OUTDIR}/scratch.nc
 rm -f ${OUTDIR}/tooth-fairy.nc
@@ -43,7 +46,8 @@ if test "${ENABLE_NETCDF4}" = 1 ; then
 fi
 
 if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-    # echo "---- testing burst buffering"
+    echo ""
+    echo "---- testing burst buffering"
 
     export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
     rm -f ${OUTDIR}/test.nc

@@ -445,7 +445,7 @@ typedef struct bufferinfo {
     MPI_File    collective_fh;
     MPI_Offset  get_size; /* amount of file read n bytes so far */
     MPI_Offset  offset;   /* current read/write offset in the file */
-    int         size;     /* allocated size of the buffer */
+    size_t      size;     /* allocated size of the buffer */
     int         version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
     int         safe_mode;/* 0: disabled, 1: enabled */
     int         rw_mode;  /* 0: independent, 1: collective */
@@ -597,7 +597,7 @@ ncmpio_unpack_xbuf(int format, NC_var *varp, MPI_Offset bufcount,
 /* Begin defined in ncmpio_file_io.c ----------------------------------------*/
 extern int
 ncmpio_read_write(NC *ncp, int rw_flag, int coll_indep, MPI_Offset offset,
-                  int len, MPI_Datatype buf_type, void *buf,
+                  MPI_Offset buf_count, MPI_Datatype buf_type, void *buf,
                   int buftype_is_contig);
 
 #endif /* _NC_H */

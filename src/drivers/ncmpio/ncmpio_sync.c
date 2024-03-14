@@ -94,7 +94,7 @@ ncmpio_write_numrecs(NC         *ncp,
         if (new_numrecs > ncp->numrecs) ncp->numrecs = new_numrecs;
 
         if (ncp->format < 5) {
-            if (ncp->numrecs != (int)ncp->numrecs)
+            if (ncp->numrecs > NC_MAX_INT)
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             len = X_SIZEOF_SIZE_T;
             err = ncmpix_put_uint32((void**)&buf, (uint)ncp->numrecs);

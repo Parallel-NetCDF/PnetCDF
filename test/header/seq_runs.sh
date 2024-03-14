@@ -19,6 +19,9 @@ else
    safe_modes="0"
 fi
 
+# prevent user environment setting of PNETCDF_HINTS to interfere
+unset PNETCDF_HINTS
+
 # header consistency tests are designed to run on more than one MPI process
 for j in ${safe_modes} ; do
     export PNETCDF_SAFE_MODE=$j
@@ -28,7 +31,8 @@ for j in ${safe_modes} ; do
 
 
     if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-        # echo "---- testing burst buffering"
+        echo ""
+        echo "---- testing burst buffering"
         export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
         ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.bb.nc
         unset PNETCDF_HINTS
