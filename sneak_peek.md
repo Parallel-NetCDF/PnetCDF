@@ -15,9 +15,14 @@ This is essentially a placeholder for the next release note ...
     ncmpi_put_vara_float_all(ncid, varid, start, count, buf);
     ```
   + PnetCDF now allows a single read/write request from a process of size
-    larger than 2 GiB. Large requests are passed down to the MP-IO library, as
-    many modern MPI-IO implementations can handle such large requests. This
-    feature thus deprecates the configure option `--enable-large-single-req`.
+    larger than 2 GiB. Such large requests are now passed down to the MP-IO
+    library. This change is because MPI 3.0 introduces the large count feature,
+    including MPI_Count data type, MPI_XXX_c and MPI_XXX_x APIs that use 8-byte
+    integer type to enable large MPI operations. As many MPI libraries today
+    have implemented this feature, PnetCDF can now take advantage of it to
+    support large single requests. Because of this change configure option
+    `--enable-large-single-req` is thus deprecated. See
+    See [PR #131](https://github.com/Parallel-NetCDF/PnetCDF/pull/131)
 
 * New optimization
   + none
