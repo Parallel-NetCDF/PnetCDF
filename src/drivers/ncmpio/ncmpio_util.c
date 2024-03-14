@@ -402,7 +402,7 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
 
         if (buf != lbuf) {
             /* pack buf into lbuf based on buftype */
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
             MPI_Count position = 0;
             MPI_Pack_c(buf, (MPI_Count)bufcount, buftype, lbuf,
                        (MPI_Count)ibuf_size, &position, MPI_COMM_SELF);
@@ -437,7 +437,7 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         }
 
         /* pack lbuf to cbuf based on imaptype */
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count position = 0;
         MPI_Pack_c(lbuf, 1, imaptype, cbuf, (MPI_Count)ibuf_size, &position,
                    MPI_COMM_SELF);
@@ -670,7 +670,7 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
     /* unpacked cbuf into lbuf based on imap -------------------------------*/
     if (imaptype != MPI_DATATYPE_NULL) {
         /* unpack cbuf to lbuf based on imaptype */
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count position = 0;
         MPI_Unpack_c(cbuf, (MPI_Count)ibuf_size, &position, lbuf, 1, imaptype,
                      MPI_COMM_SELF);
@@ -687,7 +687,7 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
     /* unpacked lbuf into buf based on buftype -----------------------------*/
     if (!buftype_is_contig && lbuf != buf) {
         /* no need unpack when buftype is used in MPI_File_read (lbuf == buf) */
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count position = 0;
         MPI_Unpack_c(lbuf, (MPI_Count)ibuf_size, &position, buf,
                      (MPI_Count)bufcount, buftype, MPI_COMM_SELF);

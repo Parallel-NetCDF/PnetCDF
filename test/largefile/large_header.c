@@ -60,7 +60,9 @@ int main(int argc, char** argv)
     CHECK_ERR
 
     /* define a variable */
-    err = ncmpi_def_var(ncid, "var", NC_INT, 1, &dimid, &varid);
+    err = ncmpi_def_var(ncid, "var0", NC_INT, 1, &dimid, &varid);
+    CHECK_ERR
+    err = ncmpi_def_var(ncid, "var1", NC_INT, 1, &dimid, &varid);
     CHECK_ERR
 
     /* make file header extent > 4 GiB */
@@ -77,11 +79,13 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid);
     CHECK_ERR
 
+    if (err != NC_NOERR) goto err_out;
+
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
                      &ncid); CHECK_ERR
 
     /* inquire ID of the variable */
-    err = ncmpi_inq_varid(ncid, "var", &varid);
+    err = ncmpi_inq_varid(ncid, "var1", &varid);
     CHECK_ERR
 
     /* read from the variable */
@@ -109,6 +113,7 @@ int main(int argc, char** argv)
         }
     }
 
+err_out:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);

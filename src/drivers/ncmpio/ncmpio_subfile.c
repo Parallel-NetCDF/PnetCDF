@@ -785,7 +785,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
         MPI_Offset outsize = bnelems * bufcount * el_size;
         cbuf = NCI_Malloc((size_t)outsize);
         if (fIsSet(reqMode, NC_REQ_WR)) {
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
             MPI_Count position=0;
             MPI_Pack_c(buf, (MPI_Count)bufcount, buftype, cbuf,
                        (MPI_Count)outsize, &position, MPI_COMM_SELF);

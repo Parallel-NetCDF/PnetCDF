@@ -211,7 +211,7 @@ fill_var_rec(NC         *ncp,
 
     bufType = MPI_BYTE;
     if (count > NC_MAX_INT) {
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
         mpireturn = MPI_Type_contiguous_c((MPI_Count)count, MPI_BYTE, &bufType);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous_c");
@@ -374,7 +374,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     MPI_Status mpistatus;
     NC_var *varp;
 
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
     MPI_Count *blocklengths, *offset;
 #else
     int *blocklengths;
@@ -423,7 +423,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     /* find the number of write segments (upper bound) */
     nsegs = (size_t)(ncp->vars.ndefined + ncp->vars.num_rec_vars * nrecs);
     count  = (MPI_Offset*) NCI_Malloc(nsegs * SIZEOF_MPI_OFFSET);
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
     offset = (MPI_Count*)   NCI_Malloc(nsegs * sizeof(MPI_Count));
 #else
     offset = (MPI_Aint*)   NCI_Malloc(nsegs * SIZEOF_MPI_AINT);
@@ -515,7 +515,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     }
 
     /* allocate one contiguous buffer space for all writes */
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
     blocklengths = (MPI_Count*) NCI_Malloc((size_t)j * sizeof(MPI_Count));
 #else
     blocklengths = (int*) NCI_Malloc((size_t)j * SIZEOF_INT);
@@ -543,7 +543,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         }
 
         count[k] *= varp->xsz;
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
         blocklengths[k] = (MPI_Count)count[k];
 #else
         if (count[k] != (int)count[k]) {
@@ -578,7 +578,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
             }
 
             count[k] *= varp->xsz;
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
             blocklengths[k] = (MPI_Count)count[k];
 #else
             if (count[k] != (int)count[k]) {
@@ -600,7 +600,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     }
     else {
         /* create fileview: a list of contiguous segment for each variable */
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
         mpireturn = MPI_Type_create_hindexed_c(k, blocklengths, offset,
                                                MPI_BYTE, &filetype);
 #else
@@ -628,7 +628,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
 
     bufType = MPI_BYTE;
     if (buf_len > NC_MAX_INT) {
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
         mpireturn = MPI_Type_contiguous_c((MPI_Count)buf_len, MPI_BYTE,
                                           &bufType);
         if (mpireturn != MPI_SUCCESS) {

@@ -145,6 +145,7 @@ AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal pe
 AH_TEMPLATE([ENABLE_THREAD_SAFE],       [Define if to enable thread-safe capability])
 AH_TEMPLATE([ENABLE_REQ_AGGREGATION],   [Define if able to support request aggregation in nonblocking routines])
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
+AH_TEMPLATE([HAVE_MPI_LARGE_COUNT],     [Define if required MPI APIs have arguments of type MPI_Count])
 
 AH_TOP([#ifndef _CONFIG_H
 #define _CONFIG_H])
@@ -1313,6 +1314,26 @@ dnl                 MPI_Type_create_hindexed \
 dnl                 MPI_Type_create_struct \
 dnl                 MPI_Type_create_resized \
 dnl                 MPI_Type_get_extent])
+
+dnl MPI_count was first introduced in MPI 3.0. Check MPI functions that make
+dnl use of MPI_Count.
+have_mpi_large_count_apis=yes
+AC_CHECK_FUNCS([MPI_Type_create_subarray_c \
+                MPI_Type_contiguous_c \
+                MPI_Type_create_hvector_c \
+                MPI_Type_create_struct_c \
+                MPI_Type_create_hindexed_c \
+                MPI_Type_vector_c \
+                MPI_Pack_c \
+                MPI_Unpack_c \
+                MPI_Type_get_true_extent_x \
+                MPI_Type_size_x], [], [have_mpi_large_count_apis=no])
+# If one of the above APIs is not available, have_mpi_large_count_apis will be
+# set to no
+UD_MSG_DEBUG([have_mpi_large_count_apis=$have_mpi_large_count_apis])
+if test "x$have_mpi_large_count_apis" = "xyes" ; then
+   AC_DEFINE(HAVE_MPI_LARGE_COUNT, 1)
+fi
 
 dnl Check presence of MPI COMBINERS. These are of type int.
 dnl These are introduced in MPI 2.0. As PnetCDF requires an MPI library that

@@ -28,18 +28,36 @@ ncmpio_read_write(NC           *ncp,
                   void         *buf,
                   int           buftype_is_contig)
 {
-    int status=NC_NOERR, mpireturn, err;
+    int status=NC_NOERR, err=NC_NOERR, mpireturn;
     MPI_Status mpistatus;
     MPI_File fh;
     MPI_Offset req_size;
-#if MPI_VERSION >= 3
+
+#ifdef HAVE_MPI_TYPE_SIZE_X
     MPI_Count btype_size;
     /* MPI_Type_size_x is introduced in MPI 3.0 */
-    MPI_Type_size_x(buf_type, &btype_size);
+    mpireturn = MPI_Type_size_x(buf_type, &btype_size);
 #else
     int btype_size;
-    MPI_Type_size(buf_type, &btype_size);
+    mpireturn = MPI_Type_size(buf_type, &btype_size);
 #endif
+    if (mpireturn != MPI_SUCCESS) {
+        err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
+        /* return the first encountered error if there is any */
+        err = (err == NC_EFILE) ? NC_EREAD : err;
+    }
+    else if (btype_size == MPI_UNDEFINED)
+        err = NC_EINTOVERFLOW;
+
+    if (err != NC_NOERR) {
+        if (coll_indep == NC_REQ_COLL) {
+            DEBUG_ASSIGN_ERROR(status, err)
+            /* write nothing, but participate the collective call */
+            buf_count = 0;
+        }
+        else
+            DEBUG_RETURN_ERROR(err)
+    }
 
     /* request size in bytes, may be > NC_MAX_INT */
     req_size = (MPI_Offset)btype_size * buf_count;
@@ -64,12 +82,15 @@ ncmpio_read_write(NC           *ncp,
         MPI_Datatype  xbuf_type=buf_type;
 
         if (buf_count > NC_MAX_INT) {
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
             MPI_Type_contiguous_c((MPI_Count)buf_count, buf_type, &xbuf_type);
             MPI_Type_commit(&xbuf_type);
             xlen = 1;
 #else
-            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+            if (coll_indep == NC_REQ_COLL)
+                DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+            else
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 #endif
         }
         else if (buf_count > 0 && !buftype_is_contig &&
@@ -110,7 +131,7 @@ ncmpio_read_write(NC           *ncp,
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) {
                     err = (err == NC_EFILE) ? NC_EREAD : err;
-                    DEBUG_ASSIGN_ERROR(status, err)
+                    DEBUG_RETURN_ERROR(err)
                 }
             }
         }
@@ -125,7 +146,7 @@ ncmpio_read_write(NC           *ncp,
 #endif
         }
         if (xbuf != buf) { /* unpack contiguous xbuf to noncontiguous buf */
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
             MPI_Count pos=0;
             MPI_Unpack_c(xbuf, xlen, &pos, buf, (MPI_Count)buf_count, buf_type,
                          MPI_COMM_SELF);
@@ -144,12 +165,15 @@ ncmpio_read_write(NC           *ncp,
         MPI_Datatype  xbuf_type=buf_type;
 
         if (buf_count > NC_MAX_INT) {
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
             MPI_Type_contiguous_c((MPI_Count)buf_count, buf_type, &xbuf_type);
             MPI_Type_commit(&xbuf_type);
             xlen = 1;
 #else
-            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+            if (coll_indep == NC_REQ_COLL)
+                DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+            else
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 #endif
         }
         else if (buf_count > 0 && !buftype_is_contig &&
@@ -160,7 +184,7 @@ ncmpio_read_write(NC           *ncp,
              * noncontiguous.
              */
             if (req_size > NC_MAX_INT) {
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
                 MPI_Count pos=0;
                 xbuf = NCI_Malloc(req_size);
                 MPI_Pack_c(buf, (MPI_Count)buf_count, buf_type, xbuf,
@@ -203,7 +227,7 @@ ncmpio_read_write(NC           *ncp,
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) {
                     err = (err == NC_EFILE) ? NC_EWRITE : err;
-                    DEBUG_ASSIGN_ERROR(status, err)
+                    DEBUG_RETURN_ERROR(err)
                 }
             }
         }

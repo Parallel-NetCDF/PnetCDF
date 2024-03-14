@@ -123,7 +123,7 @@ type_create_subarray64(int               ndims,
 
     if (ndims == 0) DEBUG_RETURN_ERROR(NC_EDIMMETA)
 
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
     MPI_Count *sizes, *subsizes, *starts;
 
     sizes = (MPI_Count*) NCI_Malloc((size_t)ndims * 3 * sizeof(MPI_Count));
@@ -329,7 +329,7 @@ filetype_create_vara(const NC         *ncp,
 
     /* previously, request size has been checked and it must > 0 */
     if (IS_RECVAR(varp)) {
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count blocklength;
 #else
         int blocklength;
@@ -358,7 +358,7 @@ filetype_create_vara(const NC         *ncp,
             blocklength = varp->xsz;
         }
 
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
         /* concatenate number of count[0] subarray types into filetype */
         err = MPI_Type_create_hvector_c(count[0], blocklength, ncp->recsize,
                                         rectype, &filetype);
@@ -576,8 +576,8 @@ ncmpio_file_set_view(const NC     *ncp,
     MPI_Comm_rank(ncp->comm, &rank);
     if (rank == 0) {
         /* prepend the whole file header to filetype */
-        MPI_Datatype root_filetype, ftypes[2];
-#if MPI_VERSION >= 3
+        MPI_Datatype root_filetype=MPI_BYTE, ftypes[2];
+#ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count blocklens[2];
         MPI_Count disps[2];
 #else
@@ -585,8 +585,10 @@ ncmpio_file_set_view(const NC     *ncp,
         MPI_Aint disps[2];
 
         /* check if header size > 2^31 */
-        if (ncp->begin_var > NC_MAX_INT)
-            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+        if (ncp->begin_var > NC_MAX_INT) {
+            status = NC_EINTOVERFLOW;
+            goto err_out;
+        }
 #endif
 
         /* first block is the header extent */
@@ -599,23 +601,31 @@ ncmpio_file_set_view(const NC     *ncp,
             disps[1] = *offset;
            ftypes[1] = filetype;
 
-#if (MPI_VERSION < 3) && (SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET)
+#if !defined(HAVE_MPI_LARGE_COUNT) && (SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET)
         if (*offset > NC_MAX_INT) {
-            blocklens[1] = 0;
-            DEBUG_ASSIGN_ERROR(status, NC_EAINT_TOO_SMALL)
+            status = NC_EINTOVERFLOW;
+            goto err_out;
         }
 #endif
 
-#if MPI_VERSION >= 3
-        MPI_Type_create_struct_c(2, blocklens, disps, ftypes, &root_filetype);
+#ifdef HAVE_MPI_LARGE_COUNT
+        mpireturn = MPI_Type_create_struct_c(2, blocklens, disps, ftypes,
+                                             &root_filetype);
 #else
-        MPI_Type_create_struct(2, blocklens, disps, ftypes, &root_filetype);
+        mpireturn = MPI_Type_create_struct(2, blocklens, disps, ftypes,
+                                           &root_filetype);
 #endif
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_struct");
+            if (status == NC_NOERR) status = err;
+        }
         MPI_Type_commit(&root_filetype);
 
+err_out:
         TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, root_filetype, "native",
                                     MPI_INFO_NULL);
-        MPI_Type_free(&root_filetype);
+        if (root_filetype != MPI_BYTE)
+            MPI_Type_free(&root_filetype);
 
         /* now update the explicit offset to be used in MPI-IO call later */
         *offset = ncp->begin_var;

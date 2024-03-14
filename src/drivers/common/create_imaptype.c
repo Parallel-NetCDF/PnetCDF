@@ -69,7 +69,7 @@ ncmpii_create_imaptype(int               ndims,
      */
     if (imap_contig_blocklen > NC_MAX_INT || count[dim] > NC_MAX_INT ||
         imap[dim] > NC_MAX_INT) {
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
         mpireturn = MPI_Type_vector_c(count[dim], imap_contig_blocklen,
                                       imap[dim], itype, imaptype);
         if (mpireturn != MPI_SUCCESS) {
@@ -99,7 +99,7 @@ ncmpii_create_imaptype(int               ndims,
         MPI_Datatype tmptype;
 
         if (count[dim] > NC_MAX_INT) {
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
             mpireturn = MPI_Type_create_hvector_c(count[dim], 1,
                         imap[dim]*el_size, *imaptype, &tmptype);
             if (mpireturn != MPI_SUCCESS) {

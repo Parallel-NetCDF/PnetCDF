@@ -362,7 +362,7 @@ int ncbbio_log_enddef(NC_bb *ncbbp)
 int ncbbio_log_close(NC_bb *ncbbp,
                      int    replay)
 {
-    int err;
+    int err, status=NC_NOERR;
     NC_bb_metadataheader* headerp;
 
 #ifdef PNETCDF_PROFILING
@@ -484,7 +484,7 @@ int ncbbio_log_close(NC_bb *ncbbp,
 #endif
 #endif
 
-    return NC_NOERR;
+    return status;
 }
 
 /*

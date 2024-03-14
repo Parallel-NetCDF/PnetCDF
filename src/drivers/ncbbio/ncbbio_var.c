@@ -417,7 +417,7 @@ ncbbio_put_varn(void              *ncdp,
             bnelems *= elsize;
 
             if (bnelems > NC_MAX_INT) {
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
                 MPI_Count position=0;
                 cbuf = NCI_Malloc(bnelems);
                 mpireturn = MPI_Pack_c((void*)buf, bufcount, buftype, cbuf,

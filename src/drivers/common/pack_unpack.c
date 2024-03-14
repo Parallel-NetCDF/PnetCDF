@@ -42,20 +42,22 @@ ncmpii_pack(int                ndims,
     MPI_Offset buf_size, nelems;
     MPI_Datatype etype, imaptype=MPI_DATATYPE_NULL;
 
-#if MPI_VERSION >= 3
-    MPI_Count position, type_size;
-    mpireturn = MPI_Type_size_c(buftype, &type_size);
+#ifdef HAVE_MPI_TYPE_SIZE_X
+    MPI_Count type_size;
+    mpireturn = MPI_Type_size_x(buftype, &type_size);
     if (mpireturn != MPI_SUCCESS) {
-        err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size_c");
+        err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size_x");
         DEBUG_RETURN_ERROR(err)
     }
 #else
-    int position, type_size;
+    int type_size;
     mpireturn = MPI_Type_size(buftype, &type_size);
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
         DEBUG_RETURN_ERROR(err)
     }
+    else if (type_size == MPI_UNDEFINED)
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 #endif
     buf_size = type_size;
 
@@ -107,11 +109,12 @@ ncmpii_pack(int                ndims,
             /* allocate lbuf and pack buf into lbuf */
             lbuf = NCI_Malloc((size_t)buf_size);
             if (lbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-            position = 0;
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
+            MPI_Count position=0;
             MPI_Pack_c(buf, (MPI_Count)bufcount, buftype, lbuf,
                        (MPI_Count)buf_size, &position, MPI_COMM_SELF);
 #else
+            int position=0;
             if (buf_size > NC_MAX_INT)
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
@@ -128,13 +131,14 @@ ncmpii_pack(int                ndims,
     /* Step 2: pack lbuf to cbuf if imap is non-contiguous */
     if (imaptype != MPI_DATATYPE_NULL) { /* true varm */
         /* pack lbuf to cbuf, a contiguous buffer, using imaptype */
-        position = 0;
-#if MPI_VERSION >= 3
+#ifdef HAVE_MPI_LARGE_COUNT
+        MPI_Count position=0;
         *cbuf = NCI_Malloc((size_t)buf_size);
         MPI_Pack_c(lbuf, 1, imaptype, *cbuf, (MPI_Count)buf_size, &position,
                    MPI_COMM_SELF);
 #else
-        if (buf_size > NC_MAX_INT) {
+        int position=0;
+        if (buf_size > NC_MAX_INT)
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
         *cbuf = NCI_Malloc((size_t)buf_size);
