@@ -76,7 +76,7 @@ ncmpio_new_NC_var(char *name, size_t name_len, int ndims)
 
 /*----< dup_NC_var() >-------------------------------------------------------*/
 static NC_var *
-dup_NC_var(const NC_var *rvarp)
+dup_NC_var(const NC_var *rvarp, int attr_hsize)
 {
     char *name;
     NC_var *varp;
@@ -95,6 +95,12 @@ dup_NC_var(const NC_var *rvarp)
     /* copy dimids[] */
     if (rvarp->ndims != 0 && rvarp->dimids != NULL)
         memcpy(varp->dimids, rvarp->dimids, (size_t)rvarp->ndims * SIZEOF_INT);
+
+#ifndef SEARCH_NAME_LINEARLY
+    /* initialize hashing lookup table size for attributes */
+    varp->attrs.hash_size = attr_hsize;
+    varp->attrs.nameT = NULL;
+#endif
 
     /* copy attributes */
     if (ncmpio_dup_NC_attrarray(&varp->attrs, &rvarp->attrs) != NC_NOERR) {
@@ -125,7 +131,6 @@ ncmpio_free_NC_vararray(NC_vararray *ncap)
     int i;
 
     assert(ncap != NULL);
-    if (ncap->ndefined == 0) return;
 
     if (ncap->value != NULL) {
         /* when error is detected reading NC_VARIABLE tag, ncap->ndefined can
@@ -142,16 +147,23 @@ ncmpio_free_NC_vararray(NC_vararray *ncap)
 
 #ifndef SEARCH_NAME_LINEARLY
     /* free space allocated for var name lookup table */
-    ncmpio_hash_table_free(ncap->nameT);
+    if (ncap->nameT != NULL) {
+        ncmpio_hash_table_free(ncap->nameT, ncap->hash_size);
+        NCI_Free(ncap->nameT);
+        ncap->nameT = NULL;
+        ncap->hash_size = 0;
+    }
 #endif
 }
 
 /*----< ncmpio_dup_NC_vararray() >-------------------------------------------*/
 int
 ncmpio_dup_NC_vararray(NC_vararray       *ncap,
-                       const NC_vararray *ref)
+                       const NC_vararray *ref,
+                       int                attr_hsize)
 {
     int i, status=NC_NOERR;
+    size_t alloc_size;
 
     assert(ref != NULL);
     assert(ncap != NULL);
@@ -162,16 +174,14 @@ ncmpio_dup_NC_vararray(NC_vararray       *ncap,
         return NC_NOERR;
     }
 
-    if (ref->ndefined > 0) {
-        size_t alloc_size = _RNDUP(ref->ndefined, NC_ARRAY_GROWBY);
-        ncap->value = (NC_var **) NCI_Calloc(alloc_size, sizeof(NC_var*));
-        if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
+    alloc_size = _RNDUP(ref->ndefined, PNC_ARRAY_GROWBY);
+    ncap->value = (NC_var **) NCI_Calloc(alloc_size, sizeof(NC_var*));
+    if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* duplicate one NC_var object at a time */
     ncap->ndefined = 0;
     for (i=0; i<ref->ndefined; i++) {
-        ncap->value[i] = dup_NC_var(ref->value[i]);
+        ncap->value[i] = dup_NC_var(ref->value[i], attr_hsize);
         if (ncap->value[i] == NULL) {
             DEBUG_ASSIGN_ERROR(status, NC_ENOMEM)
             break;
@@ -185,8 +195,12 @@ ncmpio_dup_NC_vararray(NC_vararray       *ncap,
     assert(ncap->ndefined == ref->ndefined);
 
 #ifndef SEARCH_NAME_LINEARLY
+    /* allocate hashing lookup table, if not allocated yet */
+    if (ncap->nameT == NULL)
+        ncap->nameT = NCI_Calloc(ncap->hash_size, sizeof(NC_nametable));
+
     /* duplicate var name lookup table */
-    ncmpio_hash_table_copy(ncap->nameT, ref->nameT);
+    ncmpio_hash_table_copy(ncap->nameT, ref->nameT, ncap->hash_size);
 #endif
 
     return NC_NOERR;
@@ -243,7 +257,7 @@ NC_findvar(const NC_vararray  *ncap,
     if (ncap->ndefined == 0) return NC_ENOTVAR;
 
     /* hash the var name into a key for name lookup */
-    key = HASH_FUNC(name);
+    key = HASH_FUNC(name, ncap->hash_size);
 
     /* check the list using linear search */
     nchars = strlen(name);
@@ -378,8 +392,8 @@ ncmpio_def_var(void       *ncdp,
     }
 
     /* allocate/expand ncp->vars.value array */
-    if (ncp->vars.ndefined % NC_ARRAY_GROWBY == 0) {
-        size_t alloc_size = (size_t)ncp->vars.ndefined + NC_ARRAY_GROWBY;
+    if (ncp->vars.ndefined % PNC_ARRAY_GROWBY == 0) {
+        size_t alloc_size = (size_t)ncp->vars.ndefined + PNC_ARRAY_GROWBY;
         ncp->vars.value = (NC_var **) NCI_Realloc(ncp->vars.value,
                                       alloc_size * sizeof(NC_var*));
         if (ncp->vars.value == NULL) {
@@ -421,8 +435,14 @@ err_check:
     assert(nname != NULL);
 
 #ifndef SEARCH_NAME_LINEARLY
+    varp->attrs.hash_size = ncp->hash_size_attr;
+
+    /* allocate hashing lookup table, if not allocated yet */
+    if (ncp->vars.nameT == NULL)
+        ncp->vars.nameT = NCI_Calloc(ncp->vars.hash_size, sizeof(NC_nametable));
+
     /* insert nname to the lookup table */
-    ncmpio_hash_insert(ncp->vars.nameT, nname, varp->varid);
+    ncmpio_hash_insert(ncp->vars.nameT, ncp->vars.hash_size, nname, varp->varid);
 #endif
 
     if (varidp != NULL) *varidp = varp->varid;
@@ -568,8 +588,8 @@ ncmpio_rename_var(void       *ncdp,
 
 #ifndef SEARCH_NAME_LINEARLY
     /* update var name lookup table */
-    err = ncmpio_update_name_lookup_table(ncp->vars.nameT, varid,
-                        ncp->vars.value[varid]->name, nnewname);
+    err = ncmpio_update_name_lookup_table(ncp->vars.nameT, ncp->vars.hash_size,
+                        varid, ncp->vars.value[varid]->name, nnewname);
     if (err != NC_NOERR) {
         DEBUG_TRACE_ERROR(err)
         goto err_check;

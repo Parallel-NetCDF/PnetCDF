@@ -268,7 +268,7 @@ ncmpio_create(MPI_Comm     comm,
     ncp->ncid = ncid;
 
     /* chunk size for reading header, set to default before check hints */
-    ncp->chunk = NC_DEFAULT_CHUNKSIZE;
+    ncp->chunk = PNC_DEFAULT_CHUNKSIZE;
 
     /* calculate the true header size (not-yet aligned)
      * No need to do this now.
@@ -279,7 +279,7 @@ ncmpio_create(MPI_Comm     comm,
     ncp->dims.unlimited_id = -1;
 
     /* buffer to pack noncontiguous user buffers when calling wait() */
-    ncp->ibuf_size = NC_DEFAULT_IBUF_SIZE;
+    ncp->ibuf_size = PNC_DEFAULT_IBUF_SIZE;
 
     /* Extract PnetCDF specific I/O hints from user_info and set default hint
      * values into info_used. Note some MPI libraries, such as MPICH 3.3.1 and

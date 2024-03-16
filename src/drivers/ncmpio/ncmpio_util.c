@@ -106,7 +106,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
             sprintf(value, "%d", ncp->chunk);
         }
     }
-    if (!flag) sprintf(value, "%d", NC_DEFAULT_CHUNKSIZE);
+    if (!flag) sprintf(value, "%d", PNC_DEFAULT_CHUNKSIZE);
     MPI_Info_set(info_used, "nc_header_read_chunk_size", value);
 
     if (user_info != MPI_INFO_NULL) {
@@ -144,7 +144,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
             sprintf(value, "%lld", ncp->ibuf_size);
         }
     }
-    if (!flag) sprintf(value, "%d", NC_DEFAULT_IBUF_SIZE);
+    if (!flag) sprintf(value, "%d", PNC_DEFAULT_IBUF_SIZE);
     MPI_Info_set(info_used, "nc_ibuf_size", value);
 
 #ifdef ENABLE_SUBFILING

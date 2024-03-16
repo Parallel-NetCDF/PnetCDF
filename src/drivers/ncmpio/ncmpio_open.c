@@ -40,7 +40,7 @@ ncmpio_open(MPI_Comm     comm,
             void       **ncpp)
 {
     char *env_str;
-    int mpiomode, err, status=NC_NOERR, mpireturn;
+    int i, mpiomode, err, status=NC_NOERR, mpireturn;
     MPI_File fh;
     MPI_Info info_used;
     NC *ncp=NULL;
@@ -99,10 +99,10 @@ ncmpio_open(MPI_Comm     comm,
     ncp->ncid = ncid;
 
     /* chunk size for reading header (set default before check hints) */
-    ncp->chunk = NC_DEFAULT_CHUNKSIZE;
+    ncp->chunk = PNC_DEFAULT_CHUNKSIZE;
 
     /* buffer to pack noncontiguous user buffers when calling wait() */
-    ncp->ibuf_size = NC_DEFAULT_IBUF_SIZE;
+    ncp->ibuf_size = PNC_DEFAULT_IBUF_SIZE;
 
     /* Extract PnetCDF specific I/O hints from user_info and set default hint
      * values into info_used. Note some MPI libraries, such as MPICH 3.3.1 and
@@ -182,9 +182,11 @@ ncmpio_open(MPI_Comm     comm,
 
 #ifndef SEARCH_NAME_LINEARLY
     /* initialize and populate name lookup tables ---------------------------*/
-    ncmpio_hash_table_populate_NC_dim(&ncp->dims);
-    ncmpio_hash_table_populate_NC_var(&ncp->vars);
+    ncmpio_hash_table_populate_NC_dim(&ncp->dims, ncp->dims.hash_size);
+    ncmpio_hash_table_populate_NC_var(&ncp->vars, ncp->vars.hash_size);
     ncmpio_hash_table_populate_NC_attr(ncp);
+    for (i=0; i<ncp->vars.ndefined; i++)
+        ncp->vars.value[i]->attrs.hash_size = ncp->hash_size_attr;
 #endif
 
     *ncpp = (void*)ncp;
