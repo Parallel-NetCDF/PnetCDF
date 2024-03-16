@@ -621,7 +621,9 @@ ncmpio_file_set_view(const NC     *ncp,
         }
         MPI_Type_commit(&root_filetype);
 
+#ifndef HAVE_MPI_LARGE_COUNT
 err_out:
+#endif
         TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, root_filetype, "native",
                                     MPI_INFO_NULL);
         if (root_filetype != MPI_BYTE)
