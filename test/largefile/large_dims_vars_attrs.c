@@ -25,7 +25,7 @@
 #include <pnetcdf.h>
 #include <testutils.h>
 
-#define LARGE_NUM 10240
+#define LARGE_NUM 102400
 
 int main(int argc, char** argv)
 {
@@ -100,8 +100,11 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid);
     CHECK_ERR
 
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL,
                      &ncid); CHECK_ERR
+
+    err = ncmpi_redef(ncid); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
     for (i=0; i<LARGE_NUM; i++) {
         MPI_Offset len;
@@ -139,6 +142,10 @@ int main(int argc, char** argv)
             ncmpi_inq_malloc_list();
         }
     }
+
+    err = ncmpi_inq_malloc_max_size(&malloc_size);
+    printf("%d: PnetCDF internal memory footprint high water mark %.2f MB\n",
+           rank, (float)malloc_size/1048576);
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
