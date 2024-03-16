@@ -190,6 +190,70 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
     }
     if (!flag) strcpy(value, "false");
     MPI_Info_set(info_used, "nc_header_collective", value);
+
+    ncp->dims.hash_size = PNC_HSIZE_DIM;
+    if (user_info != MPI_INFO_NULL) {
+        /* Hash table size for dimensions */
+        MPI_Info_get(user_info, "nc_hash_size_dim", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag) {
+            errno = 0;  /* errno must set to zero before calling atoi */
+            ncp->dims.hash_size = atoi(value);
+            if (errno != 0 || ncp->dims.hash_size < 0)
+                ncp->dims.hash_size = PNC_HSIZE_DIM;
+            sprintf(value, "%d", ncp->dims.hash_size);
+        }
+    }
+    if (!flag) sprintf(value, "%d", PNC_HSIZE_DIM);
+    MPI_Info_set(info_used, "nc_hash_size_dim", value);
+
+    ncp->vars.hash_size = PNC_HSIZE_VAR;
+    if (user_info != MPI_INFO_NULL) {
+        /* Hash table size for variables */
+        MPI_Info_get(user_info, "nc_hash_size_var", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag) {
+            errno = 0;  /* errno must set to zero before calling atoi */
+            ncp->vars.hash_size = atoi(value);
+            if (errno != 0 || ncp->vars.hash_size < 0)
+                ncp->vars.hash_size = PNC_HSIZE_VAR;
+            sprintf(value, "%d", ncp->vars.hash_size);
+        }
+    }
+    if (!flag) sprintf(value, "%d", PNC_HSIZE_VAR);
+    MPI_Info_set(info_used, "nc_hash_size_var", value);
+
+    ncp->attrs.hash_size = PNC_HSIZE_GATTR;
+    if (user_info != MPI_INFO_NULL) {
+        /* Hash table size for global attributes */
+        MPI_Info_get(user_info, "nc_hash_size_gattr", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag) {
+            errno = 0;  /* errno must set to zero before calling atoi */
+            ncp->attrs.hash_size = atoi(value);
+            if (errno != 0 || ncp->attrs.hash_size < 0)
+                ncp->attrs.hash_size = PNC_HSIZE_GATTR;
+            sprintf(value, "%d", ncp->attrs.hash_size);
+        }
+    }
+    if (!flag) sprintf(value, "%d", PNC_HSIZE_GATTR);
+    MPI_Info_set(info_used, "nc_hash_size_gattr", value);
+
+    ncp->hash_size_attr = PNC_HSIZE_VATTR;
+    if (user_info != MPI_INFO_NULL) {
+        /* Hash table size for non-global attributes */
+        MPI_Info_get(user_info, "nc_hash_size_vattr", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag) {
+            errno = 0;  /* errno must set to zero before calling atoi */
+            ncp->hash_size_attr = atoi(value);
+            if (errno != 0 || ncp->hash_size_attr < 0)
+                ncp->hash_size_attr = PNC_HSIZE_VATTR;
+            sprintf(value, "%d", ncp->hash_size_attr);
+        }
+    }
+    if (!flag) sprintf(value, "%d", PNC_HSIZE_VATTR);
+    MPI_Info_set(info_used, "nc_hash_size_vattr", value);
 }
 
 /*----< ncmpio_first_offset() >-----------------------------------------------*/
