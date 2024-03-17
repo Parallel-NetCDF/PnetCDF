@@ -391,19 +391,18 @@ int ncbbio_log_close(NC_bb *ncbbp,
     /* If log file is created, flush the log */
     if (ncbbp->metalog_fd != NULL) {
         /* Commit to CDF file */
-        if (replay && (headerp->num_entries > 0 || !(fIsSet(ncbbp->flag, NC_MODE_INDEP)))) {
-            ncbbio_log_flush_core(ncbbp);
+        if (replay && (headerp->num_entries > 0 ||
+            !(fIsSet(ncbbp->flag, NC_MODE_INDEP)))) {
+            status = ncbbio_log_flush_core(ncbbp);
         }
 
-        /* Close log file */
+        /* Close metadata log file */
         err = ncbbio_sharedfile_close(ncbbp->metalog_fd);
-        if (err != NC_NOERR) {
-            return err;
-        }
+        if (status == NC_NOERR) status = err;
+
+        /* Close data log file */
         err = ncbbio_sharedfile_close(ncbbp->datalog_fd);
-        if (err != NC_NOERR) {
-            return err;
-        }
+        if (status == NC_NOERR) status = err;
 
         /* Delete log files if delete flag is set */
         if (ncbbp->hints & NC_LOG_HINT_DEL_ON_CLOSE) {
