@@ -197,6 +197,11 @@ ncbbio_close(void *ncdp)
      * Putlist and metadata index also needs to be cleaned up
      */
     if (ncbbp->inited) {
+        if (ncbbp->flag & NC_MODE_DEF) { /* exit define mode first */
+            err = ncbbp->ncmpio_driver->enddef(ncbbp->ncp);
+            if (status == NC_NOERR) status = err;
+        }
+
         /* Close log file */
         err = ncbbio_log_close(ncbbp, 1);
         if (status == NC_NOERR) status = err;
