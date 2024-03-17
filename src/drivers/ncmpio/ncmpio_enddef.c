@@ -133,14 +133,14 @@ move_file_block(NC         *ncp,
          * bufcount for write. Note that the latter will write the variables
          * that have not been written before. Below uses the former option.
          */
-#ifdef _USE_MPI_GET_COUNT
+
         /* explicitly initialize mpistatus object to 0. For zero-length read,
          * MPI_Get_count may report incorrect result for some MPICH version,
          * due to the uninitialized MPI_Status object passed to MPI-IO calls.
          * Thus we initialize it above to work around.
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
-#endif
+
         TRACE_IO(MPI_File_write_at_all)(ncp->collective_fh,
                                         to+nbytes+rank*chunk_size,
                                         buf, get_size /* bufcount */,
@@ -150,12 +150,18 @@ move_file_block(NC         *ncp,
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
         }
         else {
-#ifdef _USE_MPI_GET_COUNT
-            int put_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+            /* update the number of bytes written since file open */
+#ifdef HAVE_MPI_GET_COUNT_C
+            MPI_Count put_size;
+            MPI_Get_count_c(&mpistatus, MPI_BYTE, &put_size);
             ncp->put_size += put_size;
 #else
-            ncp->put_size += get_size; /* or bufcount */
+            int put_size;
+            mpireturn = MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+            if (mpireturn != MPI_SUCCESS || put_size == MPI_UNDEFINED)
+                ncp->put_size += get_size; /* or bufcount */
+            else
+                ncp->put_size += put_size;
 #endif
         }
         TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->comm);
@@ -520,14 +526,13 @@ write_NC(NC *ncp)
 
         /* rank 0's fileview already includes the file header */
 
-#ifdef _USE_MPI_GET_COUNT
         /* explicitly initialize mpistatus object to 0. For zero-length read,
          * MPI_Get_count may report incorrect result for some MPICH version,
          * due to the uninitialized MPI_Status object passed to MPI-IO calls.
          * Thus we initialize it above to work around.
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
-#endif
+
         /* write the header in chunks */
         remain = header_wlen;
         for (i=0; i<ntimes; i++) {
@@ -544,12 +549,18 @@ write_NC(NC *ncp)
                 if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
             }
             else {
-#ifdef _USE_MPI_GET_COUNT
-                int put_size;
-                MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+                /* update the number of bytes written since file open */
+#ifdef HAVE_MPI_GET_COUNT_C
+                MPI_Count put_size;
+                MPI_Get_count_c(&mpistatus, MPI_BYTE, &put_size);
                 ncp->put_size += put_size;
 #else
-                ncp->put_size += header_wlen;
+                int put_size;
+                mpireturn = MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+                if (mpireturn != MPI_SUCCESS || put_size == MPI_UNDEFINED)
+                    ncp->put_size += header_wlen;
+                else
+                    ncp->put_size += put_size;
 #endif
             }
             remain -= NC_MAX_INT;

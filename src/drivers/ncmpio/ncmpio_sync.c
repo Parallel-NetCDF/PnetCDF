@@ -107,14 +107,13 @@ ncmpio_write_numrecs(NC         *ncp,
         }
         /* ncmpix_put_xxx advances the 1st argument with size len */
 
-#ifdef _USE_MPI_GET_COUNT
         /* explicitly initialize mpistatus object to 0. For zero-length read,
          * MPI_Get_count may report incorrect result for some MPICH version,
          * due to the uninitialized MPI_Status object passed to MPI-IO calls.
          * Thus we initialize it above to work around.
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
-#endif
+
         /* root's file view always includes the entire file header */
         if (fIsSet(ncp->flags, NC_HCOLL))
             TRACE_IO(MPI_File_write_at_all)(fh, NC_NUMRECS_OFFSET, (void*)pos,
@@ -127,12 +126,18 @@ ncmpio_write_numrecs(NC         *ncp,
             if (err == NC_EFILE) DEBUG_RETURN_ERROR(NC_EWRITE)
         }
         else {
-#ifdef _USE_MPI_GET_COUNT
-            int put_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+            /* update the number of bytes written since file open */
+#ifdef HAVE_MPI_GET_COUNT_C
+            MPI_Count put_size;
+            MPI_Get_count_c(&mpistatus, MPI_BYTE, &put_size);
             ncp->put_size += put_size;
 #else
-            ncp->put_size += len;
+            int put_size;
+            mpireturn = MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+            if (mpireturn != MPI_SUCCESS || put_size == MPI_UNDEFINED)
+                ncp->put_size += len;
+            else
+                ncp->put_size += put_size;
 #endif
         }
     }

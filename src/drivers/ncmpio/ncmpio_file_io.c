@@ -66,14 +66,12 @@ ncmpio_read_write(NC           *ncp,
     /* request size in bytes, may be > NC_MAX_INT */
     req_size = (MPI_Offset)btype_size * buf_count;
 
-#ifdef _USE_MPI_GET_COUNT
     /* explicitly initialize mpistatus object to 0. For zero-length read,
      * MPI_Get_count may report incorrect result for some MPICH version,
      * due to the uninitialized MPI_Status object passed to MPI-IO calls.
      * Thus we initialize it above to work around.
      */
     memset(&mpistatus, 0, sizeof(MPI_Status));
-#endif
 
     if (coll_indep == NC_REQ_COLL)
         fh = ncp->collective_fh;
@@ -141,12 +139,27 @@ ncmpio_read_write(NC           *ncp,
         }
         if (mpireturn == MPI_SUCCESS) {
             /* update the number of bytes read since file open */
-#ifdef _USE_MPI_GET_COUNT
-            int get_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
+#ifdef HAVE_MPI_GET_COUNT_C
+            MPI_Count get_size;
+            MPI_Get_count_c(&mpistatus, MPI_BYTE, &get_size);
             ncp->get_size += get_size;
 #else
-            ncp->get_size += req_size;
+            int get_size;
+            mpireturn = MPI_Get_count(&mpistatus, xbuf_type, &get_size);
+            if (mpireturn != MPI_SUCCESS || get_size == MPI_UNDEFINED)
+                ncp->get_size += req_size;
+            else {
+#ifdef HAVE_MPI_TYPE_SIZE_X
+                /* MPI_Type_size_x is introduced in MPI 3.0 */
+                mpireturn = MPI_Type_size_x(xbuf_type, &btype_size);
+#else
+                mpireturn = MPI_Type_size(xbuf_type, &btype_size);
+#endif
+                if (mpireturn != MPI_SUCCESS || get_size == MPI_UNDEFINED)
+                    ncp->get_size += req_size;
+                else
+                    ncp->get_size += btype_size * get_size;
+            }
 #endif
         }
         if (xbuf != buf) { /* unpack contiguous xbuf to noncontiguous buf */
@@ -237,12 +250,27 @@ ncmpio_read_write(NC           *ncp,
         }
         if (mpireturn == MPI_SUCCESS) {
             /* update the number of bytes written since file open */
-#ifdef _USE_MPI_GET_COUNT
-            int put_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
+#ifdef HAVE_MPI_GET_COUNT_C
+            MPI_Count put_size;
+            MPI_Get_count_c(&mpistatus, MPI_BYTE, &put_size);
             ncp->put_size += put_size;
 #else
-            ncp->put_size += req_size;
+            int put_size;
+            mpireturn = MPI_Get_count(&mpistatus, xbuf_type, &put_size);
+            if (mpireturn != MPI_SUCCESS || put_size == MPI_UNDEFINED)
+                ncp->put_size += req_size;
+            else {
+#ifdef HAVE_MPI_TYPE_SIZE_X
+                /* MPI_Type_size_x is introduced in MPI 3.0 */
+                mpireturn = MPI_Type_size_x(xbuf_type, &btype_size);
+#else
+                mpireturn = MPI_Type_size(xbuf_type, &btype_size);
+#endif
+                if (mpireturn != MPI_SUCCESS || put_size == MPI_UNDEFINED)
+                    ncp->put_size += req_size;
+                else
+                    ncp->put_size += btype_size * put_size;
+            }
 #endif
         }
         if (xbuf != buf) NCI_Free(xbuf);

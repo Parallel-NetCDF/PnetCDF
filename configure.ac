@@ -1326,6 +1326,7 @@ AC_CHECK_FUNCS([MPI_Type_create_subarray_c \
                 MPI_Type_vector_c \
                 MPI_Type_size_c \
                 MPI_Type_get_true_extent_c \
+                MPI_Get_count_c \
                 MPI_Pack_c \
                 MPI_Unpack_c], [], [have_mpi_large_count_apis=no])
 # If one of the above APIs is not available, have_mpi_large_count_apis will be
