@@ -84,21 +84,18 @@ getput_vard(NC               *ncp,
      * MPI_Type_create_hindexed), we need to find the true last byte accessed
      * by this request, true_ub, in order to calculate new_numrecs.
      */
-#ifdef HAVE_MPI_TYPE_SIZE_X
+#ifdef HAVE_MPI_TYPE_SIZE_C
+    /* MPI_Type_size_c is introduced in MPI 4.0 */
+    MPI_Count true_lb=0, true_ub=0, true_extent=0;
+    MPI_Count type_size;
+
+    mpireturn = MPI_Type_size_c(filetype, &type_size);
+#elif defined(HAVE_MPI_TYPE_SIZE_X)
     /* MPI_Type_size_x is introduced in MPI 3.0 */
     MPI_Count true_lb=0, true_ub=0, true_extent=0;
     MPI_Count type_size;
 
     mpireturn = MPI_Type_size_x(filetype, &type_size);
-    if (mpireturn != MPI_SUCCESS) {
-        err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size_x");
-        xtype = MPI_BYTE;
-        goto err_check;
-    }
-    filetype_size = type_size;
-    /* MPI_Type_get_true_extent_x is introduced in MPI 3.0 */
-    MPI_Type_get_true_extent_x(filetype, &true_lb, &true_extent);
-    true_ub = true_lb + true_extent;
 #else
     /* PROBLEM: In MPI_Type_size(), argument filetype_size is a 4-byte integer,
      * cannot be used for large filetypes. Prior to MPI 3.0 standard, argument
@@ -108,23 +105,30 @@ getput_vard(NC               *ncp,
     int type_size;
 
     mpireturn = MPI_Type_size(filetype, &type_size);
+#endif
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
-        xtype = MPI_BYTE;
         goto err_check;
     }
     if (type_size == MPI_UNDEFINED) { /* int overflow */
         DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
         goto err_check;
     }
-    filetype_size = type_size;
-    MPI_Type_get_true_extent(filetype, &true_lb, &true_extent);
-    true_ub = true_lb + true_extent;
-#endif
-
-    if (filetype_size == 0) { /* zero-length request */
+    else if (type_size == 0) /* zero-length request */
         goto err_check;
-    }
+
+    filetype_size = type_size;
+
+#ifdef HAVE_MPI_TYPE_GET_TRUE_EXTENT_C
+    /* MPI_Type_get_true_extent_c is introduced in MPI 4.0 */
+    MPI_Type_get_true_extent_c(filetype, &true_lb, &true_extent);
+#elif defined(HAVE_MPI_TYPE_GET_TRUE_EXTENT_X)
+    /* MPI_Type_get_true_extent_x is introduced in MPI 3.0 */
+    MPI_Type_get_true_extent_x(filetype, &true_lb, &true_extent);
+#else
+    MPI_Type_get_true_extent(filetype, &true_lb, &true_extent);
+#endif
+    true_ub = true_lb + true_extent;
 
     /* get the corresponding MPI datatype of variable external type */
     xtype = ncmpii_nc2mpitype(varp->xtype);

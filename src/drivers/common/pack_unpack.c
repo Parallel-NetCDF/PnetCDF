@@ -42,23 +42,23 @@ ncmpii_pack(int                ndims,
     MPI_Offset buf_size, nelems;
     MPI_Datatype etype, imaptype=MPI_DATATYPE_NULL;
 
-#ifdef HAVE_MPI_TYPE_SIZE_X
+#ifdef HAVE_MPI_TYPE_SIZE_C
+    MPI_Count type_size;
+    mpireturn = MPI_Type_size_c(buftype, &type_size);
+#elif defined(HAVE_MPI_TYPE_SIZE_X)
     MPI_Count type_size;
     mpireturn = MPI_Type_size_x(buftype, &type_size);
-    if (mpireturn != MPI_SUCCESS) {
-        err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size_x");
-        DEBUG_RETURN_ERROR(err)
-    }
 #else
     int type_size;
     mpireturn = MPI_Type_size(buftype, &type_size);
+#endif
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
         DEBUG_RETURN_ERROR(err)
     }
     else if (type_size == MPI_UNDEFINED)
         DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-#endif
+
     buf_size = type_size;
 
     *cbuf = buf;

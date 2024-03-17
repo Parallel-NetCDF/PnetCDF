@@ -1324,16 +1324,23 @@ AC_CHECK_FUNCS([MPI_Type_create_subarray_c \
                 MPI_Type_create_struct_c \
                 MPI_Type_create_hindexed_c \
                 MPI_Type_vector_c \
+                MPI_Type_size_c \
+                MPI_Type_get_true_extent_c \
                 MPI_Pack_c \
-                MPI_Unpack_c \
-                MPI_Type_get_true_extent_x \
-                MPI_Type_size_x], [], [have_mpi_large_count_apis=no])
+                MPI_Unpack_c], [], [have_mpi_large_count_apis=no])
 # If one of the above APIs is not available, have_mpi_large_count_apis will be
 # set to no
 UD_MSG_DEBUG([have_mpi_large_count_apis=$have_mpi_large_count_apis])
 if test "x$have_mpi_large_count_apis" = "xyes" ; then
    AC_DEFINE(HAVE_MPI_LARGE_COUNT, 1)
 fi
+
+# MPI standard will deprecate the _x procedures, in favor of the _c procedures.
+# See https://github.com/mpi-forum/mpi-issues/issues/518
+# Check the following _x procedures if available and use them when their _c
+# procedures are not.
+AC_CHECK_FUNCS([MPI_Type_get_true_extent_x \
+                MPI_Type_size_x])
 
 dnl Check presence of MPI COMBINERS. These are of type int.
 dnl These are introduced in MPI 2.0. As PnetCDF requires an MPI library that

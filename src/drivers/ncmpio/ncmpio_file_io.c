@@ -33,7 +33,11 @@ ncmpio_read_write(NC           *ncp,
     MPI_File fh;
     MPI_Offset req_size;
 
-#ifdef HAVE_MPI_TYPE_SIZE_X
+#ifdef HAVE_MPI_TYPE_SIZE_C
+    MPI_Count btype_size;
+    /* MPI_Type_size_c is introduced in MPI 4.0 */
+    mpireturn = MPI_Type_size_c(buf_type, &btype_size);
+#elif defined(HAVE_MPI_TYPE_SIZE_X)
     MPI_Count btype_size;
     /* MPI_Type_size_x is introduced in MPI 3.0 */
     mpireturn = MPI_Type_size_x(buf_type, &btype_size);
