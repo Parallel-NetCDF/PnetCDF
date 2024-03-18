@@ -23,7 +23,7 @@
 /* borrow Jenkins hash function:
  * https://en.wikipedia.org/wiki/Jenkins_hash_function
  */
-int ncmpio_jenkins_one_at_a_time_hash(const char *str_name)
+int ncmpio_jenkins_one_at_a_time_hash(const char *str_name, int hash_size)
 {
     unsigned int i, hash=0;
     size_t len = strlen(str_name);
@@ -40,10 +40,10 @@ int ncmpio_jenkins_one_at_a_time_hash(const char *str_name)
     ret = (int)hash; /* the return value will be used as an array index */
     return ((ret < 0) ? -ret : ret); /* make the value positive */
 #endif
-    /* this is to avoid expensive % operation, i.e. % HASH_TABLE_SIZE
-    return (int)((hash ^ (hash>>10) ^ (hash>>20)) & (HASH_TABLE_SIZE-1));
+    /* this is to avoid expensive % operation, i.e. % hash_size
+    return (int)((hash ^ (hash>>10) ^ (hash>>20)) & (hash_size-1));
     */
-    return (int)(hash & (HASH_TABLE_SIZE-1));
+    return (int)(hash & (hash_size-1));
     /* return value will be used as an array index */
 }
 
@@ -62,7 +62,7 @@ int ncmpio_additive_hash(const char *str_name)
 }
 
 /*----< ncmpio_rotating_hash() >---------------------------------------------*/
-int ncmpio_rotating_hash(const char *str_name)
+int ncmpio_rotating_hash(const char *str_name, int hash_size)
 {
     size_t i, len = strlen(str_name);
     unsigned int hash = (unsigned int)len;
@@ -70,11 +70,11 @@ int ncmpio_rotating_hash(const char *str_name)
         hash = (hash<<4)^(hash>>28)^(unsigned int)str_name[i];
 
     /* below is a clever way to replace (hash % prime) */
-    return (int)((hash ^ (hash>>10) ^ (hash>>20)) & (HASH_TABLE_SIZE-1));
+    return (int)((hash ^ (hash>>10) ^ (hash>>20)) & (hash_size-1));
 }
 
 /*----< ncmpio_Bernstein_hash() >--------------------------------------------*/
-int ncmpio_Bernstein_hash(const char *str_name)
+int ncmpio_Bernstein_hash(const char *str_name, int hsize)
 {
     size_t i, len = strlen(str_name);
     unsigned int hash = (unsigned int)len;
@@ -82,13 +82,12 @@ int ncmpio_Bernstein_hash(const char *str_name)
         /* hash = 65*hash+str_name[i]; */
         hash = hash+(hash<<6)+(unsigned int)str_name[i];
 
-    return (int)((hash ^ (hash>>10) ^ (hash>>20)) & (HASH_TABLE_SIZE-1));
+    return (int)((hash ^ (hash>>10) ^ (hash>>20)) & (hsize-1));
 }
 
 /*----< ncmpio_Pearson_hash() >----------------------------------------------*/
-int ncmpio_Pearson_hash(const char *str_name)
+int ncmpio_Pearson_hash(const char *str_name, int hash_size)
 {
-#if HASH_TABLE_SIZE == 256
     unsigned char T[256] = {
         251, 175, 119, 215, 81, 14, 79, 191, 103, 49, 181, 143, 186, 157,  0,
         232, 31, 32, 55, 60, 152, 58, 17, 237, 174, 70, 160, 144, 220, 90, 57,
@@ -108,18 +107,21 @@ int ncmpio_Pearson_hash(const char *str_name)
         132, 156, 38, 47, 1, 7, 254, 24, 4, 216, 131, 89, 21, 28, 133, 37, 153,
         149, 80, 170, 68, 6, 169, 234, 151
     };
-    size_t i, len=strlen(str_name);
-    unsigned char hash = (unsigned char)len;
-    for (i=len; i>0; ) hash = T[hash ^ str_name[--i]];
-    return (int)hash;
-#else
-    size_t len=strlen(str_name);
-    unsigned int i, hash=len;
-    for (i=0; i<len; ++i)
-        hash ^= str_name[i];
 
-    return (int)((hash ^ (hash>>10) ^ (hash>>20)) & (HASH_TABLE_SIZE-1));
-#endif
+    if (hash_size == 256) {
+        size_t i, len=strlen(str_name);
+        unsigned char hash = (unsigned char)len;
+        for (i=len; i>0; ) hash = T[hash ^ str_name[--i]];
+        return (int)hash;
+    }
+    else {
+        size_t len=strlen(str_name);
+        unsigned int i, hash=len;
+        for (i=0; i<len; ++i)
+            hash ^= str_name[i];
+
+        return (int)((hash ^ (hash>>10) ^ (hash>>20)) & (hash_size-1));
+    }
 }
 
 /*----< ncmpio_update_name_lookup_table() >----------------------------------*/
@@ -128,7 +130,8 @@ int ncmpio_Pearson_hash(const char *str_name)
  */
 int
 ncmpio_update_name_lookup_table(NC_nametable *nameT,
-                                const int     id,
+                                int           hash_size,
+                                int           id,
                                 const char   *oldname,  /*    normalized */
                                 const char   *unewname) /* un-normalized */
 {
@@ -138,7 +141,7 @@ ncmpio_update_name_lookup_table(NC_nametable *nameT,
     /* remove the old name from the lookup table
      * hash the var name into a key for name lookup
      */
-    key = HASH_FUNC(oldname);
+    key = HASH_FUNC(oldname, hash_size);
     for (i=0; i<nameT[key].num; i++) {
         if (nameT[key].list[i] == id) break;
     }
@@ -160,15 +163,15 @@ ncmpio_update_name_lookup_table(NC_nametable *nameT,
     if (err != NC_NOERR) return err;
 
     /* hash the var name into a key for name lookup */
-    key = HASH_FUNC(name);
+    key = HASH_FUNC(name, hash_size);
     NCI_Free(name);
 
     /* add the new name to the lookup table
      * Note unewname must have already been checked for existence
      */
-    if (nameT[key].num % NC_NAME_TABLE_CHUNK == 0)
-        nameT[key].list = (int*) NCI_Realloc(nameT[key].list,
-                          (size_t)(nameT[key].num+NC_NAME_TABLE_CHUNK) * SIZEOF_INT);
+    if (nameT[key].num % PNC_HLIST_GROWBY == 0)
+        nameT[key].list = (int*) NCI_Realloc(nameT[key].list, sizeof(int) *
+                                 (nameT[key].num + PNC_HLIST_GROWBY));
     nameT[key].list[nameT[key].num] = id;
     nameT[key].num++;
 
@@ -178,19 +181,19 @@ ncmpio_update_name_lookup_table(NC_nametable *nameT,
 /*----< ncmpio_hash_insert() >-----------------------------------------------*/
 void
 ncmpio_hash_insert(NC_nametable *nameT, /* var name lookup table */
+                   int           hash_size,
                    const char   *name,
                    int           id)
 {
     int key;
 
     /* hash the name into a key for name lookup */
-    key = HASH_FUNC(name);
+    key = HASH_FUNC(name, hash_size);
 
     /* allocate or expand the space for nameT[key].list */
-    if (nameT[key].num % NC_NAME_TABLE_CHUNK == 0)
-        nameT[key].list = (int*) NCI_Realloc(nameT[key].list,
-                          (size_t)(nameT[key].num+NC_NAME_TABLE_CHUNK) *
-                          SIZEOF_INT);
+    if (nameT[key].num % PNC_HLIST_GROWBY == 0)
+        nameT[key].list = (int*) NCI_Realloc(nameT[key].list, sizeof(int) *
+                                 (nameT[key].num + PNC_HLIST_GROWBY));
 
     /* add the ID to the name lookup table */
     nameT[key].list[nameT[key].num] = id;
@@ -201,13 +204,14 @@ ncmpio_hash_insert(NC_nametable *nameT, /* var name lookup table */
 /* only attributes can be deleted in NetCDF */
 int
 ncmpio_hash_delete(NC_nametable *nameT, /* var name lookup table */
+                   int           hash_size,
                    const char   *name,
                    int           id)
 {
     int i, j, key;
 
     /* hash the name into a key for name lookup */
-    key = HASH_FUNC(name);
+    key = HASH_FUNC(name, hash_size);
 
     /* find the entry from list[] that matches id */
     for (i=0; i<nameT[key].num; i++)
@@ -229,7 +233,7 @@ ncmpio_hash_delete(NC_nametable *nameT, /* var name lookup table */
     }
 
     /* update all IDs that are > id */
-    for (i=0; i<HASH_TABLE_SIZE; i++) {
+    for (i=0; i<hash_size; i++) {
         if (nameT[i].num == 0) continue;
         for (j=0; j<nameT[i].num; j++)
             if (nameT[i].list[j] > id)
@@ -243,6 +247,7 @@ ncmpio_hash_delete(NC_nametable *nameT, /* var name lookup table */
 /* remove old_name entry and add new_name entry */
 int
 ncmpio_hash_replace(NC_nametable *nameT, /* var name lookup table */
+                    int           hash_size,
                     const char   *old_name,
                     const char   *new_name,
                     int           id)
@@ -250,7 +255,7 @@ ncmpio_hash_replace(NC_nametable *nameT, /* var name lookup table */
     int i, key;
 
     /* hash the old name into a key for name lookup */
-    key = HASH_FUNC(old_name);
+    key = HASH_FUNC(old_name, hash_size);
 
     /* find the entry from list[] that matches id */
     for (i=0; i<nameT[key].num; i++)
@@ -272,13 +277,12 @@ ncmpio_hash_replace(NC_nametable *nameT, /* var name lookup table */
     }
 
     /* hash the new name into a key for name lookup */
-    key = HASH_FUNC(new_name);
+    key = HASH_FUNC(new_name, hash_size);
 
     /* allocate or expand the space for nameT[key].list */
-    if (nameT[key].num % NC_NAME_TABLE_CHUNK == 0)
-        nameT[key].list = (int*) NCI_Realloc(nameT[key].list,
-                          (size_t)(nameT[key].num+NC_NAME_TABLE_CHUNK) *
-                          SIZEOF_INT);
+    if (nameT[key].num % PNC_HLIST_GROWBY == 0)
+        nameT[key].list = (int*) NCI_Realloc(nameT[key].list, sizeof(int) *
+                                 (nameT[key].num + PNC_HLIST_GROWBY));
 
     /* add the ID to the name lookup table */
     nameT[key].list[nameT[key].num] = id;
@@ -290,15 +294,16 @@ ncmpio_hash_replace(NC_nametable *nameT, /* var name lookup table */
 /*----< ncmpio_hash_table_copy() >-------------------------------------------*/
 void
 ncmpio_hash_table_copy(NC_nametable       *dest,
-                       const NC_nametable *src)
+                       const NC_nametable *src,
+                       int                 hash_size)
 {
     int i;
 
-    for (i=0; i<HASH_TABLE_SIZE; i++) {
+    for (i=0; i<hash_size; i++) {
         dest[i].num = src[i].num;
         dest[i].list = NULL;
         if (dest[i].num > 0) {
-            dest[i].list = NCI_Malloc((size_t)dest[i].num * SIZEOF_INT);
+            dest[i].list = NCI_Malloc(sizeof(int) * dest[i].num);
             memcpy(dest[i].list, src[i].list, (size_t)dest[i].num * SIZEOF_INT);
         }
     }
@@ -307,10 +312,10 @@ ncmpio_hash_table_copy(NC_nametable       *dest,
 /*----< ncmpio_hash_table_free() >-------------------------------------------*/
 /* free space allocated for name lookup table */
 void
-ncmpio_hash_table_free(NC_nametable *nameT)
+ncmpio_hash_table_free(NC_nametable *nameT, int hash_size)
 {
     int i;
-    for (i=0; i<HASH_TABLE_SIZE; i++) {
+    for (i=0; i<hash_size; i++) {
         if (nameT[i].num > 0)
             NCI_Free(nameT[i].list);
         nameT[i].num = 0;
@@ -319,22 +324,23 @@ ncmpio_hash_table_free(NC_nametable *nameT)
 
 /*----< ncmpio_hash_table_populate_NC_dim() >--------------------------------*/
 void
-ncmpio_hash_table_populate_NC_dim(NC_dimarray *dimsp)
+ncmpio_hash_table_populate_NC_dim(NC_dimarray *dimsp, int hash_size)
 {
     int i;
     NC_nametable *nameT = dimsp->nameT;
 
     /* initialize dim name lookup table -------------------------------------*/
-    memset(nameT, 0, sizeof(NC_nametable) * HASH_TABLE_SIZE);
+    if (nameT == NULL && dimsp->ndefined > 0)
+        dimsp->nameT = NCI_Calloc(hash_size, sizeof(NC_nametable));
 
     /* populate name lookup table */
     for (i=0; i<dimsp->ndefined; i++) {
         /* hash the dim name into a key for name lookup */
-        int key = HASH_FUNC(dimsp->value[i]->name);
+        int key = HASH_FUNC(dimsp->value[i]->name, hash_size);
         nameT = &dimsp->nameT[key];
-        if (nameT->num % NC_NAME_TABLE_CHUNK == 0)
-            nameT->list = (int*) NCI_Realloc(nameT->list,
-                          (size_t)(nameT->num+NC_NAME_TABLE_CHUNK) *SIZEOF_INT);
+        if (nameT->num % PNC_HLIST_GROWBY == 0)
+            nameT->list = (int*) NCI_Realloc(nameT->list, sizeof(int) *
+                                 (nameT->num + PNC_HLIST_GROWBY));
         nameT->list[nameT->num] = i;
         nameT->num++;
     }
@@ -342,22 +348,23 @@ ncmpio_hash_table_populate_NC_dim(NC_dimarray *dimsp)
 
 /*----< ncmpio_hash_table_populate_NC_var() >--------------------------------*/
 void
-ncmpio_hash_table_populate_NC_var(NC_vararray *varsp)
+ncmpio_hash_table_populate_NC_var(NC_vararray *varsp, int hash_size)
 {
     int i;
     NC_nametable *nameT = varsp->nameT;
 
     /* initialize var name lookup table -------------------------------------*/
-    memset(nameT, 0, sizeof(NC_nametable) * HASH_TABLE_SIZE);
+    if (nameT == NULL && varsp->ndefined > 0)
+        varsp->nameT = NCI_Calloc(hash_size, sizeof(NC_nametable));
 
     /* populate name lookup table */
     for (i=0; i<varsp->ndefined; i++) {
         /* hash the var name into a key for name lookup */
-        int key = HASH_FUNC(varsp->value[i]->name);
+        int key = HASH_FUNC(varsp->value[i]->name, hash_size);
         nameT = &varsp->nameT[key];
-        if (nameT->num % NC_NAME_TABLE_CHUNK == 0)
-            nameT->list = (int*) NCI_Realloc(nameT->list,
-                          (size_t)(nameT->num+NC_NAME_TABLE_CHUNK) *SIZEOF_INT);
+        if (nameT->num % PNC_HLIST_GROWBY == 0)
+            nameT->list = (int*) NCI_Realloc(nameT->list, sizeof(int) *
+                                 (nameT->num + PNC_HLIST_GROWBY));
         nameT->list[nameT->num] = i;
         nameT->num++;
     }
@@ -371,15 +378,18 @@ ncmpio_hash_table_populate_NC_attr(NC *ncp)
     NC_nametable *nameT;
 
     /* populate name lookup table of global attributes */
-    memset(ncp->attrs.nameT, 0, sizeof(NC_nametable) * HASH_TABLE_SIZE);
+
+    /* initialize attr name lookup table -------------------------------------*/
+    if (ncp->attrs.nameT == NULL && ncp->attrs.ndefined > 0)
+        ncp->attrs.nameT = NCI_Calloc(ncp->attrs.hash_size, sizeof(NC_nametable));
 
     for (i=0; i<ncp->attrs.ndefined; i++) {
         /* hash the var name into a key for name lookup */
-        int key = HASH_FUNC(ncp->attrs.value[i]->name);
+        int key = HASH_FUNC(ncp->attrs.value[i]->name, ncp->attrs.hash_size);
         nameT = &ncp->attrs.nameT[key];
-        if (nameT->num % NC_NAME_TABLE_CHUNK == 0)
-            nameT->list = (int*) NCI_Realloc(nameT->list,
-                          (size_t)(nameT->num+NC_NAME_TABLE_CHUNK) *SIZEOF_INT);
+        if (nameT->num % PNC_HLIST_GROWBY == 0)
+            nameT->list = (int*) NCI_Realloc(nameT->list, sizeof(int) *
+                                 (nameT->num + PNC_HLIST_GROWBY));
         nameT->list[nameT->num] = i;
         nameT->num++;
     }
@@ -387,15 +397,18 @@ ncmpio_hash_table_populate_NC_attr(NC *ncp)
     /* populate name lookup table of each variable's attributes */
     for (j=0; j<ncp->vars.ndefined; j++) {
         NC_var *varp = ncp->vars.value[j];
-        memset(varp->attrs.nameT, 0, sizeof(NC_nametable) * HASH_TABLE_SIZE);
+
+        /* initialize attr name lookup table -------------------------------------*/
+        if (varp->attrs.nameT == NULL && varp->attrs.ndefined > 0)
+            varp->attrs.nameT = NCI_Calloc(ncp->hash_size_attr, sizeof(NC_nametable));
 
         for (i=0; i<varp->attrs.ndefined; i++) {
             /* hash the var name into a key for name lookup */
-            int key = HASH_FUNC(varp->attrs.value[i]->name);
+            int key = HASH_FUNC(varp->attrs.value[i]->name, ncp->hash_size_attr);
             nameT = &varp->attrs.nameT[key];
-            if (nameT->num % NC_NAME_TABLE_CHUNK == 0)
-                nameT->list = (int*) NCI_Realloc(nameT->list,
-                              (size_t)(nameT->num+NC_NAME_TABLE_CHUNK) *SIZEOF_INT);
+            if (nameT->num % PNC_HLIST_GROWBY == 0)
+                nameT->list = (int*) NCI_Realloc(nameT->list, sizeof(int) *
+                                     (nameT->num + PNC_HLIST_GROWBY));
             nameT->list[nameT->num] = i;
             nameT->num++;
         }

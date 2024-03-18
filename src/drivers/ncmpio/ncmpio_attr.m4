@@ -163,7 +163,12 @@ ncmpio_free_NC_attrarray(NC_attrarray *ncap)
 
 #ifndef SEARCH_NAME_LINEARLY
     /* free space allocated for attribute name lookup table */
-    ncmpio_hash_table_free(ncap->nameT);
+    if (ncap->nameT != NULL) {
+        ncmpio_hash_table_free(ncap->nameT, ncap->hash_size);
+        NCI_Free(ncap->nameT);
+        ncap->nameT = NULL;
+        ncap->hash_size = 0;
+    }
 #endif
 }
 
@@ -183,7 +188,7 @@ ncmpio_dup_NC_attrarray(NC_attrarray *ncap, const NC_attrarray *ref)
     }
 
     if (ref->ndefined > 0) {
-        size_t alloc_size = _RNDUP(ref->ndefined, NC_ARRAY_GROWBY);
+        size_t alloc_size = _RNDUP(ref->ndefined, PNC_ARRAY_GROWBY);
         ncap->value = (NC_attr **) NCI_Calloc(alloc_size, sizeof(NC_attr*));
         if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
@@ -201,8 +206,12 @@ ncmpio_dup_NC_attrarray(NC_attrarray *ncap, const NC_attrarray *ref)
     assert(ncap->ndefined == ref->ndefined);
 
 #ifndef SEARCH_NAME_LINEARLY
+    /* allocate hashing lookup table, if not allocated yet */
+    if (ncap->nameT == NULL)
+        ncap->nameT = NCI_Calloc(ncap->hash_size, sizeof(NC_nametable));
+
     /* duplicate attribute name lookup table */
-    ncmpio_hash_table_copy(ncap->nameT, ref->nameT);
+    ncmpio_hash_table_copy(ncap->nameT, ref->nameT, ncap->hash_size);
 #endif
 
     return NC_NOERR;
@@ -211,14 +220,16 @@ ncmpio_dup_NC_attrarray(NC_attrarray *ncap, const NC_attrarray *ref)
 /*----< incr_NC_attrarray() >------------------------------------------------*/
 /* Add a new handle at the end of an array of handles */
 static int
-incr_NC_attrarray(NC_attrarray *ncap, NC_attr *new_attr)
+incr_NC_attrarray(int isGlobal, NC_attrarray *ncap, NC_attr *new_attr)
 {
+    size_t growby = (isGlobal) ? PNC_ARRAY_GROWBY : PNC_VATTR_ARRAY_GROWBY;
+
     assert(ncap != NULL);
     assert(new_attr != NULL);
 
-    if (ncap->ndefined % NC_ARRAY_GROWBY == 0) {
+    if (ncap->ndefined % growby == 0) {
         /* grow the array to accommodate the new handle */
-        size_t alloc_size = (size_t)ncap->ndefined + NC_ARRAY_GROWBY;
+        size_t alloc_size = (size_t)ncap->ndefined + growby;
 
         ncap->value = (NC_attr **) NCI_Realloc(ncap->value,
                                    alloc_size * sizeof(NC_attr*));
@@ -279,7 +290,7 @@ ncmpio_NC_findattr(const NC_attrarray *ncap,
     }
 #else
     /* hash name into a key for name lookup */
-    key = HASH_FUNC(name);
+    key = HASH_FUNC(name, ncap->hash_size);
 
     /* check the list (all names sharing the same key) using linear search */
     nchars = strlen(name);
@@ -489,7 +500,7 @@ err_check:
     assert(attrp != NULL);
 
 #ifndef SEARCH_NAME_LINEARLY
-    ncmpio_hash_replace(ncap->nameT, attrp->name, nnewname, attr_id);
+    ncmpio_hash_replace(ncap->nameT, ncap->hash_size, attrp->name, nnewname, attr_id);
 #endif
 
     /* replace the old name with new name */
@@ -634,10 +645,15 @@ err_check:
         if (err != NC_NOERR) return err;
 
 #ifndef SEARCH_NAME_LINEARLY
-        ncmpio_hash_insert(ncap_out->nameT, nname, ncap_out->ndefined);
+        /* allocate hashing lookup table, if not allocated yet */
+        if (ncap_out->nameT == NULL)
+            ncap_out->nameT = NCI_Calloc(ncap_out->hash_size, sizeof(NC_nametable));
+
+        /* insert nname to the lookup table */
+        ncmpio_hash_insert(ncap_out->nameT, ncap_out->hash_size, nname, ncap_out->ndefined);
 #endif
 
-        err = incr_NC_attrarray(ncap_out, attrp);
+        err = incr_NC_attrarray((varid_out == NC_GLOBAL), ncap_out, attrp);
         if (err != NC_NOERR) return err;
     }
 
@@ -688,7 +704,7 @@ ncmpio_del_att(void       *ncdp,
 
 #ifndef SEARCH_NAME_LINEARLY
     /* delete name entry from hash table */
-    err = ncmpio_hash_delete(ncap->nameT, nname, attrid);
+    err = ncmpio_hash_delete(ncap->nameT, ncap->hash_size, nname, attrid);
     if (err != NC_NOERR) goto err_check;
 #endif
 
@@ -1068,10 +1084,15 @@ err_check:
         if (err != NC_NOERR) return err;
 
 #ifndef SEARCH_NAME_LINEARLY
-        ncmpio_hash_insert(ncap->nameT, nname, ncap->ndefined);
+        /* allocate hashing lookup table, if not allocated yet */
+        if (ncap->nameT == NULL)
+            ncap->nameT = NCI_Calloc(ncap->hash_size, sizeof(NC_nametable));
+
+        /* insert nname to the lookup table */
+        ncmpio_hash_insert(ncap->nameT, ncap->hash_size, nname, ncap->ndefined);
 #endif
 
-        err = incr_NC_attrarray(ncap, attrp);
+        err = incr_NC_attrarray((varid == NC_GLOBAL), ncap, attrp);
         if (err != NC_NOERR) return err;
     }
 

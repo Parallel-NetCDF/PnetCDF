@@ -45,9 +45,16 @@ dup_NC(const NC *ref)
     /* copy most of the NC members over */
     *ncp = *ref;
 
+#ifndef SEARCH_NAME_LINEARLY
+    /* set hash tables to NULL, indicating space not-yet allocated */
+    ncp->dims.nameT = NULL;
+    ncp->vars.nameT = NULL;
+    ncp->attrs.nameT = NULL;
+#endif
+
     if (ncmpio_dup_NC_dimarray(&ncp->dims,   &ref->dims)  != NC_NOERR ||
         ncmpio_dup_NC_attrarray(&ncp->attrs, &ref->attrs) != NC_NOERR ||
-        ncmpio_dup_NC_vararray(&ncp->vars,   &ref->vars)  != NC_NOERR) {
+        ncmpio_dup_NC_vararray(&ncp->vars,   &ref->vars, ref->hash_size_attr) != NC_NOERR) {
         ncmpio_free_NC(ncp);
         return NULL;
     }

@@ -95,6 +95,18 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New PnetCDF hint
+  + `nc_hash_size_dim:   Set hash table size for dimension names. Default: 256
+  + `nc_hash_size_var:   Set hash table size for variable names. Default: 256
+  + `nc_hash_size_gattr: Set hash table size for global attribute names.
+    Default: 64
+  + `nc_hash_size_vattr: Set hash table size for variable attribute names.
+    Default: 8
+  + The above 4 new hints allow users to set different hash table sizes for
+    different objects.  For instance, when the number of variables to be
+    defined is large and the number of attributes per variable is small,
+    increasing `nc_hash_size_var` can speed up the definition time, and
+    reducing `nc_hash_size_vattr` can reduce the memory footprint. See
+    [PR #132](https://github.com/Parallel-NetCDF/PnetCDF/pull/132).
   + `nc_header_collective` -- to instruct PnetCDF to call MPI collective APIs to
     read and write the file header. The default is "false", meaning the file
     header is only read/written by rank 0, using MPI independent read and write
@@ -179,6 +191,12 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
+  + test/largefile/tst_hash_large_ndims.c - test hashing performance when
+    the number of dimensions is large.
+  + test/largefile/tst_hash_large_nvars.c - test hashing performance when
+    the number of variables is large.
+  + test/largefile/tst_hash_large_ngattr.c - test hashing performance when
+    the number of global attributes is large.
   + test/largefile/large_header.c - test file header size larger than 2 GiB.
   + test/largefile/large_reqs.c - test a single read/write request of size
     larger than 2 GiB.

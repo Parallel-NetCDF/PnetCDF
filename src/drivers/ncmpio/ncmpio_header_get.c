@@ -753,7 +753,7 @@ hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap)
         DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
 
-    alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
+    alloc_size = _RNDUP(ncap->ndefined, PNC_ARRAY_GROWBY);
     ncap->value = (NC_dim**) NCI_Calloc(alloc_size, sizeof(NC_dim*));
     if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
@@ -998,7 +998,7 @@ hdr_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap)
         DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
 
-    alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
+    alloc_size = _RNDUP(ncap->ndefined, PNC_ARRAY_GROWBY);
     ncap->value = (NC_attr**) NCI_Calloc(alloc_size, sizeof(NC_attr*));
     if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
@@ -1244,7 +1244,7 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
         DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
 
-    alloc_size = _RNDUP(ncap->ndefined, NC_ARRAY_GROWBY);
+    alloc_size = _RNDUP(ncap->ndefined, PNC_ARRAY_GROWBY);
     ncap->value = (NC_var**) NCI_Calloc(alloc_size, sizeof(NC_var*));
     if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 

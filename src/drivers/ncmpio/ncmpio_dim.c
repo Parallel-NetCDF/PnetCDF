@@ -93,7 +93,7 @@ NC_finddim(const NC_dimarray *ncap,
     if (ncap->ndefined == 0) return NC_EBADDIM;
 
     /* hash the dim name into a key for name lookup */
-    key = HASH_FUNC(name);
+    key = HASH_FUNC(name, ncap->hash_size);
 
     /* check the list using linear search */
     nchars = strlen(name);
@@ -118,7 +118,6 @@ ncmpio_free_NC_dimarray(NC_dimarray *ncap)
     int i;
 
     assert(ncap != NULL);
-    if (ncap->ndefined == 0) return;
 
     if (ncap->value != NULL) {
         /* when error is detected reading NC_DIMENSION tag, ncap->ndefined can
@@ -139,7 +138,12 @@ ncmpio_free_NC_dimarray(NC_dimarray *ncap)
 
 #ifndef SEARCH_NAME_LINEARLY
     /* free space allocated for dim name lookup table */
-    ncmpio_hash_table_free(ncap->nameT);
+    if (ncap->nameT != NULL) {
+        ncmpio_hash_table_free(ncap->nameT, ncap->hash_size);
+        NCI_Free(ncap->nameT);
+        ncap->nameT = NULL;
+        ncap->hash_size = 0;
+    }
 #endif
 }
 
@@ -160,7 +164,7 @@ ncmpio_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref)
 
     /* allocate array of NC_dim objects */
     if (ref->ndefined > 0) {
-        size_t alloc_size = _RNDUP(ref->ndefined, NC_ARRAY_GROWBY);
+        size_t alloc_size = _RNDUP(ref->ndefined, PNC_ARRAY_GROWBY);
         ncap->value = (NC_dim**) NCI_Calloc(alloc_size, sizeof(NC_dim*));
         if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
@@ -178,8 +182,12 @@ ncmpio_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref)
     assert(ncap->ndefined == ref->ndefined);
 
 #ifndef SEARCH_NAME_LINEARLY
+    /* allocate hashing lookup table, if not allocated yet */
+    if (ncap->nameT == NULL)
+        ncap->nameT = NCI_Calloc(ncap->hash_size, sizeof(NC_nametable));
+
     /* duplicate dim name lookup table */
-    ncmpio_hash_table_copy(ncap->nameT, ref->nameT);
+    ncmpio_hash_table_copy(ncap->nameT, ref->nameT, ncap->hash_size);
 #endif
 
     return NC_NOERR;
@@ -212,8 +220,8 @@ ncmpio_def_dim(void       *ncdp,    /* IN:  NC object */
     dimp->name_len = strlen(nname);
 
     /* allocate/expand ncp->dims.value array */
-    if (ncp->dims.ndefined % NC_ARRAY_GROWBY == 0) {
-        size_t alloc_size = (size_t)ncp->dims.ndefined + NC_ARRAY_GROWBY;
+    if (ncp->dims.ndefined % PNC_ARRAY_GROWBY == 0) {
+        size_t alloc_size = (size_t)ncp->dims.ndefined + PNC_ARRAY_GROWBY;
 
         ncp->dims.value = (NC_dim **) NCI_Realloc(ncp->dims.value,
                                       alloc_size * sizeof(NC_dim*));
@@ -234,7 +242,12 @@ ncmpio_def_dim(void       *ncdp,    /* IN:  NC object */
     ncp->dims.ndefined++;
 
 #ifndef SEARCH_NAME_LINEARLY
-    ncmpio_hash_insert(ncp->dims.nameT, nname, dimid);
+    /* allocate hashing lookup table, if not allocated yet */
+    if (ncp->dims.nameT == NULL)
+        ncp->dims.nameT = NCI_Calloc(ncp->dims.hash_size, sizeof(NC_nametable));
+
+    /* insert nname to the lookup table */
+    ncmpio_hash_insert(ncp->dims.nameT, ncp->dims.hash_size, nname, dimid);
 #endif
 
     if (dimidp != NULL) *dimidp = dimid;
@@ -322,8 +335,8 @@ ncmpio_rename_dim(void       *ncdp,
 #ifndef SEARCH_NAME_LINEARLY
     /* update dim name lookup table, by removing the old name and add
      * the new name */
-    err = ncmpio_update_name_lookup_table(ncp->dims.nameT, dimid,
-                             ncp->dims.value[dimid]->name, nnewname);
+    err = ncmpio_update_name_lookup_table(ncp->dims.nameT, ncp->dims.hash_size,
+                             dimid, ncp->dims.value[dimid]->name, nnewname);
     if (err != NC_NOERR) {
         DEBUG_TRACE_ERROR(err)
         goto err_check;
