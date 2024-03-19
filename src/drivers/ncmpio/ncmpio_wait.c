@@ -127,7 +127,8 @@ ncmpio_cancel(void *ncdp,
               int  *req_ids,  /* [num_req]: IN/OUT */
               int  *statuses) /* [num_req] can be NULL (ignore status) */
 {
-    int i, j, status=NC_NOERR;
+    int status=NC_NOERR;
+    size_t i, j;
     NC *ncp=(NC*)ncdp;
 
     if (num_req == 0) return NC_NOERR;
