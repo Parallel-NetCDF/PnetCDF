@@ -128,9 +128,10 @@ pnetcdf_check_mem_usage(MPI_Comm comm)
 static int
 pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
 {
-    int i, j, rank, nprocs, ncid, bufsize, err, nerrs=0;
+    int i, j, rank, nprocs, ncid, err, nerrs=0;
     int psizes[2], local_rank[2], dimids[2], varid, nghosts;
     int *buf, *buf_ptr;
+    size_t bufsize;
     MPI_Offset gsizes[2], starts[2], counts[2], imap[2];
 
     MPI_Comm_rank(comm, &rank);

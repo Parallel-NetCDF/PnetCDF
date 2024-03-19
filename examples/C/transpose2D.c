@@ -116,7 +116,7 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
     char str[512];
     int i, j, rank, nprocs, ncid, bufsize, err, nerrs=0;
     int *buf, psizes[NDIMS], dimids[NDIMS], dimidsT[NDIMS];
-    int XY_id, YX_id;
+    int XY_id, YX_id, lower_dims;
     MPI_Offset gsizes[NDIMS], start[NDIMS], count[NDIMS], imap[NDIMS];
     MPI_Offset startT[NDIMS], countT[NDIMS];
     MPI_Info info;
@@ -137,7 +137,7 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
 
     /* for each MPI rank, find its local rank IDs along each dimension in
      * start[] */
-    int lower_dims=1;
+    lower_dims = 1;
     for (i=NDIMS-1; i>=0; i--) {
         start[i] = rank / lower_dims % psizes[i];
         lower_dims *= psizes[i];
@@ -160,7 +160,7 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
     buf = (int *) malloc(bufsize * sizeof(int));
     for (i=0; i<count[0]; i++)
     for (j=0; j<count[1]; j++)
-        buf[i*count[1] + j] = (start[0]+i)*gsizes[1] + (start[1]+j);
+        buf[i*count[1] + j] = (int)((start[0]+i)*gsizes[1] + (start[1]+j));
 
     /* set an MPI-IO hint to disable file offset alignment for fixed-size
      * variables */
@@ -219,12 +219,12 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
     /* check the contents */
     for (i=0; i<countT[0]; i++)
     for (j=0; j<countT[1]; j++) {
-        int expect = (start[1]+i) + gsizes[1] * (start[0]+j);
+        int expect = (int)((start[1]+i) + gsizes[1] * (start[0]+j));
         if (buf[i*countT[1] + j] !=  expect) {
             printf("Error at %s:%d: expect buf[%lld]=%d but got %d\n",
                    __FILE__,__LINE__,i*countT[1]+j,expect,buf[i*count[1]+j]);
             nerrs++;
-            i = count[1]; /* break loop i */
+            i = (int)count[1]; /* also break loop i */
             break;
         }
     }

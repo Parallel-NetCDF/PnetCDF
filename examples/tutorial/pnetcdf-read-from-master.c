@@ -159,8 +159,11 @@ int main(int argc, char **argv) {
         }
 
         /*and finally all processors have the data */
-        err = MPI_Bcast(data, var_size, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_ERR(err)
+        if (var_size < NC_MAX_INT) {
+            err = MPI_Bcast(data, (int)var_size, MPI_INT, 0, MPI_COMM_WORLD);
+            MPI_ERR(err)
+        }
+        /* else: must call MPI_Bcast_c() for large count requests */
 
         /* Here, every process can do computation on the local buffer, data,
            or copy the contents to somewhere else */
