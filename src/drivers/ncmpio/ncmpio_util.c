@@ -95,9 +95,9 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
         MPI_Info_get(user_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag) {
-            long int chunk;
+            int chunk;
             errno = 0;  /* errno must set to zero before calling strtoll */
-            chunk = (int) strtol(value, NULL, 10);
+            chunk = atoi(value);
             if (errno != 0) ncp->chunk = 0;
             else if (ncp->chunk < 0)
                 ncp->chunk = 0;
@@ -164,7 +164,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
                      value, &flag);
         if (flag) {
             errno = 0;
-            ncp->num_subfiles = strtoll(value, NULL, 10);
+            ncp->num_subfiles = atoi(value);
             if (errno != 0) ncp->num_subfiles = 0;
             else if (ncp->num_subfiles < 0) ncp->num_subfiles = 0;
             sprintf(value, "%d", ncp->num_subfiles);
