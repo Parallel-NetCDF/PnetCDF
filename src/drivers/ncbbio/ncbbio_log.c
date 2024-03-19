@@ -28,7 +28,7 @@
 int ncbbio_log_create(NC_bb* ncbbp,
                       __attribute__((unused)) MPI_Info info)
 {
-    int i, rank, np, err, flag, masterrank, procname_len;
+    int rank, np, err, flag, masterrank, procname_len;
     char logbase[NC_LOG_MAX_PATH], basename[NC_LOG_MAX_PATH];
     char procname[MPI_MAX_PROCESSOR_NAME];
     char *abspath, *fname, *path, *fdir = NULL;
@@ -86,7 +86,7 @@ int ncbbio_log_create(NC_bb* ncbbp,
         logbasep = ncmpii_remove_file_system_type_prefix(ncbbp->logbase);
     }
     else {
-        i = strlen(path);
+        size_t i = strlen(path);
         fdir = (char*)NCI_Malloc((i + 1) * sizeof(char));
         strncpy(fdir, path, i + 1);
         /* Search for first '\' from the back */
