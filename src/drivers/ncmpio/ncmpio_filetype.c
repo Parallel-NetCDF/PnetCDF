@@ -395,75 +395,96 @@ filetype_create_vara(const NC         *ncp,
  * blocklens[] and disps[]
  */
 static int
-stride_flatten(int               isRecVar, /* whether record variable */
-               int               ndim,     /* number of dimensions */
-               int               el_size,  /* array element size */
-               const MPI_Offset *dimlen,   /* [ndim] dimension lengths */
-               const MPI_Offset *start,    /* [ndim] starts of subarray */
-               const MPI_Offset *count,    /* [ndim] counts of subarray */
-               const MPI_Offset *stride,   /* [ndim] strides of subarray */
-               MPI_Offset       *nblocks,  /* OUT: number of blocks */
-               MPI_Offset       *blocklens,/* OUT: length of each block */
-               MPI_Aint         *disps)    /* OUT: displacement of each block */
+stride_flatten(const NC_var      *varp,
+               MPI_Offset         recsize,  /* record size */
+               const MPI_Offset  *start,    /* [ndim] starts of subarray */
+               const MPI_Offset  *count,    /* [ndim] counts of subarray */
+               const MPI_Offset  *stride,   /* [ndim] strides of subarray */
+               MPI_Offset        *nblocks,  /* OUT: number of blocks */
+               MPI_Offset       **blocklens,/* OUT: length of each block */
+               MPI_Aint         **disps)    /* OUT: displacement of each block */
 {
-    int i, j, k;
-    MPI_Offset seg_len, nstride, array_len, off, subarray_len;
+    int i, j, k, isRecVar, ndims, el_size;
+    MPI_Offset *dimlen, seg_len, nstride, array_len, off, subarray_len;
+
+    *blocklens = NULL;
+    *disps = NULL;
+
+    /* whether record variable */
+    isRecVar = IS_RECVAR(varp);
+
+    ndims = varp->ndims;
 
     /* scalar variables have been handled before this subroutine is called */
-    assert (ndim > 0);
+    assert (ndims > 0);
+
+    /* array element size */
+    el_size = varp->xsz;
+
+    /* dimension lengths */
+    dimlen = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * ndims);
+
+    for (i=0; i<ndims; i++) dimlen[i] = varp->shape[i];
+    /* for record variable, set dimlen[0] to the record size */
+    if (isRecVar) dimlen[0] = recsize;
 
     /* calculate the number of offset-length pairs */
-    *nblocks = (stride[ndim-1] == 1) ? 1 : count[ndim-1];
-    for (i=0; i<ndim-1; i++) *nblocks *= count[i];
+    *nblocks = (stride[ndims-1] == 1) ? 1 : count[ndims-1];
+    for (i=0; i<ndims-1; i++) *nblocks *= count[i];
     if (*nblocks == 0) return 1;
 
-    /* the length of all contiguous segments are of the same size */
-    seg_len  = (stride[ndim-1] == 1) ? count[ndim-1] : 1;
-    seg_len *= el_size;
-    nstride  = (stride[ndim-1] == 1) ? 1 : count[ndim-1];
+    *blocklens = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * (*nblocks));
+    *disps = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * (*nblocks));
 
-    for (i=0; i<*nblocks; i++) blocklens[i] = seg_len;
+    /* the length of all contiguous segments are of the same size */
+    seg_len  = (stride[ndims-1] == 1) ? count[ndims-1] : 1;
+    seg_len *= el_size;
+    nstride  = (stride[ndims-1] == 1) ? 1 : count[ndims-1];
+
+    for (i=0; i<*nblocks; i++) (*blocklens)[i] = seg_len;
 
     /* set the offset-length pairs for the lowest dimension */
-    disps[0] = start[ndim-1] * el_size;
+    (*disps)[0] = start[ndims-1] * el_size;
     for (k=1; k<nstride; k++)
-        disps[k] = disps[k-1] + stride[ndim-1] * el_size;
+        (*disps)[k] = (*disps)[k-1] + stride[ndims-1] * el_size;
 
     /* done with the lowest dimension */
-    ndim--;
+    ndims--;
 
     subarray_len = nstride;
     array_len = el_size;
     /* for higher dimensions */
-    while (ndim > 0) {
-        /* array_len is global array size from lowest up to ndim */
-        array_len *= dimlen[ndim];
+    while (ndims > 0) {
+        /* array_len is global array size from lowest up to ndims */
+        array_len *= dimlen[ndims];
 
-        /* off is the global array offset for this dimension, ndim-1
+        /* off is the global array offset for this dimension, ndims-1
          * For record variable, dimlen[0] is the sum of single record sizes
          */
-        if (ndim == 1 && isRecVar) off = start[0] * dimlen[0];
-        else off = start[ndim-1] * array_len;
+        if (ndims == 1 && isRecVar) off = start[0] * dimlen[0];
+        else off = start[ndims-1] * array_len;
 
-        /* update all offsets from lowest up to dimension ndim-1 */
-        for (j=0; j<subarray_len; j++) disps[j] += off;
+        /* update all offsets from lowest up to dimension ndims-1 */
+        for (j=0; j<subarray_len; j++) (*disps)[j] += off;
 
-        /* update each successive subarray of dimension ndim-1
+        /* update each successive subarray of dimension ndims-1
          * For record variable, dimlen[0] is the sum of single record sizes
          */
-        if (ndim == 1 && isRecVar) off = stride[0] * dimlen[0];
-        else off = stride[ndim-1] * array_len;
+        if (ndims == 1 && isRecVar) off = stride[0] * dimlen[0];
+        else off = stride[ndims-1] * array_len;
 
-        for (i=1; i<count[ndim-1]; i++) {
+        for (i=1; i<count[ndims-1]; i++) {
             for (j=0; j<subarray_len; j++)
-                disps[k++] = disps[j] + off;
+                (*disps)[k++] = (*disps)[j] + off;
 
-            if (ndim == 1 && isRecVar) off += stride[0] * dimlen[0];
-            else off += stride[ndim-1] * array_len;
+            if (ndims == 1 && isRecVar) off += stride[0] * dimlen[0];
+            else off += stride[ndims-1] * array_len;
         }
-        ndim--;  /* move to next higher dimension */
-        subarray_len *= count[ndim];
+        ndims--;  /* move to next higher dimension */
+        subarray_len *= count[ndims];
     }
+    NCI_Free(dimlen);
+
     return 1;
 }
 
@@ -478,9 +499,9 @@ ncmpio_filetype_create_vars(const NC         *ncp,
                             MPI_Datatype     *filetype_ptr,       /* OUT */
                             int              *is_filetype_contig) /* OUT */
 {
-    int           err, dim, isLargeReq;
+    int           err=NC_NOERR, mpireturn, dim, isLargeReq;
     MPI_Aint     *disps;
-    MPI_Offset    i, offset, nblocks, nelems, *shape, *blocklens;
+    MPI_Offset    i, nblocks, nelems, *blocklens;
     MPI_Datatype  filetype=MPI_BYTE;
 
     if (stride == NULL)
@@ -502,11 +523,13 @@ ncmpio_filetype_create_vars(const NC         *ncp,
     nelems = 1;
     for (dim=0; dim<varp->ndims; dim++) nelems *= count[dim];
 
+    /* starting file offset of the variable */
+    *offset_ptr = varp->begin;
+
     /* when nelems == 0 or varp is a scalar, i.e. varp->ndims == 0, no need to
      * create a filetype
      */
     if (varp->ndims == 0 || nelems == 0) {
-        *offset_ptr   = varp->begin;
         *filetype_ptr = MPI_BYTE;
         if (is_filetype_contig != NULL) *is_filetype_contig = 1;
         return NC_NOERR;
@@ -514,22 +537,12 @@ ncmpio_filetype_create_vars(const NC         *ncp,
 
     /* hereinafter fileview is noncontiguous, i.e. filetype != MPI_BYTE */
     if (is_filetype_contig != NULL) *is_filetype_contig = 0;
-    offset = varp->begin;
-
-    blocklens = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * nelems);
-    disps = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * nelems);
-    shape = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * varp->ndims);
-
-    for (dim=0; dim<varp->ndims; dim++) shape[dim] = varp->shape[dim];
-    /* for record variable, set shape[0] to the record size */
-    if (IS_RECVAR(varp)) shape[0] = ncp->recsize;
 
     /* flatten stride access into list of offsets and lengths stored in
      * disps[] and blocklens[], respectively.
      */
-    stride_flatten(IS_RECVAR(varp), varp->ndims, varp->xsz, shape, start,
-                   count, stride, &nblocks, blocklens, disps);
-    NCI_Free(shape);
+    stride_flatten(varp, ncp->recsize, start, count, stride, &nblocks,
+                   &blocklens, &disps);
 
     /* the flattened list allows one single call to hindexed constructor.
      * We cannot use MPI_Type_indexed because displacement for the record
@@ -539,7 +552,7 @@ ncmpio_filetype_create_vars(const NC         *ncp,
     if (nblocks > NC_MAX_INT)
         isLargeReq = 1;
     else {
-        for (i=0; i<nelems; i++) {
+        for (i=0; i<nblocks; i++) {
             if (blocklens[i] > NC_MAX_INT) {
                 isLargeReq = 1;
                 break;
@@ -556,16 +569,13 @@ ncmpio_filetype_create_vars(const NC         *ncp,
             blocklens_c[i] = blocklens[i];
             disps_c[i] = disps[i];
         }
-        err = MPI_Type_create_hindexed_c(nblocks, blocklens_c, disps_c,
-                                         MPI_BYTE, &filetype);
+        mpireturn = MPI_Type_create_hindexed_c(nblocks, blocklens_c, disps_c,
+                                               MPI_BYTE, &filetype);
         NCI_Free(blocklens_c);
         NCI_Free(disps_c);
 #else
-        NCI_Free(disps);
-        NCI_Free(blocklens);
-        *offset_ptr   = offset;
         *filetype_ptr = MPI_DATATYPE_NULL;
-        return NC_EINTOVERFLOW;
+        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
 #endif
     }
     else {
@@ -573,22 +583,24 @@ ncmpio_filetype_create_vars(const NC         *ncp,
         blocklens_i = (int*) NCI_Malloc(sizeof(int) * nelems);
         for (i=0; i<nelems; i++)
             blocklens_i[i] = (int)blocklens[i];
-        err = MPI_Type_create_hindexed((int)nblocks, blocklens_i, disps,
-                                       MPI_BYTE, &filetype);
+        mpireturn = MPI_Type_create_hindexed((int)nblocks, blocklens_i, disps,
+                                             MPI_BYTE, &filetype);
         NCI_Free(blocklens_i);
     }
 
-    NCI_Free(disps);
-    NCI_Free(blocklens);
-    if (err != MPI_SUCCESS)
-        return ncmpii_error_mpi2nc(err, "MPI_Type_create_hindexed");
+    if (disps != NULL) NCI_Free(disps);
+    if (blocklens != NULL) NCI_Free(blocklens);
 
-    MPI_Type_commit(&filetype);
+    if (mpireturn != MPI_SUCCESS) {
+        err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_hindexed");
+        *filetype_ptr = MPI_DATATYPE_NULL;
+    }
+    else {
+        MPI_Type_commit(&filetype);
+        *filetype_ptr = filetype;
+    }
 
-    *offset_ptr   = offset;
-    *filetype_ptr = filetype;
-
-    return NC_NOERR;
+    return err;
 }
 
 /*----< ncmpio_file_set_view() >---------------------------------------------*/
