@@ -561,7 +561,11 @@ ncmpio_filetype_create_vars(const NC         *ncp,
         NCI_Free(blocklens_c);
         NCI_Free(disps_c);
 #else
-        DEBUG_ASSIGN_ERROR(ret, NC_ESMALL)
+        NCI_Free(disps);
+        NCI_Free(blocklens);
+        *offset_ptr   = offset;
+        *filetype_ptr = MPI_DATATYPE_NULL;
+        return NC_EINTOVERFLOW;
 #endif
     }
     else {
@@ -623,7 +627,7 @@ ncmpio_file_set_view(const NC     *ncp,
 
         /* check if header size > 2^31 */
         if (ncp->begin_var > NC_MAX_INT) {
-            status = NC_EINTOVERFLOW;
+            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW);
             goto err_out;
         }
 #endif
@@ -640,7 +644,7 @@ ncmpio_file_set_view(const NC     *ncp,
 
 #if !defined(HAVE_MPI_LARGE_COUNT) && (SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET)
         if (*offset > NC_MAX_INT) {
-            status = NC_EINTOVERFLOW;
+            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW);
             goto err_out;
         }
 #endif
