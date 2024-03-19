@@ -294,7 +294,7 @@ int main(int argc, char** argv)
 
     /* test flexible API, using a noncontiguous buftype */
     MPI_Datatype buftype;
-    MPI_Type_vector(w_len, 1, 2, MPI_INT, &buftype);
+    MPI_Type_vector((int)w_len, 1, 2, MPI_INT, &buftype);
     MPI_Type_commit(&buftype);
     free(buffer);
     buffer = (int*) malloc(w_len * 2 * sizeof(int));

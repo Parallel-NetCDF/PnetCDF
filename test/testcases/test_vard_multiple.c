@@ -189,10 +189,10 @@ int main(int argc, char **argv) {
     /* create the first datatype using subarray */
     array_of_sizes[0]    = 2;
     array_of_sizes[1]    = NX*nprocs;
-    array_of_subsizes[0] = count[0];
-    array_of_subsizes[1] = count[1];
-    array_of_starts[0]   = start[0];
-    array_of_starts[1]   = start[1];
+    array_of_subsizes[0] = (int)count[0];
+    array_of_subsizes[1] = (int)count[1];
+    array_of_starts[0]   = (int)start[0];
+    array_of_starts[1]   = (int)start[1];
     MPI_Type_create_subarray(2, array_of_sizes, array_of_subsizes,
                              array_of_starts, MPI_ORDER_C, MPI_INT, &vtype[0]);
     MPI_Type_commit(&vtype[0]);

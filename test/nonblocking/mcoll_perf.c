@@ -38,7 +38,8 @@ static int verbose;
 }
 
 #define CHECK_GLOBAL_ATT_DIFF(type, func, nctype) {                          \
-    int   pos, len = attlen1 * sizeof(type);                                 \
+    int pos;                                                                 \
+    size_t len = sizeof(type) * attlen1;                                     \
     type *b1 = (type *)malloc(len);                                          \
     type *b2 = (type *)malloc(len);                                          \
     err = func(ncid1, NC_GLOBAL, name1, b1);                                 \
@@ -56,7 +57,8 @@ static int verbose;
 }
 
 #define CHECK_VAR_ATT_DIFF(type, func, nctype) {                             \
-    int   pos, len = attlen1 * sizeof(type);                                 \
+    int pos;                                                                 \
+    size_t len = sizeof(type) * attlen1;                                     \
     type *b1 = (type *)malloc(len);                                          \
     type *b2 = (type *)malloc(len);                                          \
     err = func(ncid1, i, name1, b1);                                         \
@@ -75,7 +77,8 @@ static int verbose;
 
 
 #define CHECK_VAR_DIFF(type, func, nctype) {                                 \
-    int   pos, len = varsize * sizeof(type);                                 \
+    int pos;                                                                 \
+    size_t len = sizeof(type) * varsize;                                     \
     type *b1 = (type *)malloc(len);                                          \
     type *b2 = (type *)malloc(len);                                          \
     err = func(ncid1, i, start, shape, b1);                                  \
