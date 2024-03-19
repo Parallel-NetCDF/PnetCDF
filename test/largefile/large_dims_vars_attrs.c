@@ -30,7 +30,7 @@
 int main(int argc, char** argv)
 {
     char filename[256], str[32];
-    int i, rank, nprocs, err, nerrs=0;
+    int i, rank, nprocs, err, nerrs=0, verbose=0;
     int ncid, cmode, *varid, *dimids, intBuf[1];
 
     MPI_Init(&argc, &argv);
@@ -143,9 +143,11 @@ int main(int argc, char** argv)
         }
     }
 
-    err = ncmpi_inq_malloc_max_size(&malloc_size);
-    printf("%d: PnetCDF internal memory footprint high water mark %.2f MB\n",
-           rank, (float)malloc_size/1048576);
+    if (verbose) {
+        err = ncmpi_inq_malloc_max_size(&malloc_size);
+        printf("\n%d: PnetCDF internal memory footprint high water mark %.2f MB\n",
+               rank, (float)malloc_size/1048576);
+    }
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
