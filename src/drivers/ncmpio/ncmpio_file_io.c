@@ -51,7 +51,7 @@ ncmpio_read_write(NC           *ncp,
         err = (err == NC_EFILE) ? NC_EREAD : err;
     }
     else if (btype_size == MPI_UNDEFINED)
-        err = NC_EINTOVERFLOW;
+        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
 
     if (err != NC_NOERR) {
         if (coll_indep == NC_REQ_COLL) {
