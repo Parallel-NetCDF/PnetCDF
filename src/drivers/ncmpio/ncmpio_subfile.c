@@ -28,14 +28,15 @@ enum {ONE, BALANCED};
 static int delegate_scheme = BALANCED; /* default: any proc can be delegate proc */
 static int is_partitioned = 0;
 
-#define check_err(fn_name_)                                                 \
+#define check_mpi_err(fn_name)                                              \
     if (mpireturn != MPI_SUCCESS) {                                         \
-        errs++;                                                             \
-        int _len;                                                           \
+        int err, err_len;                                                   \
         char err_str_[MPI_MAX_ERROR_STRING];                                \
-        MPI_Error_string(mpireturn, err_str_, &_len);                       \
-        fprintf(stderr, #fn_name_ " failed at line %d, mpireturn=%d: %s\n", \
-                __LINE__, mpireturn, err_str_);                             \
+        MPI_Error_string(mpireturn, err_str_, &err_len);                    \
+        fprintf(stderr, "Error: %s line %d calling MPI func=%s: %s\n",      \
+                __func__,__LINE__, fn_name, err_str_);                      \
+        err = ncmpii_error_mpi2nc(mpireturn, fn_name);                      \
+        DEBUG_RETURN_ERROR(err)                                             \
     }                                                                       \
 
 #if 0
@@ -328,15 +329,14 @@ int ncmpio_subfile_partition(NC *ncp)
             status = ncmpio_put_att(ncp, i, "_PnetCDF_SubFiling.ndims_org", NC_INT, 1, &vpp[i]->ndims, MPI_INT);
             if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
-            int sf_range[ncp->num_subfiles][var_ndims][3];
+            long long sf_range[ncp->num_subfiles][var_ndims][3];
 
             /* j: each dimension */
             /* subfile: create a var with partitioned dim sizes */
             for(j=0; j<var_ndims; j++) {
-                MPI_Offset dim_sz0, dim_sz;
+                MPI_Offset dim_sz0, dim_sz, max, min;
                 char str[80], *dim_name;
                 double x; /* = org dim size / num_subfiles */
-                int min, max;
 
                 dim_name = dpp[vpp[i]->dimids[j]]->name;
                 dim_sz0 = dpp[vpp[i]->dimids[j]]->size; /* init both to org dim sz */
@@ -354,9 +354,9 @@ int ncmpio_subfile_partition(NC *ncp)
                 {
                     double xx = x*(double)color;
                     double yy = x*(double)(color+1);
-                    min = (int)xx+(color==0||(xx-(int)xx==0.0)?0:1);
-                    max = (int)yy-(yy-(int)yy==0.0?1:0);
-                    if ((MPI_Offset)max >= dim_sz0) max = dim_sz0-1;
+                    min = (MPI_Offset)xx+(color==0||(xx-(MPI_Offset)xx==0.0)?0:1);
+                    max = (MPI_Offset)yy-(yy-(MPI_Offset)yy==0.0?1:0);
+                    if (max >= dim_sz0) max = dim_sz0-1;
                     dim_sz = max-min+1;
                 }
 
@@ -374,12 +374,12 @@ int ncmpio_subfile_partition(NC *ncp)
                     double xx, yy;
                     sprintf(key[jj][j], "_PnetCDF_SubFiling.range(%s).subfile.%d", dim_name, jj); /* dim name*/
                     xx = x*(double)jj;
-                    min = (int)xx+(jj==0||(xx-(int)xx==0.0)?0:1);
+                    min = (MPI_Offset)xx+(jj==0||(xx-(MPI_Offset)xx==0.0)?0:1);
                     yy = x*(double)(jj+1);
-                    max = (int)yy-(yy-(int)yy==0.0?1:0);
-                    if ((MPI_Offset)max >= dim_sz0) max = dim_sz0-1;
+                    max = (MPI_Offset)yy-(yy-(MPI_Offset)yy==0.0?1:0);
+                    if (max >= dim_sz0) max = dim_sz0-1;
 #ifdef SUBFILE_DEBUG
-                    if (myrank == 0) printf("subfile(%d): min=%d, max=%d\n", jj, min, max);
+                    if (myrank == 0) printf("subfile(%d): min=%lld, max=%lld\n", jj, min, max);
 #endif
                     if (j == par_dim_id) { /* partitioning dims? */
                         sf_range[jj][j][0] = min;
@@ -421,7 +421,7 @@ int ncmpio_subfile_partition(NC *ncp)
             for (jj=0; jj < ncp->num_subfiles; jj++)
                 for (k=0; k < var_ndims; k++) {
                     status = ncmpio_put_att(ncp, i, key[jj][k], NC_INT,
-                                            2, sf_range[jj][k], MPI_INT);
+                                            2, sf_range[jj][k], MPI_LONG_LONG);
                     if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
                 }
 
@@ -467,7 +467,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
                            MPI_Datatype      buftype,
                            int               reqMode)
 {
-    int mpireturn, errs=0, status;
+    int mpireturn, status;
     NC_subfile_access *my_req, *others_req;
     int i, j, k, myrank, nprocs;
     int *count_my_req_per_proc, *count_others_req_per_proc;
@@ -578,7 +578,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
             int jx = j%ndims_org;
             NC_dim *dimp = ncp->ncp_sf->dims.value[ncp->ncp_sf->vars.value[varid_sf]->dimids[jx]];
             int sf_range[2];
-            int ii, jj, kk, stride_count;
+            MPI_Offset ii, jj, kk, stride_count;
             char key[256], *org_dim_name;
 
             org_dim_name = strtok(dimp->name, ".");
@@ -622,12 +622,12 @@ ncmpio_subfile_getput_vars(NC               *ncp,
                     jj++;
                 else {
 #ifdef SUBFILE_DEBUG
-                    printf("rank(%d): var(%s): i=%d, j=%d, ii=%d, jj=%d, kk=%d, jx=%d\n", myrank, varp->name, i, j, ii, jj, kk, jx);
+                    printf("rank(%d): var(%s): i=%d, j=%d, ii=%lld, jj=%lld, kk=%lld, jx=%d\n", myrank, varp->name, i, j, ii, jj, kk, jx);
 #endif
                     if (kk == 0) {
                         my_req[aproc].start[jx] = ii;
 #ifdef SUBFILE_DEBUG
-                        printf("rank(%d): var(%s): my_req[%d].start[%d]=%d\n",
+                        printf("rank(%d): var(%s): my_req[%d].start[%d]=%lld\n",
                                myrank, varp->name, aproc, jx, ii);
 #endif
                     }
@@ -896,7 +896,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
 #ifdef TAU_SSON
     TAU_PHASE_STOP(t52);
 #endif
-    check_err(MPI_Waitall);
+    check_mpi_err("MPI_Waitall");
     NCI_Free(statuses);
     NCI_Free(requests);
 
@@ -933,7 +933,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
 #ifdef TAU_SSON
     TAU_PHASE_STOP(t53);
 #endif
-    check_err(MPI_Waitall);
+    check_mpi_err("MPI_Waitall");
 
 #ifdef SUBFILE_DEBUG
     /* DEBUG: print out others_req.{start,count} */
@@ -986,8 +986,11 @@ ncmpio_subfile_getput_vars(NC               *ncp,
 #ifdef SUBFILE_DEBUG
             printf("rank(%d): recv from rank %d: buf_count_others[%d]=%d\n", myrank, i, i, buf_count_others[i]);
 #endif
+            if (buf_count_others[i] > NC_MAX_INT)
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
             xbuf[i] = (void*)NCI_Calloc((size_t)buf_count_others[i], (size_t)el_size);
-            TRACE_COMM(MPI_Irecv)(xbuf[i], buf_count_others[i], (!buftype_is_contig?ptype:buftype), i, i+myrank, ncp->comm, &requests[j++]);
+            TRACE_COMM(MPI_Irecv)(xbuf[i], (int)buf_count_others[i], (!buftype_is_contig?ptype:buftype), i, i+myrank, ncp->comm, &requests[j++]);
         }
     }
 
@@ -1020,7 +1023,10 @@ ncmpio_subfile_getput_vars(NC               *ncp,
             printf("rank(%d): send to rank %d: buf_offset[%d]=%d, buf_count_my[%d]=%d\n", myrank, i, i, buf_offset[i], i, buf_count_my[i]);
 #endif
 
-            TRACE_COMM(MPI_Isend)((char*)cbuf+buf_offset[i], buf_count_my[i], (!buftype_is_contig?ptype:buftype), i, i+myrank, ncp->comm, &requests[j++]);
+            if (buf_count_my[i] > NC_MAX_INT)
+                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
+            TRACE_COMM(MPI_Isend)((char*)cbuf+buf_offset[i], (int)buf_count_my[i], (!buftype_is_contig?ptype:buftype), i, i+myrank, ncp->comm, &requests[j++]);
         } /* end if() */
     } /* end for() */
 
@@ -1032,7 +1038,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
 #ifdef TAU_SSON
     TAU_PHASE_STOP(t54);
 #endif
-    check_err(MPI_Waitall);
+    check_mpi_err("MPI_Waitall");
 
 #ifdef TAU_SSON
     TAU_PHASE_CREATE_STATIC(t55, "SSON --- getput_vars igetput", "", TAU_USER);
