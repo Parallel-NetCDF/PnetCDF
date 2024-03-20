@@ -140,6 +140,8 @@ This is essentially a placeholder for the next release note ...
     programs and collapsible bullets to display their manual pages.
 
 * Other updates:
+  + When file header extent size grows, use 64 MiB per process as the move unit
+    size. See [PR #137](https://github.com/Parallel-NetCDF/PnetCDF/pull/137)
   + Since version 1.1.0, PnetCDF has been using file striping size, if
     obtainable from hint `striping_unit` set by users or MPI-IO underneath, to
     align the starting file offset of data section. This offset is also

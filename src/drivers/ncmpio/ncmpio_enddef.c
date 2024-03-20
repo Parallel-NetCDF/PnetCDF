@@ -35,25 +35,34 @@
 /*----< move_file_block() >--------------------------------------------------*/
 static int
 move_file_block(NC         *ncp,
-                MPI_Offset  to,
-                MPI_Offset  from,
-                MPI_Offset  nbytes)
+                MPI_Offset  to,     /* destination file starting offset */
+                MPI_Offset  from,   /* source file starting offset */
+                MPI_Offset  nbytes) /* amount to be moved */
 {
     int rank, nprocs, bufcount, mpireturn, err, status=NC_NOERR, min_st;
     void *buf;
-    int chunk_size=1048576; /* move 1 MB per process at a time */
+    size_t chunk_size;
     MPI_Status mpistatus;
 
     MPI_Comm_size(ncp->comm, &nprocs);
     MPI_Comm_rank(ncp->comm, &rank);
 
-    /* if the file striping unit size is known (obtained from MPI-IO), then
-     * we use that instead of 1 MB */
-    if (ncp->striping_unit > 0) chunk_size = ncp->striping_unit;
+    /* Divide amount nbytes among all processes. If the divided amount,
+     * chunk_size, is larger then MOVE_UNIT, set chunk_size to be the move unit
+     * size per process (make sure it is <= NC_MAX_INT, as MPI read/write APIs
+     * use 4-byte int in their count argument.)
+     */
+#define MOVE_UNIT 67108864
+    chunk_size = nbytes / nprocs;
+    if (nbytes % nprocs) chunk_size++;
+    if (chunk_size > MOVE_UNIT) {
+        /* move data in multiple rounds, MOVE_UNIT per process at a time */
+        chunk_size = MOVE_UNIT;
+    }
 
     /* buf will be used as a temporal buffer to move data in chunks, i.e.
      * read a chunk and later write to the new location */
-    buf = NCI_Malloc((size_t)chunk_size);
+    buf = NCI_Malloc(chunk_size);
     if (buf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* make fileview entire file visible */
@@ -64,14 +73,17 @@ move_file_block(NC         *ncp,
     while (nbytes > 0) {
         int get_size=0;
 
-        /* calculate how much to move at each time */
-        bufcount = chunk_size;
+        /* calculate how much to move at each time. chunk_size has been
+         * checked, must be < NC_MAX_INT
+         */
+        bufcount = (int)chunk_size;
         if (nbytes < (MPI_Offset)nprocs * chunk_size) {
             /* handle the last group of chunks */
             MPI_Offset rem_chunks = nbytes / chunk_size;
             if (rank > rem_chunks) /* these processes do not read/write */
                 bufcount = 0;
             else if (rank == rem_chunks) /* this process reads/writes less */
+                /* make bufcount < chunk_size */
                 bufcount = (int)(nbytes % chunk_size);
             nbytes = 0;
         }
@@ -93,6 +105,7 @@ move_file_block(NC         *ncp,
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at_all");
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EREAD)
+            get_size = bufcount;
         }
         else {
             /* for zero-length read, MPI_Get_count may report incorrect result
@@ -105,6 +118,11 @@ move_file_block(NC         *ncp,
              * read from a file may be less than bufcount. Because we are
              * moving whatever read to a new file offset, we must use the
              * amount actually read to call MPI_File_write_at_all below.
+             *
+             * Update the number of bytes read since file open.
+             * Because each rank reads and writes no more than one chunk_size
+             * at a time and chunk_size is < NC_MAX_INT, it is OK to call
+             * MPI_Get_count, instead of MPI_Get_count_c.
              */
             MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
             ncp->get_size += get_size;
@@ -143,26 +161,24 @@ move_file_block(NC         *ncp,
 
         TRACE_IO(MPI_File_write_at_all)(ncp->collective_fh,
                                         to+nbytes+rank*chunk_size,
-                                        buf, get_size /* bufcount */,
+                                        buf, get_size /* NOT bufcount */,
                                         MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
         }
         else {
-            /* update the number of bytes written since file open */
-#ifdef HAVE_MPI_GET_COUNT_C
-            MPI_Count put_size;
-            MPI_Get_count_c(&mpistatus, MPI_BYTE, &put_size);
-            ncp->put_size += put_size;
-#else
+            /* update the number of bytes written since file open.
+             * Because each rank reads and writes no more than one chunk_size
+             * at a time and chunk_size is < NC_MAX_INT, it is OK to call
+             * MPI_Get_count, instead of MPI_Get_count_c.
+             */
             int put_size;
             mpireturn = MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
             if (mpireturn != MPI_SUCCESS || put_size == MPI_UNDEFINED)
                 ncp->put_size += get_size; /* or bufcount */
             else
                 ncp->put_size += put_size;
-#endif
         }
         TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->comm);
         status = min_st;
@@ -501,7 +517,6 @@ write_NC(NC *ncp)
     /* only rank 0's header gets written to the file */
     if (rank == 0) {
         void *buf=NULL;
-        int bufCount;
         MPI_Offset remain;
 
 #ifdef ENABLE_NULL_BYTE_HEADER_PADDING
@@ -536,7 +551,7 @@ write_NC(NC *ncp)
         /* write the header in chunks */
         remain = header_wlen;
         for (i=0; i<ntimes; i++) {
-            bufCount = (int) MIN(remain, NC_MAX_INT);
+            int bufCount = (int) MIN(remain, NC_MAX_INT);
             if (fIsSet(ncp->flags, NC_HCOLL))
                 TRACE_IO(MPI_File_write_at_all)(ncp->collective_fh, 0, buf,
                                                 bufCount, MPI_BYTE, &mpistatus);
@@ -549,21 +564,18 @@ write_NC(NC *ncp)
                 if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
             }
             else {
-                /* update the number of bytes written since file open */
-#ifdef HAVE_MPI_GET_COUNT_C
-                MPI_Count put_size;
-                MPI_Get_count_c(&mpistatus, MPI_BYTE, &put_size);
-                ncp->put_size += put_size;
-#else
+                /* Update the number of bytes read since file open.
+                 * Because each rank writes no more than NC_MAX_INT at a time,
+                 * it is OK to call MPI_Get_count, instead of MPI_Get_count_c.
+                 */
                 int put_size;
                 mpireturn = MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
                 if (mpireturn != MPI_SUCCESS || put_size == MPI_UNDEFINED)
-                    ncp->put_size += header_wlen;
+                    ncp->put_size += bufCount;
                 else
                     ncp->put_size += put_size;
-#endif
             }
-            remain -= NC_MAX_INT;
+            remain -= bufCount;
         }
         NCI_Free(buf);
     }
