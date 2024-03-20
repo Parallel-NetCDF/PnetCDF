@@ -371,6 +371,9 @@ hdr_fetch(bufferinfo *gbp) {
         else {
             /* Obtain the actual read amount. It may be smaller than readLen,
              * when the remaining file size is smaller than read chunk size.
+             * Because each MPI File_read reads amount of readLen bytes, and
+             * readLen <= read chunk size which is <= NC_MAX_INT, calling
+             * MPI_Get_count() is sufficient. No need to call MPI_Get_count_c()
              */
             int get_size;
             MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);

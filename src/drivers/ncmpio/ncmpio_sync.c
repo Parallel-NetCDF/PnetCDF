@@ -126,19 +126,17 @@ ncmpio_write_numrecs(NC         *ncp,
             if (err == NC_EFILE) DEBUG_RETURN_ERROR(NC_EWRITE)
         }
         else {
-            /* update the number of bytes written since file open */
-#ifdef HAVE_MPI_GET_COUNT_C
-            MPI_Count put_size;
-            MPI_Get_count_c(&mpistatus, MPI_BYTE, &put_size);
-            ncp->put_size += put_size;
-#else
+            /* update the number of bytes written since file open.
+             * Because the above MPI write writes either 4 or 8 bytes,
+             * calling MPI_Get_count() is sufficient. No need to call
+             * MPI_Get_count_c()
+             */
             int put_size;
             mpireturn = MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
             if (mpireturn != MPI_SUCCESS || put_size == MPI_UNDEFINED)
                 ncp->put_size += len;
             else
                 ncp->put_size += put_size;
-#endif
         }
     }
     return NC_NOERR;

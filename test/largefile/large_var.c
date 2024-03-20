@@ -61,7 +61,8 @@ swapn(void       *buf,
 int main(int argc, char** argv)
 {
     char filename[256];
-    int i, j, rank, nprocs, err, nerrs=0, bufsize, expected;
+    size_t bufsize;
+    int i, j, rank, nprocs, err, nerrs=0, expected;
     int ncid, cmode, varid, dimid[3], req[3], st[3], *buf, *buf_ptr;
     MPI_Offset offset, var_offset, start[3], count[3];
     MPI_File fh;
@@ -436,7 +437,7 @@ int main(int argc, char** argv)
     for (i=0; i<count[0]; i++) {
         for (j=0; j<count[1]; j++) {
             offset = var_offset + ((start[0] + i) * NY * NX + (start[1] + j) * NX + start[2]) * sizeof(int);
-            MPI_File_read_at(fh, offset, buf_ptr, count[2], MPI_INT, &status);
+            MPI_File_read_at(fh, offset, buf_ptr, (int)count[2], MPI_INT, &status);
 #ifndef WORDS_BIGENDIAN
             swapn(buf_ptr, count[2]);
 #endif
@@ -466,7 +467,7 @@ int main(int argc, char** argv)
     for (i=0; i<count[0]; i++) {
         for (j=0; j<count[1]; j++) {
             offset = var_offset + ((start[0] + i) * NY * NX + (start[1] + j) * NX + start[2]) * sizeof(int);
-            MPI_File_read_at(fh, offset, buf_ptr, count[2], MPI_INT, &status);
+            MPI_File_read_at(fh, offset, buf_ptr, (int)count[2], MPI_INT, &status);
 #ifndef WORDS_BIGENDIAN
             swapn(buf_ptr, count[2]);
 #endif
@@ -495,7 +496,7 @@ int main(int argc, char** argv)
     for (i=0; i<count[0]; i++) {
         for (j=0; j<count[1]; j++) {
             offset = var_offset + ((start[0] + i) * NY * NX + (start[1] + j) * NX + start[2]) * sizeof(int);
-            MPI_File_read_at(fh, offset, buf_ptr, count[2], MPI_INT, &status);
+            MPI_File_read_at(fh, offset, buf_ptr, (int)count[2], MPI_INT, &status);
 #ifndef WORDS_BIGENDIAN
             swapn(buf_ptr, count[2]);
 #endif
@@ -523,7 +524,7 @@ int main(int argc, char** argv)
     for (i=0; i<count[0]; i++) {
         for (j=0; j<count[1]; j++) {
             offset = var_offset + ((start[0] + i) * NY * NX + (start[1] + j) * NX + start[2]) * sizeof(int);
-            MPI_File_read_at(fh, offset, buf_ptr, count[2], MPI_INT, &status);
+            MPI_File_read_at(fh, offset, buf_ptr, (int)count[2], MPI_INT, &status);
 #ifndef WORDS_BIGENDIAN
             swapn(buf_ptr, count[2]);
 #endif
