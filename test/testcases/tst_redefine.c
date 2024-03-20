@@ -27,6 +27,8 @@
 
 static int verbose;
 
+#define NUM_RNDUP(x, unit) ((((x) + (unit) - 1) / (unit)) * (unit))
+
 #define LEN 16
 
 #define CHECK_VAL(ncid, varid, ii, val, expect) {                     \
@@ -44,25 +46,24 @@ static int verbose;
 static int
 check_fix_vars(MPI_Comm comm, int ncid, int *varid)
 {
-    int i, nerrs=0, err, rank, nprocs, *buf;
+    int i, nerrs=0, err, rank, *buf;
     MPI_Offset start[2], count[2];
 
     MPI_Comm_rank(comm, &rank);
-    MPI_Comm_size(comm, &nprocs);
 
-    start[0] = 0; start[1] = rank * (LEN / nprocs);
-    count[0] = 1; count[1] = LEN / nprocs;
+    start[0] = 0; start[1] = rank * LEN;
+    count[0] = 1; count[1] = LEN;
 
     buf = (int*) malloc(sizeof(int) * count[0] * count[1]);
 
     for (i=0; i<count[0]*count[1]; i++) buf[i] = -1;
     err = ncmpi_get_vara_int_all(ncid, varid[0], start+1, count+1, buf); CHECK_ERROUT
-    for (i=0; i<LEN/nprocs; i++)
+    for (i=0; i<LEN; i++)
         CHECK_VAL(ncid, varid[0], i, buf[i], rank+i)
 
     for (i=0; i<count[0]*count[1]; i++) buf[i] = -1;
     err = ncmpi_get_vara_int_all(ncid, varid[1], start+1, count+1, buf); CHECK_ERROUT
-    for (i=0; i<LEN/nprocs; i++)
+    for (i=0; i<LEN; i++)
         CHECK_VAL(ncid, varid[1], i, buf[i], rank+i+100)
 
 err_out:
@@ -73,25 +74,24 @@ err_out:
 static int
 check_rec_vars(MPI_Comm comm, int ncid, int *varid)
 {
-    int i, nerrs=0, err, rank, nprocs, *buf;
+    int i, nerrs=0, err, rank, *buf;
     MPI_Offset start[2], count[2];
 
     MPI_Comm_rank(comm, &rank);
-    MPI_Comm_size(comm, &nprocs);
 
-    start[0] = 0; start[1] = rank * (LEN / nprocs);
-    count[0] = 2; count[1] = LEN / nprocs;
+    start[0] = 0; start[1] = rank * LEN;
+    count[0] = 2; count[1] = LEN;
 
     buf = (int*) malloc(sizeof(int) * count[0] * count[1]);
 
     for (i=0; i<count[0]*count[1]; i++) buf[i] = -1;
     err = ncmpi_get_vara_int_all(ncid, varid[0], start,   count,   buf); CHECK_ERROUT
-    for (i=0; i<2*LEN/nprocs; i++)
+    for (i=0; i<2*LEN; i++)
         CHECK_VAL(ncid, varid[0], i, buf[i], rank+i+1000)
 
     for (i=0; i<count[0]*count[1]; i++) buf[i] = -1;
     err = ncmpi_get_vara_int_all(ncid, varid[1], start,   count,   buf); CHECK_ERROUT
-    for (i=0; i<2*LEN/nprocs; i++)
+    for (i=0; i<2*LEN; i++)
         CHECK_VAL(ncid, varid[1], i, buf[i], rank+i+10000)
 
 err_out:
@@ -108,7 +108,7 @@ tst_fmt(char *filename, int cmode)
     MPI_Offset old_hsize, hsize;
     MPI_Offset old_extent, extent;
     MPI_Offset old_var_off, var_off;
-    MPI_Offset v_align, r_align;
+    MPI_Offset v_align, r_align, exp_var_off;
     MPI_Comm comm = MPI_COMM_WORLD;
 
     MPI_Comm_rank(comm, &rank);
@@ -121,7 +121,7 @@ tst_fmt(char *filename, int cmode)
     err = ncmpi_create(comm, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimid[0]); CHECK_ERR
-    err = ncmpi_def_dim(ncid, "dim", LEN, &dimid[1]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "dim", LEN*nprocs, &dimid[1]); CHECK_ERR
     err = ncmpi_def_var(ncid, "fa", NC_INT, 1, dimid+1, &varid[0]); CHECK_ERR
     err = ncmpi_def_var(ncid, "fb", NC_INT, 1, dimid+1, &varid[1]); CHECK_ERR
     err = ncmpi_def_var(ncid, "ta", NC_INT, 2, dimid,   &varid[2]); CHECK_ERR
@@ -130,24 +130,24 @@ tst_fmt(char *filename, int cmode)
     /* disable header alignment */
     err = ncmpi__enddef(ncid, 0, 4, 0, 4); CHECK_ERR
 
-    start[0] = 0; start[1] = rank * (LEN / nprocs);
-    count[0] = 2; count[1] = LEN / nprocs;
+    start[0] = 0; start[1] = rank * LEN;
+    count[0] = 2; count[1] = LEN;
 
     buf = (int*) malloc(sizeof(int) * count[0] * count[1]);
 
-    for (i=0; i<LEN/nprocs; i++) buf[i] = rank + i;
+    for (i=0; i<LEN; i++) buf[i] = rank + i;
     err = ncmpi_put_vara_int_all(ncid, varid[0], start+1, count+1, buf); CHECK_ERR
-    for (i=0; i<LEN/nprocs; i++) buf[i] = rank + i + 100;
+    for (i=0; i<LEN; i++) buf[i] = rank + i + 100;
     err = ncmpi_put_vara_int_all(ncid, varid[1], start+1, count+1, buf); CHECK_ERR
-    for (i=0; i<2*LEN/nprocs; i++) buf[i] = rank + i + 1000;
+    for (i=0; i<2*LEN; i++) buf[i] = rank + i + 1000;
     err = ncmpi_put_vara_int_all(ncid, varid[2], start,   count,   buf); CHECK_ERR
-    for (i=0; i<2*LEN/nprocs; i++) buf[i] = rank + i + 10000;
+    for (i=0; i<2*LEN; i++) buf[i] = rank + i + 10000;
     err = ncmpi_put_vara_int_all(ncid, varid[3], start,   count,   buf); CHECK_ERR
 
-    err = check_fix_vars(comm, ncid, varid);
-    if (err > 0) goto err_out;
-    err = check_rec_vars(comm, ncid, varid+2);
-    if (err > 0) goto err_out;
+    nerrs += check_fix_vars(comm, ncid, varid);
+    if (nerrs > 0) goto err_out;
+    nerrs += check_rec_vars(comm, ncid, varid+2);
+    if (nerrs > 0) goto err_out;
 
     err = ncmpi_close(ncid); CHECK_ERR
 
@@ -201,10 +201,10 @@ tst_fmt(char *filename, int cmode)
                __LINE__,__FILE__, extent, old_extent);
     }
 
-    err = check_fix_vars(comm, ncid, varid);
-    if (err > 0) goto err_out;
-    err = check_rec_vars(comm, ncid, varid+2);
-    if (err > 0) goto err_out;
+    nerrs += check_fix_vars(comm, ncid, varid);
+    if (nerrs > 0) goto err_out;
+    nerrs += check_rec_vars(comm, ncid, varid+2);
+    if (nerrs > 0) goto err_out;
 
     /* enter redefine mode and add nothing */
     err = ncmpi_redef(ncid); CHECK_ERR
@@ -234,10 +234,10 @@ tst_fmt(char *filename, int cmode)
                __LINE__,__FILE__, extent, old_extent + minfree);
     }
 
-    err = check_fix_vars(comm, ncid, varid);
-    if (err > 0) goto err_out;
-    err = check_rec_vars(comm, ncid, varid+2);
-    if (err > 0) goto err_out;
+    nerrs += check_fix_vars(comm, ncid, varid);
+    if (nerrs > 0) goto err_out;
+    nerrs += check_rec_vars(comm, ncid, varid+2);
+    if (nerrs > 0) goto err_out;
 
     /* enter redefine mode and add nothing */
     err = ncmpi_redef(ncid); CHECK_ERR
@@ -267,10 +267,10 @@ tst_fmt(char *filename, int cmode)
                __LINE__,__FILE__, extent);
     }
 
-    err = check_fix_vars(comm, ncid, varid);
-    if (err > 0) goto err_out;
-    err = check_rec_vars(comm, ncid, varid+2);
-    if (err > 0) goto err_out;
+    nerrs += check_fix_vars(comm, ncid, varid);
+    if (nerrs > 0) goto err_out;
+    nerrs += check_rec_vars(comm, ncid, varid+2);
+    if (nerrs > 0) goto err_out;
 
     err = ncmpi_close(ncid); CHECK_ERR
 
@@ -316,10 +316,10 @@ tst_fmt(char *filename, int cmode)
 
     unsetenv("PNETCDF_HINTS");
 
-    err = check_fix_vars(comm, ncid, varid);
-    if (err > 0) goto err_out;
-    err = check_rec_vars(comm, ncid, varid+2);
-    if (err > 0) goto err_out;
+    nerrs += check_fix_vars(comm, ncid, varid);
+    if (nerrs > 0) goto err_out;
+    nerrs += check_rec_vars(comm, ncid, varid+2);
+    if (nerrs > 0) goto err_out;
 
     /* enter redefine mode and add nothing */
     err = ncmpi_redef(ncid); CHECK_ERR
@@ -352,10 +352,10 @@ tst_fmt(char *filename, int cmode)
     /* obtain 1st record variable's file offset */
     err = ncmpi_inq_varoffset(ncid, varid[2], &old_var_off); CHECK_ERR
 
-    err = check_fix_vars(comm, ncid, varid);
-    if (err > 0) goto err_out;
-    err = check_rec_vars(comm, ncid, varid+2);
-    if (err > 0) goto err_out;
+    nerrs += check_fix_vars(comm, ncid, varid);
+    if (nerrs > 0) goto err_out;
+    nerrs += check_rec_vars(comm, ncid, varid+2);
+    if (nerrs > 0) goto err_out;
 
     /* enter redefine mode and add nothing */
     err = ncmpi_redef(ncid); CHECK_ERR
@@ -373,10 +373,10 @@ tst_fmt(char *filename, int cmode)
                __LINE__,__FILE__, var_off, old_var_off+400);
     }
 
-    err = check_fix_vars(comm, ncid, varid);
-    if (err > 0) goto err_out;
-    err = check_rec_vars(comm, ncid, varid+2);
-    if (err > 0) goto err_out;
+    nerrs += check_fix_vars(comm, ncid, varid);
+    if (nerrs > 0) goto err_out;
+    nerrs += check_rec_vars(comm, ncid, varid+2);
+    if (nerrs > 0) goto err_out;
 
 #if 0
     err = ncmpi_close(ncid); CHECK_ERR
@@ -384,6 +384,10 @@ tst_fmt(char *filename, int cmode)
     /* reopen the file and set r_align */
     err = ncmpi_open(comm, filename, NC_WRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
 #endif
+
+    /* obtained the old offset of 1st record variable */
+    err = ncmpi_inq_varoffset(ncid, varid[2], &old_var_off); CHECK_ERR
+
     /* enter redefine mode and add nothing */
     err = ncmpi_redef(ncid); CHECK_ERR
 
@@ -394,17 +398,20 @@ tst_fmt(char *filename, int cmode)
     /* obtain 1st record variable's file offset */
     err = ncmpi_inq_varoffset(ncid, varid[2], &var_off); CHECK_ERR
 
+    /* round up to r_align */
+    exp_var_off = NUM_RNDUP(old_var_off, r_align);
+
     /* var_off should grows into 1500 bytes */
-    if (var_off != r_align) {
+    if (var_off != exp_var_off) {
         nerrs++;
         printf("Error at line %d in %s: 1st record variable offset %lld (expecting %lld)\n",
-               __LINE__,__FILE__, var_off, r_align);
+               __LINE__,__FILE__, var_off, exp_var_off);
     }
 
-    err = check_fix_vars(comm, ncid, varid);
-    if (err > 0) goto err_out;
-    err = check_rec_vars(comm, ncid, varid+2);
-    if (err > 0) goto err_out;
+    nerrs += check_fix_vars(comm, ncid, varid);
+    if (nerrs > 0) goto err_out;
+    nerrs += check_rec_vars(comm, ncid, varid+2);
+    if (nerrs > 0) goto err_out;
 
     err = ncmpi_close(ncid); CHECK_ERR
 
@@ -416,7 +423,7 @@ tst_fmt(char *filename, int cmode)
 
     /* define only record variables */
     err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimid[0]); CHECK_ERR
-    err = ncmpi_def_dim(ncid, "dim", LEN, &dimid[1]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "dim", LEN*nprocs, &dimid[1]); CHECK_ERR
     err = ncmpi_def_var(ncid, "ta", NC_INT, 2, dimid,   &varid[2]); CHECK_ERR
     err = ncmpi_def_var(ncid, "tb", NC_INT, 2, dimid,   &varid[3]); CHECK_ERR
 
@@ -427,12 +434,12 @@ tst_fmt(char *filename, int cmode)
     r_align = 512;
     err = ncmpi__enddef(ncid, 0, v_align, 0, r_align); CHECK_ERR
 
-    start[0] = 0; start[1] = rank * (LEN / nprocs);
-    count[0] = 2; count[1] = LEN / nprocs;
+    start[0] = 0; start[1] = rank * LEN;
+    count[0] = 2; count[1] = LEN;
 
-    for (i=0; i<2*LEN/nprocs; i++) buf[i] = rank + i + 1000;
+    for (i=0; i<2*LEN; i++) buf[i] = rank + i + 1000;
     err = ncmpi_put_vara_int_all(ncid, varid[2], start,   count,   buf); CHECK_ERR
-    for (i=0; i<2*LEN/nprocs; i++) buf[i] = rank + i + 10000;
+    for (i=0; i<2*LEN; i++) buf[i] = rank + i + 10000;
     err = ncmpi_put_vara_int_all(ncid, varid[3], start,   count,   buf); CHECK_ERR
 
     err = ncmpi_inq_header_size(ncid, &hsize); CHECK_ERR
@@ -455,13 +462,13 @@ tst_fmt(char *filename, int cmode)
                __LINE__,__FILE__, extent, r_align);
     }
 
-    err = check_rec_vars(comm, ncid, varid+2);
-    if (err > 0) goto err_out;
+    nerrs += check_rec_vars(comm, ncid, varid+2);
+    if (nerrs > 0) goto err_out;
 
+err_out:
     err = ncmpi_close(ncid); CHECK_ERR
     free(buf);
 
-err_out:
     return nerrs;
 }
 

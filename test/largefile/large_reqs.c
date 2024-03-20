@@ -117,8 +117,8 @@ int tst_one_var(char *filename, MPI_Comm comm)
 
     gsize[0] = NY;
     gsize[1] = NX;
-    lsize[0] = count[1];
-    lsize[1] = count[2];
+    lsize[0] = (int)count[1];
+    lsize[1] = (int)count[2];
     lstart[0] = 0;
     lstart[1] = 0;
     MPI_Type_create_subarray(2, gsize, lsize, lstart, MPI_ORDER_C,
@@ -203,31 +203,31 @@ int tst_vars(char *filename, MPI_Comm comm)
     buf = (int*) malloc(buf_len * sizeof(int));
     for (i=0; i<buf_len; i++) buf[i] = (i + rank) % 128;
 
-    /* set subarray offset and length */
-    start[0] = 0;
-    start[1] = LEN * (rank / psize[1]);
-    start[2] = LEN * (rank % psize[1]);
-    count[0] = 1;
-    count[1] = LEN - gap;
-    count[2] = LEN - gap;
-
-    if (verbose)
-        printf("rank %d start=%lld %lld count=%lld %lld\n",
-               rank, start[1],start[2], count[1],count[2]);
-
     /* create a subarray datatype for user buffer */
     int gsize[2], lsize[2], lstart[2];
     MPI_Datatype buftype;
 
     gsize[0] = LEN;
     gsize[1] = LEN;
-    lsize[0] = count[1];
-    lsize[1] = count[2];
+    lsize[0] = LEN - gap;
+    lsize[1] = LEN - gap;
     lstart[0] = 0;
     lstart[1] = 0;
     MPI_Type_create_subarray(2, gsize, lsize, lstart, MPI_ORDER_C,
                              MPI_INT, &buftype);
     MPI_Type_commit(&buftype);
+
+    /* set subarray offset and length */
+    start[0] = 0;
+    start[1] = LEN * (rank / psize[1]);
+    start[2] = LEN * (rank % psize[1]);
+    count[0] = 1;
+    count[1] = lsize[0];
+    count[2] = lsize[1];
+
+    if (verbose)
+        printf("rank %d start=%lld %lld count=%lld %lld\n",
+               rank, start[1],start[2], count[1],count[2]);
 
     if (verbose)
         printf("%d: nonblocking write total amount = %.1f GiB\n",
