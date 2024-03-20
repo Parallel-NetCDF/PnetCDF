@@ -88,8 +88,7 @@ int ncbbio_put_list_init(NC_bb *ncbbp) {
  */
 static int ncbbio_put_list_resize(NC_bb *ncbbp)
 {
-    int i;
-    ssize_t nsize;
+    size_t i, nsize;
     void *ptr;
     NC_bb_put_list *lp = &(ncbbp->putlist);
 
@@ -109,8 +108,11 @@ static int ncbbio_put_list_resize(NC_bb *ncbbp)
     /* Initialize values of ids and reqs
      * Assign increasing unique id
      */
+    if (nsize > NC_MAX_INT)
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
     for (i=lp->nalloc; i<nsize; i++) {
-        lp->ids[i] = i; // Unique ids
+        lp->ids[i] = (int)i; // Unique ids
         lp->reqs[i].valid = 0; // Not in use
     }
 

@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
     }
     if (argc == 2) filename = strdup(argv[1]);
     else           filename = strdup("testfile.nc");
-    len = strlen(filename) + 1;
+    len = (int)strlen(filename) + 1;
     MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(filename, len, MPI_CHAR, 0, MPI_COMM_WORLD);
 

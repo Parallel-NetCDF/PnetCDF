@@ -1699,7 +1699,7 @@ ifdef(`PNETCDF',`dnl
                         }
                     }
  */
-                    j = fromMixedBase(var_rank[i], index, var_shape[i]);
+                    j = (int)fromMixedBase(var_rank[i], index, var_shape[i]);
                     p = (char *) buf + j * (IntType)sizeof_nctype(var_type[i]);
                     err = GetVarm(ncid, i, index, count, stride, imap2, p, nels, datatype);
                 }

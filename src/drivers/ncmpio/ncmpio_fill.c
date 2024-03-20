@@ -642,7 +642,9 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
             buf_len = 1;
         }
 #else
-        if (status == NC_NOERR) status = NC_EINTOVERFLOW;
+        if (status == NC_NOERR)
+            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+
         buf_len = 0; /* participate collective write with 0-length request */
 #endif
     }

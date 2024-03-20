@@ -36,8 +36,8 @@ define(`PRINTTYPE',dnl
 #include <pnetcdf.h>
 
 int main(int argc, char *argv[]) {
-    int i, j, k, fd, ret, err = NC_NOERR;
-    size_t offset;
+    int i, j, k, fd, err = NC_NOERR;
+    size_t offset, rlen;
     FILE *fmeta=NULL, *fdata=NULL;
     struct stat metastat;
     struct stat datastat;
@@ -71,8 +71,8 @@ int main(int argc, char *argv[]) {
     Meta = (char*)malloc(metastat.st_size);
 
     /* Read the metadata */
-    ret = fread(Meta, metastat.st_size, 1, fmeta);
-    if (ret != 1) {
+    rlen = fread(Meta, metastat.st_size, 1, fmeta);
+    if (rlen != 1) {
         err = NC_EBADLOG;
         goto fn_exit;
     }
@@ -96,8 +96,8 @@ int main(int argc, char *argv[]) {
         /* Allocate buffer */
         Data = (char*)malloc(datastat.st_size);
         /* Read the data */
-        ret = fread(Data, datastat.st_size, 1, fdata);
-        if (ret != 1) {
+        rlen = fread(Data, datastat.st_size, 1, fdata);
+        if (rlen != 1) {
             err = NC_EBADLOG;
             goto fn_exit;
         }

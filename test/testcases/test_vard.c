@@ -205,20 +205,20 @@ int main(int argc, char **argv) {
     /* create a file type for the fixed-size variable */
     array_of_sizes[0] = 2;
     array_of_sizes[1] = NX*nprocs;
-    array_of_subsizes[0] = count[0];
-    array_of_subsizes[1] = count[1];
-    array_of_starts[0] = start[0];
-    array_of_starts[1] = start[1];
+    array_of_subsizes[0] = (int)count[0];
+    array_of_subsizes[1] = (int)count[1];
+    array_of_starts[0] = (int)start[0];
+    array_of_starts[1] = (int)start[1];
     MPI_Type_create_subarray(2, array_of_sizes, array_of_subsizes,
                              array_of_starts, MPI_ORDER_C,
                              MPI_INT, &fix_filetype);
     MPI_Type_commit(&fix_filetype);
 
     /* create a buftype with ghost cells on each side */
-    array_of_sizes[0] = count[0]+4;
-    array_of_sizes[1] = count[1]+4;
-    array_of_subsizes[0] = count[0];
-    array_of_subsizes[1] = count[1];
+    array_of_sizes[0] = (int)count[0]+4;
+    array_of_sizes[1] = (int)count[1]+4;
+    array_of_subsizes[0] = (int)count[0];
+    array_of_subsizes[1] = (int)count[1];
     array_of_starts[0] = 2;
     array_of_starts[1] = 2;
     MPI_Type_create_subarray(2, array_of_sizes, array_of_subsizes,
@@ -252,8 +252,8 @@ int main(int argc, char **argv) {
     MPI_Offset recsize;
     err = ncmpi_inq_recsize(ncid, &recsize);
     for (i=0; i<count[0]; i++) {
-        array_of_blocklengths[i] = count[1];
-        array_of_displacements[i] = start[1]*sizeof(int) + recsize * i;
+        array_of_blocklengths[i] = (int)count[1];
+        array_of_displacements[i] = (int)start[1]*sizeof(int) + recsize * i;
     }
     MPI_Type_create_hindexed(2, array_of_blocklengths, array_of_displacements,
                              MPI_INT, &rec_filetype);
@@ -454,7 +454,7 @@ int main(int argc, char **argv) {
 
     /* construct rec_filetype for dummy_rec of type NC_BYTE */
     for (i=0; i<count[0]; i++) {
-        array_of_blocklengths[i] = count[1];
+        array_of_blocklengths[i] = (int)count[1];
         array_of_displacements[i] = start[1]*sizeof(signed char) + recsize * i;
     }
     MPI_Type_create_hindexed(2, array_of_blocklengths, array_of_displacements,

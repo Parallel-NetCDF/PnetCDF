@@ -1743,7 +1743,7 @@ edge1:
                         }
                     }
  */
-                    j = fromMixedBase(var_rank[i], index, var_shape[i]);
+                    j = (int)fromMixedBase(var_rank[i], index, var_shape[i]);
                     p = (char *) buf + (int)j * sizeof_nctype(var_type[i]);
                     ifdef(`PNETCDF', `for (bufcount=1,j=0; j<var_rank[i]; j++) bufcount *= count[j];')
                     err = PutVarm(ncid, i, index, count, stride, imap2, p, bufcount, datatype);

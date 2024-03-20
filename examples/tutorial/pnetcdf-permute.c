@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     char filename[256];
     int i, j, k, rank, nprocs, ret;
     int ncfile, ndims=NDIMS;
-    MPI_Offset dim_sizes[NDIMS];
+    int dim_sizes[NDIMS];
     MPI_Offset start[NDIMS], count[NDIMS], nitems;
     int dimids[NDIMS], transposed_dims[NDIMS];
     int varid1, transposed_varid, flexible_varid;

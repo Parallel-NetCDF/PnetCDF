@@ -61,28 +61,28 @@ int main(int argc, char **argv)
     /* process 0 takes the file name as a command-line argument and
        broadcasts it to other processes */
     if (rank == 0) {
-	while ((opt = getopt(argc, argv, "f:s:p:n:l:r")) != EOF) {
-	    switch (opt) {
-	    case 'f': fbasename = optarg;
-		break;
-	    case 's': num_sf = (int)strtol(optarg,NULL,10);
-		break;
-	    case 'r': do_read = 1;
-		break;
+        while ((opt = getopt(argc, argv, "f:s:p:n:l:r")) != EOF) {
+            switch (opt) {
+            case 'f': fbasename = optarg;
+                break;
+            case 's': num_sf = (int)strtol(optarg,NULL,10);
+                break;
+            case 'r': do_read = 1;
+                break;
             case 'p': par_dim_id = (int)strtol(optarg,NULL,10);
                 break;
             case 'n': nvars = (int)strtol(optarg,NULL,10);
                 break;
             case 'l': length = (int)strtol(optarg,NULL,10);
                 break;
-	    default:
-		break;
-	    }
-	}
-	if (fbasename == NULL) {
-	    fprintf(stderr, "\n*#  Usage: test_subfile -f pathname -s num_sf -p par_dim_id \n\n");
-	    nerrs++;
-	}
+            default:
+                break;
+            }
+        }
+        if (fbasename == NULL) {
+            fprintf(stderr, "\n*#  Usage: test_subfile -f pathname -s num_sf -p par_dim_id \n\n");
+            nerrs++;
+        }
     }
     MPI_Bcast(&nerrs, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if (nerrs > 0) {
@@ -91,12 +91,12 @@ int main(int argc, char **argv)
     }
 
     if (rank == 0) {
-	len = (fbasename == NULL) ?  0 : strlen(fbasename);
-	MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        len = (fbasename == NULL) ?  0 : (int)strlen(fbasename);
+        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
     else {
-	MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	fbasename = (char *) malloc(len+1);
+        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        fbasename = (char *) malloc(len+1);
     }
     MPI_Bcast(fbasename, len+1, MPI_CHAR, 0, MPI_COMM_WORLD);
     MPI_Bcast(&num_sf, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -141,16 +141,16 @@ int main(int argc, char **argv)
     }
 
     for (i=0; i<nvars; i++) {
-	starts_list[i] = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
-	if (starts_list[i] == NULL){
-	    printf("starts_list[%d] malloc error\n", i);
-	    nerrs++; goto fn_exit;
-	}
-	count_list[i] = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
-	if (count_list[i] == NULL){
-	    printf("count_list[%d] malloc error\n", i);
-	    nerrs++; goto fn_exit;
-	}
+        starts_list[i] = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
+        if (starts_list[i] == NULL){
+            printf("starts_list[%d] malloc error\n", i);
+            nerrs++; goto fn_exit;
+        }
+        count_list[i] = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
+        if (count_list[i] == NULL){
+            printf("count_list[%d] malloc error\n", i);
+            nerrs++; goto fn_exit;
+        }
     }
 
     bufcount = 1;
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
     MPI_Dims_create(nprocs, ndims, array_of_psizes);
     if (verbose && rank == 0)
         for(i=0; i<ndims; i++)
-	    printf("array_of_psizes[%d]=%d\n", i, array_of_psizes[i]);
+            printf("array_of_psizes[%d]=%d\n", i, array_of_psizes[i]);
 
     /* subarray in each process is len x len x len */
     for (i=0; i<ndims; i++)
@@ -177,23 +177,23 @@ int main(int argc, char **argv)
         array_of_starts[i] = (MPI_Offset)length * rank_dim[i];
 
     for (i=0; i<nvars; i++) {
-	for (j=0; j<ndims; j++) {
-	    starts_list[i][j] = array_of_starts[j];
-	    count_list[i][j]  = length;
-	}
+        for (j=0; j<ndims; j++) {
+            starts_list[i][j] = array_of_starts[j];
+            count_list[i][j]  = length;
+        }
         bufcount_list[i] = bufcount;
         datatype_list[i] = MPI_INT;
     }
 
     for (i=0; i<nvars; i++) {
-	buf[i] = (int *) malloc(bufcount * sizeof(int));
-	if (buf[i] == NULL){
-	    printf("buf[i]malloc error\n");
-	    nerrs++; goto fn_exit;
-	}
+        buf[i] = (int *) malloc(bufcount * sizeof(int));
+        if (buf[i] == NULL){
+            printf("buf[i]malloc error\n");
+            nerrs++; goto fn_exit;
+        }
 
-	for (j=0; j<bufcount; j++)
-	    buf[i][j]=rank+1;
+        for (j=0; j<bufcount; j++)
+            buf[i][j]=rank+1;
     }
 
     MPI_Info_create(&info);
@@ -227,16 +227,16 @@ int main(int argc, char **argv)
     /* define variables */
     varid = (int *)malloc(nvars*sizeof(int));
     for (i=0; i<nvars; i++) {
-	sprintf(varname, "var0_%d", i);
-	err = ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids0, &varid[i]);
-	CHECK_ERR
+        sprintf(varname, "var0_%d", i);
+        err = ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids0, &varid[i]);
+        CHECK_ERR
     }
 
     if (par_dim_id != 0) {
         for (i=0; i<nvars; i++) {
             err = ncmpi_put_att_int(ncid, varid[i], "par_dim_id",
                                     NC_INT, 1, &dimids0[par_dim_id]);
-	    CHECK_ERR
+            CHECK_ERR
         }
     }
 
@@ -260,7 +260,7 @@ int main(int argc, char **argv)
                             &nattsp);
         CHECK_ERR
 
-	sprintf(varname, "var0_%d", i);
+        sprintf(varname, "var0_%d", i);
         if (strcmp(name, varname)) {
             printf("Error at line %d in %s: unexpected var[%d] name %s, should be %s\n",
             __LINE__,__FILE__,i,name,varname);

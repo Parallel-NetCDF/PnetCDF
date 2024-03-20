@@ -26,7 +26,8 @@ int main(int argc, char ** argv)
     int ncid, dimid, varid, rank, nprocs;
     MPI_Datatype vtype, rtype, usertype;
     MPI_Aint lb, extent;
-    int userbufsz, *userbuf, *cmpbuf, i, err, errs=0, nerrs=0;
+    int *userbuf, *cmpbuf, i, err, errs=0, nerrs=0;
+    size_t userbufsz;
     int count = 25;
     double pi = 3.14159;
     MPI_Offset start, acount;

@@ -144,8 +144,8 @@ int ncbbio_sharedfile_pwrite(NC_bb_sharedfile *f,
                              size_t            count,
                              off_t             offset)
 {
-    int i, err;
-    int sblock, eblock;   // start and end block
+    int err;
+    size_t i, sblock, eblock;   // start and end block
     off_t offstart, offend, wsize = 0; // Start and end offset to write for current block in physical file
     ssize_t ioret;
 
@@ -317,8 +317,8 @@ int ncbbio_sharedfile_pread(NC_bb_sharedfile *f,
                             size_t            count,
                             off_t             offset)
 {
-    int i, err;
-    int sblock, eblock;   // start and end block
+    int err;
+    size_t i, sblock, eblock;   // start and end block
     off_t offstart, offend, rsize = 0; // Start and end offset to write for current block in physical file
     ssize_t ioret;
 

@@ -116,7 +116,7 @@ int ncmpio_Pearson_hash(const char *str_name, int hash_size)
     }
     else {
         size_t len=strlen(str_name);
-        unsigned int i, hash=len;
+        unsigned int i, hash=(int)len;
         for (i=0; i<len; ++i)
             hash ^= str_name[i];
 

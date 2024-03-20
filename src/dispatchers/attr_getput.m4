@@ -145,7 +145,7 @@ check_consistency_put(MPI_Comm      comm,
     MPI_Comm_rank(comm, &rank);
 
     /* check if attribute name is consistent among all processes */
-    root_name_len = strlen(name) + 1;
+    root_name_len = (int)strlen(name) + 1;
     TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, comm);
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast root_name_len");
@@ -179,27 +179,54 @@ check_consistency_put(MPI_Comm      comm,
 
     /* check if nelems is consistent across all processes */
     root_nelems = nelems;
+
+#if !defined(HAVE_MPI_TYPE_SIZE_C) && !defined(HAVE_MPI_TYPE_SIZE_X)
+    if (root_nelems > NC_MAX_INT) {
+        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+        root_nelems = 0;
+    }
+#endif
+
     TRACE_COMM(MPI_Bcast)(&root_nelems, 1, MPI_OFFSET, 0, comm);
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
     if (err == NC_NOERR && root_nelems != nelems)
         DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_LEN)
 
+    /* must continue to participate collective calls below, even if error */
+
     /* check if buf contents is consistent across all processes */
     if (root_nelems > 0) { /* non-scalar attribute */
         /* note xsz is aligned, thus must use the exact size of buf */
-        int itype_size, rank, buf_size;
+        int rank, itype_size;
+        size_t buf_size;
         void *root_buf;
 
         MPI_Comm_rank(comm, &rank);
+
+        /* for attributes, itype is nc_type, so its size is small. Thus, no
+         * need to check against NC_MAX_INT.
+         */
         MPI_Type_size(itype, &itype_size);
-        buf_size = (int)root_nelems * itype_size;
+        buf_size = root_nelems * itype_size;
+
         if (rank > 0) root_buf = (void*) NCI_Malloc(buf_size);
         else          root_buf = (void*)buf;
 
-        TRACE_COMM(MPI_Bcast)(root_buf, root_nelems, itype, 0, comm);
+        if (root_nelems > NC_MAX_INT) {
+#ifdef HAVE_MPI_BCAST_C
+            TRACE_COMM(MPI_Bcast_c)(root_buf, root_nelems, itype, 0, comm);
+#else
+            /* Note root_nelems has been bcast-ed, same value among all ranks */
+            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_LEN)
+#endif
+        }
+        else
+            TRACE_COMM(MPI_Bcast)(root_buf, (int)root_nelems, itype, 0, comm);
+
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
+
         if (err == NC_NOERR &&
             (root_nelems != nelems || memcmp(root_buf, buf, buf_size)))
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_VAL)

@@ -107,7 +107,8 @@ int main(int argc, char **argv) {
     int          i, j, err, nerrs=0, ncid, varid0, varid1, dimids[2];
     int          rank, nprocs, array_of_blocklengths[2], buf[NY][NX];
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
-    MPI_Offset   start[2], count[2], recsize, bufcount, len;
+    int          start[2], count[2];
+    MPI_Offset   recsize, bufcount, len;
     MPI_Aint     array_of_displacements[2];
     MPI_Datatype buftype, rec_filetype, fix_filetype;
 

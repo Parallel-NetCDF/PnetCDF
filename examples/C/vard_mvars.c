@@ -146,7 +146,7 @@ int main(int argc, char **argv)
     int          rank, nprocs, *buf[2];
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     int          array_of_blocklengths[NY];
-    MPI_Offset   recsize, start[2], count[2], offset[2];
+    MPI_Offset   recsize, offset[2];
     MPI_Aint     a0, a1, array_of_displacements[NY];
     MPI_Datatype buftype, vtype[2], filetype;
 
@@ -217,16 +217,14 @@ int main(int argc, char **argv)
 
     /* specify the access pattern, a subarray for each variable of size
      * NY * NX from each MPI process */
-    start[0] = 0;  start[1] = NX*rank;
-    count[0] = NY; count[1] = NX;
-
-    /* create the first datatype using MPI subarray constructor */
     array_of_sizes[0]    = 2;
     array_of_sizes[1]    = NX*nprocs;
-    array_of_subsizes[0] = count[0];
-    array_of_subsizes[1] = count[1];
-    array_of_starts[0]   = start[0];
-    array_of_starts[1]   = start[1];
+    array_of_subsizes[0] = NY;
+    array_of_subsizes[1] = NX;
+    array_of_starts[0]   = 0;
+    array_of_starts[1]   = NX*rank;
+
+    /* create the first datatype using MPI subarray constructor */
     MPI_Type_create_subarray(2, array_of_sizes, array_of_subsizes,
                              array_of_starts, MPI_ORDER_C, MPI_INT, &vtype[0]);
     MPI_Type_commit(&vtype[0]);

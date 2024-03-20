@@ -223,7 +223,7 @@ int main(int argc, char** argv) {
                    i, start[0],start[1], count[0],count[1]);
 
         if (i % block_len == block_len-1)  {
-            int stride = MIN(myNX-1-i, block_len);
+            MPI_Offset stride = MIN(myNX-1-i, block_len);
             block_start += block_len * nprocs;
             start[1] = block_start + stride * rank;
         }
@@ -297,7 +297,7 @@ int main(int argc, char** argv) {
         ERR
 
         if (i % block_len == block_len-1)  {
-            int stride = MIN(myNX-1-i, block_len);
+            MPI_Offset stride = MIN(myNX-1-i, block_len);
             block_start += block_len * nprocs;
             start[1] = block_start + stride * rank;
         }

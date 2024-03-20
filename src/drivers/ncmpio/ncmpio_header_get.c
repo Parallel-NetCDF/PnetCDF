@@ -316,7 +316,7 @@ hdr_len_NC_vararray(const NC_vararray *ncap,
 
 /*----< hdr_fetch() >--------------------------------------------------------*/
 /* Fetch the next header chunk. The chunk buffer, pointed by gbp->base, is of
- * size 'gbp->size' bytes. Be careful not to overwrite leftover (yet to be
+ * size 'gbp->chunk' bytes. Be careful not to overwrite leftover (yet to be
  * used) data in the buffer before fetching a new chunk.
  */
 static int
@@ -329,20 +329,21 @@ hdr_fetch(bufferinfo *gbp) {
     MPI_Comm_rank(gbp->comm, &rank);
     if (rank == 0) {
         char *readBuf;
-        size_t slack, readLen;
+        int readLen;
+        size_t slack;
 
         /* any leftover data in the buffer */
-        slack = gbp->size - (gbp->pos - gbp->base);
-        if (slack == gbp->size) slack = 0;
+        slack = gbp->chunk - (gbp->pos - gbp->base);
+        if (slack == gbp->chunk) slack = 0;
 
-        /* When gbp->size == (gbp->pos - gbp->base), all data in the buffer has
+        /* When gbp->chunk == (gbp->pos - gbp->base), all data in the buffer has
          * been consumed. If not, then read additional header of size
-         * (gbp->size - slack) into a contiguous buffer, pointed by gbp->base +
+         * (gbp->chunk - slack) into a contiguous buffer, pointed by gbp->base +
          * slack.
          */
 
         readBuf = gbp->base;
-        readLen = gbp->size;
+        readLen = gbp->chunk;
         if (slack > 0) { /* move slack to beginning of the buffer, gbp->base */
             memmove(gbp->base, gbp->pos, slack);
             readBuf += slack;
@@ -377,7 +378,7 @@ hdr_fetch(bufferinfo *gbp) {
 
             /* If actual read amount is shorter than readLen, then we zero-out
              * the remaining buffer. This is because the MPI_Bcast below
-             * broadcasts a buffer of a fixed size, gbp->size. Without zeroing
+             * broadcasts a buffer of a fixed size, gbp->chunk. Without zeroing
              * out, valgrind will complain about the uninitialized values.
              */
             if (get_size < readLen)
@@ -399,7 +400,7 @@ hdr_fetch(bufferinfo *gbp) {
     }
 
     /* broadcast root's read (full or partial header) to other processes */
-    TRACE_COMM(MPI_Bcast)(gbp->base, gbp->size, MPI_BYTE, 0, gbp->comm);
+    TRACE_COMM(MPI_Bcast)(gbp->base, gbp->chunk, MPI_BYTE, 0, gbp->comm);
 
     gbp->pos = gbp->base;
 
@@ -516,8 +517,8 @@ hdr_get_NC_name(bufferinfo *gbp, char **namep, size_t *name_len)
      * NON_NEG    = <non-negative INT> |  // CDF-1 and CDF-2
      *              <non-negative INT64>  // CDF-5
      */
-    int err=NC_NOERR, padding, bufremain, strcount;
-    size_t nchars;
+    int err=NC_NOERR;
+    size_t nchars, padding, bufremain, strcount;
     char *cpos;
 
     *namep = NULL;
@@ -551,7 +552,7 @@ hdr_get_NC_name(bufferinfo *gbp, char **namep, size_t *name_len)
     */
     padding = _RNDUP(nchars, X_ALIGN) - nchars;
 
-    bufremain = gbp->size - (gbp->pos - gbp->base);
+    bufremain = gbp->chunk - (gbp->pos - gbp->base);
 
     cpos = *namep;
 
@@ -572,7 +573,7 @@ hdr_get_NC_name(bufferinfo *gbp, char **namep, size_t *name_len)
                 *namep = NULL;
                 return err;
             }
-            bufremain = gbp->size;
+            bufremain = gbp->chunk;
         }
     }
 
@@ -608,7 +609,7 @@ hdr_get_NC_name(bufferinfo *gbp, char **namep, size_t *name_len)
 #ifdef ENABLE_NULL_BYTE_HEADER_PADDING
         char pad[X_ALIGN-1];
         memset(pad, 0, X_ALIGN-1);
-        if (memcmp(gbp->pos, pad, (size_t)padding) != 0) {
+        if (memcmp(gbp->pos, pad, padding) != 0) {
 #ifdef PNETCDF_DEBUG
             fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, non-zero padding found\n",__FILE__,__func__,__LINE__);
 #endif
@@ -788,22 +789,22 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
      * doubles = [DOUBLE ...]
      * padding = <0, 1, 2, or 3 bytes to next 4-byte boundary>
      */
-    int err=NC_NOERR, xsz, padding, bufremain;
+    int err=NC_NOERR, xsz;
     void *value = attrp->xvalue;
-    MPI_Offset nbytes;
+    size_t nbytes, padding, bufremain;
 
     ncmpii_xlen_nc_type(attrp->xtype, &xsz);
     nbytes = attrp->nelems * xsz;
     padding = attrp->xsz - nbytes;
 
-    bufremain = gbp->size - (gbp->pos - gbp->base);
-    /* gbp->size is the read chunk size, which is of type 4-byte int.
+    bufremain = gbp->chunk - (gbp->pos - gbp->base);
+    /* gbp->chunk is the read chunk size, which is of type 4-byte int.
      * thus bufremain should be less than INT_MAX */
 
     /* get values */
     while (nbytes > 0) {
         if (bufremain > 0) {
-            int attcount = MIN(nbytes, bufremain);
+            size_t attcount = MIN(nbytes, bufremain);
             memcpy(value, gbp->pos, attcount);
             nbytes -= attcount;
             gbp->pos += attcount;
@@ -813,7 +814,7 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
             int err;
             err = hdr_fetch(gbp);
             if (err != NC_NOERR) return err;
-            bufremain = gbp->size;
+            bufremain = gbp->chunk;
         }
     }
 
@@ -849,7 +850,7 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
 #ifdef ENABLE_NULL_BYTE_HEADER_PADDING
         char pad[X_ALIGN-1];
         memset(pad, 0, X_ALIGN-1);
-        if (memcmp(gbp->pos, pad, (size_t)padding) != 0) {
+        if (memcmp(gbp->pos, pad, padding) != 0) {
 #ifdef PNETCDF_DEBUG
             fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, non-zero padding found\n",__FILE__,__func__,__LINE__);
 #endif
@@ -1334,13 +1335,13 @@ ncmpio_hdr_get_NC(NC *ncp)
     getbuf.rw_mode       = (fIsSet(ncp->flags, NC_HCOLL)) ? 1 : 0;
 
     /* CDF-5's minimum header size is 4 bytes more than CDF-1 and CDF-2's */
-    getbuf.size = _RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );
+    getbuf.chunk = _RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );
 
-    getbuf.base = (char*) NCI_Malloc((size_t)getbuf.size);
+    getbuf.base = (char*) NCI_Malloc(getbuf.chunk);
     getbuf.pos  = getbuf.base;
-    getbuf.end  = getbuf.base + getbuf.size;
+    getbuf.end  = getbuf.base + getbuf.chunk;
 
-    /* Fetch the next header chunk. The chunk is 'gbp->size' bytes big */
+    /* Fetch the next header chunk. The chunk is 'gbp->chunk' bytes big */
     err = hdr_fetch(&getbuf);
     if (err != NC_NOERR) return err;
 

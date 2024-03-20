@@ -79,7 +79,7 @@ char* ncmpii_remove_file_system_type_prefix(const char *filename)
         /* check if prefix is one of recognized file system types */
         int i=0;
         while (fstypes[i] != NULL) {
-            int prefix_len = strlen(fstypes[i]);
+            size_t prefix_len = strlen(fstypes[i]);
             if (!strncmp(filename, fstypes[i], prefix_len)) { /* found */
                 ret_filename += prefix_len + 1;
                 break;

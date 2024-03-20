@@ -141,9 +141,10 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
     for (j=0; j<counts[1]; j++)
     for (i=0; i<counts[2]; i++)
         buf[k*counts[1]*counts[2] +
-                      j*counts[2] + i] = (starts[0]+k)*gsizes[1]*gsizes[2]
+                      j*counts[2] + i] = (int)(
+                                         (starts[0]+k)*gsizes[1]*gsizes[2]
                                        + (starts[1]+j)*gsizes[2]
-                                       + (starts[2]+i);
+                                       + (starts[2]+i));
 
     /* set an MPI-IO hint to disable file offset alignment for fixed-size
      * variables */

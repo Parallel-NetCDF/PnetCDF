@@ -102,9 +102,9 @@ hash2nc(const nc_type var_type, int var_rank, MPI_Offset *index)
 }
 
 static int
-dbls2ncs(int nels, int var_type, double *inBuf, void *outBuf)
+dbls2ncs(size_t nels, int var_type, double *inBuf, void *outBuf)
 {
-    int i;
+    size_t i;
     char *p = (char*)outBuf;
     for (i=0; i<nels; i++) {
         switch (var_type) {

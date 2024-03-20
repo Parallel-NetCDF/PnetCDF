@@ -382,7 +382,7 @@ struct NC {
     MPI_Comm      comm_sf;      /* subfile MPI communicator */
 #endif
     int           striping_unit; /* stripe size of the file */
-    int           chunk;       /* chunk size for reading header */
+    int           chunk;       /* chunk size for reading header, one chunk at a time */
     MPI_Offset    h_align;     /* file alignment for header size */
     MPI_Offset    v_align;     /* alignment of the beginning of fixed-size variables */
     MPI_Offset    r_align;     /* file alignment for record variable section */
@@ -471,7 +471,7 @@ typedef struct bufferinfo {
     MPI_File    collective_fh;
     MPI_Offset  get_size; /* amount of file read n bytes so far */
     MPI_Offset  offset;   /* current read/write offset in the file */
-    size_t      size;     /* allocated size of the buffer */
+    int         chunk;    /* chunk size for reading the header */
     int         version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
     int         safe_mode;/* 0: disabled, 1: enabled */
     int         rw_mode;  /* 0: independent, 1: collective */

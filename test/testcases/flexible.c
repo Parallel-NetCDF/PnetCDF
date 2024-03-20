@@ -233,10 +233,10 @@ int main(int argc, char **argv) {
 
     /* create a buftype with ghost cells on each side */
     ncbuf = (int *) malloc((count[0]+4)*(count[1]+4)*sizeof(int));
-    array_of_sizes[0] = count[0]+4;
-    array_of_sizes[1] = count[1]+4;
-    array_of_subsizes[0] = count[0];
-    array_of_subsizes[1] = count[1];
+    array_of_sizes[0] = (int)count[0]+4;
+    array_of_sizes[1] = (int)count[1]+4;
+    array_of_subsizes[0] = (int)count[0];
+    array_of_subsizes[1] = (int)count[1];
     array_of_starts[0] = 2;
     array_of_starts[1] = 2;
     MPI_Type_create_subarray(2, array_of_sizes, array_of_subsizes,

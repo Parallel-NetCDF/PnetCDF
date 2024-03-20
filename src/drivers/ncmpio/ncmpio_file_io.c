@@ -51,7 +51,7 @@ ncmpio_read_write(NC           *ncp,
         err = (err == NC_EFILE) ? NC_EREAD : err;
     }
     else if (btype_size == MPI_UNDEFINED)
-        err = NC_EINTOVERFLOW;
+        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
 
     if (err != NC_NOERR) {
         if (coll_indep == NC_REQ_COLL) {
@@ -64,7 +64,7 @@ ncmpio_read_write(NC           *ncp,
     }
 
     /* request size in bytes, may be > NC_MAX_INT */
-    req_size = (MPI_Offset)btype_size * buf_count;
+    req_size = buf_count * btype_size;
 
     /* explicitly initialize mpistatus object to 0. For zero-length read,
      * MPI_Get_count may report incorrect result for some MPICH version,
@@ -109,7 +109,7 @@ ncmpio_read_write(NC           *ncp,
             }
             else {
                 xbuf_type = MPI_BYTE;
-                xlen = req_size;
+                xlen = (int)req_size;
             }
             xbuf = NCI_Malloc((size_t)req_size);
         }
@@ -217,7 +217,7 @@ ncmpio_read_write(NC           *ncp,
             }
             else {
                 int pos=0;
-                xlen = req_size;
+                xlen = (int)req_size;
                 xbuf = NCI_Malloc(xlen);
                 MPI_Pack(buf, (int)buf_count, buf_type, xbuf, xlen, &pos,
                          MPI_COMM_SELF);

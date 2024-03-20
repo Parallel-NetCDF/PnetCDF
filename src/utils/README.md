@@ -894,7 +894,6 @@ Available values for OPTION include:
   --in-place-swap             Whether using buffer in-place Endianness byte swap
   --erange-fill               Whether using fill values for NC_ERANGE error
   --subfiling                 Whether subfiling is enabled or disabled
-  --large-single-req          Whether to allow single >2GiB MPI-IO requests
   --null-byte-header-padding  Whether to check null-byte padding in header
   --burst-buffering           Whether burst buffer driver is built or not
   --profiling                 Whether internal profiling is enabled or not

@@ -1047,7 +1047,7 @@ check_atts(int ncid, int numGatts, int numVars)
             }
         }
     }
-    /* print_nok(nok); */
+    if (verbose) print_nok(nok);
 }
 
 

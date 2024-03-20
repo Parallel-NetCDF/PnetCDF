@@ -187,7 +187,7 @@ err_check:
 
         /* check if name is consistent among all processes */
         assert(name != NULL);
-        root_name_len = strlen(name) + 1;
+        root_name_len = (int)strlen(name) + 1;
         TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, pncp_out->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast root_name_len");
@@ -300,7 +300,7 @@ err_check:
 
         /* check if name is consistent among all processes */
         assert(name != NULL);
-        root_name_len = strlen(name) + 1;
+        root_name_len = (int)strlen(name) + 1;
         TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, pncp->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast root_name_len");
@@ -318,7 +318,7 @@ err_check:
 
         /* check if newname is consistent among all processes */
         assert(newname != NULL);
-        root_name_len = strlen(newname) + 1;
+        root_name_len = (int)strlen(newname) + 1;
         TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, pncp->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast root_name_len");
@@ -410,7 +410,7 @@ err_check:
 
         /* check if name is consistent among all processes */
         assert(name != NULL);
-        root_name_len = strlen(name) + 1;
+        root_name_len = (int)strlen(name) + 1;
         TRACE_COMM(MPI_Bcast)(&root_name_len, 1, MPI_INT, 0, pncp->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast root_name_len");

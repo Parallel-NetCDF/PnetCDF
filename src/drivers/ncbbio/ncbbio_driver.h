@@ -70,7 +70,7 @@ typedef struct NC_bb_metadataheader {
     MPI_Offset max_ndims;
     MPI_Offset num_entries;
     MPI_Offset entry_begin;
-    int basenamelen;
+    size_t basenamelen;
     char basename[1]; /* The hack to keep basename inside the structure */
 } NC_bb_metadataheader;
 
@@ -97,7 +97,7 @@ typedef struct NC_bb_metadataptr {
 typedef struct NC_bb_metadataidx {
     NC_bb_metadataptr *entries;
     int nused;
-    int nalloc;
+    size_t nalloc;
 } NC_bb_metadataidx;
 
 /* Buffer structure */
@@ -134,8 +134,8 @@ typedef struct NC_bb_put_req {
 typedef struct NC_bb_put_list {
     NC_bb_put_req *reqs;  // Array of request object
     int *ids;             // Array of request ids
-    int nalloc;           // Size of the pool
-    int nused;            // Number of ids issued
+    size_t nalloc;        // Size of the pool
+    size_t nused;         // Number of ids issued
 } NC_bb_put_list;
 
 /* Shared file object */

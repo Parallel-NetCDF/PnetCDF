@@ -2120,9 +2120,14 @@ APIPrefix`x_put_off_t'(void **xpp, const off_t *lp, size_t sizeof_off_t)
 #ifdef WORDS_BIGENDIAN
         memcpy(*xpp, lp, 4);
 #else
-        int xtmp, itmp = *lp;
-        xtmp = SWAP4(itmp);
-        memcpy(*xpp, &xtmp, 4);
+        if (*lp > X_INT_MAX)
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        else {
+            int xtmp, itmp;
+            itmp = (int)*lp;
+            xtmp = SWAP4(itmp);
+            memcpy(*xpp, &xtmp, 4);
+        }
 #endif
     } else {
 #ifdef WORDS_BIGENDIAN
