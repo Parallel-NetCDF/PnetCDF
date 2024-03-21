@@ -7,7 +7,7 @@ dnl -*- Mode: shell-script-mode; -*-
 dnl Process this file with GNU autoconf(1) to produce a configure script.
 dnl
 
-AC_REVISION([m4_esyscmd_s([git describe --always])])
+AC_REVISION([m4_esyscmd_s([if test -d .git ; then git describe --always ; fi])])
 dnl When using svn, we use SVN keyword Revision to copy the unique revision
 dnl number as a stamp into configure script.
 dnl AC_REVISION([$Revision$])dnl
