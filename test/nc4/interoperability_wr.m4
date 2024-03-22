@@ -44,7 +44,7 @@ int pnc_wr_$2(int rank, int ncid, int* vid, int *did){
     start[1] = 1;
     err = ncmpi_put_var1_$2_all(ncid, *vid, start, buf + 4); CHECK_ERR
 
-    return err;
+    return nerrs;
 }
 ')dnl
 dnl
@@ -81,18 +81,18 @@ int nc_rd_$2(int rank, int ncid, int vid, int *did){
         }
     }
 
-    return err;
+    return nerrs;
 }
 ')dnl
 dnl
 define(`CALL_PNC_WR',dnl
 `dnl
-    err = pnc_wr_$2(rank, ncid, vid + 0, did); CHECK_ERR
+    nerrs += pnc_wr_$2(rank, ncid, vid + 0, did); CHECK_NERRS
 ')dnl
 dnl
 define(`CALL_NC_RD',dnl
 `dnl
-    err = nc_rd_$2(rank, ncid, vid[0], did); CHECK_ERR
+    nerrs += nc_rd_$2(rank, ncid, vid[0], did); CHECK_NERRS
 ')dnl
 dnl
 /*
@@ -139,6 +139,8 @@ foreach(`dt', (`(`c', `schar', `signed char')', dnl
                `(`llu', `ulonglong', `unsigned long long')', dnl
                ), `NC_RD(translit(dt, `()'))')dnl
 
+
+#define CHECK_NERRS if (nerrs > 0) goto err_out;
 
 int main(int argc, char **argv) {
     int err, nerrs = 0;
@@ -191,6 +193,7 @@ foreach(`dt', (`(`0', `schar', `char')', dnl
                `(`9', `ulonglong', `unsigned long long')', dnl
                ), `CALL_PNC_WR(translit(dt, `()'))')dnl
 
+err_out:
     /* Close file */
     ncmpi_close(ncid);
 
