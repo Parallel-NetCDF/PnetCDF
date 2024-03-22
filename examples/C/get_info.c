@@ -15,7 +15,7 @@
  *
  *    Example standard output:
 
-    MPI File Info: nkeys = 27
+    MPI File Info: nkeys = 35
     MPI File Info: [ 0] key =            cb_buffer_size, value = 16777216
     MPI File Info: [ 1] key =             romio_cb_read, value = automatic
     MPI File Info: [ 2] key =            romio_cb_write, value = automatic
@@ -31,18 +31,26 @@
     MPI File Info: [12] key =             romio_ds_read, value = automatic
     MPI File Info: [13] key =            romio_ds_write, value = automatic
     MPI File Info: [14] key =  romio_synchronized_flush, value = disabled
-    MPI File Info: [15] key =            cb_config_list, value = *:1
-    MPI File Info: [16] key =     romio_filesystem_type, value = UFS: Generic ROMIO driver for all UNIX-like file systems
-    MPI File Info: [17] key =     romio_aggregator_list, value = 0
-    MPI File Info: [18] key =      nc_header_align_size, value = 512
-    MPI File Info: [19] key =         nc_var_align_size, value = 4
-    MPI File Info: [20] key =      nc_record_align_size, value = 4
-    MPI File Info: [21] key = nc_header_read_chunk_size, value = 262144
-    MPI File Info: [22] key =          nc_in_place_swap, value = auto
-    MPI File Info: [23] key =              nc_ibuf_size, value = 16777216
-    MPI File Info: [24] key =         pnetcdf_subfiling, value = disable
-    MPI File Info: [25] key =           nc_num_subfiles, value = 0
-    MPI File Info: [26] key =      nc_header_collective, value = false
+    MPI File Info: [15] key = romio_visibility_immediate, value = true
+    MPI File Info: [16] key =            cb_config_list, value = *:1
+    MPI File Info: [17] key =     romio_filesystem_type, value = UFS: Generic ROMIO driver for all UNIX-like file systems
+    MPI File Info: [18] key =    mpi_memory_alloc_kinds, value = mpi,system
+    MPI File Info: [19] key =     romio_aggregator_list, value = 0
+    MPI File Info: [20] key =             striping_unit, value = 0
+    MPI File Info: [21] key =           striping_factor, value = 0
+    MPI File Info: [22] key =            start_iodevice, value = 0
+    MPI File Info: [23] key =      nc_header_align_size, value = 512
+    MPI File Info: [24] key =         nc_var_align_size, value = 4
+    MPI File Info: [25] key =      nc_record_align_size, value = 4
+    MPI File Info: [26] key = nc_header_read_chunk_size, value = 262144
+    MPI File Info: [27] key =          nc_in_place_swap, value = auto
+    MPI File Info: [28] key =              nc_ibuf_size, value = 16777216
+    MPI File Info: [29] key =         pnetcdf_subfiling, value = disable
+    MPI File Info: [30] key =           nc_num_subfiles, value = 0
+    MPI File Info: [31] key =          nc_hash_size_dim, value = 256
+    MPI File Info: [32] key =          nc_hash_size_var, value = 256
+    MPI File Info: [33] key =        nc_hash_size_gattr, value = 64
+    MPI File Info: [34] key =        nc_hash_size_vattr, value = 8
  */
 
 #include <stdio.h>

@@ -1083,11 +1083,6 @@ ncmpio__enddef(void       *ncdp,
     sprintf(value, "%lld", ncp->r_align);
     MPI_Info_set(ncp->mpiinfo, "nc_record_align_size", value);
 
-    if (fIsSet(ncp->flags, NC_HCOLL))
-        MPI_Info_set(ncp->mpiinfo, "nc_header_collective", "true");
-    else
-        MPI_Info_set(ncp->mpiinfo, "nc_header_collective", "false");
-
 #ifdef ENABLE_SUBFILING
     sprintf(value, "%d", ncp->num_subfiles);
     MPI_Info_set(ncp->mpiinfo, "nc_num_subfiles", value);
