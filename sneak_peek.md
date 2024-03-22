@@ -16,11 +16,11 @@ This is essentially a placeholder for the next release note ...
     ```
   + PnetCDF now allows a single read/write request from a process of size
     larger than 2 GiB. Such large requests are now passed down to the MP-IO
-    library. This change is because MPI 3.0 introduces the large count feature,
+    library. This change is because MPI 4.0 introduces the large count feature,
     including MPI_Count data type, MPI_XXX_c and MPI_XXX_x APIs that use 8-byte
-    integer type to enable large MPI operations. As many MPI libraries today
+    integer type to enable large MPI operations. As some MPI libraries today
     have implemented this feature, PnetCDF can now take advantage of it to
-    support large single requests. Because of this change configure option
+    support large single requests. Because of this change, configure option
     `--enable-large-single-req` is thus deprecated. See
     See [PR #131](https://github.com/Parallel-NetCDF/PnetCDF/pull/131)
 
@@ -95,11 +95,11 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New PnetCDF hint
-  + `nc_hash_size_dim:   Set hash table size for dimension names. Default: 256
-  + `nc_hash_size_var:   Set hash table size for variable names. Default: 256
-  + `nc_hash_size_gattr: Set hash table size for global attribute names.
+  + `nc_hash_size_dim`:   Set hash table size for dimension names. Default: 256
+  + `nc_hash_size_var`:   Set hash table size for variable names. Default: 256
+  + `nc_hash_size_gattr`: Set hash table size for global attribute names.
     Default: 64
-  + `nc_hash_size_vattr: Set hash table size for variable attribute names.
+  + `nc_hash_size_vattr`: Set hash table size for variable attribute names.
     Default: 8
   + The above 4 new hints allow users to set different hash table sizes for
     different objects.  For instance, when the number of variables to be
@@ -107,12 +107,6 @@ This is essentially a placeholder for the next release note ...
     increasing `nc_hash_size_var` can speed up the definition time, and
     reducing `nc_hash_size_vattr` can reduce the memory footprint. See
     [PR #132](https://github.com/Parallel-NetCDF/PnetCDF/pull/132).
-  + `nc_header_collective` -- to instruct PnetCDF to call MPI collective APIs to
-    read and write the file header. The default is "false", meaning the file
-    header is only read/written by rank 0, using MPI independent read and write
-    APIs. When set to "true", collective APIs will be used with all other
-    processes making zero-size requests. See
-    [PR #104](https://github.com/Parallel-NetCDF/PnetCDF/pull/104).
 
 * New run-time environment variables
   + none
@@ -133,9 +127,8 @@ This is essentially a placeholder for the next release note ...
       variables. The file is still a valid netCDF file.
     * In the former case, PR #99 changes `ncvalidator` to report a warning,
       rather than an error.
-  + `ncvalidator` - Add printing of the dimension size of a variable when its
-    size is larger than the limitation allowed by the file format. See commit
-    5584d44.
+    * Add printing of the dimension size of a variable when its size is larger
+      than the limitation allowed by the file format. See commit 5584d44.
   + Add file src/utils/README.md which gives short descriptions of the utility
     programs and collapsible bullets to display their manual pages.
 
@@ -158,6 +151,15 @@ This is essentially a placeholder for the next release note ...
   + Silence Intel icc compilation warnings: when CFLAGS contains
     "-Wimplicit-const-int-float-conversion" and "-Wstringop-overread".
     See [PR #110](https://github.com/Parallel-NetCDF/PnetCDF/pull/110).
+  + In all previous PnetCDF's implementations, file header is always
+    written/read by rank 0 using MPI independent APIs. This can nullify ROMIO
+    hint `romio_no_indep_rw` if set by the user. To warrant no independent
+    read/write, PnetCDF now first checks hint `romio_no_indep_rw` and if set to
+    `true`, then all file header I/Os are done using MPI collective I/O calls,
+    where only rank 0 makes non-zero length requests while all others zero
+    length (in order to participate the collective calls). See
+    [PR #104](https://github.com/Parallel-NetCDF/PnetCDF/pull/104) and
+    [PR #138](https://github.com/Parallel-NetCDF/PnetCDF/pull/138).
   + In all prior versions, the file name was checked whether it contains
     character ':'. The prefix name ending with ':' is considered by ROMIO as
     the file system type name. The prefix name, if found, is then stripped, so
