@@ -180,16 +180,17 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
 #endif
 
     if (user_info != MPI_INFO_NULL) {
-        /* read/write file header using MPI collective APIs */
-        MPI_Info_get(user_info, "nc_header_collective", MPI_MAX_INFO_VAL-1,
+        /* If romio_no_indep_rw is set to true, let all processes participate
+         * the read/write file header using MPI collective APIs, where only
+         * rank 0 has non-zero request count.
+         */
+        MPI_Info_get(user_info, "romio_no_indep_rw", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag) {
             if (strcasecmp(value, "true") == 0)
                 fSet((ncp)->flags, NC_HCOLL);
         }
     }
-    if (!flag) strcpy(value, "false");
-    MPI_Info_set(info_used, "nc_header_collective", value);
 
     ncp->dims.hash_size = PNC_HSIZE_DIM;
     if (user_info != MPI_INFO_NULL) {
