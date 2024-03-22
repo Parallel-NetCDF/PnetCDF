@@ -110,7 +110,6 @@ int main(int argc, char** argv) {
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_header_align_size", "1");   /* size in bytes */
     MPI_Info_set(info, "nc_var_align_size",    "197"); /* size in bytes */
-    MPI_Info_set(info, "nc_header_collective", "true");
 
     /* create another new file using a non-NULL MPI info --------------------*/
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid2); CHECK_ERR
@@ -190,19 +189,6 @@ int main(int argc, char** argv) {
                    value);
             nerrs++;
         }
-    }
-
-    MPI_Info_get_valuelen(info_used, "nc_header_collective", &len, &flag);
-    if (flag) {
-        MPI_Info_get(info_used, "nc_header_collective", len+1, value, &flag);
-        if (strcasecmp("true", value)) {
-            printf("Error: nc_header_collective expect \"true\" but got \"%s\"\n",
-                   value);
-            nerrs++;
-        }
-    } else {
-        printf("Error: hint \"nc_header_collective\" is missing\n");
-        nerrs++;
     }
 
     MPI_Info_get_valuelen(info_used, "pnetcdf_subfiling", &len, &flag);
