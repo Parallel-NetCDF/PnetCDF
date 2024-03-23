@@ -97,11 +97,11 @@ int main(int argc, char** argv)
     if (argv[optind] == NULL) strcpy(filename, "testfile.nc");
     else                      snprintf(filename, 256, "%s", argv[optind]);
 
-    vector <MPI_Offset> start(2), count(2);
+    vector <int> start(2), count(2);
     start[0] = 0; start[1] = NX*rank;
     count[0] = 2; count[1] = NX;
     if (verbose)
-        printf("%d: start=%lld %lld count=%lld %lld\n",rank,
+        printf("%d: start=%d %d count=%d %d\n",rank,
                start[0],start[1],count[0],count[1]);
 
     /* create a file type for the fixed-size variable */
