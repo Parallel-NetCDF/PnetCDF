@@ -123,7 +123,7 @@ tst_fmt(char *filename, int cmode)
             file_size = lseek(fd, 0, SEEK_END);
 
             if (!(cmode & NC_NETCDF4) && file_size != header_size)
-                printf("Warning: expected file size %lld but got %lu\n",
+                printf("Warning: expected file size %lld but got %lld\n",
                        header_size, file_size);
 
             close(fd);
