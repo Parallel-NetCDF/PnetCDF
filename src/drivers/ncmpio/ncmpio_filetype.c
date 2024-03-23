@@ -576,6 +576,7 @@ ncmpio_filetype_create_vars(const NC         *ncp,
 #else
         *filetype_ptr = MPI_DATATYPE_NULL;
         DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+        mpireturn = MPI_SUCCESS;
 #endif
     }
     else {
@@ -633,6 +634,7 @@ ncmpio_file_set_view(const NC     *ncp,
 #ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count blocklens[2];
         MPI_Count disps[2];
+        blocklens[0] = ncp->begin_var;
 #else
         int blocklens[2];
         MPI_Aint disps[2];
@@ -642,10 +644,11 @@ ncmpio_file_set_view(const NC     *ncp,
             DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW);
             goto err_out;
         }
+
+        blocklens[0] = (int)ncp->begin_var;
 #endif
 
         /* first block is the header extent */
-        blocklens[0] = ncp->begin_var;
             disps[0] = 0;
            ftypes[0] = MPI_BYTE;
 

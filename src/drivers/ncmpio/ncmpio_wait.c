@@ -369,7 +369,8 @@ construct_filetypes(NC           *ncp,
                 if ( lead->status != NULL &&
                     *lead->status == NC_NOERR)
                     *lead->status = err;
-                status = err; /* report first error */
+                if (status == NC_NOERR)
+                    status = err; /* report first error */
             }
 #endif
             disps[j]        = lead->varp->begin;
@@ -410,8 +411,19 @@ construct_filetypes(NC           *ncp,
             MPI_Offset coalesced_len;
 
             /* No need to construct a filetype */
-            blocklens[j] = lead->varp->xsz * reqs[i].nelems;
-            coalesced_len = blocklens[j];
+            coalesced_len = lead->varp->xsz * reqs[i].nelems;
+
+#ifdef HAVE_MPI_LARGE_COUNT
+            blocklens[j] = coalesced_len;
+#else
+            if (coalesced_len > NC_MAX_INT) {
+                DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+                if (status == NC_NOERR)
+                    status = err; /* report first error */
+                coalesced_len = 0;
+            }
+            blocklens[j] = (int)coalesced_len;
+#endif
             if (last_contig_req >= 0)
                 coalesced_len += blocklens[last_contig_req];
 #ifdef HAVE_MPI_LARGE_COUNT
@@ -427,7 +439,7 @@ construct_filetypes(NC           *ncp,
             if (coalesced_len < NC_MAX_INT && last_contig_req >= 0 &&
                 disps[j] - disps[last_contig_req] ==
                 blocklens[last_contig_req]) {
-                blocklens[last_contig_req] = coalesced_len;
+                blocklens[last_contig_req] = (int)coalesced_len;
                 j--;
             }
             else last_contig_req = j;
