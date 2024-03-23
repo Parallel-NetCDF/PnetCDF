@@ -37,6 +37,8 @@
 #include <stdlib.h>
 
 #include <iostream>
+#include <sstream> // for ostringstream
+
 using namespace std;
 
 #include <string.h> /* strcpy(), strncpy() */
@@ -90,7 +92,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     extern char *optarg;
-    char filename[256], str[512];
+    char filename[256];
     int i, j, rank, nprocs, len=0, bufsize, verbose=1;
     int *buf[NUM_VARS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
@@ -153,15 +155,18 @@ int main(int argc, char **argv)
         /* define dimensions */
         vector<NcmpiDim> dimids(NDIMS);
         for (i=0; i<NDIMS; i++) {
-            sprintf(str, "%c", 'x'+i);
-            dimids[i] = nc.addDim(str, gsizes[i]);
+            char name[2];
+            name[0] = 'x'+i;
+            name[1] = '\0';
+            dimids[i] = nc.addDim(name, gsizes[i]);
         }
 
         /* define variables */
         vector<NcmpiVar> vars(NUM_VARS);
         for (i=0; i<NUM_VARS; i++) {
-            sprintf(str, "var%d", i);
-            vars[i] = nc.addVar(str, ncmpiInt, dimids);
+            std::ostringstream name;
+            name << "var" << i;
+            vars[i] = nc.addVar(name.str(), ncmpiInt, dimids);
         }
 
         /* get all the hints used */

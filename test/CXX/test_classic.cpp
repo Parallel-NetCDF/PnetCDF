@@ -2,6 +2,8 @@
 #include <string.h>
 #include <libgen.h> /* basename() */
 #include <iostream>
+#include <sstream> // for ostringstream
+
 #include <pnetcdf>
 #include <testutils.h>
 
@@ -25,14 +27,13 @@ int main( int argc, char *argv[] )
    else           strcpy(filename, "testfile.nc");
 
    if (rank == 0) {
-       char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-
        if (verbose) cout << "PnetCDF version " << ncmpi_inq_libvers() << endl;
        if (verbose) cout << "Test creation of classic format file" << endl;
 
-       sprintf(cmd_str, "*** TESTING C++ %s for creation of classic format file", basename(argv[0]));
-       printf("%-66s ------ ", cmd_str);
-       free(cmd_str);
+       std::ostringstream cmd_str;
+       cmd_str << "*** TESTING C++ " << basename(argv[0]) <<
+                  " for creation of classic format file";
+       printf("%-66s ------ ", cmd_str.str().c_str());
    }
 
    try

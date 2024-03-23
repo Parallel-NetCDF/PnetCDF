@@ -33,6 +33,8 @@
 #include <stdlib.h>
 
 #include <iostream>
+#include <sstream> // for ostringstream
+
 using namespace std;
 
 #include <string.h> /* strlen(), strcpy(), strncpy() */
@@ -68,7 +70,7 @@ int main(int argc, char **argv)
 {
     extern int optind;
     extern char *optarg;
-    char filename[256], str[512];
+    char filename[256];
     int i, j, k, rank, nprocs, len=0, bufsize, verbose=1;
     int *buf, psizes[NDIMS];
     vector<MPI_Offset> gsizes(NDIMS), starts(NDIMS), counts(NDIMS), imap(NDIMS);
@@ -101,9 +103,10 @@ int main(int argc, char **argv)
     /* calculate number of processes along each dimension */
     MPI_Dims_create(nprocs, NDIMS, psizes);
     if (verbose && rank == 0) {
-        sprintf(str, "psizes= ");
-        for (i=0; i<NDIMS; i++) sprintf(str+strlen(str), "%d ",psizes[i]);
-        printf("%s\n",str);
+        std::ostringstream name;
+        name << "psizes=";
+        for (i=0; i<NDIMS; i++) name << " " << psizes[i];
+        std::cout << name.str() << "\n";
     }
 
     /* for each MPI rank, find its local rank IDs along each dimension in
@@ -114,9 +117,10 @@ int main(int argc, char **argv)
         lower_dims *= psizes[i];
     }
     if (verbose) {
-        sprintf(str, "proc %d: dim rank= ", rank);
-        for (i=0; i<NDIMS; i++) sprintf(str+strlen(str), "%lld ",starts[i]);
-        printf("%s\n",str);
+        std::ostringstream name;
+        name << "proc " << rank << " dim rank=";
+        for (i=0; i<NDIMS; i++) name << " " << starts[i];
+        std::cout << name.str() << "\n";
     }
 
     bufsize = 1;
@@ -133,9 +137,10 @@ int main(int argc, char **argv)
     for (j=0; j<counts[1]; j++)
     for (i=0; i<counts[2]; i++)
         buf[k*counts[1]*counts[2] +
-                      j*counts[2] + i] = (starts[0]+k)*gsizes[1]*gsizes[2]
+                      j*counts[2] + i] = (int)
+                                        ((starts[0]+k)*gsizes[1]*gsizes[2]
                                        + (starts[1]+j)*gsizes[2]
-                                       + (starts[2]+i);
+                                       + (starts[2]+i));
 
     try {
         /* create the file */
@@ -145,10 +150,11 @@ int main(int argc, char **argv)
         /* define dimensions */
         vector<NcmpiDim> dimids(NDIMS);
         for (i=0; i<NDIMS; i++) {
-            sprintf(str, "%c", 'Z'-i);
-            dimids[i] = nc.addDim(str, gsizes[i]);
+            char name[2];
+            name[0] = 'Z'-i;
+            name[1] = '\0';
+            dimids[i] = nc.addDim(name, gsizes[i]);
         }
-
 
         /* define variable with no transposed file layout: ZYX */
         NcmpiVar ZYX_id = nc.addVar("ZYX_var", ncmpiInt, dimids);

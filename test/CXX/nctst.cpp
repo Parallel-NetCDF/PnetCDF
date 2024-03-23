@@ -10,7 +10,9 @@
 #include <stdlib.h>
 
 #include <iostream>
+
 using namespace std;
+#include <sstream> // for ostringstream
 
 #include <string.h>
 #include <libgen.h> /* basename() */
@@ -521,10 +523,10 @@ main(int argc, char* argv[])	// test new netCDF interface
    else           strcpy(filename, "testfile.nc");
 
    if (rank == 0) {
-       char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-       sprintf(cmd_str, "*** TESTING C++ %s for APIs with different netCDF formats ", basename(argv[0]));
-       printf("%-66s ------ ", cmd_str);
-       free(cmd_str);
+       std::ostringstream cmd_str;
+       cmd_str << "*** TESTING C++ " << basename(argv[0]) <<
+                  " for APIs with different netCDF formats";
+       printf("%-66s ------ ", cmd_str.str().c_str());
    }
 
    // Set up the format constants.
