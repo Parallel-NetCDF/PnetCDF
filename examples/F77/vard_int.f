@@ -140,8 +140,8 @@
 
           call MPI_Type_size(MPI_AINT, aint_size, err)
           if (aint_size .EQ. 4) then
-              disps(1) = start(1)*4
-              disps(2) = recsize + start(1)*4
+              disps(1) = INT(start(1)*4)
+              disps(2) = INT(recsize + start(1)*4)
               call MPI_Type_create_hindexed(2, blocklengths, disps,
      +                             MPI_INTEGER, rec_filetype, err)
           else

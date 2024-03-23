@@ -179,10 +179,10 @@
           character*256 filename
 
           ! local variables
-          integer i, j, err, nprocs, rank, str_len
+          integer j, err, nprocs, rank
           integer ncid, rec_var, fix_var, dim_t, dim_y, dim_x
-          integer*8 nx, ny, global_nx, global_ny, time_len, local_nx
-          integer*8 start(2), count(2)
+          integer*8 i, nx, ny, global_nx, global_ny, time_len, local_nx
+          integer*8 start(2), count(2), str_len
           PARAMETER(nx=3, ny=4)
           character*256 str_att
           double precision buf(nx,ny), expect
