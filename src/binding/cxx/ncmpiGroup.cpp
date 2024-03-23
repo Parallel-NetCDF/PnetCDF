@@ -547,7 +547,8 @@ NcmpiVar NcmpiGroup::addVar(const string& name, const string& typeName, const ve
   // finally define a new netCDF variable
   int varId;
   int *dimIdsPtr = dimIds.empty() ? 0 : &dimIds[0];
-  ncmpiCheck(ncmpi_def_var(myId,name.c_str(),tmpType.getId(),dimIds.size(), dimIdsPtr,&varId),__FILE__,__LINE__);
+  // Note dimIds.size() returns an integer of type size_t
+  ncmpiCheck(ncmpi_def_var(myId, name.c_str(), tmpType.getId(), (int)dimIds.size(), dimIdsPtr, &varId),__FILE__,__LINE__);
   // return an NcmpiVar object for this new variable
   return NcmpiVar(*this,varId);
 }
@@ -575,7 +576,8 @@ NcmpiVar NcmpiGroup::addVar(const string& name, const NcmpiType& ncmpiType, cons
   // finally define a new netCDF variable
   int varId;
   int *dimIdsPtr = dimIds.empty() ? 0 : &dimIds[0];
-  ncmpiCheck(ncmpi_def_var(myId,name.c_str(),tmpType.getId(),dimIds.size(), dimIdsPtr,&varId),__FILE__,__LINE__);
+  // Note dimIds.size() returns an integer of type size_t
+  ncmpiCheck(ncmpi_def_var(myId, name.c_str(), tmpType.getId(), (int)dimIds.size(), dimIdsPtr, &varId),__FILE__,__LINE__);
   // return an NcmpiVar object for this new variable
   return NcmpiVar(*this,varId);
 }

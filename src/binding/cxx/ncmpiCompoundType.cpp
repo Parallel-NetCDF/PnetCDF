@@ -87,7 +87,8 @@ void NcmpiCompoundType::addMember(const string& memberName, const NcmpiType& new
 void NcmpiCompoundType::addMember(const string& memberName, const NcmpiType& newMemberType, MPI_Offset offset, const vector<int>& shape)
 {
   if (!shape.empty())
-    ncmpiCheck(ncmpi_insert_array_compound(groupId, myId,const_cast<char*>(memberName.c_str()), offset, newMemberType.getId(), shape.size(), const_cast<int*>(&shape[0])),__FILE__,__LINE__);
+    // Note shape.size() returns an integer of type size_t
+    ncmpiCheck(ncmpi_insert_array_compound(groupId, myId,const_cast<char*>(memberName.c_str()), offset, newMemberType.getId(), (int)shape.size(), const_cast<int*>(&shape[0])),__FILE__,__LINE__);
   else
     addMember(memberName, newMemberType, offset);
 }
