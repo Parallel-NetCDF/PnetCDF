@@ -1376,10 +1376,14 @@ merge_requests(NC          *ncp,
      */
     for (i=0; i<num_reqs; i++) {
         NC_lead_req *lead = lead_list + reqs[i].lead_off;
-        ndims  = lead->varp->ndims;
-        start  = reqs[i].start;
-        count  = start + ndims;
-        stride = count + ndims;
+        ndims = lead->varp->ndims;
+        if (ndims > 0) {
+            start  = reqs[i].start;
+            count  = start + ndims;
+            stride = count + ndims;
+        }
+        else
+            start = count = stride = NULL;
 
         /* for record variable, each reqs[] is within a record */
         if (IS_RECVAR(lead->varp)) {
@@ -1417,10 +1421,15 @@ merge_requests(NC          *ncp,
         MPI_Get_address(reqs[i].xbuf, &addr);
         addr -= buf_addr,  /* distance to the buf of first req */
 
-        ndims  = lead->varp->ndims;
-        start  = reqs[i].start;
-        count  = start + ndims;
-        stride = count + ndims;
+        ndims = lead->varp->ndims;
+        if (ndims > 0) {
+            start  = reqs[i].start;
+            count  = start + ndims;
+            stride = count + ndims;
+        }
+        else
+            start = count = stride = NULL;
+
         shape  = lead->varp->shape;
 
         /* find the starting file offset for this variable */
