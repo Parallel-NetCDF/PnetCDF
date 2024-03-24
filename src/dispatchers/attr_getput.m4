@@ -218,7 +218,7 @@ check_consistency_put(MPI_Comm      comm,
             TRACE_COMM(MPI_Bcast_c)(root_buf, root_nelems, itype, 0, comm);
 #else
             /* Note root_nelems has been bcast-ed, same value among all ranks */
-            DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_ATTR_LEN)
+            DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
 #endif
         }
         else
