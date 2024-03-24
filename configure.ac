@@ -1315,7 +1315,7 @@ dnl                 MPI_Type_create_struct \
 dnl                 MPI_Type_create_resized \
 dnl                 MPI_Type_get_extent])
 
-dnl MPI_count was first introduced in MPI 3.0. Check MPI functions that make
+dnl MPI_Count was first introduced in MPI 3.0. Check MPI functions that make
 dnl use of MPI_Count.
 have_mpi_large_count_apis=yes
 AC_CHECK_FUNCS([MPI_Type_create_subarray_c \
@@ -1326,6 +1326,7 @@ AC_CHECK_FUNCS([MPI_Type_create_subarray_c \
                 MPI_Type_vector_c \
                 MPI_Type_size_c \
                 MPI_Type_get_true_extent_c \
+                MPI_Bcast_c \
                 MPI_Get_count_c \
                 MPI_Pack_c \
                 MPI_Unpack_c], [], [have_mpi_large_count_apis=no])
