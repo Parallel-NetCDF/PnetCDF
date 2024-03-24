@@ -778,7 +778,7 @@ get_att_$1(nc_type       xtype,
             /* this error is unlikely, but an internal error if happened */
             fprintf(stderr, "Error: bad attrp->xtype(%d) in %s\n",
                     xtype,__func__);
-            return NC_EBADTYPE;
+            DEBUG_RETURN_ERROR(NC_EBADTYPE)
     }
 }
 ')dnl
@@ -873,7 +873,7 @@ ncmpio_get_att(void         *ncdp,
         return get_att_longlong (xtype, &xp, nelems,  (longlong*)buf);
     else if (itype == MPI_UNSIGNED_LONG_LONG)
         return get_att_ulonglong(xtype, &xp, nelems, (ulonglong*)buf);
-    return NC_EBADTYPE;
+    DEBUG_RETURN_ERROR(NC_EBADTYPE)
 }
 
 dnl
@@ -914,7 +914,7 @@ putn_$1(void       **xpp,    /* buffer to be written to file */
         case NC_CHAR:
             return NC_ECHAR; /* NC_ECHAR check is done earlier */
         default: fprintf(stderr, "Error: bad xtype(%d) in %s\n",xtype,__func__);
-            return NC_EBADTYPE;
+            DEBUG_RETURN_ERROR(NC_EBADTYPE)
     }
 }
 ')dnl
@@ -1144,7 +1144,7 @@ err_check:
                 err = putn_longlong (&xp, nelems, buf, xtype, &fill);
             else if (itype == MPI_UNSIGNED_LONG_LONG)
                 err = putn_ulonglong(&xp, nelems, buf, xtype, &fill);
-            else err = NC_EBADTYPE;
+            else DEBUG_ASSIGN_ERROR(err, NC_EBADTYPE)
         }
 
         /* no immediately return error code here? Strange ...

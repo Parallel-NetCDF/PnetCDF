@@ -932,7 +932,7 @@ ncmpio_inq_var_fill(NC_var *varp,
         case NC_DOUBLE: return ncmpix_getn_NC_DOUBLE_double   (&xp, 1,             (double*)fill_value);
         case NC_INT64:  return ncmpix_getn_NC_INT64_longlong  (&xp, 1,          (long long*)fill_value);
         case NC_UINT64: return ncmpix_getn_NC_UINT64_ulonglong(&xp, 1, (unsigned long long*)fill_value);
-        default: return NC_EBADTYPE;
+        default: DEBUG_RETURN_ERROR(NC_EBADTYPE)
     }
 }
 

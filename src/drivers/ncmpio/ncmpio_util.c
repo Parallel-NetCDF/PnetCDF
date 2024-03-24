@@ -568,7 +568,7 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                 err = ncmpii_putn_NC_UINT64(xbuf,cbuf,nelems,itype,fillp);
                 break;
             default:
-                err = NC_EBADTYPE; /* this never happens */
+                DEBUG_ASSIGN_ERROR(err, NC_EBADTYPE) /* this never happens */
                 break;
         }
         /* The only error codes returned from the above switch block are
@@ -694,7 +694,7 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                 err = ncmpii_getn_NC_UINT64(xbuf,cbuf,nelems,itype);
                 break;
             default:
-                err = NC_EBADTYPE; /* this never happens */
+                DEBUG_ASSIGN_ERROR(err, NC_EBADTYPE) /* this never happens */
                 break;
         }
         /* The only error codes returned from the above switch block are

@@ -412,7 +412,7 @@ ncmpii_put_cast_swap(int            format, /* NC_FORMAT_CDF2/NC_FORMAT_CDF5 */
                 err = ncmpii_putn_NC_UINT64     (*xbuf,ibuf,nelems,itype,fillp);
                 break;
             default:
-                err = NC_EBADTYPE;
+                DEBUG_ASSIGN_ERROR(err, NC_EBADTYPE)
                 break;
         }
 
@@ -497,7 +497,7 @@ ncmpii_get_cast_swap(int            format, /* NC_FORMAT_CDF2/NC_FORMAT_CDF5 */
                 err = ncmpii_getn_NC_UINT64     (xbuf,*ibuf,nelems,itype);
                 break;
             default:
-                err = NC_EBADTYPE;
+                DEBUG_ASSIGN_ERROR(err, NC_EBADTYPE)
                 break;
         }
         /* NC_ERANGE can be caused by some elements in xbuf that is out of
