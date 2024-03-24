@@ -516,18 +516,18 @@ write_NC(NC *ncp)
 
     /* only rank 0's header gets written to the file */
     if (rank == 0) {
-        void *buf=NULL;
-        MPI_Offset remain;
+        char *buf=NULL, *buf_ptr;
+        MPI_Offset offset, remain;
 
 #ifdef ENABLE_NULL_BYTE_HEADER_PADDING
         /* NetCDF classic file formats require the file header null-byte
          * padded. Thus we must calloc a buffer of size equal to file header
          * extent.
          */
-        buf = NCI_Calloc(header_wlen, 1);
+        buf = (char*)NCI_Calloc(header_wlen, 1);
 #else
         /* Do not write padding area (between ncp->xsz and ncp->begin_var) */
-        buf = NCI_Malloc(header_wlen);
+        buf = (char*)NCI_Malloc(header_wlen);
 #endif
 
         /* copy the entire local header object to buf */
@@ -549,14 +549,16 @@ write_NC(NC *ncp)
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
         /* write the header in chunks */
+        offset = 0;
         remain = header_wlen;
+        buf_ptr = buf;
         for (i=0; i<ntimes; i++) {
             int bufCount = (int) MIN(remain, NC_MAX_INT);
             if (fIsSet(ncp->flags, NC_HCOLL))
-                TRACE_IO(MPI_File_write_at_all)(ncp->collective_fh, 0, buf,
+                TRACE_IO(MPI_File_write_at_all)(ncp->collective_fh, offset, buf_ptr,
                                                 bufCount, MPI_BYTE, &mpistatus);
             else
-                TRACE_IO(MPI_File_write_at)(ncp->collective_fh, 0, buf,
+                TRACE_IO(MPI_File_write_at)(ncp->collective_fh, offset, buf_ptr,
                                             bufCount, MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
@@ -575,7 +577,9 @@ write_NC(NC *ncp)
                 else
                     ncp->put_size += put_size;
             }
-            remain -= bufCount;
+            offset  += bufCount;
+            buf_ptr += bufCount;
+            remain  -= bufCount;
         }
         NCI_Free(buf);
     }

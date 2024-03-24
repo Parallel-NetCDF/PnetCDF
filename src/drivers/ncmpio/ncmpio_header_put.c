@@ -175,8 +175,9 @@ hdr_put_NC_attrV(bufferinfo    *pbp,
     sz = attrp->nelems * xsz;
     padding = attrp->xsz - sz;
 
-    if (sz > NC_MAX_INT)
+    if (pbp->version < 5 && sz > NC_MAX_INT)
         DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
     memcpy(pbp->pos, attrp->xvalue, (size_t)sz);
     pbp->pos = (void *)((char *)pbp->pos + sz);
 
@@ -539,13 +540,16 @@ int ncmpio_write_header(NC *ncp)
         MPI_Offset offset;
         size_t remain;
         size_t bufLen = _RNDUP(ncp->xsz, X_ALIGN);
-        void *buf = NCI_Malloc(bufLen); /* header's write buffer */
+        char *buf, *buf_ptr;
+
+        buf = NCI_Malloc(bufLen); /* header's write buffer */
 
         /* copy header object to write buffer */
         status = ncmpio_hdr_put_NC(ncp, buf);
 
         offset = 0;
         remain = ncp->xsz;
+        buf_ptr = buf;
         for (i=0; i<ntimes; i++) {
             int writeLen = (int)(MIN(remain, NC_MAX_INT));
 
@@ -557,10 +561,10 @@ int ncmpio_write_header(NC *ncp)
             memset(&mpistatus, 0, sizeof(MPI_Status));
 
             if (fIsSet(ncp->flags, NC_HCOLL)) /* collective write */
-                TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, writeLen,
+                TRACE_IO(MPI_File_write_at_all)(fh, offset, buf_ptr, writeLen,
                                                 MPI_BYTE, &mpistatus);
             else
-                TRACE_IO(MPI_File_write_at)(fh, offset, buf, writeLen,
+                TRACE_IO(MPI_File_write_at)(fh, offset, buf_ptr, writeLen,
                                             MPI_BYTE, &mpistatus);
 
             if (mpireturn != MPI_SUCCESS) {
@@ -583,8 +587,9 @@ int ncmpio_write_header(NC *ncp)
                 else
                     ncp->put_size += writeLen;
             }
-            offset += writeLen;
-            remain -= writeLen;
+            offset  += writeLen;
+            buf_ptr += writeLen;
+            remain  -= writeLen;
         }
         NCI_Free(buf);
     }
