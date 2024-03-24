@@ -207,6 +207,7 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
+  + test/largefile/large_attr.c - tests attributes of size > 2 GiB.
   + test/largefile/tst_hash_large_ndims.c - tests hashing performance when
     the number of dimensions is large.
   + test/largefile/tst_hash_large_nvars.c - tests hashing performance when

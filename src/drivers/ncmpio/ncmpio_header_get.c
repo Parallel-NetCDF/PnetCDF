@@ -1119,7 +1119,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
     if (err == NC_ENULLPAD) status = NC_ENULLPAD; /* non-fatal error */
     else if (err != NC_NOERR) goto fn_exit;
 
-    /* get nc_type */
+    /* get nc_type of the variable */
     err = hdr_get_nc_type(gbp, &varp->xtype);
     if (err != NC_NOERR) goto fn_exit;
 
