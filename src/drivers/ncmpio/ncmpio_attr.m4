@@ -912,7 +912,7 @@ putn_$1(void       **xpp,    /* buffer to be written to file */
         case NC_UINT64:
             return ncmpix_putn_NC_UINT64_$1    (xpp, nelems, buf, fillp);
         case NC_CHAR:
-            return NC_ECHAR; /* NC_ECHAR check is done earlier */
+            DEBUG_RETURN_ERROR(NC_ECHAR) /* NC_ECHAR check is done earlier */
         default: fprintf(stderr, "Error: bad xtype(%d) in %s\n",xtype,__func__);
             DEBUG_RETURN_ERROR(NC_EBADTYPE)
     }

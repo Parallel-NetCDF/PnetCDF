@@ -282,7 +282,7 @@ NC_begins(NC *ncp)
         }
 
         err = NC_NOERR;
-        if (root_xsz != ncp->xsz) err = NC_EMULTIDEFINE;
+        if (root_xsz != ncp->xsz) DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE)
 
         /* find min error code across processes */
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN,ncp->comm);

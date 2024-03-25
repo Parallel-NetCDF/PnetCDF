@@ -226,7 +226,8 @@ NC_findvar(const NC_vararray *ncap,
 
     assert (ncap != NULL);
 
-    if (ncap->ndefined == 0) return NC_ENOTVAR;
+    if (ncap->ndefined == 0)
+        DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     nchars = strlen(name);
     for (varid=0; varid<ncap->ndefined; varid++) {
@@ -237,7 +238,7 @@ NC_findvar(const NC_vararray *ncap,
         }
     }
 
-    return NC_ENOTVAR; /* not found */
+    DEBUG_RETURN_ERROR(NC_ENOTVAR) /* not found */
 }
 #else
 /*----< NC_findvar() >-------------------------------------------------------*/
@@ -254,7 +255,8 @@ NC_findvar(const NC_vararray  *ncap,
 
     assert (ncap != NULL);
 
-    if (ncap->ndefined == 0) return NC_ENOTVAR;
+    if (ncap->ndefined == 0)
+        DEBUG_RETURN_ERROR(NC_ENOTVAR)
 
     /* hash the var name into a key for name lookup */
     key = HASH_FUNC(name, ncap->hash_size);
@@ -270,7 +272,7 @@ NC_findvar(const NC_vararray  *ncap,
         }
     }
 
-    return NC_ENOTVAR; /* the name has never been used */
+    DEBUG_RETURN_ERROR(NC_ENOTVAR) /* the name has never been used */
 }
 #endif
 
@@ -326,7 +328,8 @@ ncmpio_NC_var_shape64(NC_var            *varp,
 
 out :
     /* No variable size can be > X_INT64_MAX - 3 */
-    if (0 == ncmpio_NC_check_vlen(varp, X_INT64_MAX-3)) return NC_EVARSIZE;
+    if (0 == ncmpio_NC_check_vlen(varp, X_INT64_MAX-3))
+        DEBUG_RETURN_ERROR(NC_EVARSIZE)
 
     /*
      * For CDF-1 and CDF-2 formats, the total number of array elements

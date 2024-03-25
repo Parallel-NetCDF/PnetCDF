@@ -62,7 +62,8 @@ NC_finddim(const NC_dimarray *ncap,
     int dimid;
     size_t nchars;
 
-    if (ncap->ndefined == 0) return NC_EBADDIM;
+    if (ncap->ndefined == 0)
+        DEBUG_RETURN_ERROR(NC_EBADDIM)
 
     /* note that the number of dimensions allowed is < 2^32 */
     nchars = strlen(name);
@@ -74,7 +75,7 @@ NC_finddim(const NC_dimarray *ncap,
             return NC_NOERR; /* found it */
         }
     }
-    return NC_EBADDIM; /* the name is not found */
+    DEBUG_RETURN_ERROR(NC_EBADDIM) /* the name is not found */
 }
 #else
 /*----< NC_finddim() >-------------------------------------------------------*/
@@ -90,7 +91,8 @@ NC_finddim(const NC_dimarray *ncap,
     int i, key, dimid;
     size_t nchars;
 
-    if (ncap->ndefined == 0) return NC_EBADDIM;
+    if (ncap->ndefined == 0)
+        DEBUG_RETURN_ERROR(NC_EBADDIM)
 
     /* hash the dim name into a key for name lookup */
     key = HASH_FUNC(name, ncap->hash_size);
@@ -105,7 +107,7 @@ NC_finddim(const NC_dimarray *ncap,
             return NC_NOERR; /* the name already exists */
         }
     }
-    return NC_EBADDIM; /* the name has never been used */
+    DEBUG_RETURN_ERROR(NC_EBADDIM) /* the name has never been used */
 }
 #endif
 

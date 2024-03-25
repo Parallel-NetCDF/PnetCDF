@@ -372,7 +372,7 @@ APINAME($1,$2,$3,$4)(int ncid,
         buftype != MPI_FLOAT         && buftype != MPI_DOUBLE             &&
         buftype != MPI_LONG_LONG_INT && buftype != MPI_UNSIGNED_LONG_LONG &&
         buftype != MPI_LONG)
-        err = NC_EINVAL;')
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)')
 
     ifelse(`$4',`',`/* for independent API, return now if error encountered */
     if (err != NC_NOERR) return err;
@@ -516,7 +516,7 @@ NAPINAME($1,$2,$3)(int                ncid,
         buftype != MPI_FLOAT         && buftype != MPI_DOUBLE             &&
         buftype != MPI_LONG_LONG_INT && buftype != MPI_UNSIGNED_LONG_LONG &&
         buftype != MPI_LONG)
-        err = NC_EINVAL;')
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)')
 
 err_check:
     ifelse(`$3',`',`/* for independent API, return now if error encountered */
@@ -639,7 +639,7 @@ MAPINAME($1,$2,$3,$4)(int                ncid,
             buftypes[i] != MPI_FLOAT         && buftypes[i] != MPI_DOUBLE             &&
             buftypes[i] != MPI_LONG_LONG_INT && buftypes[i] != MPI_UNSIGNED_LONG_LONG &&
             buftypes[i] != MPI_LONG) {
-            err = NC_EINVAL;
+            DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
             break;
         }')
     }
@@ -962,7 +962,7 @@ ncmpi_$1_vard$2(int           ncid,
         buftype != MPI_FLOAT         && buftype != MPI_DOUBLE             &&
         buftype != MPI_LONG_LONG_INT && buftype != MPI_UNSIGNED_LONG_LONG &&
         buftype != MPI_LONG)
-        err = NC_EINVAL;
+        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
 
     ifelse(`$2',`',
     `/* for independent API, return now if error encountered or zero request */

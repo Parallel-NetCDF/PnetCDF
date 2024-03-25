@@ -63,7 +63,7 @@ int hash_map_add(hash_map *map, char *key, int val) {
     cur = map->table[idx];
     while(cur != NULL){
         if (strcmp(key, cur->key) == 0){
-            return NC_EEXIST;
+            DEBUG_RETURN_ERROR(NC_EEXIST)
         }
         pre = cur;
         cur = cur->next;
@@ -110,5 +110,5 @@ int hash_map_find(hash_map *map, char *key, int *val) {
         cur = cur->next;
     }
 
-    return NC_ENOTFOUND;
+    DEBUG_RETURN_ERROR(NC_ENOTFOUND)
 }

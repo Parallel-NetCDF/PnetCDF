@@ -59,17 +59,17 @@ ncmpi_def_dim(int         ncid,    /* IN:  file ID */
      * 16 bit. */
     if (pncp->format == NC_FORMAT_CDF2) { /* CDF-2 format, max is NC_MAX_INT */
         if (size > NC_MAX_INT || (size < 0))
-            err = NC_EDIMSIZE;
+            DEBUG_ASSIGN_ERROR(err, NC_EDIMSIZE)
     } else if (pncp->format == NC_FORMAT_CDF5) { /* CDF-5 format */
         if (size < 0)
-            err = NC_EDIMSIZE;
+            DEBUG_ASSIGN_ERROR(err, NC_EDIMSIZE)
     } else if (pncp->format == NC_FORMAT_NETCDF4 ||
                pncp->format == NC_FORMAT_NETCDF4_CLASSIC) { /* NetCDF-4 format */
         if (size < 0)
-            err = NC_EDIMSIZE;
+            DEBUG_ASSIGN_ERROR(err, NC_EDIMSIZE)
     } else { /* CDF-1 format, max is NC_MAX_INT */
         if (size > NC_MAX_INT || (size < 0))
-            err = NC_EDIMSIZE;
+            DEBUG_ASSIGN_ERROR(err, NC_EDIMSIZE)
     }
     if (err != NC_NOERR) {
         DEBUG_TRACE_ERROR(err)

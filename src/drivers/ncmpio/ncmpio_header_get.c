@@ -668,7 +668,7 @@ hdr_get_NC_dim(bufferinfo *gbp, int unlimited_id, NC_dim **dimpp)
     /* check if unlimited_id already set */
     if (unlimited_id != -1 && dim_length == 0) {
         NCI_Free(name);
-        return NC_EUNLIMIT;
+        DEBUG_RETURN_ERROR(NC_EUNLIMIT)
     }
 
     /* allocate and initialize NC_dim object */
