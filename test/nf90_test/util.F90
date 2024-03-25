@@ -144,8 +144,8 @@
           MIN = 0
           MAX = X_UINT_MAX
       ELSE IF (DATATYPE .EQ. NF90_INT64) THEN
-          MIN = X_INT8_MIN
-          MAX = X_INT8_MAX
+          MIN = DBLE(X_INT8_MIN)
+          MAX = DBLE(X_INT8_MAX)
       ELSE IF (DATATYPE .EQ. NF90_UINT64) THEN
           MIN = 0
           MAX = X_UINT8_MAX
@@ -364,17 +364,17 @@
       if (abs(rank) .eq. 1 .and. index(1) .le. 4) then
           if (index(1) .eq. 1) then
               if (type .eq. NF90_CHAR) then
-                  hash = X_CHAR_MIN
+                  hash = DBLE(X_CHAR_MIN)
               else if (type .eq. NF90_BYTE) then
-                  hash = X_BYTE_MIN
+                  hash = DBLE(X_BYTE_MIN)
               else if (type .eq. NF90_SHORT) then
-                  hash = X_SHORT_MIN
+                  hash = DBLE(X_SHORT_MIN)
               else if (type .eq. NF90_INT) then
-                  hash = X_INT_MIN
+                  hash = DBLE(X_INT_MIN)
               else if (type .eq. NF90_FLOAT) then
-                  hash = X_FLOAT_MIN
+                  hash = DBLE(X_FLOAT_MIN)
               else if (type .eq. NF90_DOUBLE) then
-                  hash = X_DOUBLE_MIN
+                  hash = DBLE(X_DOUBLE_MIN)
               else if (type .eq. NF90_UBYTE) then
                   hash = 0
               else if (type .eq. NF90_USHORT) then
@@ -382,7 +382,7 @@
               else if (type .eq. NF90_UINT) then
                   hash = 0
               else if (type .eq. NF90_INT64) then
-                  hash = X_INT_MIN - 128.0
+                  hash = DBLE(X_INT_MIN - 128.0)
               else if (type .eq. NF90_UINT64) then
                   hash = 0
               else
@@ -390,27 +390,27 @@
               end if
           else if (index(1) .eq. 2) then
               if (type .eq. NF90_CHAR) then
-                  hash = X_CHAR_MAX
+                  hash = DBLE(X_CHAR_MAX)
               else if (type .eq. NF90_BYTE) then
-                  hash = X_BYTE_MAX
+                  hash = DBLE(X_BYTE_MAX)
               else if (type .eq. NF90_SHORT) then
-                  hash = X_SHORT_MAX
+                  hash = DBLE(X_SHORT_MAX)
               else if (type .eq. NF90_INT) then
-                  hash = X_INT_MAX
+                  hash = DBLE(X_INT_MAX)
               else if (type .eq. NF90_FLOAT) then
-                  hash = X_FLOAT_MAX
+                  hash = DBLE(X_FLOAT_MAX)
               else if (type .eq. NF90_DOUBLE) then
-                  hash = X_DOUBLE_MAX
+                  hash = DBLE(X_DOUBLE_MAX)
               else if (type .eq. NF90_UBYTE) then
-                  hash = X_UCHAR_MAX
+                  hash = DBLE(X_UCHAR_MAX)
               else if (type .eq. NF90_USHORT) then
-                  hash = X_USHORT_MAX
+                  hash = DBLE(X_USHORT_MAX)
               else if (type .eq. NF90_UINT) then
-                  hash = X_UINT_MAX
+                  hash = DBLE(X_UINT_MAX)
               else if (type .eq. NF90_INT64) then
-                  hash = X_INT_MAX + 128.0
+                  hash = DBLE(X_INT_MAX) + 128.0
               else if (type .eq. NF90_UINT64) then
-                  hash = X_UINT_MAX + 128.0
+                  hash = DBLE(X_UINT_MAX) + 128.0
               else
                   call ud_abort
               end if
@@ -418,13 +418,13 @@
               if (type .eq. NF90_CHAR) then
                   hash = ichar('A')
               else if (type .eq. NF90_BYTE) then
-                  hash = X_BYTE_MIN-1.0
+                  hash = DBLE(X_BYTE_MIN-1.0)
               else if (type .eq. NF90_SHORT) then
-                  hash = X_SHORT_MIN-1.0
+                  hash = DBLE(X_SHORT_MIN-1.0)
               else if (type .eq. NF90_INT) then
-                  hash = X_INT_MIN
+                  hash = DBLE(X_INT_MIN)
               else if (type .eq. NF90_FLOAT) then
-                  hash = X_FLOAT_MIN
+                  hash = DBLE(X_FLOAT_MIN)
               else if (type .eq. NF90_DOUBLE) then
                   hash = -1.0
               else if (type .eq. NF90_UBYTE) then
@@ -444,21 +444,21 @@
               if (type .eq. NF90_CHAR) then
                   hash = ichar('Z')
               else if (type .eq. NF90_BYTE) then
-                  hash = X_BYTE_MAX+1.0
+                  hash = DBLE(X_BYTE_MAX+1.0)
               else if (type .eq. NF90_SHORT) then
-                  hash = X_SHORT_MAX+1.0
+                  hash = DBLE(X_SHORT_MAX+1.0)
               else if (type .eq. NF90_INT) then
-                  hash = X_INT_MAX+1.0
+                  hash = DBLE(X_INT_MAX)+1.0
               else if (type .eq. NF90_FLOAT) then
-                  hash = X_FLOAT_MAX
+                  hash = DBLE(X_FLOAT_MAX)
               else if (type .eq. NF90_DOUBLE) then
                   hash = 1.0
               else if (type .eq. NF90_UBYTE) then
-                  hash = X_UCHAR_MAX + 1.0
+                  hash = DBLE(X_UCHAR_MAX + 1.0)
               else if (type .eq. NF90_USHORT) then
-                  hash = X_USHORT_MAX + 1.0
+                  hash = DBLE(X_USHORT_MAX + 1.0)
               else if (type .eq. NF90_UINT) then
-                  hash = X_UINT_MAX + 1.0
+                  hash = DBLE(X_UINT_MAX) + 1.0
               else if (type .eq. NF90_INT64) then
                   hash = 1.0
               else if (type .eq. NF90_UINT64) then
@@ -1591,19 +1591,19 @@
 #include "tests.inc"
 
         if (type .eq. NF90_BYTE) then
-            external_min = X_BYTE_MIN
+            external_min = DBLE(X_BYTE_MIN)
         else if (type .eq. NF90_CHAR) then
-            external_min = X_CHAR_MIN
+            external_min = DBLE(X_CHAR_MIN)
         else if (type .eq. NF90_SHORT) then
-            external_min = X_SHORT_MIN
+            external_min = DBLE(X_SHORT_MIN)
         else if (type .eq. NF90_INT) then
-            external_min = X_INT_MIN
+            external_min = DBLE(X_INT_MIN)
         else if (type .eq. NF90_FLOAT) then
-            external_min = X_FLOAT_MIN
+            external_min = DBLE(X_FLOAT_MIN)
         else if (type .eq. NF90_DOUBLE) then
-            external_min = X_DOUBLE_MIN
+            external_min = DBLE(X_DOUBLE_MIN)
         else if (type .eq. NF90_INT64) then
-            external_min = X_INT8_MIN
+            external_min = DBLE(X_INT8_MIN)
         else
             stop 'external_min(): invalid type'
         end if
@@ -1620,19 +1620,19 @@
 #include "tests.inc"
 
         if (type .eq. NF90_BYTE) then
-            external_max = X_BYTE_MAX
+            external_max = DBLE(X_BYTE_MAX)
         else if (type .eq. NF90_CHAR) then
-            external_max = X_CHAR_MAX
+            external_max = DBLE(X_CHAR_MAX)
         else if (type .eq. NF90_SHORT) then
-            external_max = X_SHORT_MAX
+            external_max = DBLE(X_SHORT_MAX)
         else if (type .eq. NF90_INT) then
-            external_max = X_INT_MAX
+            external_max = DBLE(X_INT_MAX)
         else if (type .eq. NF90_FLOAT) then
-            external_max = X_FLOAT_MAX
+            external_max = DBLE(X_FLOAT_MAX)
         else if (type .eq. NF90_DOUBLE) then
-            external_max = X_DOUBLE_MAX
+            external_max = DBLE(X_DOUBLE_MAX)
         else if (type .eq. NF90_INT64) then
-            external_max = X_INT8_MAX
+            external_max = DBLE(X_INT8_MAX)
         else
             stop 'external_max(): invalid type'
         end if
