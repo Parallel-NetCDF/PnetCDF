@@ -30,7 +30,8 @@
 
 int main(int argc, char** argv)
 {
-    char filename[256], *buf;
+    char filename[256], *name, *buf;
+    size_t i;
     int rank, nprocs, err, nerrs=0, verbose=0;
     int ncid, cmode, varid, dimid;
     MPI_Offset nelems, inq_nelems;
@@ -57,7 +58,7 @@ int main(int argc, char** argv)
         free(cmd_str);
     }
 
-    nelems = (MPI_Offset)NC_MAX_INT + 10;
+    nelems = (MPI_Offset)NC_MAX_INT + 17;
     buf = (char*) malloc(nelems);
 
     /* create a new file and put a large global attribute -------------------*/
@@ -66,6 +67,7 @@ int main(int argc, char** argv)
     CHECK_ERR
 
     /* put a large (> 2GiB) global attribute */
+    for (i=0; i<nelems; i++) buf[i] = 'a' + i % 16;
     err = ncmpi_put_att_text(ncid, NC_GLOBAL, "large_attr", nelems, buf);
     if (!(cmode & NC_64BIT_DATA)) EXP_ERR(NC_EINVAL)
     else CHECK_ERR
@@ -75,7 +77,7 @@ int main(int argc, char** argv)
     if (nerrs > 0) goto err_out;
 
     /* open the file and read back the large global attribute ---------------*/
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, info, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
     CHECK_ERR
     if (err != NC_NOERR) goto err_out;
 
@@ -86,8 +88,19 @@ int main(int argc, char** argv)
         nerrs++;
     }
 
+    for (i=0; i<nelems; i++) buf[i] = 0;
     err = ncmpi_get_att_text(ncid, NC_GLOBAL, "large_attr", buf);
     CHECK_ERR
+
+    for (i=0; i<nelems; i++) {
+        char expect = 'a' + i % 16;
+        if (buf[i] != 'a' + i % 16) {
+            printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
+                   __FILE__,__LINE__,i,expect,buf[i]);
+            nerrs++;
+            break;
+        }
+    }
 
     err = ncmpi_close(ncid); CHECK_ERR
     if (nerrs > 0) goto err_out;
@@ -104,6 +117,7 @@ int main(int argc, char** argv)
     CHECK_ERR
 
     /* put a large (> 2GiB) global attribute */
+    for (i=0; i<nelems; i++) buf[i] = 'a' + i % 16;
     err = ncmpi_put_att_text(ncid, varid, "large_attr", nelems, buf);
     if (!(cmode & NC_64BIT_DATA)) EXP_ERR(NC_EINVAL)
     else CHECK_ERR
@@ -113,7 +127,7 @@ int main(int argc, char** argv)
     if (nerrs > 0) goto err_out;
 
     /* open the file and read back the large global attribute ---------------*/
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, info, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
     CHECK_ERR
     if (err != NC_NOERR) goto err_out;
 
@@ -127,8 +141,175 @@ int main(int argc, char** argv)
         nerrs++;
     }
 
+    for (i=0; i<nelems; i++) buf[i] = 0;
     err = ncmpi_get_att_text(ncid, varid, "large_attr", buf);
     CHECK_ERR
+
+    for (i=0; i<nelems; i++) {
+        char expect = 'a' + i % 16;
+        if (buf[i] != 'a' + i % 16) {
+            printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
+                   __FILE__,__LINE__,i,expect,buf[i]);
+            nerrs++;
+            break;
+        }
+    }
+
+    err = ncmpi_close(ncid); CHECK_ERR
+    if (nerrs > 0) goto err_out;
+
+    /* create a new file and put 2 global attributes, total size > 2 GiB ----*/
+    nelems /= 2;
+
+    cmode = NC_CLOBBER | NC_64BIT_DATA;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    CHECK_ERR
+
+    /* put two global attributes (total size > 2GiB) */
+    for (i=0; i<nelems; i++) buf[i] = 'a' + i % 16;
+    err = ncmpi_put_att_text(ncid, NC_GLOBAL, "large_attr_0", nelems, buf);
+    if (!(cmode & NC_64BIT_DATA)) EXP_ERR(NC_EINVAL)
+    else CHECK_ERR
+
+    err = ncmpi_put_att_text(ncid, NC_GLOBAL, "large_attr_1", nelems, buf);
+    if (!(cmode & NC_64BIT_DATA)) EXP_ERR(NC_EINVAL)
+    else CHECK_ERR
+
+    err = ncmpi_enddef(ncid); CHECK_ERR
+    err = ncmpi_close(ncid); CHECK_ERR
+    if (nerrs > 0) goto err_out;
+
+    /* open the file and read back the large global attributes --------------*/
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
+    CHECK_ERR
+    if (err != NC_NOERR) goto err_out;
+
+    name = "large_attr_0";
+    err = ncmpi_inq_attlen(ncid, NC_GLOBAL, name, &inq_nelems);
+    if (inq_nelems != nelems) {
+        printf("Error at %s line %d: expecting attr %s nelems %lld but got %lld\n",
+               __FILE__,__LINE__,name, nelems,inq_nelems);
+        nerrs++;
+    }
+
+    for (i=0; i<nelems; i++) buf[i] = 0;
+    err = ncmpi_get_att_text(ncid, NC_GLOBAL, name, buf);
+    CHECK_ERR
+
+    for (i=0; i<nelems; i++) {
+        char expect = 'a' + i % 16;
+        if (buf[i] != 'a' + i % 16) {
+            printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
+                   __FILE__,__LINE__,i,expect,buf[i]);
+            nerrs++;
+            break;
+        }
+    }
+
+    name = "large_attr_1";
+    err = ncmpi_inq_attlen(ncid, NC_GLOBAL, name, &inq_nelems);
+    if (inq_nelems != nelems) {
+        printf("Error at %s line %d: expecting attr %s nelems %lld but got %lld\n",
+               __FILE__,__LINE__,name, nelems,inq_nelems);
+        nerrs++;
+    }
+
+    for (i=0; i<nelems; i++) buf[i] = 0;
+    err = ncmpi_get_att_text(ncid, NC_GLOBAL, name, buf);
+    CHECK_ERR
+
+    for (i=0; i<nelems; i++) {
+        char expect = 'a' + i % 16;
+        if (buf[i] != 'a' + i % 16) {
+            printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
+                   __FILE__,__LINE__,i,expect,buf[i]);
+            nerrs++;
+            break;
+        }
+    }
+
+    err = ncmpi_close(ncid); CHECK_ERR
+    if (nerrs > 0) goto err_out;
+
+    /* create a new file and put 2 local attributes, total size > 2 GiB -----*/
+    cmode = NC_CLOBBER | NC_64BIT_DATA;
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    CHECK_ERR
+
+    err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimid);
+    CHECK_ERR
+
+    err = ncmpi_def_var(ncid, "var", NC_INT, 1, &dimid, &varid);
+    CHECK_ERR
+
+    for (i=0; i<nelems; i++) buf[i] = 'a' + i % 16;
+
+    /* put two local attributes (total size > 2GiB) */
+    name = "large_attr_0";
+    err = ncmpi_put_att_text(ncid, varid, name, nelems, buf);
+    if (!(cmode & NC_64BIT_DATA)) EXP_ERR(NC_EINVAL)
+    else CHECK_ERR
+
+    name = "large_attr_1";
+    err = ncmpi_put_att_text(ncid, varid, name, nelems, buf);
+    if (!(cmode & NC_64BIT_DATA)) EXP_ERR(NC_EINVAL)
+    else CHECK_ERR
+
+    err = ncmpi_enddef(ncid); CHECK_ERR
+    err = ncmpi_close(ncid); CHECK_ERR
+    if (nerrs > 0) goto err_out;
+
+    /* open the file and read back the two local attributes -----------------*/
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
+    CHECK_ERR
+    if (err != NC_NOERR) goto err_out;
+
+    err = ncmpi_inq_varid(ncid, "var", &varid);
+    CHECK_ERR
+
+    name = "large_attr_0";
+    err = ncmpi_inq_attlen(ncid, varid, name, &inq_nelems);
+    if (inq_nelems != nelems) {
+        printf("Error at %s line %d: expecting attr %s len %lld but got %lld\n",
+               __FILE__,__LINE__,name,nelems,inq_nelems);
+        nerrs++;
+    }
+
+    for (i=0; i<nelems; i++) buf[i] = 0;
+    err = ncmpi_get_att_text(ncid, varid, name, buf);
+    CHECK_ERR
+
+    for (i=0; i<nelems; i++) {
+        char expect = 'a' + i % 16;
+        if (buf[i] != 'a' + i % 16) {
+            printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
+                   __FILE__,__LINE__,i,expect,buf[i]);
+            nerrs++;
+            break;
+        }
+    }
+
+    name = "large_attr_1";
+    err = ncmpi_inq_attlen(ncid, varid, name, &inq_nelems);
+    if (inq_nelems != nelems) {
+        printf("Error at %s line %d: expecting attr %s len %lld but got %lld\n",
+               __FILE__,__LINE__,name,nelems,inq_nelems);
+        nerrs++;
+    }
+
+    for (i=0; i<nelems; i++) buf[i] = 0;
+    err = ncmpi_get_att_text(ncid, varid, name, buf);
+    CHECK_ERR
+
+    for (i=0; i<nelems; i++) {
+        char expect = 'a' + i % 16;
+        if (buf[i] != 'a' + i % 16) {
+            printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
+                   __FILE__,__LINE__,i,expect,buf[i]);
+            nerrs++;
+            break;
+        }
+    }
 
     err = ncmpi_close(ncid); CHECK_ERR
     if (nerrs > 0) goto err_out;
