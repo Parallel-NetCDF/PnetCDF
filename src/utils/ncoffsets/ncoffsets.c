@@ -1499,7 +1499,11 @@ hdr_get_NC_var(bufferinfo  *gbp,
             return status;
         }
         if (gbp->version == 5)
-            varp->dimids[dim] = get_uint64(gbp);
+            /* number of dimensions defined in a NetCDF file is limited to
+             * NC_MAX_DIMS, which is NC_MAX_INT. Thus it is safe to cast to a
+             * 4-byte int.
+             */
+            varp->dimids[dim] = (int)get_uint64(gbp);
         else
             varp->dimids[dim] = get_uint32(gbp);
     }
@@ -2005,7 +2009,10 @@ int main(int argc, char *argv[])
 
     /* print file name and format */
     printf("netcdf %s {\n",filename);
-    printf("// file format: CDF-%d\n",ncp->flags);
+    printf("// File format: CDF-%d\n",ncp->flags);
+    printf("// Number of dimensions: %d\n",ncp->dims.ndefined);
+    printf("// Number of variables: %d\n",ncp->vars.ndefined);
+    printf("// Number of global attributes: %d\n",ncp->attrs.ndefined);
     printf("\n");
 
     /* print file header size and extent */
