@@ -4,15 +4,15 @@ This is essentially a placeholder for the next release note ...
 
 * New features
   + A single read/write request made by an MPI process is now allowed to be of
-    size larger than 2 GiB. Such large requests are passed to the MP-IO
+    size larger than 2 GiB. Such large requests will be passed to the MP-IO
     library. This feature makes use of "the large count feature" introduced in
-    MPI standard 4.0, which includes `MPI_XXX_c` APIs whose arguments are of type
-    `MPI_Count`. `MPI_Count` can be an 8-byte integer type, enabling large MPI
-    operations. As some MPI libraries today have begun implementing MPI 4.0,
-    PnetCDF now can rely on the MPI libraries to support large single requests.
-    When the MPI library used to build PnetCDF does not support large requests,
-    PnetCDF will pass the MPI errors to the users. Because of this change, the
-    PnetCDF configure option `--enable-large-single-req` is thus deprecated.
+    MPI standard 4.0, which includes `MPI_XXX_c` APIs whose arguments are of
+    type `MPI_Count`. `MPI_Count` can be an 8-byte integer type, enabling large
+    MPI operations. As some MPI libraries today have begun implementing MPI
+    4.0, PnetCDF now can rely on the MPI libraries to support large single
+    requests. When the MPI library used to build PnetCDF does not support large
+    requests, the MPI errors are returned. Because of this change, the PnetCDF
+    configure option `--enable-large-single-req` is thus deprecated.
     See [PR #131](https://github.com/Parallel-NetCDF/PnetCDF/pull/131)
   + Flexible APIs now can operate as high-level APIs, when argument `bufcount`
     is set to `NC_COUNT_IGNORE` and `buftype` is set to an MPI predefined data
@@ -30,13 +30,15 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New Limitations
-  + Hint `nc_header_read_chunk_size` is limited to `NC_MAX_INT`. PnetCDF reads
-    file header in chunks. This hint customizes the chunk size.
+  + Hint `nc_header_read_chunk_size`, introduced in version 1.4.0, is now
+    limited to `NC_MAX_INT`. As PnetCDF reads file header in chunks, this hint
+    can be used to customize the chunk size. The default is 256 KB.
+    See [4209056](https://github.com/Parallel-NetCDF/PnetCDF/commit/4209056e9a66465421f7ce9f1b44518923638b04)
 
 * Configure options
-  + `--enable-large-single-req` has been deprecated and removed, as PnetCDF now
+  + `--enable-large-single-req` is deprecated and removed, as PnetCDF now
     allows a single reqd/write request of size larger than 2 GiB.
-  + `--disable-file-sync` is now deprecated and removed. This configure option
+  + `--disable-file-sync` is deprecated and removed. This configure option
     alone was not able to provide a sufficient data consistency. Users are
     suggested to call `ncmpi_sync` and `MPI_Barrier` to achieve a desired
     consistency, as suggested by MPI standard.
@@ -44,6 +46,7 @@ This is essentially a placeholder for the next release note ...
     under folder `${prefix}/pnetcdf_examples` along with run script files. An
     example is `${prefix}/pnetcdf_examples/C/run_c_examples.sh`. The default of
     this option is `disabled`.
+    See [PR #91](https://github.com/Parallel-NetCDF/PnetCDF/pull/91)
   + Add three new environment variables `SEQ_CFLAGS`, `SEQ_LDFLAGS` and
     `SEQ_LIBS` for setting the compile, link, and library flags, respectively
     to be used to build the sequential utility programs, i.e. `cdfdiff`,
@@ -57,7 +60,8 @@ This is essentially a placeholder for the next release note ...
     Fortran 10 and later.
     See [PR #114](https://github.com/Parallel-NetCDF/PnetCDF/pull/114)
   + Handle the case when MPICC environment variable is not set and `--with-mpi`
-    is not used.  See commit 6142135.
+    is not used.  See commit
+    [6142135](https://github.com/Parallel-NetCDF/PnetCDF/commit/61421356ecd38878a4ef46771ed6520d4257251f)
   + Upgrade Autotools version requirement to autoconf 2.71, automake 1.16.5, and
     libtool 2.4.6. (Note this change affects PnetCDF developers only.)
     See [PR #95](https://github.com/Parallel-NetCDF/PnetCDF/pull/95)
@@ -71,6 +75,7 @@ This is essentially a placeholder for the next release note ...
     is `NC_COUNT_IGNORE`, `buftype` must be a predefine MPI datatype and the
     APIs operate as the high-level APIs. Fortran equivalents are
     `NF_COUNT_IGNORE` and `NF90_COUNT_IGNORE`.
+    See [PR #92](https://github.com/Parallel-NetCDF/PnetCDF/pull/92)
 
 * New APIs
   + none
@@ -81,6 +86,7 @@ This is essentially a placeholder for the next release note ...
 * API semantics updates
   + File open flag `NC_SHARE` is now deprecated. It is still defined, but takes
     no effect.
+    See [PR #119](https://github.com/Parallel-NetCDF/PnetCDF/pull/119)
   + `NC_SHARE` alone is not sufficient to provide data consistency for accessing
     a shared file in parallel and thus is now deprecated. PnetCDF follows the
     file consistency defined in MPI standard, which only addresses the case
@@ -97,22 +103,24 @@ This is essentially a placeholder for the next release note ...
 * New error code
   + none
 
-* New PnetCDF hint
-  + `nc_hash_size_dim` sets the hash table size for dimension names. Default: 256
-  + `nc_hash_size_var` sets the hash table size for variable names. Default: 256
+* New PnetCDF hints
+  + `nc_hash_size_dim` sets the hash table size for dimension names.
+    Default: 256
+  + `nc_hash_size_var` sets the hash table size for variable names.
+    Default: 256
   + `nc_hash_size_gattr` sets the hash table size for global attribute names.
     Default: 64
   + `nc_hash_size_vattr` sets the hash table size for variable attribute names.
     Default: 8
-  + The above 4 new hints allow users to set different hash table sizes for
-    different objects. Hashing tables are used for quick data object name
-    lookup.  It can be useful for files containing a large number of
-    dimensions, variables, and attributes. For instance, when the number of
-    variables to be defined is large and the number of attributes per variable
-    is small, increasing the value of `nc_hash_size_var` can speed up the
-    variable definition and inquiring time. On the other hand, reducing the
-    value of `nc_hash_size_vattr` can reduce the memory footprint. See
-    [PR #132](https://github.com/Parallel-NetCDF/PnetCDF/pull/132).
+  + The above 4 new hints can be used to set different hash table sizes for
+    dimensions, variables, and attributes. Hashing tables are used for quick
+    data object name lookup. It can be useful for files containing a large
+    number of dimensions, variables, and attributes. For instance, when the
+    number of variables to be defined is large and the number of attributes per
+    variable is small, increasing the value of `nc_hash_size_var` can speed up
+    the variable definition and inquiring time. On the other hand, setting a
+    smaller value for hint `nc_hash_size_vattr` can reduce memory footprint.
+    See [PR #132](https://github.com/Parallel-NetCDF/PnetCDF/pull/132).
 
 * New run-time environment variables
   + none
@@ -120,9 +128,10 @@ This is essentially a placeholder for the next release note ...
 * Build recipes
   + none
 
-* Updated utility program
-  + `ncvalidator` - When the file size is larger or smaller than expected, the
-    file may still be a valid netCDF file.
+* Updated utility programs
+  + `ncvalidator` - When the file size is larger or smaller than what is
+    calculated based on the metadata stored in the file header, the file may
+    still be a valid netCDF file.
     * The larger-than-expected case can happen if opening an existing file that
       contains no variable. Deleting a global attribute already defined in the
       file will reduce the file header size. In this case, the file is still a
@@ -134,23 +143,24 @@ This is essentially a placeholder for the next release note ...
       sizes of all variables. In this case, the file is still a valid netCDF
       file, and `ncvalidator` will report a warning, rather than an error.
     * Print the dimension size of a variable on stdout when its size is larger
-      than the limitation allowed by the file format. See commit 5584d44.
+      than the limitation allowed by the file format. See commit
+      [5584d44](https://github.com/Parallel-NetCDF/PnetCDF/commit/5584d44a433a68966b0be601e7a73e939c695dbf)
   + Add file src/utils/README.md which gives short descriptions of the utility
     programs and collapsible bullets to display their manual pages.
 
 * Other updates:
-  + When file header extent size grows, PnetCDF now uses 64 MiB as the data
-    movement unit size per process.
+  + When file header extent size grows, PnetCDF now uses a movement unit per
+    process of size up to 64 MiB.
     See [PR #137](https://github.com/Parallel-NetCDF/PnetCDF/pull/137)
   + Since version 1.1.0, PnetCDF has been using file striping size, if
     obtainable from the MPI-IO hint `striping_unit`, to align the starting file
     offset of the data section. This offset is also referred to as the file
     header extent, which can be larger than the header size to allow header to
-    grow later on when new data objects are added. Starting from this release,
-    file stripe size is no longer used for setting the starting offset of the
-    data section. This is because automatically setting file header extent
-    using the file striping size may grow the file header unexpectedly when
-    adding new objects to an existing file.
+    grow when new data objects are added. Starting from this release, file
+    stripe size is no longer used for setting the starting offset of the data
+    section. This is because automatically setting file header extent using the
+    file striping size may grow the file header unexpectedly when adding new
+    objects to an existing file.
     See [PR #124](https://github.com/Parallel-NetCDF/PnetCDF/pull/124) and
     [PR #125](https://github.com/Parallel-NetCDF/PnetCDF/pull/125).
   + Use unsigned int to perform byte swap.
@@ -158,27 +168,28 @@ This is essentially a placeholder for the next release note ...
   + Silence Intel icc compilation warnings: when CFLAGS contains
     "-Wimplicit-const-int-float-conversion" and "-Wstringop-overread".
     See [PR #110](https://github.com/Parallel-NetCDF/PnetCDF/pull/110).
-  + In all previous PnetCDF's implementations, file header is always
-    written/read by rank 0 using MPI independent APIs. This can nullify ROMIO
-    hint `romio_no_indep_rw` if set by the user. To warrant no independent
-    read/write, PnetCDF now first checks hint `romio_no_indep_rw` and if set to
-    `true`, then all file header I/Os are done using MPI collective I/O calls,
-    where only rank 0 makes non-zero length requests while all others zero
-    length (in order to participate the collective calls). See
+  + In all previous PnetCDF's implementations, file header is always written/
+    read by rank 0 using MPI independent APIs. This can nullify ROMIO hint
+    `romio_no_indep_rw` if set by the user. To warrant no independent read/
+    write user hint, PnetCDF now checks hint `romio_no_indep_rw` and if set to
+    `true`, then all file header I/Os are made through MPI collective I/O
+    calls, where only rank 0 makes non-zero length requests while all others
+    zero length (in order to participate the collective calls). See
     [PR #104](https://github.com/Parallel-NetCDF/PnetCDF/pull/104) and
     [PR #138](https://github.com/Parallel-NetCDF/PnetCDF/pull/138).
   + In all prior versions, the file name was checked whether it contains
     character ':'. The prefix name ending with ':' is considered by ROMIO as
     the file system type name. The prefix name, if found, is then stripped, so
-    the file name can be used in the successive POSIX function calls. However,
+    the file name can be used in the POSIX function calls internally. However,
     the prefix was not checked against the file system type names recognized
     by ROMIO. Starting from this release, the prefix is checked against the
     known file system type names to ROMIO. If the prefix is not one of the
     recognized types, e.g.  "ufs", "nfs", "xfs", "pvfs2", "gpfs", "panfs",
     "lustre", "daos", "testfs", "ime", or "quobyte", then the prefix name is
     not stripped. This change is for the case when the file name contains ':',
-    but it is not for specifying the file system type.
-    See [PR #79](https://github.com/Parallel-NetCDF/PnetCDF/pull/79).
+    but it is not for specifying the file system type. See
+    [PR #79](https://github.com/Parallel-NetCDF/PnetCDF/pull/79) and
+    [MPICH PR 5951](https://github.com/pmodels/mpich/pull/5951).
 
 * Bug fixes
   + Return I/O hints that are actually used. See commit
@@ -227,10 +238,11 @@ This is essentially a placeholder for the next release note ...
   + test/testcases/flexible_var.c - tests flexible var API
   + test/testcases/flexible_api.f - tests flexible API when `bufcount == -1`
   + test/testcases/scalar.c - adds tests for scalar variables using nonblocking
-    APIs. See commit 07ff7b1
+    APIs. See commit
+    [07ff7b1](https://github.com/search?q=repo%3AParallel-NetCDF%2FPnetCDF+07ff7b1&type=commits)
   + test/nonblocking/test_bputf.f90, test/nonblocking/test_bputf77.f -
-    add tests of APIs `inq_buffer_usage` and `inq_buffer_size`.
-    See commit 94ce438
+    add tests of APIs `inq_buffer_usage` and `inq_buffer_size`. See commit
+    [94ce438](https://github.com/Parallel-NetCDF/PnetCDF/commit/94ce438262fe7fcade031dcae1a677a827549bb3)
 
 * Issues with NetCDF library
   + none
