@@ -1628,9 +1628,9 @@ val_get_NC_var(int          fd,
      *               <non-negative INT64>  // CDF-5
      */
     char *name=NULL, xloc[1024];
-    int dim, dimid, err, status=NC_NOERR;
+    int dim, dimid, ndims, err, status=NC_NOERR;
     size_t err_addr, name_len;
-    long long ndims;
+    long long ndims64;
     NC_var *varp;
 
     /* read variable name */
@@ -1646,7 +1646,7 @@ val_get_NC_var(int          fd,
     /* read number of dimensions */
     sprintf(xloc,"%s \"%s\"",loc,name);
     err_addr = ERR_ADDR;
-    err = hdr_get_NON_NEG(fd, gbp, &ndims);
+    err = hdr_get_NON_NEG(fd, gbp, &ndims64);
     if (err != NC_NOERR) {
         if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
         if (verbose) printf("\t%s: Failed to read number of dimensions\n",xloc);
@@ -1656,14 +1656,15 @@ val_get_NC_var(int          fd,
     if (status == NC_NOERR) status = err;
 
     /* cannot be more than NC_MAX_VAR_DIMS */
-    if (ndims > NC_MAX_VAR_DIMS) {
+    if (ndims64 > NC_MAX_VAR_DIMS) {
         if (verbose) printf("Error:\n");
-        if (verbose) printf("\t%s: number of dimensions (%lld) larger than NC_MAX_VAR_DIMS (%d)\n",xloc,ndims,NC_MAX_VAR_DIMS);
+        if (verbose) printf("\t%s: number of dimensions (%lld) larger than NC_MAX_VAR_DIMS (%d)\n",xloc,ndims64,NC_MAX_VAR_DIMS);
         if (name != NULL) free(name);
         DEBUG_RETURN_ERROR(NC_EMAXDIMS)
     }
+    ndims = (int)ndims64;
 
-    if (trace) printf("\t\tnumber of dimensions = %lld\n", ndims);
+    if (trace) printf("\t\tnumber of dimensions = %d\n", ndims);
 
     /* allocate variable object */
     varp = val_new_NC_var(name, name_len, ndims);
@@ -2096,7 +2097,7 @@ off_compare(const void *a, const void *b)
 static int
 val_NC_check_voff(NC *ncp)
 {
-    int i, num_fix_vars, nerrs=0, status=NC_NOERR;
+    int i, num_fix_vars, status=NC_NOERR;
 
     if (ncp->vars.ndefined == 0) return NC_NOERR;
 
@@ -2119,7 +2120,6 @@ val_NC_check_voff(NC *ncp)
                 printf("\tvar \"%s\" begin offset (%lld) is less than file header extent (%lld)\n",
                        varp->name, varp->begin, ncp->begin_var);
             }
-            nerrs++;
             DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
         }
         if (IS_RECVAR(varp)) continue;
@@ -2149,7 +2149,6 @@ val_NC_check_voff(NC *ncp)
                 printf("\tvar \"%s\" begin offset (%lld) overlaps var %s (begin=%lld, length=%lld)\n",
                        var_cur->name, var_cur->begin, var_prv->name, var_prv->begin, var_prv->len);
             }
-            nerrs++;
             DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
         }
         var_end = var_off_len[i].off + var_off_len[i].len;
@@ -2159,7 +2158,6 @@ val_NC_check_voff(NC *ncp)
     if (ncp->begin_rec < max_var_end) {
         if (verbose) printf("Error:\n");
         if (verbose) printf("\tRecord variable section begin offset (%lld) is less than fixed-size variable section end offset (%lld)\n", ncp->begin_rec, max_var_end);
-        nerrs++;
         DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
     }
     free(var_off_len);
@@ -2197,7 +2195,6 @@ check_rec_var:
                 printf("\tvar \"%s\" begin offset (%lld) overlaps var %s (begin=%lld, length=%lld)\n",
                        var_cur->name, var_cur->begin, var_prv->name, var_prv->begin, var_prv->len);
             }
-            nerrs++;
             DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
         }
     }
@@ -2221,7 +2218,6 @@ check_rec_var:
                 else
                     printf("\tvar \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n", varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
             }
-            nerrs++;
             DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
         }
         prev_off = varp->begin + varp->len;
@@ -2231,7 +2227,6 @@ check_rec_var:
     if (ncp->begin_rec < prev_off) {
         if (verbose) printf("Error:\n");
         if (verbose) printf("\tRecord variable section begin offset (%lld) is less than fixed-size variable section end offset (%lld)\n", ncp->begin_rec, prev_off);
-        nerrs++;
         DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
     }
 
@@ -2253,7 +2248,6 @@ check_rec_var:
                 else
                     printf("Variable \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n", varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
             }
-            nerrs++;
             DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
         }
         prev_off = varp->begin + varp->len;
@@ -2471,7 +2465,7 @@ remove_file_system_type_prefix(const char *filename)
         /* check if prefix is one of recognized file system types */
         int i=0;
         while (fstypes[i] != NULL) {
-            int prefix_len = strlen(fstypes[i]);
+            size_t prefix_len = strlen(fstypes[i]);
             if (!strncmp(filename, fstypes[i], prefix_len)) { /* found */
                 ret_filename += prefix_len + 1;
                 break;
@@ -2666,7 +2660,8 @@ int main(int argc, char **argv)
         /* Assuming variables' begins do not follow their define order, find
          * max end offset among all fixed-size varaibles.
          */
-        long long expect_fsize = ncp->xsz;
+        long long expect_fsize = MAX(ncp->begin_var, ncp->begin_rec);
+        expect_fsize = MAX(expect_fsize, ncp->xsz);
         for (i=0; i<ncp->vars.ndefined; i++) {
             long long var_end;
             if (IS_RECVAR(ncp->vars.value[i])) continue;

@@ -35,7 +35,7 @@
 }
 
 #define CHECK_VAR_DIFF(itype) {                                          \
-    int indx, esize, nelems;                                             \
+    size_t indx, esize, nelems;                                          \
     itype *b1 = (itype*)buf[0];                                          \
     itype *b2 = (itype*)buf[1];                                          \
     esize = sizeof(itype);                                               \
@@ -65,7 +65,7 @@
 }
 
 #define CHECK_VAR_DIFF_UNSIGNED(itype) {                                 \
-    int indx, esize, nelems;                                             \
+    size_t indx, esize, nelems;                                          \
     itype *b1 = (itype*)buf[0];                                          \
     itype *b2 = (itype*)buf[1];                                          \
     esize = sizeof(itype);                                               \
@@ -113,7 +113,7 @@
 static void
 swapn(void   *buf,
       size_t  nelems,  /* number of elements in buf[] */
-      int     esize)   /* byte size of each element */
+      size_t  esize)   /* byte size of each element */
 {
     size_t i;
 
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
     extern int optind;
     char *str, *ptr;
     size_t nbytes;
-    int i, j, k, m, n, c, err, verbose, quiet, isDiff, nChunks;
+    int i, j, k, m, n, c, err, verbose, quiet, isDiff;
     int fd[2], nvars[2], ndims[2], nattrs[2], check_tolerance;
     int cmp_nvars, check_header, check_variable_list, check_entire_file;
     long long numVarDIFF=0, numHeadDIFF=0, numDIFF;
@@ -832,7 +832,7 @@ cmp_vars:
     for (i=0; i<cmp_nvars; i++) {
         char *var_name;
         int varid[2], *dimids[2], isRecVar[2];
-        long long remainLen, varsize[2], offset[2];
+        long long remainLen, nChunks, varsize[2], offset[2];
         off_t seek_ret;
         nc_type xtype[2];
         NC_var  *var[2];
