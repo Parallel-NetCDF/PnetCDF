@@ -15,7 +15,7 @@ dnl AC_REVISION([$Revision$])dnl
 dnl autoconf v2.70 and later is required. See https://github.com/Parallel-NetCDF/PnetCDF/issues/94
 dnl autoconf v2.70 was released in 2021-01-28
 AC_PREREQ([2.70])
-AC_INIT([PnetCDF],[1.13.0.rc1],[parallel-netcdf@mcs.anl.gov],[pnetcdf],[https://parallel-netcdf.github.io])
+AC_INIT([PnetCDF],[1.13.0],[parallel-netcdf@mcs.anl.gov],[pnetcdf],[https://parallel-netcdf.github.io])
 
 dnl config.h.in will be created by autoreconf (autoheader)
 dnl call it right after AC_INIT, as suggested by autoconf
