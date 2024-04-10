@@ -32,10 +32,13 @@ int main(int argc, char** argv)
 {
     char filename[256], *name, *buf;
     size_t i;
-    int rank, nprocs, err, nerrs=0, verbose=0;
+    int rank, nprocs, err, nerrs=0;
     int ncid, cmode, varid, dimid;
     MPI_Offset nelems, inq_nelems;
     MPI_Info info=MPI_INFO_NULL;
+#ifdef PNC_MALLOC_TRACE
+    int verbose=0;
+#endif
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -316,6 +319,7 @@ int main(int argc, char** argv)
 
     free(buf);
 
+#ifdef PNC_MALLOC_TRACE
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
@@ -333,6 +337,7 @@ int main(int argc, char** argv)
         printf("\n%d: PnetCDF internal memory footprint high water mark %.2f MB\n",
                rank, (float)malloc_size/1048576);
     }
+#endif
 
 err_out:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);

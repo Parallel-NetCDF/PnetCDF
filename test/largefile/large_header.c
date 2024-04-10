@@ -101,6 +101,7 @@ int main(int argc, char** argv)
 
     err = ncmpi_close(ncid); CHECK_ERR
 
+#ifdef PNC_MALLOC_TRACE
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
@@ -112,6 +113,7 @@ int main(int argc, char** argv)
             ncmpi_inq_malloc_list();
         }
     }
+#endif
 
 err_out:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);

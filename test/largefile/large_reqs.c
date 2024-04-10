@@ -272,9 +272,11 @@ int tst_vars(char *filename, MPI_Comm comm)
 int main(int argc, char** argv)
 {
     char filename[256];
-    int rank, nprocs, err, nerrs=0, color;
+    int rank, nprocs, nerrs=0, color;
     MPI_Comm comm;
-
+#ifdef PNC_MALLOC_TRACE
+    int err;
+#endif
     verbose = 0;
 
     MPI_Init(&argc, &argv);
@@ -319,6 +321,7 @@ int main(int argc, char** argv)
 
     if (comm != MPI_COMM_WORLD) MPI_Comm_free(&comm);
 
+#ifdef PNC_MALLOC_TRACE
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
@@ -328,6 +331,7 @@ int main(int argc, char** argv)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
     }
+#endif
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
