@@ -27,8 +27,10 @@ int main(int argc, char** argv)
 {
     char filename[256];
     int i, rank, nprocs, err, nerrs=0, ncid, cmode, verbose=1;
-    double timing[2], max_timing[2];
+    double timing[3], max_timing[3];
+#ifdef PNC_MALLOC_TRACE
     MPI_Offset malloc_size[2], sum_size, max_size[2];
+#endif
     MPI_Info info;
 
     MPI_Init(&argc, &argv);
@@ -65,6 +67,7 @@ int main(int argc, char** argv)
 
     MPI_Info_free(&info);
 
+#ifdef PNC_MALLOC_TRACE
     err = ncmpi_inq_malloc_size(&malloc_size[0]); CHECK_ERR
     err = ncmpi_inq_malloc_max_size(&malloc_size[1]); CHECK_ERR
     MPI_Reduce(&malloc_size, &max_size, 2, MPI_OFFSET, MPI_MAX, 0, MPI_COMM_WORLD);
@@ -75,6 +78,7 @@ int main(int argc, char** argv)
                (float)max_size[0]/1048576);
     }
     fflush(stdout);
+#endif
 
     MPI_Barrier(MPI_COMM_WORLD);
     timing[0] = MPI_Wtime();
@@ -86,6 +90,7 @@ int main(int argc, char** argv)
     }
     timing[0] = MPI_Wtime() - timing[0];
 
+#ifdef PNC_MALLOC_TRACE
     err = ncmpi_inq_malloc_size(&malloc_size[0]); CHECK_ERR
     err = ncmpi_inq_malloc_max_size(&malloc_size[1]); CHECK_ERR
     MPI_Reduce(&malloc_size, &max_size, 2, MPI_OFFSET, MPI_MAX, 0, MPI_COMM_WORLD);
@@ -96,6 +101,7 @@ int main(int argc, char** argv)
                (float)max_size[0]/1048576);
     }
     fflush(stdout);
+#endif
 
     MPI_Barrier(MPI_COMM_WORLD);
     timing[1] = MPI_Wtime();
@@ -103,6 +109,7 @@ int main(int argc, char** argv)
     CHECK_ERR
     timing[1] = MPI_Wtime() - timing[1];
 
+#ifdef PNC_MALLOC_TRACE
     err = ncmpi_inq_malloc_size(&malloc_size[0]); CHECK_ERR
     err = ncmpi_inq_malloc_max_size(&malloc_size[1]); CHECK_ERR
     MPI_Reduce(&malloc_size, &max_size, 2, MPI_OFFSET, MPI_MAX, 0, MPI_COMM_WORLD);
@@ -117,10 +124,20 @@ int main(int argc, char** argv)
         printf("NetCDF file header size %lld extent %lld\n",header_size,header_extent);
     }
     fflush(stdout);
+#endif
 
+    /* Note the cost of ncmpi_close can be larger than expected when configured
+     * with --enable-debug or --enable-profiling. This is because tracing
+     * malloc builds a database and freeing a large number of memory pointers
+     * involves searching and can be expensive.
+     */
+    MPI_Barrier(MPI_COMM_WORLD);
+    timing[2] = MPI_Wtime();
     err = ncmpi_close(ncid);
+    timing[2] = MPI_Wtime() - timing[2];
     CHECK_ERR
 
+#ifdef PNC_MALLOC_TRACE
     err = ncmpi_inq_malloc_size(&malloc_size[0]); CHECK_ERR
     err = ncmpi_inq_malloc_max_size(&malloc_size[1]); CHECK_ERR
     MPI_Reduce(&malloc_size, &max_size, 2, MPI_OFFSET, MPI_MAX, 0, MPI_COMM_WORLD);
@@ -140,10 +157,11 @@ int main(int argc, char** argv)
             ncmpi_inq_malloc_list();
         }
     }
+#endif
 
-    MPI_Reduce(&timing, &max_timing, 2, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&timing, &max_timing, 3, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
     if (verbose && rank == 0)
-        printf("Time ncmpi_put_att = %.4f ncmpi_enddef = %.4f\n", max_timing[0],max_timing[1]);
+        printf("Time ncmpi_put_att = %.4f ncmpi_enddef = %.4f ncmpi_close = %.4f\n", max_timing[0],max_timing[1],max_timing[2]);
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
