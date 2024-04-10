@@ -195,7 +195,7 @@ ncmpio_close(void *ncdp)
                 MPI_File_seek(fh, 0, MPI_SEEK_END);
                 MPI_File_get_position(fh, &file_size);
                 /* truncate file size to header size, if larger than header */
-                if (file_size > ncp->xsz} {
+                if (file_size > ncp->xsz) {
                     mpireturn = MPI_File_set_size(fh, ncp->xsz);
                     if (mpireturn != MPI_SUCCESS) {
                         err = ncmpii_error_mpi2nc(mpireturn,"MPI_File_set_size");
