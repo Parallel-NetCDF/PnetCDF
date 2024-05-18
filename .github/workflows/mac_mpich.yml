@@ -10,6 +10,7 @@ on:
       - '**/*.jpg'
       - '**/*.png'
       - 'docs/*'
+      - 'test/test_installed/*'
   pull_request:
     branches: [ master, test_github_actions ]
     paths-ignore:
@@ -19,19 +20,20 @@ on:
       - '**/*.jpg'
       - '**/*.png'
       - 'docs/*'
+      - 'test/test_installed/*'
 
 env:
-   MPICH_VERSION: 4.0.3
+   MPICH_VERSION: 4.2.0
 
 jobs:
     build:
       runs-on: macos-latest
       timeout-minutes: 60
       steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
         - name: Set up dependencies
           run: |
-            brew instal gcc
+            brew install gcc
             which gcc
             gcc --version
             ls -l /usr/local/bin/gfortran*
@@ -54,7 +56,7 @@ jobs:
             done
             which gfortran
             gfortran --version
-            brew instal automake autoconf libtool m4
+            brew install automake autoconf libtool m4
         - name: Build MPICH
           run: |
             cd ${GITHUB_WORKSPACE}
