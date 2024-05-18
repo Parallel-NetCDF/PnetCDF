@@ -273,11 +273,11 @@
           err = nfmpi_wait_all(ncid, 1, req, st)
           call check(err, 'In nfmpi_wait_all:')
 
+          call MPI_Type_free(subarray, err)
+
           ! close the file
           err = nfmpi_close(ncid)
           call check(err, 'In nfmpi_close: ')
-
-          call MPI_Type_free(subarray, err)
 
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)

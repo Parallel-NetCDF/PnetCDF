@@ -184,14 +184,14 @@ int main(int argc, char** argv)
 
         /* read the fixed-size variable */
         var1.getVard_all(fix_filetype, buf, bufcount, buftype);
+
+        MPI_Type_free(&rec_filetype);
+        MPI_Type_free(&fix_filetype);
     }
     catch(NcmpiException& e) {
        cout << e.what() << " error code=" << e.errorCode() << " Error!\n";
        return 1;
     }
-
-    MPI_Type_free(&rec_filetype);
-    MPI_Type_free(&fix_filetype);
 
     /* check if there is any PnetCDF internal malloc residue */
     MPI_Offset malloc_size, sum_size;

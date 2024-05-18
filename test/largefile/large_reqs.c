@@ -259,9 +259,9 @@ int tst_vars(char *filename, MPI_Comm comm)
     err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
     CHECK_ERR
 
-    err = ncmpi_close(ncid); CHECK_ERR
-
     MPI_Type_free(&buftype);
+
+    err = ncmpi_close(ncid); CHECK_ERR
 
     free(varid);
     free(buf);

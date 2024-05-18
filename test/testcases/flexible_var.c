@@ -481,9 +481,9 @@ int main(int argc, char** argv)
     /* check the contents of get buffer */
     CHECK_GET_BUF(NY, NX, buf)
 
-    err = ncmpi_close(ncid); CHECK_ERROUT
-
     MPI_Type_free(&subarray);
+
+    err = ncmpi_close(ncid); CHECK_ERROUT
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;

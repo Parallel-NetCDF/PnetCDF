@@ -210,9 +210,10 @@ int main(int argc, char **argv) {
     err = ncmpi_get_vard_all(ncid, varid0, rec_filetype, buf, bufcount,buftype);
     ERR
 
-    err = ncmpi_close(ncid); ERR
     MPI_Type_free(&rec_filetype);
     MPI_Type_free(&fix_filetype);
+
+    err = ncmpi_close(ncid); ERR
 
     nerrs += pnetcdf_check_mem_usage(MPI_COMM_WORLD);
 

@@ -486,8 +486,6 @@ int main(int argc, char **argv) {
     }
     free(schar_buf);
 
-    err = ncmpi_close(ncid); CHECK_ERR
-
     MPI_Type_free(&rec_filetype);
     MPI_Type_free(&fix_filetype);
     MPI_Type_free(&buftype);
@@ -499,6 +497,8 @@ int main(int argc, char **argv) {
     free(buf[0]); free(buf);
     free(flt_buf[0]); free(flt_buf);
     free(dbl_buf[0]); free(dbl_buf);
+
+    err = ncmpi_close(ncid); CHECK_ERR
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;

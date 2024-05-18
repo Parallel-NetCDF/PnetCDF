@@ -215,12 +215,12 @@
      +                             bufcount, buftype)
           call check(err, 'In nfmpi_get_vard_all: ')
 
+          call MPI_Type_free(rec_filetype, err)
+          call MPI_Type_free(fix_filetype, err)
+
           ! close the file
           err = nfmpi_close(ncid)
           call check(err, 'In nfmpi_close: ')
-
-          call MPI_Type_free(rec_filetype, err)
-          call MPI_Type_free(fix_filetype, err)
 
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)

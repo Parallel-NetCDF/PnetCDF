@@ -101,6 +101,9 @@ int main(int argc, char ** argv)
     CHECK_ERR
     err = ncmpi_get_vara(ncid, varid, &start, &acount, cmpbuf, 1, usertype);
     CHECK_ERR
+
+    MPI_Type_free(&usertype);
+
     err = ncmpi_close(ncid);
     CHECK_ERR
 
@@ -116,7 +119,6 @@ int main(int argc, char ** argv)
     nerrs += errs;
     free(userbuf);
     free(cmpbuf);
-    MPI_Type_free(&usertype);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;

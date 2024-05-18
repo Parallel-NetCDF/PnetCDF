@@ -371,14 +371,14 @@
           call get_var_and_verify(ncid, varid1, NX,NY,start, count, buf, &
                        buftype, ghost_buftype, fix_filetype, nerrs)
 
-          ! close the file
-          err = nf90mpi_close(ncid)
-          call check(err, 'In nf90mpi_close: ')
-
           call MPI_Type_free(rec_filetype, ierr)
           call MPI_Type_free(fix_filetype, ierr)
           call MPI_Type_free(buftype, ierr)
           call MPI_Type_free(ghost_buftype, ierr)
+
+          ! close the file
+          err = nf90mpi_close(ncid)
+          call check(err, 'In nf90mpi_close: ')
 
           ! check if there is any PnetCDF internal malloc residue
  998      format(A,I13,A)
