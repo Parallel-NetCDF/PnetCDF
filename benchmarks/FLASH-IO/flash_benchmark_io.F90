@@ -41,6 +41,7 @@
 
       MasterPE = 0
       verbose = .TRUE.
+      indep_io = .FALSE.
 
       ! root process reads command-line arguments
       if (MyPE .EQ. MasterPE) then
@@ -55,13 +56,28 @@
             if (basenm(1:2) .EQ. '-q') then
                verbose = .FALSE.
                basenm = "flash_io_test_"
+            else if (basenm(1:2) .EQ. '-i') then
+               indep_io = .TRUE.
+               basenm = "flash_io_test_"
             endif
          else if (argc .EQ. 2) then
-            verbose = .FALSE.
-            call getarg(2, basenm)
+            call getarg(1, basenm)
             if (basenm(1:2) .EQ. '-q') then
+                verbose = .FALSE.
+                call getarg(2, basenm)
+            else if (basenm(1:2) .EQ. '-i') then
+                indep_io = .TRUE.
+                call getarg(2, basenm)
+            else
                 isArgvRight = .FALSE.
             endif
+         else if (argc .EQ. 3) then
+            call getarg(3, basenm)
+            if (basenm(1:2) .EQ. '-q' .OR. basenm(1:2) .EQ. '-i') then
+                isArgvRight = .FALSE.
+            endif
+            verbose = .FALSE.
+            indep_io = .TRUE.
          else if (argc .GT. 2) then
             isArgvRight = .FALSE.
          endif
@@ -75,6 +91,10 @@
       call MPI_Bcast(isArgvRight, 1, MPI_LOGICAL, MasterPE, &
                      MPI_COMM_WORLD, ierr)
       if (.NOT. isArgvRight) goto 999
+
+      ! broadcast if independent I/O should be used
+      call MPI_Bcast(indep_io, 1, MPI_LOGICAL, MasterPE, &
+                     MPI_COMM_WORLD, ierr)
 
       ! broadcast file base name prefix
       call MPI_Bcast(basenm, 128, MPI_CHARACTER, MasterPE, &

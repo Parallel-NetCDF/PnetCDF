@@ -1,7 +1,4 @@
-#
-#  Copyright (C) 2013, Northwestern University
-#  See COPYRIGHT notice in top-level directory.
-#
+## PnetCDF FLASH-IO Benchmark
 
 This software benchmarks the performance of PnetCDF method for the I/O and data
 partitioning pattern from the FLASH I/O benchmark, developed at the Flash
@@ -51,6 +48,10 @@ and the I/O time of which dominates the entire benchmark.
   ```
   (this will use file base name prefix: "/pvfs2/flash_io_test_")
 
+  + Command-line options:
+    * [-q] quiet mode
+    * [-i] use MPI independent I/O (default is collective I/O)
+
 * Example output on screen:
 ```c
  number of guards      :             4
@@ -96,4 +97,7 @@ and the I/O time of which dominates the entire benchmark.
         AM_FCFLAGS += $(FC_DEFINE)MAXBLOCKS=100
     ```
 
+
+*  Copyright (C) 2013, Northwestern University
+*  See COPYRIGHT notice in top-level directory.
 

@@ -49,8 +49,10 @@
 
         integer info_used
         logical use_nonblocking_io
+        logical indep_io
 
         double precision chk_t(3), corner_t(3), nocorner_t(3)
-        common /timers/ chk_t, corner_t, nocorner_t, info_used, use_nonblocking_io
+        common /timers/ chk_t, corner_t, nocorner_t, info_used, &
+                        use_nonblocking_io, indep_io
 
 
