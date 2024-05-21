@@ -49,8 +49,12 @@ and the I/O time of which dominates the entire benchmark.
   (this will use file base name prefix: "/pvfs2/flash_io_test_")
 
   + Command-line options:
+    * [-h] print this message
     * [-q] quiet mode
-    * [-i] use MPI independent I/O (default is collective I/O)
+    * [-b] use PnetCDF blocking APIs (default: nonblocking)
+    * [-i] use MPI independent I/O (default: collective)
+    * -f prefix: output file prefix name (required)
+
 
 * Example output on screen:
 ```c

@@ -24,6 +24,7 @@
 #endif
       integer i, argc, ierr
       character(len=128) executable
+      character(len=8) opt
       logical verbose, isArgvRight
 
       double precision time_io(3), time_begin
@@ -42,48 +43,46 @@
       MasterPE = 0
       verbose = .TRUE.
       indep_io = .FALSE.
+      use_nonblocking_io = .TRUE.
+      basenm(1:1) = ''
 
       ! root process reads command-line arguments
       if (MyPE .EQ. MasterPE) then
          isArgvRight = .TRUE.
          argc = IARGC()   ! IARGC() does not count the executable name
          call getarg(0, executable)
-         if (argc .EQ. 0) then
-            ! default file name prefix
-            basenm = "flash_io_test_"
-         else if (argc .EQ. 1) then
-            call getarg(1, basenm)
-            if (basenm(1:2) .EQ. '-q') then
+         do i=1, argc
+            call getarg(i, opt)
+            if (opt(1:2) .EQ. '-h') then
+               isArgvRight = .FALSE.
+            else if (opt(1:2) .EQ. '-q') then
                verbose = .FALSE.
-               basenm = "flash_io_test_"
-            else if (basenm(1:2) .EQ. '-i') then
+            else if (opt(1:2) .EQ. '-b') then
+               use_nonblocking_io = .FALSE.
+            else if (opt(1:2) .EQ. '-i') then
                indep_io = .TRUE.
-               basenm = "flash_io_test_"
+            else if (opt(1:2) .EQ. '-f') then
+               call getarg(i+1, basenm)
+               if (i .EQ. argc) then
+                  isArgvRight = .FALSE.
+               else if (basenm(1:1) .EQ. '-') then
+                  isArgvRight = .FALSE.
+               else if (LEN_TRIM(basenm(:)) .EQ. 0) then
+                  isArgvRight = .FALSE.
+               endif
             endif
-         else if (argc .EQ. 2) then
-            call getarg(1, basenm)
-            if (basenm(1:2) .EQ. '-q') then
-                verbose = .FALSE.
-                call getarg(2, basenm)
-            else if (basenm(1:2) .EQ. '-i') then
-                indep_io = .TRUE.
-                call getarg(2, basenm)
-            else
-                isArgvRight = .FALSE.
-            endif
-         else if (argc .EQ. 3) then
-            call getarg(3, basenm)
-            if (basenm(1:2) .EQ. '-q' .OR. basenm(1:2) .EQ. '-i') then
-                isArgvRight = .FALSE.
-            endif
-            verbose = .FALSE.
-            indep_io = .TRUE.
-         else if (argc .GT. 2) then
-            isArgvRight = .FALSE.
-         endif
+         enddo
+
          if (.NOT. isArgvRight) then
+            isArgvRight = .FALSE.
+            i = INDEX(executable, "/", .TRUE.)
             print *, &
-            'Usage: ',trim(executable),' [-q] <ouput file base name>'
+            'Usage: ',trim(executable(i+1:)),' [-hqbi] -f <ouput file prefix name>'
+            print *, '       -h: print this message'
+            print *, '       -q: quiet mode'
+            print *, '       -b: use PnetCDF blocking APIs (default: nonblocking)'
+            print *, '       -i: use MPI independent I/O (default: collective)'
+            print *, '       -f prefix: output file prefix name (required)'
          endif
       endif
 
@@ -92,7 +91,11 @@
                      MPI_COMM_WORLD, ierr)
       if (.NOT. isArgvRight) goto 999
 
-      ! broadcast if independent I/O should be used
+      ! broadcast whether nonblocking APIs should be used
+      call MPI_Bcast(use_nonblocking_io, 1, MPI_LOGICAL, MasterPE, &
+                     MPI_COMM_WORLD, ierr)
+
+      ! broadcast whether independent I/O should be used
       call MPI_Bcast(indep_io, 1, MPI_LOGICAL, MasterPE, &
                      MPI_COMM_WORLD, ierr)
 
@@ -118,9 +121,6 @@
       bnd_box(:,:,:) = 0.e0
       neigh(:,:,:) = -1
       empty(:) = 0
-
-      ! use nonblocking APIs
-      use_nonblocking_io = .TRUE.
 
 ! initialize the unknowns with the index of the variable
       do i = 1, nvar
@@ -285,6 +285,19 @@
  1006 format(I5, 3x, i3,' x ',i3,' x ',i3, 3x, F7.2 , 2x,F10.2 /)
  1007 format(A,A)
 
+          print 1004
+          if (use_nonblocking_io) then
+              print *,' Using PnetCDF nonblocking APIs'
+          else
+              print *,' Using PnetCDF blocking APIs'
+          endif
+          if (indep_io) then
+              print *,' Using MPI independent I/O'
+          else
+              print *,' Using MPI collective I/O'
+          endif
+          print 1004
+          print 1001,' number of guards      : ',nguard
           print 1001,' number of guards      : ',nguard
           print 1001,' number of blocks      : ',local_blocks
           print 1001,' number of variables   : ',nvar

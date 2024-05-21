@@ -35,7 +35,7 @@ for i in ${check_PROGRAMS} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 
-        ${MPIRUN} ./$i -q ${TESTOUTDIR}/$i.
+        ${MPIRUN} ./$i -q -f ${TESTOUTDIR}/$i.
 
         if test $? = 0 ; then
            echo "PASS: F90 parallel run on $1 processes --------------- $i"
@@ -55,7 +55,7 @@ for i in ${check_PROGRAMS} ; do
            # echo "test burst buffering feature"
            saved_PNETCDF_HINTS=${PNETCDF_HINTS}
            export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
-           ${MPIRUN} ./$i -q ${TESTOUTDIR}/$i.bb.
+           ${MPIRUN} ./$i -q -f ${TESTOUTDIR}/$i.bb.
            if test $? = 0 ; then
               echo "PASS: F90 parallel run on $1 processes --------------- $i"
            fi
