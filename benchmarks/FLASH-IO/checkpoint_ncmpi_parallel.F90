@@ -237,7 +237,7 @@
       integer global_offset
 
       character (len=40) :: flash_release
-      double precision unk_buf(1,nxb,nyb,nzb,maxblocks)
+      double precision unk_buf(nxb,nyb,nzb,maxblocks,nvar)
 #ifdef TIMERS
       double precision time_start, time_io
 #endif
@@ -248,7 +248,7 @@
       integer ncid, cmode, file_info
       integer(kind=MPI_OFFSET_KIND) starts(5), counts(4), put_size
       integer gsizes(5), subsizes(5), gstarts(5)
-      integer buftype, reqs(nvar+6), stats(nvar+6)
+      integer reqs(nvar+6), stats(nvar+6)
 
 !-----------------------------------------------------------------------------
 ! compute the total number of blocks left of a given processor number
@@ -580,30 +580,6 @@
       time_start = MPI_Wtime()
 #endif
 
-      if (use_nonblocking_io) then
-         ! create an MPI derived data type for buffer unk
-         gsizes(1) = nvar
-         gsizes(2) = iu_bnd - il_bnd + 1
-         gsizes(3) = ju_bnd - jl_bnd + 1
-         gsizes(4) = ku_bnd - kl_bnd + 1
-         gsizes(5) = maxblocks
-         subsizes(1) = 1
-         subsizes(2) = nxb
-         subsizes(3) = nyb
-         subsizes(4) = nzb
-         subsizes(5) = lnblocks
-         gstarts(1) = 0
-         gstarts(2) = nguard
-         gstarts(3) = nguard*k2d
-         gstarts(4) = nguard*k3d
-         gstarts(5) = 0
-         call MPI_Type_create_subarray(5, gsizes, subsizes, gstarts, &
-                                       MPI_ORDER_FORTRAN, &
-                                       MPI_DOUBLE_PRECISION, buftype, &
-                                       err)
-         call MPI_Type_commit(buftype, err)
-      endif
-
       starts(1) = 1
       starts(2) = 1
       starts(3) = 1
@@ -616,25 +592,23 @@
       do i = 1, nvar
          record_label = unklabels(i)
 
-         if (.NOT. use_nonblocking_io) then
-            ! when using nonblocking flexible API, we don't even need unk_buf
-            unk_buf(1, 1:nxb, 1:nyb, 1:nzb, :) =        &
-                unk(i, nguard+1     : nguard+nxb,       &
-                       nguard*k2d+1 : nguard*k2d+nyb,   &
-                       nguard*k3d+1 : nguard*k3d+nzb, :)
-         endif
+         ! pack write data into a contiguous buffer
+         unk_buf(1:nxb, 1:nyb, 1:nzb, :, i) =        &
+             unk(i, nguard+1     : nguard+nxb,       &
+                    nguard*k2d+1 : nguard*k2d+nyb,   &
+                    nguard*k3d+1 : nguard*k3d+nzb, :)
 
          if (use_nonblocking_io) then
-            err = nfmpi_iput_vara(ncid, varid(6+i), starts, counts, &
-                                  unk(i, 1, 1, 1, 1), 1_MPI_OFFSET_KIND, buftype, reqs(i+6))
+            err = nfmpi_iput_vara_double(ncid, varid(6+i), starts, counts, &
+                                         unk_buf(1,1,1,1,i), reqs(6+i))
             if (err .NE. NF_NOERR) &
                 call check(err, "nfmpi_iput_vara: unknowns")
          else
             if (indep_io) then
-                err = nfmpi_put_vara_double(ncid, varid(6+i), starts, counts, unk_buf)
+                err = nfmpi_put_vara_double(ncid, varid(6+i), starts, counts, unk_buf(1,1,1,1,i))
                 if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_double: unknowns")
             else
-                err = nfmpi_put_vara_double_all(ncid, varid(6+i), starts, counts, unk_buf)
+                err = nfmpi_put_vara_double_all(ncid, varid(6+i), starts, counts, unk_buf(1,1,1,1,i))
                 if (err .NE. NF_NOERR) call check(err, "nfmpi_put_vara_double_all: unknowns")
             endif
          endif
@@ -656,7 +630,6 @@
              if (stats(i) .NE. NF_NOERR) &
                  call check(stats(i), 'In nfmpi_wait(_all) req '//trim(str))
           enddo
-          call MPI_Type_free(buftype, err)
       endif
 
 #ifdef TIMERS
