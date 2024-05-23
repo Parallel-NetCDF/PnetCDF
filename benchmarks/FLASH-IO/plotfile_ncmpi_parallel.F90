@@ -372,11 +372,17 @@
       endif
 
       ! set up MPI I/O hints for performance enhancement
-      file_info = MPI_INFO_NULL
       call MPI_Info_create(file_info, err)
 
-      ! use some ROMIO hints
-      ! call MPI_Info_set(file_info, 'romio_no_indep_rw', 'true', err)
+      ! whether doing independent or collective writes
+      if (indep_io) then
+          call MPI_Info_set(file_info, 'romio_no_indep_rw', 'false', err)
+      else
+          call MPI_Info_set(file_info, 'romio_no_indep_rw', 'true', err)
+      endif
+
+      ! disable data sieving, as FLASH-IO does large continuous writes
+      call MPI_Info_set(file_info, "romio_ds_write", "disable", err)
 
       ! disable file offset alignment for fixed-size variables
       call MPI_Info_set(file_info, "nc_var_align_size", "1", err)
