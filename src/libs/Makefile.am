@@ -32,6 +32,9 @@ endif
 if ENABLE_BURST_BUFFER
    libpnetcdf_la_LIBADD += ../drivers/ncbbio/libncbbio.la
 endif
+if ENABLE_CHUNKING
+   libpnetcdf_la_LIBADD += ../drivers/ncchunkio/libncchkio.la
+endif
 if ENABLE_ADIOS
    libpnetcdf_la_LIBADD += ../drivers/ncadios/libncadios.la
 endif
