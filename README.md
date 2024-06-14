@@ -55,9 +55,11 @@ Northwestern University and Argonne National Laboratory.
 * Github Actions: [![MPICH](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_mpich.yml/badge.svg)](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_mpich.yml)
 [![OpenMPI](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_openmpi.yml/badge.svg)](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_openmpi.yml)
 
-### PnetCDF user guide
+### PnetCDF user guides
 * [C API references](http://cucis.ece.northwestern.edu/projects/PnetCDF/doc/pnetcdf-c)
 * [Questions & Answers](http://cucis.ece.northwestern.edu/projects/PnetCDF/faq.html)
+* [NetCDF4 vs. PnetCDF](./doc/netcdf4_vs_pnetcdf.md)
+* [PnetCDF blocking vs. non-blocking APIs](./doc/blocking_vs_nonblocking.md)
 
 ### Mailing List
 * parallel-netcdf@mcs.anl.gov
