@@ -68,11 +68,19 @@ Northwestern University and Argonne National Laboratory.
   + The past discussions in the mailing list are available in:
     http://lists.mcs.anl.gov/pipermail/parallel-netcdf/.
 
-### Project funding supports:
-* Ongoing development and maintenance of PnetCDF is supported by the [Exascale
-  Computing Project](https://www.exascaleproject.org) (17-SC-20-SC), a joint
-  project of the U.S. Department of Energy's Office of Science and National
-  Nuclear Security Administration, responsible for delivering a capable
-  exascale ecosystem, including software, applications, and hardware
-  technology, to support the nation's exascale computing imperative.
+### Acknowledgements
+* Ongoing development and maintenance of PnetCDF-python is supported by the
+  U.S. Department of Energy's Office of Science, Scientific Discovery through
+  Advanced Computing (SciDAC) program, OASIS Institute.
+* From 2016 to 2023, the development and maintenance of PnetCDF was supported
+  by the [Exascale Computing Project](https://www.exascaleproject.org)
+  (17-SC-20-SC), a joint project of the U.S. Department of Energy's Office of
+  Science and National Nuclear Security Administration, responsible for
+  delivering a capable exascale ecosystem, including software, applications,
+  and hardware technology, to support the nation's exascale computing
+  imperative.
+* The PnetCDF project has been continuously supported by the U.S. Department of
+  Energy's Office of Science, Scientific Discovery through Advanced Computing
+  (SciDAC) program since its initiation in 2001.
+
 
