@@ -11,8 +11,10 @@
 
 | NetCDF4 | PnetCDF |
 |:-------|:--------|
+| /* mode to create a file in classic CDF-5 format */ | |
+| int cmode = NC_64BIT_DATA; | |
 | /* create a new file */ | |
-| ${\textsf{\color{green}nc\\_create\\_par}}$(path, , comm, info, &ncid); | ${\textsf{\color{blue}ncmpi\\_create}}$(comm, path, mode, info, &ncid);|
+| ${\textsf{\color{green}nc\\_create\\_par}}$(path, cmode, comm, info, &ncid); | ${\textsf{\color{blue}ncmpi\\_create}}$(comm, path, cmode, info, &ncid);|
 | /* add a global attributes */ | |
 | char *attr = "Wed Mar 27 14:35:25 CDT 2024"; | |
 | ${\textsf{\color{green}nc\\_put\\_att\\_text}}$(ncid, NC_GLOBAL, "history", 28, attr); | ${\textsf{\color{blue}ncmpi\\_put\\_att\\_text}}$(ncid, NC_GLOBAL, "history", 28, attr);  |
