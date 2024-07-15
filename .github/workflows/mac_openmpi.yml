@@ -52,6 +52,7 @@ jobs:
                         --with-hwloc=internal \
                         --with-pmix=internal \
                         --with-libevent=internal \
+                        --disable-mpi-fortran \
                         CC=gcc
             make -s LIBTOOLFLAGS=--silent V=1 -j 8 install > qout 2>&1
             make -s -j 8 distclean >> qout 2>&1
@@ -68,6 +69,7 @@ jobs:
                         --enable-shared \
                         --enable-thread-safe \
                         --with-pthread \
+                        --disable-fortran \
                         --with-mpi=${GITHUB_WORKSPACE}/OPENMPI \
                         TESTMPIRUN="${GITHUB_WORKSPACE}/OPENMPI/bin/mpiexec --oversubscribe -n NP" \
                         TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output
