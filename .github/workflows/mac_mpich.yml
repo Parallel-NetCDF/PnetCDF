@@ -64,7 +64,6 @@ jobs:
                         pnc_ac_debug=yes \
                         --enable-burst_buffering \
                         --enable-subfiling \
-                        --enable-shared \
                         --enable-thread-safe \
                         --with-pthread \
                         --disable-fortran \
