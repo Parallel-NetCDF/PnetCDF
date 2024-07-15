@@ -33,10 +33,10 @@ jobs:
         - uses: actions/checkout@v4
         - name: Set up dependencies
           run: |
-            brew install gcc
-            which gcc
-            gcc --version
-            which gfortran
+            # brew install gcc
+            # which gcc
+            # gcc --version
+            # which gfortran
             brew install automake autoconf libtool m4
         - name: Build OPENMPI
           run: |
@@ -52,9 +52,7 @@ jobs:
                         --with-hwloc=internal \
                         --with-pmix=internal \
                         --with-libevent=internal \
-                        CC=gcc \
-                        FC=gfortran \
-                        FCFLAGS=-fallow-argument-mismatch
+                        CC=gcc
             make -s LIBTOOLFLAGS=--silent V=1 -j 8 install > qout 2>&1
             make -s -j 8 distclean >> qout 2>&1
         - name: Build PnetCDF
