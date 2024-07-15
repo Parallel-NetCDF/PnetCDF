@@ -12,7 +12,8 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Configure options
-  + none
+  + The default has been changed to build both shared and static libraries.
+    See [PR #143](https://github.com/Parallel-NetCDF/PnetCDF/pull/143).
 
 * Configure updates:
   + none

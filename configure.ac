@@ -452,7 +452,8 @@ dnl Travis CI only has v2.4.2
 LT_PREREQ([2.4.6])
 dnl LT_INIT([dlopen disable-shared])
 dnl LT_INIT([dlopen])
-LT_INIT([disable-shared])
+dnl LT_INIT([disable-shared])  # build without shared libraries
+LT_INIT
 
 dnl check MPI C++ compiler
 AC_ARG_ENABLE(cxx,
