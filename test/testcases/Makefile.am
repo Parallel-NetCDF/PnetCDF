@@ -116,6 +116,10 @@ if TEST_SYMLINK
    TESTPROGRAMS += tst_symlink
 endif
 
+if TEST_LARGE_COUNT
+   TESTPROGRAMS += flexible_large_count
+endif
+
 if ENABLE_ERANGE_FILL
    M4FLAGS += -DERANGE_FILL
    TESTPROGRAMS += erange_fill
