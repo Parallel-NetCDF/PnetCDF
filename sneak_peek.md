@@ -3,7 +3,9 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
 * New features
-  + none
+  + Suuport MPI derived datatypes that are constructed from MPI 4.0 large-count
+    derived datatype constructors.
+    See [PR #145](https://github.com/Parallel-NetCDF/PnetCDF/pull/145).
 
 * New optimization
   + none
@@ -64,7 +66,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
-  + none
+  + test/testcases/flexible_large_count.c - tests flexible APIs that use MPI
+    derived datatypes created by MPI large-count datatype constructors.
+    See [PR #145](https://github.com/Parallel-NetCDF/PnetCDF/pull/145).
 
 * Issues with NetCDF library
   + none
