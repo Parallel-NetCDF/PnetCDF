@@ -222,54 +222,53 @@ dtype_filter(MPI_Datatype type)
   Return:
 . total number of blocks assigned from the distributed array
 @*/
-static int
+static MPI_Offset
 darray_get_totalblks(int rank,
-                     MPI_Offset ndims,
+                     int ndims,
+#ifdef HAVE_MPI_TYPE_GET_CONTENTS_C
+                     MPI_Count array_of_gsizes[],
+#else
                      int array_of_gsizes[],
+#endif
                      int array_of_distribs[],
                      int array_of_dargs[],
                      int array_of_psizes[])
 {
-  int total_blocks = 1;
-  int subblocks, cycle, remain_cycle;
-  int i;
-  int pcoord;
+    int i, cycle, pcoord;
+    MPI_Offset total_blocks=1, subblocks, remain_cycle;
 
-  /* Process Grid ranking is always in C ORDER,
-     so compute proc coordinates from last dim */
+    /* Process Grid ranking is always in C ORDER,
+       so compute proc coordinates from last dim */
 
-  for (i=(int)ndims-1; i>=0; i--) {
-    if ( array_of_distribs[i] == MPI_DISTRIBUTE_NONE ) {
-      total_blocks *= array_of_gsizes[i];
-    } else {
+    for (i=ndims-1; i>=0; i--) {
+        if (array_of_distribs[i] == MPI_DISTRIBUTE_NONE)
+            total_blocks *= array_of_gsizes[i];
+        else {
+            pcoord = rank % array_of_psizes[i];
+            rank /= array_of_psizes[i];
+            if (array_of_dargs[i] == MPI_DISTRIBUTE_DFLT_DARG) {
+                subblocks = array_of_gsizes[i]/array_of_psizes[i];
+                if (subblocks*array_of_psizes[i]+pcoord < array_of_gsizes[i])
+                    subblocks++;
+            } else {
+                cycle = array_of_dargs[i]*array_of_psizes[i];
+                remain_cycle = array_of_gsizes[i] % cycle;
 
-      pcoord = rank % array_of_psizes[i];
-      rank /= array_of_psizes[i];
-      if ( array_of_dargs[i] == MPI_DISTRIBUTE_DFLT_DARG ) {
-        subblocks = array_of_gsizes[i]/array_of_psizes[i];
-        if ( subblocks*array_of_psizes[i]+pcoord < array_of_gsizes[i] )
-          subblocks++;
-      } else {
-        cycle = array_of_dargs[i]*array_of_psizes[i];
-        remain_cycle = array_of_gsizes[i] % cycle;
+                subblocks = remain_cycle - pcoord*array_of_dargs[i];
+                if (subblocks > array_of_dargs[i])
+                    subblocks = array_of_dargs[i];
+                else if (subblocks < 0)
+                    subblocks = 0;
 
-        subblocks = remain_cycle - pcoord*array_of_dargs[i];
-        if (subblocks > array_of_dargs[i])
-          subblocks = array_of_dargs[i];
-        else if (subblocks < 0)
-          subblocks = 0;
+                subblocks += array_of_gsizes[i]/cycle * array_of_dargs[i];
+            }
 
-        subblocks += array_of_gsizes[i]/cycle * array_of_dargs[i];
-      }
-
-      if (subblocks == 0)
-        return 0;
-      total_blocks *= subblocks;
-
+            if (subblocks == 0)
+                return 0;
+            total_blocks *= subblocks;
+        }
     }
-  }
-
-  return total_blocks;
+    return total_blocks;
 }
 
 /*----< ncmpii_dtype_decode() >----------------------------------------------*/
@@ -294,12 +293,16 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
                         int          *isderived_p,
                         int          *iscontig_of_ptypes)
 {
-    int i, ndims, status=NC_NOERR, el_size;
-    int num_ints, num_adds, num_dtypes, combiner, isderived;
-    int *array_of_ints;
+    int i, ndims, status=NC_NOERR, el_size, mpireturn, combiner, isderived;
+    int *array_of_ints, is_large_type;
     MPI_Offset count, nelems, total_blocks;
     MPI_Datatype ptype, *array_of_dtypes=NULL;
     MPI_Aint *array_of_adds=NULL;
+#ifdef HAVE_MPI_LARGE_COUNT
+    MPI_Count num_ints, num_adds, num_larges, num_dtypes, *array_of_larges;
+#else
+    int num_ints, num_adds, num_dtypes;
+#endif
 
     el_size   = 0;
     nelems    = 0;
@@ -320,7 +323,18 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
         return NC_NOERR;
     }
 
-    MPI_Type_get_envelope(dtype, &num_ints, &num_adds, &num_dtypes, &combiner);
+    is_large_type = 0;
+#ifdef HAVE_MPI_TYPE_GET_ENVELOPE_C
+    /* MPI_Type_get_envelope_c is introduced in MPI 4.0 */
+    mpireturn = MPI_Type_get_envelope_c(dtype, &num_ints, &num_adds, &num_larges, &num_dtypes, &combiner);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_get_envelope_c");
+    if (num_larges) is_large_type = 1;
+#else
+    mpireturn = MPI_Type_get_envelope(dtype, &num_ints, &num_adds, &num_dtypes, &combiner);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_get_envelope");
+#endif
 
     if (combiner == MPI_COMBINER_F90_INTEGER ||
         combiner == MPI_COMBINER_F90_REAL ||
@@ -347,8 +361,23 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
     array_of_adds = (MPI_Aint *) NCI_Malloc((size_t)num_adds * SIZEOF_MPI_AINT);
     array_of_dtypes = (MPI_Datatype *) NCI_Malloc((size_t)num_dtypes * sizeof(MPI_Datatype));
 
-    MPI_Type_get_contents(dtype, num_ints, num_adds, num_dtypes,
-                          array_of_ints, array_of_adds, array_of_dtypes);
+    if (is_large_type) {
+#ifdef HAVE_MPI_TYPE_GET_CONTENTS_C
+        array_of_larges = (MPI_Count *) NCI_Malloc(sizeof(MPI_Count) * num_larges);
+        mpireturn = MPI_Type_get_contents_c(dtype, num_ints, num_adds, num_larges, num_dtypes,
+                                            array_of_ints, array_of_adds, array_of_larges, array_of_dtypes);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_get_contents_c");
+#else
+        return ncmpii_error_mpi2nc(MPI_ERR_IO, "MPI_Type_get_contents_c");
+#endif
+    }
+    else {
+        mpireturn = MPI_Type_get_contents(dtype, num_ints, num_adds, num_dtypes,
+                                          array_of_ints, array_of_adds, array_of_dtypes);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_get_contents");
+    }
 
     switch (combiner) {
         /* single etype */
@@ -379,7 +408,15 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
 #if defined HAVE_MPI_COMBINER_STRUCT_INTEGER
         case MPI_COMBINER_STRUCT_INTEGER:
 #endif
-            count = array_of_ints[0];
+            if (is_large_type)
+#ifdef HAVE_MPI_TYPE_GET_CONTENTS_C
+                count = array_of_larges[0];
+#else
+                return ncmpii_error_mpi2nc(MPI_ERR_IO, "MPI_COMBINER_STRUCT");
+#endif
+            else
+                count = array_of_ints[0];
+
             el_size = 0;
             for (i=0; i<count && el_size==0; i++) {
                 /* need to skip null/marker types */
@@ -388,7 +425,18 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
                                              iscontig_of_ptypes);
                 if (status != NC_NOERR) return status;
                 if (isderived) MPI_Type_free(array_of_dtypes+i);
-                if (el_size > 0) nelems *= array_of_ints[1+i];
+                if (is_large_type) {
+#ifdef HAVE_MPI_TYPE_GET_CONTENTS_C
+                    /* product of array_of_blocklengths[] */
+                    if (el_size > 0) nelems *= array_of_larges[1+i];
+#else
+                    return ncmpii_error_mpi2nc(MPI_ERR_IO, "MPI_COMBINER_STRUCT");
+#endif
+                 }
+                 else {
+                    /* product of array_of_blocklengths[] */
+                    if (el_size > 0) nelems *= array_of_ints[1+i];
+                 }
             }
             for ( ; i<count; i++) {
                 int tmpel_size;
@@ -404,9 +452,21 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
                         NCI_Free(array_of_ints);
                         NCI_Free(array_of_adds);
                         NCI_Free(array_of_dtypes);
+#ifdef HAVE_MPI_TYPE_GET_CONTENTS_C
+                        if (is_large_type) NCI_Free(array_of_larges);
+#endif
                         DEBUG_RETURN_ERROR(NC_EMULTITYPES)
                     }
-                    nelems += tmpnelems*array_of_ints[1+i];
+                    if (is_large_type)
+#ifdef HAVE_MPI_TYPE_GET_CONTENTS_C
+                        /* product of array_of_blocklengths[] */
+                        nelems += tmpnelems * array_of_larges[1+i];
+#else
+                        return ncmpii_error_mpi2nc(MPI_ERR_IO, "MPI_COMBINER_STRUCT");
+#endif
+                    else
+                        /* product of array_of_blocklengths[] */
+                        nelems += tmpnelems * array_of_ints[1+i];
                 }
             }
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
@@ -418,7 +478,14 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
     switch (combiner) {
         /* single etype */
         case MPI_COMBINER_CONTIGUOUS:
-            total_blocks = array_of_ints[0];
+            if (is_large_type)
+#ifdef HAVE_MPI_TYPE_GET_CONTENTS_C
+                total_blocks = array_of_larges[0];
+#else
+                return ncmpii_error_mpi2nc(MPI_ERR_IO, "MPI_COMBINER_CONTIGUOUS");
+#endif
+            else
+                total_blocks = array_of_ints[0];
             break;
         case MPI_COMBINER_HVECTOR:
         case MPI_COMBINER_VECTOR:
@@ -427,7 +494,16 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
 #endif
         case MPI_COMBINER_INDEXED_BLOCK:
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
-            total_blocks = (MPI_Offset)array_of_ints[0]*array_of_ints[1];
+            if (is_large_type)
+#ifdef HAVE_MPI_TYPE_GET_CONTENTS_C
+                /* count x blocklength */
+                total_blocks = array_of_larges[0]*array_of_larges[1];
+#else
+                return ncmpii_error_mpi2nc(MPI_ERR_IO, "MPI_COMBINER_VECTOR");
+#endif
+            else
+                /* count x blocklength */
+                total_blocks = (MPI_Offset)array_of_ints[0]*array_of_ints[1];
             break;
         case MPI_COMBINER_HINDEXED:
         case MPI_COMBINER_INDEXED:
@@ -435,25 +511,70 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
         case MPI_COMBINER_HINDEXED_INTEGER:
 #endif
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
-            for (i=0, total_blocks=0; i<array_of_ints[0]; i++)
-                total_blocks += array_of_ints[1+i];
+            if (is_large_type) {
+#ifdef HAVE_MPI_TYPE_GET_CONTENTS_C
+                /* sum of array_of_blocklengths[] */
+                for (i=0, total_blocks=0; i<array_of_larges[0]; i++)
+                    total_blocks += array_of_larges[1+i];
+#else
+                return ncmpii_error_mpi2nc(MPI_ERR_IO, "MPI_COMBINER_HINDEXED");
+#endif
+            }
+            else {
+                /* sum of array_of_blocklengths[] */
+                for (i=0, total_blocks=0; i<array_of_ints[0]; i++)
+                    total_blocks += array_of_ints[1+i];
+            }
             break;
         case MPI_COMBINER_SUBARRAY:
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             ndims = array_of_ints[0];
-            for (i=0, total_blocks=1; i<ndims; i++)
-                total_blocks *= array_of_ints[1+ndims+i];
+            if (is_large_type) {
+#ifdef HAVE_MPI_TYPE_GET_CONTENTS_C
+                /* calculate product of array_of_subsizes[] */
+                for (i=0, total_blocks=1; i<ndims; i++)
+                    total_blocks *= array_of_larges[ndims+i];
+#else
+                return ncmpii_error_mpi2nc(MPI_ERR_IO, "MPI_COMBINER_HINDEXED");
+#endif
+            }
+            else {
+                /* calculate product of array_of_subsizes[] */
+                for (i=0, total_blocks=1; i<ndims; i++)
+                    total_blocks *= array_of_ints[1+ndims+i];
+            }
             break;
         case MPI_COMBINER_DARRAY:
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             ndims = array_of_ints[2];
+#ifdef HAVE_MPI_TYPE_GET_CONTENTS_C
+            int *distribs, *dargs, *psizes;
+            MPI_Count *gzises;
+            if (is_large_type) {
+                gzises   = array_of_larges;
+                distribs = array_of_ints+3;          /* array_of_distribs[ndims] */
+                dargs    = array_of_ints+3+ndims;    /* array_of_dargs[ndims] */
+                psizes   = array_of_ints+3+2*ndims;  /* array_of_psizes[ndims] */
+            }
+            else {
+                gzises = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * ndims);
+                for (i=0; i<ndims; i++) gzises[i] = array_of_ints[3+i];
+                distribs = array_of_ints+3+ndims;    /* array_of_distribs[ndims] */
+                dargs    = array_of_ints+3+2*ndims;  /* array_of_dargs[ndims] */
+                psizes   = array_of_ints+3+3*ndims;  /* array_of_psizes[ndims] */
+            }
+#else
+            int *gzises   = array_of_ints+3;         /* array_of_gsizes[ndims] */
+            int *distribs = array_of_ints+3+ndims;   /* array_of_distribs[ndims] */
+            int *dargs    = array_of_ints+3+2*ndims; /* array_of_dargs[ndims] */
+            int *psizes   = array_of_ints+3+3*ndims; /* array_of_psizes[ndims] */
+#endif
             /* seldom reached, so put it in a separate function */
-            total_blocks = darray_get_totalblks(array_of_ints[1],
-                                                ndims,
-                                                array_of_ints+3,
-                                                array_of_ints+3+ndims,
-                                                array_of_ints+3+2*ndims,
-                                                array_of_ints+3+3*ndims);
+            total_blocks = darray_get_totalblks(array_of_ints[1],  /* rank */
+                                  ndims, gzises, distribs, dargs, psizes);
+#ifdef HAVE_MPI_TYPE_GET_CONTENTS_C
+            if (!is_large_type) NCI_Free(gzises);
+#endif
             break;
         case MPI_COMBINER_RESIZED:
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
@@ -473,6 +594,9 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
     NCI_Free(array_of_ints);
     NCI_Free(array_of_adds);
     NCI_Free(array_of_dtypes);
+#ifdef HAVE_MPI_TYPE_GET_CONTENTS_C
+    if (is_large_type) NCI_Free(array_of_larges);
+#endif
 
     return status;
 }

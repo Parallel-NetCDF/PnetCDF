@@ -1327,6 +1327,8 @@ AC_CHECK_FUNCS([MPI_Type_create_subarray_c \
                 MPI_Type_vector_c \
                 MPI_Type_size_c \
                 MPI_Type_get_true_extent_c \
+                MPI_Type_get_envelope_c \
+                MPI_Type_get_contents_c \
                 MPI_Bcast_c \
                 MPI_Get_count_c \
                 MPI_Pack_c \
@@ -1337,6 +1339,7 @@ UD_MSG_DEBUG([have_mpi_large_count_apis=$have_mpi_large_count_apis])
 if test "x$have_mpi_large_count_apis" = "xyes" ; then
    AC_DEFINE(HAVE_MPI_LARGE_COUNT, 1)
 fi
+AM_CONDITIONAL(TEST_LARGE_COUNT, [test x$have_mpi_large_count_apis = xyes])
 
 # MPI standard will deprecate the _x procedures, in favor of the _c procedures.
 # See https://github.com/mpi-forum/mpi-issues/issues/518
