@@ -143,7 +143,7 @@ ncmpio_igetput_varm(NC               *ncp,
 {
     void *xbuf=NULL;
     int i, err=NC_NOERR, abuf_index=-1, isize, xsize, new_nreqs, rem;
-    int buftype_is_contig=1, need_convert, free_xbuf=0;
+    int mpireturn, buftype_is_contig=1, need_convert, free_xbuf=0;
     int need_swap, in_place_swap, need_swap_back_buf=0;
     MPI_Offset nelems=0, nbytes, *ptr;
     MPI_Datatype itype, xtype, imaptype;
@@ -160,7 +160,9 @@ ncmpio_igetput_varm(NC               *ncp,
      * size in bytes. Similarly, itype and isize for internal representation.
      */
     xtype = ncmpii_nc2mpitype(varp->xtype);
-    MPI_Type_size(xtype, &xsize);
+    mpireturn = MPI_Type_size(xtype, &xsize);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
 
     if (buftype == MPI_DATATYPE_NULL) {
         /* In this case, bufcount is ignored and the internal buffer data type
@@ -178,7 +180,9 @@ ncmpio_igetput_varm(NC               *ncp,
          * In addition, it means the user buf is contiguous.
          */
         itype = buftype;
-        MPI_Type_size(itype, &isize); /* buffer element size */
+        mpireturn = MPI_Type_size(itype, &isize); /* buffer element size */
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
     }
     else { /* (bufcount > 0) */
         /* When bufcount > 0, this subroutine is called from a flexible API. If
@@ -500,8 +504,13 @@ ncmpio_igetput_varm(NC               *ncp,
      */
     if (buftype_is_contig)
         fSet(lead_req->flag, NC_REQ_BUF_TYPE_IS_CONTIG);
-    else if (fIsSet(reqMode, NC_REQ_RD))
-        MPI_Type_dup(buftype, &lead_req->buftype);
+    else if (fIsSet(reqMode, NC_REQ_RD)) {
+        mpireturn = MPI_Type_dup(buftype, &lead_req->buftype);
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_dup");
+            goto fn_exit;
+        }
+    }
 
     /* allocate a single array for non-leads to store start/count/stride */
     if (varp->ndims == 0) { /* scalar variable, start may be NULL */

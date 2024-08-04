@@ -443,7 +443,7 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                  void         *buf,    /* user buffer */
                  void         *xbuf)   /* already allocated, in external type */
 {
-    int err=NC_NOERR, free_lbuf=0, free_cbuf=0;
+    int err=NC_NOERR, mpireturn, free_lbuf=0, free_cbuf=0;
     void *lbuf=NULL, *cbuf=NULL;
     MPI_Offset ibuf_size;
 
@@ -469,16 +469,20 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
             /* pack buf into lbuf based on buftype */
 #ifdef HAVE_MPI_LARGE_COUNT
             MPI_Count position = 0;
-            MPI_Pack_c(buf, (MPI_Count)bufcount, buftype, lbuf,
-                       (MPI_Count)ibuf_size, &position, MPI_COMM_SELF);
+            mpireturn = MPI_Pack_c(buf, (MPI_Count)bufcount, buftype, lbuf,
+                                   (MPI_Count)ibuf_size, &position, MPI_COMM_SELF);
+            if (mpireturn != MPI_SUCCESS)
+                return ncmpii_error_mpi2nc(mpireturn, "MPI_Pack_c");
 #else
             int position = 0;
             if (bufcount > NC_MAX_INT || ibuf_size > NC_MAX_INT) {
                 if (free_lbuf) NCI_Free(lbuf);
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             }
-            MPI_Pack(buf, (int)bufcount, buftype, lbuf, (int)ibuf_size,
-                     &position, MPI_COMM_SELF);
+            mpireturn = MPI_Pack(buf, (int)bufcount, buftype, lbuf, (int)ibuf_size,
+                                 &position, MPI_COMM_SELF);
+            if (mpireturn != MPI_SUCCESS)
+                return ncmpii_error_mpi2nc(mpireturn, "MPI_Pack");
 #endif
         }
     }
@@ -504,14 +508,18 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         /* pack lbuf to cbuf based on imaptype */
 #ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count position = 0;
-        MPI_Pack_c(lbuf, 1, imaptype, cbuf, (MPI_Count)ibuf_size, &position,
-                   MPI_COMM_SELF);
+        mpireturn = MPI_Pack_c(lbuf, 1, imaptype, cbuf, (MPI_Count)ibuf_size,
+                               &position, MPI_COMM_SELF);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Pack_c");
 #else
         int position = 0;
         if (ibuf_size > NC_MAX_INT)
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-        MPI_Pack(lbuf, 1, imaptype, cbuf, (int)ibuf_size, &position,
-                 MPI_COMM_SELF);
+        mpireturn = MPI_Pack(lbuf, 1, imaptype, cbuf, (int)ibuf_size,
+                             &position, MPI_COMM_SELF);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Pack");
 #endif
         MPI_Type_free(&imaptype);
 
@@ -638,7 +646,7 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                    void         *buf,  /* user buffer */
                    void         *xbuf) /* already allocated, in external type */
 {
-    int err=NC_NOERR, el_size, free_lbuf=0, free_cbuf=0;
+    int err=NC_NOERR, mpireturn, el_size, free_lbuf=0, free_cbuf=0;
     void *lbuf=NULL, *cbuf=NULL;
     MPI_Offset ibuf_size;
 
@@ -737,14 +745,18 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         /* unpack cbuf to lbuf based on imaptype */
 #ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count position = 0;
-        MPI_Unpack_c(cbuf, (MPI_Count)ibuf_size, &position, lbuf, 1, imaptype,
-                     MPI_COMM_SELF);
+        mpireturn = MPI_Unpack_c(cbuf, (MPI_Count)ibuf_size, &position, lbuf,
+                                 1, imaptype, MPI_COMM_SELF);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Unpack_c");
 #else
         int position = 0;
         if (ibuf_size > NC_MAX_INT) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
-        MPI_Unpack(cbuf, (int)ibuf_size, &position, lbuf, 1, imaptype,
-                   MPI_COMM_SELF);
+        mpireturn = MPI_Unpack(cbuf, (int)ibuf_size, &position, lbuf,
+                               1, imaptype, MPI_COMM_SELF);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Unpack");
 #endif
         MPI_Type_free(&imaptype);
     }
@@ -754,8 +766,10 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         /* no need unpack when buftype is used in MPI_File_read (lbuf == buf) */
 #ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count position = 0;
-        MPI_Unpack_c(lbuf, (MPI_Count)ibuf_size, &position, buf,
+        mpireturn = MPI_Unpack_c(lbuf, (MPI_Count)ibuf_size, &position, buf,
                      (MPI_Count)bufcount, buftype, MPI_COMM_SELF);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Unpack_c");
 #else
         if (bufcount > NC_MAX_INT) {
             if (err == NC_NOERR)
@@ -765,8 +779,10 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
             int position = 0;
             if (ibuf_size > NC_MAX_INT)
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-            MPI_Unpack(lbuf, (int)ibuf_size, &position, buf, (int)bufcount,
-                       buftype, MPI_COMM_SELF);
+            mpireturn = MPI_Unpack(lbuf, (int)ibuf_size, &position, buf,
+                                   (int)bufcount, buftype, MPI_COMM_SELF);
+            if (mpireturn != MPI_SUCCESS)
+                return ncmpii_error_mpi2nc(mpireturn, "MPI_Unpack");
         }
 #endif
     }

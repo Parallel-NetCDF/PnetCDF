@@ -487,8 +487,11 @@ ncmpi_create(MPI_Comm    comm,
      * MPI_Comm_dup() is collective. We pass pncp->comm to drivers, so there
      * is no need for a driver to duplicate it again.
      */
-    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF)
-        MPI_Comm_dup(comm, &pncp->comm);
+    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF) {
+        mpireturn = MPI_Comm_dup(comm, &pncp->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_dup");
+    }
     else
         pncp->comm = comm;
 
@@ -748,8 +751,11 @@ ncmpi_open(MPI_Comm    comm,
      * MPI_Comm_dup() is collective. We pass pncp->comm to drivers, so there
      * is no need for a driver to duplicate it again.
      */
-    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF)
-        MPI_Comm_dup(comm, &pncp->comm);
+    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF) {
+        mpireturn = MPI_Comm_dup(comm, &pncp->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_dup");
+    }
     else
         pncp->comm = comm;
 

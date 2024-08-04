@@ -196,7 +196,9 @@ type_create_subarray64(int               ndims,
     DEBUG_RETURN_ERROR(NC_EAINT_TOO_SMALL)
 #endif
 
-    MPI_Type_get_extent(oldtype, &lb, &extent);
+    mpireturn = MPI_Type_get_extent(oldtype, &lb, &extent);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_get_extent");
     array_size = extent;
     for (i=0; i<ndims; i++) array_size *= array_of_sizes[i];
 
@@ -208,15 +210,15 @@ type_create_subarray64(int               ndims,
         disps[1] = extent * array_of_starts[0];
 
         /* take advantage of disps argument is of type MPI_Aint */
-        err = MPI_Type_create_hindexed(1, &blklens[1], &disps[1], oldtype, &type1);
-        if (err != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(err, "MPI_Type_create_hindexed");
+        mpireturn = MPI_Type_create_hindexed(1, &blklens[1], &disps[1], oldtype, &type1);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_hindexed");
         MPI_Type_commit(&type1);
 
         /* add holes in the beginning and tail of type1 */
-        err = MPI_Type_create_resized(type1, 0, array_size, newtype);
-        if (err != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(err, "MPI_Type_create_resized");
+        mpireturn = MPI_Type_create_resized(type1, 0, array_size, newtype);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_resized");
         MPI_Type_free(&type1);
 
         return NC_NOERR;
@@ -237,9 +239,9 @@ type_create_subarray64(int               ndims,
     blocklength = (int)array_of_subsizes[ndims-1];
     stride = array_of_sizes[ndims-1] * extent;
 
-    err = MPI_Type_create_hvector(count, blocklength, stride, oldtype, &type1);
-    if (err != MPI_SUCCESS)
-        return ncmpii_error_mpi2nc(err, "MPI_Type_create_hvector");
+    mpireturn = MPI_Type_create_hvector(count, blocklength, stride, oldtype, &type1);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_hvector");
 
     MPI_Type_commit(&type1);
 
@@ -251,9 +253,9 @@ type_create_subarray64(int               ndims,
         count = (int)array_of_subsizes[i];
         stride *= array_of_sizes[i+1];
 
-        err = MPI_Type_create_hvector(count, 1, stride, type1, &type2);
-        if (err != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(err, "MPI_Type_create_hvector");
+        mpireturn = MPI_Type_create_hvector(count, 1, stride, type1, &type2);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_hvector");
 
         MPI_Type_commit(&type2);
         MPI_Type_free(&type1);
@@ -276,13 +278,13 @@ type_create_subarray64(int               ndims,
 
     /* make filetype the same as calling MPI_Type_create_subarray() */
     /* adjust LB and UB without using MPI_LB or MPI_UB */
-    err = MPI_Type_create_hindexed(1, blklens, &disps[1], type1, &type2);
-    if (err != MPI_SUCCESS)
-        return ncmpii_error_mpi2nc(err, "MPI_Type_create_hindexed");
+    mpireturn = MPI_Type_create_hindexed(1, blklens, &disps[1], type1, &type2);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_hindexed");
     MPI_Type_commit(&type2);
-    err = MPI_Type_create_resized(type2, disps[0], disps[2], newtype);
-    if (err != MPI_SUCCESS)
-        return ncmpii_error_mpi2nc(err, "MPI_Type_create_resized");
+    mpireturn = MPI_Type_create_resized(type2, disps[0], disps[2], newtype);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_resized");
     MPI_Type_free(&type2);
     MPI_Type_free(&type1);
 
@@ -300,7 +302,7 @@ filetype_create_vara(const NC         *ncp,
                      MPI_Datatype     *filetype_ptr,       /* OUT */
                      int              *is_filetype_contig) /* OUT */
 {
-    int          status, err;
+    int          status, mpireturn;
     MPI_Offset   offset;
     MPI_Datatype filetype, xtype;
 
@@ -360,19 +362,19 @@ filetype_create_vara(const NC         *ncp,
 
 #ifdef HAVE_MPI_LARGE_COUNT
         /* concatenate number of count[0] subarray types into filetype */
-        err = MPI_Type_create_hvector_c(count[0], blocklength, ncp->recsize,
-                                        rectype, &filetype);
-        if (err != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(err, "MPI_Type_create_hvector_c");
+        mpireturn = MPI_Type_create_hvector_c(count[0], blocklength, ncp->recsize,
+                                              rectype, &filetype);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_hvector_c");
 #else
         /* check overflow, because 1st argument of hvector is of type int */
         if (count[0] > NC_MAX_INT) DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
         /* concatenate number of count[0] subarray types into filetype */
-        err = MPI_Type_create_hvector((int)count[0], blocklength, ncp->recsize,
-                                      rectype, &filetype);
-        if (err != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(err, "MPI_Type_create_hvector");
+        mpireturn = MPI_Type_create_hvector((int)count[0], blocklength, ncp->recsize,
+                                            rectype, &filetype);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_hvector");
 #endif
 
         if (rectype != MPI_BYTE) MPI_Type_free(&rectype);
@@ -667,14 +669,18 @@ ncmpio_file_set_view(const NC     *ncp,
 #ifdef HAVE_MPI_LARGE_COUNT
         mpireturn = MPI_Type_create_struct_c(2, blocklens, disps, ftypes,
                                              &root_filetype);
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_struct_c");
+            if (status == NC_NOERR) status = err;
+        }
 #else
         mpireturn = MPI_Type_create_struct(2, blocklens, disps, ftypes,
                                            &root_filetype);
-#endif
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_struct");
             if (status == NC_NOERR) status = err;
         }
+#endif
         MPI_Type_commit(&root_filetype);
 
 #ifndef HAVE_MPI_LARGE_COUNT

@@ -447,10 +447,13 @@ ncmpii_get_cast_swap(int            format, /* NC_FORMAT_CDF2/NC_FORMAT_CDF5 */
                      void         **ibuf)   /* OUT: buffer in internal type */
 {
     /* xbuf contains the data read from file and in external data type */
-    int err=NC_NOERR, xsz=0;
+    int err=NC_NOERR, mpireturn, xsz=0;
     size_t nbytes;
 
-    MPI_Type_size(itype, &xsz);
+    mpireturn = MPI_Type_size(itype, &xsz);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
+
     nbytes = (size_t)(nelems * xsz);
 
     if (ncmpii_need_convert(format, xtype, itype)) {
