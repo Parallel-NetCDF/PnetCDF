@@ -57,7 +57,7 @@ igetput_varn(NC                *ncp,
 {
     int i, j, err=NC_NOERR, free_xbuf=0, isize, xsize, abuf_index=-1;
     int isContig=1, need_convert, need_swap, need_swap_back_buf=0, lead_off;
-    int rem, new_nreqs;
+    int mpireturn, rem, new_nreqs;
     size_t memChunk;
     void *xbuf=NULL;
     char *xbufp;
@@ -105,7 +105,11 @@ igetput_varn(NC                *ncp,
      * size in bytes. Similarly, itype and isize for internal representation.
      */
     xtype = ncmpii_nc2mpitype(varp->xtype);
-    MPI_Type_size(xtype, &xsize);
+    mpireturn = MPI_Type_size(xtype, &xsize);
+    if (mpireturn != MPI_SUCCESS) {
+        err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
+        goto fn_exit;
+    }
 
     if (bufcount == NC_COUNT_IGNORE) {
         /* In this case, this subroutine is called from a high-level API.
@@ -114,7 +118,11 @@ igetput_varn(NC                *ncp,
          * representation. In addition, it means the user buf is contiguous.
          */
         itype = buftype;
-        MPI_Type_size(itype, &isize); /* buffer element size */
+        mpireturn = MPI_Type_size(itype, &isize); /* buffer element size */
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
+            goto fn_exit;
+        }
     }
     else if (buftype == MPI_DATATYPE_NULL) {
         /* In this case, bufcount is ignored and the internal buffer data type
@@ -417,7 +425,11 @@ igetput_varn(NC                *ncp,
             /* When read buftype is not contiguous, we duplicate buftype for
              * later used in the wait call to unpack xbuf using buftype to buf.
              */
-            MPI_Type_dup(buftype, &lead_req->buftype);
+            mpireturn = MPI_Type_dup(buftype, &lead_req->buftype);
+            if (mpireturn != MPI_SUCCESS) {
+                err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_dup");
+                goto fn_exit;
+            }
             lead_req->bufcount = bufcount;
         }
     }

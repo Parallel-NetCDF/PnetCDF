@@ -111,16 +111,20 @@ ncmpii_pack(int                ndims,
             if (lbuf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 #ifdef HAVE_MPI_LARGE_COUNT
             MPI_Count position=0;
-            MPI_Pack_c(buf, (MPI_Count)bufcount, buftype, lbuf,
-                       (MPI_Count)buf_size, &position, MPI_COMM_SELF);
+            mpireturn = MPI_Pack_c(buf, (MPI_Count)bufcount, buftype, lbuf,
+                                   (MPI_Count)buf_size, &position, MPI_COMM_SELF);
 #else
             int position=0;
             if (buf_size > NC_MAX_INT)
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
-            MPI_Pack(buf, (int)bufcount, buftype, lbuf, (int)buf_size,
-                     &position, MPI_COMM_SELF);
+            mpireturn = MPI_Pack(buf, (int)bufcount, buftype, lbuf,
+                                 (int)buf_size, &position, MPI_COMM_SELF);
 #endif
+            if (mpireturn != MPI_SUCCESS) {
+                err = ncmpii_error_mpi2nc(mpireturn, "MPI_Pack");
+                DEBUG_RETURN_ERROR(err)
+            }
         }
     }
 
@@ -134,7 +138,7 @@ ncmpii_pack(int                ndims,
 #ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count position=0;
         *cbuf = NCI_Malloc((size_t)buf_size);
-        MPI_Pack_c(lbuf, 1, imaptype, *cbuf, (MPI_Count)buf_size, &position,
+        mpireturn = MPI_Pack_c(lbuf, 1, imaptype, *cbuf, (MPI_Count)buf_size, &position,
                    MPI_COMM_SELF);
 #else
         int position=0;
@@ -142,9 +146,13 @@ ncmpii_pack(int                ndims,
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 
         *cbuf = NCI_Malloc((size_t)buf_size);
-        MPI_Pack(lbuf, 1, imaptype, *cbuf, (int)buf_size, &position,
+        mpireturn = MPI_Pack(lbuf, 1, imaptype, *cbuf, (int)buf_size, &position,
                  MPI_COMM_SELF);
 #endif
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Pack");
+            DEBUG_RETURN_ERROR(err)
+        }
         MPI_Type_free(&imaptype);
     }
     else /* reuse lbuf */

@@ -121,13 +121,18 @@ getput_vard(NC               *ncp,
 
 #ifdef HAVE_MPI_TYPE_GET_TRUE_EXTENT_C
     /* MPI_Type_get_true_extent_c is introduced in MPI 4.0 */
-    MPI_Type_get_true_extent_c(filetype, &true_lb, &true_extent);
+    mpireturn = MPI_Type_get_true_extent_c(filetype, &true_lb, &true_extent);
 #elif defined(HAVE_MPI_TYPE_GET_TRUE_EXTENT_X)
     /* MPI_Type_get_true_extent_x is introduced in MPI 3.0 */
-    MPI_Type_get_true_extent_x(filetype, &true_lb, &true_extent);
+    mpireturn = MPI_Type_get_true_extent_x(filetype, &true_lb, &true_extent);
 #else
-    MPI_Type_get_true_extent(filetype, &true_lb, &true_extent);
+    mpireturn = MPI_Type_get_true_extent(filetype, &true_lb, &true_extent);
 #endif
+    if (mpireturn != MPI_SUCCESS) {
+        err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_get_true_extent");
+        goto err_check;
+    }
+
     true_ub = true_lb + true_extent;
 
     /* get the corresponding MPI datatype of variable external type */
@@ -154,7 +159,11 @@ getput_vard(NC               *ncp,
     if (buftype == MPI_DATATYPE_NULL) {
         /* In this case, the request size is the same as filetype */
         buftype = etype = xtype;
-        MPI_Type_size(buftype, &el_size);
+        mpireturn = MPI_Type_size(buftype, &el_size);
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
+            goto err_check;
+        }
         bufcount = filetype_size / el_size;
         buftype_is_contig = 1;
         bnelems = bufcount;

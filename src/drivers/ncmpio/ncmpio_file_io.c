@@ -85,7 +85,14 @@ ncmpio_read_write(NC           *ncp,
 
         if (buf_count > NC_MAX_INT) {
 #ifdef HAVE_MPI_LARGE_COUNT
-            MPI_Type_contiguous_c((MPI_Count)buf_count, buf_type, &xbuf_type);
+            mpireturn = MPI_Type_contiguous_c((MPI_Count)buf_count, buf_type, &xbuf_type);
+            if (mpireturn != MPI_SUCCESS) {
+                err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous_c");
+                if (coll_indep == NC_REQ_COLL)
+                    DEBUG_ASSIGN_ERROR(status, err)
+                else
+                    DEBUG_RETURN_ERROR(err)
+            }
             MPI_Type_commit(&xbuf_type);
             xlen = 1;
 #else
@@ -103,7 +110,14 @@ ncmpio_read_write(NC           *ncp,
              * noncontiguous.
              */
             if (req_size > NC_MAX_INT) {
-                MPI_Type_contiguous((int)buf_count, buf_type, &xbuf_type);
+                mpireturn = MPI_Type_contiguous((int)buf_count, buf_type, &xbuf_type);
+                if (mpireturn != MPI_SUCCESS) {
+                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous");
+                    if (coll_indep == NC_REQ_COLL)
+                        DEBUG_ASSIGN_ERROR(status, err)
+                    else
+                        DEBUG_RETURN_ERROR(err)
+                }
                 MPI_Type_commit(&xbuf_type);
                 xlen = 1;
             }
@@ -165,13 +179,20 @@ ncmpio_read_write(NC           *ncp,
         if (xbuf != buf) { /* unpack contiguous xbuf to noncontiguous buf */
 #ifdef HAVE_MPI_LARGE_COUNT
             MPI_Count pos=0;
-            MPI_Unpack_c(xbuf, xlen, &pos, buf, (MPI_Count)buf_count, buf_type,
-                         MPI_COMM_SELF);
+            mpireturn = MPI_Unpack_c(xbuf, xlen, &pos, buf, (MPI_Count)buf_count,
+                                     buf_type, MPI_COMM_SELF);
 #else
             int pos=0;
-            MPI_Unpack(xbuf, xlen, &pos, buf, (int)buf_count, buf_type,
-                       MPI_COMM_SELF);
+            mpireturn = MPI_Unpack(xbuf, xlen, &pos, buf, (int)buf_count,
+                                   buf_type, MPI_COMM_SELF);
 #endif
+            if (mpireturn != MPI_SUCCESS) {
+                err = ncmpii_error_mpi2nc(mpireturn, "MPI_Unpack");
+                if (coll_indep == NC_REQ_COLL)
+                    DEBUG_ASSIGN_ERROR(status, err)
+                else
+                    DEBUG_RETURN_ERROR(err)
+            }
             NCI_Free(xbuf);
         }
         if (xbuf_type != buf_type && xbuf_type != MPI_BYTE)
@@ -183,7 +204,14 @@ ncmpio_read_write(NC           *ncp,
 
         if (buf_count > NC_MAX_INT) {
 #ifdef HAVE_MPI_LARGE_COUNT
-            MPI_Type_contiguous_c((MPI_Count)buf_count, buf_type, &xbuf_type);
+            mpireturn = MPI_Type_contiguous_c((MPI_Count)buf_count, buf_type, &xbuf_type);
+            if (mpireturn != MPI_SUCCESS) {
+                err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous_c");
+                if (coll_indep == NC_REQ_COLL)
+                    DEBUG_ASSIGN_ERROR(status, err)
+                else
+                    DEBUG_RETURN_ERROR(err)
+            }
             MPI_Type_commit(&xbuf_type);
             xlen = 1;
 #else
@@ -204,9 +232,23 @@ ncmpio_read_write(NC           *ncp,
 #ifdef HAVE_MPI_LARGE_COUNT
                 MPI_Count pos=0;
                 xbuf = NCI_Malloc(req_size);
-                MPI_Pack_c(buf, (MPI_Count)buf_count, buf_type, xbuf,
-                           (MPI_Count)req_size, &pos, MPI_COMM_SELF);
-                MPI_Type_contiguous_c((MPI_Count)req_size, MPI_BYTE, &xbuf_type);
+                mpireturn = MPI_Pack_c(buf, (MPI_Count)buf_count, buf_type, xbuf,
+                                       (MPI_Count)req_size, &pos, MPI_COMM_SELF);
+                if (mpireturn != MPI_SUCCESS) {
+                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_Pack_c");
+                    if (coll_indep == NC_REQ_COLL)
+                        DEBUG_ASSIGN_ERROR(status, err)
+                    else
+                        DEBUG_RETURN_ERROR(err)
+                }
+                mpireturn = MPI_Type_contiguous_c((MPI_Count)req_size, MPI_BYTE, &xbuf_type);
+                if (mpireturn != MPI_SUCCESS) {
+                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous_c");
+                    if (coll_indep == NC_REQ_COLL)
+                        DEBUG_ASSIGN_ERROR(status, err)
+                    else
+                        DEBUG_RETURN_ERROR(err)
+                }
                 MPI_Type_commit(&xbuf_type);
                 xlen = 1;
 #else
@@ -219,8 +261,15 @@ ncmpio_read_write(NC           *ncp,
                 int pos=0;
                 xlen = (int)req_size;
                 xbuf = NCI_Malloc(xlen);
-                MPI_Pack(buf, (int)buf_count, buf_type, xbuf, xlen, &pos,
-                         MPI_COMM_SELF);
+                mpireturn = MPI_Pack(buf, (int)buf_count, buf_type, xbuf,
+                                     xlen, &pos, MPI_COMM_SELF);
+                if (mpireturn != MPI_SUCCESS) {
+                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_Pack");
+                    if (coll_indep == NC_REQ_COLL)
+                        DEBUG_ASSIGN_ERROR(status, err)
+                    else
+                        DEBUG_RETURN_ERROR(err)
+                }
                 xbuf_type = MPI_BYTE;
             }
         }

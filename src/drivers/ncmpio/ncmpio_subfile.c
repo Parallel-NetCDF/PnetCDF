@@ -773,7 +773,9 @@ ncmpio_subfile_getput_vars(NC               *ncp,
 
 #ifdef SUBFILE_DEBUG
     MPI_Aint lb, extent;
-    MPI_Type_get_extent(buftype, &lb, &extent);
+    mpireturn = MPI_Type_get_extent(buftype, &lb, &extent);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_get_extent");
     printf("rank(%d): var(%s): ptype=0x%x, el_size=%d, bnelems=%d, buftype_is_contig=%d, lb=%d, extent=%d\n",
            myrank, varp->name, ptype, el_size, bnelems, buftype_is_contig, lb, extent);
 #endif
@@ -787,8 +789,10 @@ ncmpio_subfile_getput_vars(NC               *ncp,
         if (fIsSet(reqMode, NC_REQ_WR)) {
 #ifdef HAVE_MPI_LARGE_COUNT
             MPI_Count position=0;
-            MPI_Pack_c(buf, (MPI_Count)bufcount, buftype, cbuf,
-                       (MPI_Count)outsize, &position, MPI_COMM_SELF);
+            mpireturn = MPI_Pack_c(buf, (MPI_Count)bufcount, buftype, cbuf,
+                                   (MPI_Count)outsize, &position, MPI_COMM_SELF);
+            if (mpireturn != MPI_SUCCESS)
+                return ncmpii_error_mpi2nc(mpireturn, "MPI_Pack_c");
 #else
             int position=0;
             if (bufcount > NC_MAX_INT || outsize > NC_MAX_INT) {
@@ -796,8 +800,10 @@ ncmpio_subfile_getput_vars(NC               *ncp,
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             }
             else
-                MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)outsize,
-                         &position, MPI_COMM_SELF);
+                mpireturn = MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)outsize,
+                                     &position, MPI_COMM_SELF);
+                if (mpireturn != MPI_SUCCESS)
+                    return ncmpii_error_mpi2nc(mpireturn, "MPI_Pack");
 #endif
         }
     }

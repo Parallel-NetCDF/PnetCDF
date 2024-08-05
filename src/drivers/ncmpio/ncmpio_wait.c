@@ -339,6 +339,7 @@ construct_filetypes(NC           *ncp,
                     MPI_Datatype *filetype)  /* OUT */
 {
     int i, j, err, status=NC_NOERR, all_ftype_contig=1, last_contig_req;
+    int mpireturn;
     MPI_Datatype *ftypes;
 
     if (num_reqs <= 0) { /* for participating collective call */
@@ -463,13 +464,14 @@ construct_filetypes(NC           *ncp,
     else if (num_reqs == 1 && disps[0] == 0) {
         if (ftypes[0] == MPI_BYTE)
             *filetype = MPI_BYTE;
-        else
-            MPI_Type_dup(ftypes[0], filetype);
+        else {
+            mpireturn = MPI_Type_dup(ftypes[0], filetype);
+            if (mpireturn != MPI_SUCCESS)
+                err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_dup");
+        }
     }
     else { /* if (num_reqs > 1 || (num_reqs == 1 && disps[0] > 0)) */
         /* all ftypes[] created fine, now concatenate all ftypes[] */
-        int mpireturn;
-
         if (all_ftype_contig) {
 #ifdef HAVE_MPI_LARGE_COUNT
             mpireturn = MPI_Type_create_hindexed_c(num_reqs, blocklens, disps,

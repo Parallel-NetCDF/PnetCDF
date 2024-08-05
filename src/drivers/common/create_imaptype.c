@@ -56,7 +56,10 @@ ncmpii_create_imaptype(int               ndims,
         return NC_NOERR;
 
     /* itype: element data type (MPI primitive type) */
-    MPI_Type_size(itype, &el_size);
+    mpireturn = MPI_Type_size(itype, &el_size);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
+
 
     /* We have a true varm call, as imap gives non-contiguous layout.
      * User buffer will be packed (write case) or unpacked (read case)

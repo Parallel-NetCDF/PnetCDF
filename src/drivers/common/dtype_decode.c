@@ -351,9 +351,13 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
         }
         if (nelems_p)           *nelems_p = 1;
         if (ptype_p)            *ptype_p = ptype;
-        if (el_size_p)          MPI_Type_size(dtype, el_size_p);
         if (iscontig_of_ptypes) *iscontig_of_ptypes = 1;
         if (isderived_p)        *isderived_p = isderived;
+        if (el_size_p) {
+            mpireturn = MPI_Type_size(dtype, el_size_p);
+            if (mpireturn != MPI_SUCCESS)
+                return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
+        }
         return NC_NOERR;
     }
 
@@ -656,7 +660,10 @@ ncmpii_buftype_decode(int               ndims,
          * MPI datatype. This requirement has already been checked in
          * src/dispatchers/var_getput.m4
          */
-        MPI_Type_size(buftype, esize);
+        int mpireturn = MPI_Type_size(buftype, esize);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
+
         *etype    = buftype;
         *nelems   = fnelems;
         *xnbytes  = *nelems * xsz;

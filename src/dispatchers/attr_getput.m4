@@ -207,7 +207,10 @@ check_consistency_put(MPI_Comm      comm,
         /* for attributes, itype is nc_type, so its size is small. Thus, no
          * need to check against NC_MAX_INT.
          */
-        MPI_Type_size(itype, &itype_size);
+        mpireturn = MPI_Type_size(itype, &itype_size);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
+
         buf_size = root_nelems * itype_size;
 
         if (rank > 0) root_buf = (void*) NCI_Malloc(buf_size);
