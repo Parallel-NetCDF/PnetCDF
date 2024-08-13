@@ -52,7 +52,7 @@
  * collective read and write during ncmpi_wait/wait_all(). On some systems,
  * e.g. Cray KNL, using contiguous user buffers in collective I/O is much
  * faster than noncontiguous. */
-#define PNC_DEFAULT_IBUF_SIZE 16777216
+#define PNC_DEFAULT_IBUF_SIZE 0
 
 /* when variable's nctype is NC_CHAR, I/O buffer's MPI type must be MPI_CHAR
  * and vice versa */
