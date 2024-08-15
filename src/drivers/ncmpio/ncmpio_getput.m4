@@ -170,6 +170,7 @@ put_varm(NC               *ncp,
 
 if (need_convert) printf("Error at %s line %d: this version of PnetCDF does not support data type conversion !!!\n",__func__,__LINE__);
 /* force disable byte swap */ need_swap = 0;
+if (!buftype_is_contig) printf("Error at %s line %d: this version of PnetCDF does not support noncontiguous user buffer !!!\n",__func__,__LINE__);
 
     /* check if in-place byte swap can be enabled */
     can_swap_in_place = 1;

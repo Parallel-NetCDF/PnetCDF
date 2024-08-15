@@ -171,6 +171,7 @@ if (fIsSet(reqMode, NC_REQ_WR)) {
 if (need_convert) printf("Error at %s line %d: this version of PnetCDF does not support data type conversion !!!\n",__func__,__LINE__);
 /* force disable byte swap */ need_swap = 0;
 }
+if (!isContig) printf("Error at %s line %d: this version of PnetCDF does not support noncontiguous user buffer !!!\n",__func__,__LINE__);
 
     if (fIsSet(reqMode, NC_REQ_WR)) {
         /* check if in-place byte swap can be enabled */
