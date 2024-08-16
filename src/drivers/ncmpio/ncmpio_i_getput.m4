@@ -144,7 +144,7 @@ ncmpio_igetput_varm(NC               *ncp,
     void *xbuf=NULL;
     int i, err=NC_NOERR, abuf_index=-1, isize, xsize, new_nreqs, rem;
     int mpireturn, buftype_is_contig=1, need_convert, free_xbuf=0;
-    int need_swap, in_place_swap, need_swap_back_buf=0;
+    int need_swap, can_swap_in_place, need_swap_back_buf=0;
     MPI_Offset nelems=0, nbytes, *ptr;
     MPI_Datatype itype, xtype, imaptype;
     NC_lead_req *lead_req;
@@ -232,16 +232,15 @@ ncmpio_igetput_varm(NC               *ncp,
     need_convert = ncmpii_need_convert(ncp->format, varp->xtype, itype);
     need_swap    = NEED_BYTE_SWAP(varp->xtype, itype);
 
-    /* check if we can do byte swap in place */
-    if (fIsSet(ncp->flags, NC_MODE_SWAP_ON))
-        in_place_swap = 1;
-    else if (fIsSet(ncp->flags, NC_MODE_SWAP_OFF))
-        in_place_swap = 0;
-    else { /* mode is auto */
-        if (nbytes <= NC_BYTE_SWAP_BUFFER_SIZE)
-            in_place_swap = 0;
-        else
-            in_place_swap = 1;
+    /* check if in-place byte swap can be enabled */
+    can_swap_in_place = 1;
+    if (need_swap) {
+        if (! fIsSet(ncp->flags, NC_MODE_SWAP_OFF)) /* hint set by user */
+            can_swap_in_place = 0;
+        else if (! fIsSet(ncp->flags, NC_MODE_SWAP_ON)) { /* auto mode */
+            if (nbytes > NC_BYTE_SWAP_BUFFER_SIZE)
+                can_swap_in_place = 0;
+        }
     }
 
     /* check whether this is a true varm call, if yes, imaptype will be a
@@ -265,7 +264,7 @@ ncmpio_igetput_varm(NC               *ncp,
         }
         else {
             if (!buftype_is_contig || imaptype != MPI_DATATYPE_NULL ||
-                need_convert || (need_swap && in_place_swap == 0)) {
+                need_convert || (need_swap && can_swap_in_place == 0)) {
                 /* cannot use buf for I/O, must allocate xbuf */
                 xbuf = NCI_Malloc((size_t)nbytes);
                 free_xbuf = 1;

@@ -169,13 +169,13 @@ igetput_varn(NC                *ncp,
 
     if (fIsSet(reqMode, NC_REQ_WR)) {
         /* check if in-place byte swap can be enabled */
-        int in_place_swap = 0;
+        int can_swap_in_place = 1;
         if (need_swap) {
-            if (fIsSet(ncp->flags, NC_MODE_SWAP_ON))
-                in_place_swap = 1;
-            else if (! fIsSet(ncp->flags, NC_MODE_SWAP_OFF)) { /* auto mode */
+            if (! fIsSet(ncp->flags, NC_MODE_SWAP_OFF)) /* hint set by user */
+                can_swap_in_place = 0;
+            else if (! fIsSet(ncp->flags, NC_MODE_SWAP_ON)) { /* auto mode */
                 if (nbytes > NC_BYTE_SWAP_BUFFER_SIZE)
-                    in_place_swap = 1;
+                    can_swap_in_place = 0;
             }
         }
 
@@ -195,7 +195,7 @@ igetput_varn(NC                *ncp,
             err = ncmpio_abuf_malloc(ncp, nbytes, &xbuf, &abuf_index);
             if (err != NC_NOERR) goto fn_exit;
         }
-        else if (!need_convert && in_place_swap && isContig) {
+        else if (!need_convert && can_swap_in_place && isContig) {
             /* reuse buf and break it into multiple vara requests */
             xbuf = buf;
             if (need_swap) need_swap_back_buf = 1;

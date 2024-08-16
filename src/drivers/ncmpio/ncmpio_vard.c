@@ -194,17 +194,19 @@ getput_vard(NC               *ncp,
     need_swap    = NEED_BYTE_SWAP(varp->xtype, etype);
 
     if (fIsSet(reqMode, NC_REQ_WR)) {
-        int in_place_swap = 0;
+        /* check if in-place byte swap can be enabled */
+        int can_swap_in_place = 1;
         if (need_swap) {
-            if (fIsSet(ncp->flags, NC_MODE_SWAP_ON))
-                in_place_swap = 1;
-            else if (! fIsSet(ncp->flags, NC_MODE_SWAP_OFF)) { /* auto mode */
+            if (! fIsSet(ncp->flags, NC_MODE_SWAP_OFF)) /* hint set by user */
+                can_swap_in_place = 0;
+            else if (! fIsSet(ncp->flags, NC_MODE_SWAP_ON)) { /* auto mode */
                 if (filetype_size > NC_BYTE_SWAP_BUFFER_SIZE)
-                    in_place_swap = 1;
+                    can_swap_in_place = 0;
             }
         }
+
         if (!need_convert &&
-            (!need_swap || (in_place_swap && buftype_is_contig))) {
+            (!need_swap || (can_swap_in_place && buftype_is_contig))) {
             /* reuse buftype, bufcount, buf in later MPI file write */
             xbuf = buf;
             if (need_swap) {
