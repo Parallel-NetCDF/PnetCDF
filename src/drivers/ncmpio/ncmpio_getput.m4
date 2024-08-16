@@ -117,8 +117,8 @@ put_varm(NC               *ncp,
 {
     void *xbuf=NULL;
     int mpireturn, err=NC_NOERR, status=NC_NOERR, buftype_is_contig;
-    int el_size, need_convert, need_swap, in_place_swap, need_swap_back_buf=0;
-    int coll_indep, xtype_is_contig=1;
+    int el_size, need_convert, need_swap, need_swap_back_buf=0;
+    int coll_indep, xtype_is_contig=1, can_swap_in_place;
     MPI_Offset nelems=0, bnelems=0, nbytes=0, offset=0;
     MPI_Datatype itype, xtype=MPI_BYTE, imaptype, filetype=MPI_BYTE;
     MPI_File fh;
@@ -168,13 +168,14 @@ put_varm(NC               *ncp,
     need_convert = ncmpii_need_convert(ncp->format, varp->xtype, itype);
     need_swap    = NEED_BYTE_SWAP(varp->xtype, itype);
 
-    in_place_swap = 0;
+    /* check if in-place byte swap can be enabled */
+    can_swap_in_place = 1;
     if (need_swap) {
-        if (fIsSet(ncp->flags, NC_MODE_SWAP_ON))
-            in_place_swap = 1;
-        else if (! fIsSet(ncp->flags, NC_MODE_SWAP_OFF)) { /* auto mode */
+        if (! fIsSet(ncp->flags, NC_MODE_SWAP_OFF)) /* hint set by user */
+            can_swap_in_place = 0;
+        else if (! fIsSet(ncp->flags, NC_MODE_SWAP_ON)) { /* auto mode */
             if (nbytes > NC_BYTE_SWAP_BUFFER_SIZE)
-                in_place_swap = 1;
+                can_swap_in_place = 0;
         }
     }
 
@@ -185,7 +186,7 @@ put_varm(NC               *ncp,
     if (err != NC_NOERR) goto err_check;
 
     if (!need_convert && imaptype == MPI_DATATYPE_NULL &&
-        (!need_swap || (in_place_swap && buftype_is_contig))) {
+        (!need_swap || (can_swap_in_place && buftype_is_contig))) {
         /* reuse buftype, bufcount, buf in later MPI file write */
         xbuf = buf;
         if (need_swap) {
