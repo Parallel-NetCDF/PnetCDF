@@ -8,7 +8,10 @@ This is essentially a placeholder for the next release note ...
     See [PR #145](https://github.com/Parallel-NetCDF/PnetCDF/pull/145).
 
 * New optimization
-  + none
+  + When running sequentially (i.e. number of processes is 1), PnetCDF calls
+    the MPI independent I/O functions and avoids calls to MPI_Barrier,
+    MPI_Bcast, and MPI_Allreduce.
+    See [PR #149](https://github.com/Parallel-NetCDF/PnetCDF/pull/149).
 
 * New Limitations
   + none
