@@ -376,9 +376,10 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
         return ncmpii_error_mpi2nc(MPI_ERR_IO, "MPI_Type_get_contents_c");
 #endif
     }
-    else {
-        mpireturn = MPI_Type_get_contents(dtype, num_ints, num_adds, num_dtypes,
-                                          array_of_ints, array_of_adds, array_of_dtypes);
+    else { /* dtype is not a large datatype */
+        mpireturn = MPI_Type_get_contents(dtype, (int)num_ints, (int)num_adds,
+                                          (int)num_dtypes, array_of_ints,
+                                          array_of_adds, array_of_dtypes);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Type_get_contents");
     }
