@@ -1102,8 +1102,14 @@ err_check:
          * ncmpix_pad_putn_<type>() advances the first argument with nelems
          * elements. Note that attrp->xvalue is malloc-ed with a buffer of
          * size that is aligned with a 4-byte boundary.
+         *
+         * compiled with clang may generate a runtime error: store to
+         * misaligned address 0x7ffce60eb70c for type 'double', which requires
+         * 8 byte alignment. Instead declare a buffer of 8 bytes, such as
+         *     unsigned char fill[8];
+         * here we use a double to silence this error.
          */
-        unsigned char fill[8]; /* fill value in internal representation */
+        double fill; /* fill value in internal representation */
         void *xp = attrp->xvalue;
 
         if (itype == MPI_CHAR) {
