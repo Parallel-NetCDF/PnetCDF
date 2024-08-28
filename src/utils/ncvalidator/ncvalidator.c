@@ -2446,6 +2446,8 @@ fn_exit:
 
 /* End Of get NC */
 
+#ifndef BUILD_CDFDIFF
+
 /* File system types recognized by ROMIO in MPICH 4.0.0 */
 static const char* fstypes[] = {"ufs", "nfs", "xfs", "pvfs2", "gpfs", "panfs", "lustre", "daos", "testfs", "ime", "quobyte", NULL};
 
@@ -2543,7 +2545,6 @@ check_signature(char *filename)
     return NC_FORMAT_UNKNOWN;
 }
 
-#ifndef BUILD_CDFDIFF
 static void
 usage(char *argv0)
 {
