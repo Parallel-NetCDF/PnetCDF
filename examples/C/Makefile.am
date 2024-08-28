@@ -18,6 +18,7 @@ check_PROGRAMS = collective_write \
                  column_wise \
                  block_cyclic \
                  flexible_api \
+                 flexible_bottom \
                  get_info \
                  hints \
                  mput \
@@ -30,6 +31,7 @@ check_PROGRAMS = collective_write \
                  transpose \
                  transpose2D \
                  vard_int \
+                 vard_bottom \
                  i_varn_int64 \
                  bput_varn_uint \
                  bput_varn_int64 \

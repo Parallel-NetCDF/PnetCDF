@@ -60,7 +60,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New example programs
-  + none
+  + C/flexible_bottom.c and C/vard_bottom.c - These two examples construct MPI
+    derived data types using absolute memory addresses first and use MPI_BOTTOM
+    when calling the PnetCDF flexible APIs.
 
 * New programs for I/O benchmarks
   + none
