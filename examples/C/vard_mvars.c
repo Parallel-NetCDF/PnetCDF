@@ -187,7 +187,7 @@ int main(int argc, char **argv)
     array_of_displacements[0] = 0;
     MPI_Get_address(buf[0], &a0);
     MPI_Get_address(buf[1], &a1);
-    array_of_displacements[1] = a1 - a0;
+    array_of_displacements[1] = MPI_Aint_diff(a1, a0);
     vtype[0] = vtype[1] = MPI_INT;
     MPI_Type_create_struct(2, array_of_blocklengths, array_of_displacements,
                            vtype, &buftype);
