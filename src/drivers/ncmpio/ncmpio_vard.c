@@ -296,12 +296,12 @@ err_check:
     }
     status = err;
 
-    if (fIsSet(reqMode, NC_REQ_COLL)) {
+    /* when ncp->nprocs == 1, ncp->collective_fh == ncp->independent_fh */
+    fh = ncp->independent_fh;
+    coll_indep = NC_REQ_INDEP;
+    if (ncp->nprocs > 1 && fIsSet(reqMode, NC_REQ_COLL)) {
         fh = ncp->collective_fh;
         coll_indep = NC_REQ_COLL;
-    } else {
-        fh = ncp->independent_fh;
-        coll_indep = NC_REQ_INDEP;
     }
 
     /* set the MPI-IO fileview, this is a collective call */
@@ -357,12 +357,14 @@ err_check:
                 /* new_numrecs may be different among processes.
                  * First, find the max numrecs among all processes.
                  */
-                MPI_Offset max_numrecs;
-                TRACE_COMM(MPI_Allreduce)(&new_numrecs, &max_numrecs, 1,
-                                          MPI_OFFSET, MPI_MAX, ncp->comm);
-                if (mpireturn != MPI_SUCCESS) {
-                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
-                    if (status == NC_NOERR) status = err;
+                MPI_Offset max_numrecs = new_numrecs;
+                if (ncp->nprocs > 1) {
+                    TRACE_COMM(MPI_Allreduce)(&new_numrecs, &max_numrecs, 1,
+                                              MPI_OFFSET, MPI_MAX, ncp->comm);
+                    if (mpireturn != MPI_SUCCESS) {
+                        err = ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
+                        if (status == NC_NOERR) status = err;
+                    }
                 }
                 /* In collective mode, ncp->numrecs is always sync-ed among
                    processes */

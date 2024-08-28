@@ -293,8 +293,10 @@ ncmpio_create(MPI_Comm     comm,
     ncp->comm           = comm;  /* reuse comm duplicated in dispatch layer */
     ncp->mpiinfo        = info_used; /* is not MPI_INFO_NULL */
     ncp->mpiomode       = mpiomode;
+    ncp->rank           = rank;
+    ncp->nprocs         = nprocs;
     ncp->collective_fh  = fh;
-    ncp->independent_fh = MPI_FILE_NULL;
+    ncp->independent_fh = (nprocs > 1) ? MPI_FILE_NULL : fh;
     ncp->path = (char*) NCI_Malloc(strlen(path) + 1);
     strcpy(ncp->path, path);
 

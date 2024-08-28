@@ -40,6 +40,8 @@ ncmpio_file_sync(NC *ncp) {
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_File_sync");
     }
+    /* when nprocs == 1, ncp->collective_fh == ncp->independent_fh */
+    if (ncp->nprocs == 1) return NC_NOERR;
 
     /* ncp->collective_fh is never MPI_FILE_NULL as collective mode is
      * default in PnetCDF */
@@ -47,7 +49,9 @@ ncmpio_file_sync(NC *ncp) {
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_error_mpi2nc(mpireturn, "MPI_File_sync");
 
+    /* Barrier is not necessary ...
     TRACE_COMM(MPI_Barrier)(ncp->comm);
+     */
 
     return NC_NOERR;
 }
@@ -76,9 +80,9 @@ ncmpio_write_numrecs(NC         *ncp,
     /* return now if there is no record variabled defined */
     if (ncp->vars.num_rec_vars == 0) return NC_NOERR;
 
-    fh = ncp->collective_fh;
-    if (NC_indep(ncp))
-        fh = ncp->independent_fh;
+    fh = ncp->independent_fh;
+    if (ncp->nprocs > 1 && !NC_indep(ncp))
+        fh = ncp->collective_fh;
 
     if (rank > 0 && fIsSet(ncp->flags, NC_HCOLL)) {
         /* other processes participate the collective call */
@@ -115,7 +119,7 @@ ncmpio_write_numrecs(NC         *ncp,
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
         /* root's file view always includes the entire file header */
-        if (fIsSet(ncp->flags, NC_HCOLL))
+        if (fIsSet(ncp->flags, NC_HCOLL) && ncp->nprocs > 1)
             TRACE_IO(MPI_File_write_at_all)(fh, NC_NUMRECS_OFFSET, (void*)pos,
                                             len, MPI_BYTE, &mpistatus);
         else
@@ -183,15 +187,18 @@ ncmpio_sync_numrecs(void *ncdp)
     /* find the max numrecs among all processes
      * Note max numrecs may be smaller than some process's ncp->numrecs
      */
-    TRACE_COMM(MPI_Allreduce)(&ncp->numrecs, &max_numrecs, 1, MPI_OFFSET,
-                              MPI_MAX, ncp->comm);
-    if (mpireturn != MPI_SUCCESS)
-        return ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
+    max_numrecs = ncp->numrecs;
+    if (ncp->nprocs > 1) {
+        TRACE_COMM(MPI_Allreduce)(&ncp->numrecs, &max_numrecs, 1, MPI_OFFSET,
+                                  MPI_MAX, ncp->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
+    }
 
     /* root process writes max_numrecs to file */
     status = ncmpio_write_numrecs(ncp, max_numrecs);
 
-    if (ncp->safe_mode == 1) {
+    if (ncp->nprocs > 1 && ncp->safe_mode == 1) {
         /* broadcast root's status, because only root writes to the file */
         int root_status = status;
         TRACE_COMM(MPI_Bcast)(&root_status, 1, MPI_INT, 0, ncp->comm);

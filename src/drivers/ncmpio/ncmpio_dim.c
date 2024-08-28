@@ -346,10 +346,10 @@ ncmpio_rename_dim(void       *ncdp,
 #endif
 
 err_check:
-    if (ncp->safe_mode) {
+    if (ncp->safe_mode && ncp->nprocs > 1) {
+        /* check the error so far across processes */
         int status, mpireturn;
 
-        /* check the error so far across processes */
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN,ncp->comm);
         if (mpireturn != MPI_SUCCESS) {
             NCI_Free(nnewname);

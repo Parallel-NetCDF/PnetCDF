@@ -39,13 +39,16 @@ move_file_block(NC         *ncp,
                 MPI_Offset  from,   /* source file starting offset */
                 MPI_Offset  nbytes) /* amount to be moved */
 {
-    int rank, nprocs, bufcount, mpireturn, err, status=NC_NOERR, min_st;
+    int rank, bufcount, mpireturn, err, status=NC_NOERR, min_st;
     void *buf;
     size_t chunk_size;
     MPI_Status mpistatus;
+    MPI_File fh;
 
-    MPI_Comm_size(ncp->comm, &nprocs);
-    MPI_Comm_rank(ncp->comm, &rank);
+    rank = ncp->rank;
+
+    /* moving file blocks must be done in collective mode, ignoring NC_HCOLL */
+    fh = ncp->collective_fh;
 
     /* Divide amount nbytes among all processes. If the divided amount,
      * chunk_size, is larger then MOVE_UNIT, set chunk_size to be the move unit
@@ -53,8 +56,8 @@ move_file_block(NC         *ncp,
      * use 4-byte int in their count argument.)
      */
 #define MOVE_UNIT 67108864
-    chunk_size = nbytes / nprocs;
-    if (nbytes % nprocs) chunk_size++;
+    chunk_size = nbytes / ncp->nprocs;
+    if (nbytes % ncp->nprocs) chunk_size++;
     if (chunk_size > MOVE_UNIT) {
         /* move data in multiple rounds, MOVE_UNIT per process at a time */
         chunk_size = MOVE_UNIT;
@@ -66,8 +69,8 @@ move_file_block(NC         *ncp,
     if (buf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* make fileview entire file visible */
-    TRACE_IO(MPI_File_set_view)(ncp->collective_fh, 0, MPI_BYTE, MPI_BYTE,
-                                "native", MPI_INFO_NULL);
+    TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
+                                MPI_INFO_NULL);
 
     /* move the variable starting from its tail toward its beginning */
     while (nbytes > 0) {
@@ -77,7 +80,7 @@ move_file_block(NC         *ncp,
          * checked, must be < NC_MAX_INT
          */
         bufcount = (int)chunk_size;
-        if (nbytes < (MPI_Offset)nprocs * chunk_size) {
+        if (nbytes < (MPI_Offset)ncp->nprocs * chunk_size) {
             /* handle the last group of chunks */
             MPI_Offset rem_chunks = nbytes / chunk_size;
             if (rank > rem_chunks) /* these processes do not read/write */
@@ -88,7 +91,7 @@ move_file_block(NC         *ncp,
             nbytes = 0;
         }
         else {
-            nbytes -= chunk_size*nprocs;
+            nbytes -= chunk_size*ncp->nprocs;
         }
 
         /* explicitly initialize mpistatus object to 0. For zero-length read,
@@ -99,8 +102,7 @@ move_file_block(NC         *ncp,
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
         /* read the original data @ from+nbytes+rank*chunk_size */
-        TRACE_IO(MPI_File_read_at_all)(ncp->collective_fh,
-                                       from+nbytes+rank*chunk_size,
+        TRACE_IO(MPI_File_read_at_all)(fh, from+nbytes+rank*chunk_size,
                                        buf, bufcount, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at_all");
@@ -128,11 +130,13 @@ move_file_block(NC         *ncp,
             ncp->get_size += get_size;
         }
 
-        /* MPI_Barrier(ncp->comm); */
-        /* important, in case new region overlaps old region */
-        TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN,
-                                  ncp->comm);
-        status = min_st;
+        if (ncp->nprocs > 1) {
+            /* MPI_Barrier(ncp->comm); */
+            /* important, in case new region overlaps old region */
+            TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN,
+                                      ncp->comm);
+            status = min_st;
+        }
         if (status != NC_NOERR) break;
 
         /* write to new location @ to+nbytes+rank*chunk_size
@@ -159,8 +163,7 @@ move_file_block(NC         *ncp,
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
-        TRACE_IO(MPI_File_write_at_all)(ncp->collective_fh,
-                                        to+nbytes+rank*chunk_size,
+        TRACE_IO(MPI_File_write_at_all)(fh, to+nbytes+rank*chunk_size,
                                         buf, get_size /* NOT bufcount */,
                                         MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
@@ -180,8 +183,10 @@ move_file_block(NC         *ncp,
             else
                 ncp->put_size += put_size;
         }
-        TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->comm);
-        status = min_st;
+        if (ncp->nprocs > 1) {
+            TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->comm);
+            status = min_st;
+        }
         if (status != NC_NOERR) break;
     }
     NCI_Free(buf);
@@ -269,8 +274,10 @@ NC_begins(NC *ncp)
     MPI_Comm_rank(ncp->comm, &rank);
     ncp->xsz = ncmpio_hdr_len_NC(ncp);
 
-    if (ncp->safe_mode) { /* this consistency check is redundant as metadata is
-                             kept consistent at all time when safe mode is on */
+    if (ncp->safe_mode && ncp->nprocs > 1) {
+        /* this consistency check is redundant as metadata is kept consistent
+         * at all time when safe mode is on
+         */
         int err, status;
         MPI_Offset root_xsz = ncp->xsz;
 
@@ -477,13 +484,21 @@ NC_begins(NC *ncp)
 static int
 write_NC(NC *ncp)
 {
-    int status=NC_NOERR, mpireturn, err, rank;
+    int status=NC_NOERR, mpireturn, err, rank, is_coll;
     MPI_Offset i, header_wlen, ntimes;
+    MPI_File fh;
     MPI_Status mpistatus;
 
     assert(!NC_readonly(ncp));
 
     MPI_Comm_rank(ncp->comm, &rank);
+
+    /* Depending on whether NC_HCOLL is set, writing file header can be done
+     * through either MPI collective or independent write call.
+     * When * ncp->nprocs == 1, ncp->collective_fh == ncp->independent_fh
+     */
+    is_coll = (ncp->nprocs > 1 && fIsSet(ncp->flags, NC_HCOLL)) ? 1 : 0;
+    fh = ncp->collective_fh;
 
     /* In NC_begins(), root's ncp->xsz and ncp->begin_var, root's header
      * size and extent, have been broadcast (sync-ed) among processes.
@@ -554,12 +569,12 @@ write_NC(NC *ncp)
         buf_ptr = buf;
         for (i=0; i<ntimes; i++) {
             int bufCount = (int) MIN(remain, NC_MAX_INT);
-            if (fIsSet(ncp->flags, NC_HCOLL))
-                TRACE_IO(MPI_File_write_at_all)(ncp->collective_fh, offset, buf_ptr,
-                                                bufCount, MPI_BYTE, &mpistatus);
+            if (is_coll)
+                TRACE_IO(MPI_File_write_at_all)(fh, offset, buf_ptr, bufCount,
+                                                MPI_BYTE, &mpistatus);
             else
-                TRACE_IO(MPI_File_write_at)(ncp->collective_fh, offset, buf_ptr,
-                                            bufCount, MPI_BYTE, &mpistatus);
+                TRACE_IO(MPI_File_write_at)(fh, offset, buf_ptr, bufCount,
+                                            MPI_BYTE, &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
                 /* write has failed, which is more serious than inconsistency */
@@ -586,12 +601,12 @@ write_NC(NC *ncp)
     else if (fIsSet(ncp->flags, NC_HCOLL)) {
         /* other processes participate the collective call */
         for (i=0; i<ntimes; i++)
-            TRACE_IO(MPI_File_write_at_all)(ncp->collective_fh, 0, NULL,
-                                            0, MPI_BYTE, &mpistatus);
+            TRACE_IO(MPI_File_write_at_all)(fh, 0, NULL, 0, MPI_BYTE,
+                                            &mpistatus);
     }
 
 fn_exit:
-    if (ncp->safe_mode == 1) {
+    if (ncp->safe_mode == 1 && ncp->nprocs > 1) {
         /* broadcast root's status, because only root writes to the file */
         int root_status = status;
         TRACE_COMM(MPI_Bcast)(&root_status, 1, MPI_INT, 0, ncp->comm);
@@ -611,7 +626,7 @@ fn_exit:
  * do not get error and proceed to the next subroutine call.
  */
 #define CHECK_ERROR(err) {                                              \
-    if (ncp->safe_mode == 1) {                                          \
+    if (ncp->safe_mode == 1 && ncp->nprocs > 1) {                       \
         int status;                                                     \
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN,   \
                                   ncp->comm);                           \

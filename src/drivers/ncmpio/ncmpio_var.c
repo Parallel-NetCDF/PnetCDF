@@ -415,10 +415,10 @@ ncmpio_def_var(void       *ncdp,
     ncp->vars.ndefined++;
 
 err_check:
-    if (ncp->safe_mode) {
+    if (ncp->safe_mode && ncp->nprocs > 1) {
         int minE, mpireturn;
 
-        /* first check the error code across processes */
+        /* First check the error code across processes */
         TRACE_COMM(MPI_Allreduce)(&err, &minE, 1, MPI_INT, MPI_MIN, ncp->comm);
         if (mpireturn != MPI_SUCCESS) {
             if (nname != NULL) NCI_Free(nname);
@@ -600,7 +600,7 @@ ncmpio_rename_var(void       *ncdp,
 #endif
 
 err_check:
-    if (ncp->safe_mode) {
+    if (ncp->safe_mode && ncp->nprocs > 1) {
         int minE, mpireturn;
 
         /* First check error code so far across processes */
