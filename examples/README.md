@@ -70,7 +70,7 @@ with C, C++, F77, and F90 versions.
   ```
 
 * flexible_api
-  + ./C/flexible_api.c
+  + ./C/flexible_api.c ./C/flexible_bottom.c ./C/vard_bottom.c
   + ./CXX/flexible_api.cpp
   + ./F77/flexible_api.f
   + ./F90/flexible_api.f90

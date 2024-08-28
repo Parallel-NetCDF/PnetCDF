@@ -1,13 +1,17 @@
 /*********************************************************************
  *
- *  Copyright (C) 2018, Northwestern University and Argonne National Laboratory
+ *  Copyright (C) 2024, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  *
  *********************************************************************/
-/* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This program shows how to use a single vard API call to write or read two
+ * This program is basically the same as example program vard_mvars.c, but
+ * instead of using user buffer pointer when calling the vard APIs, it
+ * constructs an MPI derived data type using absolute memory addresses and
+ * uses MPI_BOTTOM in the call to vard APIs.
+ *
+ * It shows how to use a single vard API call to write or read two
  * consecutive variables. This example uses two MPI datatype constructors,
  * MPI_Type_create_subarray and MPI_Type_create_hindexed, to create the same
  * subarray view for two variables, but with different lower and upper bound
@@ -147,7 +151,7 @@ int main(int argc, char **argv)
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     int          array_of_blocklengths[NY];
     MPI_Offset   recsize, offset[2];
-    MPI_Aint     a0, a1, array_of_displacements[NY];
+    MPI_Aint     array_of_displacements[NY];
     MPI_Datatype buftype, vtype[2], filetype;
 
     MPI_Init(&argc, &argv);
@@ -184,10 +188,8 @@ int main(int argc, char **argv)
     /* construct buftype: concatenate two separated buffers */
     array_of_blocklengths[0] = NY*NX;
     array_of_blocklengths[1] = NY*NX;
-    array_of_displacements[0] = 0;
-    MPI_Get_address(buf[0], &a0);
-    MPI_Get_address(buf[1], &a1);
-    array_of_displacements[1] = MPI_Aint_diff(a1, a0);
+    MPI_Get_address(buf[0], &array_of_displacements[0]);
+    MPI_Get_address(buf[1], &array_of_displacements[1]);
     vtype[0] = vtype[1] = MPI_INT;
     MPI_Type_create_struct(2, array_of_blocklengths, array_of_displacements,
                            vtype, &buftype);
@@ -258,7 +260,7 @@ int main(int argc, char **argv)
     MPI_Type_commit(&filetype);
 
     /* write 2 consecutive fixed-size variables in a single vard call */
-    err = ncmpi_put_vard_all(ncid, varid[0], filetype, buf[0], 1, buftype); ERR
+    err = ncmpi_put_vard_all(ncid, varid[0], filetype, MPI_BOTTOM, 1, buftype); ERR
 
     /* check if the contents of write buffers are altered */
     CHECK_VALUE(buf[0], 0)
@@ -268,7 +270,7 @@ int main(int argc, char **argv)
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[1][j*NX+i] = -1;
 
     /* read back fixed-size variables */
-    err = ncmpi_get_vard_all(ncid, varid[0], filetype, buf[0], 1, buftype); ERR
+    err = ncmpi_get_vard_all(ncid, varid[0], filetype, MPI_BOTTOM, 1, buftype); ERR
 
     /* check the contents of read buffers */
     CHECK_VALUE(buf[0], 0)
@@ -304,7 +306,7 @@ int main(int argc, char **argv)
         buf[1][j*NX+i] = 3000 + rank*100 + j*10 + i;
 
     /* write 2 consecutive record variables in a single call to vard API */
-    err = ncmpi_put_vard_all(ncid, varid[2], filetype, buf[0], 1, buftype); ERR
+    err = ncmpi_put_vard_all(ncid, varid[2], filetype, MPI_BOTTOM, 1, buftype); ERR
 
     /* check if the contents of write buffers are altered */
     CHECK_VALUE(buf[0], 2000)
@@ -314,7 +316,7 @@ int main(int argc, char **argv)
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[1][j*NX+i] = -1;
 
     /* read back record variables */
-    err = ncmpi_get_vard_all(ncid, varid[2], filetype, buf[0], 1, buftype); ERR
+    err = ncmpi_get_vard_all(ncid, varid[2], filetype, MPI_BOTTOM, 1, buftype); ERR
 
     /* check the contents of read buffers */
     CHECK_VALUE(buf[0], 2000)

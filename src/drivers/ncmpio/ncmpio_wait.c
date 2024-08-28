@@ -569,7 +569,7 @@ construct_buffertypes(NC_lead_req  *lead_list,
 
         MPI_Get_address(reqs[i].xbuf, &ai);
         if (j == 0) a0 = ai;
-        disps[j] = ai - a0;
+        disps[j] = MPI_Aint_diff(ai, a0);
         j++;
     }
     /* update num_reqs to number of valid requests */
@@ -1421,7 +1421,7 @@ merge_requests(NC          *ncp,
 
         /* buf_addr is the buffer address of the first valid request */
         MPI_Get_address(reqs[i].xbuf, &addr);
-        addr -= buf_addr,  /* distance to the buf of first req */
+        addr = MPI_Aint_diff(addr, buf_addr);  /* distance to the buf of first req */
 
         ndims = lead->varp->ndims;
         if (ndims > 0) {
@@ -1478,15 +1478,15 @@ merge_requests(NC          *ncp,
 
         MPI_Offset gap = (*segs)[i].off + (*segs)[i].len - (*segs)[j].off;
         if (gap >= 0) { /* segments i and j overlaps */
-            if ((*segs)[i].buf_addr + (*segs)[i].len ==
-                (*segs)[j].buf_addr + gap) {
+            if (MPI_Aint_add((*segs)[i].buf_addr, (*segs)[i].len) ==
+                MPI_Aint_add((*segs)[j].buf_addr, gap)) {
                 /* buffers i and j are contiguous, merge j to i */
-                (*segs)[i].len += (*segs)[j].len - gap;
+                (*segs)[i].len = MPI_Aint_add((*segs)[i].len, (*segs)[j].len - gap);
             }
             else { /* buffers are not contiguous, reduce j's len */
                 (*segs)[i+1].off      = (*segs)[j].off + gap;
                 (*segs)[i+1].len      = (*segs)[j].len - gap;
-                (*segs)[i+1].buf_addr = (*segs)[j].buf_addr + gap;
+                (*segs)[i+1].buf_addr = MPI_Aint_add((*segs)[j].buf_addr, gap);
                 i++;
             }
         }
@@ -1959,7 +1959,7 @@ req_aggregation(NC     *ncp,
         if (i > 0) {
             /* get the buffer address of the first request in this group */
             MPI_Get_address(g_reqs[0].xbuf, &b_addr);
-            b_disps[i] = b_addr - b_begin; /* to 1st buffer of 1st group*/
+            b_disps[i] = MPI_Aint_diff(b_addr, b_begin); /* to 1st buffer of 1st group*/
         }
         b_blocklens[i] = 1;
     }
@@ -2374,12 +2374,12 @@ mgetput(NC     *ncp,
                 a_last_contig = a0 = ai;
                 buf = reqs[i].xbuf;
             }
-            disps[j] = ai - a0;
+            disps[j] = MPI_Aint_diff(ai, a0);
 
             req_size = blocklens[last_contig_req];
             req_size += blocklens[j];
 #ifdef HAVE_MPI_LARGE_COUNT
-            if (ai - a_last_contig == blocklens[last_contig_req]) {
+            if (MPI_Aint_diff(ai, a_last_contig) == blocklens[last_contig_req]) {
                 /* user buffer of request j is contiguous from j-1
                  * we coalesce j to j-1 */
                 blocklens[last_contig_req] += blocklens[j];
@@ -2387,7 +2387,7 @@ mgetput(NC     *ncp,
 #else
             /* if req_size overflows 4-byte int, then skip coalescing */
             if (req_size <= NC_MAX_INT &&
-                ai - a_last_contig == blocklens[last_contig_req]) {
+                MPI_Aint_diff(ai,- a_last_contig) == blocklens[last_contig_req]) {
                 /* user buffer of request j is contiguous from j-1
                  * we coalesce j to j-1 */
                 blocklens[last_contig_req] += blocklens[j];
@@ -2397,7 +2397,7 @@ mgetput(NC     *ncp,
                 /* not contiguous from request last_contig_req */
                 last_contig_req++;
                 a_last_contig = ai;
-                disps[last_contig_req] = ai - a0;
+                disps[last_contig_req] = MPI_Aint_diff(ai, a0);
                 blocklens[last_contig_req] = blocklens[i];
             }
             j++;
