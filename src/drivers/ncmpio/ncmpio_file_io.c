@@ -128,7 +128,7 @@ ncmpio_read_write(NC           *ncp,
             xbuf = NCI_Malloc((size_t)req_size);
         }
 
-        if (coll_indep == NC_REQ_COLL) {
+        if (ncp->nprocs > 1 && coll_indep == NC_REQ_COLL) {
             TRACE_IO(MPI_File_read_at_all)(fh, offset, xbuf, xlen, xbuf_type,
                                            &mpistatus);
             if (mpireturn != MPI_SUCCESS) {
@@ -274,7 +274,7 @@ ncmpio_read_write(NC           *ncp,
             }
         }
 
-        if (coll_indep == NC_REQ_COLL) {
+        if (ncp->nprocs > 1 && coll_indep == NC_REQ_COLL) {
             TRACE_IO(MPI_File_write_at_all)(fh, offset, xbuf, xlen, xbuf_type,
                                             &mpistatus);
             if (mpireturn != MPI_SUCCESS) {

@@ -31,16 +31,6 @@
 #include <ncx.h>
 #include "ncmpio_NC.h"
 
-#define CHECK_ERROR(status) {                                                \
-    if (ncp->safe_mode == 1) {                                               \
-        int g_status;                                                        \
-        TRACE_COMM(MPI_Allreduce)(&status, &g_status, 1, MPI_INT, MPI_MIN,   \
-                                  ncp->comm);                                \
-        if (g_status != NC_NOERR) return g_status;                           \
-    }                                                                        \
-    else if (status != NC_NOERR)                                             \
-        return status;                                                       \
-}
 
 /* The default fill values defined in pnetcdf.h.inc must be the same as the
  * ones defined in netCDF-4 and match the hexadecimal values set below
@@ -201,6 +191,7 @@ fill_var_rec(NC         *ncp,
         offset += ncp->recsize * recno;
     offset += start * varp->xsz;
 
+    /* when nprocs == 1, we keep I/O mode in independent mode at all time */
     fh = ncp->collective_fh;
 
     /* make the entire file visible */
@@ -231,7 +222,11 @@ fill_var_rec(NC         *ncp,
     }
 
     /* write to variable collectively */
-    TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, (int)count, bufType,
+    if (ncp->nprocs > 1)
+        TRACE_IO(MPI_File_write_at_all)(fh, offset, buf, (int)count, bufType,
+                                        &mpistatus);
+    else
+        TRACE_IO(MPI_File_write_at)(fh, offset, buf, (int)count, bufType,
                                     &mpistatus);
     NCI_Free(buf);
     if (bufType != MPI_BYTE) MPI_Type_free(&bufType);
@@ -249,12 +244,14 @@ fill_var_rec(NC         *ncp,
          *
          * First, find the max numrecs among all processes.
          */
-        MPI_Offset max_numrecs, numrecs=recno+1;
-        TRACE_COMM(MPI_Allreduce)(&numrecs, &max_numrecs, 1, MPI_OFFSET,
-                                  MPI_MAX, ncp->comm);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
-            if (status == NC_NOERR) status = err;
+        MPI_Offset max_numrecs=recno+1;
+        if (ncp->nprocs > 1) {
+            TRACE_COMM(MPI_Allreduce)(MPI_IN_PLACE, &max_numrecs, 1, MPI_OFFSET,
+                                      MPI_MAX, ncp->comm);
+            if (mpireturn != MPI_SUCCESS) {
+                err = ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
+                if (status == NC_NOERR) status = err;
+            }
         }
 
         /* In collective mode, ncp->numrecs is always sync-ed among processes */
@@ -400,14 +397,20 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
      * variables' fill modes and overwrite local's if an inconsistency is found
      * Note ncp->vars.ndefined is already made consistent by this point.
      */
-    for (i=start_vid; i<ncp->vars.ndefined; i++)
-        noFill[i-start_vid] = (char)(ncp->vars.value[i]->no_fill);
+    if (ncp->nprocs > 1) {
+        for (i=start_vid; i<ncp->vars.ndefined; i++)
+            noFill[i-start_vid] = (char)(ncp->vars.value[i]->no_fill);
+
         TRACE_COMM(MPI_Bcast)(noFill, (ncp->vars.ndefined - start_vid),
                               MPI_BYTE, 0, ncp->comm);
-    for (i=start_vid; i<ncp->vars.ndefined; i++) {
-        /* overwrite local's mode */
-        ncp->vars.value[i]->no_fill = noFill[i-start_vid];
-        if (!noFill[i-start_vid]) nVarsFill++;
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
+
+        for (i=start_vid; i<ncp->vars.ndefined; i++) {
+            /* overwrite local's mode */
+            ncp->vars.value[i]->no_fill = noFill[i-start_vid];
+            if (!noFill[i-start_vid]) nVarsFill++;
+        }
     }
 #else
     for (i=start_vid; i<ncp->vars.ndefined; i++) {
@@ -620,6 +623,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     NCI_Free(count);
     NCI_Free(offset);
 
+    /* when nprocs == 1, we keep I/O mode in independent mode at all time */
     fh = ncp->collective_fh;
 
     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, filetype, "native",
@@ -650,7 +654,10 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     }
 
     /* write to variable collectively */
-    TRACE_IO(MPI_File_write_at_all)(fh, 0, buf, (int)buf_len, bufType, &mpistatus);
+    if (ncp->nprocs > 1)
+        TRACE_IO(MPI_File_write_at_all)(fh, 0, buf, (int)buf_len, bufType, &mpistatus);
+    else
+        TRACE_IO(MPI_File_write_at)(fh, 0, buf, (int)buf_len, bufType, &mpistatus);
 
     NCI_Free(buf);
     if (bufType != MPI_BYTE) MPI_Type_free(&bufType);
@@ -728,7 +735,7 @@ ncmpio_fill_var_rec(void      *ncdp,
     }
 
 err_check:
-    if (ncp->safe_mode) { /* consistency check */
+    if (ncp->safe_mode && ncp->nprocs > 1) { /* consistency check */
         int root_varid, status, mpireturn;
         MPI_Offset root_recno;
 
@@ -776,12 +783,13 @@ ncmpio_set_fill(void *ncdp,
     int i, mpireturn, oldmode;
     NC *ncp = (NC*)ncdp;
 
-    if (ncp->safe_mode) {
+    if (ncp->safe_mode && ncp->nprocs > 1) {
         int err, status, root_fill_mode=fill_mode;
 
         TRACE_COMM(MPI_Bcast)(&root_fill_mode, 1, MPI_INT, 0, ncp->comm);
         if (mpireturn != MPI_SUCCESS)
             return  ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
+
         if (fill_mode != root_fill_mode)
             /* dataset's fill mode is inconsistent with root's */
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FILL_MODE)
@@ -792,6 +800,7 @@ ncmpio_set_fill(void *ncdp,
         TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, ncp->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
+
         if (err == NC_NOERR) err = status;
         if (err != NC_NOERR) return err;
     }
@@ -833,7 +842,7 @@ ncmpio_def_var_fill(void       *ncdp,
     /* sanity check for ncdp and varid has been done in dispatchers */
     varp = ncp->vars.value[varid];
 
-    if (ncp->safe_mode) {
+    if (ncp->safe_mode && ncp->nprocs > 1) {
         int root_ids[3], my_fill_null, minE, mpireturn;
 
         /* check if varid, no_fill, fill_value, are consistent */

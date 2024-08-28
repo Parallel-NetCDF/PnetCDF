@@ -65,14 +65,20 @@ ncmpio_getput_zero_req(NC *ncp, int reqMode)
                                 MPI_INFO_NULL);
 
     if (fIsSet(reqMode, NC_REQ_RD)) {
-        TRACE_IO(MPI_File_read_all)(fh, NULL, 0, MPI_BYTE, &mpistatus);
+        if (ncp->nprocs > 1)
+            TRACE_IO(MPI_File_read_all)(fh, NULL, 0, MPI_BYTE, &mpistatus);
+        else
+            TRACE_IO(MPI_File_read)(fh, NULL, 0, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_all");
             err = (err == NC_EFILE) ? NC_EREAD : err;
             DEBUG_ASSIGN_ERROR(status, err)
         }
     } else { /* write request */
-        TRACE_IO(MPI_File_write_all)(fh, NULL, 0, MPI_BYTE, &mpistatus);
+        if (ncp->nprocs > 1)
+            TRACE_IO(MPI_File_write_all)(fh, NULL, 0, MPI_BYTE, &mpistatus);
+        else
+            TRACE_IO(MPI_File_write)(fh, NULL, 0, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_all");
             err = (err == NC_EFILE) ? NC_EWRITE : err;
@@ -950,15 +956,15 @@ req_commit(NC  *ncp,
     }
 
     /* synchronize request metadata across processes if collective I/O */
-    if (coll_indep == NC_REQ_COLL) {
+    if (coll_indep == NC_REQ_COLL && ncp->nprocs > 1) {
         int mpireturn;
-        MPI_Offset io_req[4], do_io[4];  /* [0]: read [1]: write [2]: error */
-        io_req[0] = num_r_reqs;
-        io_req[1] = num_w_reqs;
-        io_req[2] = -err;   /* all NC errors are negative */
-        io_req[3] = newnumrecs;
-        TRACE_COMM(MPI_Allreduce)(io_req, do_io, 4, MPI_OFFSET, MPI_MAX,
-                                  ncp->comm);
+        MPI_Offset do_io[4];  /* [0]: read [1]: write [2]: error */
+        do_io[0] = num_r_reqs;
+        do_io[1] = num_w_reqs;
+        do_io[2] = -err;   /* all NC errors are negative */
+        do_io[3] = newnumrecs;
+        TRACE_COMM(MPI_Allreduce)(MPI_IN_PLACE, do_io, 4, MPI_OFFSET,
+                                  MPI_MAX, ncp->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
 
@@ -2039,10 +2045,9 @@ req_aggregation(NC     *ncp,
     }
     NCI_Free(reqs);
 
-    if (coll_indep == NC_REQ_COLL)
+    fh = ncp->independent_fh;
+    if (ncp->nprocs > 1 && coll_indep == NC_REQ_COLL)
         fh = ncp->collective_fh;
-    else
-        fh = ncp->independent_fh;
 
     /* set the MPI-IO fileview, this is a collective call */
     offset = 0;
@@ -2461,10 +2466,9 @@ mgetput(NC     *ncp,
 mpi_io:
     NCI_Free(reqs);
 
-    if (coll_indep == NC_REQ_COLL)
+    fh = ncp->independent_fh;
+    if (ncp->nprocs > 1 && coll_indep == NC_REQ_COLL)
         fh = ncp->collective_fh;
-    else
-        fh = ncp->independent_fh;
 
     /* set the MPI-IO fileview, this is a collective call */
     err = ncmpio_file_set_view(ncp, fh, &offset, filetype);

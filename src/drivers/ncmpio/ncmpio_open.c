@@ -113,10 +113,12 @@ ncmpio_open(MPI_Comm     comm,
 
     ncp->iomode         = omode;
     ncp->comm           = comm;  /* reuse comm duplicated in dispatch layer */
+    MPI_Comm_rank(comm, &ncp->rank);
+    MPI_Comm_size(comm, &ncp->nprocs);
     ncp->mpiinfo        = info_used; /* is not MPI_INFO_NULL */
     ncp->mpiomode       = mpiomode;
     ncp->collective_fh  = fh;
-    ncp->independent_fh = MPI_FILE_NULL;
+    ncp->independent_fh = (ncp->nprocs > 1) ? MPI_FILE_NULL : fh;
     ncp->path = (char*) NCI_Malloc(strlen(path) + 1);
     strcpy(ncp->path, path);
 

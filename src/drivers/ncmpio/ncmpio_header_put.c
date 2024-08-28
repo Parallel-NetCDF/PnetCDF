@@ -451,7 +451,10 @@ ncmpio_hdr_put_NC(NC *ncp, void *buf)
     putbuf.pos           = buf;
     putbuf.base          = buf;
     putbuf.safe_mode     = ncp->safe_mode;
-    putbuf.rw_mode       = (fIsSet(ncp->flags, NC_HCOLL)) ? 1 : 0;
+    if (ncp->nprocs > 1 && fIsSet(ncp->flags, NC_HCOLL))
+        putbuf.coll_mode = 1;
+    else
+        putbuf.coll_mode = 0;
 
     /* netCDF file format:
      * netcdf_file  = header  data
@@ -511,7 +514,7 @@ ncmpio_hdr_put_NC(NC *ncp, void *buf)
  */
 int ncmpio_write_header(NC *ncp)
 {
-    int rank, status=NC_NOERR, mpireturn, err;
+    int status=NC_NOERR, mpireturn, err;
     size_t i, ntimes;
     MPI_File fh;
     MPI_Status mpistatus;
@@ -523,7 +526,7 @@ int ncmpio_write_header(NC *ncp)
      */
 
     fh = ncp->collective_fh;
-    if (NC_indep(ncp))
+    if (NC_indep(ncp)) /* called in independent data mode */
         fh = ncp->independent_fh;
 
     /* update file header size, as this subroutine may be called from a rename
@@ -535,8 +538,7 @@ int ncmpio_write_header(NC *ncp)
     ntimes = ncp->xsz / NC_MAX_INT;
     if (ncp->xsz % NC_MAX_INT) ntimes++;
 
-    MPI_Comm_rank(ncp->comm, &rank);
-    if (rank == 0) { /* only root writes to file header */
+    if (ncp->rank == 0) { /* only root writes to file header */
         MPI_Offset offset;
         size_t remain;
         size_t bufLen = _RNDUP(ncp->xsz, X_ALIGN);
@@ -560,10 +562,10 @@ int ncmpio_write_header(NC *ncp)
              */
             memset(&mpistatus, 0, sizeof(MPI_Status));
 
-            if (fIsSet(ncp->flags, NC_HCOLL)) /* collective write */
+            if (fIsSet(ncp->flags, NC_HCOLL)) /* header collective write */
                 TRACE_IO(MPI_File_write_at_all)(fh, offset, buf_ptr, writeLen,
                                                 MPI_BYTE, &mpistatus);
-            else
+            else /* header independent write */
                 TRACE_IO(MPI_File_write_at)(fh, offset, buf_ptr, writeLen,
                                             MPI_BYTE, &mpistatus);
 
@@ -593,8 +595,8 @@ int ncmpio_write_header(NC *ncp)
         }
         NCI_Free(buf);
     }
-    else if (fIsSet(ncp->flags, NC_HCOLL)) { /* collective write */
-        /* other processes participate the collective call */
+    else if (fIsSet(ncp->flags, NC_HCOLL)) { /* header collective write */
+        /* collective write: other processes participate the collective call */
         for (i=0; i<ntimes; i++)
             TRACE_IO(MPI_File_write_at_all)(fh, 0, NULL, 0, MPI_BYTE, &mpistatus);
     }

@@ -407,6 +407,8 @@ struct NC {
     MPI_Offset    get_size;  /* amount of reads  committed so far in bytes */
 
     MPI_Comm      comm;           /* MPI communicator */
+    int           rank;           /* MPI rank of this process */
+    int           nprocs;         /* number of MPI processes */
     MPI_Info      mpiinfo;        /* used MPI info object */
     MPI_File      collective_fh;  /* file handle for collective mode */
     MPI_File      independent_fh; /* file handle for independent mode */
@@ -474,7 +476,7 @@ typedef struct bufferinfo {
     int         chunk;    /* chunk size for reading the header */
     int         version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
     int         safe_mode;/* 0: disabled, 1: enabled */
-    int         rw_mode;  /* 0: independent, 1: collective */
+    int         coll_mode;/* 0: independent, 1: collective */
     char       *base;     /* beginning of read/write buffer */
     char       *pos;      /* current position in buffer */
     char       *end;      /* end position of buffer */

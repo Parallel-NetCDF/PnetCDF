@@ -69,7 +69,7 @@ ncmpio_close_files(NC *ncp, int doUnlink) {
             return ncmpii_error_mpi2nc(mpireturn, "MPI_File_close");
     }
 
-    if (ncp->collective_fh != MPI_FILE_NULL) {
+    if (ncp->nprocs > 1 && ncp->collective_fh != MPI_FILE_NULL) {
         TRACE_IO(MPI_File_close)(&ncp->collective_fh);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_File_close");
@@ -78,9 +78,13 @@ ncmpio_close_files(NC *ncp, int doUnlink) {
     if (doUnlink) {
         /* called from ncmpi_abort, if the file is being created and is still
          * in define mode, the file is deleted */
-        TRACE_IO(MPI_File_delete)((char *)ncp->path, ncp->mpiinfo);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, "MPI_File_delete");
+        if (ncp->rank == 0) {
+            TRACE_IO(MPI_File_delete)((char *)ncp->path, ncp->mpiinfo);
+            if (mpireturn != MPI_SUCCESS)
+                return ncmpii_error_mpi2nc(mpireturn, "MPI_File_delete");
+        }
+        if (ncp->nprocs > 1)
+            MPI_Barrier(ncp->comm);
     }
     return NC_NOERR;
 }
@@ -163,13 +167,10 @@ ncmpio_close(void *ncdp)
 
     /* file is open for write and no variable has been defined */
     if (!NC_readonly(ncp) && ncp->vars.ndefined == 0) {
-        int rank;
-
         /* wait until all processes close the file */
-        MPI_Barrier(ncp->comm);
+        if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
 
-        MPI_Comm_rank(ncp->comm, &rank);
-        if (rank == 0) {
+        if (ncp->rank == 0) {
             /* ignore all errors, as unexpected file size if not a fatal error */
 #ifdef HAVE_TRUNCATE
             /* when calling POSIX I/O, remove file type prefix from file name */
@@ -222,7 +223,7 @@ ncmpio_close(void *ncdp)
             }
 #endif
         }
-        MPI_Barrier(ncp->comm);
+        if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
     }
 
     /* free up space occupied by the header metadata */
