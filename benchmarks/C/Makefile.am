@@ -13,7 +13,8 @@ LDADD  = $(top_builddir)/src/libs/libpnetcdf.la
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 check_PROGRAMS = aggregation \
-                 write_block_read_column
+                 write_block_read_column \
+                 pnetcdf_put_vara
 
 # parallel runs only
 # TESTS = $(check_PROGRAMS)
@@ -35,7 +36,7 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(NC_FILES)
 
-EXTRA_DIST = parallel_run.sh
+EXTRA_DIST = parallel_run.sh pnetcdf_put_vara.c
 
 ptest ptests ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="
