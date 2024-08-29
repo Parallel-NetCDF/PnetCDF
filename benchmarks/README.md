@@ -19,6 +19,22 @@ various of APIs as well as access patterns.
      but in a 2D `*-block` pattern.
    + Write and read performance are measured and reported separately.
 
+* C/pnetcdf_put_vara.c
+   + This program writes a series of 3D variables with 2D block-block
+     partitioning pattern. Each variable is a record variable. The number of
+     variables, variable size, number of time records, and the NetCDF file
+     format can be customized through command-line options. In addition, option
+     '-i', if set, PnetCDF nonblocking APIs will be used to write to the file.
+
+* C/netcdf_put_vara.c
+   + This sequential NetCDF-C program writes a series of 3D variables.  Each
+     variable is a record variable. The number of variables, variable size,
+     number of time records, and the NetCDF file format can be customized
+     through command-line options.
+   + This program and `C/pnetcdf_put_vara.c` can be used to compare the
+     performance of NetCDF and PnetCDF when running sequentially, i.e. one
+     process.
+
 * FLASH-IO
    + FLASH is a reacting hydrodynamics code developed at University of Chicago.
      https://astro.uchicago.edu/research/flash.php

@@ -68,7 +68,16 @@ This is essentially a placeholder for the next release note ...
     when calling the PnetCDF flexible APIs.
 
 * New programs for I/O benchmarks
-  + none
+  + C/pnetcdf_put_vara.c --
+    * This program writes a series of 3D variables with 2D block-block
+      partitioning pattern. Each variable is a record variable.
+
+  + C/netcdf_put_vara.c --
+    * This sequential NetCDF-C program writes a series of 3D variables. Each
+      variable is a record variable.
+    * This program and `C/pnetcdf_put_vara.c` can be used to compare the
+      performance of NetCDF and PnetCDF when running sequentially, i.e. one
+      process.
 
 * New test program
   + test/testcases/flexible_large_count.c - tests flexible APIs that use MPI
