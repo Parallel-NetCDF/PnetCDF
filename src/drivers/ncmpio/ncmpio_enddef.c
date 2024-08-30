@@ -163,7 +163,12 @@ move_file_block(NC         *ncp,
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
-        TRACE_IO(MPI_File_write_at_all)(fh, to+nbytes+rank*chunk_size,
+        if (ncp->nprocs > 1)
+            TRACE_IO(MPI_File_write_at_all)(fh, to+nbytes+rank*chunk_size,
+                                            buf, get_size /* NOT bufcount */,
+                                            MPI_BYTE, &mpistatus);
+        else
+            TRACE_IO(MPI_File_write_at)(fh, to+nbytes+rank*chunk_size,
                                         buf, get_size /* NOT bufcount */,
                                         MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
