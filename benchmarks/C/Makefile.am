@@ -36,7 +36,7 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(NC_FILES)
 
-EXTRA_DIST = parallel_run.sh pnetcdf_put_vara.c
+EXTRA_DIST = parallel_run.sh netcdf_put_vara.c
 
 ptest ptests ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="
