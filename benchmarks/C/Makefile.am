@@ -36,7 +36,9 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(NC_FILES)
 
-EXTRA_DIST = parallel_run.sh pnetcdf_put_vara.c
+# netcdf_put_vara.c is a NetCDF4 version of pnetcdf_put_vara.c. Both files can
+# be used to compare NetCDF4 performance against PnetCDF.
+EXTRA_DIST = parallel_run.sh netcdf_put_vara.c
 
 ptest ptests ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="
