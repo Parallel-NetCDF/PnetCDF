@@ -1,5 +1,5 @@
 ## PnetCDF source code development repository
-Github Actions: [![MPICH](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_mpich.yml/badge.svg)](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_mpich.yml)
+[![MPICH](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_mpich.yml/badge.svg)](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_mpich.yml)
 [![OpenMPI](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_openmpi.yml/badge.svg)](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_openmpi.yml)
 
 
