@@ -1,4 +1,7 @@
 ## PnetCDF source code development repository
+Github Actions: [![MPICH](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_mpich.yml/badge.svg)](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_mpich.yml)
+[![OpenMPI](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_openmpi.yml/badge.svg)](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_openmpi.yml)
+
 
 PnetCDF is a parallel I/O library for accessing
 [Unidata's NetCDF](http://www.unidata.ucar.edu/software/netcdf) files in
@@ -45,19 +48,13 @@ Northwestern University and Argonne National Laboratory.
   + [m4](https://www.gnu.org/software/m4/m4.html) version 1.4.17
 
 ### Build instructions and recipes
-* Please read file
-  [INSTALL](https://github.com/Parallel-NetCDF/PnetCDF/blob/master/INSTALL) for
-  build instructions. There are also several build recipes under folder
-  [doc](https://github.com/Parallel-NetCDF/PnetCDF/tree/master/doc) for a few
-  popular systems.
-
-### Current build status
-* Github Actions: [![MPICH](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_mpich.yml/badge.svg)](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_mpich.yml)
-[![OpenMPI](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_openmpi.yml/badge.svg)](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_openmpi.yml)
+* Please read file [INSTALL](./INSTALL) for build instructions. There are also
+  several build recipes under folder [doc](./doc#readme) for a few popular
+  systems.
 
 ### PnetCDF user guides
-* [C API references](http://cucis.ece.northwestern.edu/projects/PnetCDF/doc/pnetcdf-c)
-* [Questions & Answers](http://cucis.ece.northwestern.edu/projects/PnetCDF/faq.html)
+* [C API references](https://parallel-netcdf.github.io/doc/c-reference/pnetcdf-c/index.html)
+* [Questions & Answers](https://parallel-netcdf.github.io/doc/faq.html)
 * [NetCDF4 vs. PnetCDF](./doc/netcdf4_vs_pnetcdf.md)
 * [PnetCDF blocking vs. non-blocking APIs](./doc/blocking_vs_nonblocking.md)
 
