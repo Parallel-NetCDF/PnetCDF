@@ -49,7 +49,7 @@ static const char *off_limit = "https://docs.unidata.ucar.edu/nug/current/file_s
 #endif
 
 /* useful for aligning memory */
-#define _RNDUP(x, unit) ((((x) + (unit) - 1) / (unit)) * (unit))
+#define PNETCDF_RNDUP(x, unit) ((((x) + (unit) - 1) / (unit)) * (unit))
 
 #define ERR_ADDR (((size_t)gbp->pos - (size_t)gbp->base) + (size_t)(gbp->offset - gbp->size))
 
@@ -368,7 +368,7 @@ hdr_len_NC_name(size_t nchars,
     long long sz = sizeof_t; /* nelems */
 
     if (nchars != 0)  /* namestring */
-        sz += _RNDUP(nchars, X_ALIGN);
+        sz += PNETCDF_RNDUP(nchars, X_ALIGN);
 
     return sz;
 }
@@ -1012,7 +1012,7 @@ hdr_get_name(int          fd,
     if (*namep == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     (*namep)[nchars] = '\0'; /* add terminal character */
 
-    padding   = _RNDUP(nchars, X_ALIGN) - nchars;
+    padding   = PNETCDF_RNDUP(nchars, X_ALIGN) - nchars;
     pos_addr  = (size_t) gbp->pos;
     base_addr = (size_t) gbp->base;
     bufremain = gbp->size - (pos_addr - base_addr);
@@ -1347,7 +1347,7 @@ x_len_NC_attrV(nc_type    xtype,
     switch(xtype) {
         case NC_BYTE:
         case NC_CHAR:
-        case NC_UBYTE:  return _RNDUP(nelems, 4);
+        case NC_UBYTE:  return PNETCDF_RNDUP(nelems, 4);
         case NC_SHORT:
         case NC_USHORT: return ((nelems + (nelems)%2) * 2);
         case NC_INT:    return (nelems * 4);

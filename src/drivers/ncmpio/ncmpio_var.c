@@ -174,7 +174,7 @@ ncmpio_dup_NC_vararray(NC_vararray       *ncap,
         return NC_NOERR;
     }
 
-    alloc_size = _RNDUP(ref->ndefined, PNC_ARRAY_GROWBY);
+    alloc_size = PNETCDF_RNDUP(ref->ndefined, PNC_ARRAY_GROWBY);
     ncap->value = (NC_var **) NCI_Calloc(alloc_size, sizeof(NC_var*));
     if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 

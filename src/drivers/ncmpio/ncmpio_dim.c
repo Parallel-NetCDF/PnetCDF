@@ -166,7 +166,7 @@ ncmpio_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref)
 
     /* allocate array of NC_dim objects */
     if (ref->ndefined > 0) {
-        size_t alloc_size = _RNDUP(ref->ndefined, PNC_ARRAY_GROWBY);
+        size_t alloc_size = PNETCDF_RNDUP(ref->ndefined, PNC_ARRAY_GROWBY);
         ncap->value = (NC_dim**) NCI_Calloc(alloc_size, sizeof(NC_dim*));
         if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     }

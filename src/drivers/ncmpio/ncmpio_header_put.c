@@ -541,7 +541,7 @@ int ncmpio_write_header(NC *ncp)
     if (ncp->rank == 0) { /* only root writes to file header */
         MPI_Offset offset;
         size_t remain;
-        size_t bufLen = _RNDUP(ncp->xsz, X_ALIGN);
+        size_t bufLen = PNETCDF_RNDUP(ncp->xsz, X_ALIGN);
         char *buf, *buf_ptr;
 
         buf = NCI_Malloc(bufLen); /* header's write buffer */
