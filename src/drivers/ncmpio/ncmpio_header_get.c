@@ -112,7 +112,7 @@ hdr_len_NC_name(const NC_string *ncstrp, int sizeof_NON_NEG)
     assert(ncstrp != NULL);
 
     if (ncstrp->nchars != 0)  /* namestring */
-        sz += _RNDUP(ncstrp->nchars, X_ALIGN);
+        sz += PNETCDF_RNDUP(ncstrp->nchars, X_ALIGN);
 
     return sz;
 }
@@ -133,8 +133,8 @@ hdr_len_NC_dim(const NC_dim *dimp, int sizeof_NON_NEG)
 
     assert(dimp != NULL);
 
-    sz  = sizeof_NON_NEG + _RNDUP(dimp->name_len, X_ALIGN); /* name */
-    sz += sizeof_NON_NEG;                                   /* dim_length */
+    sz  = sizeof_NON_NEG + PNETCDF_RNDUP(dimp->name_len, X_ALIGN); /* name */
+    sz += sizeof_NON_NEG;                                          /* dim_length */
 
     return sz;
 }
@@ -195,10 +195,10 @@ hdr_len_NC_attr(const NC_attr *attrp, int sizeof_NON_NEG)
 
     assert(attrp != NULL);
 
-    sz  = sizeof_NON_NEG + _RNDUP(attrp->name_len, X_ALIGN); /* name */
-    sz += X_SIZEOF_NC_TYPE;                                  /* nc_type */
-    sz += sizeof_NON_NEG;                                    /* nelems */
-    sz += attrp->xsz;                                        /* [values ...] */
+    sz  = sizeof_NON_NEG + PNETCDF_RNDUP(attrp->name_len, X_ALIGN); /* name */
+    sz += X_SIZEOF_NC_TYPE;                                         /* nc_type */
+    sz += sizeof_NON_NEG;                                           /* nelems */
+    sz += attrp->xsz;                                               /* [values ...] */
 
     return sz;
 }
@@ -264,13 +264,13 @@ hdr_len_NC_var(const NC_var *varp,
      * for CDF-2, sizeof_off_t == 8 && sizeof_NON_NEG == 4
      * for CDF-5, sizeof_off_t == 8 && sizeof_NON_NEG == 8
      */
-    sz  = sizeof_NON_NEG + _RNDUP(varp->name_len, X_ALIGN);   /* name */
-    sz += sizeof_NON_NEG;                                     /* nelems */
-    sz += sizeof_NON_NEG * varp->ndims;                       /* [dimid ...] */
-    sz += hdr_len_NC_attrarray(&varp->attrs, sizeof_NON_NEG); /* vatt_list */
-    sz += X_SIZEOF_NC_TYPE;                                   /* nc_type */
-    sz += sizeof_NON_NEG;                                     /* vsize */
-    sz += sizeof_off_t;                                       /* begin */
+    sz  = sizeof_NON_NEG + PNETCDF_RNDUP(varp->name_len, X_ALIGN);   /* name */
+    sz += sizeof_NON_NEG;                                            /* nelems */
+    sz += sizeof_NON_NEG * varp->ndims;                              /* [dimid ...] */
+    sz += hdr_len_NC_attrarray(&varp->attrs, sizeof_NON_NEG);        /* vatt_list */
+    sz += X_SIZEOF_NC_TYPE;                                          /* nc_type */
+    sz += sizeof_NON_NEG;                                            /* vsize */
+    sz += sizeof_off_t;                                              /* begin */
 
     return sz;
 }
@@ -553,9 +553,9 @@ hdr_get_NC_name(bufferinfo *gbp, char **namep, size_t *name_len)
     (*namep)[nchars] = '\0'; /* add terminal character */
 
     /* X_SIZEOF_CHAR is defined as 1 in classical CDF formats
-    padding = _RNDUP(X_SIZEOF_CHAR * nchars, X_ALIGN) - X_SIZEOF_CHAR * nchars;
+    padding = PNETCDF_RNDUP(X_SIZEOF_CHAR * nchars, X_ALIGN) - X_SIZEOF_CHAR * nchars;
     */
-    padding = _RNDUP(nchars, X_ALIGN) - nchars;
+    padding = PNETCDF_RNDUP(nchars, X_ALIGN) - nchars;
 
     bufremain = gbp->chunk - (gbp->pos - gbp->base);
 
@@ -759,7 +759,7 @@ hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap)
         DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
 
-    alloc_size = _RNDUP(ncap->ndefined, PNC_ARRAY_GROWBY);
+    alloc_size = PNETCDF_RNDUP(ncap->ndefined, PNC_ARRAY_GROWBY);
     ncap->value = (NC_dim**) NCI_Calloc(alloc_size, sizeof(NC_dim*));
     if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
@@ -1004,7 +1004,7 @@ hdr_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap)
         DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
 
-    alloc_size = _RNDUP(ncap->ndefined, PNC_ARRAY_GROWBY);
+    alloc_size = PNETCDF_RNDUP(ncap->ndefined, PNC_ARRAY_GROWBY);
     ncap->value = (NC_attr**) NCI_Calloc(alloc_size, sizeof(NC_attr*));
     if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
@@ -1250,7 +1250,7 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
         DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
 
-    alloc_size = _RNDUP(ncap->ndefined, PNC_ARRAY_GROWBY);
+    alloc_size = PNETCDF_RNDUP(ncap->ndefined, PNC_ARRAY_GROWBY);
     ncap->value = (NC_var**) NCI_Calloc(alloc_size, sizeof(NC_var*));
     if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
@@ -1343,7 +1343,7 @@ ncmpio_hdr_get_NC(NC *ncp)
         getbuf.coll_mode = 0;
 
     /* CDF-5's minimum header size is 4 bytes more than CDF-1 and CDF-2's */
-    getbuf.chunk = _RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );
+    getbuf.chunk = PNETCDF_RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );
 
     getbuf.base = (char*) NCI_Malloc(getbuf.chunk);
     getbuf.pos  = getbuf.base;

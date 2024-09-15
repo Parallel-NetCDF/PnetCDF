@@ -525,7 +525,7 @@ write_NC(NC *ncp)
     header_wlen = ncp->xsz;
 #endif
 
-    header_wlen = _RNDUP(header_wlen, X_ALIGN);
+    header_wlen = PNETCDF_RNDUP(header_wlen, X_ALIGN);
 
     /* if header_wlen is > NC_MAX_INT, then write the header in chunks.
      * Note reading file header is already done in chunks. See

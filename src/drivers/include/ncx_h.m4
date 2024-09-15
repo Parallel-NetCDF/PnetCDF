@@ -9,8 +9,8 @@ dnl
  */
 /* "$Id$" */
 
-#ifndef _NCX_H
-#define _NCX_H
+#ifndef H_NCX
+#define H_NCX
 
 #include <stddef.h>    /* size_t */
 #include <sys/types.h> /* off_t */
@@ -373,4 +373,4 @@ ncmpix_putn_void(void **xpp, MPI_Offset nchars, const void *vp);
 extern int
 ncmpix_pad_putn_void(void **xpp, MPI_Offset nchars, const void *vp);
 
-#endif /* _NCX_H_ */
+#endif /* H_NCX */

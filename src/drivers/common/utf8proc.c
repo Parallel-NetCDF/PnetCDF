@@ -146,7 +146,7 @@ ncmpii_utf8_validate(const char* name)
 #include "utf8proc_data.h"
 
 
-#ifndef _PNETCDF_H
+#ifndef H_PNETCDF
 UTF8PROC_DLLEXPORT const utf8proc_int8_t utf8proc_utf8class[256] = {
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -191,7 +191,7 @@ UTF8PROC_DLLEXPORT const utf8proc_int8_t utf8proc_utf8class[256] = {
    be different, being based on ABI compatibility.): */
 #define STRINGIZEx(x) #x
 #define STRINGIZE(x) STRINGIZEx(x)
-#ifndef _PNETCDF_H
+#ifndef H_PNETCDF
 UTF8PROC_DLLEXPORT const char *utf8proc_version(void) {
   return STRINGIZE(UTF8PROC_VERSION_MAJOR) "." STRINGIZE(UTF8PROC_VERSION_MINOR) "." STRINGIZE(UTF8PROC_VERSION_PATCH) "";
 }
@@ -263,7 +263,7 @@ UTF8PROC_DLLEXPORT utf8proc_ssize_t utf8proc_iterate(
   return 4;
 }
 
-#ifndef _PNETCDF_H
+#ifndef H_PNETCDF
 UTF8PROC_DLLEXPORT utf8proc_bool utf8proc_codepoint_valid(utf8proc_int32_t uc) {
     return (((utf8proc_uint32_t)uc)-0xd800 > 0x07ff) && ((utf8proc_uint32_t)uc < 0x110000);
 }
@@ -336,7 +336,7 @@ static const utf8proc_property_t *unsafe_get_property(utf8proc_int32_t uc) {
   );
 }
 
-#ifndef _PNETCDF_H
+#ifndef H_PNETCDF
 UTF8PROC_DLLEXPORT const utf8proc_property_t *utf8proc_get_property(utf8proc_int32_t uc) {
   return uc < 0 || uc >= 0x110000 ? utf8proc_properties : unsafe_get_property(uc);
 }
@@ -417,7 +417,7 @@ static utf8proc_bool grapheme_break_extended(int lbc, int tbc, utf8proc_int32_t 
   return break_permitted;
 }
 
-#ifndef _PNETCDF_H
+#ifndef H_PNETCDF
 UTF8PROC_DLLEXPORT utf8proc_bool utf8proc_grapheme_break_stateful(
     utf8proc_int32_t c1, utf8proc_int32_t c2, utf8proc_int32_t *state) {
 
@@ -444,7 +444,7 @@ static utf8proc_int32_t seqindex_decode_entry(const utf8proc_uint16_t **entry)
   return entry_cp;
 }
 
-#ifndef _PNETCDF_H
+#ifndef H_PNETCDF
 static utf8proc_int32_t seqindex_decode_index(const utf8proc_uint32_t seqindex)
 {
   const utf8proc_uint16_t *entry = &utf8proc_sequences[seqindex];
@@ -471,7 +471,7 @@ static utf8proc_ssize_t seqindex_write_char_decomposed(utf8proc_uint16_t seqinde
   return written;
 }
 
-#ifndef _PNETCDF_H
+#ifndef H_PNETCDF
 UTF8PROC_DLLEXPORT utf8proc_int32_t utf8proc_tolower(utf8proc_int32_t c)
 {
   utf8proc_int32_t cl = utf8proc_get_property(c)->lowercase_seqindex;
@@ -595,7 +595,7 @@ UTF8PROC_DLLEXPORT utf8proc_ssize_t utf8proc_decompose_char(utf8proc_int32_t uc,
   return 1;
 }
 
-#ifndef _PNETCDF_H
+#ifndef H_PNETCDF
 UTF8PROC_DLLEXPORT utf8proc_ssize_t utf8proc_decompose(
   const utf8proc_uint8_t *str, utf8proc_ssize_t strlen,
   utf8proc_int32_t *buffer, utf8proc_ssize_t bufsize, utf8proc_option_t options
@@ -844,7 +844,7 @@ UTF8PROC_DLLEXPORT utf8proc_ssize_t utf8proc_map_custom(
   return result;
 }
 
-#ifndef _PNETCDF_H
+#ifndef H_PNETCDF
 UTF8PROC_DLLEXPORT utf8proc_uint8_t *utf8proc_NFD(const utf8proc_uint8_t *str) {
   utf8proc_uint8_t *retval;
   utf8proc_map(str, 0, &retval, UTF8PROC_NULLTERM | UTF8PROC_STABLE |

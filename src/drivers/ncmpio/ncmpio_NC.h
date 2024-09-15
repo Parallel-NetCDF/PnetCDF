@@ -4,8 +4,8 @@
  */
 /* $Id$ */
 
-#ifndef _NC_H
-#define _NC_H
+#ifndef H_NC
+#define H_NC
 
 /*
  * netcdf library 'private' data structures, objects and interfaces
@@ -631,4 +631,4 @@ ncmpio_read_write(NC *ncp, int rw_flag, int coll_indep, MPI_Offset offset,
                   MPI_Offset buf_count, MPI_Datatype buf_type, void *buf,
                   int buftype_is_contig);
 
-#endif /* _NC_H */
+#endif /* H_NC */
