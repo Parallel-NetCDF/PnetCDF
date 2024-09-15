@@ -5,8 +5,8 @@
 
 /* $Id$ */
 
-#ifndef _NCFOO_DRIVER_H
-#define _NCFOO_DRIVER_H
+#ifndef H_NCFOO_DRIVER
+#define H_NCFOO_DRIVER
 
 #include <dispatch.h>
 #include <limits.h>

@@ -4,8 +4,8 @@
  */
 /* $Id$ */
 
-#ifndef _PNC_DEBUG_H
-#define _PNC_DEBUG_H
+#ifndef H_PNC_DEBUG
+#define H_PNC_DEBUG
 
 #include <stdio.h>
 
@@ -75,4 +75,4 @@
 #define DEBUG_TRACE_ERROR(err)
 #endif
 
-#endif /* _PNC_DEBUG_H */
+#endif /* H_PNC_DEBUG */

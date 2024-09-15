@@ -151,8 +151,8 @@ AH_TEMPLATE([ENABLE_REQ_AGGREGATION],   [Define if able to support request aggre
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
 AH_TEMPLATE([HAVE_MPI_LARGE_COUNT],     [Define if required MPI APIs have arguments of type MPI_Count])
 
-AH_TOP([#ifndef _CONFIG_H
-#define _CONFIG_H])
+AH_TOP([#ifndef H_CONFIG
+#define H_CONFIG])
 AH_BOTTOM([#include <nctypes.h>
 #endif])
 

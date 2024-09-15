@@ -3,8 +3,8 @@
  *  See COPYRIGHT notice in top-level directory.
  */
 
-#ifndef _ncadios_DRIVER_H
-#define _ncadios_DRIVER_H
+#ifndef H_ncadios_DRIVER
+#define H_ncadios_DRIVER
 
 #include <mpi.h>
 #include <pnetcdf.h>

@@ -5,8 +5,8 @@
  * Copyright (c) 2008 - 2009.  UT-BATTELLE, LLC. All rights reserved.
  */
 
-#ifndef _ADIOS_TIMING_H_
-#define _ADIOS_TIMING_H_
+#ifndef H_ADIOS_TIMING
+#define H_ADIOS_TIMING
 
 
 #include <stdint.h>
