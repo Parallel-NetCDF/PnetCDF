@@ -256,7 +256,7 @@ ncmpi_def_var_fill(int         ncid,    /* IN:  file ID */
     }
 
     if (varid == NC_GLOBAL) {
-        /* setting global _FillValue through this API is not allowed */
+        /* setting global attribute _FillValue through this API is not allowed */
         DEBUG_ASSIGN_ERROR(err, NC_EGLOBAL)
         goto err_check;
     }
