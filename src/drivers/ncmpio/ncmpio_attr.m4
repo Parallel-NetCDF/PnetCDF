@@ -983,7 +983,7 @@ ncmpio_put_att(void         *ncdp,
     /* If this is attribute _FillValue, then let PnetCDF return the
      * same error codes as netCDF
      */
-    if (varid != NC_GLOBAL && !strcmp(name, NC_FillValue)) {
+    if (varid != NC_GLOBAL && !strcmp(name, "_FillValue")) {
         /* Fill value must be of the same data type */
         if (xtype != ncp->vars.value[varid]->xtype) {
             DEBUG_ASSIGN_ERROR(err, NC_EBADTYPE)
