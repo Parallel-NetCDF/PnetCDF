@@ -55,7 +55,7 @@ x_len_NC_attrV(nc_type    xtype,
     switch(xtype) {
         case NC_BYTE:
         case NC_CHAR:
-        case NC_UBYTE:  return _RNDUP(nelems, 4);
+        case NC_UBYTE:  return PNETCDF_RNDUP(nelems, 4);
         case NC_SHORT:
         case NC_USHORT: return ((nelems + nelems%2) * 2);
         case NC_INT:
@@ -188,7 +188,7 @@ ncmpio_dup_NC_attrarray(NC_attrarray *ncap, const NC_attrarray *ref)
     }
 
     if (ref->ndefined > 0) {
-        size_t alloc_size = _RNDUP(ref->ndefined, PNC_ARRAY_GROWBY);
+        size_t alloc_size = PNETCDF_RNDUP(ref->ndefined, PNC_ARRAY_GROWBY);
         ncap->value = (NC_attr **) NCI_Calloc(alloc_size, sizeof(NC_attr*));
         if (ncap->value == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
@@ -980,10 +980,10 @@ ncmpio_put_att(void         *ncdp,
 
     /* sanity checks for varid, name, xtype has been done in dispatcher */
 
-    /* If this is the _FillValue attribute, then let PnetCDF return the
+    /* If this is attribute _FillValue, then let PnetCDF return the
      * same error codes as netCDF
      */
-    if (varid != NC_GLOBAL && !strcmp(name, _FillValue)) {
+    if (varid != NC_GLOBAL && !strcmp(name, NC_FillValue)) {
         /* Fill value must be of the same data type */
         if (xtype != ncp->vars.value[varid]->xtype) {
             DEBUG_ASSIGN_ERROR(err, NC_EBADTYPE)

@@ -102,17 +102,17 @@ typedef enum {
 #define X_ALIGN                 4
 
 /* useful for aligning memory */
-#define _RNDUP(x, unit)  ((((x) + (unit) - 1) / (unit)) * (unit))
+#define PNETCDF_RNDUP(x, unit)  ((((x) + (unit) - 1) / (unit)) * (unit))
 #define M_RND_UNIT       X_SIZEOF_DOUBLE
-#define M_RNDUP(x)       _RNDUP(x, M_RND_UNIT)
+#define M_RNDUP(x)       PNETCDF_RNDUP(x, M_RND_UNIT)
 
-#define ncmpix_len_char(nelems)   _RNDUP((nelems), X_ALIGN)
+#define ncmpix_len_char(nelems)   PNETCDF_RNDUP((nelems), X_ALIGN)
 #define ncmpix_len_short(nelems)  (((nelems) + (nelems)%2)  * X_SIZEOF_SHORT)
 #define ncmpix_len_int(nelems)    ((nelems) * X_SIZEOF_INT)
 #define ncmpix_len_long(nelems)   ((nelems) * X_SIZEOF_LONG)
 #define ncmpix_len_float(nelems)  ((nelems) * X_SIZEOF_FLOAT)
 #define ncmpix_len_double(nelems) ((nelems) * X_SIZEOF_DOUBLE)
-#define ncmpix_len_ubyte(nelems)  _RNDUP((nelems), X_ALIGN)
+#define ncmpix_len_ubyte(nelems)  PNETCDF_RNDUP((nelems), X_ALIGN)
 #define ncmpix_len_ushort(nelems) (((nelems) + (nelems)%2)  * X_SIZEOF_USHORT)
 #define ncmpix_len_uint(nelems)   ((nelems) * X_SIZEOF_UINT)
 #define ncmpix_len_int64(nelems)  ((nelems) * X_SIZEOF_INT64)
@@ -534,7 +534,7 @@ hdr_len_NC_name(const NC_string *ncstrp,
     assert(ncstrp != NULL);
 
     if (ncstrp->nchars != 0)  /* namestring */
-        sz += _RNDUP(ncstrp->nchars, X_ALIGN);
+        sz += PNETCDF_RNDUP(ncstrp->nchars, X_ALIGN);
 
     return sz;
 }
@@ -919,7 +919,7 @@ hdr_get_NC_name(bufferinfo  *gbp,
     ncstrp = ncmpii_new_NC_string(nchars, NULL);
 
     nbytes = nchars;
-    padding = _RNDUP(ncstrp->nchars, X_ALIGN) - ncstrp->nchars;
+    padding = PNETCDF_RNDUP(ncstrp->nchars, X_ALIGN) - ncstrp->nchars;
     bufremain = gbp->size - ((char*)gbp->pos - (char*)gbp->base);
     cpos = ncstrp->cp;
 
