@@ -3,8 +3,8 @@
  *  See COPYRIGHT notice in top-level directory.
  */
 /* $Id$ */
-#ifndef _SUBFILE_H
-#define _SUBFILE_H
+#ifndef H_SUBFILE
+#define H_SUBFILE
 
 #include "ncmpio_NC.h"
 
@@ -33,4 +33,4 @@ extern int ncmpio_subfile_getput_vars(NC *ncp, NC_var *varp,
            const MPI_Offset  stride[], void *buf, MPI_Offset bufcount,
            MPI_Datatype buftype, int reqMode);
 
-#endif /* _SUBFILE_H */
+#endif /* H_SUBFILE */

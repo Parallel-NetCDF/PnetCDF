@@ -4,8 +4,8 @@
  */
 /* $Id$ */
 
-#ifndef _PNC_DISPATCH_H
-#define _PNC_DISPATCH_H
+#ifndef H_PNC_DISPATCH
+#define H_PNC_DISPATCH
 
 #include <pnetcdf.h>
 #include <mpi.h>
@@ -155,4 +155,4 @@ extern PNC_driver* ncbbio_inq_driver(void);
 
 extern int PNC_check_id(int ncid, PNC **pncp);
 
-#endif /* _PNC_DISPATCH_H */
+#endif /* H_PNC_DISPATCH */
