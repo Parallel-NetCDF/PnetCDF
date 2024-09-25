@@ -41,7 +41,7 @@ check_PROGRAMS = nonblocking_write \
 
 if INSTALL_EXAMPLES
    example_execbin_PROGRAMS = $(check_PROGRAMS)
-   example_execbindir = $(exec_prefix)/pnetcdf_examples/F90
+   example_execbindir = $(DESTDIR)$(exec_prefix)/pnetcdf_examples/F90
    example_execbin_SCRIPTS = run_f90_examples.sh
 endif
 
