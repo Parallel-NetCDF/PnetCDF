@@ -39,7 +39,11 @@ echo '' >& AS_MESSAGE_LOG_FD
 
 dnl Note getting command line should be done before calling AM_INIT_AUTOMAKE
 dnl as AM_INIT_AUTOMAKE modifies command line $*
-CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
+if test "x$ac_configure_args_raw" = x ; then
+   CONFIGURE_ARGS_CLEAN=`echo $* | tr '"' ' '`
+else
+   CONFIGURE_ARGS_CLEAN=$ac_configure_args_raw
+fi
 
 dnl automake version 1.16.5 was released in 2021-10-03
 dnl AM_INIT_AUTOMAKE([subdir-objects])
