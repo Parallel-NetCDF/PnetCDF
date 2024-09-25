@@ -101,6 +101,18 @@ jobs:
           run: |
             cd ${GITHUB_WORKSPACE}
             make -j 8 distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --with-mpi=${GITHUB_WORKSPACE}/OPENMPI"
+        - name: make install
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            prefix_path=${GITHUB_WORKSPACE}/pnetcdf_install
+            echo "---- test make install prefix=${prefix_path}"
+            make install prefix=${prefix_path}
+            test/tst_install.sh ${prefix_path}
+            prefix_path=pnetcdf_install
+            destdir_path=${GITHUB_WORKSPACE}/inst/
+            echo "---- test make install prefix=${prefix_path} DESTDIR=${destdir_path}"
+            make install prefix=${prefix_path} DESTDIR=${destdir_path}
+            test/tst_install.sh ${destdir_path}${prefix_path}
         - name: Cleanup
           if: ${{ always() }}
           run: |
@@ -108,4 +120,6 @@ jobs:
             make -s distclean
             rm -rf ${GITHUB_WORKSPACE}/pnetcdf_output
             rm -rf ${GITHUB_WORKSPACE}/OPENMPI
+            rm -rf ${GITHUB_WORKSPACE}/pnetcdf_install
+            rm -rf ${GITHUB_WORKSPACE}/inst
 
