@@ -61,6 +61,14 @@ check-local:
 	@echo '|  All sequential test programs have run successfully.'
 	@echo '|'
 
+# Note on DESTDIR. GNU autoconf manual Section 16.4 Installation Names has the
+# following statement. "The second method involves providing the 'DESTDIR'
+# variable. For example, 'make install DESTDIR=/alternate/directory' will
+# prepend '/alternate/directory' before all installation names. The approach of
+# 'DESTDIR' overrides is not required by the GNU Coding Standards, and does not
+# work on platforms that have drive letters. On the other hand, it does better
+# at avoiding recompilation issues, and works well even when some directory
+# options were not specified in terms of '${prefix}' at configure time."
 install-data-hook:
 	@echo '+----------------------------------------------------------------------------+'
 	@echo '|'
