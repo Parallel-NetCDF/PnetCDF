@@ -3,7 +3,7 @@ This is essentially a placeholder for the next release note ...
 ------------------------------------------------------------------------------
 
 * New features
-  + Suuport MPI derived datatypes that are constructed from MPI 4.0 large-count
+  + Support MPI derived data types that are constructed from MPI 4.0 large-count
     derived datatype constructors.
     See [PR #145](https://github.com/Parallel-NetCDF/PnetCDF/pull/145).
 
@@ -60,7 +60,10 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Bug fixes
-  + none
+  + Fix `pnetcdf-config` of reflecting the installation path when installation
+    is done by running command `make install DESTDIR=/alternate/directory`
+    which prepends '/alternate/directory' before all installation names.
+    See [PR #145](https://github.com/Parallel-NetCDF/PnetCDF/pull/154).
 
 * New example programs
   + C/flexible_bottom.c and C/vard_bottom.c - These two examples construct MPI
