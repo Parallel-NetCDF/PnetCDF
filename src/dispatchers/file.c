@@ -537,7 +537,7 @@ ncmpi_create(MPI_Comm    comm,
     return status;
 }
 
-#define _NDIMS_ 16
+#define NDIMS_ 16
 
 /*----< ncmpi_open() >-------------------------------------------------------*/
 /* This is a collective subroutine. */
@@ -549,7 +549,7 @@ ncmpi_open(MPI_Comm    comm,
            int        *ncidp)  /* OUT */
 {
     int i, j, nalloc, rank, nprocs, format, status=NC_NOERR, err;
-    int safe_mode=0, mpireturn, relax_coord_bound, DIMIDS[_NDIMS_], *dimids;
+    int safe_mode=0, mpireturn, relax_coord_bound, DIMIDS[NDIMS_], *dimids;
     char *env_str;
     MPI_Info combined_info;
     void *ncp;
@@ -814,7 +814,7 @@ ncmpi_open(MPI_Comm    comm,
      */
 
     /* allocate chunk size for pncp->vars[] */
-    nalloc = _RNDUP(pncp->nvars, PNC_VARS_CHUNK);
+    nalloc = PNETCDF_RNDUP(pncp->nvars, PNC_VARS_CHUNK);
     pncp->vars = NCI_Malloc(nalloc * sizeof(PNC_var));
     if (pncp->vars == NULL) {
         DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
@@ -825,7 +825,7 @@ ncmpi_open(MPI_Comm    comm,
 
     /* construct array of PNC_var for all variables */
     for (i=0; i<pncp->nvars; i++) {
-        int ndims, max_ndims=_NDIMS_;
+        int ndims, max_ndims=NDIMS_;
         pncp->vars[i].shape  = NULL;
         pncp->vars[i].recdim = -1;   /* if fixed-size variable */
         err = driver->inq_var(pncp->ncp, i, NULL, &pncp->vars[i].xtype, &ndims,

@@ -538,18 +538,18 @@ do_ncdump(const char *path, struct fspec* specp)
 
                     var.has_fillval = 1; /* by default, but turn off for bytes */
 
-                    /* get _FillValue attribute */
-                    ncmpi_status = ncmpi_inq_att(ncid, varid, _FillValue,
+                    /* get attribute _FillValue */
+                    ncmpi_status = ncmpi_inq_att(ncid, varid, "_FillValue",
                                                  &att.type, &att.len);
                     if (ncmpi_status == NC_NOERR &&
                         att.type == var.type && att.len == 1) {
                         if (var.type == NC_CHAR) {
                             char fillc;
-                            NC_CHECK(ncmpi_get_att_text(ncid, varid, _FillValue,
+                            NC_CHECK(ncmpi_get_att_text(ncid, varid, "_FillValue",
                                                         &fillc));
                             var.fillval = fillc;
                         } else
-                            NC_CHECK(ncmpi_get_att_double(ncid, varid, _FillValue,
+                            NC_CHECK(ncmpi_get_att_double(ncid, varid, "_FillValue",
                                                           &var.fillval));
                     } else {
                         switch (var.type) {

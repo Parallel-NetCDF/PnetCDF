@@ -74,8 +74,8 @@ Northwestern University and Argonne National Laboratory.
 * [E3SM I/O kernel study](https://github.com/Parallel-NetCDF/E3SM-IO)
 * [Scorpio](https://github.com/E3SM-Project/scorpio), the I/O module of E3SM.
 * [PIO](https://github.com/NCAR/ParallelIO) - parallel I/O library at NCAR.
-* [WRF](https://github.com/wrf-model/WRF/tree/master/external/io_pnetcdf)
-  - Weather Research & Forecasting Model at NCAR.
+* [WRF](https://github.com/wrf-model/WRF/tree/master/external/io_pnetcdf) -
+  Weather Research & Forecasting Model at NCAR.
 
 
 ### Acknowledgements

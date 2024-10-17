@@ -4,8 +4,8 @@
  */
 /* $Id$ */
 
-#ifndef _COMMON_H
-#define _COMMON_H
+#ifndef H_COMMON
+#define H_COMMON
 
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -26,16 +26,16 @@
 #endif
 
 /* useful for aligning memory */
-#define _RNDUP(x, unit)      ((((x) + (unit) - 1) / (unit)) * (unit))
-#define _RNDDOWN(x, unit)    ((x) - ((x)%(unit)))
+#define PNETCDF_RNDUP(x, unit)      ((((x) + (unit) - 1) / (unit)) * (unit))
+#define PNETCDF_RNDDOWN(x, unit)    ((x) - ((x)%(unit)))
 
 /* #define M_RND_UNIT   (sizeof(double))
  * SIZEOF_DOUBLE is defined in config.h
  */
 #define M_RND_UNIT        SIZEOF_DOUBLE
-#define M_RNDUP(x)        _RNDUP(x, M_RND_UNIT)
-#define M_RNDDOWN(x)      _RNDDOWN(x, M_RND_UNIT)
-#define D_RNDUP(x, align) _RNDUP(x, (off_t)(align))
+#define M_RNDUP(x)        PNETCDF_RNDUP(x, M_RND_UNIT)
+#define M_RNDDOWN(x)      PNETCDF_RNDDOWN(x, M_RND_UNIT)
+#define D_RNDUP(x, align) PNETCDF_RNDUP(x, (off_t)(align))
 
 /* for put request less than 4KB, copy it to a buffer and do byte swap there,
  * so if the user buffer is immutable (assuming smaller than 4KB), it will not

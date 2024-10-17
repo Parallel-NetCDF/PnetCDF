@@ -5,8 +5,8 @@
  */
 /* $Id$ */
 
-#ifndef _MPINETCDF_IMPL_H
-#define _MPINETCDF_IMPL_H
+#ifndef H_MPINETCDF_IMPL
+#define H_MPINETCDF_IMPL
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>

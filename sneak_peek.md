@@ -24,7 +24,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New constants
-  + none
+  + C macro NC_FillValue replaces _FillValue. This conforms with NetCDF4's
+    change in its version 4.9.3 release.
+    See [PR #153](https://github.com/Parallel-NetCDF/PnetCDF/pull/153).
 
 * New APIs
   + none
@@ -63,7 +65,7 @@ This is essentially a placeholder for the next release note ...
   + Fix `pnetcdf-config` of reflecting the installation path when installation
     is done by running command `make install DESTDIR=/alternate/directory`
     which prepends '/alternate/directory' before all installation names.
-    See [PR #145](https://github.com/Parallel-NetCDF/PnetCDF/pull/154).
+    See [PR #154](https://github.com/Parallel-NetCDF/PnetCDF/pull/154).
 
 * New example programs
   + C/flexible_bottom.c and C/vard_bottom.c - These two examples construct MPI

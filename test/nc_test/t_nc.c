@@ -151,7 +151,7 @@ static const char * const reqattr[] = {
 	"SCALEMIN",
 	"SCALEMAX",
 	"FIELDNAM",
-	_FillValue
+	"_FillValue"
 };
 #define NUM_RATTRS	6
 
@@ -359,8 +359,8 @@ int t_nc(char *filename, int cmode)
 
  	{
  	int ifill = -1; double dfill = -9999;
- 	err = ncmpi_put_att_int(id, Long_id, _FillValue, NC_INT, 1, &ifill); ERR
- 	err = ncmpi_put_att_double(id, Double_id, _FillValue, NC_DOUBLE, 1, &dfill); ERR
+ 	err = ncmpi_put_att_int(id, Long_id, "_FillValue", NC_INT, 1, &ifill); ERR
+ 	err = ncmpi_put_att_double(id, Double_id, "_FillValue", NC_DOUBLE, 1, &dfill); ERR
  	}
 
 #ifdef REDEF

@@ -93,7 +93,7 @@ fill_var_buf(const NC_var *varp,
 {
     int i, indx;
 
-    indx = ncmpio_NC_findattr(&varp->attrs, _FillValue);
+    indx = ncmpio_NC_findattr(&varp->attrs, "_FillValue");
     if (indx >= 0) {
         /* User defined fill value */
         NC_attr *attrp = varp->attrs.value[indx];
@@ -280,12 +280,12 @@ fillerup(NC *ncp)
              * explicitly filled by calling ncmpi_fill_var_rec() */
             continue;
 
-        /* check if _FillValue attribute is defined */
-        indx = ncmpio_NC_findattr(&ncp->vars.value[i]->attrs, _FillValue);
+        /* check if attribute _FillValue is defined */
+        indx = ncmpio_NC_findattr(&ncp->vars.value[i]->attrs, "_FillValue");
 
         /* only if filling this variable is requested. Fill mode can be
          * enabled by 2 ways: explictly call to ncmpi_def_var_fill() or put
-         * the attribute named _FillValue */
+         * the attribute named "_FillValue" */
         if (ncp->vars.value[i]->no_fill && indx == -1) continue;
 
         /* collectively fill the entire variable */
@@ -309,8 +309,8 @@ fill_added(NC *ncp, NC *old_ncp)
             /* skip record variables */
             continue;
 
-        /* check if _FillValue attribute is defined */
-        indx = ncmpio_NC_findattr(&ncp->vars.value[varid]->attrs, _FillValue);
+        /* check if attribute _FillValue is defined */
+        indx = ncmpio_NC_findattr(&ncp->vars.value[varid]->attrs, "_FillValue");
 
         /* only if filling this variable is requested */
         if (ncp->vars.value[varid]->no_fill && indx == -1) continue;
@@ -338,8 +338,8 @@ fill_added_recs(NC *ncp, NC *old_ncp)
                 /* skip non-record variables */
                 continue;
 
-            /* check if _FillValue attribute is defined */
-            indx = ncmpio_NC_findattr(&ncp->vars.value[varid]->attrs, _FillValue);
+            /* check if attribute _FillValue is defined */
+            indx = ncmpio_NC_findattr(&ncp->vars.value[varid]->attrs, "_FillValue");
 
             /* only if filling this variable is requested */
             if (ncp->vars.value[varid]->no_fill && indx == -1) continue;
@@ -725,8 +725,8 @@ ncmpio_fill_var_rec(void      *ncdp,
         goto err_check;
     }
 
-    /* check if _FillValue attribute is defined */
-    indx = ncmpio_NC_findattr(&varp->attrs, _FillValue);
+    /* check if attribute _FillValue is defined */
+    indx = ncmpio_NC_findattr(&varp->attrs, "_FillValue");
 
     /* error if the fill mode of this variable is not on */
     if (varp->no_fill && indx == -1) {
@@ -891,7 +891,7 @@ ncmpio_def_var_fill(void       *ncdp,
     if (fill_value != NULL && !varp->no_fill) {
 
         /* create/overwrite attribute _FillValue */
-        err = ncmpio_put_att(ncdp, varid, _FillValue, varp->xtype,
+        err = ncmpio_put_att(ncdp, varid, "_FillValue", varp->xtype,
                              1, fill_value, ncmpii_nc2mpitype(varp->xtype));
         if (err != NC_NOERR) return err;
     }
@@ -911,9 +911,9 @@ ncmpio_inq_var_fill(NC_var *varp,
 
     assert(varp != NULL); /* NC_GLOBAL varid is illegal in this context */
 
-    /* Check if _FillValue is defined for this variable */
+    /* Check if attribute _FillValue is defined for this variable */
     for (i=0; i<ncap->ndefined; i++) {
-        if (strcmp(ncap->value[i]->name, _FillValue) == 0)
+        if (strcmp(ncap->value[i]->name, "_FillValue") == 0)
             break;
     }
     if (i == ncap->ndefined) { /* attribute _FillValue is not set */

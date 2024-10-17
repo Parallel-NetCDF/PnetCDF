@@ -28,8 +28,8 @@
 /*
   Modified/simplified by ADIOS team for the purpose of variable/attribute store
 */
-#ifndef __HASHTBL_H_
-#define __HASHTBL_H_
+#ifndef H_HASHTBL
+#define H_HASHTBL
 
 #ifdef __cplusplus
 extern "C" {

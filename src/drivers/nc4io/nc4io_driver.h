@@ -4,8 +4,8 @@
  */
 /* $Id$ */
 
-#ifndef _nc4io_DRIVER_H
-#define _nc4io_DRIVER_H
+#ifndef H_nc4io_DRIVER
+#define H_nc4io_DRIVER
 
 #include <mpi.h>
 #include <pnetcdf.h>

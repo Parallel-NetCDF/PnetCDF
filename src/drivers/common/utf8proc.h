@@ -120,7 +120,7 @@ typedef bool utf8proc_bool;
 #endif
 #include <limits.h>
 
-#ifndef _PNETCDF_H
+#ifndef H_PNETCDF
 #ifdef _WIN32
 #  ifdef UTF8PROC_EXPORTS
 #    define UTF8PROC_DLLEXPORT __declspec(dllexport)
@@ -146,7 +146,7 @@ extern "C" {
 #  define UINT16_MAX 65535U
 #endif
 
-#ifdef _PNETCDF_H
+#ifdef H_PNETCDF
 /* silence Fujitsu compiler warning: enumerated type mixed with another type */
 #define UTF8PROC_NULLTERM   (1<<0)
 #define UTF8PROC_STABLE     (1<<1)
@@ -409,7 +409,7 @@ typedef enum {
  */
 typedef utf8proc_int32_t (*utf8proc_custom_func)(utf8proc_int32_t codepoint, void *data);
 
-#ifndef _PNETCDF_H
+#ifndef H_PNETCDF
 /**
  * Array containing the byte lengths of a UTF-8 encoded codepoint based
  * on the first byte.

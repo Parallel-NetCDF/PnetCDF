@@ -33,7 +33,7 @@
 
 #include <testutils.h>
 
-#define _RNDUP(x, unit) ((((x) + (unit) - 1) / (unit)) * (unit))
+#define PNETCDF_RNDUP(x, unit) ((((x) + (unit) - 1) / (unit)) * (unit))
 
 #define CHECK_HINT(hint) { \
     MPI_Info_get(info_used, hint, len, value, &flag); \
@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
     MPI_Info_get_valuelen(info_used, "nc_header_align_size", &len, &flag);
     if (flag) {
         MPI_Info_get(info_used, "nc_header_align_size", len+1, value, &flag);
-        expect = _RNDUP(1, 4);
+        expect = PNETCDF_RNDUP(1, 4);
         if (expect != strtoll(value,NULL,10)) {
             printf("Error: nc_header_align_size expect %lld but got %lld\n",
                     expect, strtoll(value,NULL,10));
@@ -170,7 +170,7 @@ int main(int argc, char** argv) {
     MPI_Info_get_valuelen(info_used, "nc_var_align_size", &len, &flag);
     if (flag) {
         MPI_Info_get(info_used, "nc_var_align_size", len+1, value, &flag);
-        expect = _RNDUP(197, 4);
+        expect = PNETCDF_RNDUP(197, 4);
         if (expect != strtoll(value,NULL,10)) {
             printf("Error: nc_var_align_size expect %lld but got %lld\n",
                    expect, strtoll(value,NULL,10));
