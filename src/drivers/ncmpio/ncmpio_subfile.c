@@ -799,11 +799,12 @@ ncmpio_subfile_getput_vars(NC               *ncp,
                 NCI_Free(cbuf);
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             }
-            else
+            else {
                 mpireturn = MPI_Pack(buf, (int)bufcount, buftype, cbuf, (int)outsize,
                                      &position, MPI_COMM_SELF);
                 if (mpireturn != MPI_SUCCESS)
                     return ncmpii_error_mpi2nc(mpireturn, "MPI_Pack");
+            }
 #endif
         }
     }
