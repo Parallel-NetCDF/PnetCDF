@@ -744,7 +744,7 @@ enum FILE_KIND check_file_signature(char *path)
     char *hdf5_signature="\211HDF\r\n\032\n";
     char signature[8];
     int fd;
-    size_t rlen;
+    ssize_t rlen;
 
     if ((fd = open(path, O_RDONLY, 0700)) == -1) {
         fprintf(stderr,"%s error at opening file %s (%s)\n",progname,path,strerror(errno));
