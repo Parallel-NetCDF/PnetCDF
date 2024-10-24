@@ -157,6 +157,9 @@ int main(int argc, char** argv)
 
     /* the global array is NY * (NX * nprocs) */
     G_NX  = NX * nprocs;
+    if (verbose && rank == 0)
+        printf("Global variable of size %d x %d\n",NY,G_NX);
+
     myOff = NX * rank;
     myNX  = NX;
     if (verbose) printf("%2d: myOff=%3d myNX=%3d\n",rank,myOff,myNX);
