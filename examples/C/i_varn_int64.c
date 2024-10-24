@@ -181,6 +181,8 @@ static int check_contents(int ncid, int *varid)
                 printf("Expected file contents [%d][%d]=%lld, but got %lld\n",
                        i,j,expected[i][j],r_buffer[j]);
                 nerrs++;
+                i = 4; /* break loop i */
+                break;
             }
     }
     free(r_buffer);
@@ -349,9 +351,12 @@ int main(int argc, char** argv)
     /* check buffer contents */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++)
-            if (buffer[i][j] != rank)
+            if (buffer[i][j] != rank) {
                 printf("Expected read buf[%d][%d]=%d, but got %lld\n",
                        i,j,rank,buffer[i][j]);
+                i = nreqs; /* break loop i */
+                break;
+            }
     }
 
     for (i=0; i<nreqs; i++) free(buffer[i]);
@@ -392,9 +397,12 @@ int main(int argc, char** argv)
     /* check buffer contents */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++)
-            if (buffer[i][j*2] != rank)
+            if (buffer[i][j*2] != rank) {
                 printf("Expected read buf[%d][%d]=%d, but got %lld\n",
                        i,j*2,rank,buffer[i][j*2]);
+                i = nreqs; /* break loop i */
+                break;
+            }
     }
 
     err = ncmpi_close(ncid);
