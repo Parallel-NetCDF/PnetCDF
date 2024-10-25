@@ -32,8 +32,14 @@ unset PNETCDF_HINTS
 
 for i in ${check_PROGRAMS} ; do
     for j in ${safe_modes} ; do
+    for intra_aggr in 0 1 ; do
         if test "$j" = 1 ; then # test only in safe mode
            export PNETCDF_HINTS="romio_no_indep_rw=true"
+        else
+           export PNETCDF_HINTS=
+        fi
+        if test "$intra_aggr" = 1 ; then
+           export PNETCDF_HINTS="${PNETCDF_HINTS};nc_num_aggrs_per_node=2"
         fi
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
@@ -89,6 +95,7 @@ for i in ${check_PROGRAMS} ; do
            ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc4 4
            # Validator does not support nc4
         fi
+    done
     done
     # delete output file
     if test $i = get_vara ; then
