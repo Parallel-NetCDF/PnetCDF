@@ -59,6 +59,12 @@ dup_NC(const NC *ref)
         return NULL;
     }
 
+    if (&ref->nonaggr_ranks != NULL) {
+        size_t len = sizeof(int) * ncp->num_non_aggrs;
+        ncp->nonaggr_ranks = (int*) NCI_Malloc(len);
+        memcpy(ncp->nonaggr_ranks, &ref->nonaggr_ranks, len);
+    }
+
     /* fields below should not copied from ref */
     ncp->comm       = MPI_COMM_NULL;
     ncp->mpiinfo    = MPI_INFO_NULL;

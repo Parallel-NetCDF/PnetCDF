@@ -191,6 +191,24 @@ ncmpio_open(MPI_Comm     comm,
         ncp->vars.value[i]->attrs.hash_size = ncp->hash_size_attr;
 #endif
 
+    /* set up local-node aggregation */
+    ncp->aggregation = 0;      /* whether local-node aggregation is enabled */
+    ncp->isAggr = 0;           /* whether this rank is a local-node aggregator */
+    ncp->my_aggr = 0;          /* rank ID of my aggregator */
+    ncp->num_non_aggrs = 0;    /* number of nonaggregators assigned */
+    ncp->nonaggr_ranks = NULL; /* ranks of assigned nonaggregators */
+
+    if (ncp->num_aggrs_per_node > 0) {
+        int ub_num_nonaggrs = ncp->nprocs / ncp->num_aggrs_per_node + 1;
+        ncp->nonaggr_ranks = (int*) NCI_Malloc(sizeof(int) * ub_num_nonaggrs);
+        ncp->aggregation = 1;
+        err = ncmpio_construct_aggr_list(ncp);
+        if (err != NC_NOERR) return err;
+    }
+
+if (ncp->aggregation && ncp->rank == ncp->my_aggr) printf("%d %s:%d ncp aggregation=%d isAggr=%d my_aggr=%d num_non_aggrs=%d ranks=%d .. %d\n",
+ncp->rank,__func__,__LINE__,ncp->aggregation,(ncp->my_aggr==ncp->rank),ncp->my_aggr,ncp->num_non_aggrs,ncp->nonaggr_ranks[0],ncp->nonaggr_ranks[ncp->num_non_aggrs-1]);
+
     *ncpp = (void*)ncp;
 
     return status;
