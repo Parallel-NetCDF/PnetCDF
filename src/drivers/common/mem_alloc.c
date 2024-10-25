@@ -132,8 +132,10 @@ void ncmpii_add_mem_entry(void       *buf,
 /*----< ncmpii_del_mem_entry() >---------------------------------------------*/
 /* delete a malloc entry from the table */
 static
-void ncmpii_del_mem_entry(void *buf)
+int ncmpii_del_mem_entry(void *buf)
 {
+    int err=0;
+
 #ifdef ENABLE_THREAD_SAFE
     pthread_mutex_lock(&lock);
 #endif
@@ -146,6 +148,7 @@ void ncmpii_del_mem_entry(void *buf)
         if (ret == NULL) {
             fprintf(stderr, "Error at line %d file %s: tfind() buf=%p\n",
                     __LINE__,__FILE__,buf);
+            err = 1;
             goto fn_exit;
         }
         /* free space for func and filename */
@@ -159,6 +162,7 @@ void ncmpii_del_mem_entry(void *buf)
         if (ret == NULL) {
             fprintf(stderr, "Error at line %d file %s: tdelete() buf=%p\n",
                     __LINE__,__FILE__,buf);
+            err = 1;
             goto fn_exit;
         }
         free(tmp);
@@ -170,7 +174,7 @@ fn_exit:
 #ifdef ENABLE_THREAD_SAFE
     pthread_mutex_unlock(&lock);
 #endif
-    return;
+    return err;
 }
 #endif
 
@@ -246,7 +250,9 @@ void *NCI_Realloc_fn(void       *ptr,
     }
 
 #ifdef PNC_MALLOC_TRACE
-    ncmpii_del_mem_entry(ptr);
+    if (ncmpii_del_mem_entry(ptr) != 0)
+	fprintf(stderr, "realloc failed in file %s func %s line %d\n",
+                filename, func, lineno);
 #endif
     void *buf = (void *) realloc(ptr, size);
 #ifdef PNETCDF_DEBUG
@@ -275,7 +281,9 @@ void NCI_Free_fn(void       *ptr,
 {
     if (ptr == NULL) return;
 #ifdef PNC_MALLOC_TRACE
-    ncmpii_del_mem_entry(ptr);
+    if (ncmpii_del_mem_entry(ptr) != 0)
+	fprintf(stderr, "free failed in file %s func %s line %d\n",
+                filename, func, lineno);
 #endif
     free(ptr);
 }
