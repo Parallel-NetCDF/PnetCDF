@@ -435,6 +435,14 @@ struct NC {
 
     char         *path;     /* file name */
     struct NC    *old;      /* contains the previous NC during redef. */
+
+    /* Below are used for intra-node aggregation */
+    int  num_aggrs_per_node; /* user hint */
+    int  aggregation;        /* is intra-node aggregation enabled? */
+    int  isAggr;             /* is this rank an aggregator */
+    int  my_aggr;            /* rank ID of my aggregator */
+    int  num_non_aggrs;      /* number of non-aggregators assigned */
+    int *nonaggr_ranks;      /* ranks of assigned non-aggregators */
 };
 
 #define NC_readonly(ncp)   fIsSet((ncp)->flags, NC_MODE_RDONLY)
@@ -624,6 +632,9 @@ ncmpio_unpack_xbuf(int format, NC_var *varp, MPI_Offset bufcount,
                  MPI_Datatype buftype, int buftype_is_contig, MPI_Offset nelems,
                  MPI_Datatype etype, MPI_Datatype imaptype, int need_convert,
                  int need_swap, void *buf, void *xbuf);
+
+extern int
+ncmpio_construct_aggr_list(NC *ncp);
 
 /* Begin defined in ncmpio_file_io.c ----------------------------------------*/
 extern int
