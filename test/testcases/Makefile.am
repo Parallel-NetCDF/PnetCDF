@@ -54,7 +54,8 @@ if NAGFORT
   AM_FCFLAGS += -w=uparam
 endif
 
-TESTPROGRAMS = ncmpi_vars_null_stride \
+TESTPROGRAMS = file_create_open \
+               ncmpi_vars_null_stride \
                vectors \
                collective_error \
                test_varm \
