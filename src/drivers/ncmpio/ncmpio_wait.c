@@ -27,12 +27,6 @@
 #include <common.h>
 #include "ncmpio_NC.h"
 
-static int
-intra_node_aggregation(NC     *ncp,
-                       int     num_reqs,
-                       NC_req *put_list,
-                       MPI_Offset newnumrecs);
-
 /* buffer layers:
 
         User Level              buf     (user defined buffer of MPI_Datatype)
@@ -995,7 +989,7 @@ req_commit(NC  *ncp,
 
         if (ncp->aggregation && coll_indep == NC_REQ_COLL && ncp->nprocs > 1)
             /* intra-node write aggregation must be in collective mode */
-            err = intra_node_aggregation(ncp, num_w_reqs, put_list, newnumrecs);
+            err = ncmpio_intra_node_aggregation(ncp, num_w_reqs, put_list, newnumrecs);
         else
             err = wait_getput(ncp, num_w_reqs, put_list, NC_REQ_WR, coll_indep,
                               newnumrecs);
@@ -1254,12 +1248,6 @@ typedef struct {
     MPI_Aint   buf_addr; /* distance of this request's I/O buffer to the first
                             request to be merged */
 } off_len;
-
-/* C struct for MPI messages storing a list of offset-length pairs */
-typedef struct {
-    MPI_Offset off;      /* starting file offset of the request */
-    MPI_Offset len;      /* requested length in bytes starting from off */
-} off_len_msg;
 
 /*----< off_compare() >------------------------------------------------------*/
 /* used for sorting the offsets of the off_len array */
@@ -2100,6 +2088,13 @@ req_aggregation(NC     *ncp,
     return status;
 }
 
+#if 0
+/* C struct for MPI messages storing a list of offset-length pairs */
+typedef struct {
+    MPI_Offset off;      /* starting file offset of the request */
+    MPI_Offset len;      /* requested length in bytes starting from off */
+} off_len_msg;
+
 /*----< flatten_subarray() >-------------------------------------------------*/
 /* flatten a subarray request into a list of offset-length pairs */
 static int
@@ -2824,6 +2819,7 @@ printf("%s: %d npairs=%ld i+1=%d offset=%lld\n",__func__,__LINE__,npairs, i+1,of
 
     return status;
 }
+#endif
 
 /*----< calculate_access_range() >-------------------------------------------*/
 /* Returns the file offsets of access range of this request: starting file

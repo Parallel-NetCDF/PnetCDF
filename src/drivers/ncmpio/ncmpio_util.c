@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>   /* strtoll() is first introduced in C99 */
-#include <string.h>   /* strcpy() strdup() */
+#include <string.h>   /* strcpy() */
 #include <strings.h>  /* strcasecmp() */
 #include <assert.h>
 #include <errno.h>
@@ -812,6 +812,7 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
     return err;
 }
 
+#if 0
 /*----< ncmpio_construct_aggr_list() >---------------------------------------*/
 /* Find information about MPI processes and their affinity to compute node.
  * Determine whether self process is a intra-node aggregator.
@@ -1062,4 +1063,5 @@ printf("%d: ncp->aggregation=%d nprocs_my_node=%d naggrs_my_node=%d my_aggr=%d i
 
     return NC_NOERR;
 }
+#endif
 

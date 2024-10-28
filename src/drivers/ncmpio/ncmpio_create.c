@@ -315,28 +315,29 @@ ncmpio_create(MPI_Comm     comm,
          * be '\0' (null character). In this case, safe_mode is enabled */
     }
 
-    /* set up local-node aggregation */
-    ncp->aggregation = 0;      /* whether local-node aggregation is enabled */
-    ncp->isAggr = 0;           /* whether this rank is a local-node aggregator */
+    err = ncmpio_intra_node_aggr_init(ncp);
+    if (err != NC_NOERR) return err;
+
+#if 0
+    /* set up intra-node aggregation */
+    ncp->aggregation = 0;      /* is intra-node aggregation enabled? */
+    ncp->isAggr = 0;           /* is this rank an aggregator? */
     ncp->my_aggr = 0;          /* rank ID of my aggregator */
     ncp->num_non_aggrs = 0;    /* number of nonaggregators assigned */
     ncp->nonaggr_ranks = NULL; /* ranks of assigned nonaggregators */
 
     if (ncp->num_aggrs_per_node > 0) {
-        int ub_num_nonaggrs = nprocs / ncp->num_aggrs_per_node + 1;
+        int ub_num_nonaggrs; /* upperbound nonaggregators assigned to me */
+        ub_num_nonaggrs = nprocs / ncp->num_aggrs_per_node + 1;
         ncp->nonaggr_ranks = (int*) NCI_Malloc(sizeof(int) * ub_num_nonaggrs);
         ncp->aggregation = 1;
+        /* whether aggregation is enabled will be decided again inside
+         * ncmpio_construct_aggr_list()
+         */
         err = ncmpio_construct_aggr_list(ncp);
         if (err != NC_NOERR) return err;
     }
-
-#if 0
-if (ncp->aggregation && ncp->rank == ncp->my_aggr && ncp->num_non_aggrs==4) printf("%d num_non_aggrs=%d ranks=%d %d %d %d\n", ncp->rank,ncp->num_non_aggrs,ncp->nonaggr_ranks[0], ncp->nonaggr_ranks[1],ncp->nonaggr_ranks[2],ncp->nonaggr_ranks[3]);
-else if (ncp->aggregation && ncp->rank == ncp->my_aggr && ncp->num_non_aggrs==3) printf("%d num_non_aggrs=%d ranks=%d %d %d\n", ncp->rank,ncp->num_non_aggrs,ncp->nonaggr_ranks[0], ncp->nonaggr_ranks[1],ncp->nonaggr_ranks[2]);
 #endif
-
-if (ncp->aggregation && ncp->rank == ncp->my_aggr) printf("%d %s:%d ncp aggregation=%d isAggr=%d my_aggr=%d num_non_aggrs=%d ranks=%d .. %d\n",
-ncp->rank,__func__,__LINE__,ncp->aggregation,(ncp->my_aggr==ncp->rank),ncp->my_aggr,ncp->num_non_aggrs,ncp->nonaggr_ranks[0],ncp->nonaggr_ranks[ncp->num_non_aggrs-1]);
 
     *ncpp = (void*)ncp;
 
