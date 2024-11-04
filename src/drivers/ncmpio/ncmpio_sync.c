@@ -68,12 +68,11 @@ int
 ncmpio_write_numrecs(NC         *ncp,
                      MPI_Offset  new_numrecs)
 {
-    int rank, mpireturn, err;
+    int mpireturn, err;
     MPI_File fh;
     MPI_Status mpistatus;
 
-    MPI_Comm_rank(ncp->comm, &rank);
-    if (!fIsSet(ncp->flags, NC_HCOLL) && rank > 0)
+    if (!fIsSet(ncp->flags, NC_HCOLL) && ncp->rank > 0)
         /* Only root process writes numrecs in file */
         return NC_NOERR;
 
@@ -84,7 +83,7 @@ ncmpio_write_numrecs(NC         *ncp,
     if (ncp->nprocs > 1 && !NC_indep(ncp))
         fh = ncp->collective_fh;
 
-    if (rank > 0 && fIsSet(ncp->flags, NC_HCOLL)) {
+    if (ncp->rank > 0 && fIsSet(ncp->flags, NC_HCOLL)) {
         /* other processes participate the collective call */
         TRACE_IO(MPI_File_write_at_all)(fh, 0, NULL, 0, MPI_BYTE, &mpistatus);
         return NC_NOERR;
