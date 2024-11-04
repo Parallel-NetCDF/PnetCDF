@@ -144,15 +144,12 @@ fill_var_rec(NC         *ncp,
              NC_var     *varp,
              MPI_Offset  recno) /* record number */
 {
-    int err, status=NC_NOERR, mpireturn, rank, nprocs;
+    int err, status=NC_NOERR, mpireturn;
     void *buf;
     MPI_Offset var_len, start, count, offset;
     MPI_File fh;
     MPI_Status mpistatus;
     MPI_Datatype bufType;
-
-    MPI_Comm_rank(ncp->comm, &rank);
-    MPI_Comm_size(ncp->comm, &nprocs);
 
     if (varp->ndims == 0) /* scalar variable */
         var_len = 1;
@@ -164,14 +161,14 @@ fill_var_rec(NC         *ncp,
         var_len = varp->dsizes[0];
 
     /* divide total number of elements of this variable among all processes */
-    count = var_len / nprocs;
-    start = count * rank;
-    if (rank < var_len % nprocs) {
-        start += rank;
+    count = var_len / ncp->nprocs;
+    start = count * ncp->rank;
+    if (ncp->rank < var_len % ncp->nprocs) {
+        start += ncp->rank;
         count++;
     }
     else {
-        start += var_len % nprocs;
+        start += var_len % ncp->nprocs;
     }
 
     /* allocate buffer space */
@@ -191,7 +188,7 @@ fill_var_rec(NC         *ncp,
         offset += ncp->recsize * recno;
     offset += start * varp->xsz;
 
-    /* when nprocs == 1, we keep I/O mode in independent mode at all time */
+    /* when ncp->nprocs == 1, we keep I/O mode in independent mode at all time */
     fh = ncp->collective_fh;
 
     /* make the entire file visible */
@@ -360,7 +357,7 @@ fill_added_recs(NC *ncp, NC *old_ncp)
 static int
 fillerup_aggregate(NC *ncp, NC *old_ncp)
 {
-    int i, j, k, rank, nprocs, mpireturn, err, status=NC_NOERR;
+    int i, j, k, mpireturn, err, status=NC_NOERR;
     int start_vid, recno, nVarsFill;
     char *buf_ptr, *noFill;
     void *buf;
@@ -377,9 +374,6 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     int *blocklengths;
     MPI_Aint *offset;
 #endif
-
-    MPI_Comm_rank(ncp->comm, &rank);
-    MPI_Comm_size(ncp->comm, &nprocs);
 
     /* find the starting vid for newly added variables */
     start_vid = 0;
@@ -446,14 +440,14 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         else                  var_len = varp->dsizes[0];
 
         /* divide evenly total number of variable's elements among processes */
-        count[j] = var_len / nprocs;
-        start = count[j] * rank;
-        if (rank < var_len % nprocs) {
-            start += rank;
+        count[j] = var_len / ncp->nprocs;
+        start = count[j] * ncp->rank;
+        if (ncp->rank < var_len % ncp->nprocs) {
+            start += ncp->rank;
             count[j]++;
         }
         else
-            start += var_len % nprocs;
+            start += var_len % ncp->nprocs;
 
         /* calculate the starting file offset */
         start *= varp->xsz;
@@ -483,14 +477,14 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
             else                  var_len = varp->dsizes[1];
 
             /* divide total number of variable's elements among all processes */
-            count[j] = var_len / nprocs;
-            start = count[j] * rank;
-            if (rank < var_len % nprocs) {
-                start += rank;
+            count[j] = var_len / ncp->nprocs;
+            start = count[j] * ncp->rank;
+            if (ncp->rank < var_len % ncp->nprocs) {
+                start += ncp->rank;
                 count[j]++;
             }
             else
-                start += var_len % nprocs;
+                start += var_len % ncp->nprocs;
 
             /* calculate the starting file offset */
             start *= varp->xsz;

@@ -266,7 +266,7 @@ move_record_vars(NC *ncp, NC *old) {
 static int
 NC_begins(NC *ncp)
 {
-    int i, j, rank, mpireturn;
+    int i, j, mpireturn;
     MPI_Offset end_var=0;
     NC_var *last = NULL;
     NC_var *first_var = NULL;       /* first "non-record" var */
@@ -276,7 +276,6 @@ NC_begins(NC *ncp)
      */
 
     /* get the true header size (not header extent) */
-    MPI_Comm_rank(ncp->comm, &rank);
     ncp->xsz = ncmpio_hdr_len_NC(ncp);
 
     if (ncp->safe_mode && ncp->nprocs > 1) {
@@ -489,14 +488,12 @@ NC_begins(NC *ncp)
 static int
 write_NC(NC *ncp)
 {
-    int status=NC_NOERR, mpireturn, err, rank, is_coll;
+    int status=NC_NOERR, mpireturn, err, is_coll;
     MPI_Offset i, header_wlen, ntimes;
     MPI_File fh;
     MPI_Status mpistatus;
 
     assert(!NC_readonly(ncp));
-
-    MPI_Comm_rank(ncp->comm, &rank);
 
     /* Depending on whether NC_HCOLL is set, writing file header can be done
      * through either MPI collective or independent write call.
@@ -535,7 +532,7 @@ write_NC(NC *ncp)
     if (header_wlen % NC_MAX_INT) ntimes++;
 
     /* only rank 0's header gets written to the file */
-    if (rank == 0) {
+    if (ncp->rank == 0) {
         char *buf=NULL, *buf_ptr;
         MPI_Offset offset, remain;
 

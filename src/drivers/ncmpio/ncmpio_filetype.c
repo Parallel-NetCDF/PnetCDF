@@ -620,7 +620,7 @@ ncmpio_file_set_view(const NC     *ncp,
                      MPI_Offset   *offset,  /* IN/OUT */
                      MPI_Datatype  filetype)
 {
-    int rank, err, mpireturn, status=NC_NOERR;
+    int err, mpireturn, status=NC_NOERR;
 
     if (filetype == MPI_BYTE) {
         /* filetype is a contiguous space, make the whole file visible */
@@ -629,8 +629,7 @@ ncmpio_file_set_view(const NC     *ncp,
         return NC_NOERR;
     }
 
-    MPI_Comm_rank(ncp->comm, &rank);
-    if (rank == 0) {
+    if (ncp->rank == 0) {
         /* prepend the whole file header to filetype */
         MPI_Datatype root_filetype=MPI_BYTE, ftypes[2];
 #ifdef HAVE_MPI_LARGE_COUNT

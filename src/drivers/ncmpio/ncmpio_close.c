@@ -145,17 +145,13 @@ ncmpio_close(void *ncdp)
     }
 #else
     if (ncp->numLeadGetReqs > 0) {
-        int rank;
-        MPI_Comm_rank(ncp->comm, &rank);
-        printf("PnetCDF warning: %d nonblocking get requests still pending on process %d. Cancelling ...\n",ncp->numLeadGetReqs,rank);
+        printf("PnetCDF warning: %d nonblocking get requests still pending on process %d. Cancelling ...\n",ncp->numLeadGetReqs,ncp->rank);
         err = ncmpio_cancel(ncp, NC_GET_REQ_ALL, NULL, NULL);
         if (status == NC_NOERR) status = err;
         if (status == NC_NOERR) status = NC_EPENDING;
     }
     if (ncp->numLeadPutReqs > 0) {
-        int rank;
-        MPI_Comm_rank(ncp->comm, &rank);
-        printf("PnetCDF warning: %d nonblocking put requests still pending on process %d. Cancelling ...\n",ncp->numLeadPutReqs,rank);
+        printf("PnetCDF warning: %d nonblocking put requests still pending on process %d. Cancelling ...\n",ncp->numLeadPutReqs,ncp->rank);
         err = ncmpio_cancel(ncp, NC_PUT_REQ_ALL, NULL, NULL);
         if (status == NC_NOERR) status = err;
         if (status == NC_NOERR) status = NC_EPENDING;
