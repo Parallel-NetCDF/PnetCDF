@@ -315,29 +315,18 @@ ncmpio_create(MPI_Comm     comm,
          * be '\0' (null character). In this case, safe_mode is enabled */
     }
 
-    err = ncmpio_intra_node_aggr_init(ncp);
-    if (err != NC_NOERR) return err;
-
-#if 0
-    /* set up intra-node aggregation */
-    ncp->aggregation = 0;      /* is intra-node aggregation enabled? */
-    ncp->isAggr = 0;           /* is this rank an aggregator? */
-    ncp->my_aggr = 0;          /* rank ID of my aggregator */
-    ncp->num_non_aggrs = 0;    /* number of nonaggregators assigned */
-    ncp->nonaggr_ranks = NULL; /* ranks of assigned nonaggregators */
-
-    if (ncp->num_aggrs_per_node > 0) {
-        int ub_num_nonaggrs; /* upperbound nonaggregators assigned to me */
-        ub_num_nonaggrs = nprocs / ncp->num_aggrs_per_node + 1;
-        ncp->nonaggr_ranks = (int*) NCI_Malloc(sizeof(int) * ub_num_nonaggrs);
-        ncp->aggregation = 1;
-        /* whether aggregation is enabled will be decided again inside
-         * ncmpio_construct_aggr_list()
-         */
-        err = ncmpio_construct_aggr_list(ncp);
+    /* determine whether to enable intra-node aggregation and set up all
+     * intra-node aggregation metadata.
+     * ncp->num_aggrs_per_node = 0, or non-zero indicates whether this feature
+     *     is enabled globally for all processes.
+     * ncp->my_aggr = -1 or >= 0 indicates whether aggregation is effectively
+     *     enabled for the aggregation group of this process.
+     */
+    ncp->my_aggr = -1;
+    if (ncp->num_aggrs_per_node != 0) {
+        err = ncmpio_intra_node_aggr_init(ncp);
         if (err != NC_NOERR) return err;
     }
-#endif
 
     *ncpp = (void*)ncp;
 
