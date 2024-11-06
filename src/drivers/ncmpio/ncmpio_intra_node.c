@@ -69,7 +69,6 @@ qsort_off_len_buf(MPI_Aint num,
     while (1) {
         swap_cnt = 0;
         pm = offsets + (num / 2);
-/*
         if (num > 7) {
             pl = offsets;
             pn = offsets + (num - 1);
@@ -81,7 +80,6 @@ qsort_off_len_buf(MPI_Aint num,
             }
             pm = MEDIAN(pl, pm, pn);
         }
-*/
         SWAP(offsets, lengths, bufAddr, offsets, pm);
         pa = pb = offsets;
 
@@ -163,9 +161,18 @@ ncmpio_intra_node_aggr_init(NC *ncp)
     ncp->num_nonaggrs = 0;     /* number of non-aggregators assigned */
     ncp->nonaggr_ranks = NULL; /* ranks of assigned non-aggregators */
 
+#ifdef PNETCDF_PROFILING
+    ncp->aggr_time[0] = 0.0;
+#endif
+
     if (ncp->num_aggrs_per_node == 0 || ncp->num_aggrs_per_node == ncp->nprocs)
         /* disable intra-node aggregation */
         return NC_NOERR;
+
+#ifdef PNETCDF_PROFILING
+    ncp->aggr_time[0] = MPI_Wtime();
+    for (i=1; i<7; i++) ncp->aggr_time[i] = 0;
+#endif
 
     /* allocate space for storing the rank IDs of non-aggregators assigned to
      * this rank. Note ncp->nonaggr_ranks[] will be freed when closing the
@@ -181,12 +188,10 @@ ncmpio_intra_node_aggr_init(NC *ncp)
     MPI_Get_processor_name(my_procname, &my_procname_len);
     my_procname_len++; /* to include terminate null character */
 
-/*
+#ifdef WKL_DEBUG
 printf("%d: ---------  my_procname=%s\n",ncp->rank,my_procname);
 if (ncp->rank < (ncp->nprocs/2)+(ncp->nprocs%2)) {sprintf(my_procname,"dummy.0"); my_procname_len=strlen(my_procname)+1;}
 else {sprintf(my_procname,"dummy.1"); my_procname_len=strlen(my_procname)+1;}
-*/
-#ifdef WKL_DEBUG
 #endif
 
     if (ncp->rank == root) {
@@ -316,14 +321,6 @@ else {sprintf(my_procname,"dummy.1"); my_procname_len=strlen(my_procname)+1;}
 
     /* Now, ranks_my_node[my_rank_index] == ncp->rank */
 
-#ifdef WKL_DEBUG
-if (ncp->nprocs ==2) printf("%d: node_ids=%d %d ranks_my_node=%d %d\n",ncp->rank,node_ids[0],node_ids[1],ranks_my_node[0],ranks_my_node[1]);
-else if (ncp->nprocs ==5) printf("%d: node_ids=%d %d %d %d %d ranks_my_node=%d %d %d %d %d\n",ncp->rank,
-node_ids[0],node_ids[1],node_ids[2],node_ids[3],node_ids[4],
-ranks_my_node[0],ranks_my_node[1],ranks_my_node[2],ranks_my_node[3],ranks_my_node[4]);
-printf("%d: my_node_id=%d nprocs_my_node=%d my_rank_index=%d\n",ncp->rank,my_node_id,nprocs_my_node,my_rank_index);
-#endif
-
     NCI_Free(node_ids);
 
     /* make sure number of aggregators in my node <= nprocs_my_node */
@@ -374,12 +371,6 @@ printf("%d: my_node_id=%d nprocs_my_node=%d my_rank_index=%d\n",ncp->rank,my_nod
         ncp->nonaggr_ranks = NULL;
     }
 
-#ifdef WKL_DEBUG
-if (ncp->my_aggr >=0 && ncp->rank == ncp->my_aggr) printf("%d %s:%d ncp my_aggr=%d isAggr=%d my_aggr=%d num_nonaggrs=%d ranks=%d .. %d\n",
-ncp->rank,__func__,__LINE__,ncp->my_aggr,(ncp->my_aggr==ncp->rank),ncp->my_aggr,ncp->num_nonaggrs,ncp->nonaggr_ranks[0],ncp->nonaggr_ranks[ncp->num_nonaggrs-1]);
-#endif
-
-
     /* TODO: For automatically determine Whether to enable intra-node write
      * aggregation, this should be done right before each collective write
      * call.
@@ -392,31 +383,35 @@ ncp->rank,__func__,__LINE__,ncp->my_aggr,(ncp->my_aggr==ncp->rank),ncp->my_aggr,
      * of processes are allocated on the same node.
      */
 
+#ifdef PNETCDF_PROFILING
+    ncp->aggr_time[0] = MPI_Wtime() - ncp->aggr_time[0];
+#endif
+
     return NC_NOERR;
 }
 
 /*----< flatten_subarray() >-------------------------------------------------*/
 /* flatten a subarray request into a list of offset-length pairs */
 static int
-flatten_subarray(int          ndim,    /* number of dimensions */
-                 int          el_size, /* array element size */
-                 MPI_Offset   offset,  /* starting file offset of variable */
-                 MPI_Offset  *dimlen,  /* [ndim] dimension lengths */
-                 const MPI_Offset  *start,   /* [ndim] starts of subarray */
-                 const MPI_Offset  *count,   /* [ndim] counts of subarray */
-                 const MPI_Offset  *stride,  /* [ndim] strides of subarray */
-                 MPI_Aint    *npairs,  /* OUT: number of off-len pairs */
+flatten_subarray(int                ndim,       /* number of dimensions */
+                 int                el_size,    /* array element size */
+                 MPI_Offset         var_begin,  /* starting file offset */
+                 const MPI_Offset  *dimlen,     /* [ndim] dimension lengths */
+                 const MPI_Offset  *start,      /* [ndim] starts of subarray */
+                 const MPI_Offset  *count,      /* [ndim] counts of subarray */
+                 const MPI_Offset  *stride,     /* [ndim] strides of subarray */
+                 MPI_Aint          *npairs,     /* OUT: num of off-len pairs */
 #ifdef HAVE_MPI_LARGE_COUNT
-                 MPI_Count   *offsets, /* OUT: array of offsets */
-                 MPI_Count   *lengths  /* OUT: array of lengths */
+                 MPI_Count         *offsets,    /* OUT: array of offsets */
+                 MPI_Count         *lengths     /* OUT: array of lengths */
 #else
-                 MPI_Aint    *offsets, /* OUT: array of offsets */
-                 int         *lengths  /* OUT: array of lengths */
+                 MPI_Aint          *offsets,    /* OUT: array of offsets */
+                 int               *lengths     /* OUT: array of lengths */
 #endif
                                      )
 {
-    int i, j, to_free_stride_=0;
-    MPI_Offset length, nstride, array_len, off, subarray_len, *stride_=NULL;
+    int i, j;
+    MPI_Offset length, nstride, array_len, off, subarray_len;
     size_t idx=0, idx0;
 
     *npairs = 0;
@@ -424,47 +419,33 @@ flatten_subarray(int          ndim,    /* number of dimensions */
 
     if (ndim == 0) {  /* scalar record variable */
         *npairs = 1;
-        offsets[0] = offset;
+        offsets[0] = var_begin;
         lengths[0] = el_size;
         return NC_NOERR;
     }
 
-    if (stride == NULL) { /* equivalent to {1, 1, ..., 1} */
-        stride_ = (MPI_Offset*) NCI_Malloc((size_t)ndim * SIZEOF_MPI_OFFSET);
-        for (i=0; i<ndim; i++) stride_[i] = 1;
-        to_free_stride_ = 1;
-    }
-    else
-        stride_ = (MPI_Offset*)stride;
-
-    /* TODO: check if all stride_[] >= 1
-       Q: Is it legal if any stride_[] <= 0 ? */
+    /* TODO: check if all stride[] >= 1
+       Q: Is it legal if any stride[] <= 0 ? */
 
     /* calculate the number of offset-length pairs */
-    *npairs = (stride_[ndim-1] == 1) ? 1 : count[ndim-1];
-
-#ifdef WKL_DEBUG
-for (i=0; i<ndim-1; i++) if (count[i] == 0) printf("++++++++++++++++++++++++ ERROR %d count[%d]=0\n",__LINE__,i);
-#endif
+    *npairs = (stride[ndim-1] == 1) ? 1 : count[ndim-1];
 
     for (i=0; i<ndim-1; i++)
         *npairs *= count[i];
-    if (*npairs == 0) {  /* not reachable, an error if count[] == 0 */
-        if (to_free_stride_) NCI_Free(stride_);
+    if (*npairs == 0) /* not reachable, an error if count[] == 0 */
         return NC_NOERR;
-    }
 
     /* length of each row of the subarray are of the same size */
-    length  = (stride_[ndim-1] == 1) ? count[ndim-1] : 1;
+    length  = (stride[ndim-1] == 1) ? count[ndim-1] : 1;
     length *= el_size;
-    nstride  = (stride_[ndim-1] == 1) ? 1 : count[ndim-1];
+    nstride  = (stride[ndim-1] == 1) ? 1 : count[ndim-1];
 
     /* set the offset-length pairs for the lowest dimension */
-    off = offset + start[ndim-1] * el_size;
+    off = var_begin + start[ndim-1] * el_size;
     for (i=0; i<nstride; i++) {
         offsets[idx]  = off;
         lengths[idx]  = length;
-        off          += stride_[ndim-1] * el_size;
+        off          += stride[ndim-1] * el_size;
         idx++;
     }
     ndim--;
@@ -487,7 +468,7 @@ for (i=0; i<ndim-1; i++) if (count[i] == 0) printf("++++++++++++++++++++++++ ERR
         }
 
         /* update each plan subarray of dimension ndim-1 */
-        off = array_len * stride_[ndim-1] * el_size;
+        off = array_len * stride[ndim-1] * el_size;
         for (i=1; i<count[ndim-1]; i++) {
             idx0 = 0;
             for (j=0; j<subarray_len; j++) {
@@ -496,12 +477,11 @@ for (i=0; i<ndim-1; i++) if (count[i] == 0) printf("++++++++++++++++++++++++ ERR
                 idx++;
                 idx0++;
             }
-            off += array_len * stride_[ndim-1] * el_size;
+            off += array_len * stride[ndim-1] * el_size;
         }
         ndim--;  /* move to next higher dimension */
         subarray_len *= count[ndim];
     }
-    if (to_free_stride_) NCI_Free(stride_);
 
     return NC_NOERR;
 }
@@ -521,14 +501,14 @@ flatten_req(NC                *ncp,
             MPI_Count        **offsets,   /* OUT: array of flattened offsets */
             MPI_Count        **lengths    /* OUT: array of flattened lengths */
 #else
-            MPI_Anit         **offsets,   /* OUT: array of flattened offsets */
+            MPI_Aint         **offsets,   /* OUT: array of flattened offsets */
             int              **lengths    /* OUT: array of flattened lengths */
 #endif
                                    )
 {
     int j, err=NC_NOERR, ndims, count0;
     MPI_Aint num, idx;
-    MPI_Offset var_begin, *shape;
+    MPI_Offset var_begin, *shape, *ones=NULL;
 
     *num_pairs = 0;    /* total number of offset-length pairs */
 
@@ -568,6 +548,11 @@ flatten_req(NC                *ncp,
     *lengths = (int*)     NCI_Malloc(sizeof(int)      * num);
 #endif
 
+    if (stride == NULL) { /* equivalent to {1, 1, ..., 1} */
+        ones = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * varp->ndims);
+        for (j=0; j<varp->ndims; j++) ones[j] = 1;
+    }
+
     ndims = varp->ndims;
     var_begin = varp->begin;
     shape = varp->shape;
@@ -587,7 +572,7 @@ flatten_req(NC                *ncp,
     for (j=0; j<count0; j++) {
         /* flatten the request into a list of offset-length pairs */
         err = flatten_subarray(ndims, varp->xsz, var_begin, shape,
-                               start, count, stride,
+                               start, count, (stride == NULL) ? ones : stride,
                                &num,            /* OUT: num of off-len pairs */
                                *offsets + idx,  /* OUT: array of offsets */
                                *lengths + idx); /* OUT: array of lengths */
@@ -597,6 +582,9 @@ assert(idx <= *num_pairs);
         if (IS_RECVAR(varp))
             var_begin += ncp->recsize;
     }
+    if (ones != NULL)
+        NCI_Free(ones);
+
     return err;
 }
 
@@ -613,14 +601,14 @@ flatten_reqs(NC            *ncp,
              MPI_Count    **offsets,   /* OUT: array of flattened offsets */
              MPI_Count    **lengths    /* OUT: array of flattened lengths */
 #else
-             MPI_Anit     **offsets,   /* OUT: array of flattened offsets */
+             MPI_Aint     **offsets,   /* OUT: array of flattened offsets */
              int          **lengths    /* OUT: array of flattened lengths */
 #endif
                                    )
 {
-    int i, j, status=NC_NOERR, ndims;
+    int i, j, status=NC_NOERR, ndims, max_ndims=0;
     MPI_Aint num, idx;
-    MPI_Offset *start, *count, *shape, *stride;
+    MPI_Offset *start, *count, *shape, *stride, *ones;
 
     *num_pairs = 0;    /* total number of offset-length pairs */
 
@@ -630,6 +618,7 @@ flatten_reqs(NC            *ncp,
     for (i=0; i<num_reqs; i++) {
         NC_lead_req *lead = ncp->put_lead_list + reqs[i].lead_off;
         ndims = lead->varp->ndims;
+        max_ndims = MAX(max_ndims, ndims);
         if (ndims > 0) {
             start  = reqs[i].start;
             count  = start + ndims;
@@ -671,6 +660,9 @@ flatten_reqs(NC            *ncp,
 #endif
     idx = 0;
 
+    ones = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * max_ndims);
+    for (i=0; i<max_ndims; i++) ones[i] = 1;
+
     /* now re-run the loop to fill in the off-len pairs */
     for (i=0; i<num_reqs; i++) {
         MPI_Offset var_begin;
@@ -707,12 +699,13 @@ flatten_reqs(NC            *ncp,
          * append to the end of offsets and lengths
          */
         flatten_subarray(ndims, lead->varp->xsz, var_begin, shape,
-                         start, count, stride,
+                         start, count, (stride == NULL) ? ones : stride,
                          &num,            /* OUT: number of off-len pairs */
                          *offsets + idx,  /* OUT: array of offsets */
                          *lengths + idx); /* OUT: array of lengths */
         idx += num;
     }
+    NCI_Free(ones);
 
     for (i=0; i<num_reqs; i++) {
         NC_lead_req *lead = ncp->put_lead_list + reqs[i].lead_off;
@@ -815,9 +808,13 @@ intra_node_aggregation(NC           *ncp,
     char *recv_buf=NULL, *wr_buf = NULL;
     MPI_Aint npairs, *msg;
     MPI_Offset offset=0, buf_count;
-    MPI_Datatype fileType=MPI_BYTE;
+    MPI_Datatype recvTypes, fileType=MPI_BYTE;
     MPI_File fh;
     MPI_Request *req=NULL;
+
+#ifdef PNETCDF_PROFILING
+    double timing = MPI_Wtime();
+#endif
 
 #ifdef HAVE_MPI_LARGE_COUNT
     MPI_Count bufLen;
@@ -840,12 +837,10 @@ intra_node_aggregation(NC           *ncp,
     msg[0] = num_pairs;
     msg[1] = bufLen;
 
-#ifdef WKL_DEBUG
-printf("%s:%d rank %d num_pairs=%ld bufLen=%ld\n",__func__,__LINE__,ncp->rank,num_pairs,bufLen);
-#endif
-
     if (ncp->rank == ncp->my_aggr) {
-        req = (MPI_Request*) NCI_Malloc(sizeof(MPI_Request) * ncp->num_nonaggrs);
+        /* Aggregator collects each non-aggregator's num_pairs and bufLen */
+
+        req = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * ncp->num_nonaggrs);
         nreqs = 0;
         for (i=1; i<ncp->num_nonaggrs; i++)
             MPI_Irecv(msg + i*2, 2, MPI_AINT, ncp->nonaggr_ranks[i], 0,
@@ -857,16 +852,8 @@ printf("%s:%d rank %d num_pairs=%ld bufLen=%ld\n",__func__,__LINE__,ncp->rank,nu
             /* return the first encountered error if there is any */
             if (status == NC_NOERR) status = err;
         }
-    }
-    else
-        MPI_Send(msg, 2, MPI_AINT, ncp->my_aggr, 0, ncp->comm);
 
-    /* Aggregator collects offset-length pairs from non-aggregators */
-    if (ncp->rank == ncp->my_aggr) {
-
-#ifdef WKL_DEBUG
-for (i=0; i<ncp->num_nonaggrs; i++) printf("%s:%d from %d num_pairs=%ld bufLen=%ld\n",__func__,__LINE__,i,msg[2*i],msg[2*i+1]);
-#endif
+        /* Aggregator collects offset-length pairs from non-aggregators */
 
         /* calculate the total number of offset-length pairs */
         npairs = num_pairs;
@@ -885,7 +872,6 @@ for (i=0; i<ncp->num_nonaggrs; i++) printf("%s:%d from %d num_pairs=%ld bufLen=%
             lengths = (int*) NCI_Realloc(lengths, sizeof(int) * npairs);
         }
 #endif
-        MPI_Datatype *recvTypes = (MPI_Datatype*)NCI_Malloc(sizeof(MPI_Datatype) * ncp->num_nonaggrs);
 
         nreqs = 0;
 #ifdef HAVE_MPI_LARGE_COUNT
@@ -902,20 +888,25 @@ for (i=0; i<ncp->num_nonaggrs; i++) printf("%s:%d from %d num_pairs=%ld bufLen=%
             bklens[0] = msg[i*2] * sizeof(MPI_Count);
             bklens[1] = msg[i*2] * sizeof(MPI_Count);
             mpireturn = MPI_Type_create_hindexed_c(2, bklens, disps, MPI_BYTE,
-                                                   &recvTypes[nreqs]);
+                                                   &recvTypes);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn,"MPI_Type_create_hindexed_c");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) status = err;
             }
             else {
-                mpireturn = MPI_Type_commit(&recvTypes[nreqs]);
+                mpireturn = MPI_Type_commit(&recvTypes);
                 if (mpireturn != MPI_SUCCESS) {
                     err = ncmpii_error_mpi2nc(mpireturn,"MPI_Type_commit");
                     /* return the first encountered error if there is any */
                     if (status == NC_NOERR) status = err;
                 }
             }
+            /* post to receive offset-length pairs from non-aggregators */
+            MPI_Irecv_c(MPI_BOTTOM, 1, recvTypes, ncp->nonaggr_ranks[i],
+                        0, ncp->comm, &req[nreqs]);
+            MPI_Type_free(&recvTypes);
+
             disps[0] = MPI_Aint_add(disps[0], bklens[0]);
             disps[1] = MPI_Aint_add(disps[1], bklens[1]);
             nreqs++;
@@ -933,43 +924,29 @@ for (i=0; i<ncp->num_nonaggrs; i++) printf("%s:%d from %d num_pairs=%ld bufLen=%
             bklens[0] = msg[i*2] * sizeof(MPI_Aint);
             bklens[1] = msg[i*2] * sizeof(int);
             mpireturn = MPI_Type_create_hindexed(2, bklens, disps, MPI_BYTE,
-                                                 &recvTypes[nreqs]);
+                                                 &recvTypes);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn,"MPI_Type_create_hindexed");
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) status = err;
             }
             else {
-                mpireturn = MPI_Type_commit(&recvTypes[nreqs]);
+                mpireturn = MPI_Type_commit(&recvTypes);
                 if (mpireturn != MPI_SUCCESS) {
                     err = ncmpii_error_mpi2nc(mpireturn,"MPI_Type_commit");
                     /* return the first encountered error if there is any */
                     if (status == NC_NOERR) status = err;
                 }
             }
+            /* post to receive offset-length pairs from non-aggregators */
+            MPI_Irecv(MPI_BOTTOM, 1, recvTypes, ncp->nonaggr_ranks[i],
+                      0, ncp->comm, &req[nreqs]);
+            MPI_Type_free(&recvTypes);
+
             disps[0] = MPI_Aint_add(disps[0], bklens[0]);
             disps[1] = MPI_Aint_add(disps[1], bklens[1]);
             nreqs++;
         }
-#endif
-
-        /* post requests to receive offset-length pairs from non-aggregators */
-        nreqs = 0;
-        for (i=1; i<ncp->num_nonaggrs; i++) {
-            if (msg[i*2] == 0) continue;
-#ifdef HAVE_MPI_LARGE_COUNT
-            MPI_Irecv_c(MPI_BOTTOM, 1, recvTypes[nreqs], ncp->nonaggr_ranks[i],
-                        0, ncp->comm, &req[nreqs]);
-#else
-            MPI_Irecv(MPI_BOTTOM, 1, recvTypes[nreqs], ncp->nonaggr_ranks[i],
-                      0, ncp->comm, &req[nreqs]);
-#endif
-            nreqs++;
-        }
-#ifdef WKL_DEBUG
-printf("%s:%d offsets=%lld %lld %lld %lld lengths=%lld %lld %lld %lld\n",__func__,__LINE__,
-offsets[0], offsets[1], offsets[2], offsets[3],
-lengths[0], lengths[1], lengths[2], lengths[3]);
 #endif
 
         mpireturn = MPI_Waitall(nreqs, req, MPI_STATUSES_IGNORE);
@@ -978,15 +955,9 @@ lengths[0], lengths[1], lengths[2], lengths[3]);
             /* return the first encountered error if there is any */
             if (status == NC_NOERR) status = err;
         }
-        nreqs = 0;
-        for (i=1; i<ncp->num_nonaggrs; i++) {
-            if (msg[i*2] == 0) continue;
-            MPI_Type_free(&recvTypes[nreqs++]);
-        }
-        NCI_Free(recvTypes);
     }
     else if (num_pairs > 0) { /* non-aggregator */
-        MPI_Datatype recvTypes;
+        MPI_Send(msg, 2, MPI_AINT, ncp->my_aggr, 0, ncp->comm);
 
         /* send offset-length pairs data to the aggregator */
 #ifdef HAVE_MPI_LARGE_COUNT
@@ -1016,6 +987,7 @@ lengths[0], lengths[1], lengths[2], lengths[3]);
             }
         }
         MPI_Send_c(MPI_BOTTOM, 1, recvTypes, ncp->my_aggr, 0, ncp->comm);
+        MPI_Type_free(&recvTypes);
 #else
         int bklens[2];
         MPI_Aint aint, disps[2];
@@ -1040,9 +1012,15 @@ lengths[0], lengths[1], lengths[2], lengths[3]);
             }
         }
         MPI_Send(MPI_BOTTOM, 1, recvTypes, ncp->my_aggr, 0, ncp->comm);
-#endif
         MPI_Type_free(&recvTypes);
+#endif
+        NCI_Free(msg);
     }
+
+#ifdef PNETCDF_PROFILING
+    ncp->aggr_time[2] += MPI_Wtime() - timing;
+    timing = MPI_Wtime();
+#endif
 
     /*
      * TODO, define a datatype to combine sends of offset-length pairs with the
@@ -1065,8 +1043,6 @@ lengths[0], lengths[1], lengths[2], lengths[3]);
 
         /* First, pack self write data into front of the recv_buf */
         if (bufLen > 0) {
-// printf(" -------------- (bufType == MPI_BYTE)=%d\n",(bufType == MPI_BYTE));
-// printf(" -------------- (bufType == MPI_INT)=%d bufLen=%lld\n",(bufType == MPI_INT),bufLen);
             if (bufType == MPI_BYTE)
                 memcpy(recv_buf, buf, bufLen);
             else {
@@ -1090,7 +1066,6 @@ lengths[0], lengths[1], lengths[2], lengths[3]);
         for (i=1; i<ncp->num_nonaggrs; i++) {
             if (msg[i*2 + 1] == 0) continue;
 #ifdef HAVE_MPI_LARGE_COUNT
-// printf(" -------------- RECV num=%lld src=%d\n",msg[i*2 + 1],ncp->nonaggr_ranks[i]);
             MPI_Irecv_c(ptr, msg[i*2 + 1], MPI_BYTE, ncp->nonaggr_ranks[i], 0,
                         ncp->comm, &req[nreqs++]);
 #else
@@ -1106,6 +1081,7 @@ lengths[0], lengths[1], lengths[2], lengths[3]);
             if (status == NC_NOERR) status = err;
         }
         NCI_Free(req);
+        NCI_Free(msg);
     }
     else if (bufLen > 0) {
         /* send write data to the aggregator */
@@ -1121,6 +1097,11 @@ lengths[0], lengths[1], lengths[2], lengths[3]);
         NCI_Free(lengths);
     }
 
+#ifdef PNETCDF_PROFILING
+    ncp->aggr_time[3] += MPI_Wtime() - timing;
+    timing = MPI_Wtime();
+#endif
+
     /* aggregator sorts the offset-length pairs, along with the buffer */
     if (ncp->rank == ncp->my_aggr && npairs > 0) {
 
@@ -1130,11 +1111,15 @@ lengths[0], lengths[1], lengths[2], lengths[3]);
         for (i=1; i<npairs; i++)
             bufAddr[i] = bufAddr[i-1] + lengths[i-1];
 
-// for (i=0; i<npairs; i++) printf("%d: npairs=%ld lengths[%d]=%lld\n",__LINE__,npairs,i,lengths[i]);
-// printf("Before ---------  npairs=%ld lengths[0]=%lld\n",npairs,lengths[0]);
-        /* sort offsets, lengths, bufAddr, based on offsets in increasing order */
+        /* sort offsets, lengths, bufAddr altogether, based on offsets into
+         * an increasing order
+         */
         qsort_off_len_buf(npairs, offsets, lengths, bufAddr);
-// printf("After ---------  npairs=%ld lengths[0]=%lld\n",npairs,lengths[0]);
+
+#ifdef PNETCDF_PROFILING
+        ncp->aggr_time[4] += MPI_Wtime() - timing;
+        timing = MPI_Wtime();
+#endif
 
         /* merge the overlapped buffer segments, skip the overlapped regions
          * for those with higher j indices (i.e. requests with lower j indices
@@ -1147,15 +1132,14 @@ lengths[0], lengths[1], lengths[2], lengths[3]);
 
             MPI_Offset gap = offsets[i] + lengths[i] - offsets[j];
             if (gap >= 0) { /* segments i and j overlaps */
-                if (MPI_Aint_add(bufAddr[i], lengths[i]) ==
-                    MPI_Aint_add(bufAddr[j], gap)) {
+                if (bufAddr[i] + lengths[i] == bufAddr[j] + gap) {
                     /* buffers i and j are contiguous, merge j to i */
                     lengths[i] = MPI_Aint_add(lengths[i], lengths[j] - gap);
                 }
                 else { /* buffers are not contiguous, reduce j's len */
                     offsets[i+1] = offsets[j] + gap;
                     lengths[i+1] = lengths[j] - gap;
-                    bufAddr[i+1] = MPI_Aint_add(bufAddr[j], gap);
+                    bufAddr[i+1] = bufAddr[j] + gap;
                     i++;
                 }
             }
@@ -1168,7 +1152,6 @@ lengths[0], lengths[1], lengths[2], lengths[3]);
                 }
             }
         }
-
         /* update number of pairs, now all off-len pairs are not overlapped */
         npairs = i+1;
 
@@ -1201,43 +1184,25 @@ lengths[0], lengths[1], lengths[2], lengths[3]);
                 }
             }
         }
-
-#ifdef WKL_DEBUG
-printf("%s: %d npairs=%ld i+1=%d\n",__func__,__LINE__,npairs, i+1);
-#endif
-        /* update number of segments, now all off-len pairs are not overlapped */
+        /* update number of pairs, now all off-len pairs are not overlapped */
         npairs = i+1;
 
         if (npairs == 1) {
+            /* No need to create fileType if writing to a contiguous space */
             offset = offsets[0];
-#ifdef WKL_DEBUG
-printf("%s: %d npairs=%ld i+1=%d offset=%lld\n",__func__,__LINE__,npairs, i+1,offset);
-#endif
         }
         else {
 #ifdef HAVE_MPI_LARGE_COUNT
             /* construct fileview */
-            mpireturn = MPI_Type_create_hindexed_c(npairs, lengths, offsets, MPI_BYTE,
-                                                   &fileType);
+            mpireturn = MPI_Type_create_hindexed_c(npairs, lengths, offsets,
+                                                   MPI_BYTE, &fileType);
 
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn,"MPI_Type_create_hindexed_c");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR) status = err;
-            }
-            else {
-                mpireturn = MPI_Type_commit(&fileType);
-                if (mpireturn != MPI_SUCCESS) {
-                    err = ncmpii_error_mpi2nc(mpireturn,"MPI_Type_commit");
-                    /* return the first encountered error if there is any */
-                    if (status == NC_NOERR) status = err;
-                }
-            }
 #else
             /* construct fileview */
-            mpireturn = MPI_Type_create_hindexed(npairs, lengths, offsets, MPI_BYTE,
-                                                 &fileType);
+            mpireturn = MPI_Type_create_hindexed(npairs, lengths, offsets,
+                                                 MPI_BYTE, &fileType);
 
+#endif
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn,"MPI_Type_create_hindexed");
                 /* return the first encountered error if there is any */
@@ -1251,12 +1216,14 @@ printf("%s: %d npairs=%ld i+1=%d offset=%lld\n",__func__,__LINE__,npairs, i+1,of
                     if (status == NC_NOERR) status = err;
                 }
             }
-#endif
         }
         NCI_Free(offsets);
         NCI_Free(lengths);
+#ifdef PNETCDF_PROFILING
+        ncp->aggr_time[5] += MPI_Wtime() - timing;
+        timing = MPI_Wtime();
+#endif
     }
-    NCI_Free(msg);
 
     if (ncp->rank != ncp->my_aggr) /* non-aggregator writes nothing */
         buf_count = 0;
@@ -1267,7 +1234,6 @@ printf("%s: %d npairs=%ld i+1=%d offset=%lld\n",__func__,__LINE__,npairs, i+1,of
      */
     fh = ncp->collective_fh;
 
-// printf("%s line %d: ncmpio_read_write() offset=%lld buf_count=%lld\n",__func__,__LINE__,offset,buf_count);
     /* set the MPI-IO fileview, this is a collective call */
     err = ncmpio_file_set_view(ncp, fh, &offset, fileType);
     if (fileType != MPI_BYTE) MPI_Type_free(&fileType);
@@ -1283,16 +1249,20 @@ printf("%s: %d npairs=%ld i+1=%d offset=%lld\n",__func__,__LINE__,npairs, i+1,of
 
     if (wr_buf != NULL) NCI_Free(wr_buf);
 
+#ifdef PNETCDF_PROFILING
+    ncp->aggr_time[6] += MPI_Wtime() - timing;
+#endif
+
     return status;
 }
 
 /*----< ncmpio_intra_node_aggregation_nreqs() >------------------------------*/
 /* This is a collective call */
 int
-ncmpio_intra_node_aggregation_nreqs(NC     *ncp,
-                                    int     num_reqs,
-                                    NC_req *put_list,
-                                    MPI_Offset newnumrecs)
+ncmpio_intra_node_aggregation_nreqs(NC         *ncp,
+                                    int         num_reqs,
+                                    NC_req     *put_list,
+                                    MPI_Offset  newnumrecs)
 {
     int err, status=NC_NOERR;
     MPI_Aint bufLen, num_pairs;
@@ -1306,6 +1276,10 @@ ncmpio_intra_node_aggregation_nreqs(NC     *ncp,
 
     assert(ncp->my_aggr >= 0);
 
+#ifdef PNETCDF_PROFILING
+    double timing = MPI_Wtime();
+#endif
+
     /* construct file offset-length pairs
      *     num_pairs: total number of off-len pairs
      *     offsets:   array of flattened offsets
@@ -1315,21 +1289,6 @@ ncmpio_intra_node_aggregation_nreqs(NC     *ncp,
         flatten_reqs(ncp, num_reqs, put_list, &num_pairs, &offsets, &lengths);
     else
         num_pairs = 0;
-
-// int j; for (j=1; j<num_pairs; j++) printf("%d: num_pairs=%ld lengths[%d]=%lld\n",__LINE__,num_pairs,j,lengths[j]);
-// #define WKL_DEBUG
-#ifdef WKL_DEBUG
-    int i, j;
-for (j=1; j<num_pairs; j++) {
-    if (offsets[j-1] + lengths[j-1] > offsets[j]) {
-        printf("%d: DECREASING num_pairs=%ld offsets[%d]=%lld len=%lld = %lld > offsets[%d]=%lld\n",ncp->rank,num_pairs,j-1,offsets[j-1], lengths[j-1], offsets[j-1] + lengths[j-1], j, offsets[j]);
-        break;
-    }
-}
-printf("%d: %s:%d num_reqs=%d num_pairs=%ld offsets=%lld %lld %lld %lld lengths=%lld %lld %lld %lld\n",ncp->rank,__func__,__LINE__,num_reqs,num_pairs,
-offsets[0], offsets[1], offsets[2], offsets[3],
-lengths[0], lengths[1], lengths[2], lengths[3]);
-#endif
 
     /* construct write buffer datatype, bufType.
      * bufLen is the buffer size in bytes
@@ -1344,7 +1303,12 @@ lengths[0], lengths[1], lengths[2], lengths[3]);
     if (put_list != NULL)
         NCI_Free(put_list);
 
-    err = intra_node_aggregation(ncp, num_pairs, offsets, lengths, bufLen, bufType, NULL);
+#ifdef PNETCDF_PROFILING
+    ncp->aggr_time[1] += MPI_Wtime() - timing;
+#endif
+
+    err = intra_node_aggregation(ncp, num_pairs, offsets, lengths, bufLen,
+                                 bufType, NULL);
     if (status == NC_NOERR) status = err;
 
     /* free and reset bufType */
@@ -1401,7 +1365,8 @@ ncmpio_intra_node_aggregation(NC               *ncp,
      *     offsets:   array of flattened offsets
      *     lengths:   array of flattened lengths
      */
-    err = flatten_req(ncp, varp, start, count, stride, &num_pairs, &offsets, &lengths);
+    err = flatten_req(ncp, varp, start, count, stride, &num_pairs, &offsets,
+                      &lengths);
     if (err != NC_NOERR) {
         bufLen = 0;
         num_pairs = 0;
@@ -1416,21 +1381,8 @@ ncmpio_intra_node_aggregation(NC               *ncp,
     }
     if (status == NC_NOERR) status = err;
 
-// #define WKL_DEBUG
-#ifdef WKL_DEBUG
-    int j;
-for (j=1; j<num_pairs; j++) {
-    if (offsets[j-1] + lengths[j-1] > offsets[j]) {
-        printf("%d: DECREASING num_pairs=%ld offsets[%d]=%lld len=%lld = %lld > offsets[%d]=%lld\n",ncp->rank,num_pairs,j-1,offsets[j-1], lengths[j-1], offsets[j-1] + lengths[j-1], j, offsets[j]);
-        break;
-    }
-}
-printf("%d: %s:%d num_reqs=%d num_pairs=%ld offsets=%lld %lld %lld %lld lengths=%lld %lld %lld %lld\n",ncp->rank,__func__,__LINE__,num_reqs,num_pairs,
-offsets[0], offsets[1], offsets[2], offsets[3],
-lengths[0], lengths[1], lengths[2], lengths[3]);
-#endif
-
-    err = intra_node_aggregation(ncp, num_pairs, offsets, lengths, bufCount, bufType, buf);
+    err = intra_node_aggregation(ncp, num_pairs, offsets, lengths, bufCount,
+                                 bufType, buf);
     if (status == NC_NOERR) status = err;
 
     return status;

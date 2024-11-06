@@ -446,6 +446,9 @@ struct NC {
     int  my_aggr;            /* rank ID of my aggregator */
     int  num_nonaggrs;       /* number of non-aggregators assigned */
     int *nonaggr_ranks;      /* ranks of assigned non-aggregators */
+#ifdef PNETCDF_PROFILING
+    double aggr_time[7];
+#endif
 };
 
 #define NC_readonly(ncp)   fIsSet((ncp)->flags, NC_MODE_RDONLY)
