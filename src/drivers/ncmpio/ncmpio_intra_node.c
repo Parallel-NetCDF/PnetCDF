@@ -1164,17 +1164,18 @@ intra_node_aggregation(NC           *ncp,
          */
         char *ptr = wr_buf;
         buf_count = 0;
-        for (i=0; i<npairs; i++) {
-            memcpy(ptr, recv_buf + bufAddr[i], lengths[i]);
-            ptr += lengths[i];
-            /* overlap may be found, recalculate buf_count */
-            buf_count += lengths[i];
+        if (npairs > 0) {
+            memcpy(ptr, recv_buf + bufAddr[0], lengths[0]);
+            ptr += lengths[0];
+            buf_count = lengths[0];
         }
-        NCI_Free(bufAddr);
-        if (recv_buf != NULL) NCI_Free(recv_buf);
-
-        /* coalesce the offset-length pairs */
         for (i=0, j=1; j<npairs; j++) {
+            memcpy(ptr, recv_buf + bufAddr[j], lengths[j]);
+            ptr += lengths[j];
+            /* overlap may be found, recalculate buf_count */
+            buf_count += lengths[j];
+
+            /* coalesce the offset-length pairs */
             if (offsets[i] + lengths[i] == offsets[j]) {
                 /* coalesce j into i */
                 lengths[i] += lengths[j];
@@ -1187,6 +1188,9 @@ intra_node_aggregation(NC           *ncp,
                 }
             }
         }
+        NCI_Free(bufAddr);
+        if (recv_buf != NULL) NCI_Free(recv_buf);
+
         /* update number of pairs, now all off-len pairs are not overlapped */
         npairs = i+1;
 
