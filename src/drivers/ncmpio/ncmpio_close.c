@@ -229,7 +229,7 @@ ncmpio_close(void *ncdp)
         if (ncp->my_aggr == -1) ncp->aggr_time[0] = 0.0;
         MPI_Reduce(ncp->aggr_time, &max_t, 7, MPI_DOUBLE, MPI_MAX, 0, ncp->comm);
         if (ncp->my_aggr >= 0 && ncp->rank == 0) {
-            printf("File name: %s\n", ncp->path);
+            printf("Intra-node aggregation File name: %s\n", ncp->path);
             printf("Intra-node aggregation time init            = %.4f seconds\n", max_t[0]);
             printf("Intra-node aggregation time flat            = %.4f seconds\n", max_t[1]);
             printf("Intra-node aggregation time off-len    comm = %.4f seconds\n", max_t[2]);

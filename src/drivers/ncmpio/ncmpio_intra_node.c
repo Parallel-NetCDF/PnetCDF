@@ -837,9 +837,8 @@ intra_node_aggregation(NC           *ncp,
     msg[0] = num_pairs;
     msg[1] = bufLen;
 
+    /* Aggregator collects each non-aggregator's num_pairs and bufLen */
     if (ncp->rank == ncp->my_aggr) {
-        /* Aggregator collects each non-aggregator's num_pairs and bufLen */
-
         req = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * ncp->num_nonaggrs);
         nreqs = 0;
         for (i=1; i<ncp->num_nonaggrs; i++)
@@ -852,9 +851,15 @@ intra_node_aggregation(NC           *ncp,
             /* return the first encountered error if there is any */
             if (status == NC_NOERR) status = err;
         }
+    }
+    else { /* non-aggregator */
+        MPI_Send(msg, 2, MPI_AINT, ncp->my_aggr, 0, ncp->comm);
+        if (num_pairs == 0)
+            NCI_Free(msg);
+    }
 
-        /* Aggregator collects offset-length pairs from non-aggregators */
-
+    /* Aggregator collects offset-length pairs from non-aggregators */
+    if (ncp->rank == ncp->my_aggr) {
         /* calculate the total number of offset-length pairs */
         npairs = num_pairs;
         for (i=1; i<ncp->num_nonaggrs; i++) npairs += msg[i*2];
@@ -957,8 +962,6 @@ intra_node_aggregation(NC           *ncp,
         }
     }
     else if (num_pairs > 0) { /* non-aggregator */
-        MPI_Send(msg, 2, MPI_AINT, ncp->my_aggr, 0, ncp->comm);
-
         /* send offset-length pairs data to the aggregator */
 #ifdef HAVE_MPI_LARGE_COUNT
         MPI_Aint aint;
@@ -1354,8 +1357,6 @@ ncmpio_intra_node_aggregation(NC               *ncp,
     MPI_Aint *offsets=NULL;
     int *lengths=NULL;
 #endif
-
-    assert(ncp->my_aggr >= 0);
 
     if (buf == NULL) /* zero-length request */
         return intra_node_aggregation(ncp, 0, NULL, NULL, 0, MPI_BYTE, NULL);
