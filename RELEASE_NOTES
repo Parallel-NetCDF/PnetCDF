@@ -7,6 +7,91 @@ Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
 -------------------------------------
 
 * New features
+  + Intra-node aggregation for write requests -- When the number of MPI
+    processes allocated to a compute node is large, this feature can
+    effectively reduce the communication congestion caused by an overwhelming
+    large number of asynchronous messages posted during the collective write
+    of MPI-IO. This new feature can be enabled by setting the PnetCDF I/O hint
+    'nc_num_aggrs_per_node' to the desired number of aggregators per compute
+    node. The non-aggregators send their requests to the assigned aggregators,
+    and then the aggregators make aggregated requests to the file.
+    [PR #156](https://github.com/Parallel-NetCDF/PnetCDF/pull/156).
+  + Support MPI derived data types that are constructed from the large-count
+    derived datatype constructors introduced in MPI 4.0.
+    [PR #145](https://github.com/Parallel-NetCDF/PnetCDF/pull/145).
+
+* New optimization
+  + When running sequentially (i.e. number of processes is 1), PnetCDF calls
+    the MPI independent I/O functions and avoids calls to MPI_Barrier,
+    MPI_Bcast, and MPI_Allreduce.
+    [PR #149](https://github.com/Parallel-NetCDF/PnetCDF/pull/149).
+
+* Configure options changed
+  + The default has been changed to build both shared and static libraries.
+    [PR #143](https://github.com/Parallel-NetCDF/PnetCDF/pull/143).
+
+* Configure updates:
+  + Fix `pnetcdf-config` of reflecting the installation path when installation
+    is done by running command `make install DESTDIR=/alternate/directory`
+    which prepends '/alternate/directory' before all installation names.
+    [PR #154](https://github.com/Parallel-NetCDF/PnetCDF/pull/154).
+
+* New constants
+  + A new C macro `NC_FillValue` replaces `_FillValue` and thus `_FillValue` is
+    now deprecated This conforms with NetCDF4's change in its version 4.9.3
+    release. [PR #153](https://github.com/Parallel-NetCDF/PnetCDF/pull/153).
+
+* New PnetCDF hints
+  + 'nc_num_aggrs_per_node' -- To enable the intra-node aggregation, this I/O
+    hint can set to a positive integral value, which indicates the desired
+    number of processes per compute node to be selected as the aggregators.
+    Setting it to 0 disables the aggregation, which is also the default mode.
+    [PR #156](https://github.com/Parallel-NetCDF/PnetCDF/pull/156).
+
+* Build recipes
+  + When using OpenMPI on Mac OSX, a link error may appear. The work around is
+    to add `LDFLAGS=-ld_classic` into the configure command line. Thanks to
+    Rui Chen for reporting and provide the solution.
+    [Issue #139](https://github.com/Parallel-NetCDF/PnetCDF/issues/139).
+
+* Updated utility programs
+  + none
+
+* Other updates:
+  + More document for comparing PnetCDF and NetCDF4 has been added to file
+    doc/netcdf4_vs_pnetcdf.md
+    [PR #152](https://github.com/Parallel-NetCDF/PnetCDF/pull/152) and
+    [PR #140](https://github.com/Parallel-NetCDF/PnetCDF/pull/140).
+
+* New example programs
+  + C/flexible_bottom.c and C/vard_bottom.c - These two examples construct MPI
+    derived data types using absolute memory addresses first and use MPI_BOTTOM
+    when calling the PnetCDF flexible APIs.
+
+* New programs for I/O benchmarks
+  + C/pnetcdf_put_vara.c --
+    * This program writes a series of 3D variables with 2D block-block
+      partitioning pattern. Each variable is a record variable.
+      [PR #150](https://github.com/Parallel-NetCDF/PnetCDF/pull/150).
+  + C/netcdf_put_vara.c --
+    * This sequential NetCDF-C program writes a series of 3D variables. Each
+      variable is a record variable.
+    * This program and `C/pnetcdf_put_vara.c` can be used to compare the
+      performance of NetCDF and PnetCDF when running sequentially, i.e. one
+      process.
+      [PR #150](https://github.com/Parallel-NetCDF/PnetCDF/pull/150).
+
+* New test program
+  + test/testcases/flexible_large_count.c - tests flexible APIs that use MPI
+    derived datatypes created by MPI large-count datatype constructors.
+    [PR #145](https://github.com/Parallel-NetCDF/PnetCDF/pull/145).
+
+
+-------------------------------------
+Version 1.13.0 (March 29, 2024)
+-------------------------------------
+
+* New features
   + A single read/write request made by an MPI process is now allowed to be of
     size larger than 2 GiB. Such large requests will be passed to the MP-IO
     library. This feature makes use of "the large count feature" introduced in
