@@ -73,7 +73,7 @@
 #define SetFill			nc_set_fill
 #define ReDef			nc_redef
 #define EndDef			nc_enddef
-#define _EndDef			nc__enddef
+#define EndDef_			nc__enddef
 #define FileClose		nc_close
 #define MPI_Init(a,b)
 #define MPI_Comm_rank(a,b)
@@ -89,7 +89,7 @@
 #define SetFill		ncmpi_set_fill
 #define ReDef		ncmpi_redef
 #define EndDef		ncmpi_enddef
-#define _EndDef		ncmpi__enddef
+#define EndDef_		ncmpi__enddef
 #define FileClose	ncmpi_close
 #endif
 
@@ -339,7 +339,7 @@ int check_var_offset(char *filename)
 
     err = SetFill(ncid, NC_NOFILL, &fill_mode); CHECK_ERR
     /* make the file header size larger than 2 GiB */
-    err = _EndDef(ncid, 2147483648LL, 1, 1, 1); EXP_ERR(NC_EVARSIZE)
+    err = EndDef_(ncid, 2147483648LL, 1, 1, 1); EXP_ERR(NC_EVARSIZE)
 
     /* the above error keeps the program in define mode, thus close will
      * call enddef again and this time it will use default alignments, i.e.

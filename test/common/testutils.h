@@ -5,8 +5,8 @@
 /* $Id$ */
 
 
-#ifndef _UTILS_H
-#define _UTILS_H
+#ifndef H_UTILS
+#define H_UTILS
 
 #ifdef HAVE_CONFIG_H
 #include <config.h> /* output of 'configure' */

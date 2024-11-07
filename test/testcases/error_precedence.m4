@@ -54,7 +54,7 @@ dnl
 #define SetFill                 nc_set_fill
 #define ReDef                   nc_redef
 #define EndDef                  nc_enddef
-#define _EndDef                 nc__enddef
+#define EndDef_                 nc__enddef
 #define FileClose               nc_close
 #define StrError                nc_strerror
 #define API(kind)               nc_##kind
@@ -74,7 +74,7 @@ dnl
 #define SetFill                 ncmpi_set_fill
 #define ReDef                   ncmpi_redef
 #define EndDef                  ncmpi_enddef
-#define _EndDef                 ncmpi__enddef
+#define EndDef_                 ncmpi__enddef
 #define FileClose               ncmpi_close
 #define StrError                ncmpi_strerror
 #define FileCreate(a,b,c)       ncmpi_create(MPI_COMM_WORLD,a,b,MPI_INFO_NULL,c)
