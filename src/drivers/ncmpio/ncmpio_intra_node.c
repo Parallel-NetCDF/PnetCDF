@@ -486,9 +486,9 @@ flatten_req(NC                *ncp,
 #endif
                                    )
 {
-    int j, err=NC_NOERR, ndims, count0;
+    int j, err=NC_NOERR, ndims;
     MPI_Aint num, idx;
-    MPI_Offset var_begin, *shape, *ones=NULL;
+    MPI_Offset var_begin, *shape, count0, *ones=NULL;
 
     *num_pairs = 0;    /* total number of offset-length pairs */
 
@@ -557,7 +557,7 @@ flatten_req(NC                *ncp,
                                *offsets + idx,  /* OUT: array of offsets */
                                *lengths + idx); /* OUT: array of lengths */
         idx += num;
-assert(idx <= *num_pairs);
+        assert(idx <= *num_pairs);
 
         if (IS_RECVAR(varp))
             var_begin += ncp->recsize;
@@ -786,7 +786,7 @@ intra_node_aggregation(NC           *ncp,
 {
     int i, j, err, mpireturn, status=NC_NOERR, nreqs;
     char *recv_buf=NULL, *wr_buf = NULL;
-    MPI_Aint npairs, *msg;
+    MPI_Aint npairs=0, *msg;
     MPI_Offset offset=0, buf_count;
     MPI_Datatype recvTypes, fileType=MPI_BYTE;
     MPI_File fh;
@@ -968,7 +968,7 @@ intra_node_aggregation(NC           *ncp,
         MPI_Type_free(&recvTypes);
 #else
         int bklens[2];
-        MPI_Aint aint, disps[2];
+        MPI_Aint disps[2];
 
         bklens[0] = msg[0] * sizeof(MPI_Aint);
         bklens[1] = msg[0] * sizeof(int);
@@ -1035,23 +1035,25 @@ intra_node_aggregation(NC           *ncp,
         }
 
         /* post requests to receive write data from non-aggregators */
-        char *ptr = recv_buf + bufLen;
-        for (i=1; i<ncp->num_nonaggrs; i++) {
-            if (msg[i*2 + 1] == 0) continue;
+        if (buf_count > 0) {
+            char *ptr = recv_buf + bufLen;
+            for (i=1; i<ncp->num_nonaggrs; i++) {
+                if (msg[i*2 + 1] == 0) continue;
 #ifdef HAVE_MPI_LARGE_COUNT
-            MPI_Irecv_c(ptr, msg[i*2 + 1], MPI_BYTE, ncp->nonaggr_ranks[i], 0,
-                        ncp->comm, &req[nreqs++]);
+                MPI_Irecv_c(ptr, msg[i*2 + 1], MPI_BYTE, ncp->nonaggr_ranks[i],
+                            0, ncp->comm, &req[nreqs++]);
 #else
-            MPI_Irecv(ptr, msg[i*2 + 1], MPI_BYTE, ncp->nonaggr_ranks[i], 0,
-                      ncp->comm, &req[nreqs++]);
+                MPI_Irecv(ptr, msg[i*2 + 1], MPI_BYTE, ncp->nonaggr_ranks[i],
+                          0, ncp->comm, &req[nreqs++]);
 #endif
-            ptr += msg[i*2 + 1];
-        }
-        mpireturn = MPI_Waitall(nreqs, req, MPI_STATUSES_IGNORE);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn,"MPI_Waitall");
-            /* return the first encountered error if there is any */
-            if (status == NC_NOERR) status = err;
+                ptr += msg[i*2 + 1];
+            }
+            mpireturn = MPI_Waitall(nreqs, req, MPI_STATUSES_IGNORE);
+            if (mpireturn != MPI_SUCCESS) {
+                err = ncmpii_error_mpi2nc(mpireturn,"MPI_Waitall");
+                /* return the first encountered error if there is any */
+                if (status == NC_NOERR) status = err;
+            }
         }
         NCI_Free(req);
         NCI_Free(msg);
@@ -1297,8 +1299,8 @@ ncmpio_intra_node_aggregation(NC               *ncp,
                               MPI_Datatype      bufType,
                               void             *buf)
 {
-    int i, err, status=NC_NOERR;
-    MPI_Aint bufLen, num_pairs;
+    int err, status=NC_NOERR;
+    MPI_Aint num_pairs;
 #ifdef HAVE_MPI_LARGE_COUNT
     MPI_Count *offsets=NULL, *lengths=NULL;
 #else
@@ -1317,18 +1319,12 @@ ncmpio_intra_node_aggregation(NC               *ncp,
     err = flatten_req(ncp, varp, start, count, stride, &num_pairs, &offsets,
                       &lengths);
     if (err != NC_NOERR) {
-        bufLen = 0;
         num_pairs = 0;
         if (offsets != NULL)
             NCI_Free(offsets);
         offsets = NULL;
     }
-    else {
-        bufLen = varp->xsz;
-        for (i=0; i<varp->ndims; i++)
-            bufLen *= count[i];
-    }
-    if (status == NC_NOERR) status = err;
+    status = err;
 
     err = intra_node_aggregation(ncp, num_pairs, offsets, lengths, bufCount,
                                  bufType, buf);

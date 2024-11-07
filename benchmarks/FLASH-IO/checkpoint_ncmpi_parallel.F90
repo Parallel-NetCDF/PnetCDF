@@ -247,7 +247,6 @@
 
       integer ncid, cmode, file_info
       integer(kind=MPI_OFFSET_KIND) starts(5), counts(4), put_size
-      integer gsizes(5), subsizes(5), gstarts(5)
       integer reqs(nvar+6), stats(nvar+6)
 
 !-----------------------------------------------------------------------------
