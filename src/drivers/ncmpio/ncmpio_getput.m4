@@ -117,7 +117,7 @@ put_varm(NC               *ncp,
 {
     void *xbuf=NULL;
     int mpireturn, err=NC_NOERR, status=NC_NOERR, buftype_is_contig;
-    int el_size, need_convert, need_swap, need_swap_back_buf=0;
+    int el_size, need_convert=0, need_swap=0, need_swap_back_buf=0;
     int coll_indep, xtype_is_contig=1, can_swap_in_place;
     MPI_Offset nelems=0, bnelems=0, nbytes=0, offset=0;
     MPI_Datatype itype, xtype=MPI_BYTE, imaptype, filetype=MPI_BYTE;
@@ -135,10 +135,19 @@ put_varm(NC               *ncp,
      * el_size:  byte size of itype
      * buftype_is_contig: whether buftype is contiguous
      */
-    err = ncmpii_buftype_decode(varp->ndims, varp->xtype, count, bufcount,
-                                buftype, &itype, &el_size, &bnelems,
-                                &nbytes, &buftype_is_contig);
-    if (err != NC_NOERR) goto err_check;
+    if (varp == NULL) { /* zero-sized request */
+        itype = MPI_BYTE;
+        el_size = 0;
+        bnelems = 0;
+        nbytes = 0;
+        buftype_is_contig = 0;
+    }
+    else {
+        err = ncmpii_buftype_decode(varp->ndims, varp->xtype, count, bufcount,
+                                    buftype, &itype, &el_size, &bnelems,
+                                    &nbytes, &buftype_is_contig);
+        if (err != NC_NOERR) goto err_check;
+    }
     xtype_is_contig = buftype_is_contig;
 
     if (buftype == MPI_DATATYPE_NULL) { /* buftype and bufcount are ignored */
@@ -165,8 +174,10 @@ put_varm(NC               *ncp,
         goto err_check;
 
     /* check if type conversion and Endianness byte swap is needed */
-    need_convert = ncmpii_need_convert(ncp->format, varp->xtype, itype);
-    need_swap    = NEED_BYTE_SWAP(varp->xtype, itype);
+    if (varp != NULL) { /* non-zero-sized request */
+        need_convert = ncmpii_need_convert(ncp->format, varp->xtype, itype);
+        need_swap    = NEED_BYTE_SWAP(varp->xtype, itype);
+    }
 
     /* check if in-place byte swap can be enabled */
     can_swap_in_place = 1;
@@ -182,8 +193,11 @@ put_varm(NC               *ncp,
     /* check whether this is a true varm call, if yes, imaptype will be a
      * newly created MPI derived data type, otherwise MPI_DATATYPE_NULL
      */
-    err = ncmpii_create_imaptype(varp->ndims, count, imap, itype, &imaptype);
-    if (err != NC_NOERR) goto err_check;
+    imaptype = MPI_DATATYPE_NULL;
+    if (varp != NULL) { /* non-zero-sized request */
+        err = ncmpii_create_imaptype(varp->ndims, count, imap, itype, &imaptype);
+        if (err != NC_NOERR) goto err_check;
+    }
 
     if (!need_convert && imaptype == MPI_DATATYPE_NULL &&
         (!need_swap || (can_swap_in_place && buftype_is_contig))) {
@@ -194,7 +208,7 @@ put_varm(NC               *ncp,
             need_swap_back_buf = 1;
         }
     }
-    else {
+    else if (varp != NULL) {
         xbuf = NCI_Malloc((size_t)nbytes);
         if (xbuf == NULL) {
             DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
@@ -217,7 +231,7 @@ put_varm(NC               *ncp,
     }
 
     /* Set nelems and xtype which will be used in MPI read/write */
-    if (buf != xbuf) {
+    if (buf != xbuf && varp != NULL) {
         /* xbuf is a contiguous buffer */
         xtype = ncmpii_nc2mpitype(varp->xtype);
         nelems = bnelems;
@@ -244,50 +258,59 @@ err_check:
         filetype = MPI_BYTE;
         xtype    = MPI_BYTE;
     }
-    else {
-        /* Create the filetype for this request and calculate the beginning
-         * file offset for this request. If this request is contiguous in file,
-         * then set filetype == MPI_BYTE. Otherwise filetype will be an MPI
-         * derived data type.
-         */
-        err = ncmpio_filetype_create_vars(ncp, varp, start, count, stride,
-                                          &offset, &filetype, NULL);
-        if (err != NC_NOERR) {
-            nbytes   = 0;
-            nelems   = 0;
-            filetype = MPI_BYTE;
-            xtype    = MPI_BYTE;
-            if (status == NC_NOERR) status = err;
-        }
-    }
 
-    /* TODO: if record variables are too big (so big that we cannot store the
-     * stride between records in an MPI_Aint, for example) then we will
-     * have to process this one record at a time.
-     */
-
-    fh = ncp->independent_fh;
-    coll_indep = NC_REQ_INDEP;
-    if (ncp->nprocs > 1 && fIsSet(reqMode, NC_REQ_COLL)) {
-        fh = ncp->collective_fh;
-        coll_indep = NC_REQ_COLL;
-    }
-
-    /* MPI_File_set_view is collective */
-    err = ncmpio_file_set_view(ncp, fh, &offset, filetype);
-    if (err != NC_NOERR) {
-        nelems = 0; /* skip this request */
+    if (fIsSet(reqMode, NC_REQ_COLL) && ncp->my_aggr >= 0 && ncp->nprocs > 1) {
+        /* intra-node write aggregation must be in collective mode */
+        void *wbuf = (nbytes == 0) ?  NULL : xbuf;
+        err = ncmpio_intra_node_aggregation(ncp, varp, start, count, stride, nelems, xtype, wbuf);
         if (status == NC_NOERR) status = err;
     }
-    if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
+    else {
+        if (nbytes > 0) {
+            /* Create the filetype for this request and calculate the beginning
+             * file offset for this request. If this request is contiguous in
+             * file, then set filetype == MPI_BYTE. Otherwise filetype will
+             * be an MPI derived data type.
+             */
+            err = ncmpio_filetype_create_vars(ncp, varp, start, count, stride,
+                                              &offset, &filetype, NULL);
+            if (err != NC_NOERR) {
+                nbytes   = 0;
+                nelems   = 0;
+                filetype = MPI_BYTE;
+                xtype    = MPI_BYTE;
+                if (status == NC_NOERR) status = err;
+            }
+        }
 
-    /* xtype is the element data type (MPI primitive type) in xbuf to be
-     * written to the variable defined in file. Note data stored in xbuf is in
-     * the external data type, ready to be written to file.
-     */
-    err = ncmpio_read_write(ncp, NC_REQ_WR, coll_indep, offset, nelems, xtype,
-                            xbuf, xtype_is_contig);
-    if (status == NC_NOERR) status = err;
+        /* TODO: if record variables are too big to store the stride between
+         * records in an MPI_Aint, then we will have to process this one record
+         * at a time.
+         */
+
+        fh = ncp->independent_fh;
+        coll_indep = NC_REQ_INDEP;
+        if (ncp->nprocs > 1 && fIsSet(reqMode, NC_REQ_COLL)) {
+            fh = ncp->collective_fh;
+            coll_indep = NC_REQ_COLL;
+        }
+
+        /* MPI_File_set_view is collective */
+        err = ncmpio_file_set_view(ncp, fh, &offset, filetype);
+        if (err != NC_NOERR) {
+            nelems = 0; /* skip this request */
+            if (status == NC_NOERR) status = err;
+        }
+        if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
+
+        /* xtype is the element data type (MPI primitive type) in xbuf to be
+         * written to the variable defined in file. Note data stored in xbuf
+         * is in the external data type, ready to be written to file.
+         */
+        err = ncmpio_read_write(ncp, NC_REQ_WR, coll_indep, offset, nelems,
+                                xtype, xbuf, xtype_is_contig);
+        if (status == NC_NOERR) status = err;
+    }
 
     /* done with xbuf */
     if (xbuf != NULL && xbuf != buf) NCI_Free(xbuf);
@@ -296,12 +319,12 @@ err_check:
         ncmpii_in_swapn(buf, bnelems, varp->xsz);
 
     /* for record variable, update number of records */
-    if (IS_RECVAR(varp)) {
+    if (varp != NULL && IS_RECVAR(varp)) {
         /* update header's number of records in memory */
         MPI_Offset new_numrecs = ncp->numrecs;
 
         /* calculate the max record ID written by this request */
-        if (status == NC_NOERR || status == NC_ERANGE) {
+        if (nelems > 0 && (status == NC_NOERR || status == NC_ERANGE)) {
             if (stride == NULL)
                 new_numrecs = start[0] + count[0];
             else
@@ -571,9 +594,17 @@ ncmpio_$1_var(void             *ncdp,
 
     /* sanity check has been done at dispatchers */
 
-    if (fIsSet(reqMode, NC_REQ_ZERO) && fIsSet(reqMode, NC_REQ_COLL))
+    if (fIsSet(reqMode, NC_REQ_ZERO) && fIsSet(reqMode, NC_REQ_COLL)) {
+        /* In case some processes in an aggregation group have nothing to
+         * write, they still need to participate the communication part of the
+         * intra-node aggregation operation.
+         */
+        ifelse(`$1',`put',`if (ncp->my_aggr >= 0)
+            return $1_varm(ncp, NULL, NULL, NULL, NULL, imap, NULL, 0, buftype, reqMode);')
+
         /* this collective API has a zero-length request */
         return ncmpio_getput_zero_req(ncp, reqMode);
+    }
 
     /* obtain NC_var object pointer, varp. Note sanity check for ncdp and
      * varid has been done in dispatchers */

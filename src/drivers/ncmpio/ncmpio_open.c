@@ -191,6 +191,19 @@ ncmpio_open(MPI_Comm     comm,
         ncp->vars.value[i]->attrs.hash_size = ncp->hash_size_attr;
 #endif
 
+    /* determine whether to enable intra-node aggregation and set up all
+     * intra-node aggregation metadata.
+     * ncp->num_aggrs_per_node = 0, or non-zero indicates whether this feature
+     *     is enabled globally for all processes.
+     * ncp->my_aggr = -1 or >= 0 indicates whether aggregation is effectively
+     *     enabled for the aggregation group of this process.
+     */
+    ncp->my_aggr = -1;
+    if (ncp->num_aggrs_per_node != 0) {
+        err = ncmpio_intra_node_aggr_init(ncp);
+        if (err != NC_NOERR) return err;
+    }
+
     *ncpp = (void*)ncp;
 
     return status;

@@ -435,6 +435,17 @@ struct NC {
 
     char         *path;     /* file name */
     struct NC    *old;      /* contains the previous NC during redef. */
+
+    /* Below are used for intra-node aggregation */
+    int  num_aggrs_per_node; /* number of aggregators per compute node. Set
+                                through a user hint. 0 to disable the
+                                intra-node aggregation, -1 to let PnetCDF to
+                                decide. This value must be the same among all
+                                processes.
+                              */
+    int  my_aggr;            /* rank ID of my aggregator */
+    int  num_nonaggrs;       /* number of non-aggregators assigned */
+    int *nonaggr_ranks;      /* ranks of assigned non-aggregators */
 };
 
 #define NC_readonly(ncp)   fIsSet((ncp)->flags, NC_MODE_RDONLY)
@@ -630,5 +641,18 @@ extern int
 ncmpio_read_write(NC *ncp, int rw_flag, int coll_indep, MPI_Offset offset,
                   MPI_Offset buf_count, MPI_Datatype buf_type, void *buf,
                   int buftype_is_contig);
+
+/* Begin defined in ncmpio_intranode.c --------------------------------------*/
+extern int
+ncmpio_intra_node_aggr_init(NC *ncp);
+
+extern int
+ncmpio_intra_node_aggregation_nreqs(NC *ncp, int num_reqs, NC_req *put_list,
+                                    MPI_Offset newnumrecs);
+extern int
+ncmpio_intra_node_aggregation(NC *ncp, NC_var *varp, const MPI_Offset *start,
+                              const MPI_Offset *count,
+                              const MPI_Offset *stride, MPI_Offset bufCount,
+                              MPI_Datatype bufType, void *buf);
 
 #endif /* H_NC */

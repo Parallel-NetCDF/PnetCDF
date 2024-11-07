@@ -48,10 +48,11 @@ ncmpio_free_NC(NC *ncp)
      */
     if (ncp->mpiinfo != MPI_INFO_NULL) MPI_Info_free(&ncp->mpiinfo);
 
-    if (ncp->get_list != NULL) NCI_Free(ncp->get_list);
-    if (ncp->put_list != NULL) NCI_Free(ncp->put_list);
-    if (ncp->abuf     != NULL) NCI_Free(ncp->abuf);
-    if (ncp->path     != NULL) NCI_Free(ncp->path);
+    if (ncp->get_list      != NULL) NCI_Free(ncp->get_list);
+    if (ncp->put_list      != NULL) NCI_Free(ncp->put_list);
+    if (ncp->abuf          != NULL) NCI_Free(ncp->abuf);
+    if (ncp->path          != NULL) NCI_Free(ncp->path);
+    if (ncp->nonaggr_ranks != NULL) NCI_Free(ncp->nonaggr_ranks);
 
     NCI_Free(ncp);
 }
@@ -144,17 +145,13 @@ ncmpio_close(void *ncdp)
     }
 #else
     if (ncp->numLeadGetReqs > 0) {
-        int rank;
-        MPI_Comm_rank(ncp->comm, &rank);
-        printf("PnetCDF warning: %d nonblocking get requests still pending on process %d. Cancelling ...\n",ncp->numLeadGetReqs,rank);
+        printf("PnetCDF warning: %d nonblocking get requests still pending on process %d. Cancelling ...\n",ncp->numLeadGetReqs,ncp->rank);
         err = ncmpio_cancel(ncp, NC_GET_REQ_ALL, NULL, NULL);
         if (status == NC_NOERR) status = err;
         if (status == NC_NOERR) status = NC_EPENDING;
     }
     if (ncp->numLeadPutReqs > 0) {
-        int rank;
-        MPI_Comm_rank(ncp->comm, &rank);
-        printf("PnetCDF warning: %d nonblocking put requests still pending on process %d. Cancelling ...\n",ncp->numLeadPutReqs,rank);
+        printf("PnetCDF warning: %d nonblocking put requests still pending on process %d. Cancelling ...\n",ncp->numLeadPutReqs,ncp->rank);
         err = ncmpio_cancel(ncp, NC_PUT_REQ_ALL, NULL, NULL);
         if (status == NC_NOERR) status = err;
         if (status == NC_NOERR) status = NC_EPENDING;

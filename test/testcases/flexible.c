@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
 #endif
 
     /* initialize the contents of the array */
-    for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = j+10;
+    for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = j+rank+10;
 
     /* construct an MPI derived data type for swapping 1st row with 2nd row */
     blocklengths[0] = blocklengths[1] = NX;
@@ -131,10 +131,11 @@ int main(int argc, char **argv) {
 
     /* check if the contents of buf are altered */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
-        if (buf[j][i] != j+10) {
+        if (buf[j][i] != j+rank+10) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
-                   __FILE__,__LINE__,j,i,j+10,buf[j][i]);
+                   __FILE__,__LINE__,j,i,j+rank+10,buf[j][i]);
             nerrs++;
+            break;
         }
 
     /* call flexible API that do type conversion */
@@ -142,17 +143,18 @@ int main(int argc, char **argv) {
 
     /* check if the contents of buf are altered */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
-        if (buf[j][i] != j+10) {
+        if (buf[j][i] != j+rank+10) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
-                   __FILE__,__LINE__,j,i,j+10,buf[j][i]);
+                   __FILE__,__LINE__,j,i,j+rank+10,buf[j][i]);
             nerrs++;
+            break;
         }
 
     MPI_Type_free(&buftype);
 
     /* call flexible API that do no type conversion */
     signed char *schar_buf = (signed char *) malloc(NY*NX);
-    for (j=0; j<NY; j++) for (i=0; i<NX; i++) schar_buf[j*NX+i] = j+10;
+    for (j=0; j<NY; j++) for (i=0; i<NX; i++) schar_buf[j*NX+i] = j+rank+10;
     disps[0] = 0;
     disps[1] = -NX;
     err = MPI_Type_create_hindexed(2, blocklengths, disps, MPI_SIGNED_CHAR, &buftype);
@@ -163,10 +165,11 @@ int main(int argc, char **argv) {
 
     /* check if the contents of buf are altered */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
-        if (schar_buf[j*NX+i] != j+10) {
+        if (schar_buf[j*NX+i] != j+rank+10) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
-                   __FILE__,__LINE__,j,i,j+10,schar_buf[j*NX+i]);
+                   __FILE__,__LINE__,j,i,j+rank+10,schar_buf[j*NX+i]);
             nerrs++;
+            break;
         }
 
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) schar_buf[j*NX+i] = -1;
@@ -174,10 +177,11 @@ int main(int argc, char **argv) {
 
     /* check read contents */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
-        if (schar_buf[j*NX+i] != j+10) {
+        if (schar_buf[j*NX+i] != j+rank+10) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
-                   __FILE__,__LINE__,j,i,j+10,schar_buf[j*NX+i]);
+                   __FILE__,__LINE__,j,i,j+rank+10,schar_buf[j*NX+i]);
             nerrs++;
+            break;
         }
 
     free(schar_buf);
@@ -208,10 +212,12 @@ int main(int argc, char **argv) {
     for (j=0; j<2; j++) {
         int expect = (j == 0) ? 1 : 0;
         for (i=0; i<NX; i++)
-            if (buf[j][i] != expect+10) {
+            if (buf[j][i] != expect+rank+10) {
                 printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
-                       __FILE__,__LINE__,j,i,expect+10,buf[j][i]);
+                       __FILE__,__LINE__,j,i,expect+rank+10,buf[j][i]);
                 nerrs++;
+                j = 2;
+                break;
             }
     }
 
@@ -224,10 +230,12 @@ int main(int argc, char **argv) {
     for (j=0; j<2; j++) {
         int expect = (j == 0) ? 1 : 0;
         for (i=0; i<NX; i++)
-            if (buf[j][i] != expect+10) {
+            if (buf[j][i] != expect+rank+10) {
                 printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
-                       __FILE__,__LINE__,j,i,expect+10,buf[j][i]);
+                       __FILE__,__LINE__,j,i,expect+rank+10,buf[j][i]);
                 nerrs++;
+                j = 2;
+                break;
             }
     }
 
@@ -251,6 +259,7 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             nerrs++;
+            break;
         }
     }
 
@@ -263,6 +272,7 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             nerrs++;
+            break;
         }
     }
 
@@ -278,6 +288,7 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             nerrs++;
+            break;
         }
     }
 
@@ -293,6 +304,7 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             nerrs++;
+            break;
         }
     }
 

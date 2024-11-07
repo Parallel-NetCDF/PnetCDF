@@ -984,9 +984,15 @@ req_commit(NC  *ncp,
     }
 
     /* carry out writes and reads separately (writes first) */
+
     if (do_write > 0) {
-        err = wait_getput(ncp, num_w_reqs, put_list, NC_REQ_WR, coll_indep,
-                          newnumrecs);
+
+        if (ncp->my_aggr >= 0 && coll_indep == NC_REQ_COLL && ncp->nprocs > 1)
+            /* intra-node write aggregation must be in collective mode */
+            err = ncmpio_intra_node_aggregation_nreqs(ncp, num_w_reqs, put_list, newnumrecs);
+        else
+            err = wait_getput(ncp, num_w_reqs, put_list, NC_REQ_WR, coll_indep,
+                              newnumrecs);
         put_list = NULL; /* has been freed in wait_getput() */
     }
 
@@ -1258,8 +1264,8 @@ off_compare(const void *a, const void *b)
 static MPI_Offset
 vars_flatten(int          ndim,    /* number of dimensions */
              int          el_size, /* array element size */
-             MPI_Offset  *dimlen,  /* [ndim] dimension lengths */
              MPI_Offset   offset,  /* starting file offset of variable */
+             MPI_Offset  *dimlen,  /* [ndim] dimension lengths */
              MPI_Aint     buf_addr,/* starting buffer address */
              MPI_Offset  *start,   /* [ndim] starts of subarray */
              MPI_Offset  *count,   /* [ndim] counts of subarray */
@@ -1357,6 +1363,9 @@ vars_flatten(int          ndim,    /* number of dimensions */
 }
 
 /*----< merge_requests() >---------------------------------------------------*/
+/* flatten all requests into offset-length pairs, sort them into an increasing
+ * order, and resolve the overlapped offset-length pairs.
+ */
 static int
 merge_requests(NC          *ncp,
                NC_lead_req *lead_list,
@@ -1457,7 +1466,7 @@ merge_requests(NC          *ncp,
         if (fIsSet(lead->flag, NC_REQ_STRIDE_NULL)) stride = NULL;
 
         /* flatten each request to a list of offset-length pairs */
-        vars_flatten(ndims, lead->varp->xsz, shape, var_begin,
+        vars_flatten(ndims, lead->varp->xsz, var_begin, shape,
                      addr, start, count, stride,
                      &nseg,    /* OUT: number of offset-length pairs */
                      seg_ptr); /* OUT: array of offset-length pairs */
@@ -1759,7 +1768,7 @@ req_aggregation(NC     *ncp,
      * fileview must contain only monotonic non-decreasing file offsets. Thus
      * if the nonblocking requests interleave with each other (although not
      * overlap), then we cannot simply concatenate the filetypes of individual
-     * requests. This approach flattens the requests of "interleaved" groups
+     * requests. Codes below flatten the requests of "interleaved" groups
      * into offset-length pairs, sorts, and merges them into an aggregated
      * filetype. Similar for building an aggregated I/O buffer type.
      */
@@ -1913,28 +1922,32 @@ req_aggregation(NC     *ncp,
         else { /* this group is interleaved */
             /* flatten the interleaved requests in this group, so interleaved
              * requests can be sorted and merged into a monotonically
-             * non-decreasing filetype. For example, multiple nonblocking
-             * requests each accessing a single column of a 2D array, that each
-             * produces a filetype interleaving with others'.
+             * non-decreasing order for constructing the filetype. For example,
+             * multiple nonblocking requests each writing/reading a single
+             * column of a 2D array will produces an interleaving filetype
+             * among all processes.
              *
              * The pitfall of this flattening is the additional memory
              * requirement, as it will have to break down each request into a
-             * list of offset-length pairs, and merge all lists into a sorted
-             * list based on their offsets into an increasing order.
+             * list of offset-length pairs, and then merge all lists into a
+             * sorted list based on their offsets into an increasing order.
              *
              * Be warned! The additional memory requirement for this merging can
-             * be more than the I/O data itself. For example, each nonblocking
-             * request access a single column of a 2D array of 4-byte integer
-             * type. Each off-len pair represents only a 4-byte integer, but the
-             * off-len pair itself takes 24 bytes. Additional memory is also
-             * required for MPI arguments of displacements and blocklengths.
+             * be more than the I/O data itself. For example, in the
+             * column-wise data partitioning pattern, a process makes a
+             * nonblocking request for accessing a single column of a 2D array
+             * of 4-byte integer type. However, each element of the column is
+             * flattened into an off-len pair and this off-len pair itself
+             * takes 24 bytes, sizeof(struct off_len). Additional memory is
+             * also required for MPI arguments of displacements and
+             * blocklengths when constructing the filetype.
              */
             MPI_Offset  nsegs=0;   /* number of merged offset-length pairs */
             off_len    *segs=NULL; /* array of the offset-length pairs */
             void       *merged_buf;
 
-            /* merge all requests into sorted offset-length pairs. Note
-             * g_reqs[].offset_start and offset_end are relative to the
+            /* flatten and merge all requests into sorted offset-length pairs.
+             * Note g_reqs[].offset_start and offset_end are relative to the
              * beginning of file */
             err = merge_requests(ncp, lead_list, g_num_reqs, g_reqs,
                                  &merged_buf, &nsegs, &segs);

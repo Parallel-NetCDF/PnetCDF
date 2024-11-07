@@ -50,8 +50,13 @@ ncmpio_read_write(NC           *ncp,
         /* return the first encountered error if there is any */
         err = (err == NC_EFILE) ? NC_EREAD : err;
     }
-    else if (btype_size == MPI_UNDEFINED)
+    else if (btype_size == MPI_UNDEFINED) {
+#ifdef PNETCDF_DEBUG
+        fprintf(stderr,"%d: %s line %d: btype_size MPI_UNDEFINED buf_count=%lld\n",
+                ncp->rank, __func__,__LINE__,buf_count);
+#endif
         DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+    }
 
     if (err != NC_NOERR) {
         if (coll_indep == NC_REQ_COLL) {
@@ -96,8 +101,15 @@ ncmpio_read_write(NC           *ncp,
             MPI_Type_commit(&xbuf_type);
             xlen = 1;
 #else
-            if (coll_indep == NC_REQ_COLL)
+            if (coll_indep == NC_REQ_COLL) {
+#ifdef PNETCDF_DEBUG
+                fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buf_count=%lld\n",
+                        ncp->rank, __func__,__LINE__,buf_count);
+#endif
                 DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+                /* write nothing, but participate the collective call */
+                xlen = 0;
+            }
             else
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 #endif
@@ -215,8 +227,15 @@ ncmpio_read_write(NC           *ncp,
             MPI_Type_commit(&xbuf_type);
             xlen = 1;
 #else
-            if (coll_indep == NC_REQ_COLL)
+            if (coll_indep == NC_REQ_COLL) {
+#ifdef PNETCDF_DEBUG
+                fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buf_count=%lld\n",
+                        ncp->rank, __func__,__LINE__,buf_count);
+#endif
                 DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
+                /* write nothing, but participate the collective call */
+                xlen = 0;
+            }
             else
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
 #endif
@@ -244,8 +263,10 @@ ncmpio_read_write(NC           *ncp,
                 mpireturn = MPI_Type_contiguous_c((MPI_Count)req_size, MPI_BYTE, &xbuf_type);
                 if (mpireturn != MPI_SUCCESS) {
                     err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous_c");
-                    if (coll_indep == NC_REQ_COLL)
+                    if (coll_indep == NC_REQ_COLL) {
                         DEBUG_ASSIGN_ERROR(status, err)
+                        xlen = 0;
+                    }
                     else
                         DEBUG_RETURN_ERROR(err)
                 }
