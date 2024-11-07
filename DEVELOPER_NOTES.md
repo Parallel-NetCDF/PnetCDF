@@ -3,8 +3,8 @@
 
 ### Tasks immediately before a new release (must run in the following order)
 
- 1. Sync with NetCDF header file, `netcdf.h`, for defined constants and error codes.
-    PnetCDF uses the same constants and error codes as NetCDF. See
+ 1. Sync with NetCDF4 header file, `netcdf.h`, for defined constants and error
+    codes.  PnetCDF uses the same constants and error codes as NetCDF. See
     "Conform with netCDF" below.
 
  2. Set the release version
@@ -33,11 +33,13 @@
     ```
     svn commit -m "set release date of version 1.6.1 to today"
     ```
+
  5. Commit all changes to repo servers
     * 1.8.1 and priors -- run `svn commit` to upload changes to SVN server.
-    * 1.9.0 and after -- run `git push origin master` to upload changes to github.com.
+    * 1.9.0 and after -- run `git push origin master` to upload changes to
+      github.com.
 
- 6. Generate release tar ball
+ 6. Generate release tar ball (use it for testing)
     * Generate a new `configure` file
       + Run command `autoreconf` to generate file `configure` to be included
         in the release (but ignored by the SVN/Git repo).
@@ -48,16 +50,18 @@
       + Run command `./configure` to create all Makefiles, so in the next step
         we can run command `make dist` to create the tar balls.
     * Create tar ball
-      + Run command `make dist` to produce the tar ball for PnetCDF release, such as
-        `pnetcdf-1.11.0.tar.gz`.  (Version 1.9.0 and later will only create .gz file.)
+      + Run command `make dist` to produce the tar ball for PnetCDF release,
+        such as `pnetcdf-1.11.0.tar.gz`.  (Version 1.9.0 and later will only
+        create .gz file.)
       + Starting from 1.9.0, the release date will be the date running command
         `make dist`. This setting will be done automatically, unlike step 4
         above that manually update the release date.
 
- 7. Build the new release tar ball (not source codes from the repo)
+ 7. Test the new release tar ball (not source codes from the repo)
     * build under the same directory as source
-      - run `configure` (with command-line options: `--enable-strict`, `--enable-coverage`,
-                   `--disable-cxx`, `--disable-fortran` and their combinations)
+      - run `configure` (with command-line options: `--enable-strict`,
+        `--enable-coverage`, `--disable-cxx`, `--disable-fortran` and their
+        combinations)
       - For C only, run address sanitizer build (gcc and clang) by adding
         ```
         --disable-fortran \
@@ -79,7 +83,8 @@
             TESTMPIRUN="mpiexec -n NP libtool --mode=execute valgrind --quiet --leak-check=full"
           ```
       - run `make ptests` to test programs in parallel runs
-      - run `make ptests` with valgrind, by setting TESTSEQRUN and TESTMPIRUN as described above.
+      - run `make ptests` with valgrind, by setting TESTSEQRUN and TESTMPIRUN
+        as described above.
       - run `make distcheck`
         ```
         make -s V=1 LIBTOOLFLAGS=--silent distcheck \
@@ -87,9 +92,13 @@
         ```
       - check Building Binary Packages Using DESTDIR (automake chapter 2.2.10)
         ```
-        make DESTDIR=$HOME/inst install
+        make install DESTDIR=$HOME/inst prefix=
         ```
-        This creates a folder under $HOME/inst with name equal to $prefix.
+        This creates a folder under $HOME/inst without prefix.
+        The purpose of using DESTDIR is to install a library in a temporary
+        folder, so they can be tared and copied to multiple hosts (i.e. install
+        the same copy of library on different machines without running make
+        install each there.)
 
       - test if file system type prefix added to file name is acceptable.
         For example, "ufs:" added to file name. Note this ROMIO convention may
@@ -107,7 +116,7 @@
     * build benchmarks/FLASH-IO separately from PnetCDF (it has its own build
       script, i.e. configure.ac)
 
-    * build netCDF latest release with --enable-pnetcdf using this newly build
+    * build NetCDF4 latest release with --enable-pnetcdf using this newly build
       of PnetCDF
 
  8. Create a checkpoint
@@ -146,9 +155,11 @@
   * See http://semver.org/
     * Given a version number MAJOR.MINOR.PATCH, increment the:
       1. MAJOR version when you make incompatible API changes,
-      2. MINOR version when you add functionality in a backwards-compatible manner, and
+      2. MINOR version when you add functionality in a backwards-compatible
+         manner, and
       3. PATCH version when you make backwards-compatible bug fixes.
-    * Additional labels for pre-release and build metadata are available as extensions to the MAJOR.MINOR.PATCH format.
+    * Additional labels for pre-release and build metadata are available as
+      extensions to the MAJOR.MINOR.PATCH format.
 
 * For shared library versioning
   1. For libtool ABI versioning rules see:
@@ -173,24 +184,24 @@
    libtool Chapter 7.1 What are library interfaces?
       Interfaces for libraries may be any of the following (and more):
       global variables: both names and types
-      global functions: argument types and number, return types, and function names
-      standard input, standard output, standard error, and file formats
+      global functions: argument types and number, return types, and function
+      names standard input, standard output, standard error, and file formats
       sockets, pipes, and other inter-process communication protocol formats
 
       The following explanation may help to understand the above rules a bit
       better: consider that there are three possible kinds of reactions from
       users of your library to changes in a shared library:
       1. Programs using the previous version may use the new version as drop-in
-      replacement, and programs using the new version can also work with the
-      previous one. In other words, no recompiling nor relinking is needed. In
-      this case, bump revision only, don't touch current nor age.
+         replacement, and programs using the new version can also work with the
+         previous one. In other words, no recompiling nor relinking is needed.
+         In this case, bump revision only, don't touch current nor age.
       2. Programs using the previous version may use the new version as drop-in
-      replacement, but programs using the new version may use APIs not present
-      in the previous one. In other words, a program linking against the new
-      version may fail with 'unresolved symbols' if linking against the old
-      version at runtime: set revision to 0, bump current and age.
+         replacement, but programs using the new version may use APIs not
+         present in the previous one. In other words, a program linking against
+         the new version may fail with 'unresolved symbols' if linking against
+         the old version at runtime: set revision to 0, bump current and age.
       3. Programs may need to be changed, recompiled, and relinked in order to
-      use the new version. Bump current, set revision and age to 0.
+         use the new version. Bump current, set revision and age to 0.
   ```
 ---
 ### Note on adding new MPI compiler candidates
@@ -258,43 +269,44 @@
 
 ---
 ### Note on netCDF text APIs and variables of external data type NC_CHAR
-* All netCDF external data types are considered numerical data types, except for
-NC_CHAR. Numerical data types can be converted to different numerical data
-types. However, no numerical datatype is allowed to converted to NC_CHAR and
-vice versa. Given these limitations, note the followings.
+* All netCDF external data types are considered numerical data types, except
+  for NC_CHAR. Numerical data types can be converted to different numerical
+  data types. However, no numerical datatype is allowed to converted to NC_CHAR
+  and vice versa. Given these limitations, note the followings.
 
 * For attribute APIs, only text API, ncmpi_put_att_text(), can create/write
-attributes in NC_CHAR data type. Note that ncmpi_put_att_text() does not take
-an argument of external data type like other attribute APIs, because the
-attribute to be created/written will be of NC_CHAR type. For reading, only text
-API, ncmpi_get_att_text(), can read attributes of NC_CHAR type from file,
-otherwise NC_ECHAR error code will return.  Non-text APIs are not allowed to
-put/get attributes of NC_CHAR type.
+  attributes in NC_CHAR data type. Note that ncmpi_put_att_text() does not take
+  an argument of external data type like other attribute APIs, because the
+  attribute to be created/written will be of NC_CHAR type. For reading, only
+  text API, ncmpi_get_att_text(), can read attributes of NC_CHAR type from
+  file, otherwise NC_ECHAR error code will return.  Non-text APIs are not
+  allowed to put/get attributes of NC_CHAR type.
 
-* For variable get/put APIs, only text APIs, for example nc_put_vara_text(), can
-read/write a variable defined as NC_CHAR type. Trying to use non-text APIs to
-read/write a NC_CHAR variable will result in NC_ECHAR error code returned.
+* For variable get/put APIs, only text APIs, for example nc_put_vara_text(),
+  can read/write a variable defined as NC_CHAR type. Trying to use non-text
+  APIs to read/write a NC_CHAR variable will result in NC_ECHAR error code
+  returned.
 
 * There is no NC_ERANGE error code possibly returned from text APIs.
 
 * In netCDF, NC_CHAR is designed purely for storing text data.  NC_CHAR is
-considered by netCDF as unsigned 8-bit integer, but not for used to store a
-numerical value.  Others netCDF external numerical data types and their
-numerical meanings:
-```
-NC_BYTE   is considered as a   signed 1-byte integer
-NC_UBYTE  is considered as a unsigned 1-byte integer
-NC_SHORT  is considered as a   signed 2-byte integer
-NC_USHORT is considered as a unsigned 2-byte integer
-NC_INT    is considered as a   signed 4-byte integer
-NC_UINT   is considered as a unsigned 4-byte integer
-NC_INT64  is considered as a   signed 8-byte integer
-NC_UINT64 is considered as a unsigned 8-byte integer
-NC_FLOAT  is considered as a   signed 4-byte floating point
-NC_DOUBLE is considered as a   signed 8-byte double precision floating point
-```
-All external data types, their byte sizes, sign-ness, and numerical ranges are
-independent from the systems running PnetCDF/netCDF.
+  considered by netCDF as unsigned 8-bit integer, but not for used to store a
+  numerical value.  Others netCDF external numerical data types and their
+  numerical meanings:
+  ```
+  NC_BYTE   is considered as a   signed 1-byte integer
+  NC_UBYTE  is considered as a unsigned 1-byte integer
+  NC_SHORT  is considered as a   signed 2-byte integer
+  NC_USHORT is considered as a unsigned 2-byte integer
+  NC_INT    is considered as a   signed 4-byte integer
+  NC_UINT   is considered as a unsigned 4-byte integer
+  NC_INT64  is considered as a   signed 8-byte integer
+  NC_UINT64 is considered as a unsigned 8-byte integer
+  NC_FLOAT  is considered as a   signed 4-byte floating point
+  NC_DOUBLE is considered as a   signed 8-byte double precision floating point
+  ```
+  All external data types, their byte sizes, sign-ness, and numerical ranges
+  are independent from the systems running PnetCDF/netCDF.
 
 ---
 ### config.guess, config.sub, install-sh in directory scripts
@@ -334,8 +346,8 @@ src/libf90 (1.8.1 and prior) src/binding/f90 (1.9.0 and later):
 ---
 ### Note on adding a new configure command-line option
  * Files need updated
-   * `configire.ac` -- The AC_OUTPUT section, add "enabled" on screen if the new
-     feature is enabled. No output when disabled. For example,
+   * `configire.ac` -- The AC_OUTPUT section, add "enabled" on screen if the
+     new feature is enabled. No output when disabled. For example,
      ```
         if test "x${enable_netcdf4}" = xyes; then
            echo "\
