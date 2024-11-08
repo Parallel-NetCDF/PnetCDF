@@ -565,9 +565,9 @@ ncmpio_filetype_create_vars(const NC         *ncp,
     if (isLargeReq) {
 #ifdef HAVE_MPI_TYPE_CREATE_HINDEXED_C
         MPI_Count *blocklens_c, *disps_c;
-        blocklens_c = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * nelems);
-        disps_c     = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * nelems);
-        for (i=0; i<nelems; i++) {
+        blocklens_c = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * nblocks);
+        disps_c     = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * nblocks);
+        for (i=0; i<nblocks; i++) {
             blocklens_c[i] = blocklens[i];
             disps_c[i] = disps[i];
         }
@@ -583,8 +583,8 @@ ncmpio_filetype_create_vars(const NC         *ncp,
     }
     else {
         int *blocklens_i;
-        blocklens_i = (int*) NCI_Malloc(sizeof(int) * nelems);
-        for (i=0; i<nelems; i++)
+        blocklens_i = (int*) NCI_Malloc(sizeof(int) * nblocks);
+        for (i=0; i<nblocks; i++)
             blocklens_i[i] = (int)blocklens[i];
         mpireturn = MPI_Type_create_hindexed((int)nblocks, blocklens_i, disps,
                                              MPI_BYTE, &filetype);
