@@ -2366,11 +2366,12 @@ mgetput(NC     *ncp,
         last_contig_req = 0; /* index of the last contiguous request */
         buf = NULL;
         /* process only valid requests */
-        for (i=0, j=0; i<num_reqs; i++) {
+        for (j=0, i=0; i<num_reqs; i++) {
             MPI_Offset req_size;
             NC_lead_req *lead = lead_list + reqs[i].lead_off;
 
-            if (fIsSet(lead->flag, NC_REQ_SKIP)) continue;
+            if (fIsSet(lead->flag, NC_REQ_SKIP))
+                continue; /* skip invalid request */
 
             req_size = reqs[i].nelems * lead->varp->xsz;
 
@@ -2391,6 +2392,9 @@ mgetput(NC     *ncp,
             if (j == 0) { /* first valid request */
                 a_last_contig = a0 = ai;
                 buf = reqs[i].xbuf;
+                disps[0] = 0;
+                j = 1;
+                continue;
             }
             disps[j] = MPI_Aint_diff(ai, a0);
 
@@ -2405,7 +2409,7 @@ mgetput(NC     *ncp,
 #else
             /* if req_size overflows 4-byte int, then skip coalescing */
             if (req_size <= NC_MAX_INT &&
-                MPI_Aint_diff(ai,- a_last_contig) == blocklens[last_contig_req]) {
+                MPI_Aint_diff(ai, a_last_contig) == blocklens[last_contig_req]) {
                 /* user buffer of request j is contiguous from j-1
                  * we coalesce j to j-1 */
                 blocklens[last_contig_req] += blocklens[j];
