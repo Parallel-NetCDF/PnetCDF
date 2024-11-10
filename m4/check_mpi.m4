@@ -234,6 +234,7 @@ AC_DEFUN([CHECK_MPI_VERSION],[
       AC_MSG_RESULT([${mpi_version}.${mpi_subversion}])
    fi
 
+   AC_CHECK_DECL([CRAY_MPICH_VERSION], [], [], [#include <mpi.h>])
    AC_CHECK_DECL([MPICH_VERSION],      [], [], [#include <mpi.h>])
    AC_CHECK_DECL([MPICH2_VERSION],     [], [], [#include <mpi.h>])
    AC_CHECK_DECL([OMPI_MAJOR_VERSION], [], [], [#include <mpi.h>])
@@ -265,7 +266,19 @@ AC_DEFUN([CHECK_MPI_VERSION],[
    # Note MVAPICH2's mpi.h also defines MPICH_VERSION, so this check must be
    # done before MPICH.
    if test -f saved_conftest.i ; then
-      if test "x$ac_cv_have_decl_MVAPICH2_VERSION" = xyes ; then
+      if test "x$ac_cv_have_decl_CRAY_MPICH_VERSION" = xyes ; then
+         cray_mpich_version=`${GREP} " CRAY_MPICH_VERSION " saved_conftest.i | cut -d' ' -f3`
+         if test "x$ac_cv_have_decl_MPICH_VERSION" = xyes ; then
+            mpich_version=`${GREP} " MPICH_VERSION " saved_conftest.i | cut -d' ' -d'"' -f2`
+            AC_MSG_RESULT(Cray MPICH $cray_mpich_version based on MPICH $mpich_version)
+            unset mpich_version
+         else
+            AC_MSG_RESULT(Cray MPICH $cray_mpich_version)
+         fi
+         ax_cv_mpi_compiler_vendor="Cray MPICH"
+         ax_cv_mpi_compiler_version=$cray_mpich_version
+         unset cray_mpich_version
+      elif test "x$ac_cv_have_decl_MVAPICH2_VERSION" = xyes ; then
          mvapich2_version=`${GREP} " MVAPICH2_VERSION " saved_conftest.i | cut -d' ' -d'"' -f2`
          AC_MSG_RESULT(MVAPICH2 $mvapich2_version)
          ax_cv_mpi_compiler_vendor=MVAPICH2
