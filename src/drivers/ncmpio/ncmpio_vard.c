@@ -197,10 +197,18 @@ getput_vard(NC               *ncp,
         /* check if in-place byte swap can be enabled */
         int can_swap_in_place = 1;
         if (need_swap) {
-            if (! fIsSet(ncp->flags, NC_MODE_SWAP_OFF)) /* hint set by user */
+            if (fIsSet(ncp->flags, NC_MODE_SWAP_OFF))
+                /* in-place byte swap is disabled by user through PnetCDF hint
+                 * 'nc_in_place_swap'.
+                 */
                 can_swap_in_place = 0;
-            else if (! fIsSet(ncp->flags, NC_MODE_SWAP_ON)) { /* auto mode */
-                if (filetype_size > NC_BYTE_SWAP_BUFFER_SIZE)
+            else if (! fIsSet(ncp->flags, NC_MODE_SWAP_ON)) {
+                /* auto mode, as user does not explicitly enable it */
+                if (filetype_size <= NC_BYTE_SWAP_BUFFER_SIZE)
+                    /* If write amount is small, disable in-place swap.
+                     * This is because the user buffer may be immutable.
+                     * In this case, in-place swap will cause segmentation
+                     * fault. Immutable buffers are usually small.  */
                     can_swap_in_place = 0;
             }
         }
