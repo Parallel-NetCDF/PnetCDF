@@ -563,7 +563,7 @@ ncmpio_filetype_create_vars(const NC         *ncp,
     }
 
     if (isLargeReq) {
-#ifdef HAVE_MPI_TYPE_CREATE_HINDEXED_C
+#ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count *blocklens_c, *disps_c;
         blocklens_c = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * nblocks);
         disps_c     = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * nblocks);
