@@ -1341,7 +1341,24 @@ AC_CHECK_FUNCS([MPI_Type_create_subarray_c \
 # set to no
 UD_MSG_DEBUG([have_mpi_large_count_apis=$have_mpi_large_count_apis])
 if test "x$have_mpi_large_count_apis" = "xyes" ; then
-   AC_DEFINE(HAVE_MPI_LARGE_COUNT, 1)
+   if test "x$ax_cv_mpi_compiler_vendor" = "xMPICH" ; then
+      # MPICH must be at least version 4.2.2 (ROMIO started to support MPI
+      # 4.0's large count feature)
+      AX_COMPARE_VERSION([${ax_cv_mpi_compiler_version}],[ge],[4.2.2])
+      if test "$ax_compare_version" = "true" ; then
+         AC_DEFINE(HAVE_MPI_LARGE_COUNT, 1)
+      else
+          have_mpi_large_count_apis=no
+          AC_MSG_NOTICE([
+   -----------------------------------------------------------------------
+     Disable the use of MPI 4.0 large-count feature, becase ROMIO of
+     MPICH 4.2.2 and later is required to support it, but the supplied
+     MPI is based on MPICH $ax_cv_mpi_compiler_version.
+   -----------------------------------------------------------------------])
+      fi
+   else # TODO: check other MPI vendors
+      AC_DEFINE(HAVE_MPI_LARGE_COUNT, 1)
+   fi
 fi
 AM_CONDITIONAL(TEST_LARGE_COUNT, [test x$have_mpi_large_count_apis = xyes])
 
