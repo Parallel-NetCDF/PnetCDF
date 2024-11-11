@@ -270,7 +270,8 @@ err_check:
     if (fIsSet(reqMode, NC_REQ_COLL) && ncp->my_aggr >= 0 && ncp->nprocs > 1) {
         /* intra-node write aggregation must be in collective mode */
         void *wbuf = (nbytes == 0) ?  NULL : xbuf;
-        err = ncmpio_intra_node_aggregation(ncp, varp, start, count, stride, nelems, xtype, wbuf);
+        err = ncmpio_intra_node_aggregation(ncp, NC_REQ_WR, varp, start, count,
+                                            stride, nelems, xtype, wbuf);
         if (status == NC_NOERR) status = err;
     }
     else {

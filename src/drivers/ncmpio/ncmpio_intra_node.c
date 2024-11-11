@@ -1,6 +1,29 @@
 /*
  *  Copyright (C) 2024, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
+ *
+ * This file contains the implementation of intra-node aggregation feature,
+ * which is designed for the I/O patterns that contain many noncontiguous
+ * requests interleaved among processes, and spreading across a wide range of
+ * file space. It is particularly useful when the number of MPI processes
+ * allocated to a compute node is large.
+ *
+ * This feature is enabled by setting the PnetCDF hint 'nc_num_aggrs_per_node'
+ * to a positive integral value indicating the desired number of processes per
+ * compute node to be selected as the intra-node I/O aggregators. Each process
+ * is assigned a unique aggregator. The non-aggregators send their requests to
+ * the assigned aggregators, and then the aggregators make MPI-IO requests to
+ * the file.
+ *
+ * Such strategy can effectively reduce communication congestion due to many
+ * pending asynchronous messages produced in the collective write inside of
+ * MPI-IO.
+ *
+ * The concept of intra-node request aggregation is based on the paper:
+ * Q. Kang, S. Lee, K. Hou, R. Ross, A. Agrawal, A. Choudhary, and W. Liao.
+ * Improving MPI Collective I/O for High Volume Non-Contiguous Requests With
+ * Intra-Node Aggregation. IEEE Transactions on Parallel and Distributed
+ * Systems (TPDS), 31(11):2682-2695, November 2020.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -48,6 +71,11 @@
                       ((*(b) < *(c)) ? (b) : ((*(a) < *(c)) ? (c) : (a))) : \
                       ((*(b) > *(c)) ? (b) : ((*(a) < *(c)) ? (a) : (c))))
 
+/*----< qsort_off_len_buf() >------------------------------------------------*/
+/* Sort three arrays of offsets, lengths, and buffer addresses based on the
+ * increasing order of offsets. This code is based on the qsort routine from
+ * Bentley & McIlroy's "Engineering a Sort Function".
+ */
 static void
 qsort_off_len_buf(MPI_Aint num,
 #ifdef HAVE_MPI_LARGE_COUNT
@@ -125,7 +153,7 @@ qsort_off_len_buf(MPI_Aint num,
         if ((r = pb - pa) > 1)
             qsort_off_len_buf(r, offsets, lengths, bufAddr);
         if ((r = pd - pc) > 1) {
-            /* Iterate rather than recurse to save stack space */
+            /* Iterate rather than recursively call self to save stack space */
             lengths = lengths + (num - r);
             bufAddr = bufAddr + (num - r);
             offsets = pn - r;
@@ -161,9 +189,17 @@ ncmpio_intra_node_aggr_init(NC *ncp)
     ncp->num_nonaggrs = 0;     /* number of non-aggregators assigned */
     ncp->nonaggr_ranks = NULL; /* ranks of assigned non-aggregators */
 
+#ifdef PNETCDF_PROFILING
+    ncp->aggr_time = 0.0;
+#endif
+
     if (ncp->num_aggrs_per_node == 0 || ncp->num_aggrs_per_node == ncp->nprocs)
         /* disable intra-node aggregation */
         return NC_NOERR;
+
+#ifdef PNETCDF_PROFILING
+    double timing = MPI_Wtime();
+#endif
 
     /* allocate space for storing the rank IDs of non-aggregators assigned to
      * this rank. Note ncp->nonaggr_ranks[] will be freed when closing the
@@ -367,6 +403,10 @@ ncmpio_intra_node_aggr_init(NC *ncp)
      * to enable intra-node aggregation. It indicates whether the high number
      * of processes are allocated on the same node.
      */
+
+#ifdef PNETCDF_PROFILING
+    ncp->aggr_time = MPI_Wtime() - timing;
+#endif
 
     return NC_NOERR;
 }
@@ -791,7 +831,9 @@ intra_node_aggregation(NC           *ncp,
     MPI_Datatype recvTypes, fileType=MPI_BYTE;
     MPI_File fh;
     MPI_Request *req=NULL;
-
+#ifdef PNETCDF_PROFILING
+    double timing = MPI_Wtime();
+#endif
 #ifdef HAVE_MPI_LARGE_COUNT
     MPI_Count bufLen;
     MPI_Type_size_c(bufType, &bufLen);
@@ -1190,6 +1232,10 @@ intra_node_aggregation(NC           *ncp,
         NCI_Free(lengths);
     }
 
+#ifdef PNETCDF_PROFILING
+    ncp->aggr_time += MPI_Wtime() - timing;
+#endif
+
     if (ncp->rank != ncp->my_aggr) /* non-aggregator writes nothing */
         buf_count = 0;
 
@@ -1221,6 +1267,7 @@ intra_node_aggregation(NC           *ncp,
 /* This is a collective call */
 int
 ncmpio_intra_node_aggregation_nreqs(NC         *ncp,
+                                    int         reqMode,
                                     int         num_reqs,
                                     NC_req     *put_list,
                                     MPI_Offset  newnumrecs)
@@ -1234,6 +1281,12 @@ ncmpio_intra_node_aggregation_nreqs(NC         *ncp,
     int *lengths=NULL;
 #endif
     MPI_Datatype bufType=MPI_BYTE;
+#ifdef PNETCDF_PROFILING
+    double timing = MPI_Wtime();
+#endif
+
+    /* currently supports write requests only */
+    if (fIsSet(reqMode, NC_REQ_RD)) return NC_NOERR;
 
     assert(ncp->my_aggr >= 0);
 
@@ -1259,6 +1312,10 @@ ncmpio_intra_node_aggregation_nreqs(NC         *ncp,
 
     if (put_list != NULL)
         NCI_Free(put_list);
+
+#ifdef PNETCDF_PROFILING
+    ncp->aggr_time += MPI_Wtime() - timing;
+#endif
 
     err = intra_node_aggregation(ncp, num_pairs, offsets, lengths, bufLen,
                                  bufType, NULL);
@@ -1291,6 +1348,7 @@ ncmpio_intra_node_aggregation_nreqs(NC         *ncp,
 /* This is a collective call */
 int
 ncmpio_intra_node_aggregation(NC               *ncp,
+                              int               reqMode,
                               NC_var           *varp,
                               const MPI_Offset *start,
                               const MPI_Offset *count,
@@ -1307,6 +1365,12 @@ ncmpio_intra_node_aggregation(NC               *ncp,
     MPI_Aint *offsets=NULL;
     int *lengths=NULL;
 #endif
+#ifdef PNETCDF_PROFILING
+    double timing = MPI_Wtime();
+#endif
+
+    /* currently supports write requests only */
+    if (fIsSet(reqMode, NC_REQ_RD)) return NC_NOERR;
 
     if (buf == NULL) /* zero-length request */
         return intra_node_aggregation(ncp, 0, NULL, NULL, 0, MPI_BYTE, NULL);
@@ -1325,6 +1389,10 @@ ncmpio_intra_node_aggregation(NC               *ncp,
         offsets = NULL;
     }
     status = err;
+
+#ifdef PNETCDF_PROFILING
+    ncp->aggr_time += MPI_Wtime() - timing;
+#endif
 
     err = intra_node_aggregation(ncp, num_pairs, offsets, lengths, bufCount,
                                  bufType, buf);

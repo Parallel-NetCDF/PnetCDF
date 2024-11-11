@@ -446,6 +446,9 @@ struct NC {
     int  my_aggr;            /* rank ID of my aggregator */
     int  num_nonaggrs;       /* number of non-aggregators assigned */
     int *nonaggr_ranks;      /* ranks of assigned non-aggregators */
+#ifdef PNETCDF_PROFILING
+    double aggr_time;
+#endif
 };
 
 #define NC_readonly(ncp)   fIsSet((ncp)->flags, NC_MODE_RDONLY)
@@ -647,11 +650,11 @@ extern int
 ncmpio_intra_node_aggr_init(NC *ncp);
 
 extern int
-ncmpio_intra_node_aggregation_nreqs(NC *ncp, int num_reqs, NC_req *put_list,
-                                    MPI_Offset newnumrecs);
+ncmpio_intra_node_aggregation_nreqs(NC *ncp, int mode, int num_reqs,
+                                    NC_req *put_list, MPI_Offset newnumrecs);
 extern int
-ncmpio_intra_node_aggregation(NC *ncp, NC_var *varp, const MPI_Offset *start,
-                              const MPI_Offset *count,
+ncmpio_intra_node_aggregation(NC *ncp, int mode, NC_var *varp,
+                              const MPI_Offset *start, const MPI_Offset *count,
                               const MPI_Offset *stride, MPI_Offset bufCount,
                               MPI_Datatype bufType, void *buf);
 

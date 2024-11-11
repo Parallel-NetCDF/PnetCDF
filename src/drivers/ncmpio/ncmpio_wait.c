@@ -989,7 +989,9 @@ req_commit(NC  *ncp,
 
         if (ncp->my_aggr >= 0 && coll_indep == NC_REQ_COLL && ncp->nprocs > 1)
             /* intra-node write aggregation must be in collective mode */
-            err = ncmpio_intra_node_aggregation_nreqs(ncp, num_w_reqs, put_list, newnumrecs);
+            err = ncmpio_intra_node_aggregation_nreqs(ncp, NC_REQ_WR,
+                                                      num_w_reqs, put_list,
+                                                      newnumrecs);
         else
             err = wait_getput(ncp, num_w_reqs, put_list, NC_REQ_WR, coll_indep,
                               newnumrecs);
