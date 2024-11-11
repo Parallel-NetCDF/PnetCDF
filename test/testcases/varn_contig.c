@@ -121,6 +121,10 @@ int main(int argc, char** argv)
     err = ncmpi_enddef(ncid);
     CHECK_ERR
 
+    /* make sure write fill requests sync-ed to the file before testing */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+
     /* pick arbitrary numbers of requests for 4 processes */
     num_reqs = 0;
     if (rank == 0)      num_reqs = 4;
