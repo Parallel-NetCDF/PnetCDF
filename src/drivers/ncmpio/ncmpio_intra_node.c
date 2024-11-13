@@ -1141,7 +1141,7 @@ intra_node_aggregation(NC           *ncp,
             if (gap >= 0) { /* segments i and j overlaps */
                 if (bufAddr[i] + lengths[i] == bufAddr[j] + gap) {
                     /* buffers i and j are contiguous, merge j to i */
-                    lengths[i] = MPI_Aint_add(lengths[i], lengths[j] - gap);
+                    lengths[i] += lengths[j] - gap;
                 }
                 else { /* buffers are not contiguous, reduce j's len */
                     offsets[i+1] = offsets[j] + gap;
