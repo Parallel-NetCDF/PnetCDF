@@ -1349,7 +1349,7 @@ if test "x$have_mpi_large_count_apis" = "xyes" ; then
          AC_DEFINE(HAVE_MPI_LARGE_COUNT, 1)
       else
           have_mpi_large_count_apis=no
-          AC_MSG_NOTICE([
+          AC_MSG_WARN([
    -----------------------------------------------------------------------
      Disable the use of MPI 4.0 large-count feature, becase ROMIO of
      MPICH 4.2.2 and later is required to support it, but the supplied
