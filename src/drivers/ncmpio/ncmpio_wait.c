@@ -66,21 +66,21 @@ ncmpio_getput_zero_req(NC *ncp, int reqMode)
 
     if (fIsSet(reqMode, NC_REQ_RD)) {
         if (ncp->nprocs > 1)
-            TRACE_IO(MPI_File_read_all)(fh, NULL, 0, MPI_BYTE, &mpistatus);
+            TRACE_IO(MPI_File_read_at_all)(fh, 0, NULL, 0, MPI_BYTE, &mpistatus);
         else
-            TRACE_IO(MPI_File_read)(fh, NULL, 0, MPI_BYTE, &mpistatus);
+            TRACE_IO(MPI_File_read_at)(fh, 0, NULL, 0, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_all");
+            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at_all");
             err = (err == NC_EFILE) ? NC_EREAD : err;
             DEBUG_ASSIGN_ERROR(status, err)
         }
     } else { /* write request */
         if (ncp->nprocs > 1)
-            TRACE_IO(MPI_File_write_all)(fh, NULL, 0, MPI_BYTE, &mpistatus);
+            TRACE_IO(MPI_File_write_at_all)(fh, 0, NULL, 0, MPI_BYTE, &mpistatus);
         else
-            TRACE_IO(MPI_File_write)(fh, NULL, 0, MPI_BYTE, &mpistatus);
+            TRACE_IO(MPI_File_write_at)(fh, 0, NULL, 0, MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_all");
+            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
             err = (err == NC_EFILE) ? NC_EWRITE : err;
             DEBUG_ASSIGN_ERROR(status, err)
         }
@@ -2074,7 +2074,7 @@ req_aggregation(NC     *ncp,
         buf_len = 0;
     }
 
-    /* call MPI_File_read/MPI_File_write */
+    /* call MPI_File_read_at_all/MPI_File_write_at_all */
     err = ncmpio_read_write(ncp, rw_flag, coll_indep, offset, buf_len, buf_type,
                             buf, ((buf_type == MPI_BYTE) ? 1 : 0));
     if (status == NC_NOERR) status = err;
@@ -2498,7 +2498,7 @@ mpi_io:
         buf_count = 0;
     }
 
-    /* call MPI_File_read/MPI_File_write */
+    /* call MPI_File_read_at_all/MPI_File_write_at_all */
     err = ncmpio_read_write(ncp, rw_flag, coll_indep, offset, buf_count,
                             buf_type, buf, ((buf_type == MPI_BYTE) ? 1 : 0));
     if (status == NC_NOERR) status = err;
