@@ -1164,7 +1164,7 @@ intra_node_aggregation(NC           *ncp,
 
         /* pack recv_buf, data received from non-aggregators, into wr_buf, a
          * contiguous buffer, wr_buf, which will later be used in a call to
-         * MPI_File_write_all()
+         * MPI_File_write_at_all()
          */
         char *ptr = wr_buf;
         buf_count = 0;
