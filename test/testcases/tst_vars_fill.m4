@@ -55,6 +55,7 @@ test_vars_$1(char *filename)
 {
     char var_name[32];
     int i, j, k, nprocs, rank, err, nerrs=0, ncid, dimid[2], varid[NVARS];
+    int max_nerrs;
     MPI_Offset start[2], count[2], stride[2];
     $1 buf[NY][NX];
 
@@ -123,9 +124,11 @@ test_vars_$1(char *filename)
                 }
             }
         }
+fn_exit:
+        MPI_Allreduce(&nerrs, &max_nerrs, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+        if (max_nerrs > 0) break;
     }
 
-fn_exit:
     err = ncmpi_close(ncid); CHECK_ERR
     return nerrs;
 }

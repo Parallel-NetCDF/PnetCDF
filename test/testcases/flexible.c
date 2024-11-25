@@ -135,6 +135,7 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,buf[j][i]);
             nerrs++;
+            j = NY;
             break;
         }
 
@@ -147,6 +148,7 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,buf[j][i]);
             nerrs++;
+            j = NY;
             break;
         }
 
@@ -169,10 +171,12 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,schar_buf[j*NX+i]);
             nerrs++;
+            j = NY;
             break;
         }
 
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) schar_buf[j*NX+i] = -1;
+
     err = ncmpi_get_vara_all(ncid, varid3, start, count, schar_buf+NX, 1, buftype); CHECK_ERR
 
     /* check read contents */
@@ -181,6 +185,7 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,schar_buf[j*NX+i]);
             nerrs++;
+            j = NY;
             break;
         }
 
@@ -259,6 +264,7 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             nerrs++;
+            j = (int)count[0];
             break;
         }
     }
@@ -272,6 +278,7 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             nerrs++;
+            j = (int)count[0];
             break;
         }
     }
@@ -288,6 +295,7 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             nerrs++;
+            j = (int)count[0];
             break;
         }
     }
@@ -304,6 +312,7 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             nerrs++;
+            j = (int)count[0];
             break;
         }
     }
