@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 
     char         filename[256];
     int          i, j, err, nerrs=0, ncid, varid, dimids[2], unlimit_dimid;
-    int          rank, nprocs, array_of_blocklengths[2], buf[NY][NX];
+    int          rank, nprocs, verbose, array_of_blocklengths[2], buf[NY][NX];
     MPI_Offset   recsize, len;
     MPI_Aint     array_of_displacements[2];
     MPI_Datatype rec_filetype;
@@ -53,6 +53,8 @@ int main(int argc, char **argv) {
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    verbose = 0;
 
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
@@ -94,6 +96,10 @@ int main(int argc, char **argv) {
                              MPI_INT, &rec_filetype);
     MPI_Type_commit(&rec_filetype);
 
+    if (verbose)
+        printf("%d: %s line %d: displacements=%ld blocklengths=%d\n",rank,
+               __func__,__LINE__, array_of_displacements[0], array_of_blocklengths[0]);
+
     /* write the record variable */
     err = ncmpi_put_vard_all(ncid, varid, rec_filetype, buf, NX, MPI_INT);
     CHECK_ERR
@@ -112,6 +118,10 @@ int main(int argc, char **argv) {
     MPI_Type_create_hindexed(1, array_of_blocklengths, array_of_displacements,
                              MPI_INT, &rec_filetype);
     MPI_Type_commit(&rec_filetype);
+
+    if (verbose)
+        printf("%d: %s line %d: displacements=%ld blocklengths=%d\n",rank,
+               __func__,__LINE__, array_of_displacements[0], array_of_blocklengths[0]);
 
     /* write the record variable */
     err = ncmpi_put_vard_all(ncid, varid, rec_filetype, buf[1], NX, MPI_INT);
@@ -141,6 +151,12 @@ int main(int argc, char **argv) {
     MPI_Type_create_hindexed(2, array_of_blocklengths, array_of_displacements,
                              MPI_INT, &rec_filetype);
     MPI_Type_commit(&rec_filetype);
+
+    if (verbose)
+        printf("%d: %s line %d: displacements=%ld %ld blocklengths=%d %d\n",rank,
+               __func__,__LINE__,
+               array_of_displacements[0], array_of_displacements[1],
+               array_of_blocklengths[0], array_of_blocklengths[1]);
 
     /* reset contents of buf before read */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = -1;
