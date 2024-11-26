@@ -202,6 +202,32 @@ void *NCI_Malloc_fn(size_t      size,
 }
 
 
+/*----< NCI_Strdup() >-------------------------------------------------------*/
+/* This subroutine is esstentially the same as calling strdup().
+ */
+void *NCI_Strdup_fn(const char *src,
+                    const int   lineno,
+                    const char *func,
+                    const char *filename)
+{
+    if (src == NULL) return NULL;
+
+    size_t len = strlen(src);
+    void *buf = malloc(len + 1);
+#ifdef PNETCDF_DEBUG
+    if (len >= 0 && buf == NULL)
+        fprintf(stderr, "malloc(%zd) failed in file %s func %s line %d\n",
+                len, filename, func, lineno);
+#endif
+    if (len > 0) memcpy(buf, src, len);
+    ((char*)buf)[len] = '\0';
+#ifdef PNC_MALLOC_TRACE
+    ncmpii_add_mem_entry(buf, len, lineno, func, filename);
+#endif
+    return buf;
+}
+
+
 /*----< NCI_Calloc_fn() >-----------------------------------------------------*/
 /* This subroutine is esstentially the same as calling calloc().
  * According to calloc man page, If nelem is 0, then calloc() returns either
