@@ -20,11 +20,12 @@
 
 /*----< ncmpii_error_mpi2nc() -----------------------------------------------*/
 /* translate MPI error codes to PnetCDF/netCDF error codes */
-int ncmpii_error_mpi2nc(int   mpi_errorcode, /* returned value from MPI call */
-                        char *err_msg)       /* extra error message */
+int ncmpii_error_mpi2nc(int mpi_errorcode,   /* returned value from MPI call */
+                        const char *err_msg) /* extra error message */
 {
     int errorclass, errorStringLen;
     char errorString[MPI_MAX_ERROR_STRING];
+    const char *dump_str = (err_msg == NULL) ? "" : err_msg;
 
     /* check for specific error codes understood by PnetCDF */
 
@@ -65,14 +66,13 @@ int ncmpii_error_mpi2nc(int   mpi_errorcode, /* returned value from MPI call */
      */
 
     MPI_Error_string(mpi_errorcode, errorString, &errorStringLen);
-    if (err_msg == NULL) err_msg = "";
 #ifdef PNETCDF_DEBUG
     /* report the world rank */
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    printf("rank %d: MPI error (%s) : %s\n", rank, err_msg, errorString);
+    printf("rank %d: MPI error (%s) : %s\n", rank, dump_str, errorString);
 #else
-    printf("MPI error (%s) : %s\n", err_msg, errorString);
+    printf("MPI error (%s) : %s\n", dump_str, errorString);
 #endif
 
     return NC_EFILE; /* other unknown file I/O error */

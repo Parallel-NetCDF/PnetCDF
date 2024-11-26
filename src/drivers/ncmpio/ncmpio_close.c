@@ -190,14 +190,9 @@ ncmpio_close(void *ncdp)
             if (mpireturn == MPI_SUCCESS) {
                 /* obtain file size */
                 MPI_Offset *file_size;
-                mpireturn = MPI_File_seek(fh, 0, MPI_SEEK_END);
+                mpireturn = MPI_File_get_size(fh, &file_size);
                 if (mpireturn != MPI_SUCCESS) {
-                    err = ncmpii_error_mpi2nc(mpireturn,"MPI_File_seek");
-                    if (status == NC_NOERR) status = err;
-                }
-                mpireturn = MPI_File_get_position(fh, &file_size);
-                if (mpireturn != MPI_SUCCESS) {
-                    err = ncmpii_error_mpi2nc(mpireturn,"MPI_File_get_position");
+                    err = ncmpii_error_mpi2nc(mpireturn,"MPI_File_get_size");
                     if (status == NC_NOERR) status = err;
                 }
                 /* truncate file size to header size, if larger than header */
