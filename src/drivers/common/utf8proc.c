@@ -2,7 +2,10 @@
  *  Copyright (C) 2012, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
-/* $Id$ */
+
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
 
 #include <pnetcdf.h>
 #include <pnc_debug.h>

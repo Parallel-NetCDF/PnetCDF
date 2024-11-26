@@ -398,10 +398,12 @@ int main(int argc, char **argv)
     MPI_Reduce(&put_size,     &sum_put_size,     1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Reduce(&write_timing, &max_write_timing, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
-    /* rank 0 also writes header and updates the record number in header NTIME times */
-    sum_write_size += header_size + NTIMES * 8;
-
+    /* rank 0 also writes header and updates the record number to the file
+     * header NTIME times
+     */
     if (rank == 0 && verbose) {
+        sum_write_size += header_size + NTIMES * 8;
+
         printf("\n");
         if (use_bput)
             printf("Using PnetCDF nonblocking APIs: bput\n");
