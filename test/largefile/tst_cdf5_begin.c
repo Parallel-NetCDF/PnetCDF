@@ -156,6 +156,7 @@ int main(int argc, char** argv) {
     if (err == NC_NOERR && malloc_size > 0) /* this test is for running 1 process */
         printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                malloc_size);
+    if (malloc_size > 0) ncmpi_inq_malloc_list();
 #endif
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
