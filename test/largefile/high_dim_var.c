@@ -182,6 +182,7 @@ fn_exit:
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                    sum_size);
     }
+    if (malloc_size > 0)  ncmpi_inq_malloc_list();
 #endif
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {

@@ -86,9 +86,12 @@ int main(int argc, char** argv) {
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR && malloc_size > 0) /* this test is for running 1 process */
+    if (err == NC_NOERR && malloc_size > 0) {
+        /* this test is for running 1 process */
         printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
                malloc_size);
+        if (malloc_size > 0) ncmpi_inq_malloc_list();
+    }
 
 fn_exit:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);

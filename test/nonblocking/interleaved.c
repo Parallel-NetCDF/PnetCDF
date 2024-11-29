@@ -323,7 +323,7 @@ int main(int argc, char** argv)
     err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR && malloc_size > 0) {
         printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n", malloc_size);
-        ncmpi_inq_malloc_list();
+        if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
 fn_exit:
