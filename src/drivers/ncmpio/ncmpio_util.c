@@ -136,7 +136,6 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
     }
     MPI_Info_set(info_used, "nc_in_place_swap", value);
 
-    ncp->ibuf_size = PNC_DEFAULT_IBUF_SIZE;
     if (user_info != MPI_INFO_NULL) {
 	/* temporal buffer size used to pack noncontiguous aggregated user
          * buffers when calling ncmpi_wait/wait_all, Default 16 MiB
@@ -147,7 +146,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
             MPI_Offset ibuf_size;
             errno = 0;  /* errno must set to zero before calling strtoll */
             ibuf_size = strtoll(value, NULL, 10);
-            if (errno == 0 && ncp->ibuf_size > 0) ncp->ibuf_size = ibuf_size;
+            if (errno == 0 && ibuf_size > 0) ncp->ibuf_size = ibuf_size;
         }
     }
     sprintf(value, "%lld", ncp->ibuf_size);
