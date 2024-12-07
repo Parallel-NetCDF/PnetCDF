@@ -261,6 +261,8 @@ int test_column_wise_$1(char *filename, int cdf)
                 printf("Error at line %d in %s: expect buf[%d][%d]=IFMT($1) but got IFMT($1)\n",
                        __LINE__,__FILE__,i,j,expected,buf[i][j]);
                 nerrs++;
+                i = myNX;
+                break;
             }
         }
     }
@@ -315,17 +317,28 @@ int main(int argc, char** argv)
 
     for (i=0; i<3; i++) {
         nerrs += test_column_wise_text(filename, cdf_formats[i]);
+        if (nerrs > 0) break;
         nerrs += test_column_wise_schar(filename, cdf_formats[i]);
+        if (nerrs > 0) break;
         nerrs += test_column_wise_short(filename, cdf_formats[i]);
+        if (nerrs > 0) break;
         nerrs += test_column_wise_int(filename, cdf_formats[i]);
+        if (nerrs > 0) break;
         nerrs += test_column_wise_float(filename, cdf_formats[i]);
+        if (nerrs > 0) break;
         nerrs += test_column_wise_double(filename, cdf_formats[i]);
+        if (nerrs > 0) break;
         if (cdf_formats[i] == NC_FORMAT_CDF5) {
             nerrs += test_column_wise_uchar(filename, cdf_formats[i]);
+            if (nerrs > 0) break;
             nerrs += test_column_wise_ushort(filename, cdf_formats[i]);
+            if (nerrs > 0) break;
             nerrs += test_column_wise_uint(filename, cdf_formats[i]);
+            if (nerrs > 0) break;
             nerrs += test_column_wise_longlong(filename, cdf_formats[i]);
+            if (nerrs > 0) break;
             nerrs += test_column_wise_ulonglong(filename, cdf_formats[i]);
+            if (nerrs > 0) break;
         }
     }
 

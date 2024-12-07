@@ -244,6 +244,7 @@ int main(int argc, char** argv)
             printf("Error at line %d in %s: user put buffer[%d] altered from %d to %d\n",
                    __LINE__,__FILE__,i, rank+10, buffer[i]);
             nerrs++;
+            goto err_out;
         }
     }
     if (nprocs > 4) MPI_Barrier(MPI_COMM_WORLD);
@@ -253,6 +254,7 @@ int main(int argc, char** argv)
     err = ncmpi_get_var_int_all(ncid, varid[0], r_buffer);
     CHECK_ERR
     nerrs += check_contents_for_fail(r_buffer);
+    if (nerrs > 0) goto err_out;
 
     /* permute write order */
     if (num_reqs > 0) {
@@ -270,6 +272,7 @@ int main(int argc, char** argv)
             printf("Error at line %d in %s: user put buffer[%d] altered from %d to %d\n",
                    __LINE__,__FILE__,i, rank+10, buffer[i]);
             nerrs++;
+            goto err_out;
         }
     }
 
@@ -278,6 +281,7 @@ int main(int argc, char** argv)
     err = ncmpi_get_var_int_all(ncid, varid[1], r_buffer);
     CHECK_ERR
     nerrs += check_contents_for_fail(r_buffer);
+    if (nerrs > 0) goto err_out;
 
     /* read back using get_varn API and check contents */
     for (i=0; i<w_len; i++) buffer[i] = -1;
@@ -289,6 +293,7 @@ int main(int argc, char** argv)
             printf("Error at line %d in %s: expecting buffer[%d]=%d but got %d\n",
                    __LINE__,__FILE__,i,rank+10,buffer[i]);
             nerrs++;
+            goto err_out;
         }
     }
 
@@ -308,14 +313,17 @@ int main(int argc, char** argv)
             printf("Error at line %d in %s: expecting buffer[%d]=-1 but got %d\n",
                    __LINE__,__FILE__,i,buffer[i]);
             nerrs++;
+            goto err_out;
         }
         if (i%2 == 0 && buffer[i] != rank+10) {
             printf("Error at line %d in %s: expecting buffer[%d]=%d but got %d\n",
                    __LINE__,__FILE__,i,rank+10,buffer[i]);
             nerrs++;
+            goto err_out;
         }
     }
 
+err_out:
     err = ncmpi_close(ncid);
     CHECK_ERR
 
