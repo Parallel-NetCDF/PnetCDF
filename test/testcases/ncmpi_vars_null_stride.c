@@ -22,6 +22,7 @@
             printf("Error at line %d in %s: user put buffer[%d] altered from %d to %d\n", \
                    __LINE__,__FILE__, i, rank+10, buf[i]); \
             nerrs++; \
+            goto err_out; \
         } \
     }
 
@@ -131,6 +132,7 @@ tst_fmt(char *filename, int cmode)
                     printf("Error at line %d in %s: expected buffer[%d]=%d but got %d\n",
                            __LINE__,__FILE__,i*nprocs*NX+j*NX+k, j+10, buf[i*nprocs*NX+j*NX+k]);
                     nerrs++;
+                    goto err_out;
                 }
             }
         }
@@ -153,6 +155,7 @@ tst_fmt(char *filename, int cmode)
                     printf("Error at line %d in %s: expected buffer[%d]=%d but got %d\n",
                            __LINE__,__FILE__,i*nprocs*NX+j*NX+k, j+10, buf[i*nprocs*NX+j*NX+k]);
                     nerrs++;
+                    goto err_out;
                 }
             }
         }
@@ -175,6 +178,7 @@ tst_fmt(char *filename, int cmode)
                     printf("Error at line %d in %s: expected buffer[%d]=%d but got %d\n",
                            __LINE__,__FILE__,i*nprocs*NX+k*nprocs+j, j+10, buf[i*nprocs*NX+k*nprocs+j]);
                     nerrs++;
+                    goto err_out;
                 }
             }
         }
@@ -197,6 +201,7 @@ tst_fmt(char *filename, int cmode)
                     printf("Error at line %d in %s: expected buffer[%d]=%d but got %d\n",
                            __LINE__,__FILE__,i*nprocs*NX+j*NX+k, j+10, buf[i*nprocs*NX+j*NX+k]);
                     nerrs++;
+                    goto err_out;
                 }
             }
         }
@@ -219,11 +224,13 @@ tst_fmt(char *filename, int cmode)
                     printf("Error at line %d in %s: expected buffer[%d]=%d but got %d\n",
                            __LINE__,__FILE__,i*nprocs*NX+k*nprocs+j, j+10, buf[i*nprocs*NX+k*nprocs+j]);
                     nerrs++;
+                    goto err_out;
                 }
             }
         }
     }
 
+err_out:
     err = ncmpi_close(ncid); CHECK_ERR
     free(buf);
 
@@ -260,14 +267,19 @@ int main(int argc, char **argv)
     }
 
     nerrs += tst_fmt(filename, 0);
+    if (nerrs) goto fn_exit;
     nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
+    if (nerrs) goto fn_exit;
     if (!bb_enabled) {
 #ifdef ENABLE_NETCDF4
         nerrs += tst_fmt(filename, NC_NETCDF4);
+        if (nerrs) goto fn_exit;
         nerrs += tst_fmt(filename, NC_NETCDF4 | NC_CLASSIC_MODEL);
+        if (nerrs) goto fn_exit;
 #endif
     }
     nerrs += tst_fmt(filename, NC_64BIT_DATA);
+    if (nerrs) goto fn_exit;
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -280,6 +292,7 @@ int main(int argc, char **argv)
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
+fn_exit:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
