@@ -64,7 +64,8 @@ int main(int argc, char** argv) {
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); CHECK_ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    CHECK_ERROUT
 
     /* define dimension */
     err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]); CHECK_ERR
@@ -137,7 +138,8 @@ int main(int argc, char** argv) {
     MPI_Info_set(info, "nc_var_align_size",    "197"); /* size in bytes */
 
     /* open the file for adding more metadata */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, info, &ncid); CHECK_ERR
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, info, &ncid);
+    CHECK_ERROUT
 
     /* get header size and extent, and offsets of all variables */
     err = ncmpi_inq_header_size(ncid, &header_size[0]); CHECK_ERR
@@ -323,6 +325,7 @@ int main(int argc, char** argv) {
         else       printf(PASS_STR);
     }
 
+err_out:
     MPI_Finalize();
     return (nerrs > 0);
 }
