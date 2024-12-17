@@ -125,7 +125,7 @@ ncmpio_free_NC_dimarray(NC_dimarray *ncap)
         /* when error is detected reading NC_DIMENSION tag, ncap->ndefined can
          * be > 0 and ncap->value is still NULL
          */
-        for (i=0; i<ncap->ndefined; i++) {
+        for (i=ncap->ndefined-1; i>=0; i--) {
             /* when error is detected reading dimension i, ncap->value[i] can
              * still be NULL
              */

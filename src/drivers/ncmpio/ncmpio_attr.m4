@@ -148,7 +148,7 @@ ncmpio_free_NC_attrarray(NC_attrarray *ncap)
         /* when error is detected reading NC_ATTRIBUTE tag, ncap->ndefined can
          * be > 0 and ncap->value is still NULL
          */
-        for (i=0; i<ncap->ndefined; i++) {
+        for (i=ncap->ndefined-1; i>=0; i--) {
             if (ncap->value[i] == NULL) continue;
             ncmpio_free_NC_attr(ncap->value[i]);
             NCI_Free(ncap->value[i]);
