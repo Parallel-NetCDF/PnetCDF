@@ -1062,7 +1062,7 @@ m4_defun_once([_LT_REQUIRED_DARWIN_CHECKS],[
         _lt_result=$?
 	# If there is a non-empty error log, and "single_module"
 	# appears in it, assume the flag caused a linker warning
-        if test -s conftest.err && $GREP single_module conftest.err; then
+        if test -s conftest.err && $GREP single_module conftest.err > /dev/null ; then
 	  cat conftest.err >&AS_MESSAGE_LOG_FD
 	# Otherwise, if the output was created with a 0 exit code from
 	# the compiler, it worked.
