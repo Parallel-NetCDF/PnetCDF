@@ -1,0 +1,21 @@
+8327a8328,8334
+> 
+>       # Additionally convert " -pthread" to " -Wl,-pthread" for nagfor
+>       func_cc_basename $CC
+>       case $func_cc_basename_result in
+>         nagfor*) tmp_inherited_linker_flags=`$ECHO "$tmp_inherited_linker_flags" | $SED 's/ -pthread/ -Wl,-pthread/g'` ;;
+>       esac
+> 
+9363c9370,9371
+<           case $CC in
+---
+>           func_cc_basename $CC
+>           case $func_cc_basename_result in
+9867a9876,9882
+>       esac
+> 
+>       # Time to revert the changes made for nagfor.
+>       func_cc_basename $CC
+>       case $func_cc_basename_result in
+>         nagfor*)
+>           new_inherited_linker_flags=`$ECHO " $new_inherited_linker_flags" | $SED 's% -Wl,-pthread% -pthread%g'` ;;
