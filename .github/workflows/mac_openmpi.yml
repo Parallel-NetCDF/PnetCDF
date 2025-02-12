@@ -24,6 +24,10 @@ on:
 
 env:
    OPENMPI_VERSION: 5.0.2
+   AUTOCONF_VERSION: 2.71
+   AUTOMAKE_VERSION: 1.17
+   LIBTOOL_VERSION: 2.5.4
+   M4_VERSION: 1.4.19
 
 jobs:
     build:
@@ -37,7 +41,45 @@ jobs:
             # which gcc
             # gcc --version
             # which gfortran
-            brew install automake autoconf libtool m4
+        - name: Clean up git untracked files
+          run: |
+            git clean -fx
+        - name: Build GNU autotools
+          run: |
+            export PATH="${GITHUB_WORKSPACE}/AUTOTOOLS/bin:${PATH}"
+            export LD_LIBRARY_PATH="${GITHUB_WORKSPACE}/AUTOTOOLS/lib:${LD_LIBRARY_PATH}"
+            cd ${GITHUB_WORKSPACE}
+            wget -q https://ftp.gnu.org/gnu/m4/m4-${M4_VERSION}.tar.gz
+            gzip -dc m4-${M4_VERSION}.tar.gz | tar -xf -
+            cd m4-${M4_VERSION}
+            ./configure --prefix=${GITHUB_WORKSPACE}/AUTOTOOLS \
+                        --silent
+            make -s -j 8 install > qout 2>&1
+            make -s -j 8 distclean >> qout 2>&1
+            cd ${GITHUB_WORKSPACE}
+            wget -q https://ftp.gnu.org/gnu/autoconf/autoconf-${AUTOCONF_VERSION}.tar.gz
+            gzip -dc autoconf-${AUTOCONF_VERSION}.tar.gz | tar -xf -
+            cd autoconf-${AUTOCONF_VERSION}
+            ./configure --prefix=${GITHUB_WORKSPACE}/AUTOTOOLS \
+                        --silent
+            make -s -j 8 install > qout 2>&1
+            make -s -j 8 distclean >> qout 2>&1
+            cd ${GITHUB_WORKSPACE}
+            wget -q https://ftp.gnu.org/gnu/automake/automake-${AUTOMAKE_VERSION}.tar.gz
+            gzip -dc automake-${AUTOMAKE_VERSION}.tar.gz | tar -xf -
+            cd automake-${AUTOMAKE_VERSION}
+            ./configure --prefix=${GITHUB_WORKSPACE}/AUTOTOOLS \
+                        --silent
+            make -s -j 8 install > qout 2>&1
+            make -s -j 8 distclean >> qout 2>&1
+            cd ${GITHUB_WORKSPACE}
+            wget -q https://ftp.gnu.org/gnu/libtool/libtool-${LIBTOOL_VERSION}.tar.gz
+            gzip -dc libtool-${LIBTOOL_VERSION}.tar.gz | tar -xf -
+            cd libtool-${LIBTOOL_VERSION}
+            ./configure --prefix=${GITHUB_WORKSPACE}/AUTOTOOLS \
+                        --silent
+            make -s -j 8 install > qout 2>&1
+            make -s -j 8 distclean >> qout 2>&1
         - name: Build OPENMPI
           run: |
             cd ${GITHUB_WORKSPACE}
@@ -59,6 +101,12 @@ jobs:
         - name: Build PnetCDF
           run: |
             cd ${GITHUB_WORKSPACE}
+            export PATH="${GITHUB_WORKSPACE}/AUTOTOOLS/bin:${PATH}"
+            export LD_LIBRARY_PATH="${GITHUB_WORKSPACE}/AUTOTOOLS/lib:${LD_LIBRARY_PATH}"
+            m4 --version
+            autoconf --version
+            automake --version
+            libtool --version
             autoreconf -i
             mkdir -p pnetcdf_output
             ./configure --enable-option-checking=fatal \
