@@ -215,6 +215,9 @@
 
 ---
 ### Note on autotools version used for software development
+* When seeing the error message below when running command 'autoreconf -i',
+  delete file 'm4/ltversion.m4' first. This is because ltversion.m4 is residue
+  from a previous build using an earlier version of libtool.
 * Starting from 1.9.0, in order to support building shared libraries,
   the following minimum versions are required.
   * autoconf 2.69
