@@ -2695,6 +2695,7 @@ AC_CONFIG_FILES(Makefile \
                 benchmarks/Makefile \
                 benchmarks/C/Makefile \
                 benchmarks/FLASH-IO/Makefile \
+                benchmarks/WRF-IO/Makefile \
                 doc/Makefile \
                 doc/pnetcdf-api/Makefile \
                 man/Makefile \
