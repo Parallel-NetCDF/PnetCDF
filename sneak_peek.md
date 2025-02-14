@@ -12,7 +12,11 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Configure options
-  + none
+  + For PnetCDF developers, the requirement for libtool version has been
+    changed to 2.5.4, due to an issue on Mac OS when using OpenMPI. See
+    [Issue #155](https://github.com/Parallel-NetCDF/PnetCDF/issues/155),
+    [Issue #163](https://github.com/Parallel-NetCDF/PnetCDF/issues/163),
+    and [PR #164](https://github.com/Parallel-NetCDF/PnetCDF/pull/164).
 
 * Configure updates:
   + none
@@ -54,7 +58,8 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Bug fixes
-  +
+  + Fix setting of user hint nc_ibuf_size.
+    See [PR #161](https://github.com/Parallel-NetCDF/PnetCDF/pull/161).
 
 * New example programs
   + none
