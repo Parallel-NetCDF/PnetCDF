@@ -41,6 +41,19 @@ various of APIs as well as access patterns.
    + This benchmark is algorithmically identical to its I/O kernel.
    + This distribution contains only PnetCDF I/O method.
 
+* WRF-IO
+   + WRF (Wether Research and Forecast Model) is a weather prediction computer
+     simulation program, https://github.com/wrf-model/WRF, developed at NCAR.
+   + This benchmark is an extraction of the I/O kernel of WRF and can be used
+     to evaluate the file write performance of WRF.
+   + It's data partitioning pattern is a 2D block-block checkerboard pattern,
+     along the longitude and latitude.
+
+FLASH is a reacting hydrodynamics code developed at University of Chicago.
+     https://astro.uchicago.edu/research/flash.php
+   + This benchmark is algorithmically identical to its I/O kernel.
+   + This distribution contains only PnetCDF I/O method.
+
 Copyright (C) 2012, Northwestern University and Argonne National Laboratory.
 See COPYRIGHT notice in top-level directory.
 
