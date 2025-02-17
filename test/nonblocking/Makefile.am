@@ -122,7 +122,7 @@ CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/testfile*.nc $(NC_FILES) \
              $(TESTOUTDIR)/mcoll_perf.nc.* $(TESTOUTDIR)/mcoll_perf.bb.nc.*
 
-EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh parallel_run.sh
+EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
@@ -137,21 +137,21 @@ ptest ptest4: $(check_PROGRAMS)
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 4 || exit 1
+	$(srcdir)/../parallel_run.sh 4 || exit 1
 
 ptest2 : $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 2 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 2 || exit 1
+	$(srcdir)/../parallel_run.sh 2 || exit 1
 
 ptest6 : $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 6 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 6 || exit 1
+	$(srcdir)/../parallel_run.sh 6 || exit 1
 
 ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:

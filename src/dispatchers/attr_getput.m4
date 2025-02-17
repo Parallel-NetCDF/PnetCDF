@@ -198,11 +198,9 @@ check_consistency_put(MPI_Comm      comm,
     /* check if buf contents is consistent across all processes */
     if (root_nelems > 0) { /* non-scalar attribute */
         /* note xsz is aligned, thus must use the exact size of buf */
-        int rank, itype_size;
+        int itype_size;
         size_t buf_size;
         void *root_buf;
-
-        MPI_Comm_rank(comm, &rank);
 
         /* for attributes, itype is nc_type, so its size is small. Thus, no
          * need to check against NC_MAX_INT.

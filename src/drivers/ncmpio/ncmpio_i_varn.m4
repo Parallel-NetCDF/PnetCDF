@@ -452,6 +452,12 @@ igetput_varn(NC                *ncp,
     lead_req->max_rec     = -1;
     lead_req->nonlead_num = new_nreqs;
 
+#if 0
+MPI_Aint addr;
+MPI_Get_address(lead_req->xbuf, &addr);
+printf("%s at %d: lead_req xbuf=%ld nelems=%lld\n",__func__,__LINE__, addr,lead_req->nelems);
+#endif
+
     /* varn APIs have no argument stride */
     fSet(lead_req->flag, NC_REQ_STRIDE_NULL);
 
@@ -466,6 +472,8 @@ igetput_varn(NC                *ncp,
     xbufp = (char*)xbuf;
 
     for (i=0; i<num; i++) {
+        req->npairs = 0;
+
         if (req_nelems[i] == 0) continue; /* ignore this 0-length request i */
 
         req->nelems    = req_nelems[i];
@@ -473,11 +481,17 @@ igetput_varn(NC                *ncp,
         req->xbuf      = xbufp;
         xbufp         += req_nelems[i] * xsize;
 
+#if 0
+MPI_Get_address(req->xbuf, &addr);
+printf("%s at %d: req i=%d xbuf=%ld off=%ld nelems=%lld\n",__func__,__LINE__, i,addr,(char*)req->xbuf - (char*)xbuf,req->nelems);
+#endif
+
         /* copy starts[i] and counts[i] over to req */
         req->start = start_ptr;
         memcpy(start_ptr, starts[i], memChunk);
         start_ptr += varp->ndims; /* count[] */
         if (counts == NULL || counts[i] == NULL) {
+            /* counts == NULL, equivalent to all 1s */
             for (j=0; j<varp->ndims; j++)
                  start_ptr[j] = 1; /* start_ptr is now counts[] */
         }
@@ -491,6 +505,24 @@ igetput_varn(NC                *ncp,
 
             if (counts == NULL || counts[i] == NULL) num_rec = 1;
             else                                     num_rec = counts[i][0];
+
+            /* calculate number of flattened offset-length pairs */
+            req->npairs = 1;
+            if (counts == NULL || counts[i] == NULL) {
+                /* equivalent to all multiple var1 APIs */
+                ncmpio_calc_off(ncp, varp, starts[i], &req->offset_start);
+                // req->offset_end = req->offset_start + varp->xsz;
+                req->offset_end = varp->xsz;
+            }
+            else {
+                for (j=1; j<varp->ndims-1; j++)
+                    req->npairs *= counts[i][j];
+                /* special treatment for when there is only one pair */
+                if (req->npairs == 1) {
+                    ncmpio_calc_off(ncp, varp, starts[i], &req->offset_start);
+                    req->offset_end = req->nelems * varp->xsz;
+                }
+            }
 
             max_rec = starts[i][0] + num_rec;
             lead_req->max_rec = MAX(lead_req->max_rec, max_rec);
@@ -506,6 +538,11 @@ igetput_varn(NC                *ncp,
                 lead_list = (fIsSet(reqMode, NC_REQ_WR)) ? ncp->put_lead_list
                                                          : ncp->get_lead_list;
 
+
+                req->nelems /= counts[i][0];
+                if (req->npairs == 1)
+                    req->offset_end = req->nelems * varp->xsz;
+
                 /* append (counts[i][0]-1) number of requests to the queue */
                 ncmpio_add_record_requests(lead_list, req, counts[i][0], NULL);
                 start_ptr += (counts[i][0] - 1) * 2 * varp->ndims;
@@ -514,8 +551,26 @@ igetput_varn(NC                *ncp,
             else
                 req++;
         }
-        else
+        else {
+            /* calculate number of flattened offset-length pairs */
+            req->npairs = 1;
+            if (counts == NULL || counts[i] == NULL) {
+                /* equivalent to all multiple var1 APIs */
+                ncmpio_calc_off(ncp, varp, starts[i], &req->offset_start);
+                // req->offset_end = req->offset_start + varp->xsz;
+                req->offset_end = varp->xsz;
+            }
+            else {
+                for (j=0; j<varp->ndims-1; j++)
+                    req->npairs *= counts[i][j];
+                /* special treatment for when there is only one pair */
+                if (req->npairs == 1) {
+                    ncmpio_calc_off(ncp, varp, starts[i], &req->offset_start);
+                    req->offset_end = req->nelems * varp->xsz;
+                }
+            }
             req++;
+        }
     }
 
     if (reqid != NULL) *reqid = lead_req->id;

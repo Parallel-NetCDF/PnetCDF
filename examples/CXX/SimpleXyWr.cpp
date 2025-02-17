@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 
     // Create some pretend data. If this wasn't an example program, we
     // would have some real data to write, for example, model output.
-    for (int i = 0; i < NX; i++)
+    for (i = 0; i < NX; i++)
         for (int j = 0; j < NY; j++)
             dataOut[i][j] = i * NY + j;
 

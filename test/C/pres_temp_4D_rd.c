@@ -191,9 +191,12 @@ int main(int argc, char **argv)
             }
             i++;
         }
-    } /* next record */
 
 fn_exit:
+        MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+        if (nerrs > 0) break;
+    } /* next record */
+
     /* Close the file. */
     err = ncmpi_close(ncid);
     CHECK_ERR

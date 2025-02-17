@@ -15,7 +15,7 @@ dnl AC_REVISION([$Revision$])dnl
 dnl autoconf v2.70 and later is required. See https://github.com/Parallel-NetCDF/PnetCDF/issues/94
 dnl autoconf v2.70 was released in 2021-01-28
 AC_PREREQ([2.70])
-AC_INIT([PnetCDF], [1.14.1],
+AC_INIT([PnetCDF], [1.15.0-alpha],
         [parallel-netcdf@mcs.anl.gov],
         [pnetcdf],
         [https://parallel-netcdf.github.io])
@@ -69,8 +69,8 @@ AM_EXTRA_RECURSIVE_TARGETS([tests])
 dnl parse the version numbers to 4 env variables
 PNETCDF_VERSION_MAJOR=`echo ${PACKAGE_VERSION} | cut -d. -f1`
 PNETCDF_VERSION_MINOR=`echo ${PACKAGE_VERSION} | cut -d. -f2`
-PNETCDF_VERSION_SUB=`echo ${PACKAGE_VERSION} | cut -d. -f3`
-PNETCDF_VERSION_PRE=`echo ${PACKAGE_VERSION} | cut -d. -f4`
+PNETCDF_VERSION_SUB=`echo ${PACKAGE_VERSION} | cut -d. -f3 | cut -d'-' -f1`
+PNETCDF_VERSION_PRE=`echo ${PACKAGE_VERSION} | cut -d'-' -f2`
 
 dnl Note major, minor, and sub are required, but pre is not.
 PNETCDF_VERSION=${PACKAGE_VERSION}
@@ -1175,6 +1175,8 @@ dnl AC_CHECK_FUNCS([memset setlocale sqrt strchr strrchr strtol])
 dnl AC_CHECK_LIB([m], [tanh])
 dnl UD_CHECK_LIB_MATH
 
+AC_CHECK_HEADERS([unistd.h fcntl.h malloc.h stddef.h sys/types.h limits.h time.h dirent.h])
+
 dnl When using gcc based compiler with -ansi flag, AC_CHECK_FUNCS can still
 dnl find strdup, but AC_CHECK_DECL cannot. So we check with AC_CHECK_DECL
 dnl first and then check AC_CHECK_FUNCS.
@@ -1377,8 +1379,11 @@ AC_CHECK_FUNCS([MPI_Type_create_subarray_c \
                 MPI_Type_get_true_extent_c \
                 MPI_Type_get_envelope_c \
                 MPI_Type_get_contents_c \
+                MPI_Status_set_elements_x \
                 MPI_Bcast_c \
                 MPI_Get_count_c \
+                MPI_Isend_c \
+                MPI_Irecv_c \
                 MPI_Pack_c \
                 MPI_Unpack_c \
                 MPI_File_read_at_c \
@@ -1459,6 +1464,14 @@ if test "$mpi_version" -ge "3" ; then
                           [], [], [[#include <mpi.h>]])
 fi
 
+# check some MPI combiner types that are used internally in PnetCDF
+UD_CHECK_MPI_CONSTANTS([MPI_COMBINER_DUP,
+                        MPI_COMBINER_SUBARRAY,
+                        MPI_COMBINER_DARRAY,
+                        MPI_COMBINER_INDEXED_BLOCK,
+                        MPI_COMBINER_HINDEXED_BLOCK],
+                       [], [], [[#include <mpi.h>]])
+
 dnl Check presence of various MPI error classes. Introduced in MPI 2.0.
 dnl These could be enums, so we have to do compile checks.
 dnl AC_CHECK_DECLS([MPI_ERR_FILE_EXISTS,
@@ -1520,6 +1533,94 @@ dnl     UD_CHECK_MPI_DATATYPE(MPI_REAL4)		dnl first defined in MPI 1.0
 dnl     UD_CHECK_MPI_DATATYPE(MPI_REAL8)		dnl first defined in MPI 1.0
 dnl     UD_CHECK_MPI_DATATYPE(MPI_DOUBLE_PRECISION)	dnl first defined in MPI 1.0
 dnl fi
+
+AC_MSG_CHECKING([whether MPI_Waitall takes MPI_STATUSES_IGNORE])
+if test "x${GCC}" = xyes; then
+   saved_CFLAGS=${CFLAGS}
+   CFLAGS="-Werror -Wstringop-overflow=2"
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <mpi.h>]],[[
+                      int count;
+                      MPI_Request *reqs;
+                      MPI_Waitall(count, reqs, MPI_STATUSES_IGNORE);
+      ]])], [MPI_STATUSES_IGNORE=yes], [MPI_STATUSES_IGNORE=no])
+   CFLAGS=${saved_CFLAGS}
+else
+   AC_CHECK_DECL([MPI_STATUSES_IGNORE], [MPI_STATUSES_IGNORE=yes], [MPI_STATUSES_IGNORE=no] [[#include <mpi.h>]])
+fi
+AC_MSG_RESULT([$MPI_STATUSES_IGNORE])
+if test "x$MPI_STATUSES_IGNORE" = xyes ; then
+   AC_DEFINE(HAVE_MPI_STATUSES_IGNORE, 1, [Whether MPI_Waitall takes argument MPI_STATUSES_IGNORE])
+fi
+
+#
+# Check for statfs (many) and specifically f_fstypename field (BSD)
+#
+AC_CHECK_HEADERS(sys/vfs.h sys/param.h sys/mount.h sys/statvfs.h sys/stat.h sys/type.h unistd.h)
+
+AC_CHECK_FUNCS([statvfs statfs stat])
+
+AC_CHECK_MEMBERS([struct statvfs.f_basetype,
+                  struct statfs.f_fstypename,
+                  struct statfs.f_type,
+                  struct stat.st_fstype],[],[],
+             AC_INCLUDES_DEFAULT
+             [#ifdef HAVE_SYS_VFS_H
+              #include <sys/vfs.h>
+              #endif
+              #ifdef HAVE_SYS_PARAM_H
+              #include <sys/param.h>
+              #endif
+              #ifdef HAVE_SYS_MOUNT_H
+              #include <sys/mount.h>
+              #endif
+              #ifdef HAVE_SYS_STATFS_H
+              #include <sys/statfs.h>
+              #endif
+              #ifdef HAVE_SYS_STAT_H
+              #include <sys/stat.h>
+              #endif
+              #ifdef HAVE_SYS_TYPE_H
+              #include <sys/type.h>
+              #endif
+              #ifdef HAVE_UNISTD_H
+              #include <unistd.h>
+              #endif
+              ])
+
+AC_CHECK_TYPE([blksize_t],[],[AC_DEFINE_UNQUOTED([blksize_t],[__blksize_t],[Provide blksize_t if not available]) ], [[
+               #ifdef HAVE_SYS_TYPES_H
+               #include <sys/types.h>
+               #endif
+               #ifdef HAVE_SYS_STAT_H
+               #include <sys/stat.h>
+               #endif
+               #ifdef HAVE_UNISTD_H
+               #include <unistd.h>
+               #endif]] )
+
+AC_CHECK_DECLS([pwrite])
+
+#
+# Check if Lustre is available by verifying presence of lustre/lustre_user.h
+#
+has_lustre=no
+AC_CHECK_HEADERS([lustre/lustre_user.h linux/lustre/lustre_user.h],
+                 [has_lustre=yes ; break])
+if test "x$has_lustre" = xyes ; then
+   AC_DEFINE(HAVE_LUSTRE, 1, [Define for LUSTRE])
+   LIBS="$LIBS -llustreapi"
+fi
+AM_CONDITIONAL(HAVE_LUSTRE, [test x$has_lustre = xyes])
+
+if test "x$has_lustre" = xno ; then
+   AC_MSG_CHECKING([for whether mimicking Lustre])
+   minicking_lustre=no
+   if test "x$MIMIC_LUSTRE" = xyes ; then
+      AC_DEFINE(MIMIC_LUSTRE, 1, [Define for mimicking LUSTRE file system])
+      minicking_lustre=yes
+   fi
+   AC_MSG_RESULT($minicking_lustre)
+fi
 
 AC_C_CHAR_UNSIGNED
 AC_C_BIGENDIAN
@@ -1739,8 +1840,15 @@ if test "x${debug}" = xyes; then
    if test "x$?" != x0 ; then
       CFLAGS="$CFLAGS -g"
    fi
-   CFLAGS=`echo $CFLAGS | ${SED} 's/-O. *//g' | ${SED} 's/-fast *//g'`
-   CFLAGS="$CFLAGS -O0"
+
+   # remove -fast if set by user
+   CFLAGS=`echo $CFLAGS | ${SED} 's/-fast *//g'`
+
+   # check if -O is set by user, if not, then add -O0
+   str_found=`echo "${CFLAGS}" | ${EGREP} -- "-O"`
+   if test "x$str_found" = x ; then
+      CFLAGS="$CFLAGS -O0"
+   fi
 
    if test "x${has_mpicxx}" = xyes ; then
       str_found=`echo "${CXXFLAGS}" | ${EGREP} -- "-g"`
@@ -2603,10 +2711,10 @@ else
       # no name prefix end with ':'
       FSTYPE_PREFIX=
    else
-      # check if name prefix is one of file system types known to ROMIO
-      romio_known_fstypes=(ufs nfs xfs pvfs2 gpfs panfs lustre daos testfs ime quobyte)
+      # check if name prefix is one of file system types known to PNCIO
+      known_fstypes=(ufs nfs xfs pvfs2 gpfs panfs lustre daos testfs ime quobyte)
       known_fstype=
-      for pre in $romio_known_fstypes ; do
+      for pre in $known_fstypes ; do
           if test "$FSTYPE_PREFIX" = $pre ; then
              known_fstype=$pre
              break
@@ -2691,7 +2799,7 @@ dnl Update the version information only immediately before a public release.
 dnl PnetCDF starts with 1:0:0 (shared library is first supported in 1.9.0)
 dnl because some package distributors, such as Debian, may have already built
 dnl PnetCDF with shared libraries.
-ABIVERSION="7:0:0"
+ABIVERSION="8:0:1"
 AC_SUBST(ABIVERSION)
 if test "$enable_versioning" = "yes" ; then
    ABIVERSIONFLAGS="-version-info \$(ABIVERSION)"
@@ -2711,6 +2819,7 @@ AC_CONFIG_FILES(Makefile \
                 src/drivers/common/Makefile \
                 src/drivers/include/Makefile \
                 src/drivers/ncmpio/Makefile \
+                src/drivers/pncio/Makefile \
                 src/drivers/nc4io/Makefile \
                 src/drivers/ncadios/Makefile \
                 src/drivers/ncbbio/Makefile \

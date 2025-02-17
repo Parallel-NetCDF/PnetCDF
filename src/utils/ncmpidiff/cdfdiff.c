@@ -187,9 +187,9 @@ struct vspec {
 
 /*----< get_var_names() >-----------------------------------------------------*/
 static void
-get_var_names(char *optarg, struct vspec* vspecp)
+get_var_names(char *opt_arg, struct vspec* vspecp)
 {
-    char *cp=optarg, **cpp;
+    char *cp=opt_arg, **cpp;
     int nvars = 1;
 
     /* compute number of variable names in comma-delimited list */
@@ -203,7 +203,7 @@ get_var_names(char *optarg, struct vspec* vspecp)
 
     cpp = vspecp->names;
     /* copy variable names into list */
-    for (cp = strtok(optarg, ",");
+    for (cp = strtok(opt_arg, ",");
          cp != NULL;
          cp = strtok((char *) NULL, ",")) {
 
@@ -237,11 +237,11 @@ get_type(int type)
 /*----< main() >--------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
+    /* int verbose; is defined as a locally global variable in ncvalidator.c */
     extern char *optarg;
     extern int optind;
-    char *str, *ptr;
     size_t nbytes;
-    int i, j, k, m, n, c, err, verbose, quiet, isDiff;
+    int i, j, k, m, n, c, err, quiet, isDiff;
     int fd[2], nvars[2], ndims[2], nattrs[2], check_tolerance;
     int cmp_nvars, check_header, check_variable_list, check_entire_file;
     long long numVarDIFF=0, numHeadDIFF=0, numDIFF;
@@ -264,7 +264,8 @@ int main(int argc, char **argv)
     var_list.nvars      = 0;
     check_tolerance     = 0;
 
-    while ((c = getopt(argc, argv, "bhqv:t:")) != -1)
+    while ((c = getopt(argc, argv, "bhqv:t:")) != -1) {
+        char *str, *ptr;
         switch(c) {
             case 'h':               /* compare header only */
                 check_header = 1;
@@ -301,6 +302,7 @@ int main(int argc, char **argv)
                 usage(argv[0]);
                 break;
         }
+    }
 
     /* quiet mode overwrites verbose */
     if (quiet) verbose = 0;

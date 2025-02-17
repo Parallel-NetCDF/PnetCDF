@@ -32,7 +32,7 @@ if ENABLE_ADIOS
    SUBDIRS += adios
 endif
 
-EXTRA_DIST = README.md
+EXTRA_DIST = README.md parallel_run.sh
 
 # below is the alternative when AM_EXTRA_RECURSIVE_TARGETS is not defined
 # TESTS_DIRS = $(SUBDIRS:%=tests-%)

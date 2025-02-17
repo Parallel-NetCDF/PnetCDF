@@ -64,6 +64,7 @@
             if (buf[j][i] != val+i) { \
                 printf("line %d: expecting buf[%d][%d]=%d but got %d\n",__LINE__,j,i,val+i,buf[j][i]); \
                 nerrs++; \
+                goto fn_exit; \
             } \
     } \
 } \
@@ -74,6 +75,7 @@
             if (buf[j][i] != rank*100+j*10+i) { \
                 printf("line %d: expecting buf[%d][%d]=%d but got %d\n",__LINE__,j,i,rank*100+j*10+i,(int)buf[j][i]); \
                 nerrs++; \
+                goto fn_exit; \
             } \
     } \
 }
@@ -143,20 +145,23 @@ int get_var_and_verify(int ncid,
                 nerrs++;
             }
     }
+
+fn_exit:
     free(ncbuf);
+
     return nerrs;
 }
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
 
-    char         filename[256];
+    char         filename[256], *hint_value;
     int          i, j, err, ncid, varid0, varid1, varid2, dimids[2], nerrs=0;
     int          rank, nprocs, blocklengths[2], **buf, *bufptr;
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     int          buftype_size, expected_put_size, format;
-    float        **flt_buf, *flt_bufptr;
-    double       **dbl_buf, *dbl_bufptr;
+    float        **flt_buf=NULL, *flt_bufptr;
+    double       **dbl_buf=NULL, *dbl_bufptr;
     MPI_Offset   start[2], count[2], header_size, put_size, new_put_size;
     MPI_Aint     a0, a1, disps[2];
     MPI_Datatype buftype, ghost_buftype, rec_filetype, fix_filetype;
@@ -180,6 +185,19 @@ int main(int argc, char **argv) {
         sprintf(cmd_str, "*** TESTING C   %s for vard put and get ", basename(argv[0]));
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
+    }
+
+    /* Skip test when intra-node aggregation is enabled, as vard APIs are not
+     * supported.
+     */
+    if (inq_env_hint("nc_num_aggrs_per_node", &hint_value)) {
+        if (atoi(hint_value) > 0) {
+            free(hint_value);
+            if (rank == 0) printf(SKIP_STR);
+            MPI_Finalize();
+            return 0;
+        }
+        free(hint_value);
     }
 
     /* construct various MPI derived data types */
@@ -486,6 +504,7 @@ int main(int argc, char **argv) {
     }
     free(schar_buf);
 
+fn_exit:
     MPI_Type_free(&rec_filetype);
     MPI_Type_free(&fix_filetype);
     MPI_Type_free(&buftype);
@@ -495,8 +514,14 @@ int main(int argc, char **argv) {
     free(array_of_blocklengths);
     free(array_of_displacements);
     free(buf[0]); free(buf);
-    free(flt_buf[0]); free(flt_buf);
-    free(dbl_buf[0]); free(dbl_buf);
+    if (flt_buf != NULL) {
+        free(flt_buf[0]);
+        free(flt_buf);
+    }
+    if (dbl_buf != NULL) {
+        free(dbl_buf[0]);
+        free(dbl_buf);
+    }
 
     err = ncmpi_close(ncid); CHECK_ERR
 

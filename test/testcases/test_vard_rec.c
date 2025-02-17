@@ -43,7 +43,7 @@
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
 
-    char         filename[256];
+    char         filename[256], *hint_value;
     int          i, j, err, nerrs=0, ncid, varid, dimids[2], unlimit_dimid;
     int          rank, nprocs, verbose, array_of_blocklengths[2], buf[NY][NX];
     MPI_Offset   recsize, len;
@@ -70,6 +70,19 @@ int main(int argc, char **argv) {
         sprintf(cmd_str, "*** TESTING C   %s for vard put on record var ", basename(argv[0]));
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
+    }
+
+    /* Skip test when intra-node aggregation is enabled, as vard APIs are not
+     * supported.
+     */
+    if (inq_env_hint("nc_num_aggrs_per_node", &hint_value)) {
+        if (atoi(hint_value) > 0) {
+            free(hint_value);
+            if (rank == 0) printf(SKIP_STR);
+            MPI_Finalize();
+            return 0;
+        }
+        free(hint_value);
     }
 
     /* create a new file for write */

@@ -50,8 +50,8 @@ NcmpiOpaqueType::NcmpiOpaqueType(const NcmpiGroup& grp, const string& name) :
 
 
 // constructor
-NcmpiOpaqueType::NcmpiOpaqueType(const NcmpiType& ncmpiType) :
-  NcmpiType(ncmpiType)
+NcmpiOpaqueType::NcmpiOpaqueType(const NcmpiType& xType) :
+  NcmpiType(xType)
 {
   // check the nctype object is the base of a Opaque type
   if(getTypeClass() != NC_OPAQUE) 	throw NcmpiException("The NcmpiType object must be the base of an Opaque type.",__FILE__,__LINE__);

@@ -64,6 +64,9 @@ int main(int argc, char ** argv)
     err = ncmpi_def_var(ncid, "vector", NC_DOUBLE, 1, &dimid, &varid);
     CHECK_ERR
 
+    err = ncmpi_def_var_fill(ncid, varid, 0, NULL);
+    CHECK_ERR
+
     err = ncmpi_enddef(ncid);
     CHECK_ERR
 

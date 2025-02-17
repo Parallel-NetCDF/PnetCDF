@@ -315,7 +315,7 @@ int ncmpio_subfile_partition(NC *ncp)
         if (dpp[vpp[i]->dimids[par_dim_id]]->size/ncp->num_subfiles > 0 &&
             vpp[i]->ndims >= par_dim_id+1 &&
             vpp[i]->ndims >= SUBFILING_MIN_NDIMS) {
-            int varid, j, jj, k;
+            int varid, jj, k;
             int var_ndims = vpp[i]->ndims; /* keep org ndims */
             int dimids[var_ndims];
             char *key[ncp->num_subfiles][var_ndims];
@@ -1003,7 +1003,6 @@ ncmpio_subfile_getput_vars(NC               *ncp,
     for (i=0; i<nprocs; i++) {
         buf_count_my[i] = 1;
         if (count_my_req_per_proc[i] != 0 && i != myrank) {
-            MPI_Offset diff[ndims_org];
             for (k=0; k < ndims_org; k++) {
                 int l;
                 MPI_Offset stride_count, tmp=1;

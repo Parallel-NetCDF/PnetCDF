@@ -90,7 +90,7 @@ ptest ptest4: $(check_PROGRAMS)
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 4 || exit 1
+	$(srcdir)/../parallel_run.sh 4 || exit 1
 
 ptests: ptest4
 ptest2 ptest6 ptest8 ptest10:

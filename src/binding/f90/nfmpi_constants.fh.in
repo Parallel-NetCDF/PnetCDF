@@ -16,6 +16,8 @@
       PNETCDF_VERSION_MINOR = @PNETCDF_VERSION_MINOR@, &
       PNETCDF_VERSION_SUB   = @PNETCDF_VERSION_SUB@
 
+      character(len=16), parameter :: PNETCDF_VERSION_PRE = "@PNETCDF_VERSION_PRE@"
+
 !
 ! list of PnetCDF options enabled/disabled at configure time
 !

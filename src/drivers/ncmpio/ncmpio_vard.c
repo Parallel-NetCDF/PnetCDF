@@ -55,9 +55,8 @@ getput_vard(NC               *ncp,
     void *xbuf=NULL;
     int mpireturn, status=NC_NOERR, err=NC_NOERR, xtype_is_contig=1;
     int el_size, buftype_is_contig=0, need_swap_back_buf=0;
-    int need_convert=0, need_swap=0, coll_indep, rw_flag;
-    MPI_File fh;
-    MPI_Offset nelems=0, fnelems=0, bnelems=0, offset=0;
+    int need_convert=0, need_swap=0;
+    MPI_Offset fnelems=0, bnelems=0, offset=0;
     MPI_Datatype etype=MPI_DATATYPE_NULL, xtype=MPI_BYTE;
     MPI_Offset filetype_size=0;
 #ifdef HAVE_MPI_TYPE_SIZE_C
@@ -70,6 +69,17 @@ getput_vard(NC               *ncp,
     MPI_Aint true_lb=0, true_ub=0, true_extent=0;
     int type_size;
 #endif
+
+    if (ncp->fstype != PNCIO_FSTYPE_MPIIO) {
+        fprintf(stderr, "PnetCDF vard APIs are only supported when using MPI-IO.\n");
+        fprintf(stderr, "Please set environment variable PNETCDF_HINTS to \"nc_pncio=disable\"\n");
+        return NC_ENOTSUPPORT;
+    }
+
+    if (ncp->num_aggrs_per_node > 0) {
+        fprintf(stderr, "PnetCDF vard APIs are not supported when intra-node agggregation is enabled\n");
+        return NC_ENOTSUPPORT;
+    }
 
 #ifdef ENABLE_SUBFILING
     /* call a separate routine if variable is stored in subfiles */
@@ -170,7 +180,7 @@ getput_vard(NC               *ncp,
         bnelems = bufcount;
     }
     else {
-        /* find the element type of filetype. ncmpii_dtype_decode() checks
+        /* find the element type of buftype. ncmpii_dtype_decode() checks
          * NC_EMULTITYPES */
         err = ncmpii_dtype_decode(buftype, &etype, &el_size, &bnelems, NULL,
                                   &buftype_is_contig);
@@ -214,8 +224,8 @@ getput_vard(NC               *ncp,
             }
         }
 
-        if (!need_convert &&
-            (!need_swap || (can_swap_in_place && buftype_is_contig))) {
+        if (!need_convert && buftype_is_contig &&
+            (!need_swap || can_swap_in_place)) {
             /* reuse buftype, bufcount, buf in later MPI file write */
             xbuf = buf;
             if (need_swap) {
@@ -246,7 +256,7 @@ getput_vard(NC               *ncp,
         }
     }
     else { /* read request */
-        if (!need_convert && (!need_swap || buftype_is_contig)) {
+        if (!need_convert && !need_swap && buftype_is_contig) {
             /* reuse buftype, bufcount, buf in later MPI file read */
             xbuf = buf;
         }
@@ -259,18 +269,7 @@ getput_vard(NC               *ncp,
             xtype_is_contig = 1;
         }
     }
-
-    /* Set nelems and xtype which will be used in MPI read/write */
-    if (buf != xbuf) {
-        /* xbuf is a malloc-ed contiguous buffer */
-        nelems = bnelems;
-    }
-    else {
-        /* we can safely use bufcount and buftype in MPI File read/write.
-         * Note buftype may be noncontiguous. */
-        nelems = bufcount;
-        xtype = buftype;
-    }
+assert(xtype_is_contig == 1);
 
     /* set fileview's displacement to the variable's starting file offset */
     offset = varp->begin;
@@ -296,7 +295,6 @@ err_check:
          */
         offset   = 0;
         bufcount = 0;
-        nelems   = 0;
         filetype_size = 0;
         filetype = MPI_BYTE;
         buftype  = MPI_BYTE;
@@ -305,31 +303,79 @@ err_check:
     }
     status = err;
 
-    /* when ncp->nprocs == 1, ncp->collective_fh == ncp->independent_fh */
-    fh = ncp->independent_fh;
-    coll_indep = NC_REQ_INDEP;
-    if (ncp->nprocs > 1 && fIsSet(reqMode, NC_REQ_COLL)) {
-        fh = ncp->collective_fh;
-        coll_indep = NC_REQ_COLL;
-    }
-
     /* set the MPI-IO fileview, this is a collective call */
-    err = ncmpio_file_set_view(ncp, fh, &offset, filetype);
+#if 1
+    /* vard API is only supported when using MPI-IO, not PNCIO */
+    char *mpi_name;
+    MPI_File fh;
+
+    /* when ncp->nprocs == 1, ncp->collective_fh == ncp->independent_fh */
+    fh = (ncp->nprocs > 1 && !fIsSet(ncp->flags, NC_MODE_INDEP))
+       ? ncp->collective_fh : ncp->independent_fh;
+
+    TRACE_IO(MPI_File_set_view, (fh, offset, MPI_BYTE, filetype, "native",
+                                 MPI_INFO_NULL));
+    if (mpireturn != MPI_SUCCESS) {
+        err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
+        if (status == NC_NOERR) status = err;
+    }
+#else
+    err = ncmpio_file_set_view(ncp, offset, filetype, 0, NULL, NULL);
+#endif
     if (err != NC_NOERR) {
         if (status == NC_NOERR) status = err;
-        nelems = 0; /* skip this request */
+        filetype_size = 0; /* skip this request */
     }
 
-    rw_flag = (fIsSet(reqMode, NC_REQ_RD)) ? NC_REQ_RD : NC_REQ_WR;
+#if 1
+    /* vard API is only supported when using MPI-IO, not PNCIO */
+    int coll_indep = NC_REQ_INDEP;
+    if (ncp->nprocs > 1 && !fIsSet(ncp->flags, NC_MODE_INDEP))
+        coll_indep = NC_REQ_COLL;
 
-    err = ncmpio_read_write(ncp, rw_flag, coll_indep, offset, nelems,
-                            xtype, xbuf, xtype_is_contig);
+    PNCIO_View buf_view;
+    buf_view.type = MPI_BYTE;
+    buf_view.size = filetype_size;
+    buf_view.count = 1;
+    buf_view.is_contig = 1;
+
+    if (fIsSet(reqMode, NC_REQ_RD)) {
+        MPI_Offset rlen;
+
+        if (ncp->nprocs > 1 && coll_indep == NC_REQ_COLL)
+            rlen = ncmpio_file_read_at_all(ncp, 0, xbuf, buf_view);
+        else
+            rlen = ncmpio_file_read_at_all(ncp, 0, xbuf, buf_view);
+        if (status == NC_NOERR && rlen < 0) status = (int)rlen;
+    }
+    else {
+        MPI_Offset wlen;
+
+        if (ncp->nprocs > 1 && coll_indep == NC_REQ_COLL)
+            wlen = ncmpio_file_write_at_all(ncp, 0, xbuf, buf_view);
+        else
+            wlen = ncmpio_file_write_at(ncp, 0, xbuf, buf_view);
+        if (status == NC_NOERR && wlen < 0) status = (int)wlen;
+    }
+#else
+    int rw_flag = (fIsSet(reqMode, NC_REQ_RD)) ? NC_REQ_RD : NC_REQ_WR;
+
+    err = ncmpio_read_write(ncp, rw_flag, 0, nelems, xtype, xbuf);
     if (status == NC_NOERR) status = err;
+#endif
 
-    /* No longer need to reset the file view, as the root's fileview includes
-     * the whole file header.
-     MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
-     */
+    /* reset fileview to make entire file visible */
+#if 1
+    TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, MPI_BYTE, "native",
+                                 MPI_INFO_NULL));
+    if (mpireturn != MPI_SUCCESS) {
+        err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
+        if (status == NC_NOERR) status = err;
+    }
+#else
+    err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, 0, NULL, NULL);
+    if (status == NC_NOERR) status = err;
+#endif
 
     if (fIsSet(reqMode, NC_REQ_RD)) {
         if (filetype_size == 0) return status;

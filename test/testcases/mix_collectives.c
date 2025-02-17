@@ -181,7 +181,7 @@ int main(int argc, char **argv)
                 __LINE__,__FILE__,i,g_buf[i],check_buf[i]);
                 nerrs++;
                 free(check_buf);
-                goto err_out;
+                goto syn_err;
             }
         }
     }
@@ -207,7 +207,7 @@ int main(int argc, char **argv)
                 printf("Error at line %d in %s: expecting var[%d]=%d but got %d\n",
                 __LINE__,__FILE__,i, j*4+i + rank*100, buf[j][i]);
                 nerrs++;
-                goto err_out;
+                goto syn_err;
             }
         }
     }
@@ -222,7 +222,7 @@ int main(int argc, char **argv)
                 printf("Error at line %d in %s: expecting var[%d]=%d but got %d\n",
                 __LINE__,__FILE__,j, j+rank*100, *val);
                 nerrs++;
-                goto err_out;
+                goto syn_err;
             }
             val++;
         }
@@ -238,7 +238,7 @@ int main(int argc, char **argv)
                 printf("Error at line %d in %s: expecting var[%d][%d]=%d but got %d\n",
                 __LINE__,__FILE__,j,i, j*4+i + rank*100, buf[j][i]);
                 nerrs++;
-                goto err_out;
+                goto syn_err;
             }
         }
     }
@@ -251,10 +251,14 @@ int main(int argc, char **argv)
                 printf("Error at line %d in %s: expecting var[%d][%d]=%d but got %d\n",
                 __LINE__,__FILE__,j,i, -1, buf[j][i]);
                 nerrs++;
-                goto err_out;
+                goto syn_err;
             }
         }
     }
+
+syn_err:
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+    if (nerrs) goto err_out;
 
     /* test when different processes call put APIs with different varid */
     err = ncmpi_redef(ncid); CHECK_ERR

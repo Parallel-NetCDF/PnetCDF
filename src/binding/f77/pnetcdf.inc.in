@@ -14,10 +14,12 @@
       integer PNETCDF_VERSION_MAJOR
       integer PNETCDF_VERSION_MINOR
       integer PNETCDF_VERSION_SUB
+      character*16 PNETCDF_VERSION_PRE
 
       parameter (PNETCDF_VERSION_MAJOR = @PNETCDF_VERSION_MAJOR@)
       parameter (PNETCDF_VERSION_MINOR = @PNETCDF_VERSION_MINOR@)
       parameter (PNETCDF_VERSION_SUB   = @PNETCDF_VERSION_SUB@)
+      parameter (PNETCDF_VERSION_PRE   = "@PNETCDF_VERSION_PRE@")
 
 !
 ! list of PnetCDF options enabled/disabled at configure time

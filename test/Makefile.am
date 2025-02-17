@@ -64,6 +64,8 @@ else
    PTEST_SUBDIRS = $(SUBDIRS)
 endif
 
+EXTRA_DIST = parallel_run.sh
+
 ptest:
 	@for d in $(PTEST_SUBDIRS) ; do \
 		$(MAKE) $(MFLAGS) -C $$d ptest $$* || exit 1 ; \

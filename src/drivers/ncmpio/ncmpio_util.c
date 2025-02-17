@@ -18,267 +18,320 @@
 
 #include <pnc_debug.h>
 #include <common.h>
+#include <ncx.h>
 #include "ncmpio_NC.h"
 
-/*----< ncmpio_set_pnetcdf_hints() >-----------------------------------------*/
-/* this is where the I/O hints designated to pnetcdf are extracted and their
- * default values are set.
+#define MAX_INT_LEN 24
+
+/*----< ncmpio_hint_extract() >----------------------------------------------*/
+/* Extract hints from info. Argument info is the info object set by application
+ * user and passed to ncmpi_create() or ncmpi_open(). For those PnetCDF hints
+ * are not set in info, their default values are used.
  */
-void ncmpio_set_pnetcdf_hints(NC *ncp,
-                              MPI_Info user_info,
-                              MPI_Info info_used)
+void ncmpio_hint_extract(NC       *ncp,
+                         MPI_Info  info)
 {
     char value[MPI_MAX_INFO_VAL];
-    int  flag;
+    int  flag, ival;
+    long long llval;
 
-    if (user_info == MPI_INFO_NULL) flag = 0;
+    assert(ncp != NULL);
 
-    /* Note info_used cannot be MPI_INFO_NULL, as it is returned from a call to
-     * MPI_File_get_info()
-     */
-    assert(info_used != MPI_INFO_NULL);
+    ncp->info_v_align = -1; /* -1 indicates not set */
+    ncp->info_r_align = -1; /* -1 indicates not set */
+
+    /* chunk size for reading header (set default before check hints) */
+    ncp->chunk = PNC_DEFAULT_CHUNKSIZE;
+
+    /* buffer to pack noncontiguous user buffers when calling wait() */
+    ncp->ibuf_size = PNC_DEFAULT_IBUF_SIZE;
+
+#ifdef ENABLE_SUBFILING
+    ncp->subfile_mode = 0;
+    ncp->num_subfiles = 0;
+#endif
+
+    ncp->dims.hash_size  = PNC_HSIZE_DIM;
+    ncp->vars.hash_size  = PNC_HSIZE_VAR;
+    ncp->attrs.hash_size = PNC_HSIZE_GATTR;
+    ncp->hash_size_attr  = PNC_HSIZE_VATTR;
+
+    /* number of INA aggregators per compute node */
+    ncp->num_aggrs_per_node = 0;
+
+    /* file system type */
+    ncp->fstype = PNCIO_FSTYPE_CHECK;
+
+    if (info == MPI_INFO_NULL) return;
 
     /* nc_var_align_size, and r_align take effect when a file is created, or
      * opened and later adding more metadata or variable data
      */
 
-    ncp->info_v_align = -1; /* -1 indicates not set */
-    if (user_info != MPI_INFO_NULL) {
-        /* aligns starting file offsets of entire data section */
-        MPI_Info_get(user_info, "nc_var_align_size", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) {
-            errno = 0;  /* errno must set to zero before calling strtoll */
-            ncp->info_v_align = strtoll(value, NULL, 10);
-            if (errno != 0) ncp->info_v_align = -1;
-            else if (ncp->info_v_align < 0) ncp->info_v_align = -1;
-        }
+    /* aligns starting file offsets of entire data section */
+    MPI_Info_get(info, "nc_var_align_size", MPI_MAX_INFO_VAL-1, value, &flag);
+    if (flag) {
+        errno = 0;  /* errno must set to zero before calling strtoll */
+        llval = strtoll(value, NULL, 10);
+        if (errno == 0 && llval >= 0)
+            ncp->info_v_align = llval;
     }
-    if (ncp->info_v_align == -1)
-        sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
-    else
-        sprintf(value, OFFFMT, ncp->info_v_align);
-    MPI_Info_set(info_used, "nc_var_align_size", value);
 
-    if (user_info != MPI_INFO_NULL) {
-        /* Hint nc_header_align_size is now deprecated. But for backward
-         * compatibility, let's still check.
-         */
-        MPI_Offset info_h_align = -1;
-        MPI_Info_get(user_info, "nc_header_align_size", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) {
-            errno = 0;  /* errno must set to zero before calling strtoll */
-            info_h_align = strtoll(value, NULL, 10);
-            if (errno != 0) info_h_align = -1;
-            else if (info_h_align < 0) info_h_align = -1;
-        }
-        /* if nc_header_align_size is set and nc_var_align_size is not set,
-         * replace hint nc_var_align_size with the value of info_h_align.
-         */
-        if (info_h_align >= 0 && ncp->info_v_align == -1) {
-            ncp->info_v_align = info_h_align;
-            sprintf(value, OFFFMT, ncp->info_v_align);
-            MPI_Info_set(info_used, "nc_var_align_size", value);
+    /* Hint nc_header_align_size is now deprecated. But for backward
+     * compatibility, let's still check.
+     */
+    MPI_Info_get(info, "nc_header_align_size", MPI_MAX_INFO_VAL-1,
+                 value, &flag);
+    if (flag) {
+        errno = 0;  /* errno must set to zero before calling strtoll */
+        llval = strtoll(value, NULL, 10);
+        if (errno == 0 && llval >= 0) {
+            /* if nc_header_align_size is set and nc_var_align_size is not set,
+             * replace hint nc_var_align_size with the value of info_h_align.
+             */
+            if (llval >= 0 && ncp->info_v_align == -1)
+                ncp->info_v_align = llval;;
         }
     }
 
-    ncp->info_r_align = -1;
-    if (user_info != MPI_INFO_NULL) {
-        /* aligns starting file offset of the record variable section */
-        MPI_Info_get(user_info, "nc_record_align_size", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) {
-            errno = 0;  /* errno must set to zero before calling strtoll */
-            ncp->info_r_align = strtoll(value, NULL, 10);
-            if (errno != 0) ncp->info_r_align = -1;
-            else if (ncp->info_r_align < 0) ncp->info_r_align = -1;
-        }
+    /* aligns starting file offset of the record variable section */
+    MPI_Info_get(info, "nc_record_align_size", MPI_MAX_INFO_VAL-1,
+                 value, &flag);
+    if (flag) {
+        errno = 0;  /* errno must set to zero before calling strtoll */
+        llval = strtoll(value, NULL, 10);
+        if (errno == 0 && llval >= 0)
+            ncp->info_r_align = llval;
     }
-    if (ncp->info_r_align == -1)
-        sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
-    else
-        sprintf(value, OFFFMT, ncp->info_r_align);
-    MPI_Info_set(info_used, "nc_record_align_size", value);
 
-    ncp->chunk = PNC_DEFAULT_CHUNKSIZE;
-    if (user_info != MPI_INFO_NULL) {
-        /* header reading chunk size */
-        MPI_Info_get(user_info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) {
-            int chunk;
-            errno = 0;  /* errno must set to zero before calling strtoll */
-            chunk = atoi(value);
-            if (errno != 0) ncp->chunk = 0;
-            else if (ncp->chunk < 0)
+    /* header reading chunk size */
+    MPI_Info_get(info, "nc_header_read_chunk_size", MPI_MAX_INFO_VAL-1,
+                 value, &flag);
+    if (flag) {
+        errno = 0;  /* errno must set to zero before calling strtoll */
+        llval = strtoll(value, NULL, 10);
+        if (errno == 0) {
+            if (llval < 0)
                 ncp->chunk = 0;
-            else if (chunk > NC_MAX_INT) /* limit to NC_MAX_INT */
+            else if (llval > NC_MAX_INT) /* limit to NC_MAX_INT */
                 ncp->chunk = NC_MAX_INT;
-        }
-    }
-    sprintf(value, "%d", ncp->chunk);
-    MPI_Info_set(info_used, "nc_header_read_chunk_size", value);
+            else
+                ncp->chunk = (int)llval;
 
-    strcpy(value, "auto");
-    if (user_info != MPI_INFO_NULL) {
-        /* setting in-place byte swap (matters only for Little Endian) */
-        MPI_Info_get(user_info, "nc_in_place_swap", MPI_MAX_INFO_VAL-1, value, &flag);
-        if (flag) {
-            if (strcasecmp(value, "enable") == 0) {
-                fClr(ncp->flags, NC_MODE_SWAP_OFF);
-                fSet(ncp->flags, NC_MODE_SWAP_ON);
-            }
-            else if (strcasecmp(value, "disable") == 0) {
-                fClr(ncp->flags, NC_MODE_SWAP_ON);
-                fSet(ncp->flags, NC_MODE_SWAP_OFF);
-            }
-            else if (strcasecmp(value, "auto") == 0) {
-                fClr(ncp->flags, NC_MODE_SWAP_ON);
-                fClr(ncp->flags, NC_MODE_SWAP_OFF);
-            }
+            /* CDF-5's minimum header size is 4 bytes more than CDF-1 2's */
+            ncp->chunk = PNETCDF_RNDUP(MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN);
         }
     }
-    MPI_Info_set(info_used, "nc_in_place_swap", value);
 
-    if (user_info != MPI_INFO_NULL) {
-	/* temporal buffer size used to pack noncontiguous aggregated user
-         * buffers when calling ncmpi_wait/wait_all, Default 16 MiB
-         */
-        MPI_Info_get(user_info, "nc_ibuf_size", MPI_MAX_INFO_VAL-1, value,
-                     &flag);
-        if (flag) {
-            MPI_Offset ibuf_size;
-            errno = 0;  /* errno must set to zero before calling strtoll */
-            ibuf_size = strtoll(value, NULL, 10);
-            if (errno == 0 && ibuf_size >= 0) ncp->ibuf_size = ibuf_size;
+    /* setting in-place byte swap (matters only for Little Endian) */
+    MPI_Info_get(info, "nc_in_place_swap", MPI_MAX_INFO_VAL-1, value, &flag);
+    if (flag) {
+        if (strcasecmp(value, "enable") == 0) {
+            fClr(ncp->flags, NC_MODE_SWAP_OFF);
+            fSet(ncp->flags, NC_MODE_SWAP_ON);
+        }
+        else if (strcasecmp(value, "disable") == 0) {
+            fClr(ncp->flags, NC_MODE_SWAP_ON);
+            fSet(ncp->flags, NC_MODE_SWAP_OFF);
+        }
+        else if (strcasecmp(value, "auto") == 0) {
+            fClr(ncp->flags, NC_MODE_SWAP_ON);
+            fClr(ncp->flags, NC_MODE_SWAP_OFF);
         }
     }
-    sprintf(value, OFFFMT, ncp->ibuf_size);
-    MPI_Info_set(info_used, "nc_ibuf_size", value);
+
+    /* Temporal buffer size used to pack non-contiguous aggregated user buffers
+     * when calling ncmpi_wait/wait_all. Default PNC_DEFAULT_IBUF_SIZE.
+     */
+    MPI_Info_get(info, "nc_ibuf_size", MPI_MAX_INFO_VAL-1, value, &flag);
+    if (flag) {
+        errno = 0;  /* errno must set to zero before calling strtoll */
+        llval = strtoll(value, NULL, 10);
+        if (errno == 0 && llval >= 0)
+            ncp->ibuf_size = llval;
+    }
 
 #ifdef ENABLE_SUBFILING
-    ncp->subfile_mode = 0;
-    if (user_info != MPI_INFO_NULL) {
-        MPI_Info_get(user_info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) {
-            if (strcasecmp(value, "enable") == 0)
-                ncp->subfile_mode = 1;
+    MPI_Info_get(info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1, value, &flag);
+    if (flag) {
+        if (strcasecmp(value, "enable") == 0)
+            ncp->subfile_mode = 1;
+        else {
+            ncp->subfile_mode = 0;
+            ncp->num_subfiles = 0;
         }
     }
-    if (ncp->subfile_mode)
-        MPI_Info_set(info_used, "pnetcdf_subfiling", "enable");
-    else
-        MPI_Info_set(info_used, "pnetcdf_subfiling", "disable");
 
-    ncp->num_subfiles = 0;
-    if (user_info != MPI_INFO_NULL) {
-        MPI_Info_get(user_info, "nc_num_subfiles", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
+    if (ncp->subfile_mode == 1) {
+        MPI_Info_get(info, "nc_num_subfiles", MPI_MAX_INFO_VAL-1, value, &flag);
         if (flag) {
-            errno = 0;
-            ncp->num_subfiles = atoi(value);
-            if (errno != 0) ncp->num_subfiles = 0;
-            else if (ncp->num_subfiles < 0) ncp->num_subfiles = 0;
+            errno = 0;  /* errno must set to zero before calling atoi */
+            ival = atoi(value);
+            if (errno == 0 && ival >= 0)
+                ncp->num_subfiles = ival;
         }
     }
-    sprintf(value, "%d", ncp->num_subfiles);
-    MPI_Info_set(info_used, "nc_num_subfiles", value);
-
-    if (ncp->subfile_mode == 0) ncp->num_subfiles = 0;
-#else
-    MPI_Info_set(info_used, "pnetcdf_subfiling", "disable");
-    MPI_Info_set(info_used, "nc_num_subfiles", "0");
 #endif
 
-    if (user_info != MPI_INFO_NULL) {
-        /* If romio_no_indep_rw is set to true, let all processes participate
-         * the read/write file header using MPI collective APIs, where only
-         * rank 0 has non-zero request count.
-         */
-        MPI_Info_get(user_info, "romio_no_indep_rw", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
+    /* Hash table size for dimensions */
+    MPI_Info_get(info, "nc_hash_size_dim", MPI_MAX_INFO_VAL-1, value, &flag);
+    if (flag) {
+        errno = 0;  /* errno must set to zero before calling atoi */
+        ival = atoi(value);
+        if (errno == 0 && ival >= 0)
+            ncp->dims.hash_size = ival;
+    }
+
+    /* Hash table size for variables */
+    MPI_Info_get(info, "nc_hash_size_var", MPI_MAX_INFO_VAL-1, value, &flag);
+    if (flag) {
+        errno = 0;  /* errno must set to zero before calling atoi */
+        ival = atoi(value);
+        if (errno == 0 && ival >= 0)
+            ncp->vars.hash_size = ival;
+    }
+
+    /* Hash table size for global attributes */
+    MPI_Info_get(info, "nc_hash_size_gattr", MPI_MAX_INFO_VAL-1, value, &flag);
+    if (flag) {
+        errno = 0;  /* errno must set to zero before calling atoi */
+        ival = atoi(value);
+        if (errno == 0 && ival >= 0)
+            ncp->attrs.hash_size = ival;
+    }
+
+    /* Hash table size for non-global attributes */
+    MPI_Info_get(info, "nc_hash_size_vattr", MPI_MAX_INFO_VAL-1, value, &flag);
+    if (flag) {
+        errno = 0;  /* errno must set to zero before calling atoi */
+        ival = atoi(value);
+        if (errno == 0 && ival >= 0)
+            ncp->hash_size_attr = ival;
+    }
+
+    /* Number of intra-node aggregators per compute node. */
+    if (ncp->nprocs > 1) {
+        MPI_Info_get(info, "nc_num_aggrs_per_node", MPI_MAX_INFO_VAL-1, value,
+                     &flag);
         if (flag) {
-            if (strcasecmp(value, "true") == 0)
-                fSet((ncp)->flags, NC_HCOLL);
+            errno = 0;  /* errno must set to zero before calling atoi */
+            ival = atoi(value);
+            if (errno == 0 && ival >= 0)
+                ncp->num_aggrs_per_node = ival;
         }
     }
 
-    ncp->dims.hash_size = PNC_HSIZE_DIM;
-    if (user_info != MPI_INFO_NULL) {
-        /* Hash table size for dimensions */
-        MPI_Info_get(user_info, "nc_hash_size_dim", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) {
-            errno = 0;  /* errno must set to zero before calling atoi */
-            ncp->dims.hash_size = atoi(value);
-            if (errno != 0 || ncp->dims.hash_size < 0)
-                ncp->dims.hash_size = PNC_HSIZE_DIM;
-        }
-    }
-    sprintf(value, "%d", ncp->dims.hash_size);
-    MPI_Info_set(info_used, "nc_hash_size_dim", value);
+    /* If user explicitly want to use MPI-IO instead of PnetCDF's internal PNCIO
+     * driver, then set PnetCDF I/O hint "nc_pncio" to "disable".
+     */
+    MPI_Info_get(info, "nc_pncio", MPI_MAX_INFO_VAL-1, value, &flag);
+    if (flag && strcasecmp(value, "disable") == 0)
+        ncp->fstype = PNCIO_FSTYPE_MPIIO;
+}
 
-    ncp->vars.hash_size = PNC_HSIZE_VAR;
-    if (user_info != MPI_INFO_NULL) {
-        /* Hash table size for variables */
-        MPI_Info_get(user_info, "nc_hash_size_var", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) {
-            errno = 0;  /* errno must set to zero before calling atoi */
-            ncp->vars.hash_size = atoi(value);
-            if (errno != 0 || ncp->vars.hash_size < 0)
-                ncp->vars.hash_size = PNC_HSIZE_VAR;
-        }
-    }
-    sprintf(value, "%d", ncp->vars.hash_size);
-    MPI_Info_set(info_used, "nc_hash_size_var", value);
+/*----< ncmpio_hint_set() >--------------------------------------------------*/
+/* Insert PnetCDF hints into info. Argument info is the info object returned
+ * from an earlier call to MPI_File_get_info().
+ */
+void ncmpio_hint_set(NC       *ncp,
+                     MPI_Info  info)
+{
+    char int_str[MAX_INT_LEN];
 
-    ncp->attrs.hash_size = PNC_HSIZE_GATTR;
-    if (user_info != MPI_INFO_NULL) {
-        /* Hash table size for global attributes */
-        MPI_Info_get(user_info, "nc_hash_size_gattr", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) {
-            errno = 0;  /* errno must set to zero before calling atoi */
-            ncp->attrs.hash_size = atoi(value);
-            if (errno != 0 || ncp->attrs.hash_size < 0)
-                ncp->attrs.hash_size = PNC_HSIZE_GATTR;
-        }
-    }
-    sprintf(value, "%d", ncp->attrs.hash_size);
-    MPI_Info_set(info_used, "nc_hash_size_gattr", value);
+    assert(ncp != NULL);
+    assert(info != MPI_INFO_NULL);
 
-    ncp->hash_size_attr = PNC_HSIZE_VATTR;
-    if (user_info != MPI_INFO_NULL) {
-        /* Hash table size for non-global attributes */
-        MPI_Info_get(user_info, "nc_hash_size_vattr", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) {
-            errno = 0;  /* errno must set to zero before calling atoi */
-            ncp->hash_size_attr = atoi(value);
-            if (errno != 0 || ncp->hash_size_attr < 0)
-                ncp->hash_size_attr = PNC_HSIZE_VATTR;
-        }
-    }
-    sprintf(value, "%d", ncp->hash_size_attr);
-    MPI_Info_set(info_used, "nc_hash_size_vattr", value);
+    /* nc_var_align_size, and r_align take effect when a file is created, or
+     * opened and later adding more metadata or variable data
+     */
 
-    ncp->num_aggrs_per_node = 0;
-    if (user_info != MPI_INFO_NULL) {
-        /* Hash table size for non-global attributes */
-        MPI_Info_get(user_info, "nc_num_aggrs_per_node", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) {
-            errno = 0;  /* errno must set to zero before calling atoi */
-            ncp->num_aggrs_per_node = atoi(value);
-            if (errno != 0 || ncp->num_aggrs_per_node < 0)
-                ncp->num_aggrs_per_node = 0;
+    /* aligns starting file offsets of entire data section */
+    if (ncp->info_v_align != -1) {
+        snprintf(int_str, MAX_INT_LEN, OFFFMT, ncp->info_v_align);
+        MPI_Info_set(info, "nc_var_align_size", int_str);
+    }
+
+    /* aligns starting file offset of the record variable section */
+    if (ncp->info_r_align != -1) {
+        snprintf(int_str, MAX_INT_LEN, OFFFMT, ncp->info_r_align);
+        MPI_Info_set(info, "nc_record_align_size", int_str);
+    }
+
+    /* header reading chunk size */
+    snprintf(int_str, MAX_INT_LEN, "%d", ncp->chunk);
+    MPI_Info_set(info, "nc_header_read_chunk_size", int_str);
+
+    /* setting in-place byte swap (matters only for Little Endian) */
+    int swap_on  = fIsSet(ncp->flags, NC_MODE_SWAP_ON);
+    int swap_off = fIsSet(ncp->flags, NC_MODE_SWAP_OFF);
+    if (!swap_on && !swap_off)
+        MPI_Info_set(info, "nc_in_place_swap", "auto");
+    else if (swap_on)
+        MPI_Info_set(info, "nc_in_place_swap", "enable");
+    else
+        MPI_Info_set(info, "nc_in_place_swap", "disable");
+
+    /* Temporal buffer size used to pack non-contiguous aggregated user buffers
+     * when calling ncmpi_wait/wait_all. Default PNC_DEFAULT_IBUF_SIZE.
+     */
+    snprintf(int_str, MAX_INT_LEN, OFFFMT, ncp->ibuf_size);
+    MPI_Info_set(info, "nc_ibuf_size", int_str);
+
+#ifdef ENABLE_SUBFILING
+    if (ncp->subfile_mode)
+        MPI_Info_set(info, "pnetcdf_subfiling", "enable");
+    else
+        MPI_Info_set(info, "pnetcdf_subfiling", "disable");
+
+    snprintf(int_str, MAX_INT_LEN, "%d", ncp->num_subfiles);
+    MPI_Info_set(info, "nc_num_subfiles", int_str);
+#endif
+
+    /* Hash table size for dimensions */
+    snprintf(int_str, MAX_INT_LEN, "%d", ncp->dims.hash_size);
+    MPI_Info_set(info, "nc_hash_size_dim", int_str);
+
+    /* Hash table size for variables */
+    snprintf(int_str, MAX_INT_LEN, "%d", ncp->vars.hash_size);
+    MPI_Info_set(info, "nc_hash_size_var", int_str);
+
+    /* Hash table size for global attributes */
+    snprintf(int_str, MAX_INT_LEN, "%d", ncp->attrs.hash_size);
+    MPI_Info_set(info, "nc_hash_size_gattr", int_str);
+
+    /* Hash table size for non-global attributes */
+    snprintf(int_str, MAX_INT_LEN, "%d", ncp->hash_size_attr);
+    MPI_Info_set(info, "nc_hash_size_vattr", int_str);
+
+    /* Whether using MPI-IO instead of PnetCDF's internal PNCIO driver. */
+    if (ncp->fstype == PNCIO_FSTYPE_MPIIO)
+        MPI_Info_set(info, "nc_pncio", "disable");
+    else
+        MPI_Info_set(info, "nc_pncio", "enable");
+
+    if (ncp->num_aggrs_per_node > 0) {
+        /* Number of intra-node aggregators per compute node. */
+        snprintf(int_str, MAX_INT_LEN, "%d", ncp->num_aggrs_per_node);
+        MPI_Info_set(info, "nc_num_aggrs_per_node", int_str);
+
+        /* Add hint "ina_node_list", list of INA aggregators' rank IDs */
+        if (ncp->ina_node_list != NULL) {
+            char value[MPI_MAX_INFO_VAL];
+            int i;
+            snprintf(value, MAX_INT_LEN, "%d", ncp->ina_node_list[0]);
+            for (i=1; i<ncp->ina_nprocs; i++) {
+                snprintf(int_str, sizeof(int_str), " %d", ncp->ina_node_list[i]);
+                if (strlen(value) + strlen(int_str) >= MPI_MAX_INFO_VAL-5) {
+                    strcat(value, " ...");
+                    break;
+                }
+                strcat(value, int_str);
+            }
+            MPI_Info_set(info, "nc_ina_node_list", value);
         }
     }
-    sprintf(value, "%d", ncp->num_aggrs_per_node);
-    MPI_Info_set(info_used, "nc_num_aggrs_per_node", value);
+    else /* Update hint "num_aggrs_per_node" to indicate disabled. */
+        MPI_Info_set(info, "nc_num_aggrs_per_node", "0");
 }
 
 /*----< ncmpio_first_offset() >-----------------------------------------------*/
@@ -730,12 +783,12 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                 break;
         }
         /* The only error codes returned from the above switch block are
-	 * NC_EBADTYPE or NC_ERANGE. Bad varp->xtype and itype have been sanity
-	 * checked at the dispatchers, so NC_EBADTYPE is not possible. Thus,
-	 * the only possible error is NC_ERANGE.  NC_ERANGE can be caused by
-	 * one or more elements of buf that is out of range representable by
-	 * the external data type, it is not considered a fatal error. This
-	 * request must continue to finish.
+	     * NC_EBADTYPE or NC_ERANGE. Bad varp->xtype and itype have been sanity
+	     * checked at the dispatchers, so NC_EBADTYPE is not possible. Thus,
+	     * the only possible error is NC_ERANGE.  NC_ERANGE can be caused by
+	     * one or more elements of buf that is out of range representable by
+	     * the external data type, it is not considered a fatal error. This
+	     * request must continue to finish.
          */
     }
     else {
@@ -785,34 +838,173 @@ ncmpio_unpack_xbuf(int           fmt,   /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
         MPI_Type_free(&imaptype);
     }
 
-    /* unpacked lbuf into buf based on buftype -----------------------------*/
-    if (!buftype_is_contig && lbuf != buf) {
-        /* no need unpack when buftype is used in MPI_File_read (lbuf == buf) */
+    /* Unpacked lbuf into buf based on buftype. Note no need to unpack when
+     * buftype is used in MPI_File_read, i.e. lbuf == buf.
+     */
+    if (lbuf != buf) {
+        if (buftype_is_contig)
+            memcpy(buf, lbuf, ibuf_size);
+        else { /* buftye is not contiguous */
 #ifdef HAVE_MPI_LARGE_COUNT
-        MPI_Count position = 0;
-        mpireturn = MPI_Unpack_c(lbuf, (MPI_Count)ibuf_size, &position, buf,
-                     (MPI_Count)bufcount, buftype, MPI_COMM_SELF);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, "MPI_Unpack_c");
-#else
-        if (bufcount > NC_MAX_INT) {
-            if (err == NC_NOERR)
-                DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-        }
-        else {
-            int position = 0;
-            if (ibuf_size > NC_MAX_INT)
-                DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-            mpireturn = MPI_Unpack(lbuf, (int)ibuf_size, &position, buf,
-                                   (int)bufcount, buftype, MPI_COMM_SELF);
+            MPI_Count position = 0;
+            mpireturn = MPI_Unpack_c(lbuf, (MPI_Count)ibuf_size, &position,
+                                     buf, (MPI_Count)bufcount, buftype,
+                                     MPI_COMM_SELF);
             if (mpireturn != MPI_SUCCESS)
-                return ncmpii_error_mpi2nc(mpireturn, "MPI_Unpack");
-        }
+                return ncmpii_error_mpi2nc(mpireturn, "MPI_Unpack_c");
+#else
+            if (bufcount > NC_MAX_INT) {
+                if (err == NC_NOERR)
+                    DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
+            }
+            else {
+                int position = 0;
+                if (ibuf_size > NC_MAX_INT)
+                    DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+                mpireturn = MPI_Unpack(lbuf, (int)ibuf_size, &position, buf,
+                                       (int)bufcount, buftype, MPI_COMM_SELF);
+                if (mpireturn != MPI_SUCCESS)
+                    return ncmpii_error_mpi2nc(mpireturn, "MPI_Unpack");
+            }
 #endif
+        }
     }
     if (free_cbuf) NCI_Free(cbuf);
     if (free_lbuf) NCI_Free(lbuf);
 
     return err;
+}
+
+/*----< ncmpio_calc_off() >--------------------------------------------------*/
+/* Returns the starting file offset of a subarray request.
+ * Note zero-length request should never call this subroutine.
+ * Only a single offset-length pair will call this subroutine.
+ */
+int
+ncmpio_calc_off(const NC         *ncp,
+                const NC_var     *varp,
+                const MPI_Offset *start,  /* [varp->ndims] */
+                MPI_Offset       *offset) /* OUT: start offset */
+{
+    int i, ndims = varp->ndims; /* number of dimensions of this variable */
+
+    /*
+     * varp->dsizes[] is computed from right to left product of shape
+     * For example, a 3D array of size 5x4x3 in C order,
+     * For fixed-size variable: dsizes[0]=60 dsizes[1]=12 dsizes[2]=3
+     * For record     variable: dsizes[0]=12 dsizes[1]=12 dsizes[2]=3
+     */
+    if (IS_RECVAR(varp)) {
+        *offset = 0;
+        if (ndims > 1) {
+            /* start from the least significant dimension */
+            *offset = start[ndims-1];
+            /* the remaining dimensions */
+            for (i=ndims-2; i>0; i--)
+                *offset += start[i]*varp->dsizes[i+1];
+        }
+        *offset *= varp->xsz;  /* offset in bytes */
+    }
+    else {
+        /* first handle the least significant dimension */
+        *offset = start[ndims-1];
+        /* remaining dimensions till the most significant dimension */
+        for (i=ndims-2; i>=0; i--)
+            *offset += start[i] * varp->dsizes[i+1];
+        *offset *= varp->xsz;  /* offset in bytes */
+    }
+
+    return NC_NOERR;
+}
+
+/*----< ncmpio_calc_start_end() >--------------------------------------------*/
+/* Returns the file offsets of access range of this request: starting file
+ * offset and end offset (exclusive).
+ * Note zero-length request should never call this subroutine.
+ */
+int
+ncmpio_calc_start_end(const NC         *ncp,
+                      const NC_var     *varp,
+                      const MPI_Offset *start,     /* [varp->ndims] */
+                      const MPI_Offset *count,     /* [varp->ndims] */
+                      const MPI_Offset *stride,    /* [varp->ndims] */
+                      MPI_Offset       *start_off, /* OUT: start offset */
+                      MPI_Offset       *end_off)   /* OUT: end   offset */
+{
+    int i, ndims = varp->ndims; /* number of dimensions of this variable */
+
+    /*
+     * varp->dsizes[] is computed from right to left product of shape
+     * For example, a 3D array of size 5x4x3 in C order,
+     * For fixed-size variable: dsizes[0]=60 dsizes[1]=12 dsizes[2]=3
+     * For record     variable: dsizes[0]=12 dsizes[1]=12 dsizes[2]=3
+     */
+    if (IS_RECVAR(varp)) {
+        *start_off = 0;
+        *end_off   = 0;
+        if (stride == NULL) {
+            if (ndims > 1) {
+                /* least significant dimension */
+                *start_off = start[ndims-1];
+                *end_off   = start[ndims-1]+(count[ndims-1]-1);
+                /* the remaining dimensions */
+                for (i=ndims-2; i>0; i--) {
+                    *start_off += start[i]*varp->dsizes[i+1];
+                    *end_off += (start[i]+(count[i]-1))*varp->dsizes[i+1];
+                }
+            }
+            *start_off *= varp->xsz;  /* offset in bytes */
+            *end_off   *= varp->xsz;
+            /* handle the unlimited, most significant dimension */
+            *start_off += start[0] * ncp->recsize;
+            *end_off   += (start[0]+(count[0]-1)) * ncp->recsize;
+        }
+        else {
+            if (ndims > 1) {
+                /* least significant dimension */
+                *start_off = start[ndims-1];
+                *end_off   = start[ndims-1]+(count[ndims-1]-1)*stride[ndims-1];
+                /* the remaining dimensions */
+                for (i=ndims-2; i>0; i--) {
+                    *start_off += start[i]*varp->dsizes[i+1];
+                    *end_off += (start[i]+(count[i]-1)*stride[i]) *
+                                varp->dsizes[i+1];
+                }
+            }
+            *start_off *= varp->xsz;  /* offset in bytes */
+            *end_off   *= varp->xsz;
+            /* handle the unlimited, most significant dimension */
+            *start_off += start[0] * ncp->recsize;
+            *end_off   += (start[0]+(count[0]-1)*stride[0]) * ncp->recsize;
+        }
+    }
+    else {
+        if (stride == NULL) {
+            /* first handle the least significant dimension */
+            *start_off = start[ndims-1];
+            *end_off   = start[ndims-1] + (count[ndims-1]-1);
+            /* remaining dimensions till the most significant dimension */
+            for (i=ndims-2; i>=0; i--) {
+                *start_off += start[i] * varp->dsizes[i+1];
+                *end_off += (start[i]+(count[i]-1)) * varp->dsizes[i+1];
+            }
+        }
+        else {
+            /* first handle the least significant dimension */
+            *start_off = start[ndims-1];
+            *end_off   = start[ndims-1]+(count[ndims-1]-1)*stride[ndims-1];
+            /* remaining dimensions till the most significant dimension */
+            for (i=ndims-2; i>=0; i--) {
+                *start_off += start[i] * varp->dsizes[i+1];
+                *end_off += (start[i]+(count[i]-1)*stride[i])*varp->dsizes[i+1];
+            }
+        }
+        *start_off *= varp->xsz;  /* offset in bytes */
+        *end_off   *= varp->xsz;
+    }
+    *start_off += varp->begin; /* beginning file offset of this variable */
+    *end_off   += varp->begin + varp->xsz;
+
+    return NC_NOERR;
 }
 
