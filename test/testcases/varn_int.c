@@ -23,11 +23,11 @@
  *             X = 10 ;
  *             REC_DIM = UNLIMITED ; // (4 currently)
  *    variables:
- *             int var(Y, X) ;
+ *             int fix_var(Y, X) ;
  *             int rec_var(REC_DIM, X) ;
  *    data:
  *
- *     var =
+ *     fix_var =
  *       13, 13, 13, 11, 11, 10, 10, 12, 11, 11,
  *       10, 12, 12, 12, 13, 11, 11, 12, 12, 12,
  *       11, 11, 12, 13, 13, 13, 10, 10, 11, 11,
@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 {
     char filename[256];
     int i, j, rank, nprocs, err, nerrs=0;
-    int ncid, cmode, varid[3], dimid[2], num_reqs, *buffer, *r_buffer;
+    int ncid, cmode, varid[2], dimid[2], num_reqs, *buffer, *r_buffer;
     MPI_Offset w_len, **starts=NULL, **counts=NULL;
 
     MPI_Init(&argc, &argv);
@@ -129,7 +129,7 @@ int main(int argc, char** argv)
     CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]);
     CHECK_ERR
-    err = ncmpi_def_var(ncid, "var", NC_INT, NDIMS, dimid, &varid[0]);
+    err = ncmpi_def_var(ncid, "fix_var", NC_INT, NDIMS, dimid, &varid[0]);
     CHECK_ERR
     err = ncmpi_def_dim(ncid, "REC_DIM", NC_UNLIMITED, &dimid[0]);
     CHECK_ERR
@@ -290,7 +290,7 @@ int main(int argc, char** argv)
 
     for (i=0; i<w_len; i++) {
         if (buffer[i] != rank+10) {
-            printf("Error at line %d in %s: expecting buffer[%d]=%d but got %d\n",
+            printf("Error at line %d in %s: expecting rec_var buffer[%d]=%d but got %d\n",
                    __LINE__,__FILE__,i,rank+10,buffer[i]);
             nerrs++;
             goto err_out;
@@ -310,7 +310,7 @@ int main(int argc, char** argv)
 
     for (i=0; i<w_len*2; i++) {
         if (i%2 && buffer[i] != -1) {
-            printf("Error at line %d in %s: expecting buffer[%d]=-1 but got %d\n",
+            printf("Error at line %d in %s: expecting rec_var buffer[%d]=-1 but got %d\n",
                    __LINE__,__FILE__,i,buffer[i]);
             nerrs++;
             goto err_out;

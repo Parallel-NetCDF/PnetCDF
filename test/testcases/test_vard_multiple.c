@@ -77,7 +77,7 @@
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
 
-    char         filename[256];
+    char         filename[256], *hint_value;
     int          i, j, err, ncid, varid[4], dimids[3], nerrs=0, unlimit_dimid;
     int          rank, nprocs, *buf[2];
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
@@ -104,6 +104,19 @@ int main(int argc, char **argv) {
         sprintf(cmd_str, "*** TESTING C   %s for vard to 2 variables ", basename(argv[0]));
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
+    }
+
+    /* Skip test when intra-node aggregation is enabled, as vard APIs are not
+     * supported.
+     */
+    if (inq_env_hint("nc_num_aggrs_per_node", &hint_value)) {
+        if (atoi(hint_value) > 0) {
+            free(hint_value);
+            if (rank == 0) printf(SKIP_STR);
+            MPI_Finalize();
+            return 0;
+        }
+        free(hint_value);
     }
 
     buf[0] = (int*)malloc(sizeof(int) * NY * NX);

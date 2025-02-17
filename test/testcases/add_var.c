@@ -58,6 +58,7 @@ tst_fmt(char *filename, int cmode)
     for (i=0; i<10; i++) {
         sprintf(var_name, "var_%d", i);
         err = ncmpi_def_var(ncid, var_name, NC_INT, 2, dimid, &varid); CHECK_ERR
+        err = ncmpi_def_var_fill(ncid, varid, 0, NULL); CHECK_ERR
     }
     err = ncmpi_enddef(ncid); CHECK_ERR
 
@@ -70,7 +71,9 @@ tst_fmt(char *filename, int cmode)
 
     /* add 2 new variables */
     err = ncmpi_def_var(ncid, "new_var1", NC_INT,   2, dimid, &varid); CHECK_ERR
+    err = ncmpi_def_var_fill(ncid, varid, 0, NULL); CHECK_ERR
     err = ncmpi_def_var(ncid, "new_var2", NC_FLOAT, 2, dimid, &varid); CHECK_ERR
+    err = ncmpi_def_var_fill(ncid, varid, 0, NULL); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     err = ncmpi_inq_nvars(ncid, &nvars); CHECK_ERR

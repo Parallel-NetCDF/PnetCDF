@@ -43,6 +43,7 @@ program tst_types2
   call MPI_Comm_size(MPI_COMM_WORLD, p, ierr)
 
   ! take filename from command-line argument if there is any
+  cmd = ' '
   if (my_rank .EQ. 0) then
       filename = FILE_NAME
       err = get_args(cmd, filename)

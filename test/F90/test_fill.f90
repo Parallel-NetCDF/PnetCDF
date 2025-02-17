@@ -29,14 +29,16 @@
           implicit none
 
           character(LEN=256) filename
-          integer i, err, ierr, rank
+          integer i, err, ierr, rank, nprocs
           integer :: ncid, mode, cmode, dimid(1), varid
           integer(kind=MPI_OFFSET_KIND) :: start(1)
           integer(kind=MPI_OFFSET_KIND) :: count(1)
+          integer(kind=MPI_OFFSET_KIND) :: dim_len
           integer(kind=MPI_OFFSET_KIND), parameter :: len = 3
           integer, parameter :: k = selected_int_kind(18)
           integer(kind=k) :: buf(len)
 
+          call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
 
           tst_fmt = 0
@@ -51,7 +53,8 @@
           call check(err, 'In nf90mpi_create: ')
           tst_fmt = tst_fmt + err
 
-          err = nf90mpi_def_dim(ncid, "dim", len, dimid(1))
+          dim_len = len * nprocs
+          err = nf90mpi_def_dim(ncid, "dim", dim_len, dimid(1))
           call check(err, 'In nf90mpi_def_dim: ')
           tst_fmt = tst_fmt + err
 
@@ -74,7 +77,7 @@
           tst_fmt = tst_fmt + err
 
           ! Write buf
-          start(1) = 1
+          start(1) = len * rank + 1
           count(1) = len
           err = nf90mpi_put_var_all(ncid, varid, buf, start, count)
           call check(err, 'In nf90mpi_put_var_all: ')
@@ -97,6 +100,7 @@
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
 
           ! take filename from command-line argument if there is any
+          cmd = ' '
           if (rank .EQ. 0) then
               filename = 'testfile.nc'
               err = get_args(cmd, filename)

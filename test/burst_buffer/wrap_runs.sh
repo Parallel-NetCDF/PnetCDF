@@ -24,12 +24,38 @@ fi
 unset PNETCDF_HINTS
 
 for j in ${safe_modes} ; do
+    if test "$j" = 1 ; then # test only in safe mode
+       SAFE_HINTS="romio_no_indep_rw=true"
+    else
+       SAFE_HINTS="romio_no_indep_rw=false"
+    fi
+for mpiio_mode in 0 1 ; do
+    if test "$mpiio_mode" = 1 ; then
+       USEMPIO_HINTS="nc_pncio=disable"
+    else
+       USEMPIO_HINTS="nc_pncio=enable"
+    fi
+
+for bb_mode in 1 ; do
+    PNETCDF_HINTS=
+    if test "x$SAFE_HINTS" != x ; then
+       PNETCDF_HINTS="$SAFE_HINTS"
+    fi
+    if test "x$USEMPIO_HINTS" != x ; then
+       PNETCDF_HINTS="$USEMPIO_HINTS;$PNETCDF_HINTS"
+    fi
+    if test "$bb_mode" = 1 ; then
+       PNETCDF_HINTS="$PNETCDF_HINTS;nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
+    fi
+    export PNETCDF_HINTS="$PNETCDF_HINTS"
     export PNETCDF_SAFE_MODE=$j
-    # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
-    export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
+    # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
+
     ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
     unset PNETCDF_HINTS
     ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
+done
+done
 done
 
 rm -f ${OUTDIR}/$outfile.nc

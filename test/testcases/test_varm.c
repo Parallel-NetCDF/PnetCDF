@@ -14,6 +14,8 @@
 
 #include <testutils.h>
 
+static int verbose;
+
 static int
 check_read_contents(float *rh)
 {
@@ -25,10 +27,9 @@ check_read_contents(float *rh)
     for (i=0; i<6; i++) {
         for (j=0; j<4; j++) {
             if (rh[j*6+i] != k) {
-#ifdef PRINT_ERR_ON_SCREEN
-                printf("Error at %s:%d : expect rh[%d][%d]=%f but got %f\n",
-                __FILE__,__LINE__,j,i,k,rh[j*6+i]);
-#endif
+                if (verbose)
+                    printf("Error at %s:%d : expect rh[%d][%d]=%f but got %f\n",
+                           __FILE__,__LINE__,j,i,k,rh[j*6+i]);
                 return 1;
             }
             k += 1.0;
@@ -71,11 +72,10 @@ check_write_contents(signed char *varT)
     for (j=0; j<4; j++) {
         for (i=0; i<6; i++) {
             if (varT[j*6+i] != j*6+i + 50) {
-#ifdef PRINT_ERR_ON_SCREEN
-                /* this error is a pnetcdf internal error, if occurs */
-                printf("Error at line %d in %s: expecting varT[%d][%d]=%d but got %d\n",
-                __LINE__,__FILE__,j,i,j*6+i + 50,varT[j*6+i]);
-#endif
+                if (verbose)
+                    /* this error is a pnetcdf internal error, if occurs */
+                    printf("Error at line %d in %s: expecting varT[%d][%d]=%d but got %d\n",
+                           __LINE__,__FILE__,j,i,j*6+i + 50,varT[j*6+i]);
                 return 1;
             }
         }
@@ -97,7 +97,8 @@ tst_fmt(char *filename, int cmode)
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     cmode |= NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    CHECK_FATAL_ERR
 
     /* define a variable of a 6 x 4 integer array in the nc file */
     err = ncmpi_def_dim(ncid, "Y", 6, &dimid[0]); CHECK_ERR
@@ -124,7 +125,8 @@ tst_fmt(char *filename, int cmode)
 
     err = ncmpi_close(ncid); CHECK_ERR
 
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    CHECK_FATAL_ERR
 
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
 
@@ -177,7 +179,8 @@ tst_fmt(char *filename, int cmode)
 
     err = ncmpi_close(ncid); CHECK_ERR
 
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
+    CHECK_FATAL_ERR
 
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
 
@@ -186,7 +189,8 @@ tst_fmt(char *filename, int cmode)
     start[0] = 0; start[1] = 0;
     count[0] = 6; count[1] = 4;
     if (rank > 0) count[0] = count[1] = 0;
-    err = ncmpi_put_vara_int_all(ncid, varid, start, count, &var[0][0]); CHECK_ERR
+    err = ncmpi_put_vara_int_all(ncid, varid, start, count, &var[0][0]);
+    CHECK_ERR
 
     /* set the contents of the write buffer varT, a 4 x 6 char array
           50, 51, 52, 53, 54, 55,
@@ -236,6 +240,7 @@ tst_fmt(char *filename, int cmode)
 
     err = ncmpi_close(ncid); CHECK_ERR
 
+fn_exit:
     return nerrs;
 }
 
@@ -263,6 +268,8 @@ int main(int argc, char **argv)
         printf("%-66s ------ ", cmd_str); fflush(stdout);
         free(cmd_str);
     }
+
+    verbose = 1;
 
 #ifdef DEBUG
     if (nprocs > 1 && rank == 0)

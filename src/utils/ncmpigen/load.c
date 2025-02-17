@@ -394,7 +394,7 @@ fstrcat(
  */
 static void
 f_var_init(
-    int varnum,			/* which variable */
+    int varid,			/* which variable */
     void *rec_start		/* start of data */
     )
 {
@@ -415,9 +415,9 @@ f_var_init(
     int ival;
 
     /* load variable with data values  */
-    sprintf(stmnt, "data %s /",vars[varnum].lname);
+    sprintf(stmnt, "data %s /",vars[varid].lname);
     stmnt_len = strlen(stmnt);
-    switch (vars[varnum].type) {
+    switch (vars[varid].type) {
     case NC_BYTE:
 	charvalp = (char *) rec_start;
 	for (ival = 0; ival < var_len-1; ival++) {
@@ -524,10 +524,10 @@ f_var_init(
 
     /* For record variables, store data statement for later use;
       otherwise, just print it. */
-    if (vars[varnum].ndims > 0 && vars[varnum].dims[0] == rec_dim) {
+    if (vars[varid].ndims > 0 && vars[varid].dims[0] == rec_dim) {
 	char *dup_stmnt = (char*) emalloc(strlen(stmnt)+1);
 	strcpy(dup_stmnt, stmnt); /* ULTRIX missing strdup */
-	vars[varnum].data_stmnt = dup_stmnt;
+	vars[varid].data_stmnt = dup_stmnt;
     } else {
 	fline(stmnt);
     }

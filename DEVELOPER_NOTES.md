@@ -149,11 +149,16 @@
  10. Generate SHA1 checksums
     * Run command:
       ```
-      openssl sha1 pnetcdf-1.11.0.tar.gz`
+      openssl sha1 pnetcdf-1.11.0.tar.gz
       ```
     * Example command-line output:
       ```
       SHA1(pnetcdf-1.11.0.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
+      ```
+    * Or use SHA 256
+      ```
+      sha256sum pnetcdf-1.11.0.tar.gz
+      a18a1a43e6c4fd7ef5827dbe90e9dcf1363b758f513af1f1356ed6c651195a9f pnetcdf-1.11.0.tar.gz
       ```
 11. Update PnetCDF Web Page
     * https://github.com/Parallel-NetCDF/Parallel-NetCDF.github.io

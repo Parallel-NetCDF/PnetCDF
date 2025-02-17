@@ -126,7 +126,7 @@ int main(int argc, char **argv)
     extern int optind;
     extern char *optarg;
     int i, j, k, err, nerrs=0, debug=0, use_contig_buf=0, use_bput=0;
-    int nprocs, len=0, nelems, rank;
+    int nprocs, len=0, nelems, rank, format, rec_bytes;
     int *sca_buf, *fix_buf[FIX_NVARS], *rec_buf[REC_NVARS];
     int gsizes[NDIMS], psizes[NDIMS];
     double write_timing, max_write_timing, write_bw;
@@ -172,9 +172,14 @@ int main(int argc, char **argv)
                psizes[0],psizes[1],psizes[2]);
 
     starts[0] = 0;
+#if NDIMS == 3
     starts[1] = (rank / (psizes[1] * psizes[2])) % psizes[0];
     starts[2] = (rank / psizes[2]) % psizes[1];
     starts[3] = rank % psizes[2];
+#elif NDIMS == 2
+    starts[1] = (rank / psizes[1]) % psizes[0];
+    starts[2] = rank % psizes[1];
+#endif
 
     counts[0] = 1;
     nelems = 1;
@@ -206,7 +211,7 @@ int main(int argc, char **argv)
             rec_buf[i] = sca_buf + SCA_NVARS + FIX_NVARS * nelems + nelems * i;
     }
     else {
-        /* allocate individual buffers separately +1 ensure non-contiguity*/
+        /* allocate individual buffers separately +1 ensure non-contiguity */
         sca_buf = (int*) malloc(sizeof(int) * (SCA_NVARS+1));
         for (i=0; i<FIX_NVARS; i++)
             fix_buf[i] = (int *) malloc(sizeof(int) * (nelems+1));
@@ -247,6 +252,9 @@ int main(int argc, char **argv)
 
     MPI_Info_free(&info);
 
+    ncmpi_inq_format(ncid, &format);
+    rec_bytes = (format == NC_FORMAT_CDF5) ? 8 : 4;
+
     req = (int*) malloc(sizeof(int) * (SCA_NVARS + FIX_NVARS + REC_NVARS));
     st  = (int*) malloc(sizeof(int) * (SCA_NVARS + FIX_NVARS + REC_NVARS));
 
@@ -262,22 +270,22 @@ int main(int argc, char **argv)
     /* define scalar variables */
     for (i=0; i<SCA_NVARS; i++) {
         sprintf(str, "scalar_var_%d", i);
-        err = ncmpi_def_var(ncid, str, NC_INT, 0, NULL, &sca_var[i]);
-        ERR
+        err = ncmpi_def_var(ncid, str, NC_INT, 0, NULL, &sca_var[i]); ERR
+        err = ncmpi_def_var_fill(ncid, sca_var[i], 0, NULL); ERR
     }
 
     /* define fix-sized variables */
     for (i=0; i<FIX_NVARS; i++) {
         sprintf(str, "fix_var_%d", i);
-        err = ncmpi_def_var(ncid, str, NC_INT, NDIMS, dimids+1, &fix_var[i]);
-        ERR
+        err = ncmpi_def_var(ncid, str, NC_INT, NDIMS, dimids+1, &fix_var[i]); ERR
+        err = ncmpi_def_var_fill(ncid, fix_var[i], 0, NULL); ERR
     }
 
     /* define record variables */
     for (i=0; i<REC_NVARS; i++) {
         sprintf(str, "rec_var_%d", i);
-        err = ncmpi_def_var(ncid, str, NC_INT, NDIMS+1, dimids, &rec_var[i]);
-        ERR
+        err = ncmpi_def_var(ncid, str, NC_INT, NDIMS+1, dimids, &rec_var[i]); ERR
+        err = ncmpi_def_var_fill(ncid, rec_var[i], 0, NULL); ERR
     }
 
     /* exit the define mode */
@@ -287,6 +295,12 @@ int main(int argc, char **argv)
     /* get all the MPI-IO and PnetCDF hints used */
     err = ncmpi_inq_file_info(ncid, &info_used);
     ERR
+
+    /* fill all record variables */
+    for (j=0; j<NTIMES; j++)
+        for (i=0; i<REC_NVARS; i++) {
+            err = ncmpi_fill_var_rec(ncid, rec_var[i], j); ERR
+        }
 
     if (!use_bput) {
         k = 0;
@@ -391,7 +405,10 @@ int main(int argc, char **argv)
 
     write_timing = MPI_Wtime() - write_timing;
 
-    write_size = nelems * (FIX_NVARS + NTIMES * REC_NVARS) + SCA_NVARS;
+    write_size  = nelems * FIX_NVARS;
+    write_size += nelems * NTIMES * REC_NVARS;
+    /* scalar variables are written by rank 0 only in PnetCDF */
+    write_size += (rank == 0) ? SCA_NVARS : 0;
     write_size *= sizeof(int);
 
     MPI_Reduce(&write_size,   &sum_write_size,   1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -402,7 +419,7 @@ int main(int argc, char **argv)
      * header NTIME times
      */
     if (rank == 0 && verbose) {
-        sum_write_size += header_size + NTIMES * 8;
+        sum_write_size += header_size + ((REC_NVARS) ? NTIMES * rec_bytes : 0);
 
         printf("\n");
         if (use_bput)

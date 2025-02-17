@@ -38,6 +38,7 @@
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
 
           ! take filename from command-line argument if there is any
+          cmd = ' '
           if (rank .EQ. 0) then
               filename = 'testfile.nc'
               err = get_args(cmd, filename)

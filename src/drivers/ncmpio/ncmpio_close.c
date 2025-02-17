@@ -51,44 +51,9 @@ ncmpio_free_NC(NC *ncp)
     if (ncp->get_list      != NULL) NCI_Free(ncp->get_list);
     if (ncp->put_list      != NULL) NCI_Free(ncp->put_list);
     if (ncp->abuf          != NULL) NCI_Free(ncp->abuf);
-    if (ncp->path          != NULL) NCI_Free(ncp->path);
     if (ncp->nonaggr_ranks != NULL) NCI_Free(ncp->nonaggr_ranks);
 
     NCI_Free(ncp);
-}
-
-/*----< ncmpio_close_files() >-----------------------------------------------*/
-int
-ncmpio_close_files(NC *ncp, int doUnlink) {
-    char *mpi_name;
-    int mpireturn;
-
-    assert(ncp != NULL); /* this should never occur */
-
-    if (ncp->independent_fh != MPI_FILE_NULL) {
-        TRACE_IO(MPI_File_close, (&ncp->independent_fh));
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, mpi_name);
-    }
-
-    if (ncp->nprocs > 1 && ncp->collective_fh != MPI_FILE_NULL) {
-        TRACE_IO(MPI_File_close, (&ncp->collective_fh));
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, mpi_name);
-    }
-
-    if (doUnlink) {
-        /* called from ncmpi_abort, if the file is being created and is still
-         * in define mode, the file is deleted */
-        if (ncp->rank == 0) {
-            TRACE_IO(MPI_File_delete, ((char *)ncp->path, ncp->mpiinfo));
-            if (mpireturn != MPI_SUCCESS)
-                return ncmpii_error_mpi2nc(mpireturn, mpi_name);
-        }
-        if (ncp->nprocs > 1)
-            MPI_Barrier(ncp->comm);
-    }
-    return NC_NOERR;
 }
 
 /*----< ncmpio_close() >------------------------------------------------------*/
@@ -159,8 +124,69 @@ ncmpio_close(void *ncdp)
     }
 #endif
 
-    /* calling MPI_File_close() */
-    err = ncmpio_close_files(ncp, 0);
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+    int i, j, ntimers;
+    double tt[16], max_t[16], put_time=0, get_time=0;
+    MPI_Offset sizes[16], max_sizes[16], max_npairs_put=0, max_npairs_get=0;
+
+    /* print intra-node aggregation timing breakdown */
+    if (ncp->num_aggrs_per_node > 0) {
+        j = 0;
+        for (i=0; i<6; i++) sizes[j++] = ncp->maxmem_put[i];
+        for (i=0; i<6; i++) sizes[j++] = ncp->maxmem_get[i];
+        sizes[12] = ncp->ina_npairs_put;
+        sizes[13] = ncp->ina_npairs_get;
+
+        MPI_Allreduce(sizes, max_sizes, 14, MPI_OFFSET, MPI_MAX, ncp->comm);
+        max_npairs_put = max_sizes[12];
+        max_npairs_get = max_sizes[13];
+
+        for (i=0; i<12; i++) tt[i] = (float)(max_sizes[i]) / 1048576.0; /* in MiB */
+        if (ncp->rank == 0 && max_npairs_put > 0)
+            printf("%s: INA put npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
+                   __func__, max_sizes[12], tt[0],tt[1],tt[2],tt[3],tt[4],tt[5]);
+        if (ncp->rank == 0 && max_npairs_get > 0)
+            printf("%s: INA get npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
+                   __func__, max_sizes[13], tt[6],tt[7],tt[8],tt[9],tt[10],tt[11]);
+
+        if (max_npairs_put > 0) { /* put npairs > 0 */
+            put_time = ncp->ina_time_init + ncp->ina_time_flatten;
+            ntimers = 4;
+            for (i=0; i<ntimers; i++) {
+                tt[i]     = ncp->ina_time_put[i];
+                put_time += tt[i];
+            }
+            tt[ntimers]   = ncp->ina_time_init;
+            tt[ntimers+1] = ncp->ina_time_flatten;
+            tt[ntimers+2] = put_time;
+
+            MPI_Reduce(tt, max_t, ntimers+3, MPI_DOUBLE, MPI_MAX, 0, ncp->comm);
+            put_time = max_t[ntimers+2];
+            if (ncp->rank == 0)
+                printf("%s: INA put timing %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f = %5.2f\n",
+                __func__, max_t[ntimers],max_t[ntimers+1],max_t[0],max_t[1],max_t[2],max_t[3],put_time);
+        }
+        if (max_npairs_get > 0) { /* get npairs > 0 */
+            get_time = ncp->ina_time_init + ncp->ina_time_flatten;
+            ntimers = 4;
+            for (i=0; i<ntimers; i++) {
+                tt[i]     = ncp->ina_time_get[i];
+                get_time += tt[i];
+            }
+            tt[ntimers]   = ncp->ina_time_init;
+            tt[ntimers+1] = ncp->ina_time_flatten;
+            tt[ntimers+2] = get_time;
+
+            MPI_Reduce(tt, max_t, ntimers+3, MPI_DOUBLE, MPI_MAX, 0, ncp->comm);
+            if (ncp->rank == 0)
+                printf("%s: INA get timing %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f = %5.2f\n",
+                __func__, max_t[ntimers],max_t[ntimers+1],max_t[0],max_t[1],max_t[2],max_t[3],max_t[ntimers+2]);
+        }
+    }
+#endif
+
+    /* close the file */
+    err = ncmpio_file_close(ncp);
     if (status == NC_NOERR) status = err;
 
     /* file is open for write and no variable has been defined */
@@ -218,6 +244,10 @@ ncmpio_close(void *ncdp)
         }
         if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
     }
+
+    /* free the intra-node aggregation communicator */
+    if (ncp->ina_comm != MPI_COMM_NULL)
+        MPI_Comm_free(&ncp->ina_comm);
 
     /* free up space occupied by the header metadata */
     ncmpio_free_NC(ncp);

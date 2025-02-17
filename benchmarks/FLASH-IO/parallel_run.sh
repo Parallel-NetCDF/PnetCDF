@@ -10,12 +10,15 @@ set -e
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 
-# remove file system type prefix if there is any
-OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
-
 MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "check_PROGRAMS=${check_PROGRAMS}"
+
+# remove file system type prefix if there is any
+OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
+
+# let NTHREADS=$1*6-1
+NTHREADS=`expr $1 \* 6 - 1`
 
 # echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
 if test "x${PNETCDF_DEBUG}" = x1 ; then
@@ -27,63 +30,119 @@ fi
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
-for i in ${check_PROGRAMS} ; do
-    for j in ${safe_modes} ; do
-    for intra_aggr in 0 1 ; do
-        if test "$j" = 1 ; then # test only in safe mode
-           export PNETCDF_HINTS="romio_no_indep_rw=true"
-        else
-           export PNETCDF_HINTS=
-        fi
-        if test "$intra_aggr" = 1 ; then
-           export PNETCDF_HINTS="${PNETCDF_HINTS};nc_num_aggrs_per_node=2"
-        fi
-        export PNETCDF_SAFE_MODE=$j
-        # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+FILE_EXTS="ncmpi_chk_0000 ncmpi_plt_cnt_0000 ncmpi_plt_crn_0000"
 
-        ${MPIRUN} ./$i -q -f ${TESTOUTDIR}/$i.
+fixed_length=23
+
+for i in ${check_PROGRAMS} ; do
+
+    for j in ${safe_modes} ; do
+        if test "$j" = 1 ; then # test only in safe mode
+           SAFE_HINTS="romio_no_indep_rw=true"
+           safe_hint="  SAFE"
+        else
+           SAFE_HINTS="romio_no_indep_rw=false"
+           safe_hint="NOSAFE"
+        fi
+        OUT_PREFIX="${TESTOUTDIR}/$i"
+
+    for mpiio_mode in 0 1 ; do
+        if test "$mpiio_mode" = 1 ; then
+           USEMPIO_HINTS="nc_pncio=disable"
+           DRIVER_OUT_FILE="${OUT_PREFIX}.mpio"
+           driver_hint=" MPIO"
+        else
+           USEMPIO_HINTS="nc_pncio=enable"
+           DRIVER_OUT_FILE="${OUT_PREFIX}.pncio"
+           driver_hint="PNCIO"
+        fi
+    for intra_aggr in 0 1 ; do
+        if test "$intra_aggr" = 1 ; then
+           INA_HINTS="nc_num_aggrs_per_node=2"
+           INA_OUT_FILE="${DRIVER_OUT_FILE}.ina"
+           ina_hint="  INA"
+        else
+           INA_HINTS="nc_num_aggrs_per_node=0"
+           INA_OUT_FILE="${DRIVER_OUT_FILE}"
+           ina_hint="NOINA"
+        fi
+
+        OUT_FILE=$INA_OUT_FILE
+        TEST_OPTS="$safe_hint $driver_hint $ina_hint"
+
+        PNETCDF_HINTS=
+        if test "x$SAFE_HINTS" != x ; then
+           PNETCDF_HINTS="$SAFE_HINTS"
+        fi
+        if test "x$USEMPIO_HINTS" != x ; then
+           PNETCDF_HINTS="$USEMPIO_HINTS;$PNETCDF_HINTS"
+        fi
+        if test "x$INA_HINTS" != x ; then
+           PNETCDF_HINTS="$INA_HINTS;$PNETCDF_HINTS"
+        fi
+
+        export PNETCDF_HINTS="$PNETCDF_HINTS"
+        export PNETCDF_SAFE_MODE=$j
+        # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
+
+        CMD_OPTS="-q -f ${OUT_FILE}."
+
+        # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPTS"
+        ${MPIRUN} ./$i $CMD_OPTS
 
         if test $? = 0 ; then
-           echo "PASS: F90 parallel run on $1 processes --------------- $i"
+           printf "PASS: F90 nprocs=$1 %-${fixed_length}s   -------- $i\n" "$TEST_OPTS"
         fi
 
         if test "x${BUILD_BENCHMARKS_IN_PNETCDF}" != x1 ; then
            continue
         fi
 
-        # echo "--- validating file ${TESTOUTDIR}/$i.ncmpi_chk_0000.nc"
-        ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.ncmpi_chk_0000.nc
-        ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.ncmpi_plt_cnt_0000.nc
-        ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.ncmpi_plt_crn_0000.nc
-        # echo ""
+        for ext in $FILE_EXTS ; do
+           # echo "${LINENO}:--- validating file $OUT_FILE.$ext.nc"
+           ${TESTSEQRUN} ${VALIDATOR} -q $OUT_FILE.$ext.nc
+        done
 
         if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-           # echo "test burst buffering feature"
+           # echo "---- test burst buffering feature"
            saved_PNETCDF_HINTS=${PNETCDF_HINTS}
            export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
-           ${MPIRUN} ./$i -q -f ${TESTOUTDIR}/$i.bb.
+           CMD_OPTS="-q -f ${OUT_FILE}.bb."
+           # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPTS"
+           ${MPIRUN} ./$i $CMD_OPTS
+
            if test $? = 0 ; then
-              echo "PASS: F90 parallel run on $1 processes --------------- $i"
+              printf "PASS: F90 nprocs=$1 %-${fixed_length}s   -------- $i\n" "$TEST_OPTS BB"
            fi
+
            export PNETCDF_HINTS=${saved_PNETCDF_HINTS}
 
-           # echo "--- validating file ${TESTOUTDIR}/$i.bb.ncmpi_chk_0000.nc"
-           ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.bb.ncmpi_chk_0000.nc
-           ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.bb.ncmpi_plt_cnt_0000.nc
-           ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.bb.ncmpi_plt_crn_0000.nc
-
-           # echo "--- ncmpidiff $i.ncmpi_chk_0000.nc $i.bb.ncmpi_chk_0000.nc ---"
-           ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$i.ncmpi_chk_0000.nc ${TESTOUTDIR}/$i.bb.ncmpi_chk_0000.nc
-           ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$i.ncmpi_plt_cnt_0000.nc ${TESTOUTDIR}/$i.bb.ncmpi_plt_cnt_0000.nc
-           ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$i.ncmpi_plt_crn_0000.nc ${TESTOUTDIR}/$i.bb.ncmpi_plt_crn_0000.nc
+           for ext in $FILE_EXTS ; do
+              # echo "${LINENO}: --- validating file ${OUT_FILE}.bb.nc"
+              ${TESTSEQRUN} ${VALIDATOR} -q $OUT_FILE.bb.$ext.nc
+              # echo "${LINENO}: --- ncmpidiff -q $OUT_FILE.$ext.nc $OUT_FILE.bb.$ext.nc ---"
+              ${MPIRUN} ${NCMPIDIFF} -q $OUT_FILE.$ext.nc $OUT_FILE.bb.$ext.nc
+           done
         fi
-    done
-    done
-    rm -f ${OUTDIR}/$i.ncmpi_chk_0000.nc
-    rm -f ${OUTDIR}/$i.ncmpi_plt_cnt_0000.nc
-    rm -f ${OUTDIR}/$i.ncmpi_plt_crn_0000.nc
-    rm -f ${OUTDIR}/$i.bb.ncmpi_chk_0000.nc
-    rm -f ${OUTDIR}/$i.bb.ncmpi_plt_cnt_0000.nc
-    rm -f ${OUTDIR}/$i.bb.ncmpi_plt_crn_0000.nc
-done
+
+        if test "x${ENABLE_NETCDF4}" = x1 ; then
+           # echo "${LINENO}: test netCDF-4 feature"
+           ${MPIRUN} ./$i $CMD_OPTS ${OUT_FILE}.nc4 4
+           # Validator does not support nc4
+        fi
+    done # intra_aggr
+    done # mpiio_mode
+
+    for ext in $FILE_EXTS ; do
+       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc ---"
+       $MPIRUN $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc
+       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.$ext.nc ---"
+       $MPIRUN $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.$ext.nc
+       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc ---"
+       $MPIRUN $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc
+    done # ext
+
+    done # safe_modes
+    rm -f ${OUTDIR}/$i*nc*
+done # check_PROGRAMS
 

@@ -2113,7 +2113,7 @@ TestFunc(rename_att)(AttVarArgs)
     nc_type atttype;
     IntType length;
     IntType attlength;
-    char  text[MAX_NELS];
+    char  txt_buf[MAX_NELS];
     double value[MAX_NELS];
     double expect;
 
@@ -2185,13 +2185,13 @@ TestFunc(rename_att)(AttVarArgs)
             IF (length != attlength)
                 error("inq_att: unexpected length");
             if (datatype == NC_CHAR) {
-                err = APIFunc(get_att_text)(ncid, varid, name, text);
+                err = APIFunc(get_att_text)(ncid, varid, name, txt_buf);
                 IF (err != NC_NOERR)
                     error("get_att_text: %s", APIFunc(strerror)(err));
                 for (k = 0; k < attlength; k++) {
                     ndx[0] = k;
                     expect = hash(datatype, -1, ndx);
-                    IF (text[k] != (char)expect)
+                    IF (txt_buf[k] != (char)expect)
                         error("get_att_text: unexpected value");
                 }
             } else {
@@ -2386,7 +2386,7 @@ TestFunc(set_fill)(VarArgs)
     IntType j;
     int old_fillmode;
     int nok = 0;      /* count of valid comparisons */
-    char text = 0;
+    char txt_buf = 0;
     double value = 0;
     double fill;
     IntType index[MAX_RANK];
@@ -2461,7 +2461,7 @@ ifdef(`PNETCDF', `
     for (i=0; i<=index[0]; i++)
         err = APIFunc(fill_var_rec)(ncid, varid, i);')dnl
 
-    err = PutVar1TYPE(text)(ncid, varid, index, &text);
+    err = PutVar1TYPE(text)(ncid, varid, index, &txt_buf);
     IF (err != NC_NOERR)
         error("put_var1_text_all: %s", APIFunc(strerror)(err));
 
@@ -2486,10 +2486,10 @@ ifdef(`PNETCDF', `
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err != 0) error("error in toMixedBase");
             if (var_type[i] == NC_CHAR) {
-                err = GetVar1TYPE(text)(ncid, i, index, &text);
+                err = GetVar1TYPE(text)(ncid, i, index, &txt_buf);
                 IF (err != NC_NOERR)
                     error("get_var1_text_all failed: %s", APIFunc(strerror)(err));
-                value = text;
+                value = txt_buf;
             } else {
                 err = GetVar1TYPE(double)(ncid, i, index, &value);
                 IF (err != NC_NOERR)
@@ -2524,11 +2524,11 @@ ifdef(`PNETCDF', `
 
     /* set _FillValue = 42 for all vars */
     fill = 42;
-    text = 42;
+    txt_buf = 42;
     for (i = 0; i < numVars; i++) {
 #ifndef ENABLE_NETCDF4
         if (var_type[i] == NC_CHAR) {
-            err = APIFunc(put_att_text)(ncid, i, "_FillValue", 1, &text);
+            err = APIFunc(put_att_text)(ncid, i, "_FillValue", 1, &txt_buf);
             IF (err != NC_NOERR)
                 error("put_att_text: %s", APIFunc(strerror)(err));
         } else {
@@ -2558,7 +2558,7 @@ ifdef(`PNETCDF', `
         IF (err != NC_NOERR)
             error("def_var_fill: %s", APIFunc(strerror)(err));
         switch (var_type[i]) {
-            case NC_CHAR:   err = APIFunc(put_att_text)     (ncid, i, "_FillValue", 1, &text);
+            case NC_CHAR:   err = APIFunc(put_att_text)     (ncid, i, "_FillValue", 1, &txt_buf);
                             break;
             case NC_BYTE:   err = APIFunc(put_att_schar)    (ncid,i,"_FillValue",var_type[i],1,&fill_sc);
                             break;
@@ -2605,7 +2605,7 @@ ifdef(`PNETCDF', `
     for (i=0; i<=index[0]; i++)
         err = APIFunc(fill_var_rec)(ncid, varid, i);')dnl
 
-    err = PutVar1TYPE(text)(ncid, varid, index, &text);
+    err = PutVar1TYPE(text)(ncid, varid, index, &txt_buf);
     IF (err != NC_NOERR)
         error("put_var1_text_all: %s", APIFunc(strerror)(err));
 
@@ -2616,10 +2616,10 @@ ifdef(`PNETCDF', `
             err = toMixedBase(j, var_rank[i], var_shape[i], index);
             IF (err != 0) error("error in toMixedBase");
             if (var_type[i] == NC_CHAR) {
-                err = GetVar1TYPE(text)(ncid, i, index, &text);
+                err = GetVar1TYPE(text)(ncid, i, index, &txt_buf);
                 IF (err != NC_NOERR)
                     error("get_var1_text_all failed: %s", APIFunc(strerror)(err));
-                value = text;
+                value = txt_buf;
             } else {
                 err = GetVar1TYPE(double)(ncid, i, index, &value);
                 IF (err != NC_NOERR)
@@ -2666,7 +2666,7 @@ ifdef(`PNETCDF', `
     /* NetCDF-4 may return NC_ELATEDEF instead of NC_ELATEFILL */
     for (i = 0; i < numVars; i++) {
         if (var_type[i] == NC_CHAR) {
-            err = APIFunc(put_att_text)(ncid, i, "_FillValue", 1, &text);
+            err = APIFunc(put_att_text)(ncid, i, "_FillValue", 1, &txt_buf);
             if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) {
 #ifdef NETCDF_GE_4_5_0
                 IF (err != NC_ELATEFILL && err != NC_ELATEDEF)

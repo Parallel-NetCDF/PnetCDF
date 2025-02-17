@@ -82,23 +82,6 @@
 }
 
 static
-int clear_file_contents(int ncid, int *varid)
-{
-    int i, err, nerrs=0, rank;
-    long long *w_buffer = (long long*) malloc(sizeof(long long) * NY*NX);
-    for (i=0; i<NY*NX; i++) w_buffer[i] = -1;
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    for (i=0; i<4; i++) {
-        err = ncmpi_put_var_longlong_all(ncid, varid[i], w_buffer);
-        CHECK_ERR
-    }
-    free(w_buffer);
-    return nerrs;
-}
-
-static
 int check_contents_for_fail(int ncid, int *varid, int lineno)
 {
     /* all processes read entire variables back and check contents */
@@ -178,7 +161,6 @@ int main(int argc, char** argv)
     long long *buffer[4], *cbuffer[4], *rbuffer[4];
     int num_segs[4] = {4, 6, 5, 4};
     int req_lens[4], my_nsegs[4];
-    int bb_enabled=0;
 
     MPI_Datatype buftype[4];
     MPI_Offset **starts[4], **counts[4];
@@ -302,18 +284,6 @@ int main(int argc, char** argv)
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
-    {
-        int flag;
-        char hint[MPI_MAX_INFO_VAL];
-        MPI_Info infoused;
-
-        ncmpi_inq_file_info(ncid, &infoused);
-        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
-        if (flag && strcasecmp(hint, "enable") == 0)
-            bb_enabled = 1;
-        MPI_Info_free(&infoused);
-    }
-
     /* create a global array of size NY * NX */
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]); CHECK_ERR
@@ -337,6 +307,8 @@ int main(int argc, char** argv)
         nerrs++;
     }
 
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
+
     err = ncmpi_enddef(ncid); CHECK_ERR
 
 #ifdef STRONGER_CONSISTENCY
@@ -345,19 +317,8 @@ int main(int argc, char** argv)
     ncmpi_sync(ncid);
 #endif
 
-    /* clear the file contents using a blocking API, before commit the
-     * nonblocking requests posted in define mode */
-    if (!bb_enabled) {
-        nerrs += clear_file_contents(ncid, varid);
-    }
-
-#ifdef STRONGER_CONSISTENCY
-    ncmpi_sync(ncid);
-    MPI_Barrier(MPI_COMM_WORLD);
-    ncmpi_sync(ncid);
-#endif
-
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
+
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     CHECK_ERR
     ERRS(nreqs, sts)
@@ -403,6 +364,9 @@ int main(int argc, char** argv)
                                        counts[i], cbuffer[i], &reqs[i]);
         CHECK_ERR
     }
+
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
+
     err = ncmpi_enddef(ncid); CHECK_ERR
 
 #ifdef STRONGER_CONSISTENCY
@@ -411,19 +375,8 @@ int main(int argc, char** argv)
     ncmpi_sync(ncid);
 #endif
 
-    /* clear the file contents using a blocking API, before commit the
-     * nonblocking requests posted in define mode */
-    if (!bb_enabled) {
-        nerrs += clear_file_contents(ncid, varid);
-    }
-
-#ifdef STRONGER_CONSISTENCY
-    ncmpi_sync(ncid);
-    MPI_Barrier(MPI_COMM_WORLD);
-    ncmpi_sync(ncid);
-#endif
-
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
+
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     CHECK_ERR
     ERRS(nreqs, sts)
@@ -479,6 +432,8 @@ int main(int argc, char** argv)
         CHECK_ERR
     }
 
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
+
     err = ncmpi_enddef(ncid); CHECK_ERR
 
 #ifdef STRONGER_CONSISTENCY
@@ -487,19 +442,8 @@ int main(int argc, char** argv)
     ncmpi_sync(ncid);
 #endif
 
-    /* clear the file contents using a blocking API, before commit the
-     * nonblocking requests posted in define mode */
-    if (!bb_enabled) {
-        nerrs += clear_file_contents(ncid, varid);
-    }
-
-#ifdef STRONGER_CONSISTENCY
-    ncmpi_sync(ncid);
-    MPI_Barrier(MPI_COMM_WORLD);
-    ncmpi_sync(ncid);
-#endif
-
     nerrs += check_num_pending_reqs(ncid, nreqs*2, __LINE__);
+
     err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
     CHECK_ERR
     ERRS(nreqs, sts)
@@ -517,8 +461,10 @@ int main(int argc, char** argv)
 
     /* all processes read entire variables back and check contents */
     nerrs += check_contents_for_fail(ncid, varid, __LINE__);
+
     /* commit read requests */
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
+
     err = ncmpi_wait_all(ncid, nreqs, reqs+4, sts);
     CHECK_ERR
     ERRS(nreqs, sts)
@@ -589,19 +535,9 @@ int main(int argc, char** argv)
         CHECK_ERR
     }
 
+    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
+
     err = ncmpi_enddef(ncid); CHECK_ERR
-
-#ifdef STRONGER_CONSISTENCY
-    ncmpi_sync(ncid);
-    MPI_Barrier(MPI_COMM_WORLD);
-    ncmpi_sync(ncid);
-#endif
-
-    /* clear the file contents using a blocking API, before commit the
-     * nonblocking requests posted in define mode */
-    if (!bb_enabled) {
-        nerrs += clear_file_contents(ncid, varid);
-    }
 
 #ifdef STRONGER_CONSISTENCY
     ncmpi_sync(ncid);
@@ -621,6 +557,7 @@ int main(int argc, char** argv)
 
     /* flush nonblocking 1st batch read requests */
     nerrs += check_num_pending_reqs(ncid, nreqs*2, __LINE__);
+
     err = ncmpi_wait_all(ncid, nreqs, reqs+4, sts);
     CHECK_ERR
     ERRS(nreqs, sts)
@@ -642,6 +579,7 @@ int main(int argc, char** argv)
 
     /* flush nonblocking 2nd batch read requests */
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
+
     err = ncmpi_wait_all(ncid, nreqs, reqs+8, sts);
     CHECK_ERR
     ERRS(nreqs, sts)

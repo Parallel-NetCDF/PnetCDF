@@ -27,8 +27,6 @@ DATA_FILES = $(NC_FILES:%=%_*.data)
 CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out \
              $(META_FILES) $(DATA_FILES)
 
-EXTRA_DIST = parallel_run.sh
-
 TESTS_ENVIRONMENT  = export SED="$(SED)";
 TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
 TESTS_ENVIRONMENT += export TESTOUTDIR="$(FSTYPE_PREFIX)$(TESTOUTDIR)";
@@ -43,21 +41,21 @@ ptest ptest4: $(check_PROGRAMS)
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 4 || exit 1
+	$(srcdir)/../parallel_run.sh 4 "BB " || exit 1
 
 ptest8: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 8 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 8 || exit 1
+	$(srcdir)/../parallel_run.sh 8 "BB "|| exit 1
 
 ptest3: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 3 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 3 || exit 1
+	$(srcdir)/../parallel_run.sh 3 "BB "|| exit 1
 
 ptests: ptest3 ptest4 ptest8
 ptest2 ptest6 ptest10:

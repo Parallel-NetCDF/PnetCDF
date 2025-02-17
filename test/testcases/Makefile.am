@@ -98,7 +98,8 @@ TESTPROGRAMS = file_create_open \
                test_get_varn \
                tst_del_attr \
                tst_redefine \
-               tst_grow_header
+               tst_grow_header \
+               tst_varn_var1
 
 M4_SRCS      = put_all_kinds.m4 \
                erange_fill.m4 \
@@ -220,7 +221,7 @@ CLEANFILES = $(M4_SRCS:.m4=.c) core core.* *.gcda *.gcno *.gcov gmon.out \
              $(NC_FILES)
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh redef-good.ncdump \
-             wrap_runs.sh parallel_run.sh
+             wrap_runs.sh
 
 # Some of these tests are designed to run on one process,
 # Run them on 4 processes to see if they can handle well
@@ -232,21 +233,21 @@ ptest ptest4: $(check_PROGRAMS)
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 4 || exit 1
+	$(srcdir)/../parallel_run.sh 4 || exit 1
 
 ptest2: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 2 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 2 || exit 1
+	$(srcdir)/../parallel_run.sh 2 || exit 1
 
 ptest6: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 6 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 6 || exit 1
+	$(srcdir)/../parallel_run.sh 6 || exit 1
 
 ptests: ptest2 ptest4 ptest6
 ptest8 ptest10:

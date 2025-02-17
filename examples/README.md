@@ -180,6 +180,7 @@ with C, C++, F77, and F90 versions.
 * get_vara
   + ./C/get_vara.c
   + ./CXX/get_vara.cpp
+  + ./F77/get_vara.c
   + This example is the read counterpart of example `put_vara.c`. It shows how
     to use `ncmpi_get_vara_int_all()` to read a 2D 4-byte integer array in
     parallel.  It also reads a global attribute and two attribute of variable

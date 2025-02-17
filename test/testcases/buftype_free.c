@@ -22,16 +22,18 @@
 
 #define NY 4
 #define NX 4
+#define NVARS 4
+#define NGHOSTS 2
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
 
     char filename[256];
-    int  i, j, err, ncid, varid[4], dimids[2], req[4], st[4], nerrs=0;
-    int  rank, nprocs, buf[4][(NY+4)*(NX+4)];
+    int  i, j, err, ncid, varid[NVARS], dimids[2], req[NVARS], st[NVARS], nerrs=0;
+    int  rank, nprocs, *buf[NVARS];
     int  gsize[2], subsize[2], a_start[2], ghost;
     MPI_Offset start[2], count[2];
-    MPI_Datatype buftype[4];
+    MPI_Datatype buftype[NVARS];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -65,7 +67,14 @@ int main(int argc, char **argv) {
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* initialize the contents of the array */
-    for (i=0; i<4; i++) for (j=0; j<(NY+4)*(NX+4); j++) buf[i][j] = rank+10;
+    ghost      = NGHOSTS;
+    gsize[1]   = NX + 2 * ghost;
+    gsize[0]   = NY + 2 * ghost;
+
+    for (i=0; i<NVARS; i++) {
+        buf[i] = (int*) malloc(sizeof(int) * gsize[0] * gsize[1]);
+        for (j=0; j<gsize[0]*gsize[1]; j++) buf[i][j] = rank+10;
+    }
 
     start[0] = NY*rank; start[1] = 0;
     count[0] = NY;      count[1] = NX;
@@ -76,7 +85,7 @@ int main(int argc, char **argv) {
     err = ncmpi_put_vara_int_all(ncid, varid[3], start, count, buf[3]); CHECK_ERR
 
     /* check if user write buffer contents altered */
-    for (i=0; i<4; i++) {
+    for (i=0; i<NVARS; i++) {
         for (j=0; j<(NY+4)*(NX+4); j++) {
             if (buf[i][j] != rank+10) {
                 printf("Error at line %d in %s: user put buffer[%d][%d] altered from %d to %d\n",
@@ -87,15 +96,12 @@ int main(int argc, char **argv) {
     }
 
     /* define an MPI datatype using MPI_Type_create_subarray() */
-    ghost      = 2;
-    gsize[1]   = NX + 2 * ghost;
-    gsize[0]   = NY + 2 * ghost;
     subsize[1] = NX;
     subsize[0] = NY;
     a_start[1] = ghost;
     a_start[0] = ghost;
 
-    for (i=0; i<4; i++) {
+    for (i=0; i<NVARS; i++) {
         req[i] = NC_REQ_NULL;
         st[i]  = NC_NOERR;
         MPI_Type_create_subarray(2, gsize, subsize, a_start, MPI_ORDER_C, MPI_INT, &buftype[i]);
@@ -105,8 +111,8 @@ int main(int argc, char **argv) {
         MPI_Type_free(&buftype[i]);
     }
 
-    err = ncmpi_wait_all(ncid, 4, req, st); CHECK_ERR
-    for (i=0; i<4; i++) {
+    err = ncmpi_wait_all(ncid, NVARS, req, st); CHECK_ERR
+    for (i=0; i<NVARS; i++) {
         if (st[i] != NC_NOERR) {
             err = st[i];
             CHECK_ERR
@@ -114,6 +120,9 @@ int main(int argc, char **argv) {
     }
 
     err = ncmpi_close(ncid); CHECK_ERR
+
+    for (i=0; i<NVARS; i++)
+        free(buf[i]);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;

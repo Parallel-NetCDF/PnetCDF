@@ -34,7 +34,7 @@
 static
 int test_collective_error(char *filename, int safe_mode, int cmode)
 {
-    int rank, nproc, ncid, err, nerrs=0, varid, dimids[1], req, status;
+    int rank, nproc, ncid, err, nerrs=0, varid, dimids[1], req, status, exp;
     double buf[2];
     MPI_Offset start[1], count[1];
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -44,10 +44,10 @@ int test_collective_error(char *filename, int safe_mode, int cmode)
 
     /* Create a 2 element vector of doubles */
     cmode |= NC_CLOBBER;
-    err = ncmpi_create(comm, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
-    err = ncmpi_def_dim(ncid, "dim", 2, &dimids[0]); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var", NC_DOUBLE, 1, dimids, &varid); CHECK_ERR
-    err = ncmpi_enddef(ncid); CHECK_ERR
+    err = ncmpi_create(comm, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR_ALL
+    err = ncmpi_def_dim(ncid, "dim", 2, &dimids[0]); CHECK_ERR_ALL
+    err = ncmpi_def_var(ncid, "var", NC_DOUBLE, 1, dimids, &varid); CHECK_ERR_ALL
+    err = ncmpi_enddef(ncid); CHECK_ERR_ALL
 
     if (rank == 0) {
         start[0] = 0;
@@ -70,8 +70,9 @@ int test_collective_error(char *filename, int safe_mode, int cmode)
 
     err = ncmpi_put_vara_all(ncid, varid, start, count, buf, count[0],
                              MPI_DOUBLE);
-    if ((safe_mode && nproc > 1) || rank == 1) EXP_ERR(NC_EINVALCOORDS)
-    else                                       EXP_ERR(NC_NOERR)
+    if ((safe_mode && nproc > 1) || rank == 1) exp = NC_EINVALCOORDS;
+    else                                       exp = NC_NOERR;
+    CHECK_EXP_ERR_ALL(exp)
 
     /* check if user put buffer contents altered */
     if (buf[0] != 1.0) {
@@ -86,8 +87,9 @@ int test_collective_error(char *filename, int safe_mode, int cmode)
     }
 
     err = ncmpi_put_vara_double_all(ncid, varid, start, count, buf);
-    if ((safe_mode && nproc > 1) || rank == 1) EXP_ERR(NC_EINVALCOORDS)
-    else                                       EXP_ERR(NC_NOERR)
+    if ((safe_mode && nproc > 1) || rank == 1) exp = NC_EINVALCOORDS;
+    else                                       exp = NC_NOERR;
+    CHECK_EXP_ERR_ALL(exp)
 
     /* check if user put buffer contents altered */
     if (buf[0] != 1.0) {
@@ -103,12 +105,10 @@ int test_collective_error(char *filename, int safe_mode, int cmode)
 
     if (!(cmode & NC_NETCDF4)) {
         err = ncmpi_iput_vara_double(ncid, varid, start, count, buf, &req);
-        if (rank == 1)
-            EXP_ERR(NC_EINVALCOORDS)
-        else
-            EXP_ERR(NC_NOERR)
+        exp = (rank == 1) ? NC_EINVALCOORDS : NC_NOERR;
+        EXP_ERR(exp)
 
-        err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+        err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR_ALL
 
         /* check if user put buffer contents altered */
         if (buf[0] != 1.0) {
@@ -125,25 +125,26 @@ int test_collective_error(char *filename, int safe_mode, int cmode)
 
     err = ncmpi_get_vara_all(ncid, varid, start, count,
 			     buf, count[0], MPI_DOUBLE);
-    if ((safe_mode && nproc > 1) || rank == 1) EXP_ERR(NC_EINVALCOORDS)
-    else                                       EXP_ERR(NC_NOERR)
+    if ((safe_mode && nproc > 1) || rank == 1) exp = NC_EINVALCOORDS;
+    else                                       exp = NC_NOERR;
+    CHECK_EXP_ERR_ALL(exp)
 
     err = ncmpi_get_vara_double_all(ncid, varid, start, count, buf);
-    if ((safe_mode && nproc > 1) || rank == 1) EXP_ERR(NC_EINVALCOORDS)
-    else                                       EXP_ERR(NC_NOERR)
+    if ((safe_mode && nproc > 1) || rank == 1) exp = NC_EINVALCOORDS;
+    else                                       exp = NC_NOERR;
+    CHECK_EXP_ERR_ALL(exp)
 
     if (!(cmode & NC_NETCDF4)) {
         err = ncmpi_iget_vara_double(ncid, varid, start, count, buf, &req);
-        if (rank == 1)
-            EXP_ERR(NC_EINVALCOORDS)
-        else
-            EXP_ERR(NC_NOERR)
+        exp = (rank == 1) ? NC_EINVALCOORDS : NC_NOERR;
+        EXP_ERR(exp)
 
-        err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+        err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR_ALL
     }
 
-    err = ncmpi_close(ncid); CHECK_ERR
+    err = ncmpi_close(ncid); CHECK_ERR_ALL
 
+fn_exit:
     return nerrs;
 }
 

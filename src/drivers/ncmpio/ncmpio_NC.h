@@ -16,6 +16,7 @@
 
 #include <dispatch.h>
 #include "ncmpio_driver.h"
+#include "pncio.h"
 
 #define NC_DEFAULT_H_MINFREE 0
 #define NC_DEFAULT_V_ALIGN   512
@@ -156,7 +157,7 @@ typedef struct {
  * specifications can be of type 8-byte integers.
  */
 typedef struct NC_dimarray {
-    int            ndefined;      /* number of defined dimensions */
+    int            ndefined;      /* no. defined dimensions */
     int            unlimited_id;  /* -1 for not defined, otherwise >= 0 */
     NC_dim       **value;
     int            hash_size;
@@ -180,7 +181,7 @@ ncmpio_dup_NC_dimarray(NC_dimarray *ncap, const NC_dimarray *ref);
  * NC attribute
  */
 typedef struct {
-    MPI_Offset nelems;   /* number of attribute elements */
+    MPI_Offset nelems;   /* no. attribute elements */
     MPI_Offset xsz;      /* amount of space at xvalue (4-byte aligned) */
     nc_type    xtype;    /* external NC data type of the attribute */
     size_t     name_len; /* strlen(name) for faster string compare */
@@ -199,7 +200,7 @@ typedef struct {
  * specifications can be of type 8-byte integers.
  */
 typedef struct NC_attrarray {
-    int            ndefined;  /* number of defined attributes */
+    int            ndefined;  /* no. defined attributes */
     NC_attr      **value;
     int            hash_size;
     NC_nametable  *nameT;
@@ -238,7 +239,7 @@ typedef struct {
     int           no_fill; /* whether fill mode is disabled */
     size_t        name_len;/* strlen(name) for faster string compare */
     char         *name;    /* name of the variable */
-    int           ndims;   /* number of dimensions */
+    int           ndims;   /* no. dimensions */
     int          *dimids;  /* [ndims] array of dimension IDs */
     MPI_Offset   *shape;   /* [ndims] dim->size of each dim
                               shape[0] == NC_UNLIMITED if record variable */
@@ -268,8 +269,8 @@ typedef struct {
  */
 /* note: we only allow less than 2^31-1 variables defined in a file */
 typedef struct NC_vararray {
-    int            ndefined;    /* number of defined variables */
-    int            num_rec_vars;/* number of defined record variables */
+    int            ndefined;    /* no. defined variables */
+    int            num_rec_vars;/* no. defined record variables */
     NC_var       **value;
     int            hash_size;
     NC_nametable  *nameT;
@@ -319,15 +320,15 @@ typedef struct NC_lead_req {
     int           flag;         /* bit-wise OR of the above NC_REQ_* flags */
     int           id;           /* even number for write, odd for read */
     int           nonlead_off;  /* start index in the non-lead queue */
-    int           nonlead_num;  /* number of non-lead requests */
+    int           nonlead_num;  /* no. non-lead requests */
     int           abuf_index;   /* index in the abuf occupy_table. -1 means not
                                    using attached buffer */
     void         *buf;          /* user buffer */
     void         *xbuf;         /* buffer in external type, may be == buf */
     NC_var       *varp;         /* pointer to NC variable object */
-    MPI_Offset    nelems;       /* total number of array elements requested */
+    MPI_Offset    nelems;       /* total no. array elements requested */
     MPI_Offset    max_rec;      /* highest record requested */
-    MPI_Offset    bufcount;     /* number of buftype in this request */
+    MPI_Offset    bufcount;     /* no. buftype in this request */
     MPI_Offset   *start;        /* [varp->ndims*3] for start/count/stride */
     MPI_Datatype  buftype;      /* user defined derived data type */
     MPI_Datatype  itype;        /* internal element data type in buftype */
@@ -338,10 +339,11 @@ typedef struct NC_lead_req {
 typedef struct NC_req {
     MPI_Offset    offset_start; /* starting offset of aggregate access region */
     MPI_Offset    offset_end;   /*   ending offset of aggregate access region */
-    MPI_Offset    nelems;       /* number of array elements requested */
+    MPI_Offset    nelems;       /* no. array elements requested */
     MPI_Offset   *start;        /* [varp->ndims*3] for start/count/stride */
     void         *xbuf;         /* buffer in external type, used in file I/O calls */
     int           lead_off;     /* start index in the lead queue */
+    MPI_Aint      npairs;       /* no. flattened offset-length pairs */
 } NC_req;
 
 #define NC_ABUF_DEFAULT_TABLE_SIZE 128
@@ -382,11 +384,10 @@ struct NC {
     int           safe_mode;    /* 0 or 1, for parameter consistency check */
 #ifdef ENABLE_SUBFILING
     int           subfile_mode; /* 0 or 1, for disable/enable subfiling */
-    int           num_subfiles; /* number of subfiles */
+    int           num_subfiles; /* no. subfiles */
     struct NC    *ncp_sf;       /* ncp of subfile */
     MPI_Comm      comm_sf;      /* subfile MPI communicator */
 #endif
-    int           striping_unit; /* stripe size of the file */
     int           chunk;       /* chunk size for reading header, one chunk at a time */
     MPI_Offset    v_align;     /* alignment of the beginning of fixed-size variables */
     MPI_Offset    r_align;     /* file alignment for record variable section */
@@ -407,16 +408,20 @@ struct NC {
 
     MPI_Offset    recsize;   /* length of 'record': sum of single record sizes
                                 of all the record variables */
-    MPI_Offset    numrecs;   /* number of 'records' allocated */
+    MPI_Offset    numrecs;   /* no. 'records' allocated */
     MPI_Offset    put_size;  /* amount of writes committed so far in bytes */
     MPI_Offset    get_size;  /* amount of reads  committed so far in bytes */
 
     MPI_Comm      comm;           /* MPI communicator */
     int           rank;           /* MPI rank of this process */
-    int           nprocs;         /* number of MPI processes */
+    int           nprocs;         /* no. MPI processes */
+    int           num_nodes;      /* no. unique compute nodes allocated */
+    int          *node_ids;       /* [nprocs] node IDs of each rank */
     MPI_Info      mpiinfo;        /* used MPI info object */
-    MPI_File      collective_fh;  /* file handle for collective mode */
-    MPI_File      independent_fh; /* file handle for independent mode */
+    MPI_File      collective_fh;  /* MPI-IO file handle for collective mode */
+    MPI_File      independent_fh; /* MPI-IO file handle for independent mode */
+    PNCIO_File    *pncio_fh;      /* PNCIO file handler */
+    int           fstype;         /* file system type: PNCIO_LUSTRE, PNCIO_UFS */
 
     NC_dimarray   dims;     /* dimensions defined */
     NC_attrarray  attrs;    /* global attributes defined */
@@ -426,35 +431,54 @@ struct NC {
 
     int           maxGetReqID;    /* max get request ID */
     int           maxPutReqID;    /* max put request ID */
-    int           numLeadGetReqs; /* number of pending lead get requests */
-    int           numLeadPutReqs; /* number of pending lead put requests */
+    int           numLeadGetReqs; /* no. pending lead get requests */
+    int           numLeadPutReqs; /* no. pending lead put requests */
     NC_lead_req  *get_lead_list;  /* list of lead nonblocking read requests */
     NC_lead_req  *put_lead_list;  /* list of lead nonblocking write requests */
 
-    int           numGetReqs;   /* number of pending nonblocking get requests */
-    int           numPutReqs;   /* number of pending nonblocking put requests */
+    int           numGetReqs;   /* no. pending nonblocking get requests */
+    int           numPutReqs;   /* no. pending nonblocking put requests */
     NC_req       *get_list;     /* list of nonblocking read requests */
     NC_req       *put_list;     /* list of nonblocking write requests */
 
     NC_buf       *abuf;     /* attached buffer, used by bput APIs */
 
-    char         *path;     /* file name */
+    const char   *path;     /* file name */
     struct NC    *old;      /* contains the previous NC during redef. */
 
-    /* Below are used for intra-node aggregation */
-    int  num_aggrs_per_node; /* number of aggregators per compute node. Set
-                                through a user hint. 0 to disable the
-                                intra-node aggregation, -1 to let PnetCDF to
-                                decide. This value must be the same among all
-                                processes.
+    /* Below are used for intra-node aggregation (INA) */
+    MPI_Comm      ina_comm;  /* communicator of only intra-node aggregators */
+    int           ina_nprocs;/* no. processes in intra-node communicator */
+    int           ina_rank;  /* rank ID in intra-node communicator */
+    int  num_aggrs_per_node; /* no. aggregators per compute node. Set through a
+                              * user hint. 0 to disable the intra-node
+                              * aggregation, -1 to let PnetCDF to decide.This
+                              * value must be the same among all processes.
                               */
     int  my_aggr;            /* rank ID of my aggregator */
-    int  num_nonaggrs;       /* number of non-aggregators assigned */
+    int  num_nonaggrs;       /* no. non-aggregators assigned */
     int *nonaggr_ranks;      /* ranks of assigned non-aggregators */
+    int *ina_node_list;      /* rank IDs of INA aggregators */
+
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    double aggr_time;
+    double ina_time_init;
+    double ina_time_flatten;
+    double ina_time_put[5];
+    double ina_time_get[5];
+    size_t ina_npairs_put;
+    size_t ina_npairs_get;
+    size_t maxmem_put[6];
+    size_t maxmem_get[6];
 #endif
 };
+
+typedef struct bufferinfo {
+    NC         *ncp;
+    MPI_Offset  offset;   /* current read/write offset in the file */
+    char       *base;     /* beginning of read/write buffer */
+    char       *pos;      /* current position in buffer */
+    char       *end;      /* end position of buffer */
+} bufferinfo;
 
 #define NC_readonly(ncp)   fIsSet((ncp)->flags, NC_MODE_RDONLY)
 #define NC_IsNew(ncp)      fIsSet((ncp)->flags, NC_MODE_CREATE)
@@ -474,9 +498,6 @@ struct NC {
         (NC_EMULTIDEFINE_FIRST >= (err) && (err) >= NC_EMULTIDEFINE_LAST)
 
 /* Begin defined in nc.c ----------------------------------------------------*/
-extern void
-ncmpio_free_NC(NC *ncp);
-
 extern int
 ncmpio_NC_check_vlen(NC_var *varp, MPI_Offset vlen_max);
 
@@ -487,20 +508,6 @@ extern int
 ncmpio_NC_check_voffs(NC *ncp);
 
 /* Begin defined in ncmpio_header_get.c -------------------------------------*/
-typedef struct bufferinfo {
-    MPI_Comm    comm;
-    MPI_File    collective_fh;
-    MPI_Offset  get_size; /* amount of file read n bytes so far */
-    MPI_Offset  offset;   /* current read/write offset in the file */
-    int         chunk;    /* chunk size for reading the header */
-    int         version;  /* 1, 2, and 5 for CDF-1, 2, and 5 respectively */
-    int         safe_mode;/* 0: disabled, 1: enabled */
-    int         coll_mode;/* 0: independent, 1: collective */
-    char       *base;     /* beginning of read/write buffer */
-    char       *pos;      /* current position in buffer */
-    char       *end;      /* end position of buffer */
-} bufferinfo;
-
 extern MPI_Offset
 ncmpio_hdr_len_NC(const NC *ncp);
 
@@ -516,9 +523,6 @@ ncmpio_write_header(NC *ncp);
 
 /* Begin defined in ncmpio_sync.c -------------------------------------------*/
 extern int
-ncmpio_file_sync(NC *ncp);
-
-extern int
 ncmpio_write_numrecs(NC *ncp, MPI_Offset new_numrecs);
 
 /* Begin defined in ncmpio_filetype.c ---------------------------------------*/
@@ -527,10 +531,6 @@ ncmpio_filetype_create_vars(const NC* ncp, const NC_var* varp,
                 const MPI_Offset start[], const MPI_Offset count[],
                 const MPI_Offset stride[], MPI_Offset *offset,
                 MPI_Datatype *filetype, int *is_filetype_contig);
-
-extern int
-ncmpio_file_set_view(const NC *ncp, MPI_File fh, MPI_Offset *offset,
-                MPI_Datatype filetype);
 
 /* Begin defined in ncmpio_igetput.m4 ---------------------------------------*/
 extern int
@@ -607,17 +607,16 @@ ncmpio_inq_var_fill(NC_var *varp, void *fill_value);
 extern int
 ncmpio_fill_vars(NC *ncp);
 
-/* Begin defined in ncmpio_nonblocking.c ------------------------------------*/
-extern int
-ncmpio_getput_zero_req(NC *ncp, int rw_flag);
-
-/* Begin defined in ncmpio_close.c */
-extern int
-ncmpio_close_files(NC *ncp, int doUnlink);
+/* Begin defined in ncmpio_close.c ------------------------------------------*/
+extern void
+ncmpio_free_NC(NC *ncp);
 
 /* Begin defined in ncmpio_utils.c ------------------------------------------*/
 extern void
-ncmpio_set_pnetcdf_hints(NC *ncp, MPI_Info user_info, MPI_Info info_used);
+ncmpio_hint_extract(NC *ncp, MPI_Info info);
+
+extern void
+ncmpio_hint_set(NC *ncp, MPI_Info info);
 
 extern int
 ncmpio_NC_check_name(const char *name, int file_ver);
@@ -644,23 +643,73 @@ ncmpio_unpack_xbuf(int format, NC_var *varp, MPI_Offset bufcount,
                  MPI_Datatype etype, MPI_Datatype imaptype, int need_convert,
                  int need_swap, void *buf, void *xbuf);
 
-/* Begin defined in ncmpio_file_io.c ----------------------------------------*/
 extern int
-ncmpio_read_write(NC *ncp, int rw_flag, int coll_indep, MPI_Offset offset,
-                  MPI_Offset buf_count, MPI_Datatype buf_type, void *buf,
-                  int buftype_is_contig);
+ncmpio_calc_off(const NC *ncp, const NC_var *varp, const MPI_Offset *start,
+                MPI_Offset *offset);
+
+extern int
+ncmpio_calc_start_end(const NC *ncp, const NC_var *varp,
+                      const MPI_Offset *start, const MPI_Offset *count,
+                      const MPI_Offset *stride, MPI_Offset *start_off,
+                      MPI_Offset *end_off);
+
+/* Begin defined in ncmpio_file_io.c ----------------------------------------*/
+extern MPI_Offset
+ncmpio_file_read_at(NC *ncp, MPI_Offset offset, void *buf,
+                    PNCIO_View buf_view);
+
+extern MPI_Offset
+ncmpio_file_read_at_all(NC *ncp, MPI_Offset offset, void *buf,
+                    PNCIO_View buf_view);
+
+extern MPI_Offset
+ncmpio_file_write_at(NC *ncp, MPI_Offset offset, const void *buf,
+                    PNCIO_View buf_view);
+
+extern MPI_Offset
+ncmpio_file_write_at_all(NC *ncp, MPI_Offset offset, const void *buf,
+                    PNCIO_View buf_view);
+
+extern int
+ncmpio_getput_zero_req(NC *ncp, int rw_flag);
+
+extern int
+ncmpio_read_write(NC *ncp, int rw_flag, MPI_Offset offset,
+                  PNCIO_View flat_btype, void *buf);
+
+extern int
+ncmpio_file_close(NC *ncp);
+
+extern int
+ncmpio_file_delete(NC *ncp);
+
+extern int
+ncmpio_file_sync(NC *ncp);
+
+extern int
+ncmpio_file_set_view(const NC *ncp, MPI_Offset disp, MPI_Datatype filetype,
+                MPI_Aint npairs,
+#ifdef HAVE_MPI_LARGE_COUNT
+                MPI_Count *offsets, MPI_Count *lengths
+#else
+                MPI_Offset *offsets, int *lengths
+#endif
+);
+
+extern int
+ncmpio_file_open(NC *ncp, MPI_Comm comm, const char *path, int omode,
+                 MPI_Info info);
 
 /* Begin defined in ncmpio_intranode.c --------------------------------------*/
 extern int
-ncmpio_intra_node_aggr_init(NC *ncp);
+ncmpio_ina_init(NC *ncp);
 
 extern int
-ncmpio_intra_node_aggregation_nreqs(NC *ncp, int mode, int num_reqs,
-                                    NC_req *put_list, MPI_Offset newnumrecs);
+ncmpio_ina_nreqs(NC *ncp, int mode, int num_reqs, NC_req *put_list,
+                 MPI_Offset newnumrecs);
 extern int
-ncmpio_intra_node_aggregation(NC *ncp, int mode, NC_var *varp,
-                              const MPI_Offset *start, const MPI_Offset *count,
-                              const MPI_Offset *stride, MPI_Offset bufCount,
-                              MPI_Datatype bufType, void *buf);
+ncmpio_ina_req(NC *ncp, int mode, NC_var *varp, const MPI_Offset *start,
+               const MPI_Offset *count, const MPI_Offset *stride,
+               MPI_Offset nbytes, void *buf);
 
 #endif /* H_NC */

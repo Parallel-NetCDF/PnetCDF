@@ -29,8 +29,8 @@ NcmpiAtt::NcmpiAtt() :
 {}
 
 // Constructor for non-null instances.
-NcmpiAtt::NcmpiAtt(bool nullObject):
-  nullObject(nullObject),
+NcmpiAtt::NcmpiAtt(bool nullObj):
+  nullObject(nullObj),
   groupId(-1),
   varId(-1)
 {}

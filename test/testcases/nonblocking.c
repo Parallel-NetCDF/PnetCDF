@@ -43,17 +43,124 @@
 #define NY 4
 #define NX 5
 
+static
+int tst_mode(const char *filename,
+             int         mode,
+             MPI_Info    info)
+{
+    int i, j, err, ncid, varid, dimids[2], req[2], st[2], nerrs=0;
+    int rank, nprocs, buf[NY+1][NX];
+    MPI_Offset start[2], count[2];
+
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
+    CHECK_FATAL_ERR
+
+    /* define a 2D array */
+    err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimids[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", NX,    &dimids[1]); CHECK_ERR
+    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimids, &varid); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
+
+    if (mode == MODE_INDEP) {
+        err = ncmpi_sync(ncid); CHECK_ERR
+    }
+
+    /* initialize the contents of the array */
+    for (j=0; j<NY+1; j++) for (i=0; i<NX; i++) buf[j][i] = j;
+
+    start[0] = 2*rank; start[1] = 0;
+    count[0] = 1;      count[1] = NX;
+
+    /* call nonblocking API */
+    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[1], &req[0]);
+    CHECK_ERR
+
+    start[0] += 1;
+    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[0], &req[1]);
+    CHECK_ERR
+
+    st[0] = st[1] = NC_NOERR;
+
+    if (mode == MODE_COLL) {
+        err = ncmpi_wait_all(ncid, 2, req, st);
+        CHECK_ERR
+    }
+    else {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+        err = ncmpi_wait(ncid, 2, req, st);
+        CHECK_ERR
+    }
+    err = st[0]; CHECK_ERR
+    err = st[1]; CHECK_ERR
+
+    /* check if the contents of buf are altered */
+    for (j=0; j<NY; j++)
+        for (i=0; i<NX; i++)
+            if (buf[j][i] != j) {
+                printf("Error at line %d in %s: buf[%d][%d]=%d != %d\n",
+                __LINE__,__FILE__,j,i,buf[j][i],j);
+                nerrs++;
+                goto fn_exit;
+            }
+
+    /* check if root process can write to file header in data mode */
+    err = ncmpi_rename_var(ncid, varid, "VAR"); CHECK_ERR
+
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    /* open the same file and read back for validate */
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
+                     &ncid); CHECK_FATAL_ERR
+
+    err = ncmpi_inq_varid(ncid, "VAR", &varid); CHECK_ERR
+
+    if (mode == MODE_INDEP) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR_ALL
+    }
+
+    /* initialize the contents of the array to a different value */
+    for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = -1;
+
+    /* read back variable */
+    start[0] = 2*rank; start[1] = 0;
+    count[0] = 2;      count[1] = NX;
+    if (mode == MODE_COLL)
+        err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf[0]);
+    else
+        err = ncmpi_get_vara_int(ncid, varid, start, count, buf[0]);
+    CHECK_ERR
+
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    /* check if the contents of buf are expected */
+    for (j=0; j<2; j++) {
+        int val = (j == 0) ? 1 : 0;
+        for (i=0; i<NX; i++)
+            if (buf[j][i] != val) {
+                printf("Error: unexpected read buf[%d][%d]=%d, should be %d\n",
+                       j,i,buf[j][i],val);
+                nerrs++;
+                goto fn_exit;
+            }
+    }
+
+fn_exit:
+    return nerrs;
+}
+
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
 
-    char       filename[256];
-    int        i, j, err, ncid, varid, dimids[2], req[2], st[2], nerrs=0;
-    int        rank, nprocs, buf[NY+1][NX];
-    MPI_Offset start[2], count[2];
-    MPI_Info   info;
+    char filename[256];
+    int err, nerrs=0, rank;
+    MPI_Info info;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (argc > 2) {
@@ -76,73 +183,23 @@ int main(int argc, char **argv) {
     /* When using PVFS2, unexpected buffer value error message might occur.
      * This is due to  a possible bug in ADIOI_PVFS2_OldWriteStrided() when
      * filetype is contiguous and buftype is non-contiguous.
-     * Fix: Add ROMIO hint to force ADIO driever to use POSIX I/O */
+     * Fix: Add ROMIO hint to force MPI-IO to use POSIX I/O driver */
     /* MPI_Info_set(info, "romio_pvfs2_posix_write", "enable"); */
 
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid); CHECK_ERR
-    MPI_Info_free(&info);
+    /* disable internal buffering for small non-blocking APIs */
+    MPI_Info_set(info, "nc_ibuf_size", "0");
 
-    /* define a 2D array */
-    err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimids[0]); CHECK_ERR
-    err = ncmpi_def_dim(ncid, "X", NX,    &dimids[1]); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimids, &varid); CHECK_ERR
-    err = ncmpi_enddef(ncid); CHECK_ERR
+    nerrs = tst_mode(filename, MODE_COLL,  MPI_INFO_NULL);
+    if (nerrs > 0) goto err_out;
 
-    /* initialize the contents of the array */
-    for (j=0; j<NY+1; j++) for (i=0; i<NX; i++) buf[j][i] = j;
+    nerrs = tst_mode(filename, MODE_INDEP, MPI_INFO_NULL);
+    if (nerrs > 0) goto err_out;
 
-    start[0] = 2*rank; start[1] = 0;
-    count[0] = 1;      count[1] = NX;
+    nerrs = tst_mode(filename, MODE_COLL, info);
+    if (nerrs > 0) goto err_out;
 
-    /* call nonblocking API */
-    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[1], &req[0]); CHECK_ERR
-
-    start[0] += 1;
-    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[0], &req[1]); CHECK_ERR
-
-    st[0] = st[1] = NC_NOERR;
-    err = ncmpi_wait_all(ncid, 2, req, st); CHECK_ERR
-    err = st[0]; CHECK_ERR
-    err = st[1]; CHECK_ERR
-
-    /* check if the contents of buf are altered */
-    for (j=0; j<NY; j++)
-        for (i=0; i<NX; i++)
-            if (buf[j][i] != j)
-                printf("Error at line %d in %s: buf[%d][%d]=%d != %d\n",
-                __LINE__,__FILE__,j,i,buf[j][i],j);
-
-    /* check if root process can write to file header in data mode */
-    err = ncmpi_rename_var(ncid, varid, "VAR"); CHECK_ERR
-
-    err = ncmpi_close(ncid); CHECK_ERR
-
-    /* open the same file and read back for validate */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
-                     &ncid); CHECK_ERR
-
-    err = ncmpi_inq_varid(ncid, "VAR", &varid); CHECK_ERR
-
-    /* initialize the contents of the array to a different value */
-    for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = -1;
-
-    /* read back variable */
-    start[0] = 2*rank; start[1] = 0;
-    count[0] = 2;      count[1] = NX;
-    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf[0]); CHECK_ERR
-
-    err = ncmpi_close(ncid); CHECK_ERR
-
-    /* check if the contents of buf are expected */
-    for (j=0; j<2; j++) {
-        int val = (j == 0) ? 1 : 0;
-        for (i=0; i<NX; i++)
-            if (buf[j][i] != val) {
-                printf("Unexpected read buf[%d][%d]=%d, should be %d\n",
-                       j,i,buf[j][i],val);
-                nerrs++;
-            }
-    }
+    nerrs = tst_mode(filename, MODE_INDEP, info);
+    if (nerrs > 0) goto err_out;
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -154,6 +211,9 @@ int main(int argc, char **argv) {
                    sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
+
+err_out:
+    MPI_Info_free(&info);
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {

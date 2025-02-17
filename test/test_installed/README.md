@@ -109,12 +109,6 @@ distribution. All test programs are designed to run on 4 MPI processes.
   cc -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib  test_fillvalue.o  testutils.o -lpnetcdf -o test_fillvalue
   cc -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -c ../testcases/test_get_varn.c
   cc -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib  test_get_varn.o  testutils.o -lpnetcdf -o test_get_varn
-  cc -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -c ../testcases/test_vard.c
-  cc -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib  test_vard.o  testutils.o -lpnetcdf -o test_vard
-  cc -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -c ../testcases/test_vard_multiple.c
-  cc -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib  test_vard_multiple.o  testutils.o -lpnetcdf -o test_vard_multiple
-  cc -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -c ../testcases/test_vard_rec.c
-  cc -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib  test_vard_rec.o  testutils.o -lpnetcdf -o test_vard_rec
   cc -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -c ../testcases/test_varm.c
   cc -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib  test_varm.o  testutils.o -lpnetcdf -o test_varm
   cc -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -c ../testcases/tst_def_var_fill.c
@@ -182,10 +176,6 @@ distribution. All test programs are designed to run on 4 MPI processes.
   cc -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib  transpose2D.o  testutils.o -lpnetcdf -o transpose2D
   cc -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -c ../../examples/C/transpose.c
   cc -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib  transpose.o  testutils.o -lpnetcdf -o transpose
-  cc -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -c ../../examples/C/vard_int.c
-  cc -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib  vard_int.o  testutils.o -lpnetcdf -o vard_int
-  cc -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -c ../../examples/C/vard_mvars.c
-  cc -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib  vard_mvars.o  testutils.o -lpnetcdf -o vard_mvars
   ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -c ../../examples/F77/block_cyclic.f -o block_cyclic.77o
   ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -o block_cyclic.exe77 block_cyclic.77o utils.o -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib -lpnetcdf
   ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -c ../../examples/F77/bput_varn_int8.f -o bput_varn_int8.77o
@@ -214,8 +204,6 @@ distribution. All test programs are designed to run on 4 MPI processes.
   ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -o time_var.exe77 time_var.77o utils.o -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib -lpnetcdf
   ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -c ../../examples/F77/transpose.f -o transpose.77o
   ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -o transpose.exe77 transpose.77o utils.o -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib -lpnetcdf
-  ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -c ../../examples/F77/vard_int.f -o vard_int.77o
-  ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -o vard_int.exe77 vard_int.77o utils.o -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib -lpnetcdf
   ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -c ../../examples/F90/block_cyclic.f90 -o block_cyclic.90o
   ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -o block_cyclic.exe90 block_cyclic.90o utils.o -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib -lpnetcdf
   ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -c ../../examples/F90/column_wise.f90 -o column_wise.90o
@@ -238,8 +226,6 @@ distribution. All test programs are designed to run on 4 MPI processes.
   ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -o put_varn_real.exe90 put_varn_real.90o utils.o -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib -lpnetcdf
   ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -c ../../examples/F90/transpose.f90 -o transpose.90o
   ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -o transpose.exe90 transpose.90o utils.o -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib -lpnetcdf
-  ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -c ../../examples/F90/vard_int.f90 -o vard_int.90o
-  ftn -I/opt/cray/pe/parallel-netcdf/1.12.3.1/include -I../common -w -fallow-argument-mismatch -o vard_int.exe90 vard_int.90o utils.o -L/opt/cray/pe/parallel-netcdf/1.12.3.1/lib -lpnetcdf
   ```
   </details>
 
@@ -298,9 +284,6 @@ distribution. All test programs are designed to run on 4 MPI processes.
   *** TESTING C   test_erange for checking for NC_ERANGE             ------ pass
   *** TESTING C   test_fillvalue for _FillValue for NC_GLOBAL        ------ pass
   *** TESTING C   test_get_varn for get_varn                         ------ pass
-  *** TESTING C   test_vard for vard put and get                     ------ pass
-  *** TESTING C   test_vard_multiple for vard to 2 variables         ------ pass
-  *** TESTING C   test_vard_rec for vard put on record var           ------ pass
   *** TESTING C   test_varm for get/put varm                         ------ pass
   *** TESTING C   tst_def_var_fill for def_var_fill                  ------ pass
   *** TESTING C   tst_dimsizes for defining max dimension sizes      ------ pass
@@ -336,8 +319,6 @@ distribution. All test programs are designed to run on 4 MPI processes.
   *** TESTING C   examples/C/time_var                                ------ pass
   *** TESTING C   examples/C/transpose2D                             ------ pass
   *** TESTING C   examples/C/transpose                               ------ pass
-  *** TESTING C   examples/C/vard_int                                ------ pass
-  *** TESTING C   examples/C/vard_mvars                              ------ pass
   *** TESTING F77 examples/F77/block_cyclic.exe77                    ------ pass
   *** TESTING F77 examples/F77/bput_varn_int8.exe77                  ------ pass
   *** TESTING F77 examples/F77/column_wise.exe77                     ------ pass
@@ -352,7 +333,6 @@ distribution. All test programs are designed to run on 4 MPI processes.
   *** TESTING F77 examples/F77/put_varn_real.exe77                   ------ pass
   *** TESTING F77 examples/F77/time_var.exe77                        ------ pass
   *** TESTING F77 examples/F77/transpose.exe77                       ------ pass
-  *** TESTING F77 examples/F77/vard_int.exe77                        ------ pass
   *** TESTING F90 examples/F90/block_cyclic.exe90                    ------ pass
   *** TESTING F90 examples/F90/column_wise.exe90                     ------ pass
   *** TESTING F90 examples/F90/fill_mode.exe90                       ------ pass
@@ -364,7 +344,6 @@ distribution. All test programs are designed to run on 4 MPI processes.
   *** TESTING F90 examples/F90/put_varn_int.exe90                    ------ pass
   *** TESTING F90 examples/F90/put_varn_real.exe90                   ------ pass
   *** TESTING F90 examples/F90/transpose.exe90                       ------ pass
-  *** TESTING F90 examples/F90/vard_int.exe90                        ------ pass
 
   Total number of tested programs: 105
 

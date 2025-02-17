@@ -75,11 +75,11 @@ main(int argc, char **argv)
        "has ascii_del_\x7f_in name",
        /* Invalid UTF-8 of various sorts, thanks to Markus Kuhn */
        "\xA0\xB0\xC0\xD0",
-       "xyz\x80", 		/* unexpected continuation bytes */
+       "xyz\x80",                 /* unexpected continuation bytes */
        "\x80xyz",
        "xyz\xBF",
        "\xBFxyz",
-       "\xC0xyz",		/* lonely start characters */
+       "\xC0xyz",                /* lonely start characters */
        "x\xC0yz",
        "xy\xC0z",
        "xyz\xC0",
@@ -125,7 +125,7 @@ main(int argc, char **argv)
        "x\xFDyz",
        "xy\xFDz",
        "xyz\xFD",
-       "\xC0\xC0xy",		/* last continuation byte missing */
+       "\xC0\xC0xy",                /* last continuation byte missing */
        "x\xC0\xC0y",
        "xy\xC0\xC0",
        "\xDF\xDFxy",
@@ -149,7 +149,7 @@ main(int argc, char **argv)
        "x\xFC\x80\x80\x80\x80",
        "\xFD\x80\x80\x80\x80x",
        "x\xFD\x80\x80\x80\x80",
-       "\xFExyz",		/* impossible bytes */
+       "\xFExyz",                /* impossible bytes */
        "x\xFEyz",
        "xy\xFEz",
        "xyz\xFE",
@@ -157,7 +157,7 @@ main(int argc, char **argv)
        "x\xFFyz",
        "xy\xFFz",
        "xyz\xFF",
-       "\xC0\xAFxy",		/* overlong sequences */
+       "\xC0\xAFxy",                /* overlong sequences */
        "x\xC0\xAFy",
        "xy\xC0\xAF",
        "\xE0\x80\xAFx",
@@ -179,7 +179,7 @@ main(int argc, char **argv)
        "x\xF8\x87\xBF\xBF\xBF",
        "\xFC\x83\xBF\xBF\xBF\xBFx",
        "x\xFC\x83\xBF\xBF\xBF\xBF",
-       "x\xC0\x80",		/* overlong NULs */
+       "x\xC0\x80",                /* overlong NULs */
        "x\xE0\x80\x80",
        "x\xF0\x80\x80\x80",
        "x\xF8\x80\x80\x80\x80",
@@ -202,7 +202,7 @@ main(int argc, char **argv)
        "x\xED\xAF\xBF\xED\xBF\xBF"
 #if 0
        /* The two below is legal since UTF8PROC_VERSION_MAJOR 2 */
-       "x\xEF\xBF\xBE",		/* other illegal code positions */
+       "x\xEF\xBF\xBE",                /* other illegal code positions */
        "x\xEF\xBF\xBF"
 #endif
    };
@@ -252,63 +252,66 @@ main(int argc, char **argv)
        printf("*** switching to netCDF %s format...", format_names[j]);
 #endif
        if((res = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|cmode[j], MPI_INFO_NULL, &ncid)))
-	   ERROR
+           ERROR
 
        /* Define dimensions, variables, and attributes with various
-	* acceptable names */
+        * acceptable names */
        for (i = 0; i < NUM_GOOD; i++) {
-	   if ((res = ncmpi_def_dim(ncid, valid[i], DIMLEN, &dimid)))
-	       ERRORI
+           if ((res = ncmpi_def_dim(ncid, valid[i], DIMLEN, &dimid)))
+               ERRORI
 
-	   dimids[i] = dimid;
-	   /* Define variable with same name */
-	   if ((res = ncmpi_def_var(ncid, valid[i], NC_FLOAT, NDIMS, &dimids[i], &varid)))
-	       ERRORI
-	   varids[i] = varid;
-	   /* Define variable and global attributes with same name and value */
-	   if ((res = ncmpi_put_att_text(ncid, varid, valid[i], strlen(valid[i]), valid[i])))
-	       ERRORI
-	   if ((res = ncmpi_put_att_double(ncid, NC_GLOBAL, valid[i], NC_DOUBLE, NATTVALS, attvals)))
-	       ERRORI
+           dimids[i] = dimid;
+           /* Define variable with same name */
+           if ((res = ncmpi_def_var(ncid, valid[i], NC_FLOAT, NDIMS, &dimids[i], &varid)))
+               ERRORI
+           if ((res = ncmpi_def_var_fill(ncid, varid, 0, NULL)))
+               ERRORI
+
+           varids[i] = varid;
+           /* Define variable and global attributes with same name and value */
+           if ((res = ncmpi_put_att_text(ncid, varid, valid[i], strlen(valid[i]), valid[i])))
+               ERRORI
+           if ((res = ncmpi_put_att_double(ncid, NC_GLOBAL, valid[i], NC_DOUBLE, NATTVALS, attvals)))
+               ERRORI
        }
 
        /* Try defining dimensions, variables, and attributes with various
-	* bad names and make sure these are rejected */
+        * bad names and make sure these are rejected */
        for (i = 0; i < NUM_BAD; i++) {
-	   if ((res = ncmpi_def_dim(ncid, notvalid[i], DIMLEN, &dimid)) != NC_EBADNAME)
+           if ((res = ncmpi_def_dim(ncid, notvalid[i], DIMLEN, &dimid)) != NC_EBADNAME)
                ERRORI
-	   if ((res = ncmpi_def_var(ncid, notvalid[i], NC_FLOAT, NDIMS, dimids, &varid)) != NC_EBADNAME)
+           if ((res = ncmpi_def_var(ncid, notvalid[i], NC_FLOAT, NDIMS, dimids, &varid)) != NC_EBADNAME)
                ERRORI
-	   if ((res = ncmpi_put_att_text(ncid, varid, notvalid[i], strlen(attstring), attstring)) != NC_EBADNAME)
+           if ((res = ncmpi_put_att_text(ncid, varid, notvalid[i], strlen(attstring), attstring)) != NC_EBADNAME)
                ERRORI
-	   if ((res = ncmpi_put_att_double(ncid, NC_GLOBAL, notvalid[i], NC_DOUBLE, NATTVALS, attvals)) != NC_EBADNAME)
+           if ((res = ncmpi_put_att_double(ncid, NC_GLOBAL, notvalid[i], NC_DOUBLE, NATTVALS, attvals)) != NC_EBADNAME)
                ERRORI
        }
        if ((res = ncmpi_enddef(ncid)))
-	   ERROR
+           ERROR
        if ((res = ncmpi_close(ncid)))
-	   ERROR
+           ERROR
 
        /* Check it out, make sure all objects with good names were defined OK */
        if ((res = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid)))
-	   ERROR
+           ERROR
        for (i = 0; i < NUM_GOOD; i++) {
-	   MPI_Offset attlen;
-	   if ((res = ncmpi_inq_dimid(ncid, valid[i], &dimid)) || dimid != dimids[i])
-	       ERRORI
-	   if ((res = ncmpi_inq_varid(ncid, valid[i], &varid)) || varid != varids[i])
-	       ERRORI
-	   res = ncmpi_inq_attlen(ncid, varid, valid[i], &attlen);
-	   if ((res = ncmpi_get_att_text(ncid, varid, valid[i], attstr_in)))
-	       ERRORI
-	   attstr_in[attlen] = '\0';
-	   if (strcmp(valid[i], attstr_in) != 0)
-	       ERRORI
-	   if ((res = ncmpi_get_att_double(ncid, NC_GLOBAL, valid[i], attvals_in)) || attvals[0] != attvals_in[0])
-	       ERRORI
+           MPI_Offset attlen;
+           if ((res = ncmpi_inq_dimid(ncid, valid[i], &dimid)) || dimid != dimids[i])
+               ERRORI
+           if ((res = ncmpi_inq_varid(ncid, valid[i], &varid)) || varid != varids[i])
+               ERRORI
+           res = ncmpi_inq_attlen(ncid, varid, valid[i], &attlen);
+           if ((res = ncmpi_get_att_text(ncid, varid, valid[i], attstr_in)))
+               ERRORI
+           attstr_in[attlen] = '\0';
+           if (strcmp(valid[i], attstr_in) != 0)
+               ERRORI
+           if ((res = ncmpi_get_att_double(ncid, NC_GLOBAL, valid[i], attvals_in)) || attvals[0] != attvals_in[0])
+               ERRORI
        }
        if ((res = ncmpi_close(ncid)))
-	   ERROR
+           ERROR
    }
 
     /* check if PnetCDF freed all internal malloc */

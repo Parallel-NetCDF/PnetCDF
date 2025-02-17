@@ -58,8 +58,8 @@ NcmpiEnumType::NcmpiEnumType(const NcmpiGroup& grp, const string& name):
 
 
 // constructor
-NcmpiEnumType::NcmpiEnumType(const NcmpiType& ncmpiType):
-  NcmpiType(ncmpiType)
+NcmpiEnumType::NcmpiEnumType(const NcmpiType& xType):
+  NcmpiType(xType)
 {
   // check the nctype object is the base of an Enum type
   if(getTypeClass() != NC_ENUM) throw NcmpiException("The NcmpiType object must be the base of an Enum type.",__FILE__,__LINE__);

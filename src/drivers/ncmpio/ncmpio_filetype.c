@@ -506,6 +506,9 @@ ncmpio_filetype_create_vars(const NC         *ncp,
     MPI_Offset    i, nblocks, nelems, *blocklens;
     MPI_Datatype  filetype=MPI_BYTE;
 
+/* This is no longer used, as all requests go to INA subroutines to flatten. */
+assert(0);
+
     if (stride == NULL)
         return filetype_create_vara(ncp, varp, start, count, offset_ptr,
                                     filetype_ptr, is_filetype_contig);
@@ -604,107 +607,5 @@ ncmpio_filetype_create_vars(const NC         *ncp,
     }
 
     return err;
-}
-
-/*----< ncmpio_file_set_view() >---------------------------------------------*/
-/* This function handles the special case for root process for setting its
- * file view: to keeps the whole file header visible to the root process. This
- * is because the root process may update the number of records or attributes
- * into the file header while in data mode. In PnetCDF design, only root
- * process can read/write the file header.
- * This function is collective if called in collective data mode
- */
-int
-ncmpio_file_set_view(const NC     *ncp,
-                     MPI_File      fh,
-                     MPI_Offset   *offset,  /* IN/OUT */
-                     MPI_Datatype  filetype)
-{
-    char *mpi_name;
-    int err, mpireturn, status=NC_NOERR;
-
-    if (filetype == MPI_BYTE) {
-        /* filetype is a contiguous space, make the whole file visible */
-        TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, MPI_BYTE,
-                                     "native", MPI_INFO_NULL));
-        return NC_NOERR;
-    }
-
-    if (ncp->rank == 0) {
-        /* prepend the whole file header to filetype */
-        MPI_Datatype root_filetype=MPI_BYTE, ftypes[2];
-#ifdef HAVE_MPI_LARGE_COUNT
-        MPI_Count blocklens[2];
-        MPI_Count disps[2];
-        blocklens[0] = ncp->begin_var;
-#else
-        int blocklens[2];
-        MPI_Aint disps[2];
-
-        /* check if header size > 2^31 */
-        if (ncp->begin_var > NC_MAX_INT) {
-            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW);
-            goto err_out;
-        }
-
-        blocklens[0] = (int)ncp->begin_var;
-#endif
-
-        /* first block is the header extent */
-            disps[0] = 0;
-           ftypes[0] = MPI_BYTE;
-
-        /* second block is filetype, the subarray request(s) to the variable */
-        blocklens[1] = 1;
-            disps[1] = *offset;
-           ftypes[1] = filetype;
-
-#if !defined(HAVE_MPI_LARGE_COUNT) && (SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET)
-        if (*offset > NC_MAX_INT) {
-            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW);
-            goto err_out;
-        }
-#endif
-
-#ifdef HAVE_MPI_LARGE_COUNT
-        mpireturn = MPI_Type_create_struct_c(2, blocklens, disps, ftypes,
-                                             &root_filetype);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_struct_c");
-            if (status == NC_NOERR) status = err;
-        }
-#else
-        mpireturn = MPI_Type_create_struct(2, blocklens, disps, ftypes,
-                                           &root_filetype);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_struct");
-            if (status == NC_NOERR) status = err;
-        }
-#endif
-        MPI_Type_commit(&root_filetype);
-
-#ifndef HAVE_MPI_LARGE_COUNT
-err_out:
-#endif
-        TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, root_filetype, "native",
-                                     MPI_INFO_NULL));
-        if (root_filetype != MPI_BYTE)
-            MPI_Type_free(&root_filetype);
-
-        /* now update the explicit offset to be used in MPI-IO call later */
-        *offset = ncp->begin_var;
-    }
-    else {
-        TRACE_IO(MPI_File_set_view, (fh, *offset, MPI_BYTE, filetype, "native",
-                                     MPI_INFO_NULL));
-        /* the explicit offset is already set in fileview */
-        *offset = 0;
-    }
-    if (mpireturn != MPI_SUCCESS) {
-        err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-        if (status == NC_NOERR) status = err;
-    }
-
-    return status;
 }
 

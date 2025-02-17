@@ -63,6 +63,7 @@
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
 
           ! take filename from command-line argument if there is any
+          cmd = ' '
           if (rank .EQ. 0) then
               filename = 'testfile.nc'
               err = get_args(cmd, filename)
@@ -109,34 +110,38 @@
           call check(err, 'In nfmpi_put_att_int8: ')
 
           ! define a variable of an integer array of size 3 in the nc file
-          err = nfmpi_def_dim(ncid, 'X', 3_MPI_OFFSET_KIND, dimid(1))
-          call check(err, 'In nfmpi_def_dim: ')
+          err = nf90mpi_def_dim(ncid, 'X', 3_MPI_OFFSET_KIND, dimid(1))
+          call check(err, 'In nf90mpi_def_dim: ')
 
-          err = nfmpi_def_var(ncid, 'var', NF90_INT, 1, dimid, varid)
-          call check(err, 'In nfmpi_def_var: ')
+          err = nf90mpi_def_var(ncid, 'var', NF90_INT, dimid, varid)
+          call check(err, 'In nf90mpi_def_var: ')
 
-          err = nfmpi_enddef(ncid)
-          call check(err, 'In nfmpi_enddef: ')
+          ! fill with default fill value
+          err = nf90mpi_def_var_fill(ncid, varid, 0, NF90_FILL_INT)
+          call check(err, 'In nf90mpi_def_var_fill: ')
+
+          err = nf90mpi_enddef(ncid)
+          call check(err, 'In nf90mpi_enddef: ')
 
           ! bufsize must be max of data type converted before and after
           bufsize = 3*4
-          err = nfmpi_buffer_attach(ncid, bufsize)
-          call check(err, 'In nfmpi_buffer_attach: ')
+          err = nf90mpi_buffer_attach(ncid, bufsize)
+          call check(err, 'In nf90mpi_buffer_attach: ')
 
           start(1) = 1
           count(1) = 3
-          err = nfmpi_bput_vara_int(ncid, varid, start, count, ibuf, req(1))
+          err = nfmpi_bput_vara_int(ncid, varid, start, count, ibuf(1:), req(1))
           call check(err, 'In nfmpi_bput_vara_int: ')
 
-          err = nfmpi_wait_all(ncid, 1, req, status)
-          call check(err, 'In nfmpi_wait_all: ')
+          err = nf90mpi_wait_all(ncid, 1, req, status)
+          call check(err, 'In nf90mpi_wait_all: ')
 
           if (status(1) .ne. NF90_NOERR) then
-              print*,'Error at bput status ', nfmpi_strerror(status(1))
+              print*,'Error at bput status ', nf90mpi_strerror(status(1))
           endif
 
-          err = nfmpi_buffer_detach(ncid)
-          call check(err, 'In nfmpi_buffer_detach: ')
+          err = nf90mpi_buffer_detach(ncid)
+          call check(err, 'In nf90mpi_buffer_detach: ')
 
           ! close the file
           err = nf90mpi_close(ncid)
