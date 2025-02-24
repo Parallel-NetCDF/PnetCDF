@@ -17,7 +17,7 @@
 
 #define LEN_NAME 101
 
-#define USE_PNETCDF
+// #define USE_PNETCDF
 
 #ifdef USE_PNETCDF
 #include <pnetcdf.h>
@@ -125,7 +125,6 @@ int main(int argc, char **argv)
     ADD_DIM(num_side_ss17, 24540);
     ADD_DIM(num_side_ss21, 36);
     ADD_DIM(num_side_ss25, 1894);
-    ADD_DIM(num_elem_maps, 1);
 
     /* define variables */
     ADD_VAR_3D(qa_records, NC_CHAR, num_qa_rec, four, len_string);
@@ -167,11 +166,6 @@ int main(int argc, char **argv)
     ADD_VAR_1D(side_ss21, NC_INT, num_side_ss21) ;
     ADD_VAR_1D(elem_ss25, NC_INT, num_side_ss25) ;
     ADD_VAR_1D(side_ss25, NC_INT, num_side_ss25) ;
-    ADD_VAR_1D(em_prop1, NC_INT, num_elem_maps) ;
-    err = PUT_ATTR_TEXT(ncid, em_prop1_v, "name", 2, "ID"); CHECK_ERR
-    ADD_VAR_2D(emap_names, NC_CHAR, num_elem_maps, len_name) ;
-    err = PUT_ATTR_TEXT(ncid, emap_names_v, "_FillValue", 1, "\0"); CHECK_ERR
-    ADD_VAR_1D(elem_map1, NC_INT, num_elem) ;
 
     err = ENDDEF(ncid); CHECK_ERR
 
@@ -183,16 +177,6 @@ int main(int argc, char **argv)
     strcpy(ptr, "block_1_fluid");
     err = PUT_TEXT(ncid, eb_names_v, buf); CHECK_ERR
     free(buf);
-
-    /* add a global attribute to grow header */
-    err = REDEF(ncid); CHECK_ERR
-
-    char *attr = (char*) calloc(512, 1);
-    err = PUT_ATTR_TEXT(ncid, NC_GLOBAL, "attr", 512, attr);
-    CHECK_ERR
-    free(attr);
-
-    err = ENDDEF(ncid); CHECK_ERR
 
     /* write variable ss_names */
     buf = (char*) calloc(num_side_sets * LEN_NAME, 1);
@@ -224,6 +208,24 @@ int main(int argc, char **argv)
     strcpy(ptr, "surface_air_fluid");
     err = PUT_TEXT(ncid, ss_names_v, buf); CHECK_ERR
     free(buf);
+
+    /* add more metadata */
+    err = REDEF(ncid); CHECK_ERR
+
+    /* add a global attribute to grow header */
+    char *attr = (char*) calloc(512, 1);
+    err = PUT_ATTR_TEXT(ncid, NC_GLOBAL, "attr", 512, attr);
+    CHECK_ERR
+    free(attr);
+
+    ADD_DIM(num_elem_maps, 1);
+    ADD_VAR_1D(em_prop1, NC_INT, num_elem_maps) ;
+    err = PUT_ATTR_TEXT(ncid, em_prop1_v, "name", 2, "ID"); CHECK_ERR
+    ADD_VAR_2D(emap_names, NC_CHAR, num_elem_maps, len_name) ;
+    err = PUT_ATTR_TEXT(ncid, emap_names_v, "_FillValue", 1, "\0"); CHECK_ERR
+    ADD_VAR_1D(elem_map1, NC_INT, num_elem) ;
+
+    err = ENDDEF(ncid); CHECK_ERR
 
     /* add aother global attribute to grow header */
     err = REDEF(ncid); CHECK_ERR
