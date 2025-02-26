@@ -76,8 +76,9 @@ tst_fmt(char *filename, int cmode)
             for (j=0; j<3; j++) buf[j]='a'+j;
             err = ncmpi_put_att_text(ncid, NC_GLOBAL, attr_name[i], 3, buf); CHECK_ERR
         }
-        else
+        else {
             err = ncmpi_put_att(ncid, NC_GLOBAL, attr_name[i], i, 3, buf); CHECK_ERR
+        }
         ATTR_EXP_ERR(NC_NOERR, attr_name[i])
 
         err = ncmpi_close(ncid); CHECK_ERR
