@@ -167,8 +167,9 @@ tst_atts3(char *filename, int cmode)
 
       /* Create a file with some global atts. */
       err=ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL,&ncid); ERR
-      for (j = 0; j < NUM_SIMPLE_ATTS; j++)
+      for (j = 0; j < NUM_SIMPLE_ATTS; j++) {
          err=ncmpi_put_att_int(ncid, NC_GLOBAL, name[j], NC_INT, 0, NULL); ERR
+      }
       err=ncmpi_close(ncid); ERR
 
       /* Reopen the file and check the order. */
