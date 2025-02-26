@@ -94,7 +94,7 @@ tst_att_ordering(char *filename, int cmode)
 {
    int ncid, err, nerrs=0;
    char name[NUM_ATTS][ATT_MAX_NAME + 1] = {"Gc", "Gb", "Gs", "Gi", "Gf",
-					    "Gd", "Gatt-name-dashes", "Gatt.name.dots"};
+                                            "Gd", "Gatt-name-dashes", "Gatt.name.dots"};
    int len[NUM_ATTS] = {0, 2, 3, 3, 3, 3, 1, 1};
    signed char b[2] = {-128, 127};
    short s[3] = {-32768, 0, 32767};
@@ -161,22 +161,22 @@ tst_atts3(char *filename, int cmode)
    {
       int ncid;
       char name[NUM_SIMPLE_ATTS][ATT_MAX_NAME + 1] = {"Gc", "Gb", "Gs", "Gi", "Gf",
-						      "Gd", "G7", "G8", "G9"};
+                                                      "Gd", "G7", "G8", "G9"};
       char name_in[NC_MAX_NAME];
       int j;
 
       /* Create a file with some global atts. */
       err=ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL,&ncid); ERR
       for (j = 0; j < NUM_SIMPLE_ATTS; j++)
-	 err=ncmpi_put_att_int(ncid, NC_GLOBAL, name[j], NC_INT, 0, NULL); ERR
+         err=ncmpi_put_att_int(ncid, NC_GLOBAL, name[j], NC_INT, 0, NULL); ERR
       err=ncmpi_close(ncid); ERR
 
       /* Reopen the file and check the order. */
       err=ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
       for (j = 0; j < NUM_SIMPLE_ATTS; j++)
       {
-	 err=ncmpi_inq_attname(ncid, NC_GLOBAL, j, name_in); ERR
-	 if (strcmp(name_in, name[j])) ERRV
+         err=ncmpi_inq_attname(ncid, NC_GLOBAL, j, name_in); ERR
+         if (strcmp(name_in, name[j])) ERRV
       }
 
       /* Close up shop. */
@@ -200,14 +200,14 @@ tst_atts3(char *filename, int cmode)
        * out-of-range values */
       if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_INT_NAME, uchar_in)) != NC_ERANGE) ERR
       for (i = 0; i < ATT_LEN; i++) {
-	if (i == 0 || i == 2) continue;
-	if (uchar_in[i] != (unsigned char) int_out[i]) ERRV
+        if (i == 0 || i == 2) continue;
+        if (uchar_in[i] != (unsigned char) int_out[i]) ERRV
       }
 
       /* This was bug NCF-171: on 32-bit platforms, bad values returned */
       err=ncmpi_get_att_longlong(ncid, NC_GLOBAL, ATT_INT_NAME, longlong_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-      	if (longlong_in[i] != (long long) int_out[i]) ERRV
+              if (longlong_in[i] != (long long) int_out[i]) ERRV
       err=ncmpi_close(ncid); ERR
 
       /* Create a file with a global attribute of each type. */
@@ -234,19 +234,19 @@ tst_atts3(char *filename, int cmode)
       /* Check numeric values. */
       err=ncmpi_get_att_schar(ncid, NC_GLOBAL, ATT_SCHAR_NAME, schar_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (schar_in[i] != schar_out[i]) ERRV
+         if (schar_in[i] != schar_out[i]) ERRV
       err=ncmpi_get_att_short(ncid, NC_GLOBAL, ATT_SHORT_NAME, short_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (short_in[i] != short_out[i]) ERRV
+         if (short_in[i] != short_out[i]) ERRV
       err=ncmpi_get_att_int(ncid, NC_GLOBAL, ATT_INT_NAME, int_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (int_in[i] != int_out[i]) ERRV
+         if (int_in[i] != int_out[i]) ERRV
       err=ncmpi_get_att_float(ncid, NC_GLOBAL, ATT_FLOAT_NAME, float_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (float_in[i] != float_out[i]) ERRV
+         if (float_in[i] != float_out[i]) ERRV
       err=ncmpi_get_att_double(ncid, NC_GLOBAL, ATT_DOUBLE_NAME, double_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (double_in[i] != double_out[i]) ERRV
+         if (double_in[i] != double_out[i]) ERRV
       err=ncmpi_close(ncid); ERR
    }
    if (verbose) printf("ok\n");
@@ -268,139 +268,139 @@ tst_atts3(char *filename, int cmode)
       /* Read all atts (except text) as double. */
       err=ncmpi_get_att_double(ncid, NC_GLOBAL, ATT_SCHAR_NAME, double_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (double_in[i] != schar_out[i]) ERRV
+         if (double_in[i] != schar_out[i]) ERRV
       err=ncmpi_get_att_double(ncid, NC_GLOBAL, ATT_SHORT_NAME, double_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (double_in[i] != short_out[i]) ERRV
+         if (double_in[i] != short_out[i]) ERRV
       err=ncmpi_get_att_double(ncid, NC_GLOBAL, ATT_INT_NAME, double_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (double_in[i] != int_out[i]) ERRV
+         if (double_in[i] != int_out[i]) ERRV
       err=ncmpi_get_att_double(ncid, NC_GLOBAL, ATT_FLOAT_NAME, double_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (double_in[i] != float_out[i]) ERRV
+         if (double_in[i] != float_out[i]) ERRV
       err=ncmpi_get_att_double(ncid, NC_GLOBAL, ATT_DOUBLE_NAME, double_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (double_in[i] != double_out[i]) ERRV
+         if (double_in[i] != double_out[i]) ERRV
 
       /* Read all atts (except text) as float. */
       err=ncmpi_get_att_float(ncid, NC_GLOBAL, ATT_SCHAR_NAME, float_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (float_in[i] != schar_out[i]) ERRV
+         if (float_in[i] != schar_out[i]) ERRV
       err=ncmpi_get_att_float(ncid, NC_GLOBAL, ATT_SHORT_NAME, float_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (float_in[i] != short_out[i]) ERRV
+         if (float_in[i] != short_out[i]) ERRV
       err=ncmpi_get_att_float(ncid, NC_GLOBAL, ATT_INT_NAME, float_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (float_in[i] != int_out[i]) ERRV
+         if (float_in[i] != int_out[i]) ERRV
       err=ncmpi_get_att_float(ncid, NC_GLOBAL, ATT_FLOAT_NAME, float_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (float_in[i] != float_out[i]) ERRV
+         if (float_in[i] != float_out[i]) ERRV
       err=ncmpi_get_att_float(ncid, NC_GLOBAL, ATT_DOUBLE_NAME, float_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	  if (float_in[i] != (float) double_out[i]) ERRV
+          if (float_in[i] != (float) double_out[i]) ERRV
 
       /* Read all atts (except text) as int. */
       err=ncmpi_get_att_int(ncid, NC_GLOBAL, ATT_SCHAR_NAME, int_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (int_in[i] != schar_out[i]) ERRV
+         if (int_in[i] != schar_out[i]) ERRV
       err=ncmpi_get_att_int(ncid, NC_GLOBAL, ATT_SHORT_NAME, int_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (int_in[i] != short_out[i]) ERRV
+         if (int_in[i] != short_out[i]) ERRV
       err=ncmpi_get_att_int(ncid, NC_GLOBAL, ATT_INT_NAME, int_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (int_in[i] != int_out[i]) ERRV
+         if (int_in[i] != int_out[i]) ERRV
       err=ncmpi_get_att_int(ncid, NC_GLOBAL, ATT_FLOAT_NAME, int_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	  if (int_in[i] != (int) float_out[i]) ERRV
+          if (int_in[i] != (int) float_out[i]) ERRV
       err=ncmpi_get_att_int(ncid, NC_GLOBAL, ATT_DOUBLE_NAME, int_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	  if (int_in[i] != (int) double_out[i]) ERRV
+          if (int_in[i] != (int) double_out[i]) ERRV
 
       /* Read all atts (except text) as short. */
       err=ncmpi_get_att_short(ncid, NC_GLOBAL, ATT_SCHAR_NAME, short_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (short_in[i] != schar_out[i]) ERRV
+         if (short_in[i] != schar_out[i]) ERRV
       err=ncmpi_get_att_short(ncid, NC_GLOBAL, ATT_SHORT_NAME, short_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (short_in[i] != short_out[i]) ERRV
+         if (short_in[i] != short_out[i]) ERRV
       if ((err=ncmpi_get_att_short(ncid, NC_GLOBAL, ATT_INT_NAME, short_in)) != NC_ERANGE) ERR
       for (i = 0; i < ATT_LEN; i++) {
           if (i == 0 || i == 2) continue;
-	  if (short_in[i] != (short) int_out[i]) ERRV
+          if (short_in[i] != (short) int_out[i]) ERRV
       }
       err=ncmpi_get_att_short(ncid, NC_GLOBAL, ATT_FLOAT_NAME, short_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	  if (short_in[i] != (short) float_out[i]) ERRV
+          if (short_in[i] != (short) float_out[i]) ERRV
       err=ncmpi_get_att_short(ncid, NC_GLOBAL, ATT_DOUBLE_NAME, short_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	  if (short_in[i] != (short) double_out[i]) ERRV
+          if (short_in[i] != (short) double_out[i]) ERRV
 
       /* Read all atts (except text) as schar. */
       err=ncmpi_get_att_schar(ncid, NC_GLOBAL, ATT_SCHAR_NAME, schar_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (schar_in[i] != schar_out[i]) ERRV
+         if (schar_in[i] != schar_out[i]) ERRV
       if ((err=ncmpi_get_att_schar(ncid, NC_GLOBAL, ATT_SHORT_NAME, schar_in)) != NC_ERANGE) ERR
       for (i = 0; i < ATT_LEN; i++) {
          if (i == 0 || i == 2) continue;
-	 if (schar_in[i] != (signed char) short_out[i]) ERRV
+         if (schar_in[i] != (signed char) short_out[i]) ERRV
       }
       if ((err=ncmpi_get_att_schar(ncid, NC_GLOBAL, ATT_INT_NAME, schar_in)) != NC_ERANGE) ERR
       for (i = 0; i < ATT_LEN; i++) {
-	 if (i == 0 || i == 2) continue; /* int_out[0] and int_out[2] are out of schar range */
-	 if (schar_in[i] != (signed char) int_out[i]) ERRV
+         if (i == 0 || i == 2) continue; /* int_out[0] and int_out[2] are out of schar range */
+         if (schar_in[i] != (signed char) int_out[i]) ERRV
       }
       err=ncmpi_get_att_schar(ncid, NC_GLOBAL, ATT_FLOAT_NAME, schar_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (schar_in[i] != (signed char) float_out[i]) ERRV
+         if (schar_in[i] != (signed char) float_out[i]) ERRV
       err=ncmpi_get_att_schar(ncid, NC_GLOBAL, ATT_DOUBLE_NAME, schar_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (schar_in[i] != (signed char) double_out[i]) ERRV
+         if (schar_in[i] != (signed char) double_out[i]) ERRV
 
       /* Read all atts (except text) as uchar. */
       if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_SCHAR_NAME, uchar_in)) != NC_ERANGE) ERR
       for (i = 0; i < ATT_LEN; i++) {
-	 if (i == 0) continue; /* skip schar_out[0]=NC_MIN_BYTE as it causes NC_ERANGE */
-	 if (uchar_in[i] != (unsigned char) schar_out[i]) ERRV
+         if (i == 0) continue; /* skip schar_out[0]=NC_MIN_BYTE as it causes NC_ERANGE */
+         if (uchar_in[i] != (unsigned char) schar_out[i]) ERRV
       }
       if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_SHORT_NAME, uchar_in)) != NC_ERANGE) ERR
 /*
       for (i = 0; i < ATT_LEN; i++)
-	 if (uchar_in[i] != (unsigned char) short_out[i]) ERRV
+         if (uchar_in[i] != (unsigned char) short_out[i]) ERRV
 */
       if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_INT_NAME, uchar_in)) != NC_ERANGE) ERR
       for (i = 0; i < ATT_LEN; i++) {
-	 if (i == 0 || i == 2) continue;
-	 if (uchar_in[i] != (unsigned char) int_out[i]) ERRV
+         if (i == 0 || i == 2) continue;
+         if (uchar_in[i] != (unsigned char) int_out[i]) ERRV
       }
       if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_FLOAT_NAME, uchar_in)) != NC_ERANGE) ERR
       for (i = 0; i < ATT_LEN; i++) {
-	 if (i == 0) continue;
-	 if (uchar_in[i] != (unsigned char) float_out[i]) ERRV
+         if (i == 0) continue;
+         if (uchar_in[i] != (unsigned char) float_out[i]) ERRV
       }
       if ((err=ncmpi_get_att_uchar(ncid, NC_GLOBAL, ATT_DOUBLE_NAME, uchar_in)) != NC_ERANGE) ERR
       for (i = 0; i < ATT_LEN; i++) {
-	 if (i == 0) continue;
-	 if (uchar_in[i] != (unsigned char) double_out[i]) ERRV
+         if (i == 0) continue;
+         if (uchar_in[i] != (unsigned char) double_out[i]) ERRV
       }
 
       /* Read all atts (except text) into long long variable. */
       err=ncmpi_get_att_longlong(ncid, NC_GLOBAL, ATT_SCHAR_NAME, longlong_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (longlong_in[i] != schar_out[i]) ERRV
+         if (longlong_in[i] != schar_out[i]) ERRV
       err=ncmpi_get_att_longlong(ncid, NC_GLOBAL, ATT_SHORT_NAME, longlong_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (longlong_in[i] != short_out[i]) ERRV
+         if (longlong_in[i] != short_out[i]) ERRV
       err=ncmpi_get_att_longlong(ncid, NC_GLOBAL, ATT_INT_NAME, longlong_in); ERR
       /* This was bug NCF-171: on 32-bit platforms, bad values returned */
       err=ncmpi_get_att_longlong(ncid, NC_GLOBAL, ATT_INT_NAME, longlong_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-      	if (longlong_in[i] != (long long) int_out[i]) ERRV
+              if (longlong_in[i] != (long long) int_out[i]) ERRV
       err=ncmpi_get_att_longlong(ncid, NC_GLOBAL, ATT_FLOAT_NAME, longlong_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (longlong_in[i] != (long long)float_out[i]) ERRV
+         if (longlong_in[i] != (long long)float_out[i]) ERRV
       err=ncmpi_get_att_longlong(ncid, NC_GLOBAL, ATT_DOUBLE_NAME, longlong_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (longlong_in[i] != (long long)double_out[i]) ERRV
+         if (longlong_in[i] != (long long)double_out[i]) ERRV
 
       err=ncmpi_close(ncid); ERR
    }
@@ -738,19 +738,19 @@ tst_atts3(char *filename, int cmode)
       /* Check numeric values. */
       err=ncmpi_get_att_schar(ncid, NC_GLOBAL, ATT_SCHAR_NAME, schar_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (schar_in[i] != schar_out[i]) ERRV
+         if (schar_in[i] != schar_out[i]) ERRV
       err=ncmpi_get_att_short(ncid, NC_GLOBAL, ATT_SHORT_NAME, short_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (short_in[i] != short_out[i]) ERRV
+         if (short_in[i] != short_out[i]) ERRV
       err=ncmpi_get_att_int(ncid, NC_GLOBAL, ATT_INT_NAME, int_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (int_in[i] != int_out[i]) ERRV
+         if (int_in[i] != int_out[i]) ERRV
       err=ncmpi_get_att_float(ncid, NC_GLOBAL, ATT_FLOAT_NAME, float_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (float_in[i] != float_out[i]) ERRV
+         if (float_in[i] != float_out[i]) ERRV
       err=ncmpi_get_att_double(ncid, NC_GLOBAL, ATT_DOUBLE_NAME, double_in); ERR
       for (i = 0; i < ATT_LEN; i++)
-	 if (double_in[i] != double_out[i]) ERRV
+         if (double_in[i] != double_out[i]) ERRV
       err=ncmpi_close(ncid); ERR
    }
    if (verbose) printf("ok\n");
