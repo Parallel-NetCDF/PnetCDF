@@ -1,5 +1,14 @@
 ## Utility Programs
 
+* [ncmpidiff](#ncmpidiff)
+* [cdfdiff](#cdfdiff)
+* [ncmpidump](#ncmpidump)
+* [ncmpigen](#ncmpigen)
+* [ncoffsets](#ncoffsets)
+* [ncvalidator](#ncvalidator)
+* [pnetcdf-config](#pnetcdf-config)
+* [pnetcdf_version](#pnetcdf_version)
+
 ### ncmpidiff
 <ul>
   <li> An MPI program runs in parallel to compare the contents of the two files and
