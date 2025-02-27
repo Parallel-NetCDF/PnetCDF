@@ -58,41 +58,44 @@ Print the file offset information for all variables in a netCDF file.
 % ncoffsets -sg testfile.nc
 .nf
 netcdf testfile.nc {
-//file format: CDF-1
+// File format: CDF-1
+// Number of dimensions: 4
+// Number of variables: 4
+// Number of global attributes: 0
 
 file header:
-	size   = 340 bytes
-	extent = 340 bytes
+    size   = 256 bytes
+    extent = 512 bytes
 
 dimensions:
-	x = 100
-	y = 100
-	z = 100
-	time = UNLIMITED // (100 currently)
+    time = UNLIMITED // (101 currently)
+    Z = 100
+    Y = 100
+    X = 100
 
 fixed-size variables:
-	double square(x, y):
-	       start file offset =         340
-	       end   file offset =       80340
-	       size in bytes     =       80000
-	       gap from prev var =           0
-	double cube(x, y, z):
-	       start file offset =       80340
-	       end   file offset =     8080340
-	       size in bytes     =     8000000
-	       gap from prev var =           0
+    float  square(Y, X):
+           start file offset =         512
+           end   file offset =       40512
+           size in bytes     =       40000
+           gap from prev var =         256
+    double cube(Z, Y, X):
+           start file offset =       40512
+           end   file offset =     8040512
+           size in bytes     =     8000000
+           gap from prev var =           0
 
 record variables:
-	double time(time):
-	       start file offset =     8080340    (record 0)
-	       end   file offset =     8081140    (record 0)
-	       size in bytes     =           8    (of one record)
-	       gap from prev var =           0
-	double xytime(time, x, y):
-	       start file offset =     8080348    (record 0)
-	       end   file offset =    16080348    (record 0)
-	       size in bytes     =       80000    (of one record)
-	       gap from prev var =           0
+    double time(time):
+           start file offset =     8040512    (0th record)
+           end   file offset =     8040520    (0th record)
+           size in bytes     =           8    (of one record)
+           gap from prev var =           0
+    float  rec_var(time, Z, Y, X):
+           start file offset =     8040520    (0th record)
+           end   file offset =    12040520    (0th record)
+           size in bytes     =     4000000    (of one record)
+           gap from prev var =           0
 }
 .LP
 Check if there are gaps in between two adjacent fixed-size variables.
