@@ -262,7 +262,6 @@ int ncmpio_subfile_partition(NC *ncp)
     /* NOTE: the following "for loop" should be before NC_begins() */
 
     /* adjust the hints to be used by PnetCDF; use the same value in master */
-    ncp->ncp_sf->h_align = ncp->h_align;
     ncp->ncp_sf->v_align = ncp->v_align;
     ncp->ncp_sf->r_align = ncp->r_align;
 
