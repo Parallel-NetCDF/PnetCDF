@@ -90,6 +90,42 @@ This is essentially a placeholder for the next release note ...
 * Issues related to Darshan library:
   + none
 
+* Update of PnetCDF hints
+  + There are three ways in PnetCDF for user to set hints to adjust file header
+    extent size:
+    1. through setting hints `nc_header_align_size`, `nc_var_align_size`, and
+       `nc_record_align_size` in in the environment variable `PNETCDF_HINTS`.
+    2. through arguments `h_minfree`, `v_align`, `v_minfree`, and `r_align` of
+       `ncmpi__enddef()`.
+    3. through setting hints `nc_header_align_size`, `nc_var_align_size`, and
+       `nc_record_align_size` in an MPI info object and passing it to calls
+       of `ncmpi_create()` and `ncmpi_open()`.
+  + Users may set the same hints through one or more of the above methods.
+    When a hint is set more than one time, PnetCDF implements the following
+    hint precedence.
+    * 1st priority: hints set in the environment variable `PNETCDF_HINTS`, e.g.
+      `PNETCDF_HINTS="nc_var_align_size=1024"`
+    * 2nd priority: hints used in the arguments of `ncmpi__enddef()`, e.g.
+      `ncmpi__enddef(..., v_align=1024,...)`
+    * 3rd priority: hints set in the MPI info object passed into calls of
+      `ncmpi_create()` and `ncmpi_open()`, e.g.
+      `MPI_Info_set("nc_var_align_size", "1024");`
+  + PnetCDF I/O hint `nc_header_align_size` is essentially the same as hint
+    `nc_var_align_size`, but its name is closer to the hint's intent, i.e.
+    adjusting the header to reserve space for its growth in the future when new
+    data objects are added. Please note when both hints are set, only hint
+    `nc_var_align_size` will take effect in PnetCDF and `nc_header_align_size`
+    ignored.
+  + When there is no fix-sized variable (i.e. non-record variable) defined,
+    argument `v_minfree` passsed to `ncmpi__enddef()` is ignored. In this
+    case, users should set `h_minfree`, if an extra space is desired.
+  + When there is no fix-sized variables defined and none of hints
+    `nc_header_align_size`, `nc_var_align_size`, or argument `v_align` is set,
+    `nc_record_align_size` or `r_align`, if set, will be used to align the
+    header extent.
+  + For the above update to the hints used for file layout alignment, see
+    PnetCDF See [PR #173](https://github.com/Parallel-NetCDF/PnetCDF/pull/173).
+
 * Clarifications
   + none
 
