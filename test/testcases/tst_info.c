@@ -53,7 +53,6 @@ int check_pnetcdf_hints(int ncid)
     err = ncmpi_inq_file_info(ncid, &info_used);
     CHECK_ERR;
 
-    CHECK_HINT("nc_header_align_size");
     CHECK_HINT("nc_var_align_size");
     CHECK_HINT("nc_header_read_chunk_size");
     CHECK_HINT("nc_record_align_size");
@@ -108,7 +107,6 @@ int main(int argc, char** argv) {
 
     /* create some PnetCDF-level I/O hints */
     MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_header_align_size", "1");   /* size in bytes */
     MPI_Info_set(info, "nc_var_align_size",    "197"); /* size in bytes */
 
     /* create another new file using a non-NULL MPI info --------------------*/
@@ -152,20 +150,6 @@ int main(int argc, char** argv) {
         printf("header_extent=%lld\n\n",header_extent);
     }
 #endif
-
-    MPI_Info_get_valuelen(info_used, "nc_header_align_size", &len, &flag);
-    if (flag) {
-        MPI_Info_get(info_used, "nc_header_align_size", len+1, value, &flag);
-        expect = PNETCDF_RNDUP(1, 4);
-        if (expect != strtoll(value,NULL,10)) {
-            printf("Error: nc_header_align_size expect %lld but got %lld\n",
-                    expect, strtoll(value,NULL,10));
-            nerrs++;
-        }
-    } else {
-        printf("Error: hint \"nc_header_align_size\" is missing\n");
-        nerrs++;
-    }
 
     MPI_Info_get_valuelen(info_used, "nc_var_align_size", &len, &flag);
     if (flag) {

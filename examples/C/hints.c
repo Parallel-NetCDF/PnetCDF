@@ -7,8 +7,8 @@
 /* $Id$ */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This example sets two PnetCDF hints:
- *    nc_header_align_size and nc_var_align_size
+ * This example sets PnetCDF hint:
+ *    nc_var_align_size
  * and prints the hint values as well as the header size, header extent, and
  * two variables' starting file offsets.
  *
@@ -18,7 +18,6 @@
  *
  *    % mpiexec -l -n 4 ./hints /pvfs2/wkliao/testfile.nc
  *
- *    nc_header_align_size      set to = 1024
  *    nc_var_align_size         set to = 512
  *    nc_header_read_chunk_size set to = 256
  *    header size                      = 252
@@ -94,7 +93,7 @@ int print_hints(int ncid,
     char value[MPI_MAX_INFO_VAL];
     int err, len, flag, nerrs=0;
     MPI_Offset header_size, header_extent, var_zy_start, var_yx_start;
-    MPI_Offset h_align=-1, v_align=-1, h_chunk=-1;
+    MPI_Offset v_align=-1, h_chunk=-1;
     MPI_Info info_used;
 
     err = ncmpi_inq_header_size  (ncid, &header_size);      ERR
@@ -103,12 +102,7 @@ int print_hints(int ncid,
     err = ncmpi_inq_varoffset(ncid, varid1, &var_yx_start); ERR
 
     err = ncmpi_inq_file_info(ncid, &info_used); ERR
-    MPI_Info_get_valuelen(info_used, "nc_header_align_size", &len, &flag);
-    if (flag) {
-        MPI_Info_get(info_used, "nc_header_align_size", len+1, value, &flag);
-        h_align = strtoll(value,NULL,10);
-    }
-        MPI_Info_get_valuelen(info_used, "nc_var_align_size", &len, &flag);
+    MPI_Info_get_valuelen(info_used, "nc_var_align_size", &len, &flag);
     if (flag) {
         MPI_Info_get(info_used, "nc_var_align_size", len+1, value, &flag);
         v_align = strtoll(value,NULL,10);
@@ -119,11 +113,6 @@ int print_hints(int ncid,
         h_chunk = strtoll(value,NULL,10);
     }
     MPI_Info_free(&info_used);
-
-    if (h_align == -1)
-        printf("nc_header_align_size      is NOT set\n");
-    else
-        printf("nc_header_align_size      set to = %lld\n", h_align);
 
     if (v_align == -1)
         printf("nc_var_align_size         is NOT set\n");
@@ -171,7 +160,6 @@ int main(int argc, char** argv)
     else                      snprintf(filename, 256, "%s", argv[optind]);
 
     MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_header_align_size",      "1024"); /* size in bytes */
     MPI_Info_set(info, "nc_var_align_size",         "512");  /* size in bytes */
     MPI_Info_set(info, "nc_header_read_chunk_size", "256");  /* size in bytes */
     /* note that set the above values to 1 to disable the alignment */
