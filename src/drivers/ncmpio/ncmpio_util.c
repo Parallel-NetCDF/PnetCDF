@@ -38,62 +38,67 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
      */
     assert(info_used != MPI_INFO_NULL);
 
-    /* nc_header_align_size, nc_var_align_size, and r_align take effect when
-     * a file is created, or opened and later adding more metadata or variable
-     * data */
+    /* nc_var_align_size, and r_align take effect when a file is created, or
+     * opened and later adding more metadata or variable data
+     */
 
-    ncp->env_h_align = 0;
+    ncp->info_v_align = -1; /* -1 indicates not set */
     if (user_info != MPI_INFO_NULL) {
-        /* aligns the size of header extent of a newly created file */
-        MPI_Info_get(user_info, "nc_header_align_size", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) {
-            errno = 0;  /* errno must set to zero before calling strtoll */
-            ncp->env_h_align = strtoll(value, NULL, 10);
-            if (errno != 0) ncp->env_h_align = 0;
-            else if (ncp->env_h_align < 0) ncp->env_h_align = 0;
-        }
-    }
-    if (ncp->env_h_align == 0)
-        sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
-    else
-        sprintf(value, "%lld", ncp->env_h_align);
-    MPI_Info_set(info_used, "nc_header_align_size", value);
-
-    ncp->env_v_align = 0;
-    if (user_info != MPI_INFO_NULL) {
-        /* aligns starting file offsets of individual fixed-size variables */
+        /* aligns starting file offsets of entire data section */
         MPI_Info_get(user_info, "nc_var_align_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag) {
             errno = 0;  /* errno must set to zero before calling strtoll */
-            ncp->env_v_align = strtoll(value, NULL, 10);
-            if (errno != 0) ncp->env_v_align = 0;
-            else if (ncp->env_v_align < 0) ncp->env_v_align = 0;
+            ncp->info_v_align = strtoll(value, NULL, 10);
+            if (errno != 0) ncp->info_v_align = -1;
+            else if (ncp->info_v_align < 0) ncp->info_v_align = -1;
         }
     }
-    if (ncp->env_v_align == 0)
+    if (ncp->info_v_align == -1)
         sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
     else
-        sprintf(value, "%lld", ncp->env_v_align);
+        sprintf(value, "%lld", ncp->info_v_align);
     MPI_Info_set(info_used, "nc_var_align_size", value);
 
-    ncp->env_r_align = 0;
+    if (user_info != MPI_INFO_NULL) {
+        /* Hint nc_header_align_size is now deprecated. But for backward
+         * compatibility, let's still check.
+         */
+        int info_h_align = -1;
+        MPI_Info_get(user_info, "nc_header_align_size", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag) {
+            errno = 0;  /* errno must set to zero before calling strtoll */
+            info_h_align = strtoll(value, NULL, 10);
+            if (errno != 0) info_h_align = -1;
+            else if (info_h_align < 0) info_h_align = -1;
+        }
+        /* if nc_header_align_size is set and nc_var_align_size is not set,
+         * replace hint nc_var_align_size with the value of info_h_align.
+         */
+        if (info_h_align >= 0 && ncp->info_v_align == -1) {
+            ncp->info_v_align = info_h_align;
+            sprintf(value, "%lld", ncp->info_v_align);
+            MPI_Info_set(info_used, "nc_var_align_size", value);
+        }
+    }
+
+    ncp->info_r_align = -1;
     if (user_info != MPI_INFO_NULL) {
         /* aligns starting file offset of the record variable section */
         MPI_Info_get(user_info, "nc_record_align_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag) {
             errno = 0;  /* errno must set to zero before calling strtoll */
-            ncp->env_r_align = strtoll(value, NULL, 10);
-            if (errno != 0) ncp->env_r_align = 0;
-            else if (ncp->env_r_align < 0) ncp->env_r_align = 0;
+            ncp->info_r_align = strtoll(value, NULL, 10);
+            if (errno != 0) ncp->info_r_align = -1;
+            else if (ncp->info_r_align < 0) ncp->info_r_align = -1;
         }
     }
-    if (ncp->env_r_align == 0)
+    if (ncp->info_r_align == -1)
         sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
     else
-        sprintf(value, "%lld", ncp->env_r_align);
+        sprintf(value, "%lld", ncp->info_r_align);
     MPI_Info_set(info_used, "nc_record_align_size", value);
 
     ncp->chunk = PNC_DEFAULT_CHUNKSIZE;

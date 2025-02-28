@@ -305,28 +305,27 @@ NC_begins(NC *ncp)
     }
 
     /* This function is called in ncmpi_enddef(), which can happen either when
-     * creating a new file or opening an existing file with metadata modified.
-     * For the former case, ncp->begin_var == 0 here.
-     * For the latter case, we set begin_var a new value only if the new header
-     * grows out of its extent or the start of non-record variables is not
-     * aligned as requested by ncp->h_align.
-     * Note ncp->xsz is header size and ncp->begin_var is header extent.
-     * Add the minimum header free space requested by user.
+     * creating a new file and first time call to ncmpi_enddef(), or other
+     * case, e.g. opening an existing file, calling ncmpi_redef(), and then
+     * ncmpi_enddef(). For the former case, ncp->begin_var == 0. For the latter
+     * case, ncp->begin_var must be > 0, as it is the orignial header extent.
+     * We increase begin_var only if the new header size grows out of its
+     * original extent, or the start of variable section is not aligned as
+     * requested by ncp->v_align. Note ncp->xsz is header size and
+     * ncp->begin_var is header extent. Growth of header extent must also
+     * respect the minimum header free space requested by user.
      */
+    ncp->begin_var = MAX(ncp->begin_var, ncp->xsz + ncp->h_minfree);
+
+    /* align header extent */
     if (ncp->vars.ndefined > 0)
-        ncp->begin_var = D_RNDUP(ncp->xsz + ncp->h_minfree, ncp->h_align);
+        ncp->begin_var = D_RNDUP(ncp->begin_var, ncp->v_align);
     else /* no variable defined, ignore alignment and set header extent to
           * header size */
-        ncp->begin_var = ncp->xsz;
+        ncp->begin_var = MAX(ncp->begin_var, ncp->xsz);
 
-    if (ncp->old != NULL) {
-        /* If this define mode was entered from a redef(), we check whether
-         * the new begin_var against the old begin_var. We do not shrink
-         * the header extent.
-         */
-        if (ncp->begin_var < ncp->old->begin_var)
-            ncp->begin_var = ncp->old->begin_var;
-    }
+    if (ncp->old != NULL)
+        assert(ncp->begin_var >= ncp->old->begin_var);
 
     /* ncp->begin_var is the aligned starting file offset of the first
      * variable (also data section), which is the extent of file header
@@ -374,13 +373,21 @@ NC_begins(NC *ncp)
      * non-record variables or if the start of record variables is not aligned
      * as requested by ncp->r_align.
      */
-    if (ncp->begin_rec < end_var + ncp->v_minfree)
-        ncp->begin_rec = end_var + ncp->v_minfree;
+    if (ncp->vars.ndefined > ncp->vars.num_rec_vars) {
+        if (ncp->begin_rec < end_var + ncp->v_minfree)
+            ncp->begin_rec = end_var + ncp->v_minfree;
+    }
+    else { /* if there is no fix-sized variable, ignore v_minfree */
+        if (ncp->begin_rec < end_var)
+            ncp->begin_rec = end_var;
+    }
 
     ncp->begin_rec = D_RNDUP(ncp->begin_rec, 4);
 
-    /* align the starting offset for record variable section */
-    if (ncp->r_align > 1)
+    /* Align the starting offset for record variable section.
+     * Ignore ncp->r_align, if there is no fix-sized variable.
+     */
+    if (ncp->r_align > 1 && ncp->vars.ndefined > ncp->vars.num_rec_vars)
         ncp->begin_rec = D_RNDUP(ncp->begin_rec, ncp->r_align);
 
     if (ncp->old != NULL) {
@@ -985,12 +992,94 @@ check_rec_var:
     return NC_NOERR;
 }
 
+/*----< read_hints() >-------------------------------------------------------*/
+/* check only the following hints set in environment variable PNETCDF_HINTS or
+ * MPI_Info object passed to ncmpi_create() and ncmpi_open().
+ * nc_header_align_size, nc_var_align_size, and nc_record_align_size
+ */
+static void
+read_hints(NC *ncp)
+{
+    char *warn_str="Warning: skip ill-formed hint set in PNETCDF_HINTS";
+    char *env_str, *env_str_cpy, *hint, *next_hint, *key, *val, *deli;
+    char *hint_saved=NULL;
+
+    /* reset hints from environment variable PNETCDF_HINTS */
+    ncp->env_v_align = -1;
+    ncp->env_r_align = -1;
+
+    /* get hints from the environment variable PNETCDF_HINTS, a string of
+     * hints separated by ";" and each hint is in the form of hint=value. E.g.
+     * "cb_nodes=16;cb_config_list=*:6". If this environment variable is set,
+     * it overrides the same hints that were set by MPI_Info_set() called in
+     * the application program.
+     */
+    env_str = getenv("PNETCDF_HINTS");
+    if (env_str == NULL) return;
+
+    env_str_cpy = strdup(env_str);
+    next_hint = env_str_cpy;
+
+    do {
+        hint = next_hint;
+        deli = strchr(hint, ';');
+        if (deli != NULL) {
+            *deli = '\0'; /* add terminate char */
+            next_hint = deli + 1;
+        }
+        else next_hint = "\0";
+        if (hint_saved != NULL) free(hint_saved);
+
+        /* skip all-blank hint */
+        hint_saved = strdup(hint);
+        if (strtok(hint, " \t") == NULL) continue;
+
+        free(hint_saved);
+        hint_saved = strdup(hint); /* save hint for error message */
+
+        deli = strchr(hint, '=');
+        if (deli == NULL) { /* ill-formed hint */
+            printf("%s: '%s'\n", warn_str, hint_saved);
+            continue;
+        }
+        *deli = '\0';
+
+        /* hint key */
+        key = strtok(hint, "= \t");
+        if (key == NULL || NULL != strtok(NULL, "= \t")) {
+            /* expect one token before = */
+            printf("%s: '%s'\n", warn_str, hint_saved);
+            continue;
+        }
+
+        /* hint value */
+        val = strtok(deli+1, "= \t");
+        if (NULL != strtok(NULL, "= \t")) { /* expect one token before = */
+            printf("%s: '%s'\n", warn_str, hint_saved);
+            continue;
+        }
+
+        if (!strcmp(key, "nc_header_align_size") && ncp->env_v_align == -1)
+            ncp->env_v_align = atoll(val);
+        else if (!strcmp(key, "nc_var_align_size"))
+            ncp->env_v_align = atoll(val);
+        else if (!strcmp(key, "nc_record_align_size"))
+            ncp->env_r_align = atoll(val);
+
+    } while (*next_hint != '\0');
+
+    if (hint_saved != NULL) free(hint_saved);
+    free(env_str_cpy);
+
+    /* return no error as all hints are advisory */
+}
+
 /*----< ncmpio__enddef() >---------------------------------------------------*/
 /* This is a collective subroutine.
  * h_minfree  Sets the pad at the end of the "header" section, i.e. at least
  *            this amount of free space includes at the end of header extent.
  * v_align    Controls the alignment of the beginning of the data section for
- *            fixed size variables.
+ *            fixed size variables. Its value is also the header extent.
  * v_minfree  Sets the pad at the end of the data section for fixed size
  *            variables, i.e. at least this amount of free space between the
  *            fixed-size variable section and record variable section.
@@ -1006,99 +1095,113 @@ ncmpio__enddef(void       *ncdp,
 {
     int i, num_fix_vars, mpireturn, err=NC_NOERR, status=NC_NOERR;
     char value[MPI_MAX_INFO_VAL];
+    MPI_Offset saved_begin_var;
     NC *ncp = (NC*)ncdp;
 
-    /* negative values of h_minfree, v_align, v_minfree, r_align have been
-     * checked at dispatchers.
+    /* update the total number of record variables */
+    ncp->vars.num_rec_vars = 0;
+    for (i=0; i<ncp->vars.ndefined; i++)
+        ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
+
+    /* h_minfree, v_align, v_minfree, r_align being -1 means this subroutine is
+     * called from ncmpio_enddef().
      */
+
+    /* check hints from environment variable PNETCDF_HINTS, or MPI info */
+    read_hints(ncp);
 
     /* sanity check for NC_ENOTINDEFINE, NC_EINVAL, NC_EMULTIDEFINE_FNC_ARGS
      * has been done at dispatchers */
-    ncp->h_minfree = h_minfree;
-    ncp->v_minfree = v_minfree;
+    ncp->h_minfree = (h_minfree < 0) ? NC_DEFAULT_H_MINFREE : h_minfree;
+    ncp->v_minfree = (v_minfree < 0) ? NC_DEFAULT_V_MINFREE : v_minfree;
 
-    /* calculate a good file extent alignment size based on:
-     *     + hints set by users in the environment variable PNETCDF_HINTS
-     *       nc_header_align_size and nc_var_align_size
-     *     + v_align set in the call to ncmpi__enddef()
-     * Hints set in the environment variable PNETCDF_HINTS have the higher
-     * precedence than the ones set in the API calls.
-     * The precedence of hints and arguments:
-     * 1. hints set in PNETCDF_HINTS environment variable at run time
-     * 2. hints set in the source codes, for example, a call to
-     *    MPI_Info_set("nc_header_align_size", "1048576");
-     * 3. source codes calling ncmpi__enddef(). For example,
-     *    MPI_Offset v_align = 1048576;
-     *    ncmpi__enddef(ncid, 0, v_align, 0, 0);
-     * 4. defaults
-     *       0   for h_minfree
-     *       512 for v_align
-     *       0   for v_minfree
-     *       4   for r_align
+    /* calculate a good file extent alignment size based on user hints.
+     * The precedence of hints:
+     * + 1st priority: hints set in the environment variable PNETCDF_HINTS,
+     *                 i.e. nc_var_align_size and nc_record_align_size
+     *                 e.g. PNETCDF_HINTS="nc_var_align_size=1024"
+     * + 2nd priority: hints set in the MPI info objects passed into calls to
+     *                 ncmpi_create() and ncmpi_open()
+     *                 e.g. MPI_Info_set("nc_var_align_size", "1024");
+     * + 3rd priority: hints passed from arguments of ncmpi__enddef()
+     *                 i.e. v_align and r_align
+     *                 e.g. ncmpi__enddef(..., v_align=1024,...)
+     *
+     * Default values
+     *       NC_DEFAULT_H_MINFREE for h_minfree
+     *       NC_DEFAULT_V_ALIGN   for v_align
+     *       NC_DEFAULT_V_MINFREE for v_minfree
+     *       NC_DEFAULT_R_ALIGN   for r_align
      */
-
-    /* ncp->h_align, ncp->v_align, ncp->r_align, and ncp->chunk have been
-     * set during file create/open */
 
     num_fix_vars = ncp->vars.ndefined - ncp->vars.num_rec_vars;
 
-    /* reset to hints set at file create/open time */
-    ncp->h_align = ncp->env_h_align;
-    ncp->v_align = ncp->env_v_align;
-    ncp->r_align = ncp->env_r_align;
+    /* determine header extent (alignment for the data section) */
+    if (ncp->env_v_align == -1) {
+        /* hint nc_var_align_size is not set in PNETCDF_HINTS */
+        ncp->v_align = -1;
 
-    if (ncp->h_align == 0) {   /* hint nc_header_align_size is not set */
-        if (ncp->v_align > 0)  /* hint nc_var_align_size is set */
-            ncp->h_align = ncp->v_align;
-        else if (v_align > 0)  /* v_align is passed from ncmpi__enddef */
-            ncp->h_align = v_align;
+        if (num_fix_vars == 0 && ncp->env_r_align != -1)
+            /* if no fix-sizes variable, try use env_r_align */
+            ncp->v_align = ncp->env_r_align;
 
-        /* if no fixed-size variables is defined, use r_align */
-        if (ncp->h_align == 0 && num_fix_vars == 0) {
-            if (ncp->r_align > 0)  /* hint nc_record_align_size is set */
-                ncp->h_align = ncp->r_align;
-            else if (r_align > 0)  /* r_align is passed from ncmpi__enddef */
-                ncp->h_align = r_align;
+        if (ncp->v_align < 0) { /* ncp->v_align is still not set */
+            if (ncp->info_v_align >= 0)
+                /* use hint set in MPI info passed to ncmpi_create/ncmpi_open */
+                ncp->v_align = ncp->info_v_align;
+            else if (v_align >= 0)
+                /* valid v_align is passed from ncmpi__enddef */
+                ncp->v_align = v_align;
         }
 
-        if (ncp->h_align == 0 && ncp->old == NULL)
-            /* h_align is still not set. Set h_align only when creating a new
-             * file. When opening an existing file file, setting h_align here
-             * may unexpectedly grow the file extent.
-             */
-            ncp->h_align = FILE_ALIGNMENT_DEFAULT;
+        if (ncp->v_align < 0) { /* ncp->v_align is still not set */
+            if (ncp->old != NULL)
+                /* if enter from redefine mode, reuse one set in old header */
+                ncp->v_align = ncp->old->v_align;
+            else /* default */
+                ncp->v_align = NC_DEFAULT_V_ALIGN;
+        }
     }
-    /* else respect user hint */
+    else /* hint nc_var_align_size is set in PNETCDF_HINTS, use it and
+          * ignore v_align passed from ncmpi__enddef().
+          */
+        ncp->v_align = ncp->env_v_align;
 
-    if (ncp->v_align == 0) { /* user info does not set nc_var_align_size */
-        if (v_align > 0)     /* v_align is passed from ncmpi__enddef */
-            ncp->v_align = v_align;
-        /* else ncp->v_align is already set by user/env, ignore the one passed
-         * by the argument v_align of this subroutine.
-         */
-    }
+    /* determine alignment for record variable section */
+    if (ncp->env_r_align == -1) {
+        /* hint nc_record_align_size is not set in PNETCDF_HINTS */
+        ncp->r_align = -1;
 
-    if (ncp->r_align == 0) { /* user info does not set nc_record_align_size */
-        if (r_align > 0)     /* r_align is passed from ncmpi__enddef */
+        if (ncp->info_r_align >= 0)
+            /* use hint set in MPI info passed to ncmpi_create/ncmpi_open */
+            ncp->r_align = ncp->info_r_align;
+        else if (r_align >= 0)
+            /* valid r_align is passed from ncmpi__enddef */
             ncp->r_align = r_align;
-        /* else ncp->r_align is already set by user/env, ignore the one passed
-         * by the argument r_align of this subroutine.
-         */
+
+        if (ncp->r_align == -1) { /* ncp->r_align is still not set */
+            if (ncp->old != NULL)
+                /* reuse one set in old header */
+                ncp->r_align = ncp->old->r_align;
+            else
+                ncp->r_align = NC_DEFAULT_R_ALIGN;
+        }
     }
+    else
+        /* hint nc_record_align_size is set in PNETCDF_HINTS, use it and
+         * ignore r_align passed from ncmpi__enddef().
+         */
+        ncp->r_align = ncp->env_r_align;
 
     /* all CDF formats require 4-bytes alignment */
-    if (ncp->h_align == 0)    ncp->h_align = 4;
-    else                      ncp->h_align = D_RNDUP(ncp->h_align, 4);
-    if (ncp->v_align == 0)    ncp->v_align = 4;
-    else                      ncp->v_align = D_RNDUP(ncp->v_align, 4);
-    if (ncp->r_align == 0)    ncp->r_align = 4;
-    else                      ncp->r_align = D_RNDUP(ncp->r_align, 4);
+    if (ncp->v_align == 0) ncp->v_align = 4;
+    else                   ncp->v_align = D_RNDUP(ncp->v_align, 4);
+    if (ncp->r_align == 0) ncp->r_align = 4;
+    else                   ncp->r_align = D_RNDUP(ncp->r_align, 4);
 
     /* reflect the hint changes to the MPI info object, so the user can inquire
      * what the true hint values are being used
      */
-    sprintf(value, "%lld", ncp->h_align);
-    MPI_Info_set(ncp->mpiinfo, "nc_header_align_size", value);
     sprintf(value, "%lld", ncp->v_align);
     MPI_Info_set(ncp->mpiinfo, "nc_var_align_size", value);
     sprintf(value, "%lld", ncp->r_align);
@@ -1130,13 +1233,11 @@ ncmpio__enddef(void       *ncdp,
      * Note in NC_begins, root broadcasts ncp->xsz, the file header size, to
      * all processes.
      */
+    saved_begin_var = ncp->begin_var;
     err = NC_begins(ncp);
+    if (err != NC_NOERR) /* restore the original begin_var when failed */
+        ncp->begin_var = saved_begin_var;
     CHECK_ERROR(err)
-
-    /* update the total number of record variables */
-    ncp->vars.num_rec_vars = 0;
-    for (i=0; i<ncp->vars.ndefined; i++)
-        ncp->vars.num_rec_vars += IS_RECVAR(ncp->vars.value[i]);
 
     if (ncp->safe_mode) {
         /* check whether variable begins are in an increasing order.
@@ -1239,6 +1340,6 @@ ncmpio__enddef(void       *ncdp,
 int
 ncmpio_enddef(void *ncdp)
 {
-    return ncmpio__enddef(ncdp, 0, 0, 0, 0);
+    return ncmpio__enddef(ncdp, -1, -1, -1, -1);
 }
 
