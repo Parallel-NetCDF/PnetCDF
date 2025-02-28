@@ -91,5 +91,22 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Clarifications
-  + none
+  + There are three ways in PnetCDF for user to set hints to adjust file header
+    extent size, for example. Users may set the same hints multiple times
+    during the run of their applications. When this happens, PnetCDF implements
+    the following hint precedence.
+    * 1st priority: hints set in the environment variable `PNETCDF_HINTS`, e.g.
+      `PNETCDF_HINTS="nc_var_align_size=1024"`
+    * 2nd priority: hints passed from arguments of `ncmpi__enddef()`, e.g.
+      `ncmpi__enddef(..., v_align=1024,...)`
+    * 3rd priority: hints set in the MPI info objects passed into calls to
+      `ncmpi_create()` and `ncmpi_open()`, e.g.
+      `MPI_Info_set("nc_var_align_size", "1024");`
+    See [PR #173](https://github.com/Parallel-NetCDF/PnetCDF/pull/173).
+  + PnetCDF I/O hint `nc_header_align_size` is essentially the same as hint
+    `nc_var_align_size`, but name of the former is closer to the intent, i.e.
+    to adjust the header space to reserve space for possible expansion in the
+    future when new data objects are added. However, when both hints were set
+    by the users, only hint `nc_var_align_size` will take effect in PnetCDF and
+    `nc_header_align_size` will be ignored.
 

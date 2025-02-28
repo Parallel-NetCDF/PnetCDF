@@ -6,8 +6,8 @@
 ! $Id$
 
 !
-! This example sets two PnetCDF hints:
-!    nc_header_align_size and nc_var_align_size
+! This example sets PnetCDF hint:
+!    nc_var_align_size
 ! and prints the hint values as well as the header size, header extent, and
 ! two variables' starting file offsets.
 !
@@ -17,7 +17,6 @@
 !
 !    % mpiexec -n 4 ./hints /pvfs2/wkliao/testfile.nc
 !
-!    nc_header_align_size      set to = 1024
 !    nc_var_align_size         set to = 512
 !    nc_header_read_chunk_size set to = 256
 !    header size                      = 252
@@ -54,9 +53,8 @@
           logical flag
           integer*8 header_size, header_extent
           integer*8 var_zy_start, var_yx_start
-          integer*8 h_align, v_align, h_chunk
+          integer*8 v_align, h_chunk
 
-          h_align=-1
           v_align=-1
           h_chunk=-1
 
@@ -72,13 +70,6 @@
           err = nfmpi_inq_file_info(ncid, info_used)
           call check(err, 'In nfmpi_inq_file_info : ')
 
-          call MPI_Info_get_valuelen(info_used, "nc_header_align_size",
-     +                               len, flag, err)
-          if (flag) then
-              call MPI_Info_get(info_used, "nc_header_align_size",
-     +                          len+1, value, flag, err)
-              read(value, '(i16)') h_align
-          endif
           call MPI_Info_get_valuelen(info_used, "nc_var_align_size",
      +                               len, flag, err)
           if (flag) then
@@ -96,11 +87,6 @@
           endif
           call MPI_Info_free(info_used, err)
 
-          if (h_align .EQ. -1) then
-              print*,"nc_header_align_size      is NOT set"
-          else
-              print*,"nc_header_align_size      set to = ", h_align
-          endif
           if (v_align .EQ. -1) then
               print*,"nc_var_align_size         is NOT set"
           else
@@ -178,7 +164,6 @@
      +               MPI_COMM_WORLD, err)
 
       call MPI_Info_create(info, err)
-      call MPI_Info_set(info, "nc_header_align_size",      "1024", err)
       call MPI_Info_set(info, "nc_var_align_size",         "512",  err)
       call MPI_Info_set(info, "nc_header_read_chunk_size", "256",  err)
       ! note that set the above values to 1 to disable the alignment

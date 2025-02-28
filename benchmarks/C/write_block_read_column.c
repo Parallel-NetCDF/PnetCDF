@@ -84,7 +84,6 @@ int benchmark_write(char       *filename,
 
     /* set PnetCDF I/O hints */
     MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_header_align_size",      "1");   /* size in bytes */
     MPI_Info_set(info, "nc_var_align_size",         "1");   /* size in bytes */
     MPI_Info_set(info, "nc_header_read_chunk_size", "512"); /* size in bytes */
     /* note that set the above values to 1 to disable the alignment */

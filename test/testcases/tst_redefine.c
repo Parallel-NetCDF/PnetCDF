@@ -102,18 +102,20 @@ err_out:
 static int
 tst_fmt(char *filename, int cmode)
 {
+    char str[1024];
     int i, rank, nprocs, ncid, err, nerrs=0;
-    int *buf, dimid[3], varid[4], minfree=100;
+    int *buf, dimid[3], varid[4];
     MPI_Offset start[2], count[2];
     MPI_Offset old_hsize, hsize;
     MPI_Offset old_extent, extent;
     MPI_Offset old_var_off, var_off;
-    MPI_Offset v_align, r_align, exp_var_off;
+    MPI_Offset h_minfree, v_align, v_minfree, r_align, exp_var_off;
     MPI_Comm comm = MPI_COMM_WORLD;
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
 
+    /* disable interference from environment variable PNETCDF_HINTS */
     unsetenv("PNETCDF_HINTS");
 
     /* create a new file */
@@ -127,8 +129,13 @@ tst_fmt(char *filename, int cmode)
     err = ncmpi_def_var(ncid, "ta", NC_INT, 2, dimid,   &varid[2]); CHECK_ERR
     err = ncmpi_def_var(ncid, "tb", NC_INT, 2, dimid,   &varid[3]); CHECK_ERR
 
-    /* disable header alignment */
-    err = ncmpi__enddef(ncid, 0, 4, 0, 4); CHECK_ERR
+    /* explicitly disable header alignment */
+    h_minfree = 0;  /* header free space */
+    v_align   = 4;  /* alignment for variable section (also header extent) */
+    v_minfree = 0;  /* free space between fixed and record variable sections */
+    r_align   = 4;  /* alignment for record variable section */
+
+    err = ncmpi__enddef(ncid, h_minfree, v_align, v_minfree, r_align); CHECK_ERR
 
     start[0] = 0; start[1] = rank * LEN;
     count[0] = 2; count[1] = LEN;
@@ -162,9 +169,12 @@ tst_fmt(char *filename, int cmode)
     err = ncmpi_inq_header_size(ncid, &hsize); CHECK_ERR
     err = ncmpi_inq_header_extent(ncid, &extent); CHECK_ERR
     if (verbose)
-        printf("File header size = %lld extent = %lld\n", hsize, extent);
+        printf("Line %d: file create header size = %lld extent = %lld\n",
+               __LINE__,hsize, extent);
 
-    /* make sure header size == extent */
+    /* because both alignments are turned off and free space set to zeros, it
+     * is expected that header size == extent
+     */
     if (hsize != extent) {
         nerrs++;
         printf("Error at line %d in %s: File header size %lld != extent %lld\n",
@@ -176,7 +186,7 @@ tst_fmt(char *filename, int cmode)
 
     err = ncmpi_def_dim(ncid, "dim_x", 25, &dimid[2]); CHECK_ERR
 
-    /* disable header alignment */
+    /* again disable header alignment */
     err = ncmpi__enddef(ncid, 0, 4, 0, 4); CHECK_ERR
 
     old_hsize = hsize;
@@ -184,41 +194,46 @@ tst_fmt(char *filename, int cmode)
     err = ncmpi_inq_header_size(ncid, &hsize); CHECK_ERR
     err = ncmpi_inq_header_extent(ncid, &extent); CHECK_ERR
     if (verbose) {
-        printf("File old header size = %6lld old extent = %6lld\n", old_hsize, old_extent);
-        printf("File new header size = %6lld new extent = %6lld\n", hsize, extent);
+        printf("Line %d: old header size = %6lld old extent = %6lld\n",
+               __LINE__,old_hsize, old_extent);
+        printf("Line %d: new header size = %6lld new extent = %6lld\n",
+               __LINE__,hsize, extent);
     }
 
-    /* make sure header size grows */
+    /* check if header size grows */
     if (hsize <= old_hsize) {
         nerrs++;
         printf("Error at line %d in %s: File header size %lld fails to grow from %lld\n",
                __LINE__,__FILE__, hsize, old_hsize);
     }
-    /* make sure header extent grows */
+    /* check if header extent grows */
     if (extent <= old_extent) {
         nerrs++;
         printf("Error at line %d in %s: File header extent %lld fails to grow from %lld\n",
                __LINE__,__FILE__, extent, old_extent);
     }
 
+    /* because file extent grows, check contents of all variables */
     nerrs += check_fix_vars(comm, ncid, varid);
     if (nerrs > 0) goto err_out;
     nerrs += check_rec_vars(comm, ncid, varid+2);
     if (nerrs > 0) goto err_out;
 
-    /* enter redefine mode and add nothing */
+    /* enter redefine mode and set a header free space */
     err = ncmpi_redef(ncid); CHECK_ERR
-
-    /* add free space into header extent */
-    err = ncmpi__enddef(ncid, minfree, 0, 0, 0); CHECK_ERR
 
     old_hsize = hsize;
     old_extent = extent;
+    h_minfree = old_extent - old_hsize + 76;
+    err = ncmpi__enddef(ncid, h_minfree, 0, 0, 0); CHECK_ERR
+
     err = ncmpi_inq_header_size(ncid, &hsize); CHECK_ERR
     err = ncmpi_inq_header_extent(ncid, &extent); CHECK_ERR
     if (verbose) {
-        printf("File old header size = %6lld old extent = %6lld\n", old_hsize, old_extent);
-        printf("File new header size = %6lld new extent = %6lld\n", hsize, extent);
+        printf("Line %d: old header size = %6lld old extent = %6lld\n",
+               __LINE__,old_hsize, old_extent);
+        printf("Line %d: new header size = %6lld new extent = %6lld\n",
+               __LINE__,hsize, extent);
     }
 
     /* make sure header size does not change */
@@ -227,13 +242,73 @@ tst_fmt(char *filename, int cmode)
         printf("Error at line %d in %s: File header size %lld changed from %lld\n",
                __LINE__,__FILE__, hsize, old_hsize);
     }
-    /* make sure header extent grows minfree bytes */
-    if (extent != old_extent + minfree) {
+
+    /* make sure header has at a minimal free space of size h_minfree bytes */
+    if (extent - hsize < h_minfree) {
         nerrs++;
-        printf("Error at line %d in %s: File header extent %lld fails to grow into %lld\n",
-               __LINE__,__FILE__, extent, old_extent + minfree);
+        printf("Error at line %d in %s: File header free space %lld fails to be %lld\n",
+               __LINE__,__FILE__, extent - hsize, h_minfree);
     }
 
+    /* because no alignment is set and only some additional space is added,
+     * header extent must grow exactly h_minfree.
+     */
+    if (extent - old_extent != h_minfree) {
+        nerrs++;
+        printf("Error at line %d in %s: File header extent %lld fails to grow to %lld\n",
+               __LINE__,__FILE__, extent, old_extent + h_minfree);
+    }
+
+    /* file extent does not change, check contents of all variables */
+    nerrs += check_fix_vars(comm, ncid, varid);
+    if (nerrs > 0) goto err_out;
+    nerrs += check_rec_vars(comm, ncid, varid+2);
+    if (nerrs > 0) goto err_out;
+
+    /* enter redefine mode and add a free space to the header extent but
+     * nothing else
+     */
+    err = ncmpi_redef(ncid); CHECK_ERR
+
+    /* add free space into header extent */
+    old_hsize = hsize;
+    old_extent = extent;
+    h_minfree = old_extent - old_hsize + 100;
+    err = ncmpi__enddef(ncid, h_minfree, 0, 0, 0); CHECK_ERR
+
+    err = ncmpi_inq_header_size(ncid, &hsize); CHECK_ERR
+    err = ncmpi_inq_header_extent(ncid, &extent); CHECK_ERR
+    if (verbose) {
+        printf("Line %d: old header size = %6lld old extent = %6lld\n",
+               __LINE__,old_hsize, old_extent);
+        printf("Line %d: new header size = %6lld new extent = %6lld\n",
+               __LINE__,hsize, extent);
+    }
+
+    /* make sure header size does not change */
+    if (hsize != old_hsize) {
+        nerrs++;
+        printf("Error at line %d in %s: File header size %lld changed from %lld\n",
+               __LINE__,__FILE__, hsize, old_hsize);
+    }
+
+    /* make sure header has at a minimal free space of size h_minfree bytes */
+    if (extent - hsize < h_minfree) {
+        nerrs++;
+        printf("Error at line %d in %s: File header free space %lld fails to be %lld\n",
+               __LINE__,__FILE__, extent - hsize, h_minfree);
+    }
+
+    /* because no alignment is set, header extent must be exactly equal to
+     * old_hsize + h_minfree
+     */
+    if (extent != old_hsize + h_minfree) {
+        nerrs++;
+        printf("Error at line %d in %s: File header extent %lld fails to grow into %lld\n",
+               __LINE__,__FILE__, extent, old_hsize + h_minfree);
+    }
+
+    /* because file extent grows, check contents of all variables */
     nerrs += check_fix_vars(comm, ncid, varid);
     if (nerrs > 0) goto err_out;
     nerrs += check_rec_vars(comm, ncid, varid+2);
@@ -243,15 +318,18 @@ tst_fmt(char *filename, int cmode)
     err = ncmpi_redef(ncid); CHECK_ERR
 
     /* align header extent to 512 bytes */
-    err = ncmpi__enddef(ncid, 0, 512, 0, 0); CHECK_ERR
+    v_align = 512;
+    err = ncmpi__enddef(ncid, 0, v_align, 0, 0); CHECK_ERR
 
     old_hsize = hsize;
     old_extent = extent;
     err = ncmpi_inq_header_size(ncid, &hsize); CHECK_ERR
     err = ncmpi_inq_header_extent(ncid, &extent); CHECK_ERR
     if (verbose) {
-        printf("File old header size = %6lld old extent = %6lld\n", old_hsize, old_extent);
-        printf("File new header size = %6lld new extent = %6lld\n", hsize, extent);
+        printf("Line %d: old header size = %6lld old extent = %6lld\n",
+               __LINE__,old_hsize, old_extent);
+        printf("Line %d: new header size = %6lld new extent = %6lld\n",
+               __LINE__,hsize, extent);
     }
 
     /* make sure header size does not change */
@@ -260,13 +338,14 @@ tst_fmt(char *filename, int cmode)
         printf("Error at line %d in %s: File header size %lld changed from %lld\n",
                __LINE__,__FILE__, hsize, old_hsize);
     }
-    /* make sure header extent grows to 512 bytes */
-    if (extent != 512) {
+    /* make sure header extent align with v_align */
+    if (extent % v_align) {
         nerrs++;
-        printf("Error at line %d in %s: File header extent %lld fails to grow into 512\n",
-               __LINE__,__FILE__, extent);
+        printf("Error at line %d in %s: File header extent %lld fails to align with %lld\n",
+               __LINE__,__FILE__, extent, v_align);
     }
 
+    /* because file extent may have grown, check contents of all variables */
     nerrs += check_fix_vars(comm, ncid, varid);
     if (nerrs > 0) goto err_out;
     nerrs += check_rec_vars(comm, ncid, varid+2);
@@ -274,8 +353,12 @@ tst_fmt(char *filename, int cmode)
 
     err = ncmpi_close(ncid); CHECK_ERR
 
-
-    setenv("PNETCDF_HINTS", "nc_header_align_size=700", 1);
+    /* Now test alignments with environment variable PNETCDF_HINTS. Note hints
+     * set in an environment variable supersede the ones set in API calls.
+     */
+    v_align = 28;
+    sprintf(str, "nc_var_align_size=%lld\n",v_align);
+    setenv("PNETCDF_HINTS", str, 1);
 
     /* reopen the file and check file header size and extent */
     err = ncmpi_open(comm, filename, NC_WRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
@@ -288,17 +371,21 @@ tst_fmt(char *filename, int cmode)
     /* enter redefine mode and add nothing */
     err = ncmpi_redef(ncid); CHECK_ERR
 
-    /* align header extent to 800 bytes, this should take no effect, as
-     * run-time hints precedes function calls. */
-    err = ncmpi__enddef(ncid, 0, 800, 0, 0); CHECK_ERR
+    /* align header extent to 100 bytes, this should take no effect, as
+     * run-time hints set in the environment variable precedes the alignments
+     * set in function calls.
+     */
+    err = ncmpi__enddef(ncid, 0, 100, 0, 0); CHECK_ERR
 
     old_hsize = hsize;
     old_extent = extent;
     err = ncmpi_inq_header_size(ncid, &hsize); CHECK_ERR
     err = ncmpi_inq_header_extent(ncid, &extent); CHECK_ERR
     if (verbose) {
-        printf("File old header size = %6lld old extent = %6lld\n", old_hsize, old_extent);
-        printf("File new header size = %6lld new extent = %6lld\n", hsize, extent);
+        printf("Line %d: old header size = %6lld old extent = %6lld\n",
+               __LINE__,old_hsize, old_extent);
+        printf("Line %d: new header size = %6lld new extent = %6lld\n",
+               __LINE__,hsize, extent);
     }
 
     /* make sure header size does not change */
@@ -307,15 +394,14 @@ tst_fmt(char *filename, int cmode)
         printf("Error at line %d in %s: File header size %lld changed from %lld\n",
                __LINE__,__FILE__, hsize, old_hsize);
     }
-    /* make sure header extent grows to 700 bytes */
-    if (extent != 700) {
+    /* make sure header extent aligns with v_align */
+    if (extent % v_align) {
         nerrs++;
-        printf("Error at line %d in %s: File header extent %lld fails to grow into 700\n",
-               __LINE__,__FILE__, extent);
+        printf("Error at line %d in %s: File header extent %lld fails to align with %lld\n",
+               __LINE__,__FILE__, extent, v_align);
     }
 
-    unsetenv("PNETCDF_HINTS");
-
+    /* because file extent may have grown, check contents of all variables */
     nerrs += check_fix_vars(comm, ncid, varid);
     if (nerrs > 0) goto err_out;
     nerrs += check_rec_vars(comm, ncid, varid+2);
@@ -324,16 +410,63 @@ tst_fmt(char *filename, int cmode)
     /* enter redefine mode and add nothing */
     err = ncmpi_redef(ncid); CHECK_ERR
 
-    /* set minfree to the free space, this should not grow the extent */
-    err = ncmpi__enddef(ncid, extent-hsize, 0, 0, 0); CHECK_ERR
+    /* unset environment variable PNETCDF_HINTS */
+    unsetenv("PNETCDF_HINTS");
+
+    /* as no hint is set in PNETCDF_HINTS, this v_align should be respected,
+     * i.e. supersede the hints set in MPI info when create/open the file
+     */
+    v_align = 100;
+    err = ncmpi__enddef(ncid, 0, v_align, 0, 0); CHECK_ERR
 
     old_hsize = hsize;
     old_extent = extent;
     err = ncmpi_inq_header_size(ncid, &hsize); CHECK_ERR
     err = ncmpi_inq_header_extent(ncid, &extent); CHECK_ERR
     if (verbose) {
-        printf("File old header size = %6lld old extent = %6lld\n", old_hsize, old_extent);
-        printf("File new header size = %6lld new extent = %6lld\n", hsize, extent);
+        printf("Line %d: old header size = %6lld old extent = %6lld\n",
+               __LINE__,old_hsize, old_extent);
+        printf("Line %d: new header size = %6lld new extent = %6lld\n",
+               __LINE__,hsize, extent);
+    }
+
+    /* make sure header size does not change */
+    if (hsize != old_hsize) {
+        nerrs++;
+        printf("Error at line %d in %s: File header size %lld changed from %lld\n",
+               __LINE__,__FILE__, hsize, old_hsize);
+    }
+    /* make sure header extent aligns with v_align */
+    if (extent % v_align) {
+        nerrs++;
+        printf("Error at line %d in %s: File header extent %lld fails to align with %lld\n",
+               __LINE__,__FILE__, extent, v_align);
+    }
+
+    /* because file extent may have grown, check contents of all variables */
+    nerrs += check_fix_vars(comm, ncid, varid);
+    if (nerrs > 0) goto err_out;
+    nerrs += check_rec_vars(comm, ncid, varid+2);
+    if (nerrs > 0) goto err_out;
+
+    /* enter redefine mode and add nothing */
+    err = ncmpi_redef(ncid); CHECK_ERR
+
+    /* set h_minfree to be less than the already free space, this should not
+     * grow the header extent
+     */
+    h_minfree = extent - hsize;
+    err = ncmpi__enddef(ncid, h_minfree, 0, 0, 0); CHECK_ERR
+
+    old_hsize = hsize;
+    old_extent = extent;
+    err = ncmpi_inq_header_size(ncid, &hsize); CHECK_ERR
+    err = ncmpi_inq_header_extent(ncid, &extent); CHECK_ERR
+    if (verbose) {
+        printf("Line %d: old header size = %6lld old extent = %6lld\n",
+               __LINE__,old_hsize, old_extent);
+        printf("Line %d: new header size = %6lld new extent = %6lld\n",
+               __LINE__,hsize, extent);
     }
 
     /* make sure header size does not change */
@@ -349,9 +482,7 @@ tst_fmt(char *filename, int cmode)
                __LINE__,__FILE__, extent, old_extent);
     }
 
-    /* obtain 1st record variable's file offset */
-    err = ncmpi_inq_varoffset(ncid, varid[2], &old_var_off); CHECK_ERR
-
+    /* check contents of all variables */
     nerrs += check_fix_vars(comm, ncid, varid);
     if (nerrs > 0) goto err_out;
     nerrs += check_rec_vars(comm, ncid, varid+2);
@@ -360,36 +491,34 @@ tst_fmt(char *filename, int cmode)
     /* enter redefine mode and add nothing */
     err = ncmpi_redef(ncid); CHECK_ERR
 
+    /* obtain 1st record variable's file offset */
+    err = ncmpi_inq_varoffset(ncid, varid[2], &old_var_off); CHECK_ERR
+
     /* set v_minfree of size 400 */
-    err = ncmpi__enddef(ncid, 0, 0, 400, 0); CHECK_ERR
+    v_minfree = 400;
+    err = ncmpi__enddef(ncid, 0, 0, v_minfree, 0); CHECK_ERR
 
     /* obtain 1st record variable's file offset */
     err = ncmpi_inq_varoffset(ncid, varid[2], &var_off); CHECK_ERR
 
     /* var_off should grows 400 bytes */
-    if (var_off != old_var_off + 400) {
+    if (var_off != old_var_off + v_minfree) {
         nerrs++;
         printf("Error at line %d in %s: 1st record variable offset %lld (expecting %lld)\n",
-               __LINE__,__FILE__, var_off, old_var_off+400);
+               __LINE__,__FILE__, var_off, old_var_off+v_minfree);
     }
 
+    /* check contents of all variables */
     nerrs += check_fix_vars(comm, ncid, varid);
     if (nerrs > 0) goto err_out;
     nerrs += check_rec_vars(comm, ncid, varid+2);
     if (nerrs > 0) goto err_out;
 
-#if 0
-    err = ncmpi_close(ncid); CHECK_ERR
-
-    /* reopen the file and set r_align */
-    err = ncmpi_open(comm, filename, NC_WRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
-#endif
+    /* enter redefine mode and add nothing */
+    err = ncmpi_redef(ncid); CHECK_ERR
 
     /* obtained the old offset of 1st record variable */
     err = ncmpi_inq_varoffset(ncid, varid[2], &old_var_off); CHECK_ERR
-
-    /* enter redefine mode and add nothing */
-    err = ncmpi_redef(ncid); CHECK_ERR
 
     /* set r_align to 1500 */
     r_align = 1500;
@@ -408,6 +537,7 @@ tst_fmt(char *filename, int cmode)
                __LINE__,__FILE__, var_off, exp_var_off);
     }
 
+    /* check contents of all variables */
     nerrs += check_fix_vars(comm, ncid, varid);
     if (nerrs > 0) goto err_out;
     nerrs += check_rec_vars(comm, ncid, varid+2);
@@ -445,7 +575,8 @@ tst_fmt(char *filename, int cmode)
     err = ncmpi_inq_header_size(ncid, &hsize); CHECK_ERR
     err = ncmpi_inq_header_extent(ncid, &extent); CHECK_ERR
     if (verbose)
-        printf("File header size = %lld extent = %lld\n", hsize, extent);
+        printf("Line %d: create clobber header size = %lld extent = %lld\n",
+               __LINE__,hsize, extent);
 
     /* obtain 1st record variable's file offset */
     err = ncmpi_inq_varoffset(ncid, varid[2], &var_off); CHECK_ERR
