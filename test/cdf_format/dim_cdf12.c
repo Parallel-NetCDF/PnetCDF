@@ -72,9 +72,9 @@ int main(int argc, char** argv)
 
     /* Note this test program must use the 512-byte alignment setting */
     MPI_Info_create(&info);
-    /* use the 512-byte header align size */
-    MPI_Info_set(info, "nc_header_align_size", "512");
-    /* use the 512-byte fixed-size variable starting file offset alignment */
+    /* use the 512-byte fixed-size variable starting file offset alignment,
+     * which is also the header extent align size
+     */
     MPI_Info_set(info, "nc_var_align_size", "512");
 
     /* get command-line arguments */

@@ -134,8 +134,7 @@ int main(int argc, char** argv) {
 
     /* mimic netCDF that does not do alignments */
     MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_header_align_size", "1"); /* size in bytes */
-    MPI_Info_set(info, "nc_var_align_size",    "197"); /* size in bytes */
+    MPI_Info_set(info, "nc_var_align_size", "197"); /* size in bytes */
 
     /* open the file for adding more metadata */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, info, &ncid);

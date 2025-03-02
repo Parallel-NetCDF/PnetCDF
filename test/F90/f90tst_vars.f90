@@ -60,8 +60,7 @@ program f90tst_vars
   end do
 
   call MPI_Info_create(info, ierr)
-  call MPI_Info_set(info, "nc_header_align_size",      "1024", ierr)
-  call MPI_Info_set(info, "nc_var_align_size",         "512",  ierr)
+  call MPI_Info_set(info, "nc_var_align_size",         "1024", ierr)
   call MPI_Info_set(info, "nc_header_read_chunk_size", "256",  ierr)
 
   ! Create the netCDF file.

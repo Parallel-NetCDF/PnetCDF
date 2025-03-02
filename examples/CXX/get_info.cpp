@@ -15,7 +15,7 @@
  *
  *    Example standard output:
 
-    MPI File Info: nkeys = 18
+    MPI File Info: nkeys = 17
     MPI File Info: [ 0] key =            cb_buffer_size, value = 16777216
     MPI File Info: [ 1] key =             romio_cb_read, value = automatic
     MPI File Info: [ 2] key =            romio_cb_write, value = automatic
@@ -31,9 +31,8 @@
     MPI File Info: [12] key =             romio_ds_read, value = automatic
     MPI File Info: [13] key =            romio_ds_write, value = automatic
     MPI File Info: [14] key =            cb_config_list, value = *:1
-    MPI File Info: [15] key =      nc_header_align_size, value = 512
-    MPI File Info: [16] key =         nc_var_align_size, value = 512
-    MPI File Info: [17] key = nc_header_read_chunk_size, value = 0
+    MPI File Info: [15] key =         nc_var_align_size, value = 512
+    MPI File Info: [16] key = nc_header_read_chunk_size, value = 0
  */
 
 #include <stdio.h>

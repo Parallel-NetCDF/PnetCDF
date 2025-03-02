@@ -172,10 +172,9 @@ int benchmark_write(char       *filename,
 
     /* set PnetCDF I/O hints */
     MPI_Info_create(&info);
-    /* disable the header extent alignments
-    MPI_Info_set(info, "nc_header_align_size", "1");    size in bytes
-    */
-    /* disable the fixed-size variable alignments */
+    /* disable the fixed-size variable alignments, which also
+     * disable the header extent alignments
+     */
     MPI_Info_set(info, "nc_var_align_size", "1");
 
     nvars = 0;
