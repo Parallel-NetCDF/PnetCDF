@@ -92,8 +92,8 @@ with C, C++, F77, and F90 versions.
   + ./CXX/hints.cpp
   + ./F77/hints.f
   + ./F90/hints.f90
-  + This example sets two PnetCDF hints: `nc_header_align_size` and
-    `nc_var_align_size` and prints the hint values, the header size, header
+  + This example sets PnetCDF hint: `nc_var_align_size`
+    and prints the hint values, the header size, header
     extent, and variables' starting file offsets.
 
 * ./C/mput.c
