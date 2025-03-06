@@ -104,12 +104,25 @@ This is essentially a placeholder for the next release note ...
     When a hint is set more than one time, PnetCDF implements the following
     hint precedence.
     * 1st priority: hints set in the environment variable `PNETCDF_HINTS`, e.g.
-      `PNETCDF_HINTS="nc_var_align_size=1024"`
+      `PNETCDF_HINTS="nc_var_align_size=1024"`. Making this the first priority
+      is because it allows the same application executable without source code
+      modification to run using different settings through a run-time
+      environment varaible.
     * 2nd priority: hints used in the arguments of `ncmpi__enddef()`, e.g.
-      `ncmpi__enddef(..., v_align=1024,...)`
+      `ncmpi__enddef(..., v_align=1024,...)`. With the same reason as described
+      above, application source codes making a call to APIs using specific
+      arguments should have a priority lower than the ones set in a run-time
+      environment variable, so that users can try different hints using the
+      same executable.
     * 3rd priority: hints set in the MPI info object passed into calls of
       `ncmpi_create()` and `ncmpi_open()`, e.g.
-      `MPI_Info_set("nc_var_align_size", "1024");`
+      `MPI_Info_set("nc_var_align_size", "1024");`. This is because MPI info
+      can only be passed at the file creation or open time whose hints are
+      generally applied to the whole operation to the fille until it is closed.
+      However, `ncmpi__endde()` can be called multiple times between a file's
+      open and close, as users may want to use a settings unique for individual
+      call to `ncmpi__endde()`. Thus `ncmpi__endde()` should have a higher
+      priority than MPI info.
   + PnetCDF I/O hint `nc_header_align_size` is essentially the same as hint
     `nc_var_align_size`, but its name is closer to the hint's intent, i.e.
     adjusting the header to reserve space for its growth in the future when new
@@ -127,5 +140,8 @@ This is essentially a placeholder for the next release note ...
     PnetCDF See [PR #173](https://github.com/Parallel-NetCDF/PnetCDF/pull/173).
 
 * Clarifications
-  + none
+  + Hint precedence change. PnetCDF version 1.14.0 and prior use a hint
+    precedence of `PNETCDF_HINTS` > `MPI info` > `ncmpi__enddef()`. Starting
+    from 1.14.1, the precedence has been changed to `PNETCDF_HINTS` >
+    `ncmpi__enddef()` > `MPI info`.
 
