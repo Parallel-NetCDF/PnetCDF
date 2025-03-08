@@ -1,13 +1,12 @@
 /*
  *  Copyright (C) 2025, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
- *
  */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * This program tests header extent growth by re-entering the define mode and
- * add more fix-sized and record variables.
+ * This program tests header extent growth by re-entering the define mode
+ * multiple times and add more fix-sized and record variables.
  *
  * The compile and run commands are given below.
  *
