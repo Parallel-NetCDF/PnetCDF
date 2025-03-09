@@ -6,7 +6,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New optimization
-  + none
+  + When file header extent size grows, moving the data section to a higher
+    file offset has changed to be done in chunks of 16 MB per process.
+    See [PR #174](https://github.com/Parallel-NetCDF/PnetCDF/pull/174),
 
 * New Limitations
   + none
