@@ -39,60 +39,66 @@ move_file_block(NC         *ncp,
                 MPI_Offset  from,   /* source file starting offset */
                 MPI_Offset  nbytes) /* amount to be moved */
 {
-    int rank, bufcount, mpireturn, err, status=NC_NOERR, min_st;
+    int rank, nprocs, mpireturn, err, status=NC_NOERR, min_st;
     void *buf;
-    size_t chunk_size;
+    size_t num_moves, mv_amnt, p_units;
+    MPI_Offset off_last, off_from, off_to;
     MPI_Status mpistatus;
     MPI_File fh;
 
     rank = ncp->rank;
+    nprocs = ncp->nprocs;
 
     /* moving file blocks must be done in collective mode, ignoring NC_HCOLL */
     fh = ncp->collective_fh;
-
-    /* Divide amount nbytes among all processes. If the divided amount,
-     * chunk_size, is larger then MOVE_UNIT, set chunk_size to be the move unit
-     * size per process (make sure it is <= NC_MAX_INT, as MPI read/write APIs
-     * use 4-byte int in their count argument.)
-     */
-#define MOVE_UNIT 67108864
-    chunk_size = nbytes / ncp->nprocs;
-    if (nbytes % ncp->nprocs) chunk_size++;
-    if (chunk_size > MOVE_UNIT) {
-        /* move data in multiple rounds, MOVE_UNIT per process at a time */
-        chunk_size = MOVE_UNIT;
-    }
-
-    /* buf will be used as a temporal buffer to move data in chunks, i.e.
-     * read a chunk and later write to the new location */
-    buf = NCI_Malloc(chunk_size);
-    if (buf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* make fileview entire file visible */
     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
                                 MPI_INFO_NULL);
 
-    /* move the variable starting from its tail toward its beginning */
-    while (nbytes > 0) {
-        int get_size=0;
+    /* Divide amount nbytes into chunks of size MOVE_UNIT each and assign
+     * chunks among all processes. If the number of chunks is larger then
+     * the number of processes, carry out the data move in multiple rounds.
+     */
+#define MOVE_UNIT 16777216
+    /* buf will be used as a temporal buffer to move data in chunks, i.e.
+     * read a chunk and later write to the new location
+     */
+    buf = NCI_Malloc(MOVE_UNIT);
+    if (buf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-        /* calculate how much to move at each time. chunk_size has been
-         * checked, must be < NC_MAX_INT
-         */
-        bufcount = (int)chunk_size;
-        if (nbytes < (MPI_Offset)ncp->nprocs * chunk_size) {
-            /* handle the last group of chunks */
-            MPI_Offset rem_chunks = nbytes / chunk_size;
-            if (rank > rem_chunks) /* these processes do not read/write */
-                bufcount = 0;
-            else if (rank == rem_chunks) /* this process reads/writes less */
-                /* make bufcount < chunk_size */
-                bufcount = (int)(nbytes % chunk_size);
-            nbytes = 0;
+    p_units = MOVE_UNIT * nprocs;
+    num_moves = nbytes / p_units;
+    if (nbytes % p_units) num_moves++;
+    off_last = (num_moves - 1) * p_units + rank * MOVE_UNIT;
+    off_from = from + off_last;
+    off_to   = to   + off_last;
+    mv_amnt  = nbytes % p_units;
+    if (mv_amnt == 0 && nbytes > 0) mv_amnt = p_units;
+
+    /* move the data section starting from its tail toward its beginning */
+    while (nbytes > 0) {
+        int chunk_size, get_size=0;
+
+        if (mv_amnt == p_units) {
+            /* each rank moves amount of chunk_size */
+            chunk_size = MOVE_UNIT;
         }
         else {
-            nbytes -= chunk_size*ncp->nprocs;
+            /* when total move amount is less than p_units */
+            size_t num_chunks = mv_amnt / MOVE_UNIT;
+            if (mv_amnt % MOVE_UNIT) num_chunks++;
+            if (rank < num_chunks) {
+                chunk_size = MOVE_UNIT;
+                if (rank == num_chunks - 1 && mv_amnt % MOVE_UNIT > 0)
+                    chunk_size = mv_amnt % MOVE_UNIT;
+                assert(chunk_size > 0);
+            }
+            else
+                chunk_size = 0;
         }
+
+        /* each rank moves data of size chunk_size from off_from to off_to */
 
         /* explicitly initialize mpistatus object to 0. For zero-length read,
          * MPI_Get_count may report incorrect result for some MPICH version,
@@ -101,13 +107,17 @@ move_file_block(NC         *ncp,
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
-        /* read the original data @ from+nbytes+rank*chunk_size */
-        TRACE_IO(MPI_File_read_at_all)(fh, from+nbytes+rank*chunk_size,
-                                       buf, bufcount, MPI_BYTE, &mpistatus);
+        /* read the original data at off_from for amount of chunk_size */
+        if (ncp->nprocs > 1)
+            TRACE_IO(MPI_File_read_at_all)(fh, off_from, buf, chunk_size,
+                                           MPI_BYTE, &mpistatus);
+        else
+            TRACE_IO(MPI_File_read_at)(fh, off_from, buf, chunk_size,
+                                           MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at_all");
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EREAD)
-            get_size = bufcount;
+            get_size = chunk_size;
         }
         else {
             /* for zero-length read, MPI_Get_count may report incorrect result
@@ -116,8 +126,8 @@ move_file_block(NC         *ncp,
              * work around. See MPICH ticket:
              * https://trac.mpich.org/projects/mpich/ticket/2332
              *
-             * Note we cannot set bufcount to get_size, as the actual size
-             * read from a file may be less than bufcount. Because we are
+             * Note we cannot set chunk_size to get_size, as the actual size
+             * read from a file may be less than chunk_size. Because we are
              * moving whatever read to a new file offset, we must use the
              * amount actually read to call MPI_File_write_at_all below.
              *
@@ -139,7 +149,7 @@ move_file_block(NC         *ncp,
         }
         if (status != NC_NOERR) break;
 
-        /* write to new location @ to+nbytes+rank*chunk_size
+        /* write to new location at off_to for amount of chunk_size
          *
          * Ideally, we should write the amount of get_size returned from a call
          * to MPI_Get_count in the below MPI write. This is in case some
@@ -152,7 +162,7 @@ move_file_block(NC         *ncp,
          * the correct value due to an internal error that fails to initialize
          * the MPI_Status object. Therefore, the solution can be either to
          * explicitly initialize the status object to zeros, or to just use
-         * bufcount for write. Note that the latter will write the variables
+         * chunk_size for write. Note that the latter will write the variables
          * that have not been written before. Below uses the former option.
          */
 
@@ -164,12 +174,12 @@ move_file_block(NC         *ncp,
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
         if (ncp->nprocs > 1)
-            TRACE_IO(MPI_File_write_at_all)(fh, to+nbytes+rank*chunk_size,
-                                            buf, get_size /* NOT bufcount */,
+            TRACE_IO(MPI_File_write_at_all)(fh, off_to, buf,
+                                            get_size /* NOT chunk_size */,
                                             MPI_BYTE, &mpistatus);
         else
-            TRACE_IO(MPI_File_write_at)(fh, to+nbytes+rank*chunk_size,
-                                        buf, get_size /* NOT bufcount */,
+            TRACE_IO(MPI_File_write_at)(fh, off_to, buf,
+                                        get_size /* NOT chunk_size */,
                                         MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
@@ -184,15 +194,22 @@ move_file_block(NC         *ncp,
             int put_size;
             mpireturn = MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
             if (mpireturn != MPI_SUCCESS || put_size == MPI_UNDEFINED)
-                ncp->put_size += get_size; /* or bufcount */
+                ncp->put_size += get_size; /* or chunk_size */
             else
                 ncp->put_size += put_size;
         }
         if (ncp->nprocs > 1) {
-            TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN, ncp->comm);
+            TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN,
+                                      ncp->comm);
             status = min_st;
         }
         if (status != NC_NOERR) break;
+
+        /* move on to the next round */
+        mv_amnt   = p_units;
+        off_from -= mv_amnt;
+        off_to   -= mv_amnt;
+        nbytes   -= mv_amnt;
     }
     NCI_Free(buf);
     return status;
@@ -1174,8 +1191,9 @@ ncmpio__enddef(void       *ncdp,
 
         if (ncp->vars.ndefined > 0) { /* no. record and non-record variables */
             if (ncp->begin_var > ncp->old->begin_var) {
-                /* header size increases, shift the entire data part down */
-                /* shift record variables first */
+                /* header extent has increased, shift the entire data section
+                 * to a higher offset, by moving record variables first
+                 */
                 err = move_record_vars(ncp, ncp->old);
                 CHECK_ERROR(err)
 
