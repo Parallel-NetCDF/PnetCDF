@@ -2,7 +2,6 @@
  *  Copyright (C) 2003, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  */
-/* $Id$ */
 
 /*
  * This file implements the corresponding APIs defined in src/dispatchers/file.c
@@ -31,15 +30,21 @@
 #include "ncmpio_subfile.h"
 #endif
 
+/* Divide the amount of data to be moved into chunks of size MOVE_UNIT each,
+ * and assign chunks to all processes. If the number of chunks is larger than
+ * the number of processes, carry out the data movement in multiple rounds.
+ */
+#define MOVE_UNIT 16777216
 
-/*----< move_file_block() >--------------------------------------------------*/
+/*----< move_file_block() >-------------------------------------------------*/
+/* Call MPI independent I/O subroutines to move data */
 static int
 move_file_block(NC         *ncp,
-                MPI_Offset  to,     /* destination file starting offset */
-                MPI_Offset  from,   /* source file starting offset */
+                MPI_Offset  to,     /* destination starting file offset */
+                MPI_Offset  from,   /* source      starting file offset */
                 MPI_Offset  nbytes) /* amount to be moved */
 {
-    int rank, nprocs, mpireturn, err, status=NC_NOERR, min_st;
+    int rank, nprocs, mpireturn, err, status=NC_NOERR;
     void *buf;
     size_t num_moves, mv_amnt, p_units;
     MPI_Offset off_last, off_from, off_to;
@@ -49,6 +54,11 @@ move_file_block(NC         *ncp,
     rank = ncp->rank;
     nprocs = ncp->nprocs;
 
+    /* To make sure all processes finish their I/O before any process starts to
+     * read, it is necessary to call MPI_Barrier.
+     */
+    if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
+
     /* moving file blocks must be done in collective mode, ignoring NC_HCOLL */
     fh = ncp->collective_fh;
 
@@ -56,11 +66,6 @@ move_file_block(NC         *ncp,
     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
                                 MPI_INFO_NULL);
 
-    /* Divide amount nbytes into chunks of size MOVE_UNIT each and assign
-     * chunks among all processes. If the number of chunks is larger then
-     * the number of processes, carry out the data move in multiple rounds.
-     */
-#define MOVE_UNIT 16777216
     /* buf will be used as a temporal buffer to move data in chunks, i.e.
      * read a chunk and later write to the new location
      */
@@ -116,7 +121,8 @@ move_file_block(NC         *ncp,
                                            MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at_all");
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EREAD)
+            if (status == NC_NOERR && err == NC_EFILE)
+                DEBUG_ASSIGN_ERROR(status, NC_EREAD)
             get_size = chunk_size;
         }
         else {
@@ -140,14 +146,8 @@ move_file_block(NC         *ncp,
             ncp->get_size += get_size;
         }
 
-        if (ncp->nprocs > 1) {
-            /* MPI_Barrier(ncp->comm); */
-            /* important, in case new region overlaps old region */
-            TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN,
-                                      ncp->comm);
-            status = min_st;
-        }
-        if (status != NC_NOERR) break;
+        /* to prevent from one rank's write run faster than other's read */
+        if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
 
         /* write to new location at off_to for amount of chunk_size
          *
@@ -179,11 +179,12 @@ move_file_block(NC         *ncp,
                                             MPI_BYTE, &mpistatus);
         else
             TRACE_IO(MPI_File_write_at)(fh, off_to, buf,
-                                        get_size /* NOT chunk_size */,
-                                        MPI_BYTE, &mpistatus);
+                                            get_size /* NOT chunk_size */,
+                                            MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
+            if (status == NC_NOERR && err == NC_EFILE)
+                DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
         }
         else {
             /* update the number of bytes written since file open.
@@ -198,12 +199,6 @@ move_file_block(NC         *ncp,
             else
                 ncp->put_size += put_size;
         }
-        if (ncp->nprocs > 1) {
-            TRACE_COMM(MPI_Allreduce)(&status, &min_st, 1, MPI_INT, MPI_MIN,
-                                      ncp->comm);
-            status = min_st;
-        }
-        if (status != NC_NOERR) break;
 
         /* move on to the next round */
         mv_amnt   = p_units;
@@ -211,28 +206,8 @@ move_file_block(NC         *ncp,
         off_to   -= mv_amnt;
         nbytes   -= mv_amnt;
     }
+
     NCI_Free(buf);
-    return status;
-}
-
-/*----< move_fixed_vars() >--------------------------------------------------*/
-/* move one fixed variable at a time, only when the new begin > old begin */
-static int
-move_fixed_vars(NC *ncp, NC *old)
-{
-    int i, err, status=NC_NOERR;
-
-    /* move starting from the last fixed variable */
-    for (i=old->vars.ndefined-1; i>=0; i--) {
-        if (IS_RECVAR(old->vars.value[i])) continue;
-
-        MPI_Offset from = old->vars.value[i]->begin;
-        MPI_Offset to   = ncp->vars.value[i]->begin;
-        if (to > from) {
-            err = move_file_block(ncp, to, from, ncp->vars.value[i]->len);
-            if (status == NC_NOERR) status = err;
-        }
-    }
     return status;
 }
 
@@ -1177,40 +1152,84 @@ ncmpio__enddef(void       *ncdp,
     }
 #endif
 
-    if (ncp->old != NULL) {
+    if (ncp->old != NULL && ncp->vars.ndefined > 0) {
         /* The current define mode was entered from ncmpi_redef, not from
-         * ncmpi_create. We must check if header has been expanded.
+         * ncmpi_create. We must check if header extent has grown.
+         * This only needs to be done when there are variables defined.
          */
+        int mov_done=0;
+        MPI_Offset nbytes;
 
         assert(!NC_IsNew(ncp));
         assert(fIsSet(ncp->flags, NC_MODE_DEF));
         assert(ncp->begin_rec >= ncp->old->begin_rec);
         assert(ncp->begin_var >= ncp->old->begin_var);
         assert(ncp->vars.ndefined >= ncp->old->vars.ndefined);
+
         /* ncp->numrecs has already sync-ed in ncmpi_redef */
 
-        if (ncp->vars.ndefined > 0) { /* no. record and non-record variables */
-            if (ncp->begin_var > ncp->old->begin_var) {
-                /* header extent has increased, shift the entire data section
-                 * to a higher offset, by moving record variables first
-                 */
-                err = move_record_vars(ncp, ncp->old);
-                CHECK_ERROR(err)
+        if (ncp->begin_var > ncp->old->begin_var &&
+            ncp->begin_rec > ncp->old->begin_rec &&
+            ncp->vars.ndefined == ncp->old->vars.ndefined) {
+            /* Data section grows and no new variable has been added. The
+             * entire data section must be moved to a higher file offset.
+             */
+            /* amount of data section to be moved */
+            nbytes = ncp->old->begin_rec - ncp->old->begin_var
+                   + ncp->old->recsize * ncp->old->numrecs;
 
-                /* shift non-record variables */
-                /* err = move_vars_r(ncp, ncp->old); */
-                err = move_fixed_vars(ncp, ncp->old);
-                CHECK_ERROR(err)
+            err = move_file_block(ncp, ncp->begin_var, ncp->old->begin_var,
+                                  nbytes);
+            if (status == NC_NOERR) status = err;
+            mov_done = 1;
+        }
+        else {
+            if (ncp->begin_rec > ncp->old->begin_rec) {
+                /* beginning of record variable section grows. The entire
+                 * record variable section must be moved to a higher file
+                 * offset.
+                 */
+                if (ncp->recsize == ncp->old->recsize) {
+                    /* no new record variable has been added */
+
+                    /* amount of data to be moved */
+                    nbytes = ncp->old->recsize * ncp->old->numrecs;
+
+                    err = move_file_block(ncp, ncp->begin_rec,
+                                          ncp->old->begin_rec, nbytes);
+                    if (status == NC_NOERR) status = err;
+                }
+                else {
+                    /* new record variables have been added. Must move one
+                     * record at a time
+                     */
+                    err = move_record_vars(ncp, ncp->old);
+                    if (status == NC_NOERR) status = err;
+                }
+                mov_done = 1;
             }
-            else if (ncp->begin_rec > ncp->old->begin_rec ||
-                     ncp->recsize   > ncp->old->recsize) {
-                /* number of non-record variables increases, or
-                   number of records of record variables increases,
-                   shift and move all record variables down */
-                err = move_record_vars(ncp, ncp->old);
-                CHECK_ERROR(err)
+
+            if (ncp->begin_var > ncp->old->begin_var) {
+                /* beginning of fix-sized variable section grows. The
+                 * fix-sized variable section must be moved to a higher
+                 * file offset.
+                 */
+                /* amount of data to be moved. Note there may be some free
+                 * space at the end of fix-sized variable section that need not
+                 * be moved.
+                 */
+                nbytes = ncp->old->begin_rec - ncp->old->begin_var;
+
+                err = move_file_block(ncp, ncp->begin_var, ncp->old->begin_var,
+                                      nbytes);
+                if (status == NC_NOERR) status = err;
+                mov_done = 1;
             }
         }
+
+        /* to prevent some ranks run faster than others */
+        if (mov_done && ncp->nprocs > 1) MPI_Barrier(ncp->comm);
+
     } /* ... ncp->old != NULL */
 
     /* first sync header objects in memory across all processes, and then root
