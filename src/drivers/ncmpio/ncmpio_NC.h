@@ -17,6 +17,11 @@
 #include <dispatch.h>
 #include "ncmpio_driver.h"
 
+#define NC_DEFAULT_H_MINFREE 0
+#define NC_DEFAULT_V_ALIGN   512
+#define NC_DEFAULT_V_MINFREE 0
+#define NC_DEFAULT_R_ALIGN   4
+
 #define FILE_ALIGNMENT_DEFAULT 512
 #define FILE_ALIGNMENT_LB      4
 
@@ -383,12 +388,12 @@ struct NC {
 #endif
     int           striping_unit; /* stripe size of the file */
     int           chunk;       /* chunk size for reading header, one chunk at a time */
-    MPI_Offset    h_align;     /* file alignment for header size */
     MPI_Offset    v_align;     /* alignment of the beginning of fixed-size variables */
     MPI_Offset    r_align;     /* file alignment for record variable section */
-    MPI_Offset    env_h_align; /* h_align set in environment variable */
     MPI_Offset    env_v_align; /* v_align set in environment variable */
     MPI_Offset    env_r_align; /* r_align set in environment variable */
+    MPI_Offset    info_v_align;/* v_align set in MPI Info object */
+    MPI_Offset    info_r_align;/* r_align set in MPI Info object */
     MPI_Offset    h_minfree;   /* pad at the end of the header section */
     MPI_Offset    v_minfree;   /* pad at the end of the data section for fixed-size variables */
     MPI_Offset    ibuf_size;   /* packing buffer size for flushing noncontig
