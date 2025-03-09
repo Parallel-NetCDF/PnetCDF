@@ -1191,9 +1191,14 @@ ncmpio__enddef(void       *ncdp,
 
         if (ncp->vars.ndefined > 0) { /* no. record and non-record variables */
             if (ncp->begin_var > ncp->old->begin_var) {
-                /* header extent has increased, shift the entire data section
-                 * to a higher offset, by moving record variables first
+                /* header size increases, move the entire data section to a
+                 * higher file offset. To make sure all processes finish their
+                 * I/O before any process starts to read, it is necessary to
+                 * call MPI_Barrier.
                  */
+                if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
+
+                /* shift record variables first */
                 err = move_record_vars(ncp, ncp->old);
                 CHECK_ERROR(err)
 
@@ -1204,6 +1209,13 @@ ncmpio__enddef(void       *ncdp,
             }
             else if (ncp->begin_rec > ncp->old->begin_rec ||
                      ncp->recsize   > ncp->old->recsize) {
+                /* fix-sized variable section size increases, move the entire
+                 * record variable section to a higher file offset. To make
+                 * sure all processes finish their I/O before any process
+                 * starts to read, it is necessary to call MPI_Barrier.
+                 */
+                if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
+
                 /* number of non-record variables increases, or
                    number of records of record variables increases,
                    shift and move all record variables down */
