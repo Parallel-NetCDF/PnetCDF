@@ -75,7 +75,8 @@ This is essentially a placeholder for the next release note ...
     See [PR #165](https://github.com/Parallel-NetCDF/PnetCDF/pull/165).
 
 * New test program
-  + none
+  + test/testcases/tst_grow_header.c tests header extent growth by re-entering
+    the define mode multiple times and add more fix-sized and record variables.
 
 * Issues with NetCDF library
   + none
