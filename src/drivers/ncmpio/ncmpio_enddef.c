@@ -37,14 +37,14 @@
 #define MOVE_UNIT 16777216
 
 /*----< move_file_block() >-------------------------------------------------*/
-/* Call MPI independent I/O subroutines to move data */
+/* Call MPI I/O subroutines to move data */
 static int
 move_file_block(NC         *ncp,
                 MPI_Offset  to,     /* destination starting file offset */
                 MPI_Offset  from,   /* source      starting file offset */
                 MPI_Offset  nbytes) /* amount to be moved */
 {
-    int rank, nprocs, mpireturn, err, status=NC_NOERR;
+    int rank, nprocs, mpireturn, err, status=NC_NOERR, do_coll;
     void *buf;
     size_t num_moves, mv_amnt, p_units;
     MPI_Offset off_last, off_from, off_to;
@@ -65,6 +65,13 @@ move_file_block(NC         *ncp,
     /* make fileview entire file visible */
     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
                                 MPI_INFO_NULL);
+
+    /* Use MPI collective I/O subroutines to move data, only if nproc > 1 and
+     * MPI-IO hint "romio_no_indep_rw" is set to true. Otherwise, use MPI
+     * independent I/O subroutines, as the data partitioned among processes are
+     * not interleaved and thus need no collective I/O.
+     */
+    do_coll = (ncp->nprocs > 1 && fIsSet(ncp->flags, NC_HCOLL));
 
     /* buf will be used as a temporal buffer to move data in chunks, i.e.
      * read a chunk and later write to the new location
@@ -103,8 +110,6 @@ move_file_block(NC         *ncp,
                 chunk_size = 0;
         }
 
-        /* each rank moves data of size chunk_size from off_from to off_to */
-
         /* explicitly initialize mpistatus object to 0. For zero-length read,
          * MPI_Get_count may report incorrect result for some MPICH version,
          * due to the uninitialized MPI_Status object passed to MPI-IO calls.
@@ -112,8 +117,8 @@ move_file_block(NC         *ncp,
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
-        /* read the original data at off_from for amount of chunk_size */
-        if (ncp->nprocs > 1)
+        /* read from file at off_from for amount of chunk_size */
+        if (do_coll)
             TRACE_IO(MPI_File_read_at_all)(fh, off_from, buf, chunk_size,
                                            MPI_BYTE, &mpistatus);
         else
@@ -132,11 +137,6 @@ move_file_block(NC         *ncp,
              * work around. See MPICH ticket:
              * https://trac.mpich.org/projects/mpich/ticket/2332
              *
-             * Note we cannot set chunk_size to get_size, as the actual size
-             * read from a file may be less than chunk_size. Because we are
-             * moving whatever read to a new file offset, we must use the
-             * amount actually read to call MPI_File_write_at_all below.
-             *
              * Update the number of bytes read since file open.
              * Because each rank reads and writes no more than one chunk_size
              * at a time and chunk_size is < NC_MAX_INT, it is OK to call
@@ -149,23 +149,6 @@ move_file_block(NC         *ncp,
         /* to prevent from one rank's write run faster than other's read */
         if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
 
-        /* write to new location at off_to for amount of chunk_size
-         *
-         * Ideally, we should write the amount of get_size returned from a call
-         * to MPI_Get_count in the below MPI write. This is in case some
-         * variables are defined but never been written. The value returned by
-         * MPI_Get_count is supposed to be the actual amount read by the MPI
-         * read call. If partial data (or none) is available for read, then we
-         * should just write that amount. Note this MPI write is collective,
-         * and thus all processes must participate the call even if get_size
-         * is 0. However, in some MPICH versions MPI_Get_count fails to report
-         * the correct value due to an internal error that fails to initialize
-         * the MPI_Status object. Therefore, the solution can be either to
-         * explicitly initialize the status object to zeros, or to just use
-         * chunk_size for write. Note that the latter will write the variables
-         * that have not been written before. Below uses the former option.
-         */
-
         /* explicitly initialize mpistatus object to 0. For zero-length read,
          * MPI_Get_count may report incorrect result for some MPICH version,
          * due to the uninitialized MPI_Status object passed to MPI-IO calls.
@@ -173,7 +156,11 @@ move_file_block(NC         *ncp,
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
-        if (ncp->nprocs > 1)
+        /* Write to new location at off_to for amount of get_size. Assuming the
+         * call to MPI_Get_count() above returns the actual amount of data read
+         * from the file, i.e. get_size.
+         */
+        if (do_coll)
             TRACE_IO(MPI_File_write_at_all)(fh, off_to, buf,
                                             get_size /* NOT chunk_size */,
                                             MPI_BYTE, &mpistatus);
