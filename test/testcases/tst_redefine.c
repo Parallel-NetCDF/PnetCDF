@@ -32,7 +32,7 @@
 
 #include <testutils.h>
 
-#define LEN 16
+#define LEN 101
 
 #define RNDUP(x, unit) ((((x) + (unit) - 1) / (unit)) * (unit))
 
@@ -159,7 +159,11 @@ err_out:
     } \
     /* read variables back and check contents */ \
     nerrs += check_vars(comm, ncid, varid); \
-    if (nerrs > 0) goto err_out; \
+    if (nerrs > 0) { \
+        printf("Error at line %d in %s: check_vars failed\n", \
+               __LINE__,__FILE__); \
+        goto err_out; \
+    } \
 }
 
 #define GROW_METADATA(growth) { \
