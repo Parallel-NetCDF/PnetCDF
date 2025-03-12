@@ -1270,10 +1270,14 @@ ncmpio__enddef(void       *ncdp,
         /* ncp->numrecs has already sync-ed in ncmpi_redef */
 
         if (ncp->begin_var > ncp->old->begin_var &&
-            ncp->begin_rec > ncp->old->begin_rec &&
-            ncp->vars.ndefined == ncp->old->vars.ndefined) {
-            /* Data section grows and no new variable has been added. The
-             * entire data section must be moved to a higher file offset.
+            ncp->begin_rec - ncp->begin_var ==
+            ncp->old->begin_rec - ncp->old->begin_var &&
+            ncp->vars.num_rec_vars == ncp->old->vars.num_rec_vars) {
+            /* When header extent grows, if the distance between the starting
+             * offsets of fix-sized and record variable sections remains the
+             * same, and no new record variable has been added, then the entire
+             * data section can be moved as a single contiguous block to a
+             * higher file offset.
              */
             /* amount of data section to be moved */
             nbytes = ncp->old->begin_rec - ncp->old->begin_var
@@ -1290,8 +1294,11 @@ ncmpio__enddef(void       *ncdp,
                  * record variable section must be moved to a higher file
                  * offset.
                  */
-                if (ncp->recsize == ncp->old->recsize) {
-                    /* no new record variable has been added */
+                if (ncp->vars.num_rec_vars == ncp->old->vars.num_rec_vars) {
+                    /* no new record variable has been added, then the entire
+                     * record variable section can be moved as a single
+                     * contiguous block
+                     */
 
                     /* amount of data to be moved */
                     nbytes = ncp->old->recsize * ncp->old->numrecs;
@@ -1302,7 +1309,8 @@ ncmpio__enddef(void       *ncdp,
                 }
                 else {
                     /* new record variables have been added. Must move one
-                     * record at a time
+                     * record at a time, because all records of record
+                     * variables are stored interleaved in the file.
                      */
                     err = move_record_vars(ncp, ncp->old);
                     if (status == NC_NOERR) status = err;
@@ -1311,15 +1319,25 @@ ncmpio__enddef(void       *ncdp,
             }
 
             if (ncp->begin_var > ncp->old->begin_var) {
-                /* beginning of fix-sized variable section grows. The
-                 * fix-sized variable section must be moved to a higher
-                 * file offset.
+                /* beginning of fix-sized variable section grows. The fix-sized
+                 * variable section must be moved to a higher file offset.
                  */
-                /* amount of data to be moved. Note there may be some free
-                 * space at the end of fix-sized variable section that need not
-                 * be moved.
+
+                /* First, find the size of fix-sized variable section, i.e.
+                 * from the last fix-sized variable's begin and len. Note there
+                 * may be some free space at the end of fix-sized variable
+                 * section that need not be moved.
                  */
-                nbytes = ncp->old->begin_rec - ncp->old->begin_var;
+                MPI_Offset end_var = ncp->old->begin_var;
+                for (i=ncp->old->vars.ndefined-1; i>=0; i--) {
+                    if (!IS_RECVAR(ncp->old->vars.value[i])) {
+                        end_var = ncp->old->vars.value[i]->begin
+                                + ncp->old->vars.value[i]->len;
+                        break;
+                    }
+                }
+                /* amount of data to be moved */
+                nbytes = end_var - ncp->old->begin_var;
 
                 err = move_file_block(ncp, ncp->begin_var, ncp->old->begin_var,
                                       nbytes);
