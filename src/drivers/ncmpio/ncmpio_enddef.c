@@ -36,6 +36,132 @@
  */
 #define MOVE_UNIT 16777216
 
+#define USE_POSIX_IO_TO_MOVE
+#ifdef USE_POSIX_IO_TO_MOVE
+/*----< move_file_block() >-------------------------------------------------*/
+/* Call POSIX I/O subroutines to move data */
+#include <fcntl.h>      /* open() */
+#include <sys/types.h>  /* open() */
+#include <sys/stat.h>   /* open() */
+#include <unistd.h>     /* pread(), pwrite(), close() */
+
+static int
+move_file_block(NC         *ncp,
+                MPI_Offset  to,     /* destination starting file offset */
+                MPI_Offset  from,   /* source      starting file offset */
+                MPI_Offset  nbytes) /* amount to be moved */
+{
+    int fd, rank, nprocs, status=NC_NOERR, do_open;
+    void *buf;
+    size_t num_moves, mv_amnt, p_units;
+    off_t off_last, off_from, off_to;
+    char *path = ncmpii_remove_file_system_type_prefix(ncp->path);
+
+    rank = ncp->rank;
+    nprocs = ncp->nprocs;
+
+    /* buf will be used as a temporal buffer to move data in chunks, i.e.
+     * read a chunk and later write to the new location
+     */
+    buf = NCI_Malloc(MOVE_UNIT);
+    if (buf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
+
+    p_units = MOVE_UNIT * nprocs;
+    num_moves = nbytes / p_units;
+    if (nbytes % p_units) num_moves++;
+    off_last = (num_moves - 1) * p_units + rank * MOVE_UNIT;
+    off_from = from + off_last;
+    off_to   = to   + off_last;
+    mv_amnt  = nbytes % p_units;
+    if (mv_amnt == 0 && nbytes > 0) mv_amnt = p_units;
+
+    /* determine the subset of processes that have data to move */
+    do_open = 0;
+    if (nbytes >= p_units)
+        do_open = 1;
+    else {
+        int n_units = nbytes / MOVE_UNIT;
+        if (nbytes % MOVE_UNIT) n_units++;
+        if (rank < n_units) do_open = 1;
+    }
+
+    if (do_open && (fd = open(path, O_RDWR)) == -1) {
+        fprintf(stderr,"Error at %s line %d: open file %s (%s)\n",
+                __func__,__LINE__,path,strerror(errno));
+        DEBUG_RETURN_ERROR(NC_EFILE)
+    }
+
+    /* move the data section starting from its tail toward its beginning */
+    while (nbytes > 0) {
+        size_t chunk_size;
+        ssize_t get_size, put_size;
+
+        if (mv_amnt == p_units) {
+            /* each rank moves amount of chunk_size */
+            chunk_size = MOVE_UNIT;
+        }
+        else {
+            /* when total move amount is less than p_units */
+            size_t num_chunks = mv_amnt / MOVE_UNIT;
+            if (mv_amnt % MOVE_UNIT) num_chunks++;
+            if (rank < num_chunks) {
+                chunk_size = MOVE_UNIT;
+                if (rank == num_chunks - 1 && mv_amnt % MOVE_UNIT > 0)
+                    chunk_size = mv_amnt % MOVE_UNIT;
+                assert(chunk_size > 0);
+            }
+            else
+                chunk_size = 0;
+        }
+
+        if (chunk_size > 0) {
+            /* read from file at off_from for amount of chunk_size */
+            get_size = pread(fd, buf, chunk_size, off_from);
+            if (get_size < 0) {
+                fprintf(stderr,
+                "Error at %s line %d: pread file %s offset %ld size %zd (%s)\n",
+                __func__,__LINE__,path,off_from,chunk_size,strerror(errno));
+                DEBUG_RETURN_ERROR(NC_EREAD)
+                get_size = 0;
+            }
+            ncp->get_size += get_size;
+        }
+        else
+            get_size = 0;
+
+        /* to prevent from one rank's write run faster than other's read */
+        if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
+
+        if (get_size > 0) {
+            /* Write to new location at off_to for amount of get_size. Assuming
+             * the call to MPI_Get_count() above returns the actual amount of
+             * data read from the file, i.e. get_size.
+             */
+            put_size = pwrite(fd, buf, get_size, off_to);
+            if (put_size < 0) {
+                fprintf(stderr,
+                "Error at %s line %d: pwrite file %s offset %ld size %zd (%s)\n",
+                __func__,__LINE__,path,off_to,get_size,strerror(errno));
+                DEBUG_RETURN_ERROR(NC_EREAD)
+                put_size = 0;
+            }
+            ncp->put_size += put_size;
+        }
+
+        /* move on to the next round */
+        mv_amnt   = p_units;
+        off_from -= mv_amnt;
+        off_to   -= mv_amnt;
+        nbytes   -= mv_amnt;
+    }
+
+    if (do_open && close(fd) == -1)
+        DEBUG_RETURN_ERROR(NC_EFILE)
+
+    NCI_Free(buf);
+    return status;
+}
+#else
 /*----< move_file_block() >-------------------------------------------------*/
 /* Call MPI I/O subroutines to move data */
 static int
@@ -54,17 +180,14 @@ move_file_block(NC         *ncp,
     rank = ncp->rank;
     nprocs = ncp->nprocs;
 
-    /* To make sure all processes finish their I/O before any process starts to
-     * read, it is necessary to call MPI_Barrier.
+    /* collective_fh can be used in either MPI independent or collective I/O
+     * APIs to move data, within this subroutine.
      */
-    if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
-
-    /* moving file blocks must be done in collective mode, ignoring NC_HCOLL */
     fh = ncp->collective_fh;
 
-    /* make fileview entire file visible */
-    TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
-                                MPI_INFO_NULL);
+    /* MPI-IO fileview has been reset in ncmpi_redef() to make the entire file
+     * visible
+     */
 
     /* Use MPI collective I/O subroutines to move data, only if nproc > 1 and
      * MPI-IO hint "romio_no_indep_rw" is set to true. Otherwise, use MPI
@@ -116,12 +239,13 @@ move_file_block(NC         *ncp,
          * Thus we initialize it above to work around.
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
+        mpireturn = MPI_SUCCESS;
 
         /* read from file at off_from for amount of chunk_size */
         if (do_coll)
             TRACE_IO(MPI_File_read_at_all)(fh, off_from, buf, chunk_size,
                                            MPI_BYTE, &mpistatus);
-        else
+        else if (chunk_size > 0)
             TRACE_IO(MPI_File_read_at)(fh, off_from, buf, chunk_size,
                                            MPI_BYTE, &mpistatus);
         if (mpireturn != MPI_SUCCESS) {
@@ -130,7 +254,7 @@ move_file_block(NC         *ncp,
                 DEBUG_ASSIGN_ERROR(status, NC_EREAD)
             get_size = chunk_size;
         }
-        else {
+        else if (chunk_size > 0) {
             /* for zero-length read, MPI_Get_count may report incorrect result
              * for some MPICH version, due to the uninitialized MPI_Status
              * object passed to MPI-IO calls. Thus we initialize it above to
@@ -155,6 +279,7 @@ move_file_block(NC         *ncp,
          * Thus we initialize it above to work around.
          */
         memset(&mpistatus, 0, sizeof(MPI_Status));
+        mpireturn = MPI_SUCCESS;
 
         /* Write to new location at off_to for amount of get_size. Assuming the
          * call to MPI_Get_count() above returns the actual amount of data read
@@ -164,7 +289,7 @@ move_file_block(NC         *ncp,
             TRACE_IO(MPI_File_write_at_all)(fh, off_to, buf,
                                             get_size /* NOT chunk_size */,
                                             MPI_BYTE, &mpistatus);
-        else
+        else if (get_size > 0)
             TRACE_IO(MPI_File_write_at)(fh, off_to, buf,
                                             get_size /* NOT chunk_size */,
                                             MPI_BYTE, &mpistatus);
@@ -173,7 +298,7 @@ move_file_block(NC         *ncp,
             if (status == NC_NOERR && err == NC_EFILE)
                 DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
         }
-        else {
+        else if (get_size > 0) {
             /* update the number of bytes written since file open.
              * Because each rank reads and writes no more than one chunk_size
              * at a time and chunk_size is < NC_MAX_INT, it is OK to call
@@ -197,6 +322,7 @@ move_file_block(NC         *ncp,
     NCI_Free(buf);
     return status;
 }
+#endif
 
 /*----< move_record_vars() >-------------------------------------------------*/
 /* Move the record variables from lower offsets (old) to higher offsets. */
@@ -1266,6 +1392,12 @@ ncmpio__enddef(void       *ncdp,
              * data section can be moved as a single contiguous block to a
              * higher file offset.
              */
+
+            /* Make sure all processes finish their I/O before any process
+             * starts to read the data section.
+             */
+            if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
+
             /* amount of data section to be moved */
             nbytes = ncp->old->begin_rec - ncp->old->begin_var
                    + ncp->old->recsize * ncp->old->numrecs;
@@ -1281,6 +1413,12 @@ ncmpio__enddef(void       *ncdp,
                  * record variable section must be moved to a higher file
                  * offset.
                  */
+
+                /* Make sure all processes finish their I/O before any process
+                 * starts to read the data section.
+                 */
+                if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
+
                 if (ncp->vars.num_rec_vars == ncp->old->vars.num_rec_vars) {
                     /* no new record variable has been added, then the entire
                      * record variable section can be moved as a single
@@ -1310,6 +1448,11 @@ ncmpio__enddef(void       *ncdp,
                  * variable section must be moved to a higher file offset.
                  */
 
+                /* Make sure all processes finish their I/O before any process
+                 * starts to read the data section.
+                 */
+                if (!mov_done && ncp->nprocs > 1) MPI_Barrier(ncp->comm);
+
                 /* First, find the size of fix-sized variable section, i.e.
                  * from the last fix-sized variable's begin and len. Note there
                  * may be some free space at the end of fix-sized variable
@@ -1333,7 +1476,10 @@ ncmpio__enddef(void       *ncdp,
             }
         }
 
-        /* to prevent some ranks run faster than others */
+        /* to prevent some ranks run faster than others and start to read
+         * after exiting ncmpi_enddef(), while some processes are still moving
+         * the data section
+         */
         if (mov_done && ncp->nprocs > 1) MPI_Barrier(ncp->comm);
 
     } /* ... ncp->old != NULL */
