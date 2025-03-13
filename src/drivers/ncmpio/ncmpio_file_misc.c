@@ -81,6 +81,7 @@ dup_NC(const NC *ref)
 int
 ncmpio_redef(void *ncdp)
 {
+    int err, status=NC_NOERR, mpireturn;
     NC *ncp = (NC*)ncdp;
 
 #if 0
@@ -105,7 +106,24 @@ ncmpio_redef(void *ncdp)
     /* we are now entering define mode */
     fSet(ncp->flags, NC_MODE_DEF);
 
-    return NC_NOERR;
+    /* must reset fileview as header extent may later change in enddef() */
+    TRACE_IO(MPI_File_set_view)(ncp->collective_fh, 0, MPI_BYTE,
+                                MPI_BYTE, "native", MPI_INFO_NULL);
+    if (mpireturn != MPI_SUCCESS) {
+        err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_set_view");
+        DEBUG_ASSIGN_ERROR(status, err)
+    }
+
+    if (ncp->independent_fh != MPI_FILE_NULL) {
+        TRACE_IO(MPI_File_set_view)(ncp->independent_fh, 0, MPI_BYTE,
+                                    MPI_BYTE, "native", MPI_INFO_NULL);
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_set_view");
+            DEBUG_ASSIGN_ERROR(status, err)
+        }
+    }
+
+    return status;
 }
 
 /*----< ncmpio_begin_indep_data() >------------------------------------------*/
