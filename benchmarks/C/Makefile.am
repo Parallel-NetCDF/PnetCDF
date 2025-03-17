@@ -14,8 +14,8 @@ LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 check_PROGRAMS = aggregation \
                  write_block_read_column \
-                 pnetcdf_put_vara
-
+                 pnetcdf_put_vara \
+				 indep_data_obj_create
 # parallel runs only
 # TESTS = $(check_PROGRAMS)
 

@@ -59,6 +59,15 @@ using various I/O access patterns.
      performance of NetCDF and PnetCDF when running sequentially, i.e. one
      process.
 
+### C/indep_data_obj_create.c
+   + This program create a large volume of data objects and writes a large amount of metadata
+     to output file.  Each process is evenly assigned a subset of non-shared data objects
+     (variables and dimensions) it intends to create.
+   + The program launches MPI communications to synchronize data objects across all processes.
+     All processes share a copy of the metadata so they can collectively define variables, dimensions,
+     and attributes. The metadata is written to the header of output file.
+
+
 Copyright (C) 2012, Northwestern University and Argonne National Laboratory.
 See COPYRIGHT notice in top-level directory.
 
