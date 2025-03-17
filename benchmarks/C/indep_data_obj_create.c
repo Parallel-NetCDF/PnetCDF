@@ -16,7 +16,7 @@
 #include <pnetcdf.h>
 
 #include <math.h>
-#include <malloc.h>
+
 
 #include <assert.h>
 
