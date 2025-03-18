@@ -1397,11 +1397,9 @@ int main(int argc, char *argv[]) {
     MPI_Reduce(&times[0], &max_times[0], 6, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
     MPI_Reduce(&times[0], &min_times[0], 6, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
     for (int i = 0; i < 6; i++) {
-        if (rank == 0) {
+        if (rank == 0 && verbose) {
+            printf("Min %s time: %f seconds\n", names[i], min_times[i]);
             printf("Max %s time: %f seconds\n", names[i], max_times[i]);
-            if (verbose){
-                printf("Min %s time: %f seconds\n", names[i], min_times[i]);
-             }
         }
     }
     if (mem_track){
