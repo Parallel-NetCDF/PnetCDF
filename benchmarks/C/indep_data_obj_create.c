@@ -1250,7 +1250,7 @@ int main(int argc, char *argv[]) {
 
     int verbose=1, mem_track=0, num_vars=NUM_VARS, num_dims_per_var=NUM_DIMS, num_attrs_per_var=NUM_ATTRS, dim_size=DIM_SIZE, attr_size=ATTR_SIZE, hash_size=HASH_SIZE;
 
-    while ((i = getopt(argc, argv, "hma:q:d:l:s:t:n:")) != EOF)
+    while ((i = getopt(argc, argv, "hqma:d:l:s:t:n:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
                       break;
