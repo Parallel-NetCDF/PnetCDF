@@ -14,6 +14,7 @@
 #include <time.h>   /* time() localtime(), asctime() */
 #include <mpi.h>
 #include <pnetcdf.h>
+#include <stdint.h>
 
 #include <math.h>
 
