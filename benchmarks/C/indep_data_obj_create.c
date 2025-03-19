@@ -1038,7 +1038,7 @@ void generate_metadata(int rank, int nproc, struct hdr *file_info, int num_vars,
 
         // Get variable information
         char var_name[NC_MAX_NAME + 1];
-        sprintf(var_name, "process_%d_var_%d", rank, i - start);
+        sprintf(var_name, "process_%d_var_%d", rank, i - (int)start);
         variable_info->name_len = strlen(var_name);
         variable_info->name = (char *)tracked_malloc((variable_info->name_len + 1) * sizeof(char));
         strcpy(variable_info->name, var_name);
@@ -1172,7 +1172,7 @@ int define_hdr(struct hdr *hdr_data, int ncid){
             att_xtype = hdr_data->vars.value[i]->attrs.value[k]->xtype;
             att_nelems = hdr_data->vars.value[i]->attrs.value[k]->nelems;
             err = ncmpi_put_att(ncid, varid[i],  hdr_data->vars.value[i]->attrs.value[k]->name, att_xtype, 
-            att_nelems, &hdr_data->vars.value[i]->attrs.value[k]->xvalue[0]); ERR
+            att_nelems, (const void *)hdr_data->vars.value[i]->attrs.value[k]->xvalue); ERR
         }
         tracked_free(v_dimids);
 
