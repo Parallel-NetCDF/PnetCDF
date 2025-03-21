@@ -1,3 +1,25 @@
+/*
+ *  Copyright (C) 2025, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ */
+
+/* This file contains the implementation of CDL header file APIs, which are
+ * public to PnetCDF users, i.e. visible in file pnetcdf.h.
+ *    cdl_hdr_open()       opens and parses the CDL file's header
+ *    cdl_hdr_inq_format() returns file format version
+ *    cdl_hdr_inq_ndims()  returns number of dimensions defined in CDL file
+ *    cdl_hdr_inq_dim()    returns metadata of a dimension
+ *    cdl_hdr_inq_nvars()  returns number of variables
+ *    cdl_hdr_inq_var()    returns metadata of a variable defined in CDL file
+ *    cdl_hdr_inq_nattrs() returns number of attributes of a given variable
+ *    cdl_hdr_inq_attr()   returns metadata of an attribute
+ *    cdl_hdr_close()      closes the CDL file
+ */
+
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,7 +38,7 @@ static int debug;
 
 #define ERR_FORMAT(msg) { \
     printf("Error line %d: input file format at %s\n", __LINE__,msg); \
-    err = -1; \
+    err = NC_ENOTNC; \
     goto err_out; \
 }
 
@@ -27,44 +49,47 @@ static int debug;
 typedef struct {
     char       *name;
     MPI_Offset  size;
-} HR_dim;
+} CDL_dim;
 
 typedef struct {
-    int     nelems;      /* number of defined dimensions */
-    HR_dim *value;
-} HR_dimarray;
+    int      nelems;      /* number of defined dimensions */
+    CDL_dim *value;
+} CDL_dimarray;
 
 typedef struct {
-    char       *name;     /* name of the attributes */
-    nc_type     xtype;    /* external NC data type of the attribute */
-    MPI_Offset  nelems;   /* number of attribute elements */
-    void       *xvalue;   /* the actual data, in external representation */
-} HR_attr;
+    char       *name;    /* name of the attributes */
+    nc_type     xtype;   /* external NC data type of the attribute */
+    MPI_Offset  nelems;  /* number of attribute elements */
+    void       *value;   /* attribute contents */
+} CDL_attr;
 
 typedef struct {
-    int      nelems;  /* number of defined attributes */
-    HR_attr *value;
-} HR_attrarray;
+    int       nelems;  /* number of defined attributes */
+    CDL_attr *value;
+} CDL_attrarray;
 
 typedef struct {
-    char         *name;    /* name of the variable */
-    nc_type       xtype;   /* variable's external NC data type */
-    int           ndims;   /* number of dimensions */
-    int          *dimids;  /* [ndims] array of dimension IDs */
-    HR_attrarray  attrs;   /* attribute array */
-} HR_var;
+    char          *name;    /* name of the variable */
+    nc_type        xtype;   /* variable's external NC data type */
+    int            ndims;   /* number of dimensions */
+    int           *dimids;  /* [ndims] array of dimension IDs */
+    CDL_attrarray  attrs;   /* attribute array */
+} CDL_var;
 
 typedef struct {
-    int     nelems;    /* number of defined variables */
-    HR_var *value;
-} HR_vararray;
+    int      nelems;    /* number of defined variables */
+    CDL_var *value;
+} CDL_vararray;
 
 typedef struct {
     int           format;   /* 1, 2, or 5 corresponding to CDF-1, 2, or 5 */
-    HR_dimarray   dims;     /* dimensions defined */
-    HR_attrarray  attrs;    /* global attributes defined */
-    HR_vararray   vars;     /* variables defined */
-} NC_header;
+    CDL_dimarray  dims;     /* dimensions defined */
+    CDL_attrarray attrs;    /* global attributes defined */
+    CDL_vararray  vars;     /* variables defined */
+} CDL_header;
+
+static CDL_header *cdl_filelist[NC_MAX_NFILES];
+static int cdl_nfiles;
 
 static
 int c_to_xtype(char *ctype)
@@ -84,26 +109,28 @@ int c_to_xtype(char *ctype)
 }
 
 static
-int get_dimid(NC_header   *header,
-              char *name)
+int get_dimid(CDL_header *header,
+              char       *name,
+              int        *dimid)
 {
     int i;
-    HR_dim *dimp = header->dims.value;
+    CDL_dim *dimp = header->dims.value;
 
     for (i=0; i<header->dims.nelems; i++)
-        if (!strcmp(dimp[i].name, name))
-            return i;
+        if (!strcmp(dimp[i].name, name)) {
+            *dimid = i;
+            return NC_NOERR;
+        }
 
     printf("Error: failed to find dim ID for %s\n", name);
-
-    return -1;
+    return NC_EBADDIM;
 }
 
 static
 int parse_signature(char **bptr)
 {
     char *line;
-    int err=0;
+    int err=NC_NOERR;
 
     /* first line is signature "netcdf" and file name */
     line = strtok(*bptr, "\n");
@@ -127,14 +154,14 @@ err_out:
 }
 
 static
-int parse_format(char      **bptr,
-                 NC_header  *header,
-                 int        *dim_sec,
-                 int        *var_sec,
-                 int        *gattr_sec)
+int parse_format(char       **bptr,
+                 CDL_header  *header,
+                 int         *dim_sec,
+                 int         *var_sec,
+                 int         *gattr_sec)
 {
     char *line, *key, *val;
-    int err=0;
+    int err=NC_NOERR;
 
     /* 2nd line is a comment containing file format version */
     header->format = 1;
@@ -155,6 +182,8 @@ int parse_format(char      **bptr,
                 val += strlen(fmt_str);
                 val[1] = '\0';
                 header->format = atoi(val);
+                if (*val != '1' && *val != '2' && *val != '5')
+                    return NC_ENOTNC;
                 if (debug) printf("LINE %d CDF file format: CDF-%d\n", __LINE__,header->format);
             }
             else if (!strcmp(key+3, "global attributes:"))
@@ -174,10 +203,10 @@ int parse_format(char      **bptr,
 }
 
 static
-int parse_dims(char        **bptr,
-               HR_dimarray  *dims,
-               int          *var_sec,
-               int          *gattr_sec)
+int parse_dims(char         **bptr,
+               CDL_dimarray  *dims,
+               int           *var_sec,
+               int           *gattr_sec)
 {
     char *line, *key, *val;
     int err=0;
@@ -203,10 +232,10 @@ int parse_dims(char        **bptr,
 
         if (dims->nelems % DIM_ARRAY_GROWBY == 0) {
             size_t len = dims->nelems + DIM_ARRAY_GROWBY;
-            dims->value = (HR_dim*) realloc(dims->value,
-                                            sizeof(HR_dim) * len);
+            dims->value = (CDL_dim*) realloc(dims->value,
+                                             sizeof(CDL_dim) * len);
         }
-        HR_dim *dimp = &dims->value[dims->nelems];
+        CDL_dim *dimp = &dims->value[dims->nelems];
         dimp->name = strdup(key);
         if (!strcmp(val, "UNLIMITED"))
             dimp->size = NC_UNLIMITED;
@@ -223,7 +252,7 @@ int parse_dims(char        **bptr,
 }
 
 #define PARSE_ATTR(itype, tail, conv) { \
-    itype *buf = (itype*) attrp->xvalue; \
+    itype *buf = (itype*) attrp->value; \
     attrp->nelems=0; \
     key = strtok(str, ", ;"); \
     while (key != NULL) { \
@@ -234,8 +263,8 @@ int parse_dims(char        **bptr,
 }
 
 static
-int parse_attr_value(HR_attr *attrp,
-                     char    *val)
+int parse_attr_value(CDL_attr *attrp,
+                     char     *val)
 {
     int err=0;
 
@@ -243,9 +272,9 @@ int parse_attr_value(HR_attr *attrp,
         attrp->xtype = NC_CHAR;
         char *tail = strrchr(val, '\"');
         *tail = '\0';
-        attrp->xvalue = strdup(val+2);
-        if (debug) printf("LINE %d ATTR name %s type NC_CHAR %s\n",__LINE__, attrp->name, (char*)attrp->xvalue);
-        attrp->nelems = strlen(attrp->xvalue);
+        attrp->value = strdup(val+2);
+        if (debug) printf("LINE %d ATTR name %s type NC_CHAR %s\n",__LINE__, attrp->name, (char*)attrp->value);
+        attrp->nelems = strlen(attrp->value);
     }
     else { /* not text */
         int xtype, nelems=0;
@@ -275,7 +304,7 @@ int parse_attr_value(HR_attr *attrp,
 
         strcpy(str, val);
 
-        attrp->xvalue = (void*) malloc(sizeof(double) * nelems);
+        attrp->value = (void*) malloc(sizeof(double) * nelems);
 
              if (xtype == NC_INT)    PARSE_ATTR(int, 0, atoi)
         else if (xtype == NC_BYTE)   PARSE_ATTR(signed char, 1, atoi)
@@ -294,9 +323,9 @@ int parse_attr_value(HR_attr *attrp,
 }
 
 static
-int parse_attr(char         **bptr,
-               char          *var_name,
-               HR_attrarray  *attrs)
+int parse_attr(char          **bptr,
+               char           *var_name,
+               CDL_attrarray  *attrs)
 {
     char *line, line_cpy[LINE_SIZE], *key, *val;
     int err=0;
@@ -346,10 +375,10 @@ int parse_attr(char         **bptr,
         }
         if (attrs->nelems % ATTR_ARRAY_GROWBY == 0) {
             size_t len = attrs->nelems + ATTR_ARRAY_GROWBY;
-            attrs->value = (HR_attr*) realloc(attrs->value,
-                                              sizeof(HR_attr) * len);
+            attrs->value = (CDL_attr*) realloc(attrs->value,
+                                               sizeof(CDL_attr) * len);
         }
-        HR_attr *attrp = &attrs->value[attrs->nelems];
+        CDL_attr *attrp = &attrs->value[attrs->nelems];
 
         char *next;
 
@@ -371,15 +400,15 @@ err_out:
 }
 
 static
-int parse_vars(char    **bptr,
-               NC_header *header,
-               int *gattr_sec)
+int parse_vars(char       **bptr,
+               CDL_header  *header,
+               int         *gattr_sec)
 {
     char *type, *var_name;
     char *line, orig_line[LINE_SIZE], *key, *val;
     int err=0;
     size_t prefix_len;
-    HR_vararray *vars = &header->vars;
+    CDL_vararray *vars = &header->vars;
 
     while ((line = strtok(*bptr, "\n")) != NULL) {
         if (line[0] == '}') return 1; /* end of file */
@@ -405,10 +434,10 @@ int parse_vars(char    **bptr,
 
         if (vars->nelems % VAR_ARRAY_GROWBY == 0) {
             size_t len = vars->nelems + VAR_ARRAY_GROWBY;
-            vars->value = (HR_var*) realloc(vars->value,
-                                            sizeof(HR_var) * len);
+            vars->value = (CDL_var*) realloc(vars->value,
+                                             sizeof(CDL_var) * len);
         }
-        HR_var *varp = &vars->value[vars->nelems];
+        CDL_var *varp = &vars->value[vars->nelems];
         var_name = strtok(NULL, "( ");
         varp->name = strdup(var_name);
         varp->xtype = c_to_xtype(type);
@@ -435,14 +464,15 @@ int parse_vars(char    **bptr,
             key = strtok(str, ", ");
             int i = 0;
             while (key != NULL) {
-                int dimid = get_dimid(header, key);
-                if (dimid < 0) {
+                int dimid;
+                err = get_dimid(header, key, &dimid);
+                if (err != NC_NOERR) {
                     free(str);
                     free(varp->name);
                     varp->name = NULL;
                     free(varp->dimids);
                     varp->dimids = NULL;
-                    return -1;
+                    return err;
                 }
                 varp->dimids[i++] = dimid;
                 key = strtok(NULL, ", ");
@@ -459,9 +489,10 @@ err_out:
     return err;
 }
 
-int nc_header_free(NC_header *header)
+static
+int hdr_free(CDL_header *header)
 {
-    int i, j, err=0;
+    int i, j, err=NC_NOERR;
 
     /* free dimensions */
     for (i=0; i<header->dims.nelems; i++)
@@ -473,7 +504,7 @@ int nc_header_free(NC_header *header)
     /* free global attributes */
     for (i=0; i<header->attrs.nelems; i++) {
         free(header->attrs.value[i].name);
-        free(header->attrs.value[i].xvalue);
+        free(header->attrs.value[i].value);
     }
 
     if (header->attrs.value != NULL)
@@ -481,7 +512,7 @@ int nc_header_free(NC_header *header)
 
     /* free variables */
     for (i=0; i<header->vars.nelems; i++) {
-        HR_var *varp = &header->vars.value[i];
+        CDL_var *varp = &header->vars.value[i];
 
         if (varp->name != NULL) free(varp->name);
         if (varp->dimids != NULL) free(varp->dimids);
@@ -489,7 +520,7 @@ int nc_header_free(NC_header *header)
         /* free attributes */
         for (j=0; j<varp->attrs.nelems; j++) {
             free(varp->attrs.value[j].name);
-            free(varp->attrs.value[j].xvalue);
+            free(varp->attrs.value[j].value);
         }
         if (varp->attrs.value != NULL)
             free(varp->attrs.value);
@@ -503,24 +534,48 @@ int nc_header_free(NC_header *header)
     return err;
 }
 
-NC_header *nc_header_parse(char *filename)
+int cdl_hdr_close(int hid)
+{
+    int err=NC_NOERR;
+    CDL_header *header;
+
+    /* check if hid is valid */
+    if (hid >= NC_MAX_NFILES || cdl_filelist[hid] == NULL)
+        return NC_EBADID;
+
+    header = cdl_filelist[hid];
+    err = hdr_free(header);
+
+    cdl_filelist[hid] = NULL;
+
+    while (cdl_nfiles > 0 && cdl_filelist[cdl_nfiles-1] == NULL)
+        cdl_nfiles--;
+
+    return err;
+}
+
+int cdl_hdr_open(const char *filename,
+                 int        *hid)
 {
     FILE *fptr;
     char *fbuf, *bptr;
-    int err=0, dim_sec, var_sec, gattr_sec;
-    NC_header *header=NULL;
+    int err, dim_sec, var_sec, gattr_sec;
+    CDL_header *header=NULL;
+
+    if (cdl_nfiles + 1 > NC_MAX_NFILES)
+        return NC_ENFILE;
 
     fptr = fopen(filename, "r");
     if (fptr == NULL) {
         printf("Error: fail to open file %s (%s)\n",
                filename,strerror(errno));
-        return NULL;
+        return NC_ENOENT;
     }
     err = fseek(fptr, 0, SEEK_END);
     if (err < 0) {
         printf("Error: fail to fseek file %s (%s)\n",
                filename,strerror(errno));
-        return NULL;
+        return NC_EFILE;
     }
 
     /* read the entire file into a buffer */
@@ -533,46 +588,208 @@ NC_header *nc_header_parse(char *filename)
 
     /* check netCDF file signature */
     err = parse_signature(&bptr);
-    if (err) goto err_out;
+    if (err != NC_NOERR) goto err_out;
 
-    header = (NC_header*) calloc(1, sizeof(NC_header));
+    header = (CDL_header*) calloc(1, sizeof(CDL_header));
 
     dim_sec = var_sec = gattr_sec = 0;
 
     /* check netCDF file format */
     err = parse_format(&bptr, header, &dim_sec, &var_sec, &gattr_sec);
-    if (err) goto err_out;
+    if (err < NC_NOERR) goto err_out;
 
     /* Dimension section */
     if (dim_sec) {
         err = parse_dims(&bptr, &header->dims, &var_sec, &gattr_sec);
-        if (err) goto err_out;
+        if (err < NC_NOERR) goto err_out;
     }
 
     /* Variable section */
     if (var_sec) {
         err = parse_vars(&bptr, header, &gattr_sec);
-        if (err) goto err_out;
+        if (err < NC_NOERR) goto err_out;
     }
 
     /* Global attribute section */
     if (gattr_sec) {
         err = parse_attr(&bptr, "", &header->attrs);
-        if (err) goto err_out;
+        if (err < NC_NOERR) goto err_out;
     }
 
 err_out:
     free(fbuf);
 
-    if (err == -1) {
-        nc_header_free(header);
-        return NULL;
+    if (err < NC_NOERR) {
+        if (header != NULL)
+            hdr_free(header);
+        return err;
     }
 
-    return header;
+    *hid = cdl_nfiles;
+    cdl_filelist[cdl_nfiles++] = header;
+
+    return NC_NOERR;
 }
 
-#define TEST_RUN
+int cdl_hdr_inq_format(int  hid,
+                       int *format)
+{
+    CDL_header *header;
+
+    /* check if hid is valid */
+    if (hid >= NC_MAX_NFILES || cdl_filelist[hid] == NULL)
+        return NC_EBADID;
+
+    header = cdl_filelist[hid];
+
+    *format = header->format;
+    return NC_NOERR;
+}
+
+int cdl_hdr_inq_ndims(int  hid,
+                      int *ndims)
+{
+    CDL_header *header;
+
+    /* check if hid is valid */
+    if (hid >= NC_MAX_NFILES || cdl_filelist[hid] == NULL)
+        return NC_EBADID;
+
+    header = cdl_filelist[hid];
+
+    *ndims = header->dims.nelems;
+    return NC_NOERR;
+}
+
+int cdl_hdr_inq_dim(int          hid,
+                    int          dimid,
+                    char       **name,
+                    MPI_Offset  *size)
+{
+    CDL_header *header;
+
+    /* check if hid is valid */
+    if (hid >= NC_MAX_NFILES || cdl_filelist[hid] == NULL)
+        return NC_EBADID;
+
+    header = cdl_filelist[hid];
+
+    /* check dimid if valid */
+    if (dimid < 0 || dimid >= header->dims.nelems)
+        return NC_EBADID;
+
+    if (name != NULL) *name = header->dims.value[dimid].name;
+    if (size != NULL) *size = header->dims.value[dimid].size;
+    return NC_NOERR;
+}
+
+int cdl_hdr_inq_nattrs(int  hid,
+                       int  varid,
+                       int *nattrs)
+{
+    CDL_header *header;
+
+    /* check if hid is valid */
+    if (hid >= NC_MAX_NFILES || cdl_filelist[hid] == NULL)
+        return NC_EBADID;
+
+    header = cdl_filelist[hid];
+
+    /* check varid if valid */
+    if (varid == NC_GLOBAL)
+        *nattrs = header->attrs.nelems;
+    else if (varid < NC_GLOBAL || varid >= header->vars.nelems)
+        return NC_EBADID;
+    else
+        *nattrs = header->vars.value[varid].attrs.nelems;
+
+    return NC_NOERR;
+}
+
+int cdl_hdr_inq_attr(int          hid,
+                     int          varid,
+                     int          attrid,
+                     char       **name,
+                     nc_type     *xtype,
+                     MPI_Offset  *nelems,
+                     void       **value)
+{
+    CDL_attr *attrp;
+    CDL_attrarray *attr_array;
+    CDL_header *header;
+
+    /* check if hid is valid */
+    if (hid >= NC_MAX_NFILES || cdl_filelist[hid] == NULL)
+        return NC_EBADID;
+
+    header = cdl_filelist[hid];
+
+    /* check varid if valid */
+    if (varid == NC_GLOBAL)
+        attr_array = &header->attrs;
+    else if (varid < NC_GLOBAL || varid >= header->vars.nelems)
+        return NC_EBADID;
+    else
+        attr_array = &header->vars.value[varid].attrs;
+
+    /* check attrid if valid */
+    if (attrid < 0 || attrid >= attr_array->nelems)
+        return NC_EBADID;
+
+    attrp = &attr_array->value[attrid];
+
+    if (name   != NULL) *name   = attrp->name;
+    if (xtype  != NULL) *xtype  = attrp->xtype;
+    if (nelems != NULL) *nelems = attrp->nelems;
+    if (value  != NULL) *value  = attrp->value;
+
+    return NC_NOERR;
+}
+
+int cdl_hdr_inq_nvars(int  hid,
+                      int *nvars)
+{
+    CDL_header *header;
+
+    /* check if hid is valid */
+    if (hid >= NC_MAX_NFILES || cdl_filelist[hid] == NULL)
+        return NC_EBADID;
+
+    header = cdl_filelist[hid];
+
+    /* check header if valid */
+    if (header == NULL) return 1;
+
+    if(nvars != NULL) *nvars = header->vars.nelems;
+    return NC_NOERR;
+}
+
+int cdl_hdr_inq_var(int       hid,
+                    int       varid,
+                    char    **name,
+                    nc_type  *xtype,
+                    int      *ndims,
+                    int     **dimids)
+{
+    CDL_header *header;
+
+    /* check if hid is valid */
+    if (hid >= NC_MAX_NFILES || cdl_filelist[hid] == NULL)
+        return NC_EBADID;
+
+    header = cdl_filelist[hid];
+
+    /* check varid if valid */
+    if (varid < 0 || varid >= header->vars.nelems)
+        return NC_EBADID;
+
+    if (name   != NULL) *name   = header->vars.value[varid].name;
+    if (xtype  != NULL) *xtype  = header->vars.value[varid].xtype;
+    if (ndims  != NULL) *ndims  = header->vars.value[varid].ndims;
+    if (dimids != NULL) *dimids = header->vars.value[varid].dimids;
+
+    return NC_NOERR;
+}
 
 #ifdef TEST_RUN
 #define ERR { \
@@ -587,100 +804,111 @@ err_out:
 
 int main(int argc, char **argv)
 {
-    int i, j, err=0;
-    NC_header *header;
+    int i, j, err=0, hid;
 
     MPI_Init(&argc, &argv);
 
     if (argc != 2) {
-        printf("Usage: %s header_file\n",argv[0]);
+        printf("Usage: %s <CDL file>\n",argv[0]);
         exit(1);
     }
 
-    debug=0;
+    debug=1;
 
-    header = nc_header_parse(argv[1]);
-    if (header == NULL) exit(1);
+    err = cdl_hdr_open(argv[1], &hid);
+    if (err != NC_NOERR) exit(1);
 
-    if (debug) {
-        printf("==================================================\n");
-        printf("CDF file format: CDF-%d\n", header->format);
-        printf("dim: nelems %d\n", header->dims.nelems);
-        for (i=0; i<header->dims.nelems; i++) {
-            HR_dim *dimp = header->dims.value+i;
-            printf("\t name %s size %lld\n",dimp->name, dimp->size);
-        }
-
-        printf("var: nelems %d\n", header->vars.nelems);
-        for (i=0; i<header->vars.nelems; i++) {
-            HR_var *varp = header->vars.value+i;
-            printf("\t name %s type %d ndims %d nattr %d\n",
-                    varp->name, varp->xtype, varp->ndims,varp->attrs.nelems);
-            for (j=0; j<varp->ndims; j++)
-                printf("\t\tdimid %d\n",varp->dimids[j]);
-            for (j=0; j<varp->attrs.nelems; j++) {
-                HR_attr *attrp = varp->attrs.value + j;
-                if (attrp->xtype == NC_CHAR)
-                    printf("\t\tattr %s type %d nelems %lld (%s)\n",
-                        attrp->name, attrp->xtype,attrp->nelems,(char*)attrp->xvalue);
-                else
-                    printf("\t\tattr %s type %d nelems %lld\n",
-                        attrp->name, attrp->xtype,attrp->nelems);
-            }
-        }
-        printf("global attrs: nelems %d\n", header->attrs.nelems);
-        for (i=0; i<header->attrs.nelems; i++) {
-            HR_attr *attrp = header->attrs.value+i;
-            if (attrp->xtype == NC_CHAR)
-                printf("\t name %s type %d nelems %lld (%s)\n",
-                    attrp->name, attrp->xtype, attrp->nelems,(char*)attrp->xvalue);
-            else
-                printf("\t name %s type %d nelems %lld\n",
-                    attrp->name, attrp->xtype, attrp->nelems);
-        }
-    }
+    if (debug) printf("==================================================\n");
 
     /* create a new netcdf file */
-    int ncid, cmode;
+    int ncid, cmode, format;
+
+    err = cdl_hdr_inq_format(hid, &format); ERR
+
+    if (debug) printf("CDF file format: CDF-%d\n", format);
 
     cmode = NC_CLOBBER;
-    if (header->format == 2) cmode |= NC_64BIT_OFFSET;
-    else if (header->format == 5) cmode |= NC_64BIT_DATA;
+    if (format == 2) cmode |= NC_64BIT_OFFSET;
+    else if (format == 5) cmode |= NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, "testfile.nc", cmode, MPI_INFO_NULL, &ncid);
     ERR
 
+    char *name;
+    int ndims, *dimids, nvars, nattrs;
+    void *value;
+    nc_type xtype;
+    MPI_Offset size, nelems;
+
     /* define dimensions */
-    for (i=0; i<header->dims.nelems; i++) {
+    err = cdl_hdr_inq_ndims(hid, &ndims); ERR
+    if (debug) printf("dim: ndims %d\n", ndims);
+
+    for (i=0; i<ndims; i++) {
         int dimid;
-        HR_dim *dimp = header->dims.value+i;
-        err = ncmpi_def_dim(ncid, dimp->name, dimp->size, &dimid); ERR
+
+        err = cdl_hdr_inq_dim(hid, i, &name, &size); ERR
+        if (debug) ("\t name %s size %lld\n",name, size);
+
+        err = ncmpi_def_dim(ncid, name, size, &dimid); ERR
     }
 
     /* define variables */
-    for (i=0; i<header->vars.nelems; i++) {
+    err = cdl_hdr_inq_nvars(hid, &nvars); ERR
+    if (debug) printf("var: nvars %d\n", nvars);
+
+    for (i=0; i<nvars; i++) {
         int varid;
-        HR_var *varp = header->vars.value+i;
-        err = ncmpi_def_var(ncid, varp->name, varp->xtype, varp->ndims,
-                            varp->dimids, &varid); ERR
+
+        err = cdl_hdr_inq_var(hid, i, &name, &xtype, &ndims, &dimids); ERR
+
+        err = ncmpi_def_var(ncid, name, xtype, ndims, dimids, &varid); ERR
 
         /* define local attributes */
-        for (j=0; j<varp->attrs.nelems; j++) {
-            HR_attr *attrp = varp->attrs.value+j;
-            err = ncmpi_put_att(ncid, varid, attrp->name, attrp->xtype,
-                                attrp->nelems, attrp->xvalue); ERR
+        err = cdl_hdr_inq_nattrs(hid, i, &nattrs); ERR
+
+        if (debug) {
+            printf("\t name %s type %d ndims %d nattr %d\n",
+                          name, xtype, ndims, nattrs);
+            for (j=0; j<ndims; j++)
+                printf("\t\tdimid %d\n",dimids[j]);
+        }
+
+        for (j=0; j<nattrs; j++) {
+            err = cdl_hdr_inq_attr(hid, i, j, &name, &xtype, &nelems, &value); ERR
+            if (debug) {
+                if (xtype == NC_CHAR)
+                    printf("\t\tattr %s type %d nelems %lld (%s)\n",
+                            name, xtype,nelems,(char*)value);
+                else
+                    printf("\t\tattr %s type %d nelems %lld\n",
+                           name, xtype, nelems);
+            }
+
+            err = ncmpi_put_att(ncid, varid, name, xtype, nelems, value); ERR
         }
     }
 
     /* define global attributes */
-    for (i=0; i<header->attrs.nelems; i++) {
-        HR_attr *attrp = header->attrs.value+i;
-        err = ncmpi_put_att(ncid, NC_GLOBAL, attrp->name, attrp->xtype,
-                                    attrp->nelems, attrp->xvalue); ERR
+    err = cdl_hdr_inq_nattrs(hid, NC_GLOBAL, &nattrs); ERR
+    if (debug) printf("global attrs: nattrs %d\n", nattrs);
+
+    for (i=0; i<nattrs; i++) {
+        err = cdl_hdr_inq_attr(hid, NC_GLOBAL, i, &name, &xtype, &nelems, &value);
+        if (debug) {
+            if (xtype == NC_CHAR)
+                printf("\t name %s type %d nelems %lld (%s)\n",
+                        name, xtype, nelems,(char*)value);
+            else
+                printf("\t name %s type %d nelems %lld\n",
+                        name, xtype, nelems);
+        }
+
+        err = ncmpi_put_att(ncid, NC_GLOBAL, name, xtype, nelems, value); ERR
     }
     err = ncmpi_close(ncid); ERR
 
 err_out:
-    err = nc_header_free(header);
+    err = cdl_hdr_close(hid); ERR
 
     MPI_Finalize();
     return err;
