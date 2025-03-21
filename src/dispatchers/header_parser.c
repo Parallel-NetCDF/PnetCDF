@@ -100,13 +100,18 @@ int get_dimid(NC_header   *header,
 }
 
 static
-int parse_signature(FILE *fptr)
+int parse_signature(char **bptr)
 {
-    char line[LINE_SIZE];
+    char *line;
     int err=0;
 
     /* first line is signature "netcdf" and file name */
-    if (fgets(line, LINE_SIZE, fptr) != NULL) {
+    line = strtok(*bptr, "\n");
+    if (line[0] == '}') return 1; /* end of file */
+
+    *bptr += strlen(line) + 1;
+    while (**bptr == '\n') (*bptr)++;
+    if (line != NULL) {
         if (strlen(line) == 0) ERR_FORMAT("signature line")
         char *signature = strtok(line, " ");
         if (signature == NULL || strcmp(signature, "netcdf"))
@@ -122,22 +127,25 @@ err_out:
 }
 
 static
-int parse_format(FILE *fptr,
-                 char *line,
-                 NC_header   *header,
-                 int  *dim_sec,
-                 int  *var_sec,
-                 int  *gattr_sec)
+int parse_format(char      **bptr,
+                 NC_header  *header,
+                 int        *dim_sec,
+                 int        *var_sec,
+                 int        *gattr_sec)
 {
-    char *key, *val;
+    char *line, *key, *val;
     int err=0;
 
     /* 2nd line is a comment containing file format version */
     header->format = 1;
-    while (fgets(line, LINE_SIZE, fptr) != NULL) {
+
+    while ((line = strtok(*bptr, "\n")) != NULL) {
+        if (line[0] == '}') return 1; /* end of file */
+
+        *bptr += strlen(line) + 1;
+        while (**bptr == '\n') (*bptr)++;
         key = strtok(line, " \t\n");
         if (key == NULL) continue; /* blank line */
-        if (key[0] == '}') return 1; /* end of file */
         if (!strncmp(key, "data:", 5)) return 1; /* data section */
         if (!strcmp(key, "//")) { /* comment line */
             val = strtok(NULL, "\n");
@@ -166,19 +174,21 @@ int parse_format(FILE *fptr,
 }
 
 static
-int parse_dims(FILE *fptr,
-               char *line,
-               HR_dimarray *dims,
-               int *var_sec,
-               int *gattr_sec)
+int parse_dims(char        **bptr,
+               HR_dimarray  *dims,
+               int          *var_sec,
+               int          *gattr_sec)
 {
-    char *key, *val;
+    char *line, *key, *val;
     int err=0;
 
-    while (fgets(line, LINE_SIZE, fptr) != NULL) {
+    while ((line = strtok(*bptr, "\n")) != NULL) {
+        if (line[0] == '}') return 1; /* end of file */
+
+        *bptr += strlen(line) + 1;
+        while (**bptr == '\n') (*bptr)++;
         key = strtok(line, "\n");
         if (key == NULL || !strcmp(key, "//")) continue;
-        if (key[0] == '}') return 1; /* end of file */
         if (!strncmp(key, "data:", 5)) return 1; /* data section */
         if (!strcmp(key, "variables:")) {
             *var_sec = 1;
@@ -284,36 +294,32 @@ int parse_attr_value(HR_attr *attrp,
 }
 
 static
-int parse_attr(FILE *fptr,
-               char *line,
-               char *var_name,
-               HR_attrarray *attrs)
+int parse_attr(char         **bptr,
+               char          *var_name,
+               HR_attrarray  *attrs)
 {
-    char *new_line, orig_line[LINE_SIZE], *key, *val;
+    char *line, line_cpy[LINE_SIZE], *key, *val;
     int err=0;
+    size_t prefix_len;
 
     /* parse attributes */
-    new_line = fgets(line, LINE_SIZE, fptr);
-    while (new_line != NULL) {
-        size_t prefix_len;
-        strncpy(orig_line, line, LINE_SIZE);
-        key = strtok(line, "\n");
-        if (key == NULL) {
-            new_line = fgets(line, LINE_SIZE, fptr);
-            continue;
-        }
-        prefix_len = strspn(key, " \t");
-        key += prefix_len;
-        if (!strncmp(key, "// global attributes:", 21)) {
-            strncpy(line, orig_line, LINE_SIZE);
-            new_line = line;
+    while ((line = strtok(*bptr, "\n")) != NULL) {
+        if (line[0] == '}') return 1; /* end of file */
+
+        *bptr += strlen(line) + 1;
+        while (**bptr == '\n') (*bptr)++;
+
+        strcpy(line_cpy, line);
+
+        prefix_len = strspn(line_cpy, " \t");
+        key = line_cpy + prefix_len;
+        if (*var_name != '\0' && !strncmp(key, "// global attributes:", 21)) {
+            *bptr = line;
             break;
         }
         if (!strncmp(key, "//", 2)) {
-            new_line = fgets(line, LINE_SIZE, fptr);
             continue;
         }
-        if (key[0] == '}') return 1; /* end of file */
         if (!strncmp(key, "data:", 5)) return 1; /* data section */
 
         char *name;
@@ -323,7 +329,10 @@ int parse_attr(FILE *fptr,
         }
         else {
             char *colon = strchr(key, ':');
-            if (colon == NULL) break; /* not attribute */
+            if (colon == NULL) { /* not attribute */
+                *bptr = line;
+                break;
+            }
             *colon = '\0';
             name = key;
             if (strcmp(name, var_name)) ERR_FORMAT("attribute name");
@@ -332,8 +341,7 @@ int parse_attr(FILE *fptr,
 
         /* check if an attribute of this variable */
         if (strcmp(name, var_name)) {
-            strncpy(line, orig_line, LINE_SIZE);
-            new_line = line;
+            *bptr = line;
             break;
         }
         if (attrs->nelems % ATTR_ARRAY_GROWBY == 0) {
@@ -357,43 +365,43 @@ int parse_attr(FILE *fptr,
 
         attrs->nelems++;
         parse_attr_value(attrp, val);
-
-        new_line = fgets(line, LINE_SIZE, fptr);
     }
 err_out:
     return err;
 }
 
 static
-int parse_vars(FILE *fptr,
-               char *line,
+int parse_vars(char    **bptr,
                NC_header *header,
                int *gattr_sec)
 {
     char *type, *var_name;
-    char *new_line, orig_line[LINE_SIZE], *key, *val;
+    char *line, orig_line[LINE_SIZE], *key, *val;
     int err=0;
+    size_t prefix_len;
     HR_vararray *vars = &header->vars;
 
-    new_line = fgets(line, LINE_SIZE, fptr);
-    while (new_line != NULL) {
+    while ((line = strtok(*bptr, "\n")) != NULL) {
+        if (line[0] == '}') return 1; /* end of file */
+
+        *bptr += strlen(line) + 1;
+        while (**bptr == '\n') (*bptr)++;
+
         strncpy(orig_line, line, LINE_SIZE);
-        key = strtok(line, "\n");
-        if (key == NULL || !strcmp(key, "//")) {
-            new_line = fgets(line, LINE_SIZE, fptr);
-            continue;
-        }
-        if (key[0] == '}') goto err_out; /* end of file */
-        if (!strncmp(key, "data:", 5)) return 1; /* data section */
-        if (!strcmp(key, "// global attributes:")) {
+
+        prefix_len = strspn(line, " \t");
+        line += prefix_len;
+        if (!strncmp(line, "// global attributes:", 21)) {
+            *bptr = line;
             *gattr_sec = 1;
             break;
         }
-        type = strtok(key, " \t\n");
-        if (!strcmp(type, "//")) {
-            new_line = fgets(line, LINE_SIZE, fptr);
+        if (!strncmp(line, "//", 2)) {
             continue;
         }
+        if (!strncmp(line, "data:", 5)) return 1; /* data section */
+
+        type = strtok(line, " \t\n");
 
         if (vars->nelems % VAR_ARRAY_GROWBY == 0) {
             size_t len = vars->nelems + VAR_ARRAY_GROWBY;
@@ -401,7 +409,7 @@ int parse_vars(FILE *fptr,
                                             sizeof(HR_var) * len);
         }
         HR_var *varp = &vars->value[vars->nelems];
-        var_name = strtok(NULL, "(; ");
+        var_name = strtok(NULL, "( ");
         varp->name = strdup(var_name);
         varp->xtype = c_to_xtype(type);
         varp->ndims = 0;
@@ -443,11 +451,9 @@ int parse_vars(FILE *fptr,
         }
         vars->nelems++;
 
-        err = parse_attr(fptr, line, varp->name, &varp->attrs);
+        err = parse_attr(bptr, varp->name, &varp->attrs);
         if (err)
             goto err_out;
-        else
-            new_line = line;
     }
 err_out:
     return err;
@@ -500,8 +506,8 @@ int nc_header_free(NC_header *header)
 NC_header *nc_header_parse(char *filename)
 {
     FILE *fptr;
+    char *fbuf, *bptr;
     int err=0, dim_sec, var_sec, gattr_sec;
-    char line[LINE_SIZE];
     NC_header *header=NULL;
 
     fptr = fopen(filename, "r");
@@ -510,35 +516,53 @@ NC_header *nc_header_parse(char *filename)
                filename,strerror(errno));
         return NULL;
     }
+    err = fseek(fptr, 0, SEEK_END);
+    if (err < 0) {
+        printf("Error: fail to fseek file %s (%s)\n",
+               filename,strerror(errno));
+        return NULL;
+    }
 
-    err = parse_signature(fptr);
+    /* read the entire file into a buffer */
+    long file_size = ftell(fptr);
+    fbuf = (char *) malloc(file_size);
+    err = fseek(fptr, 0, SEEK_SET);
+    fread(fbuf, 1, file_size, fptr);
+    bptr = fbuf;
+    fclose(fptr);
+
+    /* check netCDF file signature */
+    err = parse_signature(&bptr);
     if (err) goto err_out;
 
     header = (NC_header*) calloc(1, sizeof(NC_header));
 
     dim_sec = var_sec = gattr_sec = 0;
 
-    err = parse_format(fptr, line, header, &dim_sec, &var_sec, &gattr_sec);
+    /* check netCDF file format */
+    err = parse_format(&bptr, header, &dim_sec, &var_sec, &gattr_sec);
     if (err) goto err_out;
 
     /* Dimension section */
     if (dim_sec) {
-        err = parse_dims(fptr, line, &header->dims, &var_sec, &gattr_sec);
+        err = parse_dims(&bptr, &header->dims, &var_sec, &gattr_sec);
         if (err) goto err_out;
     }
 
     /* Variable section */
     if (var_sec) {
-        err = parse_vars(fptr, line, header, &gattr_sec);
+        err = parse_vars(&bptr, header, &gattr_sec);
         if (err) goto err_out;
     }
+
+    /* Global attribute section */
     if (gattr_sec) {
-        err = parse_attr(fptr, line, "", &header->attrs);
+        err = parse_attr(&bptr, "", &header->attrs);
         if (err) goto err_out;
     }
 
 err_out:
-    fclose(fptr);
+    free(fbuf);
 
     if (err == -1) {
         nc_header_free(header);
