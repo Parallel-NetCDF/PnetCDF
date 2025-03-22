@@ -42,9 +42,10 @@ static int debug;
     goto err_out; \
 }
 
-#define DIM_ARRAY_GROWBY 2
-#define VAR_ARRAY_GROWBY 2
-#define ATTR_ARRAY_GROWBY 2
+#define DIM_ARRAY_GROWBY   32
+#define VAR_ARRAY_GROWBY   128
+#define ATTR_ARRAY_GROWBY  8
+#define GATTR_ARRAY_GROWBY 64
 
 typedef struct {
     char       *name;
@@ -368,15 +369,25 @@ int parse_attr(char          **bptr,
             val = colon + 1;
         }
 
-        /* check if an attribute of this variable */
+        /* check if it is an attribute of this variable */
         if (strcmp(name, var_name)) {
             *bptr = line;
             break;
         }
-        if (attrs->nelems % ATTR_ARRAY_GROWBY == 0) {
-            size_t len = attrs->nelems + ATTR_ARRAY_GROWBY;
-            attrs->value = (CDL_attr*) realloc(attrs->value,
-                                               sizeof(CDL_attr) * len);
+
+        if (*var_name == '\0') { /* global attributes */
+            if (attrs->nelems % GATTR_ARRAY_GROWBY == 0) {
+                size_t len = attrs->nelems + GATTR_ARRAY_GROWBY;
+                attrs->value = (CDL_attr*) realloc(attrs->value,
+                                                   sizeof(CDL_attr) * len);
+            }
+        }
+        else {
+            if (attrs->nelems % ATTR_ARRAY_GROWBY == 0) {
+                size_t len = attrs->nelems + ATTR_ARRAY_GROWBY;
+                attrs->value = (CDL_attr*) realloc(attrs->value,
+                                                   sizeof(CDL_attr) * len);
+            }
         }
         CDL_attr *attrp = &attrs->value[attrs->nelems];
 
