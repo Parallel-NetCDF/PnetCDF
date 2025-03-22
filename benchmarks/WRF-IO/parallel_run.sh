@@ -41,7 +41,7 @@ for i in ${check_PROGRAMS} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 
-        OPTS="-l 100 -w 100"
+        OPTS="-l 100 -w 100 -i ${srcdir}/wrf_header.txt"
         # echo "${MPIRUN} ./$i -q ${OPTS} ${TESTOUTDIR}/$i.nc"
         ${MPIRUN} ./$i -q ${OPTS} ${TESTOUTDIR}/$i.nc
         if test $? = 0 ; then
