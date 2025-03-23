@@ -19,6 +19,8 @@
  * process of rank 0.
  *
  * The grid size can be set by command-line options of -l and -w.
+ * -l to set size for dimension "south_north"
+ * -w to set size for dimension "west_east"
  *
  * To compile:
  *    % mpicc -O2 wrf_io.c -o wrf_io -lpnetcdf
@@ -88,16 +90,45 @@ typedef struct {
 static
 int construct_vars(int         hid, /* CDL header ID */
                    WRF_VAR    *vars,
-                   int         logitute,
-                   int         latitute,
+                   MPI_Offset *logitute,
+                   MPI_Offset *latitute,
                    int         psizes[2],
                    MPI_Offset *buf_size)
 {
     char *name;
     int i, err=NC_NOERR, nprocs, rank;
     int ndims, *dimids, nvars, my_rank_y, my_rank_x;
-    MPI_Offset my_start_y, my_start_x, my_count_y, my_count_x;
+    MPI_Offset dimlen, my_start_y, my_start_x, my_count_y, my_count_x;
     nc_type xtype;
+
+    /* determine whether to use logitute, latitute set at command line */
+    err = cdl_hdr_inq_ndims(hid, &ndims);
+    CHECK_ERR("cdl_hdr_inq_ndims")
+
+    if (*logitute <= 0) {
+        for (i=0; i<ndims; i++) {
+            err = cdl_hdr_inq_dim(hid, i, &name, &dimlen);
+            CHECK_ERR("cdl_hdr_inq_dim")
+
+            /* Note south_north must be defined before south_north_stag */
+            if (!strcmp(name, "south_north")) {
+                *logitute = dimlen;
+                break;
+            }
+        }
+    }
+    if (*latitute <= 0) {
+        for (i=0; i<ndims; i++) {
+            err = cdl_hdr_inq_dim(hid, i, &name, &dimlen);
+            CHECK_ERR("cdl_hdr_inq_dim")
+
+            /* Note west_east must be defined before west_east_stag */
+            if (!strcmp(name, "west_east")) {
+                *latitute = dimlen;
+                break;
+            }
+        }
+    }
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -105,24 +136,24 @@ int construct_vars(int         hid, /* CDL header ID */
     my_rank_y = rank / psizes[1];
     my_rank_x = rank % psizes[1];
 
-    my_count_y = logitute / psizes[0];
+    my_count_y = *logitute / psizes[0];
     my_start_y = my_count_y * my_rank_y;
-    if (my_rank_y < logitute % psizes[0]) {
+    if (my_rank_y < *logitute % psizes[0]) {
         my_start_y += my_rank_y;
         my_count_y++;
     }
     else {
-        my_start_y += logitute % psizes[0];
+        my_start_y += *logitute % psizes[0];
     }
 
-    my_count_x = latitute / psizes[1];
+    my_count_x = *latitute / psizes[1];
     my_start_x = my_count_x * my_rank_x;
-    if (my_rank_x < latitute % psizes[1]) {
+    if (my_rank_x < *latitute % psizes[1]) {
         my_start_x += my_rank_x;
         my_count_x++;
     }
     else {
-        my_start_x += latitute % psizes[1];
+        my_start_x += *latitute % psizes[1];
     }
 
     if (debug) {
@@ -153,7 +184,7 @@ int construct_vars(int         hid, /* CDL header ID */
         vars->count[0] = 1;    /* time dimension */
 
         if (ndims == 1) {
-            vars->nelems = (rank == 0) ? 1 : 0;                                       \
+            vars->nelems = (rank == 0) ? 1 : 0;
         }
         else if (ndims == 2) {
             err = cdl_hdr_inq_dim(hid, dimids[1], NULL, &dim1);
@@ -210,11 +241,11 @@ err_out:
 }
 
 static
-int def_dims_vars(int      ncid,
-                  int      hid, /* CDL header ID */
-                  int      logitute,
-                  int      latitute,
-                  WRF_VAR *vars)
+int def_dims_vars(int         ncid,
+                  int         hid, /* CDL header ID */
+                  MPI_Offset *logitute,
+                  MPI_Offset *latitute,
+                  WRF_VAR    *vars)
 {
     char *name;
     void *value;
@@ -234,10 +265,10 @@ int def_dims_vars(int      ncid,
         CHECK_ERR("cdl_hdr_inq_dim")
         if (debug) printf("\t name %s size %lld\n",name, size);
 
-             if (!strcmp(name, "south_north"))      size = logitute;
-        else if (!strcmp(name, "south_north_stag")) size = logitute + 1;
-        else if (!strcmp(name, "west_east"))        size = latitute;
-        else if (!strcmp(name, "west_east_stag"))   size = latitute + 1;
+             if (!strcmp(name, "south_north"))      size = *logitute;
+        else if (!strcmp(name, "south_north_stag")) size = *logitute + 1;
+        else if (!strcmp(name, "west_east"))        size = *latitute;
+        else if (!strcmp(name, "west_east_stag"))   size = *latitute + 1;
 
         err = ncmpi_def_dim(ncid, name, size, &dimid);
         CHECK_ERR("ncmpi_def_dim")
@@ -306,13 +337,13 @@ err_out:
 }
 
 static
-int wrf_io_benchmark(char     *out_file,
-                     int       hid,  /* CDL header ID */
-                     int       psizes[2],
-                     int       logitute,
-                     int       latitute,
-                     int       ntimes,
-                     MPI_Info  info)
+int wrf_io_benchmark(char       *out_file,
+                     int         hid,  /* CDL header ID */
+                     int         psizes[2],
+                     MPI_Offset  logitute,
+                     MPI_Offset  latitute,
+                     int         ntimes,
+                     MPI_Info    info)
 {
     int i, j, err=NC_NOERR, nprocs, rank;
     int cmode, ncid, nvars;
@@ -331,7 +362,7 @@ int wrf_io_benchmark(char     *out_file,
     vars = (WRF_VAR*) malloc(sizeof(WRF_VAR) * nvars);
 
     /* populate variable metadata */
-    err = construct_vars(hid, vars, logitute, latitute, psizes, &buf_size);
+    err = construct_vars(hid, vars, &logitute, &latitute, psizes, &buf_size);
     CHECK_ERR("construct_vars")
 
     if (debug) {
@@ -387,7 +418,7 @@ int wrf_io_benchmark(char     *out_file,
     CHECK_ERR("ncmpi_create")
 
     /* define dimension, variables, and attributes */
-    err = def_dims_vars(ncid, hid, logitute, latitute, vars);
+    err = def_dims_vars(ncid, hid, &logitute, &latitute, vars);
     CHECK_ERR("def_dims_vars")
 
     /* exit metadata define mode */
@@ -476,7 +507,7 @@ int wrf_io_benchmark(char     *out_file,
         printf("Output NetCDF file name:       %s\n", out_file);
         printf("Number of MPI processes:       %d\n", nprocs);
         printf("MPI processes arranged to 2D:  %d x %d\n", psizes[0], psizes[1]);
-        printf("Grid size logitute x latitute: %d x %d\n",logitute, latitute);
+        printf("Grid size logitute x latitute: %lld x %lld\n",logitute,latitute);
         printf("Total number of variables:     %d\n", nvars);
         printf("Number of time records:        %d\n",ntimes);
         printf("Total write amount:            %lld B\n", sum_w_size);
@@ -603,8 +634,9 @@ int main(int argc, char** argv)
     extern char *optarg;
     char out_file[1024], *cdl_file, *cb_nodes_str;
     int i, j, err, nerrs=0, nprocs, rank, ntimes, psizes[2], hid;
-    int logitute, latitute, num_cb_nodes, num_intra_nodes, *cb_nodes;
+    int num_cb_nodes, num_intra_nodes, *cb_nodes;
     int nc_num_aggrs_per_node[]={0};
+    MPI_Offset logitute, latitute;
     MPI_Info info=MPI_INFO_NULL;
 
     MPI_Init(&argc, &argv);
@@ -615,11 +647,11 @@ int main(int argc, char** argv)
     verbose= 1;
     debug  = 0;
     ntimes = 1;
-    logitute = 100;
-    latitute = 100;
+    cdl_file = NULL;
+    logitute = -1; /* default to use west_east from cdl file */
+    latitute = -1; /* default to use south_north from cdl file */
     cb_nodes     = NULL;
     cb_nodes_str = NULL;
-    cdl_file = NULL;
 
     while ((i = getopt(argc, argv, "hqdl:w:n:r:i:")) != EOF)
         switch(i) {
@@ -627,9 +659,9 @@ int main(int argc, char** argv)
                       break;
             case 'd': debug = 1;
                       break;
-            case 'l': logitute = atoi(optarg);
+            case 'l': logitute = atoll(optarg);
                       break;
-            case 'w': latitute = atoi(optarg);
+            case 'w': latitute = atoll(optarg);
                       break;
             case 'r': cb_nodes_str = strdup(optarg);
                       break;
@@ -662,8 +694,8 @@ int main(int argc, char** argv)
     MPI_Dims_create(nprocs, 2, psizes);
 
     if (debug && rank == 0) {
-        printf("logitute=%d latitute=%d psizes=%d x %d\n",logitute,latitute,
-               psizes[0],psizes[1]);
+        printf("logitute=%lld latitute=%lld psizes=%d x %d\n",
+               logitute,latitute,psizes[0],psizes[1]);
         fflush(stdout);
     }
 
