@@ -44,12 +44,15 @@ for i in ${check_PROGRAMS} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 
+        CMD_OPTS="-q ${TESTOUTDIR}/$i.nc"
         if test $i = get_vara ; then
            # get_vara reads the file 'put_vara.nc' created by put_vara
-           ${MPIRUN} ./$i -q ${TESTOUTDIR}/put_vara.nc
-        else
-           ${MPIRUN} ./$i -q ${TESTOUTDIR}/$i.nc
+           CMD_OPTS="-q ${TESTOUTDIR}/put_vara.nc"
+        elif test $i = create_from_cdl ; then
+           # create_from_cdl reads a CDL header file
+           CMD_OPTS="-q -o ${TESTOUTDIR}/$i.nc ${srcdir}/cdl_header.txt"
         fi
+        ${MPIRUN} ./$i ${CMD_OPTS}
         if test $? = 0 ; then
            echo "PASS:  C  parallel run on $1 processes --------------- $i"
         fi
@@ -73,11 +76,13 @@ for i in ${check_PROGRAMS} ; do
            # echo "test burst buffering feature"
            saved_PNETCDF_HINTS=${PNETCDF_HINTS}
            export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
+           CMD_OPTS="-q ${TESTOUTDIR}/$i.bb.nc"
            if test $i = get_vara ; then
-              ${MPIRUN} ./$i -q ${TESTOUTDIR}/put_vara.bb.nc
-           else
-              ${MPIRUN} ./$i -q ${TESTOUTDIR}/$i.bb.nc
+              CMD_OPTS="-q ${TESTOUTDIR}/put_vara.bb.nc"
+           elif test $i = create_from_cdl ; then
+              CMD_OPTS="-q -o ${TESTOUTDIR}/$i.bb.nc ${srcdir}/cdl_header.txt"
            fi
+           ${MPIRUN} ./$i ${CMD_OPTS}
            if test $? = 0 ; then
               echo "PASS:  C  parallel run on $1 processes --------------- $i"
            fi
@@ -94,7 +99,9 @@ for i in ${check_PROGRAMS} ; do
 
         if test "x${ENABLE_NETCDF4}" = x1 ; then
            # echo "test netCDF-4 feature"
-           ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc4 4
+           if test $i != create_from_cdl ; then
+              ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc4 4
+           fi
            # Validator does not support nc4
         fi
 
