@@ -39,7 +39,8 @@ check_PROGRAMS = collective_write \
                  ghost_cell \
                  req_all \
                  vard_mvars \
-                 time_var
+                 time_var \
+                 create_from_cdl
 
 if INSTALL_EXAMPLES
    example_execbin_PROGRAMS = $(check_PROGRAMS)
@@ -105,6 +106,7 @@ tests-local: all $(check_PROGRAMS)
 
 install-exec-hook:
 	@if test "x$(example_execbindir)" != x ; then \
+	cp -f $(srcdir)/cdl_header.txt $(DESTDIR)$(example_execbindir) ; \
 	$(SED_I) -e 's|check_PROGRAMS|$(check_PROGRAMS)|g ; s|TESTOUTDIR|$(TESTOUTDIR)|g ; s|TESTMPIRUN|$(TESTMPIRUN)|g ; s|SED_CMD|$(SED)|g ; s|ENABLE_BURST_BUFFER|$(ENABLE_BURST_BUFFER)|g ; s|ENABLE_NETCDF4|$(ENABLE_NETCDF4)|g' $(DESTDIR)$(example_execbindir)/run_c_examples.sh ; \
 	fi
 
