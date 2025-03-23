@@ -41,7 +41,7 @@ TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
 
-EXTRA_DIST = wrap_runs.sh.sh parallel_run.sh
+EXTRA_DIST = wrap_runs.sh parallel_run.sh cdl_header.txt
 
 CLEANFILES = $(TESTOUTDIR)/tst_cdl_hdr_parser.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
