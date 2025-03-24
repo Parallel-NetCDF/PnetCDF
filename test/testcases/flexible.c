@@ -245,7 +245,7 @@ int main(int argc, char **argv) {
     }
 
     /* create a buftype with ghost cells on each side */
-    ncbuf = (int *) malloc((count[0]+4)*(count[1]+4)*sizeof(int));
+    ncbuf = (int *) malloc(sizeof(int) * (count[0]+4) * (count[1]+4));
     array_of_sizes[0] = (int)count[0]+4;
     array_of_sizes[1] = (int)count[1]+4;
     array_of_subsizes[0] = (int)count[0];

@@ -175,18 +175,18 @@ err_check:
 
         /* check if dimids is consistent among all processes */
         if (root_ndims > 0) {
-            int *root_dimids = (int*)NCI_Malloc((size_t)root_ndims *SIZEOF_INT);
+            int *root_dimids = (int*)NCI_Malloc(sizeof(int) * root_ndims);
             if (dimids != NULL)
-                memcpy(root_dimids, dimids, (size_t)root_ndims*SIZEOF_INT);
+                memcpy(root_dimids, dimids, sizeof(int) * root_ndims);
             else
-                memset(root_dimids, 0, (size_t)root_ndims*SIZEOF_INT);
+                memset(root_dimids, 0, sizeof(int) * root_ndims);
             TRACE_COMM(MPI_Bcast)(root_dimids, root_ndims,MPI_INT,0,pncp->comm);
             if (mpireturn != MPI_SUCCESS) {
                 NCI_Free(root_dimids);
                 return ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
             }
             if (err == NC_NOERR && dimids != NULL &&
-                memcmp(root_dimids, dimids, (size_t)root_ndims*SIZEOF_INT))
+                memcmp(root_dimids, dimids, sizeof(int) * root_ndims))
                 DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_VAR_DIMIDS)
             NCI_Free(root_dimids);
         }
@@ -222,7 +222,7 @@ err_check:
         }
 
         pncp->vars[*varidp].shape = (MPI_Offset*)
-                                    NCI_Malloc(ndims * SIZEOF_MPI_OFFSET);
+                                    NCI_Malloc(sizeof(MPI_Offset) * ndims);
         for (i=0; i<ndims; i++) {
             /* obtain size of dimension i */
             err = pncp->driver->inq_dim(pncp->ncp, dimids[i], NULL,

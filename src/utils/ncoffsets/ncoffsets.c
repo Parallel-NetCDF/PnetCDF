@@ -1114,7 +1114,7 @@ hdr_get_NC_dimarray(bufferinfo  *gbp,
     } else {
         if (type != NC_DIMENSION) DEBUG_RETURN_ERROR(NC_ENOTNC);
 
-        ncap->value = (NC_dim **) malloc(ndefined * sizeof(NC_dim*));
+        ncap->value = (NC_dim **) malloc(sizeof(NC_dim*) * ndefined);
         MALLOC_CHECK(ncap->value)
         ncap->nalloc = (int)ndefined;
 
@@ -1389,7 +1389,7 @@ hdr_get_NC_attrarray(bufferinfo   *gbp,
         if (type != NC_ATTRIBUTE)
             DEBUG_RETURN_ERROR(NC_ENOTNC);
 
-        ncap->value = (NC_attr **)malloc((size_t)ndefined * sizeof(NC_attr*));
+        ncap->value = (NC_attr **)malloc(sizeof(NC_attr*) * ndefined);
         MALLOC_CHECK(ncap->value)
         ncap->nalloc = (int)ndefined;
 
@@ -1617,7 +1617,7 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
         if (type != NC_VARIABLE)
             DEBUG_RETURN_ERROR(NC_ENOTNC);
 
-        ncap->value = (NC_var **) malloc((size_t)ndefined * sizeof(NC_var*));
+        ncap->value = (NC_var **) malloc(sizeof(NC_var*) * ndefined);
         MALLOC_CHECK(ncap->value)
         ncap->nalloc = (int)ndefined;
 
@@ -1814,7 +1814,7 @@ make_lvars(char *optarg, struct fspec* fspecp)
         if (*cp == ',')
             nvars++;
 
-    fspecp->lvars = (char **) malloc(nvars * sizeof(char*));
+    fspecp->lvars = (char **) malloc(sizeof(char*) * nvars);
     MALLOC_CHECK(fspecp->lvars)
 
     cpp = fspecp->lvars;
@@ -1828,7 +1828,7 @@ make_lvars(char *optarg, struct fspec* fspecp)
         cpp++;
     }
     fspecp->nlvars = nvars;
-    fspecp->varp = (NC_var**) malloc(nvars * sizeof(NC_var*));
+    fspecp->varp = (NC_var**) malloc(sizeof(NC_var*) * nvars);
     MALLOC_CHECK(fspecp->varp)
 }
 
@@ -1981,7 +1981,7 @@ int main(int argc, char *argv[])
     /* First check if all selected variables can be found in input file. */
     if (fspecp->nlvars > 0) {
         /* print a selected list of variables */
-        fspecp->varids = (int*) malloc(fspecp->nlvars * sizeof(int));
+        fspecp->varids = (int*) malloc(sizeof(int) * fspecp->nlvars);
         MALLOC_CHECK(fspecp->varids)
         for (i=0; i<fspecp->nlvars; i++) {
             for (j=0; j<ncp->vars.ndefined; j++) {
@@ -2033,9 +2033,9 @@ int main(int argc, char *argv[])
     }
 
     if (fspecp->nlvars == 0) { /* print all variables */
-        fspecp->varp = (NC_var**) malloc(ncp->vars.ndefined * sizeof(NC_var*));
+        fspecp->varp = (NC_var**) malloc(sizeof(NC_var*) * ncp->vars.ndefined);
         MALLOC_CHECK(fspecp->varp)
-        fspecp->varids = (int*) malloc(ncp->vars.ndefined * sizeof(int));
+        fspecp->varids = (int*) malloc(sizeof(int) * ncp->vars.ndefined);
         MALLOC_CHECK(fspecp->varids)
         fspecp->nlvars = ncp->vars.ndefined;
         fspecp->lvars = NULL;

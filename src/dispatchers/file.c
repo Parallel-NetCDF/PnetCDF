@@ -815,7 +815,7 @@ ncmpi_open(MPI_Comm    comm,
 
     /* allocate chunk size for pncp->vars[] */
     nalloc = PNETCDF_RNDUP(pncp->nvars, PNC_VARS_CHUNK);
-    pncp->vars = NCI_Malloc(nalloc * sizeof(PNC_var));
+    pncp->vars = NCI_Malloc(sizeof(PNC_var) * nalloc);
     if (pncp->vars == NULL) {
         DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
         goto fn_exit;
@@ -835,10 +835,10 @@ ncmpi_open(MPI_Comm    comm,
 
         if (ndims > 0) {
             pncp->vars[i].shape = (MPI_Offset*)
-                                  NCI_Malloc(ndims * SIZEOF_MPI_OFFSET);
+                                  NCI_Malloc(sizeof(MPI_Offset) * ndims);
             if (ndims > max_ndims) { /* avoid repeated malloc */
                 if (dimids == DIMIDS) dimids = NULL;
-                dimids = (int*) NCI_Realloc(dimids, ndims * SIZEOF_INT);
+                dimids = (int*) NCI_Realloc(dimids, sizeof(int) * ndims);
                 max_ndims = ndims;
             }
             err = driver->inq_var(pncp->ncp, i, NULL, NULL, NULL,

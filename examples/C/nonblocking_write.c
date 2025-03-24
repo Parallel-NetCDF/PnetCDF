@@ -197,7 +197,7 @@ int main(int argc, char **argv)
 
         total_nelems = SCA_NVARS + (FIX_NVARS + REC_NVARS) * nelems;
 
-        sca_buf = (int*) malloc(total_nelems * sizeof(int));
+        sca_buf = (int*) malloc(sizeof(int) * total_nelems);
 
         for (i=0; i<FIX_NVARS; i++)
             fix_buf[i] = sca_buf + SCA_NVARS + nelems * i;
@@ -207,11 +207,11 @@ int main(int argc, char **argv)
     }
     else {
         /* allocate individual buffers separately +1 ensure non-contiguity*/
-        sca_buf = (int*) malloc((SCA_NVARS+1) * sizeof(int));
+        sca_buf = (int*) malloc(sizeof(int) * (SCA_NVARS+1));
         for (i=0; i<FIX_NVARS; i++)
-            fix_buf[i] = (int *) malloc((nelems+1) * sizeof(int));
+            fix_buf[i] = (int *) malloc(sizeof(int) * (nelems+1));
         for (i=0; i<REC_NVARS; i++)
-            rec_buf[i] = (int *) malloc((nelems+1) * sizeof(int));
+            rec_buf[i] = (int *) malloc(sizeof(int) * (nelems+1));
     }
 
     /* initialize buffer contents */
@@ -247,8 +247,8 @@ int main(int argc, char **argv)
 
     MPI_Info_free(&info);
 
-    req = (int*) malloc((SCA_NVARS + FIX_NVARS + REC_NVARS) * sizeof(int));
-    st  = (int*) malloc((SCA_NVARS + FIX_NVARS + REC_NVARS) * sizeof(int));
+    req = (int*) malloc(sizeof(int) * (SCA_NVARS + FIX_NVARS + REC_NVARS));
+    st  = (int*) malloc(sizeof(int) * (SCA_NVARS + FIX_NVARS + REC_NVARS));
 
     /* define dimensions */
     err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimids[0]);

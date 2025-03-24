@@ -87,7 +87,7 @@ int ncbbio_log_create(NC_bb* ncbbp,
     }
     else {
         size_t i = strlen(path);
-        fdir = (char*)NCI_Malloc((i + 1) * sizeof(char));
+        fdir = (char*)NCI_Malloc(sizeof(char) * (i + 1));
         strncpy(fdir, path, i + 1);
         /* Search for first '\' from the back */
         for (i--; i > -1; i--) {

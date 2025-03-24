@@ -376,13 +376,13 @@ nc4io_inq_misc(void       *ncdp,
          */
         err = nc_inq(nc4p->ncid, &ndim, NULL, NULL, NULL);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
-        isrec = (int*)NCI_Malloc(SIZEOF_INT * ndim);
-        memset(isrec, 0, SIZEOF_INT * ndim);
+        isrec = (int*)NCI_Malloc(sizeof(int) * ndim);
+        memset(isrec, 0, sizeof(int) * ndim);
 
         /* Get list of unlimited dim */
         err = nc_inq_unlimdims(nc4p->ncid, &nrecdim, NULL);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-        recdims = (int*)NCI_Malloc(SIZEOF_INT * nrecdim);
+        recdims = (int*)NCI_Malloc(sizeof(int) * nrecdim);
         err = nc_inq_unlimdims(nc4p->ncid, NULL, recdims);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
@@ -395,7 +395,7 @@ nc4io_inq_misc(void       *ncdp,
         err = nc_inq_varids(nc4p->ncid, &nvar, NULL);
         if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
-        vars = NCI_Malloc(SIZEOF_INT * nvar);
+        vars = NCI_Malloc(sizeof(int) * nvar);
         if (vars == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
         /* IDs of all variables */
@@ -415,7 +415,7 @@ nc4io_inq_misc(void       *ncdp,
             err = nc_inq_varndims(nc4p->ncid, vars[i], &ndim);
             if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
-            dims = NCI_Malloc(SIZEOF_INT * ndim);
+            dims = NCI_Malloc(sizeof(int) * ndim);
             if (dims == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM);
 
             /* IDs of dimensions */

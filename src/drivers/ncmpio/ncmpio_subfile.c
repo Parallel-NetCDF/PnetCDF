@@ -394,8 +394,8 @@ int ncmpio_subfile_partition(NC *ncp)
             } /* for each dim */
 
             /* master file: replace the original var with scalar var */
-            vpp[i]->dimids_org = (int*) NCI_Malloc((size_t)vpp[i]->ndims * SIZEOF_INT);
-            memcpy(vpp[i]->dimids_org, vpp[i]->dimids, (size_t)vpp[i]->ndims*SIZEOF_INT);
+            vpp[i]->dimids_org = (int*) NCI_Malloc(sizeof(int) * vpp[i]->ndims);
+            memcpy(vpp[i]->dimids_org, vpp[i]->dimids, sizeof(int) * vpp[i]->ndims);
             vpp[i]->ndims_org = vpp[i]->ndims;
             vpp[i]->ndims = 0;
             if (IS_RECVAR(vpp[i])) {
@@ -509,10 +509,10 @@ ncmpio_subfile_getput_vars(NC               *ncp,
                             &color, MPI_INT);
     if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
 
-    count_my_req_per_proc = (int *)NCI_Calloc((size_t)nprocs, SIZEOF_INT);
-    count_others_req_per_proc = (int *)NCI_Calloc((size_t)nprocs, SIZEOF_INT);
-    buf_count_my = (MPI_Offset *)NCI_Calloc((size_t)nprocs, SIZEOF_MPI_OFFSET);
-    buf_count_others = (MPI_Offset *)NCI_Calloc((size_t)nprocs, SIZEOF_MPI_OFFSET);
+    count_my_req_per_proc = (int *)NCI_Calloc((size_t)nprocs, sizeof(int));
+    count_others_req_per_proc = (int *)NCI_Calloc((size_t)nprocs, sizeof(int));
+    buf_count_my = (MPI_Offset *)NCI_Calloc((size_t)nprocs, sizeof(MPI_Offset));
+    buf_count_others = (MPI_Offset *)NCI_Calloc((size_t)nprocs, sizeof(MPI_Offset));
 
     /* TODO: shouldn't it be initialized to 0? */
     for (i=0; i<nprocs; i++) {
@@ -525,7 +525,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
 
     /* init allocated my_req */
     for (i=0; i<nprocs; i++) {
-        my_req[i].start = (MPI_Offset*)NCI_Malloc((size_t)(3 * ndims_org * SIZEOF_MPI_OFFSET));
+        my_req[i].start = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * 3 * ndims_org);
         my_req[i].count = my_req[i].start + ndims_org;
         my_req[i].start_org = my_req[i].count + ndims_org;
         /* init start/count to -1 */
@@ -696,7 +696,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
     others_req = (NC_subfile_access *) NCI_Calloc((size_t)nprocs, sizeof(NC_subfile_access));
     /* init allocated others_req */
     for (i=0; i<nprocs; i++) {
-        others_req[i].start = (MPI_Offset *)NCI_Malloc((size_t)(3 * ndims_org * SIZEOF_MPI_OFFSET));
+        others_req[i].start = (MPI_Offset *)NCI_Malloc(sizeof(MPI_Offset) * 3 * ndims_org);
         others_req[i].count = others_req[i].start + ndims_org;
         others_req[i].start_org = others_req[i].count + ndims_org;
         /* init start/count to -1 */
@@ -851,7 +851,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
     int *array_of_requests;
     int *array_of_statuses;
     /* TODO: each proc can't get more than nprocs-1?? */
-    array_of_requests = (int *)NCI_Malloc((size_t)nprocs * SIZEOF_INT);
+    array_of_requests = (int *)NCI_Malloc(sizeof(int) * nprocs);
     for (i=0; i<nprocs; i++)
         array_of_requests[i] = NC_REQ_NULL;
 
@@ -879,7 +879,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
 
     /* doing other proc's request to my subfile
        TODO: each proc can't get more than nprocs?? */
-    requests = (MPI_Request *)NCI_Malloc((size_t)nprocs*2*sizeof(MPI_Request));
+    requests = (MPI_Request *)NCI_Malloc(sizeof(MPI_Request) * nprocs * 2);
 
     j = 0;
 #ifdef TAU_SSON
@@ -897,7 +897,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
         if (count_others_req_per_proc[i] != 0 && i != myrank)
             TRACE_COMM(MPI_Isend)(&count_my_req_per_proc[i], 1, MPI_INT, i, i+myrank, ncp->comm, &requests[j++]);
 
-    statuses = (MPI_Status *)NCI_Malloc((size_t)j*sizeof(MPI_Status));
+    statuses = (MPI_Status *)NCI_Malloc(sizeof(MPI_Status) * j);
     TRACE_COMM(MPI_Waitall)(j, requests, statuses);
 #ifdef TAU_SSON
     TAU_PHASE_STOP(t52);
@@ -907,7 +907,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
     NCI_Free(requests);
 
     j = 0;
-    requests = (MPI_Request *)NCI_Malloc((size_t)nprocs*2*sizeof(MPI_Request));
+    requests = (MPI_Request *)NCI_Malloc(sizeof(MPI_Request) * nprocs * 2);
 
 #ifdef TAU_SSON
     TAU_PHASE_CREATE_STATIC(t53, "SSON --- getput_vars: exch start,count,", "", TAU_USER);
@@ -916,7 +916,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
     /* when dest rank == myrank */
     if (count_others_req_per_proc[myrank] > 0)
         memcpy(others_req[myrank].start, my_req[myrank].start,
-               (size_t)ndims_org * 3 * SIZEOF_MPI_OFFSET);
+               sizeof(MPI_Offset) * ndims_org * 3);
 
     /* exchange my_req's and others_req's start[], count[], and start_org[] */
     for (i=0; i<nprocs; i++) {
@@ -931,7 +931,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
                       i+myrank, ncp->comm, &requests[j++]);
     }
 
-    statuses = (MPI_Status *)NCI_Malloc((size_t)j*sizeof(MPI_Status));
+    statuses = (MPI_Status *)NCI_Malloc(sizeof(MPI_Status) * j);
     TRACE_COMM(MPI_Waitall)(j, requests, statuses);
     NCI_Free(statuses);
     NCI_Free(requests);
@@ -973,7 +973,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
 #endif
 
     j = 0;
-    requests = (MPI_Request *)NCI_Malloc((size_t)nprocs*2*sizeof(MPI_Request));
+    requests = (MPI_Request *)NCI_Malloc(sizeof(MPI_Request) * nprocs * 2);
 
     xbuf = (void**)NCI_Calloc((size_t)nprocs, sizeof(void *));
 
@@ -1036,7 +1036,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
         } /* end if() */
     } /* end for() */
 
-    statuses = (MPI_Status *)NCI_Malloc((size_t)j * sizeof(MPI_Status));
+    statuses = (MPI_Status *)NCI_Malloc(sizeof(MPI_Status) * j);
     TRACE_COMM(MPI_Waitall)(j, requests, statuses);
     NCI_Free(statuses);
     NCI_Free(requests);
@@ -1083,7 +1083,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
     double stime, wait_time;
     stime = MPI_Wtime();
     */
-    array_of_statuses = (int *)NCI_Malloc((size_t)nasyncios * SIZEOF_INT);
+    array_of_statuses = (int *)NCI_Malloc(sizeof(int) * nasyncios);
     status = ncmpio_wait(ncp->ncp_sf, nasyncios, array_of_requests, array_of_statuses, NC_REQ_COLL);
     if (status != NC_NOERR) DEBUG_RETURN_ERROR(status)
     NCI_Free(array_of_statuses);

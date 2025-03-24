@@ -348,7 +348,7 @@ ncmpio_last_offset(const NC         *ncp,
 
     /* when count == NULL, this is called from a var API */
     if (count != NULL) {
-        last_indx = (MPI_Offset*) NCI_Malloc((size_t)ndims * SIZEOF_MPI_OFFSET);
+        last_indx = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * ndims);
 
         if (stride != NULL) {
             for (i=0; i<ndims; i++) {

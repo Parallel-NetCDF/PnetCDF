@@ -74,7 +74,7 @@ int hash_map_add(hash_map *map, char *key, int val) {
     if (new_node == NULL){
         DEBUG_RETURN_ERROR(NC_ENOMEM);
     }
-    new_node->key = (char*)NCI_Malloc((strlen(key) + 1) * sizeof(char));
+    new_node->key = (char*)NCI_Malloc(sizeof(char) * (strlen(key) + 1));
     if (new_node->key == NULL){
         NCI_Free(new_node);
         DEBUG_RETURN_ERROR(NC_ENOMEM);

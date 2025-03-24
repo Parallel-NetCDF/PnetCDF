@@ -1035,7 +1035,7 @@ cmp_vars:
                                     break;
                             pos = ((long long)m + k * nChunks) / var[0]->xsz;
 
-                            diffStart = (long long*) malloc(var[0]->ndims * sizeof(long long));
+                            diffStart = (long long*) malloc(sizeof(long long) * var[0]->ndims);
                             for (_i=var[0]->ndims-1; _i>=0; _i--) {
                                 if (isRecVar[0] && _i == 0) {
                                     diffStart[_i] = r; /* r-th record */
@@ -1092,7 +1092,7 @@ cmp_vars:
         } else {
             int _i;
             long long pos, *diffStart;
-            diffStart = (long long*) malloc(ndims[0] * sizeof(long long));
+            diffStart = (long long*) malloc(sizeof(long long) * ndims[0]);
             if (worst != -1) pos = worst;
             for (_i=ndims[0]-1; _i>=0; _i--) {
                 long long dimLen = var[0]->shape[_i];

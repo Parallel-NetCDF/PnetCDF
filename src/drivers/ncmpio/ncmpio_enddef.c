@@ -943,7 +943,7 @@ ncmpio_NC_check_voffs(NC *ncp)
     if (num_fix_vars == 0) goto check_rec_var;
 
     /* check non-record variables first */
-    var_off_len = (off_len*) NCI_Malloc(num_fix_vars * sizeof(off_len));
+    var_off_len = (off_len*) NCI_Malloc(sizeof(off_len) * num_fix_vars);
     for (i=0, j=0; i<ncp->vars.ndefined; i++) {
         NC_var *varp = ncp->vars.value[i];
         if (varp->begin < ncp->xsz) {
@@ -1000,7 +1000,7 @@ check_rec_var:
     if (ncp->vars.num_rec_vars == 0) return NC_NOERR;
 
     /* check record variables */
-    var_off_len = (off_len*) NCI_Malloc(ncp->vars.num_rec_vars * sizeof(off_len));
+    var_off_len = (off_len*) NCI_Malloc(sizeof(off_len) * ncp->vars.num_rec_vars);
     for (i=0, j=0; i<ncp->vars.ndefined; i++) {
         NC_var *varp = ncp->vars.value[i];
         if (!IS_RECVAR(varp)) continue;

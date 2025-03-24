@@ -567,7 +567,7 @@ ncbbio_cancel(void *ncdp,
      * req_ids.  We do onw swap for each put request, so there are at most
      * num_req swaps.
      */
-    swapidx = (int*)NCI_Malloc(SIZEOF_INT * num_req);
+    swapidx = (int*)NCI_Malloc(sizeof(int) * num_req);
 
     /* Count the number of put requests and swap it to the first section.  nput
      * is number of put request known so far, it also mark the end of the first
@@ -755,7 +755,7 @@ ncbbio_wait(void *ncdp,
      * req_ids.  We do onw swap for each put request, so there are at most
      * num_reqs swaps
      */
-    swapidx = (int*)NCI_Malloc(SIZEOF_INT * num_reqs);
+    swapidx = (int*)NCI_Malloc(sizeof(int) * num_reqs);
 
     /* Count the number of put requests and swap it to the first section
      * nput is number of put request known so far, it also mark the end of the

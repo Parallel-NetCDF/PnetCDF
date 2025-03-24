@@ -1417,7 +1417,7 @@ sub logical_array_ftoc {
 }
 sub logical_array_in_decl {
     my $count = $_[0];
-    print $OUTFD "    int *l$count = (int *)$malloc((size_t)($Array_size) * SIZEOF_INT);\n";
+    print $OUTFD "    int *l$count = (int *)$malloc(sizeof(int) * ($Array_size));\n";
     $clean_up .= "    $free(l$count);\n";
 }
 sub logical_array_in_arg {
@@ -1741,7 +1741,7 @@ sub blankpad_out_ftoc {
 
     # Allocate space to hold the C version of the output
     $strlen = "d$count";
-    print $OUTFD "    p$count = (char *)$malloc( (size_t)$strlen + 1 );\n";
+    print $OUTFD "    p$count = (char *)$malloc((size_t)$strlen + 1);\n";
 }
 sub blankpad_ctof {
     my $coutvar = $_[0];
@@ -1782,7 +1782,7 @@ sub blankpadonflag_out_ftoc {
 
     # Allocate space to hold the C version of the output
     $strlen = "d$count";
-    print $OUTFD "    p$count = (char *)$malloc( (size_t)$strlen + 1 );\n";
+    print $OUTFD "    p$count = (char *)$malloc((size_t)$strlen + 1);\n";
 }
 sub blankpadonflag_ctof {
     my $coutvar = $_[0];
@@ -1864,7 +1864,7 @@ sub addnullandtrim_ftoc {
         while (*p == ' ' && p > v$count) p--;
         p++;
         while (*pin == ' ' && pin < p) pin++;
-        p$count = (char *)$malloc( (size_t)(p-pin) + 1 );
+        p$count = (char *)$malloc((size_t)(p-pin) + 1);
         for (li=0; li<(p-pin); li++) { p$count\[li\] = pin\[li\]; }
         p$count\[li\] = '\\0';
     }
@@ -1919,8 +1919,8 @@ sub chararray_ftoc {
       }\n";
     }
     print $OUTFD "\
-      p$count = (char **)$malloc( (size_t)asize$count * sizeof(char *) );
-      ptmp    = (char *)$malloc( (size_t)asize$count * (d$count + 1) );
+      p$count = (char **)$malloc(sizeof(char *) * (asize$count));
+      ptmp    = (char *)$malloc((size_t)asize$count * (d$count + 1));
       for (i=0; i<asize$count-1; i++) {
           char *p = v$count + i * d$count, *pin, *pdest;
           int j;
@@ -1983,7 +1983,7 @@ sub chararray2_ftoc {
     # arrays are not the same.  In C, for a two dimensional array
     # sized at run time, we must
     # allocate an array of pointers to arrays.
-    #    p = (char ***) malloc( nrows * sizeof(char **) )
+    #    p = (char ***) malloc(sizeof(char **) * nrows)
     # where we are letting using p[nrows][colindex].
     # For MPI_Comm_spawn_multiple, each of these rows is for one command.
     # Each p[k] is a pointer to an array of character strings.
@@ -2004,7 +2004,7 @@ sub chararray2_ftoc {
       int k;
 
       /* Allocate the array of pointers for the commands */
-      p$count = (char ***)$malloc( (size_t)($Array_size) * sizeof(char **) );
+      p$count = (char ***)$malloc(sizeof(char **) * ($Array_size));
 
       for (k=0; k<$Array_size; k++) {
         /* For each command, find the number of command-line arguments.
@@ -2031,8 +2031,8 @@ sub chararray2_ftoc {
 
         /* argcnt is the number of provided arguments.
            Allocate the necessary elements and copy, null terminating copies */
-        pargs = (char **)$malloc( (size_t)(argcnt+1)*sizeof(char *) );
-        pdata = (char *)$malloc( (size_t)arglen );
+        pargs = (char **)$malloc(sizeof(char*) * (argcnt+1));
+        pdata = (char *)$malloc((size_t)arglen );
         p$count\[k\] = pargs;
         pargs\[argcnt\] = '\\0';  /* Null terminate end */
         /* Copy each argument to consequtive locations in pdata,
@@ -2080,7 +2080,7 @@ sub intToAintArr_ftoc {
 #ifdef HAVE_AINT_LARGER_THAN_FINT
     if ($Array_size > 0) {
         int li;
-        l$count = (MPI_Aint *)$malloc( (size_t)($Array_size) * SIZEOF_MPI_AINT );
+        l$count = (MPI_Aint *)$malloc(sizeof(MPI_Aint) * ($Array_size));
         for (li=0; li<$Array_size; li++)
             l$count\[li\] = v$count\[li\];
     }

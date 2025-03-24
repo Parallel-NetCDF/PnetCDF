@@ -114,7 +114,7 @@ name_path(const char *path)
     else                /* skip delimeter */
         cp++;
 
-    new = (char *) malloc((unsigned) (strlen(cp)+1));
+    new = (char *) malloc(strlen(cp) + 1);
     if (new == 0) error("out of memory!");
 
     strcpy(new, cp);    /* copy last component of path */
@@ -344,7 +344,7 @@ pr_att(int         ncid,
             free(att.string);
             break;
         default:
-            att.vals = (double *) malloc(att.len * sizeof(double));
+            att.vals = (double *) malloc(sizeof(double) * att.len);
             if (!att.vals) {
                 error("Out of memory!");
                 NC_CHECK( ncmpi_close(ncid) );
@@ -460,7 +460,7 @@ do_ncdump(const char *path, struct fspec* specp)
         /* print dimension info */
         if (ndims > 0) Printf ("dimensions:\n");
 
-        dims = (struct ncdim*) malloc(ndims*sizeof(struct ncdim));
+        dims = (struct ncdim*) malloc(sizeof(struct ncdim) * ndims);
         for (dimid = 0; dimid < ndims; dimid++) {
             NC_CHECK(ncmpi_inq_dim(ncid, dimid, dims[dimid].name,
                                    &dims[dimid].size) );
@@ -532,7 +532,7 @@ do_ncdump(const char *path, struct fspec* specp)
                 if (var.ndims == 0 || var.dims[0] != xdimid ||
                     dims[xdimid].size != 0) {
                     /* Collect variable's dim sizes */
-                    vdims = (size_t*) malloc(var.ndims * sizeof(size_t));
+                    vdims = (size_t*) malloc(sizeof(size_t) * var.ndims);
                     for (id = 0; id < var.ndims; id++)
                          vdims[id] = dims[var.dims[id]].size;
 
@@ -623,7 +623,7 @@ make_lvars(char *optarg, struct fspec* fspecp)
         if (*cp == ',')
             nvars++;
 
-    fspecp->lvars = (char **) malloc(nvars * sizeof(char*));
+    fspecp->lvars = (char **) malloc(sizeof(char*) * nvars);
     if (!fspecp->lvars) error("out of memory");
 
     cpp = fspecp->lvars;

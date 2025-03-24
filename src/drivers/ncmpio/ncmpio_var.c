@@ -62,9 +62,9 @@ ncmpio_new_NC_var(char *name, size_t name_len, int ndims)
     if (varp == NULL) return NULL;
 
     if (ndims > 0) {
-        varp->shape  = (MPI_Offset*)NCI_Calloc(ndims, SIZEOF_MPI_OFFSET);
-        varp->dsizes = (MPI_Offset*)NCI_Calloc(ndims, SIZEOF_MPI_OFFSET);
-        varp->dimids = (int *)      NCI_Calloc(ndims, SIZEOF_INT);
+        varp->shape  = (MPI_Offset*)NCI_Calloc(ndims, sizeof(MPI_Offset));
+        varp->dsizes = (MPI_Offset*)NCI_Calloc(ndims, sizeof(MPI_Offset));
+        varp->dimids = (int *)      NCI_Calloc(ndims, sizeof(int));
     }
 
     varp->name     = name;         /* name has been malloc-ed */
@@ -94,7 +94,7 @@ dup_NC_var(const NC_var *rvarp, int attr_hsize)
 
     /* copy dimids[] */
     if (rvarp->ndims != 0 && rvarp->dimids != NULL)
-        memcpy(varp->dimids, rvarp->dimids, (size_t)rvarp->ndims * SIZEOF_INT);
+        memcpy(varp->dimids, rvarp->dimids, sizeof(int) * rvarp->ndims);
 
 #ifndef SEARCH_NAME_LINEARLY
     /* initialize hashing lookup table size for attributes */
@@ -112,8 +112,8 @@ dup_NC_var(const NC_var *rvarp, int attr_hsize)
      * compute_var_shape() to recompute it after a new variable is created
      */
     if (rvarp->ndims > 0) { /* skip memcpy if ndims == 0 (scalar variables) */
-        memcpy(varp->shape,  rvarp->shape,  (size_t)rvarp->ndims * SIZEOF_MPI_OFFSET);
-        memcpy(varp->dsizes, rvarp->dsizes, (size_t)rvarp->ndims * SIZEOF_MPI_OFFSET);
+        memcpy(varp->shape,  rvarp->shape,  sizeof(MPI_Offset) * rvarp->ndims);
+        memcpy(varp->dsizes, rvarp->dsizes, sizeof(MPI_Offset) * rvarp->ndims);
     }
     varp->xsz   = rvarp->xsz;
     varp->len   = rvarp->len;
@@ -384,7 +384,7 @@ ncmpio_def_var(void       *ncdp,
 
     /* copy dimids[] */
     if (ndims != 0 && dimids != NULL)
-        memcpy(varp->dimids, dimids, (size_t)ndims * SIZEOF_INT);
+        memcpy(varp->dimids, dimids, sizeof(int) * ndims);
 
     /* set up array dimensional structures */
     err = ncmpio_NC_var_shape64(varp, &ncp->dims);
@@ -536,11 +536,11 @@ ncmpio_inq_var(void       *ncdp,
 #ifdef ENABLE_SUBFILING
         /* varp->dimids_org is already set during open or enddef */
         if (varp->num_subfiles > 1 && varp->ndims_org > 0)
-            memcpy(dimids, varp->dimids_org, (size_t)varp->ndims_org * SIZEOF_INT);
+            memcpy(dimids, varp->dimids_org, sizeof(int) * varp->ndims_org);
         else
 #endif
         if (varp->ndims > 0)
-            memcpy(dimids, varp->dimids, (size_t)varp->ndims * SIZEOF_INT);
+            memcpy(dimids, varp->dimids, sizeof(int) * varp->ndims);
     }
     if (nattsp != NULL) *nattsp = varp->attrs.ndefined;
 

@@ -76,9 +76,9 @@ int ncadiosi_get_list_init(NC_ad_get_list *lp) {
     /* Initialize parameter and allocate the array  */
     lp->nused = 0;
     lp->nalloc = PUT_ARRAY_SIZE;
-    lp->reqs = (NC_ad_get_req*)NCI_Malloc(lp->nalloc * sizeof(NC_ad_get_req));
-    lp->ids = (int*)NCI_Malloc(lp->nalloc * SIZEOF_INT);
-    lp->pos = (int*)NCI_Malloc(lp->nalloc * SIZEOF_INT);
+    lp->reqs = (NC_ad_get_req*)NCI_Malloc(sizeof(NC_ad_get_req) * lp->nalloc);
+    lp->ids = (int*)NCI_Malloc(sizeof(int) * lp->nalloc);
+    lp->pos = (int*)NCI_Malloc(sizeof(int) * lp->nalloc);
     if (lp->reqs == NULL || lp->ids == NULL) {
         DEBUG_RETURN_ERROR(NC_ENOMEM);
     }
@@ -114,11 +114,11 @@ static int ncadiosi_get_list_resize(NC_ad_get_list *lp)
     if (ptr == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM);
     lp->reqs = (NC_ad_get_req*)ptr;
 
-    ptr = NCI_Realloc(lp->ids, nsize * SIZEOF_INT);
+    ptr = NCI_Realloc(lp->ids, sizeof(int) * nsize);
     if (ptr == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM);
     lp->ids = (int*)ptr;
 
-    ptr = NCI_Realloc(lp->pos, nsize * SIZEOF_INT);
+    ptr = NCI_Realloc(lp->pos, sizeof(int) * nsize);
     if (ptr == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM);
     lp->pos = (int*)ptr;
 

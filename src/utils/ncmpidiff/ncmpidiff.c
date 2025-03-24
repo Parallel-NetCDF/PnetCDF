@@ -225,7 +225,7 @@
         } else {                                                             \
             int _i;                                                          \
             MPI_Offset *diffStart;                                           \
-            diffStart = (MPI_Offset*) malloc(ndims[0] * sizeof(MPI_Offset)); \
+            diffStart = (MPI_Offset*) malloc(sizeof(MPI_Offset) * ndims[0]); \
             if (worst != -1) pos = worst;                                    \
             v1 = b1[pos];                                                    \
             v2 = b2[pos];                                                    \
@@ -669,7 +669,7 @@ cmp_vars:
 
             varid[0] = i;
             err = ncmpi_inq_varndims(ncid[0], i, &ndims[0]); HANDLE_ERROR
-            dimids[0] = (int*) calloc((size_t)ndims[0], SIZEOF_INT);
+            dimids[0] = (int*) calloc((size_t)ndims[0], sizeof(int));
             if (!dimids[0]) OOM_ERROR
             err = ncmpi_inq_var(ncid[0], i, name[0], &xtype[0], &ndims[0], dimids[0], &natts[0]);
             HANDLE_ERROR
@@ -686,7 +686,7 @@ cmp_vars:
 
             /* inquire variable metadata for varid[1] */
             err = ncmpi_inq_varndims(ncid[1], varid[1], &ndims[1]); HANDLE_ERROR
-            dimids[1] = (int*) calloc((size_t)ndims[1], SIZEOF_INT);
+            dimids[1] = (int*) calloc((size_t)ndims[1], sizeof(int));
             if (!dimids[1]) OOM_ERROR
             err = ncmpi_inq_var(ncid[1], varid[1], name[1], &xtype[1], &ndims[1], dimids[1], &natts[1]);
             HANDLE_ERROR
@@ -901,12 +901,12 @@ cmp_vars:
          */
 
         err = ncmpi_inq_varndims(ncid[0], varid1, &ndims[0]); HANDLE_ERROR
-        dimids[0] = (int*) calloc((size_t)ndims[0], SIZEOF_INT);
+        dimids[0] = (int*) calloc((size_t)ndims[0], sizeof(int));
         if (!dimids[0]) OOM_ERROR
         err = ncmpi_inq_var(ncid[0], varid1, name[0], &xtype[0], &ndims[0], dimids[0], &natts[0]);
         HANDLE_ERROR
         err = ncmpi_inq_varndims(ncid[1], varid2, &ndims[1]); HANDLE_ERROR
-        dimids[1] = (int*) calloc((size_t)ndims[1], SIZEOF_INT);
+        dimids[1] = (int*) calloc((size_t)ndims[1], sizeof(int));
         if (!dimids[1]) OOM_ERROR
         err = ncmpi_inq_var(ncid[1], varid2, name[1], &xtype[1], &ndims[1], dimids[1], &natts[1]);
         HANDLE_ERROR
@@ -941,7 +941,7 @@ cmp_vars:
         else if (!check_header && !rank && verbose)
             printf("\tSAME: number of dimensions (%d)\n",ndims[0]);
 
-        shape = (MPI_Offset*) calloc((size_t)ndims[0] * 2, SIZEOF_MPI_OFFSET);
+        shape = (MPI_Offset*) calloc((size_t)ndims[0] * 2, sizeof(MPI_Offset));
         if (!shape) OOM_ERROR
         start = shape + ndims[0];
 

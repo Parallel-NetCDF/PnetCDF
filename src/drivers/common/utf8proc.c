@@ -826,7 +826,7 @@ UTF8PROC_DLLEXPORT utf8proc_ssize_t utf8proc_map_custom(
   *dstptr = NULL;
   result = utf8proc_decompose_custom(str, strlen, NULL, 0, options, custom_func, custom_data);
   if (result < 0) return result;
-  buffer = (utf8proc_int32_t *) NCI_Malloc(result * sizeof(utf8proc_int32_t) + 1);
+  buffer = (utf8proc_int32_t *) NCI_Malloc(sizeof(utf8proc_int32_t) * result + 1);
   if (!buffer) return UTF8PROC_ERROR_NOMEM;
   result = utf8proc_decompose_custom(str, strlen, buffer, result, options, custom_func, custom_data);
   if (result < 0) {

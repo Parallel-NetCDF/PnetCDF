@@ -462,9 +462,9 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
     uint32_t version = 0;
     is_input_fortran = 0;
 
-    b = malloc (sizeof (struct adios_bp_buffer_struct_v1));
-    b_0 = malloc (sizeof (struct adios_bp_buffer_struct_v1));
-    b_1 = malloc (sizeof (struct adios_bp_buffer_struct_v1));
+    b = malloc(sizeof(struct adios_bp_buffer_struct_v1));
+    b_0 = malloc(sizeof(struct adios_bp_buffer_struct_v1));
+    b_1 = malloc(sizeof(struct adios_bp_buffer_struct_v1));
     adios_buffer_struct_init (b);
 
     rc = adios_posix_open_read_internal (ncid->path, "", b);
@@ -597,14 +597,14 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
             err = adios_parse_var_data_header_v1 (b, &var_header);
 
             if (var_header.is_dim == adios_flag_yes) {
-                var_payload.payload = malloc (var_header.payload_size);
+                var_payload.payload = malloc(var_header.payload_size);
                 err = adios_parse_var_data_payload_v1 (b, &var_header, &var_payload
                                                 ,var_header.payload_size
                                                 );
             }
             else {
                 /* alloc size +1 to remove valgrind complaint */
-                var_payload.payload = malloc (var_header.payload_size + 1);
+                var_payload.payload = malloc(var_header.payload_size + 1);
                 err = adios_parse_var_data_payload_v1 (b, &var_header, &var_payload
                                                 ,var_header.payload_size
                                                 );

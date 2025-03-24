@@ -63,8 +63,8 @@ int ncbbio_put_list_init(NC_bb *ncbbp) {
     /* Initialize parameter and allocate the array  */
     lp->nused = 0;
     lp->nalloc = PUT_ARRAY_SIZE;
-    lp->reqs = (NC_bb_put_req*)NCI_Malloc(lp->nalloc * sizeof(NC_bb_put_req));
-    lp->ids = (int*)NCI_Malloc(lp->nalloc * SIZEOF_INT);
+    lp->reqs = (NC_bb_put_req*)NCI_Malloc(sizeof(NC_bb_put_req) * lp->nalloc);
+    lp->ids = (int*)NCI_Malloc(sizeof(int) * lp->nalloc);
     if (lp->reqs == NULL || lp->ids == NULL) {
         DEBUG_RETURN_ERROR(NC_ENOMEM);
     }
@@ -100,7 +100,7 @@ static int ncbbio_put_list_resize(NC_bb *ncbbp)
     if (ptr == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM);
 
     lp->reqs = (NC_bb_put_req*)ptr;
-    ptr = NCI_Realloc(lp->ids, nsize * SIZEOF_INT);
+    ptr = NCI_Realloc(lp->ids, sizeof(int) * nsize);
     if (ptr == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM);
 
     lp->ids = (int*)ptr;
