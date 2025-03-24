@@ -419,11 +419,11 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
 
     /* find the number of write segments (upper bound) */
     nsegs = (size_t)(ncp->vars.ndefined + ncp->vars.num_rec_vars * nrecs);
-    count  = (MPI_Offset*) NCI_Malloc(nsegs * SIZEOF_MPI_OFFSET);
+    count  = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * nsegs);
 #ifdef HAVE_MPI_LARGE_COUNT
-    offset = (MPI_Count*)   NCI_Malloc(nsegs * sizeof(MPI_Count));
+    offset = (MPI_Count*)   NCI_Malloc(sizeof(MPI_Count) * nsegs);
 #else
-    offset = (MPI_Aint*)   NCI_Malloc(nsegs * SIZEOF_MPI_AINT);
+    offset = (MPI_Aint*)   NCI_Malloc(sizeof(MPI_Aint) * nsegs);
 #endif
 
     /* calculate each segment's offset and count */
@@ -513,9 +513,9 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
 
     /* allocate one contiguous buffer space for all writes */
 #ifdef HAVE_MPI_LARGE_COUNT
-    blocklengths = (MPI_Count*) NCI_Malloc((size_t)j * sizeof(MPI_Count));
+    blocklengths = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * j);
 #else
-    blocklengths = (int*) NCI_Malloc((size_t)j * SIZEOF_INT);
+    blocklengths = (int*) NCI_Malloc(sizeof(int) * j);
 #endif
     buf = NCI_Malloc((size_t)buf_len);
     buf_ptr = (char*)buf;

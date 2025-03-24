@@ -75,7 +75,7 @@ igetput_varn(NC                *ncp,
     /* validity of starts and counts has been checked at dispatcher layer */
 
     /* calculate nelems and the number of new non-lead and non-zero requests */
-    req_nelems = (MPI_Offset*) NCI_Malloc(num * SIZEOF_MPI_OFFSET);
+    req_nelems = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * num);
     new_nreqs = 0;
     nelems    = 0;
     if (counts != NULL) {
@@ -161,7 +161,7 @@ igetput_varn(NC                *ncp,
     /* for nonblocking API, return now if request size is zero */
     if (nbytes == 0) goto fn_exit;
 
-    memChunk = varp->ndims * SIZEOF_MPI_OFFSET;
+    memChunk = sizeof(MPI_Offset) * varp->ndims;
 
     /* check if type conversion and Endianness byte swap is needed */
     need_convert = ncmpii_need_convert(ncp->format, varp->xtype, itype);

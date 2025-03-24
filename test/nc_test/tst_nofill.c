@@ -401,7 +401,7 @@ main(int argc, char **argv)
 	   char varname2[NC_MAX_NAME];
 	   /* How many values in this variable to compare? */
 	   err = ncmpi_inq_varndims(ncid1, varid, &ndims); ERR
-	   dimids = malloc((ndims + 1) * sizeof(int));
+	   dimids = malloc(sizeof(int) * (ndims + 1));
 	   if (!dimids) printf("Error in file %s line %d\n",__FILE__,__LINE__);
 	   err = ncmpi_inq_vardimid (ncid1, varid, dimids); ERR
 	   nvals = 1;
@@ -417,9 +417,9 @@ main(int argc, char **argv)
 	   if (vtype != NC_CHAR) {  /* numeric data, just read in as doubles */
 	       double *data1, *data2;
 	       /* Allocate space to hold values in both files */
-	       data1 = malloc((nvals + 1) * sizeof(double));
+	       data1 = malloc(sizeof(double) * (nvals + 1));
 	       if (!data1) printf("Error in file %s line %d\n",__FILE__,__LINE__);
-	       data2 = malloc((nvals + 1) * sizeof(double));
+	       data2 = malloc(sizeof(double) * (nvals + 1));
 	       if (!data2) printf("Error in file %s line %d\n",__FILE__,__LINE__);
 	       /* Read in values */
 	       err = ncmpi_get_var_double_all(ncid1, varid, data1); ERR
@@ -439,9 +439,9 @@ main(int argc, char **argv)
 	   } else {		/* character data */
 	       char *data1, *data2;
 	       /* Allocate space to hold values in both files */
-	       data1 = malloc((nvals + 1) * sizeof(char));
+	       data1 = malloc(sizeof(char) * (nvals + 1));
 	       if (!data1) printf("Error in file %s line %d\n",__FILE__,__LINE__);
-	       data2 = malloc((nvals + 1) * sizeof(char));
+	       data2 = malloc(sizeof(char) * (nvals + 1));
 	       if (!data2) printf("Error in file %s line %d\n",__FILE__,__LINE__);
 	       /* Read in values */
 	       err = ncmpi_get_var_text_all(ncid1, varid, data1); ERR

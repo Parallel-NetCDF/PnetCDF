@@ -574,9 +574,9 @@ vardata(
 	initeps = 1;
     }
 
-    cor = (MPI_Offset*) malloc(vrank * sizeof (MPI_Offset));
-    edg = (MPI_Offset*) malloc(vrank * sizeof (MPI_Offset));
-    add = (size_t*) malloc(vrank * sizeof (size_t));
+    cor = (MPI_Offset*) malloc(sizeof(MPI_Offset) * vrank);
+    edg = (MPI_Offset*) malloc(sizeof(MPI_Offset) * vrank);
+    add = (size_t*) malloc(sizeof(size_t) * vrank);
 
     nels = 1;
     for (id = 0; id < vrank; id++) {

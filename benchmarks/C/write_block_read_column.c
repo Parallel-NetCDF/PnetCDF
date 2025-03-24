@@ -91,22 +91,22 @@ int benchmark_write(char       *filename,
     /* initialize I/O buffer */
     for (i=0; i<NVARS; i++) {
         if (i % 4 == 0) {
-            int *int_b = (int*) malloc(len * len * sizeof(int));
+            int *int_b = (int*) malloc(sizeof(int) * len * len);
             for (j=0; j<len*len; j++) int_b[j] = rank;
             buf[i] = (void*)int_b;
         }
         else if (i % 4 == 1) {
-            float *flt_b = (float*) malloc(len * len * sizeof(float));
+            float *flt_b = (float*) malloc(sizeof(float) * len * len);
             for (j=0; j<len*len; j++) flt_b[j] = rank;
             buf[i] = (void*)flt_b;
         }
         else if (i % 4 == 2) {
-            short *shr_b = (short*) malloc(len * len * sizeof(short));
+            short *shr_b = (short*) malloc(sizeof(short) * len * len);
             for (j=0; j<len*len; j++) shr_b[j] = rank;
             buf[i] = (void*)shr_b;
         }
         else {
-            double *dbl_b = (double*) malloc(len * len * sizeof(double));
+            double *dbl_b = (double*) malloc(sizeof(double) * len * len);
             for (j=0; j<len*len; j++) dbl_b[j] = rank;
             buf[i] = (void*)dbl_b;
         }
@@ -240,8 +240,8 @@ int benchmark_read(char       *filename,
     err = ncmpi_inq_dimlen(ncid, dimid[0], &gsizes[0]); ERR(err)
     err = ncmpi_inq_dimlen(ncid, dimid[1], &gsizes[1]); ERR(err)
 
-    varid = (int*)   malloc(nvars * sizeof(int));
-    buf   = (void**) malloc(nvars * sizeof(void*));
+    varid = (int*)   malloc(sizeof(int) * nvars);
+    buf   = (void**) malloc(sizeof(void*) * nvars);
 
     /* construct *-block partitioning pattern */
     start[0] = 0;
@@ -260,13 +260,13 @@ int benchmark_read(char       *filename,
     for (i=0; i<nvars; i++) {
         varid[i] = i;
         if (i % 4 == 0)
-            buf[i] = malloc(len * sizeof(int));
+            buf[i] = malloc(sizeof(int) * len);
         else if (i % 4 == 1)
-            buf[i] = (float*) malloc(len * sizeof(float));
+            buf[i] = (float*) malloc(sizeof(float) * len);
         else if (i % 4 == 2)
-            buf[i] = (short*) malloc(len * sizeof(short));
+            buf[i] = (short*) malloc(sizeof(short) * len);
         else
-            buf[i] = (double*) malloc(len * sizeof(double));
+            buf[i] = (double*) malloc(sizeof(double) * len);
     }
     end_t = MPI_Wtime();
     timing[2] = end_t - start_t;

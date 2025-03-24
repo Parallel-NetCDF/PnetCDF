@@ -181,7 +181,7 @@ int main(int argc, char** argv)
     err = ncmpi_enddef(ncid); ERR
 
     /* var_zy is partitioned along Z dimension */
-    buf_zy = (int*) malloc(NZ * (NY * nprocs) * sizeof(int));
+    buf_zy = (int*) malloc(sizeof(int) * NZ * (NY * nprocs));
     for (i=0; i<NZ*(NY*nprocs); i++) buf_zy[i] = i;
 
     start[0] = NZ * rank; start[1] = 0;
@@ -189,7 +189,7 @@ int main(int argc, char** argv)
     err = ncmpi_put_vara_int_all(ncid, varid0, start, count, buf_zy); ERR
 
     /* var_yx is partitioned along X dimension */
-    buf_yx = (float*) malloc((NY * nprocs) * NX * sizeof(float));
+    buf_yx = (float*) malloc(sizeof(float) * (NY * nprocs) * NX);
     for (i=0; i<(NY*nprocs)*NX; i++) buf_yx[i] = i;
 
     start[0] = 0;           start[1] = NX * rank;

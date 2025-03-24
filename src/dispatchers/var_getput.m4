@@ -27,14 +27,14 @@ define(`GOTO_CHECK',`{ DEBUG_ASSIGN_ERROR(err, $1) goto err_check; }')dnl
 
 #define GET_ONE_COUNT(ndims, count) {                                    \
     int _i;                                                              \
-    count = (MPI_Offset*) NCI_Malloc((size_t)ndims * SIZEOF_MPI_OFFSET); \
+    count = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * ndims);        \
     for (_i=0; _i<ndims; _i++)                                           \
         count[_i] = 1;                                                   \
 }
 
 #define GET_FULL_DIMENSIONS(pncp, varp, start, count) {                       \
     int _i;                                                                   \
-    start = (MPI_Offset*) NCI_Malloc((size_t)varp.ndims*2*SIZEOF_MPI_OFFSET); \
+    start = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * varp.ndims * 2);    \
     count = start + varp.ndims;                                               \
                                                                               \
     for (_i=0; _i<varp.ndims; _i++) {                                         \
@@ -661,7 +661,7 @@ MAPINAME($1,$2,$3,$4)(int                ncid,
         return err;
     }')
 
-    reqs = (int*) NCI_Malloc((size_t)nvars * SIZEOF_INT);
+    reqs = (int*) NCI_Malloc(sizeof(int) * nvars);
     for (i=0; i<nvars; i++) {
         MPI_Offset *start, *count, *stride=NULL, *imap=NULL;
 

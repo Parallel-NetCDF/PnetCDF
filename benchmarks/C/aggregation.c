@@ -184,13 +184,13 @@ int benchmark_write(char       *filename,
     if (cfg->star_block) nvars++;
     nvars *= cfg->nvars;
 
-    varid = (int*) malloc(nvars * sizeof(int));
+    varid = (int*) malloc(sizeof(int) * nvars);
 
     /* initialize I/O buffer */
     lenlen = cfg->len * cfg->len;
-    buf = (double**) malloc(nvars * sizeof(double*));
+    buf = (double**) malloc(sizeof(double*) * nvars);
     for (i=0; i<nvars; i++) {
-        buf[i] = (double*) malloc(lenlen * sizeof(double));
+        buf[i] = (double*) malloc(sizeof(double) * lenlen);
         assert(buf[i] != NULL);
         for (j=0; j<lenlen; j++) buf[i][j] = (double)rank;
     }
@@ -280,8 +280,8 @@ int benchmark_write(char       *filename,
         }
     }
     assert(v == nvars);
-    reqs = (int*) malloc(num_reqs * sizeof(int));
-    sts  = (int*) malloc(num_reqs * sizeof(int));
+    reqs = (int*) malloc(sizeof(int) * num_reqs);
+    sts  = (int*) malloc(sizeof(int) * num_reqs);
 
     err = ncmpi_enddef(ncid); ERR(err)
     err = ncmpi_inq_header_size(ncid, &cfg->header_size); ERR(err)
@@ -436,9 +436,9 @@ int benchmark_read(char       *filename,
     nvars *= cfg->nvars;
 
     /* allocate I/O buffer */
-    buf = (double**) malloc(nvars * sizeof(double*));
+    buf = (double**) malloc(sizeof(double*) * nvars);
     for (i=0; i<nvars; i++) {
-        buf[i] = (double*) malloc(lenlen * sizeof(double));
+        buf[i] = (double*) malloc(sizeof(double) * lenlen);
         assert(buf[i] != NULL);
     }
     MPI_Barrier(comm);
@@ -499,8 +499,8 @@ int benchmark_read(char       *filename,
         if (cfg->star_block)
             num_reqs++; /* complete in 1 nonblocking call */
     }
-    reqs = (int*) malloc(num_reqs * sizeof(int));
-    sts  = (int*) malloc(num_reqs * sizeof(int));
+    reqs = (int*) malloc(sizeof(int) * num_reqs);
+    sts  = (int*) malloc(sizeof(int) * num_reqs);
 
     timing[2] = timing[3] = 0;
     for (n=0; n<cfg->num_records; n++) {

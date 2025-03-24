@@ -546,8 +546,8 @@ YYSTYPE install(  /* install sname in symbol table */
 {
     YYSTYPE sp;
 
-    sp = (YYSTYPE) emalloc (sizeof (struct Symbol));
-    sp -> name = (char *) emalloc (strlen (sname) + 1);/* +1 for '\0' */
+    sp = (YYSTYPE) emalloc(sizeof(struct Symbol));
+    sp -> name = (char *) emalloc(strlen(sname) + 1);/* +1 for '\0' */
     (void) strcpy (sp -> name, sname);
     sp -> next = symlist;	/* put at front of list */
     sp -> is_dim = 0;
@@ -594,16 +594,16 @@ static int yygrowstack(void)
 
     i = yyssp - yyss;
     newss = (yyss != 0)
-          ? (short *)realloc(yyss, newsize * sizeof(*newss))
-          : (short *)malloc(newsize * sizeof(*newss));
+          ? (short *)realloc(yyss, sizeof(*newss) * newsize)
+          : (short *)malloc(sizeof(*newss) * newsize);
     if (newss == 0)
         return -1;
 
     yyss  = newss;
     yyssp = newss + i;
     newvs = (yyvs != 0)
-          ? (YYSTYPE *)realloc(yyvs, newsize * sizeof(*newvs))
-          : (YYSTYPE *)malloc(newsize * sizeof(*newvs));
+          ? (YYSTYPE *)realloc(yyvs, sizeof(*newvs) * newsize)
+          : (YYSTYPE *)malloc(sizeof(*newvs) * newsize);
     if (newvs == 0)
         return -1;
 
@@ -1123,7 +1123,7 @@ case 75:
 			   exit(9);
 		       }
 		       rec_len = var_len;
-		       rec_start = malloc ((MPI_Offset)(rec_len*var_size));
+		       rec_start = malloc((size_t)(rec_len*var_size));
 		       if (rec_start == 0) {
 			   derror ("out of memory\n");
 			   exit(3);

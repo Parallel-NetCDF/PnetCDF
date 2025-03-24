@@ -154,8 +154,8 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
     }
 
 
-    reqids = (int*)NCI_Malloc(ncbbp->entrydatasize.nused * SIZEOF_INT);
-    stats = (int*)NCI_Malloc(ncbbp->entrydatasize.nused * SIZEOF_INT);
+    reqids = (int*)NCI_Malloc(sizeof(int) * ncbbp->entrydatasize.nused);
+    stats = (int*)NCI_Malloc(sizeof(int) * ncbbp->entrydatasize.nused);
 
     /*
      * Iterate through meta log entries
@@ -299,7 +299,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
 #endif
 
                     /* Replay event with non-blocking call */
-                    if ((size_t)(entryp->esize) == sizeof(NC_bb_metadataentry) + entryp->ndims * SIZEOF_MPI_OFFSET * num){
+                    if ((size_t)(entryp->esize) == sizeof(NC_bb_metadataentry) + sizeof(MPI_Offset) * entryp->ndims * num){
                         err = ncbbp->ncmpio_driver->iput_varn(ncbbp->ncp, entryp->varid, num, starts, NULL, (void*)(databufferoff), -1, buftype, reqids + j, NC_REQ_WR | NC_REQ_NBI | NC_REQ_HL);
                     }
                     else{

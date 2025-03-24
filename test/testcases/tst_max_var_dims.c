@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
 
     /* define dimensions */
-    dimid = (int*) malloc((NC_MAX_VAR_DIMS+2) * sizeof(int));
+    dimid = (int*) malloc(sizeof(int) * (NC_MAX_VAR_DIMS+2));
     err = ncmpi_def_dim(ncid, "dim0", NC_UNLIMITED, &dimid[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "dim1", 1, &dimid[1]); CHECK_ERR
 

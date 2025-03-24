@@ -1265,7 +1265,7 @@ fstrstr(
 	free(istr0);
 	return ostr;
     }
-    ostr = cp = (char *) emalloc(12*ilen);
+    ostr = cp = (char *) emalloc(ilen*12);
     *ostr = '\0';
     if (isprint(*istr)) {	/* handle first character in input */
 	*cp++ = '\'';
@@ -1834,7 +1834,7 @@ grow_iarray(
      int **arpp)		/* address of start of int array */
 {
   if (nar == 0) {
-    *arpp = (int *) emalloc(1 * sizeof(int));
+    *arpp = (int *) emalloc(sizeof(int));
     return;
   }
   if (! pow2(nar))		/* return unless nar is a power of two */
@@ -1860,7 +1860,7 @@ grow_varray(
      struct vars **arpp)	/* address of start of var array */
 {
   if (nar == 0) {
-    *arpp = (struct vars *) emalloc(1 * sizeof(struct vars));
+    *arpp = (struct vars *) emalloc(sizeof(struct vars));
     return;
   }
   if (! pow2(nar))		/* return unless nar is a power of two */
@@ -1886,7 +1886,7 @@ grow_darray(
      struct dims **arpp)	/* address of start of var array */
 {
   if (nar == 0) {
-    *arpp = (struct dims *) emalloc(1 * sizeof(struct dims));
+    *arpp = (struct dims *) emalloc(sizeof(struct dims));
     return;
   }
   if (! pow2(nar))		/* return unless nar is a power of two */
@@ -1912,7 +1912,7 @@ grow_aarray(
      struct atts **arpp)	/* address of start of var array */
 {
   if (nar == 0) {
-    *arpp = (struct atts *) emalloc(1 * sizeof(struct atts));
+    *arpp = (struct atts *) emalloc(sizeof(struct atts));
     return;
   }
   if (! pow2(nar))		/* return unless nar is a power of two */

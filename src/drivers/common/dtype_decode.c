@@ -361,9 +361,9 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
         return NC_NOERR;
     }
 
-    array_of_ints = (int *) NCI_Malloc((size_t)num_ints * SIZEOF_INT);
-    array_of_adds = (MPI_Aint *) NCI_Malloc((size_t)num_adds * SIZEOF_MPI_AINT);
-    array_of_dtypes = (MPI_Datatype *) NCI_Malloc((size_t)num_dtypes * sizeof(MPI_Datatype));
+    array_of_ints = (int *) NCI_Malloc(sizeof(int) * num_ints);
+    array_of_adds = (MPI_Aint *) NCI_Malloc(sizeof(MPI_Aint) * num_adds);
+    array_of_dtypes = (MPI_Datatype *) NCI_Malloc(sizeof(MPI_Datatype)* num_dtypes);
 
     if (is_large_type) {
 #ifdef HAVE_MPI_LARGE_COUNT

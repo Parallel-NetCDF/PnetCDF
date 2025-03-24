@@ -73,7 +73,7 @@ int ncadiosi_var_list_add(NC_ad_var_list *list, NC_ad_var data) {
 
     if (list->nalloc == 0){
         list->nalloc = 16;
-        list->data = NCI_Malloc(list->nalloc * sizeof(NC_ad_var));
+        list->data = NCI_Malloc(sizeof(NC_ad_varp) * list->nalloc);
     }
     else if (list->nalloc == id){
         list->nalloc *= 2;
@@ -93,7 +93,7 @@ int ncadiosi_dim_list_add(NC_ad_dim_list *list, NC_ad_dim data) {
 
     if (list->nalloc == 0){
         list->nalloc = 16;
-        list->data = NCI_Malloc(list->nalloc * sizeof(NC_ad_dim));
+        list->data = NCI_Malloc(sizeof(NC_ad_dim) * list->nalloc);
     }
     else if (list->nalloc == id){
         list->nalloc *= 2;
@@ -113,11 +113,11 @@ int ncadiosi_att_list_add(NC_ad_att_list *list, int data) {
 
     if (list->nalloc == 0){
         list->nalloc = 16;
-        list->data = NCI_Malloc(list->nalloc * SIZEOF_INT);
+        list->data = NCI_Malloc(sizeof(int) * list->nalloc);
     }
     else if (list->nalloc == id){
         list->nalloc *= 2;
-        list->data = NCI_Realloc(list->data, list->nalloc * SIZEOF_INT);
+        list->data = NCI_Realloc(list->data, list->nalloc * sizeof(int));
     }
 
     list->data[id] = data;

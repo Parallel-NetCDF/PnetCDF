@@ -91,7 +91,7 @@ int get_var_and_verify(int ncid,
     int i, j, rank, err, *ncbuf, nerrs=0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    ncbuf = (int *) malloc((count[0]+4)*(count[1]+4)*sizeof(int));
+    ncbuf = (int *) malloc(sizeof(int) * (count[0]+4) * (count[1]+4));
 
     /* clear the contents of the read buffer */
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) buf[j][i] = -1;
@@ -184,8 +184,8 @@ int main(int argc, char **argv) {
 
     /* construct various MPI derived data types */
 
-    buf = (int**)malloc(NY * sizeof(int*));
-    buf[0] = (int*)malloc(NY * NX * sizeof(int));
+    buf = (int**)malloc(sizeof(int*) * NY);
+    buf[0] = (int*)malloc(sizeof(int) * NY * NX);
     for (i=1; i<NY; i++) buf[i] = buf[i-1] + NX;
 
     /* construct an MPI derived data type for swapping 1st row with 2nd row */
@@ -247,8 +247,8 @@ int main(int argc, char **argv) {
     err = ncmpi_fill_var_rec(ncid, varid2, 1); CHECK_ERR
 
     /* create a file type for the record variable */
-    int *array_of_blocklengths=(int*) malloc(count[0]*sizeof(int));
-    MPI_Aint *array_of_displacements=(MPI_Aint*) malloc(count[0]*sizeof(MPI_Aint));
+    int *array_of_blocklengths=(int*) malloc(sizeof(int) * count[0]);
+    MPI_Aint *array_of_displacements=(MPI_Aint*) malloc(sizeof(MPI_Aint) * count[0]);
     MPI_Offset recsize;
     err = ncmpi_inq_recsize(ncid, &recsize);
     for (i=0; i<count[0]; i++) {
@@ -339,8 +339,8 @@ int main(int argc, char **argv) {
     nerrs += get_var_and_verify(ncid, varid1, start, count, buf, buftype, ghost_buftype, fix_filetype);
 
     /* test type conversion from float to int */
-    flt_buf = (float**)malloc(NY * sizeof(float*));
-    flt_buf[0] = (float*)malloc(NY * NX * sizeof(float));
+    flt_buf = (float**)malloc(sizeof(float*) * NY);
+    flt_buf[0] = (float*)malloc(sizeof(float) * NY * NX);
     for (i=1; i<NY; i++) flt_buf[i] = flt_buf[i-1] + NX;
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
         flt_buf[j][i] = rank*100.0 + j*10.0 + i;
@@ -392,8 +392,8 @@ int main(int argc, char **argv) {
     }
 
     /* test type conversion from double to int */
-    dbl_buf = (double**)malloc(NY * sizeof(double*));
-    dbl_buf[0] = (double*)malloc(NY * NX * sizeof(double));
+    dbl_buf = (double**)malloc(sizeof(double*) * NY);
+    dbl_buf[0] = (double*)malloc(sizeof(double) * NY * NX);
     for (i=1; i<NY; i++) dbl_buf[i] = dbl_buf[i-1] + NX;
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
         dbl_buf[j][i] = rank*100.0 + j*10.0 + i;

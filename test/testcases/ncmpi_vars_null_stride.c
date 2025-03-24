@@ -58,7 +58,7 @@ tst_fmt(char *filename, int cmode)
     start[1] = rank*NX;
     count[0] = NY;
     count[1] = NX;
-    buf = (int*) malloc((size_t)NY * NX * sizeof(int));
+    buf = (int*) malloc(sizeof(int) * NY * NX);
     for (i=0; i<NY*NX; i++) buf[i] = rank+10;
 
     err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf); CHECK_ERR
@@ -114,7 +114,7 @@ tst_fmt(char *filename, int cmode)
         err = ncmpi_buffer_detach(ncid); CHECK_ERR
     }
 
-    buf = (int*) malloc((size_t)NY * NX * nprocs * sizeof(int));
+    buf = (int*) malloc(sizeof(int) * NY * NX * nprocs);
     memset(buf, 0, (size_t)NY * NX * nprocs * sizeof(int));
     err = ncmpi_get_var_int_all(ncid, varid[0], buf); CHECK_ERR
 

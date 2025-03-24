@@ -2066,7 +2066,7 @@ sub intToFintArr_ftoc {
     print $OUTFD "
     {
         int li;
-        l$count = (int*) $malloc((size_t)$Array_size * sizeof(int));
+        l$count = (int*) $malloc(sizeof(int) * ($Array_size));
         for (li=0; li<$Array_size; li++)
             l$count\[li\] = v$count\[li\]; /* convert MPI_Fint to C int */
     }\n";
@@ -2074,7 +2074,7 @@ sub intToFintArr_ftoc {
 sub intToFintArr_out_ftoc {
     my $count = $_[0];
     print $OUTFD "
-    l$count = (int*) $malloc((size_t)$Array_size * sizeof(int));
+    l$count = (int*) $malloc(sizeof(int) * ($Array_size));
     \n";
 }
 sub intToFintArr_in_arg {
@@ -2178,7 +2178,7 @@ sub reorderOffsetArr_ftoc {
     ierr = ncmpi_inq_varndims((int)(*v1), (int)(*v2-1), &ndims); /* get number of dimensions */
     if (ierr != NC_NOERR) return ierr;
 
-    l$count = (MPI_Offset*) $malloc((size_t)ndims * $Array_size * SIZEOF_MPI_OFFSET);
+    l$count = (MPI_Offset*) $malloc(sizeof(MPI_Offset) * ndims * ($Array_size));
     for (li=0; li<ndims; li++) /* convert Fortran order to C order */
         l$count\[li\] = v$count\[ndims-1-li\] - 1; /* convert 1-based to 0-based */\n";
     } else {
@@ -2224,8 +2224,8 @@ sub reorderOffsetArr1DTo2D_ftoc {
     }
     print $OUTFD "
     if (*v3 > 0) {
-        l$count    = (MPI_Offset**) $malloc((size_t)*v3 * sizeof(MPI_Offset*));
-        l$count\[0\] = (MPI_Offset*)  $malloc((size_t)*v3 * (size_t)ndims * SIZEOF_MPI_OFFSET);
+        l$count    = (MPI_Offset**) $malloc(sizeof(MPI_Offset*) * (*v3));
+        l$count\[0\] = (MPI_Offset*)  $malloc(sizeof(MPI_Offset) * (*v3) * (size_t)ndims);
     }
     for (lj=1; lj<*v3; lj++)
         l$count\[lj\] = l$count\[lj-1\] + ndims;
@@ -2282,7 +2282,7 @@ sub reorderIntArr_ftoc {
     if (ierr != NC_NOERR) return ierr;\n"
     }
     print $OUTFD "
-    l$count = (int*) $malloc((size_t)ndims * SIZEOF_INT);
+    l$count = (int*) $malloc(sizeof(int) * ndims);
     for (li=0; li<ndims; li++) /* convert Fortran order to C order */
         l$count\[li\] = v$count\[ndims-1-li\];
     \n";
@@ -2322,7 +2322,7 @@ sub reorderIntArrOut_out_ftoc {
     ierr = ncmpi_inq_varndims((int)(*v1), (int)(*v2-1), &ndims); /* get number of dimensions */
     if (ierr != NC_NOERR) return ierr;
 
-    l$count = (int*) $malloc((size_t)ndims * SIZEOF_INT);
+    l$count = (int*) $malloc(sizeof(int) * ndims);
     \n";
 }
 sub reorderIntArrOut_out_arg {
@@ -2509,7 +2509,7 @@ sub IntIndexInArr_ftoc {
     ln$count = $Array_size;
     if (ln$count > 0) {
         int li;
-        l$count = (int*) $malloc( (size_t)ln$count * SIZEOF_INT);
+        l$count = (int*) $malloc(sizeof(int) * ln$count);
         for (li=0; li<ln$count; li++) /* convert Fortran order to C order */
             l$count\[li\] = v$count\[ln$count-li-1\]-1; /* convert 1-based MPI_Fint to 0-based int */
     }

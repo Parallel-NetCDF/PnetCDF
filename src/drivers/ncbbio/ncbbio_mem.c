@@ -86,7 +86,7 @@ char* ncbbio_log_buffer_alloc(NC_bb_buffer *bp, size_t size) {
  * IN   ep: array to be initialized
  */
 int ncbbio_log_sizearray_init(NC_bb_sizevector *sp){
-    sp->values = (size_t*)NCI_Malloc(LOG_ARRAY_SIZE * sizeof(size_t));
+    sp->values = (size_t*)NCI_Malloc(sizeof(size_t) * LOG_ARRAY_SIZE);
     if (sp->values == NULL){
         DEBUG_RETURN_ERROR(NC_ENOMEM);
     }
@@ -144,7 +144,7 @@ int ncbbio_log_sizearray_append(NC_bb_sizevector *sp, size_t size) {
  * IN   vp: vector to be initialized
  */
 int ncbbio_log_intvector_init(NC_bb_intvector *vp){
-    vp->values = (int*)NCI_Malloc(LOG_ARRAY_SIZE * SIZEOF_INT);
+    vp->values = (int*)NCI_Malloc(sizeof(int) * LOG_ARRAY_SIZE);
     if (vp->values == NULL){
         DEBUG_RETURN_ERROR(NC_ENOMEM);
     }
@@ -181,7 +181,7 @@ int ncbbio_log_intvector_append(NC_bb_intvector *vp, int size) {
          */
         size_t newsize = vp->nalloc * SIZE_MULTIPLIER;
         /* ret is used to temporaryly hold the allocated buffer so we don't lose ncbbp->metadata.buffer if allocation fails */
-        ret = (int*)NCI_Realloc(vp->values, newsize * SIZEOF_INT);
+        ret = (int*)NCI_Realloc(vp->values, sizeof(int) * newsize);
         /* If not enough memory */
         if (ret == NULL) {
             return NC_ENOMEM;

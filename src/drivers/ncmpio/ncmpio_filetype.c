@@ -126,7 +126,7 @@ type_create_subarray64(int               ndims,
 #ifdef HAVE_MPI_LARGE_COUNT
     MPI_Count *sizes, *subsizes, *starts;
 
-    sizes = (MPI_Count*) NCI_Malloc((size_t)ndims * 3 * sizeof(MPI_Count));
+    sizes = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * ndims * 3);
     subsizes = sizes    + ndims;
     starts   = subsizes + ndims;
     for (i=0; i<ndims; i++) {
@@ -161,7 +161,7 @@ type_create_subarray64(int               ndims,
         int *sizes, *subsizes, *starts;
         /* none of dimensions > 2^31-1, we can safely use
          * MPI_Type_create_subarray */
-        sizes = (int*) NCI_Malloc((size_t)ndims * 3 * SIZEOF_INT);
+        sizes = (int*) NCI_Malloc(sizeof(int) * ndims * 3);
         subsizes = sizes    + ndims;
         starts   = subsizes + ndims;
         for (i=0; i<ndims; i++) {

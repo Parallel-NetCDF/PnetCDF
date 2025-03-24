@@ -354,7 +354,7 @@ construct_filetypes(NC           *ncp,
     }
 
     /* hereinafter, num_reqs > 0 */
-    ftypes = (MPI_Datatype*) NCI_Malloc((size_t)num_reqs * sizeof(MPI_Datatype));
+    ftypes = (MPI_Datatype*) NCI_Malloc(sizeof(MPI_Datatype) * num_reqs);
 
     /* create a filetype for each request */
     last_contig_req = -1; /* index of the last contiguous request */
@@ -777,9 +777,9 @@ extract_reqs(NC      *ncp,
 
     /* allocate put_list and get_list */
     if (*num_w_reqs)
-        *put_list = (NC_req*) NCI_Malloc((*num_w_reqs)*sizeof(NC_req));
+        *put_list = (NC_req*) NCI_Malloc(sizeof(NC_req) * (*num_w_reqs));
     if (*num_r_reqs)
-        *get_list = (NC_req*) NCI_Malloc((*num_r_reqs)*sizeof(NC_req));
+        *get_list = (NC_req*) NCI_Malloc(sizeof(NC_req) * (*num_r_reqs));
 
     /* copy over ncp->put_list and ncp->get_list to *put_list and *get_list */
     put_list_ptr = *put_list;
@@ -1291,7 +1291,7 @@ vars_flatten(int          ndim,    /* number of dimensions */
     }
 
     if (stride == NULL) { /* equivalent to {1, 1, ..., 1} */
-        stride = (MPI_Offset*) NCI_Malloc((size_t)ndim * SIZEOF_MPI_OFFSET);
+        stride = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * ndim);
         for (i=0; i<ndim; i++) stride[i] = 1;
         to_free_stride = 1;
     }
@@ -1428,7 +1428,7 @@ merge_requests(NC          *ncp,
     }
 
     /* now we can allocate a contiguous memory space for the off-len pairs */
-    off_len *seg_ptr = (off_len*)NCI_Malloc((size_t)(*nsegs) * sizeof(off_len));
+    off_len *seg_ptr = (off_len*)NCI_Malloc(sizeof(off_len) * (*nsegs));
     *segs = seg_ptr;
 
     /* now re-run the loop to fill in the off-len pairs */
@@ -1582,8 +1582,8 @@ type_create_off_len(MPI_Offset    nsegs,    /* no. off-len pairs */
     mpireturn = MPI_Type_create_hindexed_c(j+1, blocklens, disps, MPI_BYTE,
                                            filetype);
 #else
-    blocklens = (int*)      NCI_Malloc(true_nsegs * SIZEOF_INT);
-    disps     = (MPI_Aint*) NCI_Malloc(true_nsegs * SIZEOF_MPI_AINT);
+    blocklens = (int*)      NCI_Malloc(sizeof(int) * true_nsegs);
+    disps     = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * true_nsegs);
 
     /* coalesce segs[].off and len to disps[] and blocklens[] */
     if (segs[0].len > NC_MAX_INT) {
@@ -1667,8 +1667,8 @@ type_create_off_len(MPI_Offset    nsegs,    /* no. off-len pairs */
                                            buf_type);
 #else
     if (true_nsegs < j + 1) {
-        blocklens = (int*)      NCI_Realloc(blocklens, (j+1) * SIZEOF_INT);
-        disps     = (MPI_Aint*) NCI_Realloc(disps,     (j+1) * SIZEOF_MPI_AINT);
+        blocklens = (int*)      NCI_Realloc(blocklens, sizeof(int) * (j+1));
+        disps     = (MPI_Aint*) NCI_Realloc(disps,     sizeof(MPI_Aint) * (j+1));
     }
 
     /* coalesce segs[].off and len to disps[] and blocklens[] */
@@ -1813,7 +1813,7 @@ req_aggregation(NC     *ncp,
         }
     }
 
-    group_index = (int*) NCI_Malloc((size_t)(ngroups+1) * 2 * SIZEOF_INT);
+    group_index = (int*) NCI_Malloc(sizeof(int) * (ngroups+1) * 2);
     group_type  = group_index + (ngroups+1);
 
     /* calculate the starting index of each group and determine group type */
@@ -1863,7 +1863,7 @@ req_aggregation(NC     *ncp,
      * Then use one collective I/O to commit.
      */
 
-    ftypes = (MPI_Datatype*) NCI_Malloc((size_t)ngroups*2*sizeof(MPI_Datatype));
+    ftypes = (MPI_Datatype*) NCI_Malloc(sizeof(MPI_Datatype) * ngroups * 2);
     btypes = ftypes + ngroups;
 
     /* temp buffers, used by multiple calls to construct_filetypes()  */
@@ -2311,8 +2311,8 @@ mgetput(NC     *ncp,
 #else
     int *blocklens;
     MPI_Aint *disps;
-    blocklens = (int*) NCI_Malloc((size_t)num_reqs * SIZEOF_INT);
-    disps = (MPI_Aint*) NCI_Malloc((size_t)num_reqs * SIZEOF_MPI_AINT);
+    blocklens = (int*) NCI_Malloc(sizeof(int) * num_reqs);
+    disps = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * num_reqs);
 #endif
 
     lead_list = (rw_flag == NC_REQ_RD) ? ncp->get_lead_list

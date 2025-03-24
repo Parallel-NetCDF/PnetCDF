@@ -657,7 +657,7 @@ load_netcdf(void *rec_start)
 	break;
     }
 
-    start = (MPI_Offset*) malloc(vars[varnum].ndims * 2 * sizeof(MPI_Offset));
+    start = (MPI_Offset*) malloc(sizeof(MPI_Offset) * vars[varnum].ndims * 2);
     count = start + vars[varnum].ndims;
 
     if (vars[varnum].ndims > 0) {
