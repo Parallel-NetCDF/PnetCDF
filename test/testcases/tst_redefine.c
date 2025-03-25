@@ -55,7 +55,7 @@ static int verbose;
 static int
 check_vars(MPI_Comm comm, int ncid, int *varid)
 {
-    int i, nerrs=0, err, rank, *buf, nvars;
+    int i, nerrs=0, err, rank, *buf=NULL, nvars;
     MPI_Offset start[2], count[2];
 
     MPI_Comm_rank(comm, &rank);
@@ -102,7 +102,7 @@ check_vars(MPI_Comm comm, int ncid, int *varid)
         CHECK_VAL(ncid, varid[3], i, buf[i], rank+i+100)
 
 err_out:
-    free(buf);
+    if (buf != NULL) free(buf);
     return nerrs;
 }
 
