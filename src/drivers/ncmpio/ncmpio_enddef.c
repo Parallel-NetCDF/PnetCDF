@@ -80,7 +80,7 @@ move_file_block(NC         *ncp,
     if (nbytes >= p_units)
         do_open = 1;
     else {
-        int n_units = nbytes / MOVE_UNIT;
+        MPI_Offset n_units = nbytes / MOVE_UNIT;
         if (nbytes % MOVE_UNIT) n_units++;
         if (rank < n_units) do_open = 1;
     }
