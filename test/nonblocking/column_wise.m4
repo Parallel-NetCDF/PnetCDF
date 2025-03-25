@@ -112,7 +112,7 @@ int test_column_wise_$1(char *filename, int cdf)
 
     /* First, fill the entire array with zeros, using a blocking I/O.
        Every process writes a subarray of size NY * myNX */
-    buf    = ($1**) malloc(myNX * sizeof($1*));
+    buf    = ($1**) malloc(sizeof($1*) * myNX);
     buf[0] = ($1*)  calloc(NY * myNX, sizeof($1));
     start[0] = 0;   start[1] = myOff;
     count[0] = NY;  count[1] = myNX;
@@ -127,12 +127,12 @@ int test_column_wise_$1(char *filename, int cdf)
     /* initialize the buffer with rank ID. Also make the case interesting,
        by allocatsing buffersd separately */
     for (i=0; i<myNX; i++) {
-        buf[i] = ($1*) malloc(NY * sizeof($1));
+        buf[i] = ($1*) malloc(sizeof($1) * NY);
         for (j=0; j<NY; j++) buf[i][j] = ($1)rank+10;
     }
 
-    reqs = (int*) malloc(myNX * sizeof(int));
-    sts  = (int*) malloc(myNX * sizeof(int));
+    reqs = (int*) malloc(sizeof(int) * myNX);
+    sts  = (int*) malloc(sizeof(int) * myNX);
 
     /* each proc writes myNX single columns of the 2D array */
     start[0]  = 0;   start[1] = rank;

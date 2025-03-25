@@ -41,7 +41,7 @@ tst_fmt(char *filename, int cmode)
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     /* allocate I/O buffer */
-    buf = (int*) malloc(NY*NX * sizeof(int));
+    buf = (int*) malloc(sizeof(int) * NY*NX);
 
     /* create a new file for writing ------------------------------------*/
     cmode |= NC_CLOBBER;

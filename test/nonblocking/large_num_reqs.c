@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
     err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimid, &varid); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
-    req = (int*) malloc(NUM_REQS * 2 * sizeof(int));
+    req = (int*) malloc(sizeof(int) * NUM_REQS * 2);
     status = req + NUM_REQS;
 
     buf = (int*) calloc(NUM_REQS * 6,  sizeof(int));

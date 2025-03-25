@@ -121,8 +121,8 @@ static int test_vard(int ncid, int *varid)
     MPI_Type_commit(&fix_filetype);
 
     /* create a file type for the record variable */
-    int *array_of_blocklengths=(int*) malloc(count[0]*sizeof(int));
-    MPI_Aint *array_of_displacements=(MPI_Aint*) malloc(count[0]*sizeof(MPI_Aint));
+    int *array_of_blocklengths=(int*) malloc(sizeof(int) * count[0]);
+    MPI_Aint *array_of_displacements=(MPI_Aint*) malloc(sizeof(MPI_Aint) * count[0]);
     MPI_Offset recsize;
     err = ncmpi_inq_recsize(ncid, &recsize);
     for (i=0; i<count[0]; i++) {
@@ -168,8 +168,8 @@ static int test_varn(int ncid)
     else if (rank == 2) num_reqs = 5;
     else if (rank == 3) num_reqs = 4;
 
-    starts    = (MPI_Offset**) malloc(num_reqs *    sizeof(MPI_Offset*));
-    counts    = (MPI_Offset**) malloc(num_reqs *    sizeof(MPI_Offset*));
+    starts    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * num_reqs);
+    counts    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * num_reqs);
     starts[0] = (MPI_Offset*)  calloc(num_reqs * 2, sizeof(MPI_Offset));
     counts[0] = (MPI_Offset*)  calloc(num_reqs * 2, sizeof(MPI_Offset));
     for (i=1; i<num_reqs; i++) {
@@ -227,7 +227,7 @@ static int test_varn(int ncid)
                   -  -  -  -  -  -  -  3  3  3
          */
     }
-    buffer = (int*) malloc(4*10 * sizeof(int));
+    buffer = (int*) malloc(sizeof(int) * 4*10);
 
     TRC(ncmpi_redef)(ncid); CHECK_ERR
     err = ncmpi_def_dim(ncid, "M",  4, &dimids[0]); CHECK_ERR
@@ -267,8 +267,8 @@ static int test_ivarn(int ncid)
     num_reqs[3] = 4;
 
     for (i=0; i<4; i++) {
-        starts[i]    = (MPI_Offset**) malloc(num_reqs[i] *    sizeof(MPI_Offset*));
-        counts[i]    = (MPI_Offset**) malloc(num_reqs[i] *    sizeof(MPI_Offset*));
+        starts[i]    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * num_reqs[i]);
+        counts[i]    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * num_reqs[i]);
         starts[i][0] = (MPI_Offset*)  calloc(num_reqs[i] * 2, sizeof(MPI_Offset));
         counts[i][0] = (MPI_Offset*)  calloc(num_reqs[i] * 2, sizeof(MPI_Offset));
         for (j=1; j<num_reqs[i]; j++) {
@@ -303,7 +303,7 @@ static int test_ivarn(int ncid)
     starts[3][3][y] = 3; starts[3][3][x] = 7; counts[3][3][y] = 1; counts[3][3][x] = 3;
 
     for (i=0; i<4; i++) {
-        buffer[i] = (int*) malloc(4*10 * sizeof(int));
+        buffer[i] = (int*) malloc(sizeof(int) * 4*10);
         for (j=0; j<4*10; j++) buffer[i][j] = rank+100;
     }
 

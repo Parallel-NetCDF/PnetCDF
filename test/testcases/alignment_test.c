@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* write all variables */
-    buf = (int*) malloc(NX * sizeof(int));
+    buf = (int*) malloc(sizeof(int) * NX);
     for (i=0; i<NVARS; i++) {
         for (j=0; j<NX; j++) buf[j] = rank*1000 + i*10 + j;
 #ifdef TEST_FIXED_VAR

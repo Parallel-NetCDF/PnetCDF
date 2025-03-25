@@ -175,7 +175,7 @@ int main(int argc, char** argv)
 
     /* First, fill the entire array with zeros, using a blocking I/O.
        Every process writes a subarray of size NY * myNX */
-    buf    = (int**) malloc(myNX * sizeof(int*));
+    buf    = (int**) malloc(sizeof(int*) * myNX);
     buf[0] = (int*)  calloc(NY * myNX, sizeof(int));
     start[0] = 0;   start[1] = myOff;
     count[0] = NY;  count[1] = myNX;
@@ -187,12 +187,12 @@ int main(int argc, char** argv)
     /* initialize the buffer with rank ID. Also make the case interesting,
        by allocating buffers separately */
     for (i=0; i<myNX; i++) {
-        buf[i] = (int*) malloc(NY * sizeof(int));
+        buf[i] = (int*) malloc(sizeof(int) * NY);
         for (j=0; j<NY; j++) buf[i][j] = rank;
     }
 
-    reqs = (int*) malloc(myNX * sizeof(int));
-    sts  = (int*) malloc(myNX * sizeof(int));
+    reqs = (int*) malloc(sizeof(int) * myNX);
+    sts  = (int*) malloc(sizeof(int) * myNX);
 
     /* each proc writes myNX single columns of the 2D array */
     start[0]  = 0;   start[1] = rank;

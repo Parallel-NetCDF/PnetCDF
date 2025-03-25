@@ -165,8 +165,8 @@ int main(int argc, char** argv)
     else if (rank == 3) num_reqs = 4;
 
     if (num_reqs > 0) {
-        starts    = (MPI_Offset**) malloc(num_reqs*       sizeof(MPI_Offset*));
-        counts    = (MPI_Offset**) malloc(num_reqs*       sizeof(MPI_Offset*));
+        starts    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * num_reqs);
+        counts    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * num_reqs);
         starts[0] = (MPI_Offset*)  calloc(num_reqs*NDIMS, sizeof(MPI_Offset));
         counts[0] = (MPI_Offset*)  calloc(num_reqs*NDIMS, sizeof(MPI_Offset));
         for (i=1; i<num_reqs; i++) {
@@ -226,9 +226,9 @@ int main(int argc, char** argv)
          */
     }
 
-    nvarids   = (int*)          malloc(num_reqs * sizeof(int));
-    bufcounts = (MPI_Offset*)   malloc(num_reqs * sizeof(MPI_Offset));
-    datatypes = (MPI_Datatype*) malloc(num_reqs * sizeof(MPI_Datatype));
+    nvarids   = (int*)          malloc(sizeof(int) * num_reqs);
+    bufcounts = (MPI_Offset*)   malloc(sizeof(MPI_Offset) * num_reqs);
+    datatypes = (MPI_Datatype*) malloc(sizeof(MPI_Datatype) * num_reqs);
     w_len = 0;
     for (i=0; i<num_reqs; i++) {
         nvarids[i]    = varid;
@@ -238,11 +238,11 @@ int main(int argc, char** argv)
     }
 
     /* allocate I/O buffer and initialize its contents */
-    buffer = (int*)  malloc(w_len * sizeof(int));
+    buffer = (int*)  malloc(sizeof(int) * w_len);
     for (i=0; i<w_len; i++) buffer[i] = rank;
 
     /* set the buffer pointers to different offsets to the I/O buffer */
-    bufs    = (int**) malloc(num_reqs * sizeof(int*));
+    bufs    = (int**) malloc(sizeof(int*) * num_reqs);
     if (num_reqs > 0) bufs[0] = buffer;
     for (i=1; i<num_reqs; i++) bufs[i] = bufs[i-1] + bufcounts[i-1];
 

@@ -157,7 +157,7 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
     }
 
     /* allocate buffer and initialize buffer with contiguous numbers, in YX layout */
-    buf = (int *) malloc(bufsize * sizeof(int));
+    buf = (int *) malloc(sizeof(int) * bufsize);
     for (i=0; i<count[0]; i++)
     for (j=0; j<count[1]; j++)
         buf[i*count[1] + j] = (int)((start[0]+i)*gsizes[1] + (start[1]+j));

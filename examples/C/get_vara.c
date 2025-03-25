@@ -154,14 +154,14 @@ pnetcdf_io(MPI_Comm comm, char *filename)
     err = ncmpi_inq_attlen(ncid, varid, "float_att_name", &len); ERR
 
     /* get attribute contents */
-    float_att = (float*) malloc(len * sizeof(float));
+    float_att = (float*) malloc(sizeof(float) * len);
     err = ncmpi_get_att_float(ncid, varid, "float_att_name", float_att); ERR
     free(float_att);
 
     /* the local array size */
     local_ny = global_ny;
     local_nx = global_nx / nprocs;
-    buf = (int*) malloc(local_nx * local_ny * sizeof(int));
+    buf = (int*) malloc(sizeof(int) * local_nx * local_ny);
 
     /* prepare reading subarray */
     start[0] = 0;

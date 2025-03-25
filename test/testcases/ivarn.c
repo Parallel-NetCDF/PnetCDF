@@ -229,8 +229,8 @@ int main(int argc, char** argv)
     ncmpi_sync(ncid);
 #endif
 
-    starts    = (MPI_Offset**) malloc(2 *    sizeof(MPI_Offset*));
-    counts    = (MPI_Offset**) malloc(2 *    sizeof(MPI_Offset*));
+    starts    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * 2);
+    counts    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * 2);
     starts[0] = (MPI_Offset*)  calloc(2 * 2, sizeof(MPI_Offset));
     counts[0] = (MPI_Offset*)  calloc(2 * 2, sizeof(MPI_Offset));
     for (i=1; i<2; i++) {

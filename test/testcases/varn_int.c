@@ -156,8 +156,8 @@ int main(int argc, char** argv)
     else if (rank == 3) num_reqs = 4;
 
     if (num_reqs > 0) {
-        starts    = (MPI_Offset**) malloc(num_reqs *        sizeof(MPI_Offset*));
-        counts    = (MPI_Offset**) malloc(num_reqs *        sizeof(MPI_Offset*));
+        starts    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * num_reqs);
+        counts    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * num_reqs);
         starts[0] = (MPI_Offset*)  calloc(num_reqs * NDIMS, sizeof(MPI_Offset));
         counts[0] = (MPI_Offset*)  calloc(num_reqs * NDIMS, sizeof(MPI_Offset));
         for (i=1; i<num_reqs; i++) {
@@ -226,8 +226,8 @@ int main(int argc, char** argv)
     }
 
     /* allocate I/O buffer and initialize its contents */
-    r_buffer = (int*) malloc(NY*NX * sizeof(int));
-    buffer   = (int*) malloc(w_len * sizeof(int));
+    r_buffer = (int*) malloc(sizeof(int) * NY*NX);
+    buffer   = (int*) malloc(sizeof(int) * w_len);
     for (i=0; i<w_len; i++) buffer[i] = rank+10;
 
     /* check error code: NC_ENULLSTART */
@@ -302,7 +302,7 @@ int main(int argc, char** argv)
     MPI_Type_vector((int)w_len, 1, 2, MPI_INT, &buftype);
     MPI_Type_commit(&buftype);
     free(buffer);
-    buffer = (int*) malloc(w_len * 2 * sizeof(int));
+    buffer = (int*) malloc(sizeof(int) * w_len * 2);
     for (i=0; i<2*w_len; i++) buffer[i] = -1;
     err = ncmpi_get_varn_all(ncid, varid[0], num_reqs, starts, counts, buffer, 1, buftype);
     CHECK_ERR

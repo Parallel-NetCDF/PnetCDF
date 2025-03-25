@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 
     nelms = (NRECS > DIMLEN) ? NRECS : DIMLEN;
     for (i=1; i<NDIMS; i++) nelms *= DIMLEN;
-    buffer = (short*) malloc(nelms * sizeof(short));
+    buffer = (short*) malloc(sizeof(short) * nelms);
     if (buffer == NULL) {
         printf("Error %s at line %d: fail to allocate buffer of size %zu\n",
                argv[0], __LINE__, nelms * sizeof(int));

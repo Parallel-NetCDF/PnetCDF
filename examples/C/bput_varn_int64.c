@@ -153,8 +153,8 @@ static MPI_Offset *** calloc_3D(size_t z, size_t y, size_t x)
 {
     if (z*y*x == 0) return NULL;
     int _j, _k;
-    MPI_Offset ***buf  = (MPI_Offset***) malloc(z     * sizeof(MPI_Offset**));
-    MPI_Offset  **bufy = (MPI_Offset**)  malloc(z*y   * sizeof(MPI_Offset*));
+    MPI_Offset ***buf  = (MPI_Offset***) malloc(sizeof(MPI_Offset**) * z);
+    MPI_Offset  **bufy = (MPI_Offset**)  malloc(sizeof(MPI_Offset*) * z*y);
     MPI_Offset   *bufx = (MPI_Offset*)   calloc(z*y*x,  sizeof(MPI_Offset));
     for (_k=0; _k<z; _k++, bufy+=y) {
         buf[_k] = bufy;
@@ -191,7 +191,7 @@ static int check_contents(int ncid, int *varid)
                                      3, 2, 0, 2, 3, 2, 3, 2, 1, 1,
                                      3, 0, 2, 1, 2, 0, 2, 1, 2, 0}};
 
-    long long *r_buffer = (long long*) malloc(NY*NX*sizeof(long long));
+    long long *r_buffer = (long long*) malloc(sizeof(long long)*NY*NX);
 
     for (i=0; i<4; i++) {
         for (j=0; j<NY*NX; j++) r_buffer[j] = 99999;
@@ -388,7 +388,7 @@ int main(int argc, char** argv)
         if (verbose) printf("req_lens[%d]=%d\n",i,req_lens[i]);
 
         /* allocate I/O buffer and initialize its contents */
-        buffer[i] = (long long*) malloc(req_lens[i] * sizeof(long long));
+        buffer[i] = (long long*) malloc(sizeof(long long) * req_lens[i]);
         for (j=0; j<req_lens[i]; j++) buffer[i][j] = rank;
 
         bufsize += req_lens[i];
@@ -420,7 +420,7 @@ int main(int argc, char** argv)
         MPI_Datatype buftype;
         MPI_Type_vector(req_lens[i], 1, 2, MPI_UNSIGNED, &buftype);
         MPI_Type_commit(&buftype);
-        buffer[i] = (long long*) malloc(req_lens[i] * 2 * sizeof(long long));
+        buffer[i] = (long long*) malloc(sizeof(long long) * req_lens[i] * 2);
         for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = rank;
 
         err = ncmpi_bput_varn(ncid, varid[i], num_segs[i], starts[i],

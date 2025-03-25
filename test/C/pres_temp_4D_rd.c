@@ -177,10 +177,10 @@ int main(int argc, char **argv)
         start[1] = 0;
 
     /* allocate read buffers */
-    pres_in = (float **)malloc(count[1] * 2 * sizeof(float *));
+    pres_in = (float **)malloc(sizeof(float *) * count[1] * 2);
     temp_in = pres_in + count[1];
     if (count[1] > 0) {
-        pres_in[0] = (float *)malloc(count[1] * 2 * NLAT * NLON * sizeof(float));
+        pres_in[0] = (float *)malloc(sizeof(float) * count[1] * 2 * NLAT * NLON);
         temp_in[0] = pres_in[0] + count[1] * NLAT * NLON;
         for (i = 1; i < count[1]; i++) {
             pres_in[i] = pres_in[i - 1] + NLAT * NLON;

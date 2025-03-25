@@ -455,7 +455,7 @@ int t_nc(char *filename, int cmode)
 	{
 		int jj;
 		err = ncmpi_inq_varndims(id, ii, &vdesc->ndims); ERR
-                vdesc->dims = (int*) malloc(vdesc->ndims * sizeof(int));
+                vdesc->dims = (int*) malloc(sizeof(int) * vdesc->ndims);
 
 		err = ncmpi_inq_var(id, ii,
 			vdesc->mnem,

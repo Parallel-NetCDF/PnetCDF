@@ -144,13 +144,13 @@ int main(int argc, char** argv)
         len = flt_vatt.getAttLength();
 
         /* get attribute contents */
-        float *float_att = (float*) malloc(len * sizeof(float));
+        float *float_att = (float*) malloc(sizeof(float) * len);
         flt_vatt.getValues(float_att);
 
         /* the local array size */
         local_ny = global_ny;
         local_nx = global_nx / nprocs;
-        int *buf = (int*) malloc(local_nx * local_ny * sizeof(int));
+        int *buf = (int*) malloc(sizeof(int) * local_nx * local_ny);
 
         /* prepare reading subarray */
         vector<MPI_Offset> start(2), count(2);

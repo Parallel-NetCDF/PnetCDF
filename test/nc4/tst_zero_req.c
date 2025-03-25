@@ -38,7 +38,7 @@ tst_fmt(char *filename, int cmode)
         return 1;
     }
 
-    buf = (int*)malloc(Y_LEN*X_LEN*sizeof(int));
+    buf = (int*)malloc(sizeof(int) * Y_LEN*X_LEN);
     for (i=0; i<Y_LEN*X_LEN; i++) buf[i] = rank*100+i;
 
     /* To test HDF5 1.10.2 bug, it must use a record variable, fixed-size

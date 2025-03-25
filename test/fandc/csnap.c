@@ -232,10 +232,10 @@ void write_file(char *filename, double *t) {
   count_2d[0] = locsiz_2d[0];
   count_2d[1] = locsiz_2d[1];
 
-  tt = (double*)malloc(locsiz_3d[0]*locsiz_3d[1]*locsiz_3d[2]*sizeof(double));
+  tt = (double*)malloc(sizeof(double) * locsiz_3d[0]*locsiz_3d[1]*locsiz_3d[2]);
 
   if (has_2d)
-    smf = (double*)malloc(locsiz_2d[0]*locsiz_2d[1]*sizeof(double));
+    smf = (double*)malloc(sizeof(double) * locsiz_2d[0]*locsiz_2d[1]);
   else
     smf = (double*)malloc(sizeof(double));
 
@@ -322,14 +322,14 @@ void read_file(char *filename, double *t) {
   count_2d[0] = locsiz_2d[0];
   count_2d[1] = locsiz_2d[1];
 
-  tt = (double*)malloc(locsiz_3d[0]*locsiz_3d[1]*locsiz_3d[2]*sizeof(double));
+  tt = (double*)malloc(sizeof(double) * locsiz_3d[0]*locsiz_3d[1]*locsiz_3d[2]);
 
   if (has_2d)
-    smf = (double*)malloc(locsiz_2d[0]*locsiz_2d[1]*sizeof(double));
+    smf = (double*)malloc(sizeof(double) * locsiz_2d[0]*locsiz_2d[1]);
   else
     smf = (double*)malloc(sizeof(double));
 
-  buf = (double*)malloc(locsiz_3d[0]*locsiz_3d[1]*locsiz_3d[2]*sizeof(double));
+  buf = (double*)malloc(sizeof(double) * locsiz_3d[0]*locsiz_3d[1]*locsiz_3d[2]);
 
   get_fields(tt, smf);
 

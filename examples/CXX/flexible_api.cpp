@@ -161,7 +161,7 @@ int main(int argc, char** argv)
 
         /* allocate buffer buf_zy and initialize its contents */
         int buffer_len = (NZ+2*ghost_len) * (NY+2*ghost_len);
-        buf_zy = (int*) malloc(buffer_len * sizeof(int));
+        buf_zy = (int*) malloc(sizeof(int) * buffer_len);
         for (i=0; i<buffer_len; i++) buf_zy[i] = rank;
 
         vector <MPI_Offset> start(2), count(2);
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
 
         /* allocate buffer buf_yx and initialize its contents */
         buffer_len = (NY+2*ghost_len) * (NX+2*ghost_len);
-        buf_yx = (float*) malloc(buffer_len * sizeof(float));
+        buf_yx = (float*) malloc(sizeof(float) * buffer_len);
         for (i=0; i<buffer_len; i++) buf_yx[i] = rank;
 
         start[0] = 0;  start[1] = NX * rank;
