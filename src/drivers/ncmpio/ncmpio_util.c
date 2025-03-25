@@ -64,7 +64,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
         /* Hint nc_header_align_size is now deprecated. But for backward
          * compatibility, let's still check.
          */
-        int info_h_align = -1;
+        MPI_Offset info_h_align = -1;
         MPI_Info_get(user_info, "nc_header_align_size", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         if (flag) {
