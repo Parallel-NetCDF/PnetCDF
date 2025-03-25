@@ -124,7 +124,7 @@ int main(int argc, char** argv)
     count[1] = 2;
     count[2] = 10;
 
-    buf = (int*) malloc(40 * sizeof(int));
+    buf = (int*) malloc(sizeof(int) * 40);
     for (i=0; i<40; i++) buf[i] = rank*100 + i;
 
     /* write: subarray of 1 x 2 x 10 at start 1 x 8 x (2G + rank * 10) */
@@ -282,7 +282,7 @@ int main(int argc, char** argv)
     count[1] = 2;
     count[2] = 10;
 
-    buf = (int*) malloc(40 * sizeof(int));
+    buf = (int*) malloc(sizeof(int) * 40);
     for (i=0; i<40; i++) buf[i] = rank*100 + i;
 
     /* write: subarray of 1 x 2 x 10 at start 1 x 8 x (2G + rank * 10) */

@@ -69,7 +69,7 @@ tst_fmt(char *filename, int cmode)
     count[0] = len0;
     count[1] = len1;
 
-    data = (int*) malloc(len0*len1 * sizeof(int));
+    data = (int*) malloc(sizeof(int) * len0*len1);
     k=0;
     for (i=0; i<len0; i++)
         for (j=0; j<len1; j++)
@@ -81,7 +81,7 @@ tst_fmt(char *filename, int cmode)
 
     count[0] = len0;
     count[1] = len5;
-    data = (int*) malloc(len0*len5 * sizeof(int));
+    data = (int*) malloc(sizeof(int) * len0*len5);
     k=0;
     for (i=0; i<len0; i++)
         for (j=0; j<len5; j++)
@@ -93,7 +93,7 @@ tst_fmt(char *filename, int cmode)
 
     count[0] = len0;
     count[1] = len9;
-    data = (int*) malloc(len0*len9 * sizeof(int));
+    data = (int*) malloc(sizeof(int) * len0*len9);
     k=0;
     for (i=0; i<len0; i++)
         for (j=0; j<len9; j++)
@@ -124,7 +124,7 @@ tst_fmt(char *filename, int cmode)
     count[0] = len0;
     count[1] = len2;
     k=0;
-    dbl_data = (double*) malloc(len0*len2 * sizeof(double));
+    dbl_data = (double*) malloc(sizeof(double) * len0*len2);
     for (i=0; i<len0; i++)
         for (j=0; j<len2; j++) {
             dbl_data[i*len2+j] = (k*k);

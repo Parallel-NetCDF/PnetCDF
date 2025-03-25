@@ -57,8 +57,8 @@ int main(int argc, char** argv)
         free(cmd_str);
     }
 
-    dimids = (int*) malloc(LARGE_NUM * sizeof(int));
-    varid = (int*) malloc(LARGE_NUM * sizeof(int));
+    dimids = (int*) malloc(sizeof(int) * LARGE_NUM);
+    varid = (int*) malloc(sizeof(int) * LARGE_NUM);
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER;

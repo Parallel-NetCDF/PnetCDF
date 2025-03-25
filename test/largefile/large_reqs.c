@@ -80,7 +80,7 @@ int tst_one_var(char *filename, MPI_Comm comm)
 
     /* user buffer is contiguous */
     buf_len = (size_t)NY * NX;
-    buf = (int*) malloc(buf_len * sizeof(int));
+    buf = (int*) malloc(sizeof(int) * buf_len);
     for (i=0; i<buf_len; i++) buf[i] = (i + rank) % 128;
 
     /* write the entire variable */
@@ -175,7 +175,7 @@ int tst_vars(char *filename, MPI_Comm comm)
     err = ncmpi_def_dim(ncid, "Y", LEN*psize[0], &dimid[1]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", LEN*psize[1], &dimid[2]); CHECK_ERR
 
-    varid = (int*) malloc(NVARS * sizeof(int));
+    varid = (int*) malloc(sizeof(int) * NVARS);
 
     for (i=0; i<NVARS; i++) {
         /* define a 2D variables of integer type */
@@ -200,7 +200,7 @@ int tst_vars(char *filename, MPI_Comm comm)
     /* make user buffer noncontiguous */
     gap = 2;
     buf_len = (LEN * LEN + gap) * NVARS;
-    buf = (int*) malloc(buf_len * sizeof(int));
+    buf = (int*) malloc(sizeof(int) * buf_len);
     for (i=0; i<buf_len; i++) buf[i] = (i + rank) % 128;
 
     /* create a subarray datatype for user buffer */

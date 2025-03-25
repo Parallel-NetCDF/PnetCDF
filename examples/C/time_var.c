@@ -245,7 +245,7 @@ pnetcdf_read(MPI_Comm comm, char *filename)
     err = ncmpi_inq_varid(ncid, "fix_var", &fix_var); ERR
 
     /* allocate read buffer */
-    buf = (double*) malloc(global_ny * global_nx * sizeof(double));
+    buf = (double*) malloc(sizeof(double) * global_ny * global_nx);
     for (i=0; i<global_ny*global_nx; i++) buf[i] = -1.0; /* initialize buffer */
 
     /* read 1st record of the record variable, rec_var */

@@ -243,8 +243,8 @@ void* thread_func(void *arg)
     sprintf(filename, "%s.%d", ((thread_arg*)arg)->fname, id);
 
     /* allocate I/O buffers and initialize their contents */
-    ibuf = (int*)    malloc(NY * NX * sizeof(int));
-    dbuf = (double*) malloc(NY * NX * sizeof(double));
+    ibuf = (int*)    malloc(sizeof(int) * NY * NX);
+    dbuf = (double*) malloc(sizeof(double) * NY * NX);
     for (i=0; i<NY*NX; i++) {
         ibuf[i] = id;
         dbuf[i] = 1.0 * id;

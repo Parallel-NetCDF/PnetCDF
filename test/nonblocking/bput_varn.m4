@@ -165,7 +165,7 @@ static
 int clear_file_contents_$1(int ncid, int *varid)
 {
     int i, err, nerrs=0, rank;
-    $1 *w_buffer = ($1*) malloc(NY*NX * sizeof($1));
+    $1 *w_buffer = ($1*) malloc(sizeof($1) * NY*NX);
     for (i=0; i<NY*NX; i++) w_buffer[i] = 99;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -205,7 +205,7 @@ int check_contents_for_fail_$1(int ncid, int *varid)
                               12, 12, 13, 10, 10, 10, 11, 11, 12, 12,
                               11, 11, 11, 13, 12, 12, 12, 10, 10, 10}};
 
-    $1 *r_buffer = ($1*) malloc(NY*NX * sizeof($1));
+    $1 *r_buffer = ($1*) malloc(sizeof($1) * NY*NX);
 
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     if (nprocs > 4) MPI_Barrier(MPI_COMM_WORLD);
@@ -309,8 +309,8 @@ test_bput_varn_$1(char *filename, int cdf)
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* allocate space for starts and counts */
-    starts[0] = (MPI_Offset**) malloc(4 * 6 * sizeof(MPI_Offset*));
-    counts[0] = (MPI_Offset**) malloc(4 * 6 * sizeof(MPI_Offset*));
+    starts[0] = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * 4 * 6);
+    counts[0] = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * 4 * 6);
     starts[0][0] = (MPI_Offset*) calloc(4 * 6 * NDIMS, sizeof(MPI_Offset));
     counts[0][0] = (MPI_Offset*) calloc(4 * 6 * NDIMS, sizeof(MPI_Offset));
     for (i=1; i<4; i++) {
@@ -363,7 +363,7 @@ test_bput_varn_$1(char *filename, int cdf)
         }
 
         /* allocate I/O buffer and initialize its contents */
-        buffer[i] = ($1*) malloc(req_lens[i] * sizeof($1));
+        buffer[i] = ($1*) malloc(sizeof($1) * req_lens[i]);
         for (j=0; j<req_lens[i]; j++) buffer[i][j] = ($1)rank+10;
         bufsize += req_lens[i];
     }
@@ -461,7 +461,7 @@ test_bput_varn_$1(char *filename, int cdf)
         MPI_Datatype buftype;
         MPI_Type_vector(req_lens[i], 1, 2, ITYPE2MPI($1), &buftype);
         MPI_Type_commit(&buftype);
-        buffer[i] = ($1*)malloc(req_lens[i]*2*sizeof($1));
+        buffer[i] = ($1*)malloc(sizeof($1) * req_lens[i]*2);
         for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = ($1)rank+10;
 
         err = ncmpi_bput_varn(ncid, varid[i], my_nsegs[i], starts[i],

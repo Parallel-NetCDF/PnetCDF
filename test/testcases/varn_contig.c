@@ -133,8 +133,8 @@ int main(int argc, char** argv)
     else if (rank == 3) num_reqs = 5;
 
     if (num_reqs > 0) {
-        starts    = (MPI_Offset**) malloc(num_reqs *        sizeof(MPI_Offset*));
-        counts    = (MPI_Offset**) malloc(num_reqs *        sizeof(MPI_Offset*));
+        starts    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * num_reqs);
+        counts    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * num_reqs);
         starts[0] = (MPI_Offset*)  calloc(num_reqs * NDIMS, sizeof(MPI_Offset));
         counts[0] = (MPI_Offset*)  calloc(num_reqs * NDIMS, sizeof(MPI_Offset));
         for (i=1; i<num_reqs; i++) {
@@ -197,8 +197,8 @@ int main(int argc, char** argv)
     w_len = NX; /* total write length for this process */
 
     /* allocate I/O buffer and initialize its contents */
-    r_buffer = (int*) malloc(NY*NX * sizeof(int));
-    buffer   = (int*) malloc(w_len * sizeof(int));
+    r_buffer = (int*) malloc(sizeof(int) * NY*NX);
+    buffer   = (int*) malloc(sizeof(int) * w_len);
     for (i=0; i<w_len; i++) buffer[i] = rank*100 + 100;
 
     /* check error code: NC_ENULLSTART */

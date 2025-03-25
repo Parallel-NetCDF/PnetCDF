@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
     for(i=0; i<nvars; i++) {
         ret = ncmpi_inq_varndims(ncfile, i, &var_ndims);
         if (ret != NC_NOERR) handle_error(ret, __LINE__);
-        dimids = (int*) malloc(var_ndims * sizeof(int));
+        dimids = (int*) malloc(sizeof(int) * var_ndims);
 
         /* much less coordination in this case compared to rank 0 doing all
          * the i/o: everyone already has the necessary information */

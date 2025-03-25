@@ -164,7 +164,7 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
     /* allocate and initialize buffer with ghost cells on both ends of each dim */
     nghosts = 2;
     bufsize = (counts[0] + 2 * nghosts) * (counts[1] + 2 * nghosts);
-    buf = (int *) malloc(bufsize * sizeof(int));
+    buf = (int *) malloc(sizeof(int) * bufsize);
     for (i=0; i<counts[0]+2*nghosts; i++)
     for (j=0; j<counts[1]+2*nghosts; j++) {
         if (nghosts <= i && i < counts[0]+nghosts &&

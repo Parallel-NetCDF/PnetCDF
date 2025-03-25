@@ -198,8 +198,8 @@ int main(int argc, char **argv)
     }
 
     /* allocate buffer and initialize with contiguous numbers */
-    buf = (double *) malloc(bufsize * sizeof(double));
-    rbuf = (double *) malloc(bufsize * sizeof(double));
+    buf = (double *) malloc(sizeof(double) * bufsize);
+    rbuf = (double *) malloc(sizeof(double) * bufsize);
     for (k=0; k<count[0]; k++)
     for (j=0; j<count[1]; j++)
     for (i=0; i<count[2]; i++)

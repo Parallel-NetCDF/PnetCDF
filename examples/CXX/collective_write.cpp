@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 
     /* allocate buffer and initialize with some non-zero numbers */
     for (i=0; i<NUM_VARS; i++) {
-        buf[i] = (int *) malloc(bufsize * sizeof(int));
+        buf[i] = (int *) malloc(sizeof(int) * bufsize);
         for (j=0; j<bufsize; j++) buf[i][j] = rank * i + 123 + j;
     }
 

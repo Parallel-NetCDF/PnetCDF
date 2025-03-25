@@ -231,10 +231,10 @@ int main(int argc, char **argv)
         start[1] = 0;
 
     /* allocate write buffers */
-    pres_out = (float **)malloc(count[1] * 2 * sizeof(float *));
+    pres_out = (float **)malloc(sizeof(float *) * count[1] * 2);
     temp_out = pres_out + count[1];
     if (count[1] > 0) {
-        pres_out[0] = (float *)malloc(count[1] * 2 * NLAT * NLON * sizeof(float));
+        pres_out[0] = (float *)malloc(sizeof(float) * count[1] * 2 * NLAT * NLON);
         temp_out[0] = pres_out[0] + count[1] * NLAT * NLON;
         for (i = 1; i < count[1]; i++) {
             pres_out[i] = pres_out[i - 1] + NLAT * NLON;

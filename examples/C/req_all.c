@@ -156,9 +156,9 @@ int main(int argc, char** argv)
     err = ncmpi_enddef(ncid); ERR
 
     /* initialize the buffer with rank ID */
-    buf = (int**) malloc(myNX * sizeof(int*));
+    buf = (int**) malloc(sizeof(int*) * myNX);
     for (i=0; i<myNX; i++) {
-        buf[i] = (int*) malloc(NY * sizeof(int));
+        buf[i] = (int*) malloc(sizeof(int) * NY);
         for (j=0; j<NY; j++) buf[i][j] = rank;
     }
 

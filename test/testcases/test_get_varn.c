@@ -98,8 +98,8 @@ int main(int argc, char** argv)
     /* num_reqs = 1; => works fine*/
     num_reqs = 2;
 
-    starts    = (MPI_Offset**) malloc(num_reqs*       sizeof(MPI_Offset*));
-    counts    = (MPI_Offset**) malloc(num_reqs*       sizeof(MPI_Offset*));
+    starts    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * num_reqs);
+    counts    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * num_reqs);
     starts[0] = (MPI_Offset*)  calloc(num_reqs*NDIMS, sizeof(MPI_Offset));
     counts[0] = (MPI_Offset*)  calloc(num_reqs*NDIMS, sizeof(MPI_Offset));
     for (i = 1; i < num_reqs; i++) {

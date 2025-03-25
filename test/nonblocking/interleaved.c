@@ -143,7 +143,7 @@ int main(int argc, char** argv)
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* now we are in data mode */
-    buf = (int*) malloc(NY*NX * sizeof(int));
+    buf = (int*) malloc(sizeof(int) * NY*NX);
 
     /* fill the entire variable var0 with -1s */
     for (i=0; i<NY*NX; i++) buf[i] = -1;
@@ -159,7 +159,7 @@ int main(int argc, char** argv)
     start[0] = 0; start[1] = 3;
     count[0] = 8; count[1] = 2;
     len = (size_t)(count[0] * count[1]);
-    buf0 = (int*) malloc(len * sizeof(int));
+    buf0 = (int*) malloc(sizeof(int) * len);
     for (i=0; i<len; i++) buf0[i] = 50+i;
     err = ncmpi_iput_vara_int(ncid, varid[0], start, count, buf0, &req[0]);
     CHECK_ERR
@@ -168,7 +168,7 @@ int main(int argc, char** argv)
     start[0] = 1; start[1] = 8;
     count[0] = 1; count[1] = 5;
     len = (size_t)(count[0] * count[1]);
-    buf1 = (int*) malloc(len * sizeof(int));
+    buf1 = (int*) malloc(sizeof(int) * len);
     for (i=0; i<len; i++) buf1[i] = 60+i;
     err = ncmpi_iput_vara_int(ncid, varid[0], start, count, buf1, &req[1]);
     CHECK_ERR
@@ -177,7 +177,7 @@ int main(int argc, char** argv)
     start[0] = 3; start[1] = 7;
     count[0] = 1; count[1] = 5;
     len = (size_t)(count[0] * count[1]);
-    buf2 = (int*) malloc(len * sizeof(int));
+    buf2 = (int*) malloc(sizeof(int) * len);
     for (i=0; i<len; i++) buf2[i] = 70+i;
     err = ncmpi_iput_vara_int(ncid, varid[0], start, count, buf2, &req[2]);
     CHECK_ERR
@@ -199,7 +199,7 @@ int main(int argc, char** argv)
     start[0] = 0; start[1] = 3;
     count[0] = 8; count[1] = 2;
     len = (size_t)(count[0] * count[1]);
-    buf0 = (int*) malloc(len * sizeof(int));
+    buf0 = (int*) malloc(sizeof(int) * len);
     for (i=0; i<count[0]*count[1]; i++) buf0[i] = 50+i;
     err = ncmpi_iput_vara_int(ncid, varid[1], start, count, buf0, &req[0]);
     CHECK_ERR

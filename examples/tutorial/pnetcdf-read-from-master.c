@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
              * allocate the dimids array */
             err = ncmpi_inq_varndims(ncfile, i, &var_ndims);
             if (err != NC_NOERR) handle_error(err, __LINE__);
-            dimids = (int*) malloc(var_ndims * sizeof(int));
+            dimids = (int*) malloc(sizeof(int) * var_ndims);
 
             err = ncmpi_inq_var(ncfile, i, varname, &type, &var_ndims, dimids,
                     &var_natts);

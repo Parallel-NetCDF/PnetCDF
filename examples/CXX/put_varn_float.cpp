@@ -114,7 +114,7 @@ int main(int argc, char** argv)
         else if (rank == 3) num_reqs = 10;
 
         if (num_reqs > 0) {
-            starts    = (MPI_Offset**)malloc(num_reqs*       sizeof(MPI_Offset*));
+            starts    = (MPI_Offset**)malloc(sizeof(MPI_Offset*) * num_reqs);
             starts[0] = (MPI_Offset*) calloc(num_reqs*NDIMS, sizeof(MPI_Offset));
             for (i=1; i<num_reqs; i++)
                 starts[i] = starts[i-1] + NDIMS;
@@ -193,7 +193,7 @@ int main(int argc, char** argv)
         }
 
         /* allocate I/O buffer and initialize its contents */
-        buffer = (float*) malloc(num_reqs * sizeof(float));
+        buffer = (float*) malloc(sizeof(float) * num_reqs);
         for (i=0; i<num_reqs; i++) buffer[i] =  (float)rank;
 
         /* set the buffer pointers to different offsets to the I/O buffer */

@@ -85,7 +85,7 @@ static
 int clear_file_contents(int ncid, int *varid)
 {
     int i, err, nerrs=0, rank;
-    long long *w_buffer = (long long*) malloc(NY*NX * sizeof(long long));
+    long long *w_buffer = (long long*) malloc(sizeof(long long) * NY*NX);
     for (i=0; i<NY*NX; i++) w_buffer[i] = -1;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -120,7 +120,7 @@ int check_contents_for_fail(int ncid, int *varid, int lineno)
                                      12, 12, 13, 10, 10, 10, 11, 11, 12, 12,
                                      11, 11, 11, 13, 12, 12, 12, 10, 10, 10}};
 
-    long long *r_buffer = (long long*) malloc(NY*NX * sizeof(long long));
+    long long *r_buffer = (long long*) malloc(sizeof(long long) * NY*NX);
 
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     if (nprocs > 4) MPI_Barrier(MPI_COMM_WORLD);
@@ -238,8 +238,8 @@ int main(int argc, char** argv)
 #endif
 
     /* allocate space for starts and counts */
-    starts[0] = (MPI_Offset**) malloc(4 * 6 * sizeof(MPI_Offset*));
-    counts[0] = (MPI_Offset**) malloc(4 * 6 * sizeof(MPI_Offset*));
+    starts[0] = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * 4 * 6);
+    counts[0] = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * 4 * 6);
     starts[0][0] = (MPI_Offset*) calloc(4 * 6 * NDIMS, sizeof(MPI_Offset));
     counts[0][0] = (MPI_Offset*) calloc(4 * 6 * NDIMS, sizeof(MPI_Offset));
     for (i=1; i<4; i++) {
@@ -289,7 +289,7 @@ int main(int argc, char** argv)
         }
 
         /* allocate I/O buffer and initialize its contents */
-        buffer[i] = (long long*) malloc(req_lens[i] * sizeof(long long));
+        buffer[i] = (long long*) malloc(sizeof(long long) * req_lens[i]);
         for (j=0; j<req_lens[i]; j++) buffer[i][j] = rank+10;
     }
     varname[0] = "var0";
@@ -381,7 +381,7 @@ int main(int argc, char** argv)
     /* try with buffer being a single contiguous space ----------------------*/
     for (i=0; i<nreqs; i++) bufsize += req_lens[i];
     cbuffer[0] = NULL;
-    if (bufsize>0) cbuffer[0] = (long long*) malloc(bufsize * sizeof(long long));
+    if (bufsize>0) cbuffer[0] = (long long*) malloc(sizeof(long long) * bufsize);
     for (i=1; i<nreqs; i++) cbuffer[i] = cbuffer[i-1] + req_lens[i-1];
     for (i=0; i<bufsize; i++) cbuffer[0][i] = rank+10;
 
@@ -541,9 +541,9 @@ int main(int argc, char** argv)
     for (i=0; i<nreqs; i++) {
         MPI_Type_vector(req_lens[i], 1, 2, MPI_LONG_LONG, &buftype[i]);
         MPI_Type_commit(&buftype[i]);
-        buffer[i] = (long long*) malloc(req_lens[i] * 2 * sizeof(long long));
+        buffer[i] = (long long*) malloc(sizeof(long long) * req_lens[i] * 2);
         for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = rank+10;
-        rbuffer[i] = (long long*) malloc(req_lens[i] * 2 * sizeof(long long));
+        rbuffer[i] = (long long*) malloc(sizeof(long long) * req_lens[i] * 2);
         for (j=0; j<req_lens[i]*2; j++) rbuffer[i][j] = -1;
     }
 

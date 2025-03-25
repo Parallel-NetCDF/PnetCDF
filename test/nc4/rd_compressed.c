@@ -45,7 +45,7 @@ static int create_nc4(char *filename)
     err = nc_enddef(ncid); CHECK_ERR
 
     /* initialize buffer contents */
-    buf = (int*) malloc(NZ*NY*NZ * sizeof(int));
+    buf = (int*) malloc(sizeof(int) * NZ*NY*NZ);
     for (i=0; i<NZ*NY*NZ; i++) buf[i] = i;
 
     /* write the entire variable */
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
         bufLen *= dimLen;
     }
 
-    buf = (int*) malloc(bufLen * sizeof(int));
+    buf = (int*) malloc(sizeof(int) * bufLen);
 
     /* read the entire variable */
     err = ncmpi_get_var_int_all(ncid, varid, buf); CHECK_ERR

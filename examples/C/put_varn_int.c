@@ -156,8 +156,8 @@ int main(int argc, char** argv)
     else if (rank == 3) num_reqs = 4;
 
     if (num_reqs > 0) {
-        starts    = (MPI_Offset**) malloc(num_reqs*       sizeof(MPI_Offset*));
-        counts    = (MPI_Offset**) malloc(num_reqs*       sizeof(MPI_Offset*));
+        starts    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * num_reqs);
+        counts    = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * num_reqs);
         starts[0] = (MPI_Offset*)  calloc(num_reqs*NDIMS, sizeof(MPI_Offset));
         counts[0] = (MPI_Offset*)  calloc(num_reqs*NDIMS, sizeof(MPI_Offset));
         for (i=1; i<num_reqs; i++) {
@@ -226,7 +226,7 @@ int main(int argc, char** argv)
     }
 
     /* allocate I/O buffer and initialize its contents */
-    buffer = (int*) malloc(w_len * sizeof(int));
+    buffer = (int*) malloc(sizeof(int) * w_len);
     for (i=0; i<w_len; i++) buffer[i] = rank;
 
     /* set the buffer pointers to different offsets to the I/O buffer */

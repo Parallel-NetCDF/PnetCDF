@@ -136,7 +136,7 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
     }
 
     /* allocate buffer and initialize with contiguous numbers */
-    buf = (int *) malloc(bufsize * sizeof(int));
+    buf = (int *) malloc(sizeof(int) * bufsize);
     for (k=0; k<counts[0]; k++)
     for (j=0; j<counts[1]; j++)
     for (i=0; i<counts[2]; i++)

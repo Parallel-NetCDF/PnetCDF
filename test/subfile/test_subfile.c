@@ -114,39 +114,39 @@ int main(int argc, char **argv)
 
     array_of_gsizes[0] = array_of_gsizes[1] = array_of_gsizes[2] = length;
 
-    buf = (int **)malloc(nvars*sizeof(int*));
+    buf = (int **)malloc(sizeof(int*) * nvars);
     if (buf == NULL){
         printf("buf malloc error\n");
         nerrs++; goto fn_exit;
     }
-    bufcount_list = (MPI_Offset *)malloc(nvars*sizeof(MPI_Offset));
+    bufcount_list = (MPI_Offset *)malloc(sizeof(MPI_Offset)*nvars);
     if (bufcount_list == NULL){
         printf("bufcount_list malloc error\n");
         nerrs++; goto fn_exit;
     }
-    starts_list = (MPI_Offset **)malloc(nvars*sizeof(MPI_Offset *));
+    starts_list = (MPI_Offset **)malloc(sizeof(MPI_Offset *)*nvars);
     if (starts_list== NULL){
         printf("starts_list malloc error\n");
         nerrs++; goto fn_exit;
     }
-    count_list = (MPI_Offset **)malloc(nvars*sizeof(MPI_Offset *));
+    count_list = (MPI_Offset **)malloc(sizeof(MPI_Offset *)*nvars);
     if (count_list == NULL){
         printf("count_list malloc error\n");
         nerrs++; goto fn_exit;
     }
-    datatype_list = (MPI_Datatype*)malloc(nvars*sizeof(MPI_Datatype));
+    datatype_list = (MPI_Datatype*)malloc(sizeof(MPI_Datatype)*nvars);
     if (datatype_list == NULL){
         printf("count_list malloc error\n");
         nerrs++; goto fn_exit;
     }
 
     for (i=0; i<nvars; i++) {
-        starts_list[i] = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
+        starts_list[i] = (MPI_Offset *)malloc(sizeof(MPI_Offset)*ndims);
         if (starts_list[i] == NULL){
             printf("starts_list[%d] malloc error\n", i);
             nerrs++; goto fn_exit;
         }
-        count_list[i] = (MPI_Offset *)malloc(ndims*sizeof(MPI_Offset));
+        count_list[i] = (MPI_Offset *)malloc(sizeof(MPI_Offset)*ndims);
         if (count_list[i] == NULL){
             printf("count_list[%d] malloc error\n", i);
             nerrs++; goto fn_exit;
@@ -186,7 +186,7 @@ int main(int argc, char **argv)
     }
 
     for (i=0; i<nvars; i++) {
-        buf[i] = (int *) malloc(bufcount * sizeof(int));
+        buf[i] = (int *) malloc(sizeof(int) * bufcount);
         if (buf[i] == NULL){
             printf("buf[i]malloc error\n");
             nerrs++; goto fn_exit;
@@ -225,7 +225,7 @@ int main(int argc, char **argv)
     }
 
     /* define variables */
-    varid = (int *)malloc(nvars*sizeof(int));
+    varid = (int *)malloc(sizeof(int)*nvars);
     for (i=0; i<nvars; i++) {
         sprintf(varname, "var0_%d", i);
         err = ncmpi_def_var(ncid, varname, NC_INT, ndims, dimids0, &varid[i]);
