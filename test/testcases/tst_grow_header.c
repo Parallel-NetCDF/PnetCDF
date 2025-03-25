@@ -53,7 +53,7 @@ check_vars(MPI_Comm    comm,
            MPI_Offset *start,
            MPI_Offset *count)
 {
-    int id, j, r, nerrs=0, err, rank, *buf, rec_dim, dimids[3], nvars;
+    int id, j, r, nerrs=0, err, rank, *buf=NULL, rec_dim, dimids[3], nvars;
     MPI_Offset nrecs;
 
     MPI_Comm_rank(comm, &rank);
@@ -111,7 +111,7 @@ check_vars(MPI_Comm    comm,
     }
 
 err_out:
-    free(buf);
+    if (buf != NULL) free(buf);
     return err;
 }
 
@@ -186,7 +186,7 @@ err_out:
 }
 #define WRITE_REC_VAR(id) { \
     for (i=0; i<count[1] * count[2]; i++) \
-        buf[i] = rank + i + id * 10 + start[0]; \
+        buf[i] = rank + i + id * 10 + (int)start[0]; \
     err = ncmpi_put_vara_int_all(ncid, varid[id], start, count, buf); \
     CHECK_ERR \
 }
@@ -196,7 +196,7 @@ tst_fmt(char *filename,
         int   cmode)
 {
     int i, rank, nprocs, ncid, err, nerrs=0;
-    int *buf, dimid[3], varid[16];
+    int *buf=NULL, dimid[3], varid[16];
     MPI_Info info=MPI_INFO_NULL;
     MPI_Offset start[3], count[3], increment;
 
@@ -379,9 +379,10 @@ tst_fmt(char *filename,
     exp_extent = 1024 * 5;
     CHECK_HEADER_SIZE
 
-err_out:
     err = ncmpi_close(ncid); CHECK_ERR
-    free(buf);
+
+err_out:
+    if (buf != NULL) free(buf);
     MPI_Info_free(&info);
 
     return nerrs;
