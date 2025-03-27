@@ -23,20 +23,26 @@ num_pass=0
 
 for exec in __TEST_PROGS__ ; do
    OUTFILE="$OUT_DIR/$exec.nc"
+   CMD_OPTS=
    if test "x$exec" = xpres_temp_4D_rd ; then
       OUTFILE="$OUT_DIR/pres_temp_4D_wr.nc"
+   elif test "x$exec" = xtst_cdl_hdr_parser ; then
+      CMD_OPTS="-q ../cdl/cdl_header.txt -o"
    fi
-   CMD="__RUN_CMD__ -n $NP $exec $OUTFILE"
+   CMD="__RUN_CMD__ -n $NP $exec $CMD_OPTS $OUTFILE"
    eval "$CMD"
    num_pass=$(expr $num_pass + 1)
 done
 
 for exec in __EXAMPLE_PROGS__ ; do
    OUTFILE="$OUT_DIR/$exec.nc"
+   CMD_OPTS=
    if test "x$exec" = xget_vara ; then
       OUTFILE="$OUT_DIR/put_vara.nc"
+   elif test "x$exec" = xcreate_from_cdl ; then
+      CMD_OPTS="../../examples/C/cdl_header.txt -o"
    fi
-   CMD="__RUN_CMD__ -n $NP $exec -q $OUTFILE"
+   CMD="__RUN_CMD__ -n $NP $exec -q $CMD_OPTS $OUTFILE"
    eval "$CMD"
    extension="${exec##*.}"
    if test "x$extension" = xexe90 ; then
