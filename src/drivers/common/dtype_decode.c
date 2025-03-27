@@ -300,8 +300,11 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
     MPI_Aint *array_of_adds=NULL;
 #ifdef HAVE_MPI_LARGE_COUNT
     MPI_Count num_ints, num_adds, num_larges, num_dtypes, *array_of_larges;
+    int *distribs, *dargs, *psizes;
+    MPI_Count *gzises;
 #else
     int num_ints, num_adds, num_dtypes;
+    int *gzises, *distribs, *dargs, *psizes;
 #endif
 
     el_size   = 0;
@@ -553,8 +556,6 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
             if (iscontig_of_ptypes) *iscontig_of_ptypes = 0;
             ndims = array_of_ints[2];
 #ifdef HAVE_MPI_LARGE_COUNT
-            int *distribs, *dargs, *psizes;
-            MPI_Count *gzises;
             if (is_large_type) {
                 gzises   = array_of_larges;
                 distribs = array_of_ints+3;          /* array_of_distribs[ndims] */
@@ -569,10 +570,10 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
                 psizes   = array_of_ints+3+3*ndims;  /* array_of_psizes[ndims] */
             }
 #else
-            int *gzises   = array_of_ints+3;         /* array_of_gsizes[ndims] */
-            int *distribs = array_of_ints+3+ndims;   /* array_of_distribs[ndims] */
-            int *dargs    = array_of_ints+3+2*ndims; /* array_of_dargs[ndims] */
-            int *psizes   = array_of_ints+3+3*ndims; /* array_of_psizes[ndims] */
+            gzises   = array_of_ints+3;         /* array_of_gsizes[ndims] */
+            distribs = array_of_ints+3+ndims;   /* array_of_distribs[ndims] */
+            dargs    = array_of_ints+3+2*ndims; /* array_of_dargs[ndims] */
+            psizes   = array_of_ints+3+3*ndims; /* array_of_psizes[ndims] */
 #endif
             /* seldom reached, so put it in a separate function */
             total_blocks = darray_get_totalblks(array_of_ints[1],  /* rank */

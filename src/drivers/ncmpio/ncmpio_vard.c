@@ -60,6 +60,16 @@ getput_vard(NC               *ncp,
     MPI_Offset nelems=0, fnelems=0, bnelems=0, offset=0;
     MPI_Datatype etype=MPI_DATATYPE_NULL, xtype=MPI_BYTE;
     MPI_Offset filetype_size;
+#ifdef HAVE_MPI_TYPE_SIZE_C
+    MPI_Count true_lb=0, true_ub=0, true_extent=0;
+    MPI_Count type_size;
+#elif defined(HAVE_MPI_TYPE_SIZE_X)
+    MPI_Count true_lb=0, true_ub=0, true_extent=0;
+    MPI_Count type_size;
+#else
+    MPI_Aint true_lb=0, true_ub=0, true_extent=0;
+    int type_size;
+#endif
 
 #ifdef ENABLE_SUBFILING
     /* call a separate routine if variable is stored in subfiles */
@@ -86,24 +96,15 @@ getput_vard(NC               *ncp,
      */
 #ifdef HAVE_MPI_TYPE_SIZE_C
     /* MPI_Type_size_c is introduced in MPI 4.0 */
-    MPI_Count true_lb=0, true_ub=0, true_extent=0;
-    MPI_Count type_size;
-
     mpireturn = MPI_Type_size_c(filetype, &type_size);
 #elif defined(HAVE_MPI_TYPE_SIZE_X)
     /* MPI_Type_size_x is introduced in MPI 3.0 */
-    MPI_Count true_lb=0, true_ub=0, true_extent=0;
-    MPI_Count type_size;
-
     mpireturn = MPI_Type_size_x(filetype, &type_size);
 #else
     /* PROBLEM: In MPI_Type_size(), argument filetype_size is a 4-byte integer,
      * cannot be used for large filetypes. Prior to MPI 3.0 standard, argument
      * "size" of MPI_Type_size is of type int. When int overflows, the returned
      * value in argument "size" may be a negative. */
-    MPI_Aint true_lb=0, true_ub=0, true_extent=0;
-    int type_size;
-
     mpireturn = MPI_Type_size(filetype, &type_size);
 #endif
     if (mpireturn != MPI_SUCCESS) {
