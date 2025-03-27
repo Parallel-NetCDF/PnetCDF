@@ -1238,10 +1238,16 @@ ncmpi_inq_file_format(const char *filename,
             DEBUG_RETURN_ERROR(NC_EFILE)
         }
     }
-    /* get first 8 bytes of file */
+    /* get first 8 bytes of file, which contains the file signature */
+    errno = 0;
     rlen = read(fd, signature, 8);
     if (rlen != 8) {
         close(fd); /* ignore error */
+        if (rlen == 0 && errno == 0)
+            fprintf(stderr, "Error: empty file %s\n", filename);
+        else
+            fprintf(stderr, "Error: fail to read signature of file %s\n",
+                    filename);
         DEBUG_RETURN_ERROR(NC_EFILE)
     }
     if (close(fd) == -1) {
