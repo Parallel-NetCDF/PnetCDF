@@ -119,6 +119,12 @@
     * build NetCDF4 latest release with --enable-pnetcdf using this newly build
       of PnetCDF
 
+    * Folder test/test_installed contains makefile and run scripts for a subset
+      of test and example programs that can be run on a parallel computer with
+      job submission system. See test/test_installed/README.md for compile and
+      run instructions. Remember to add new test/example programs added in the
+      new release.
+
  8. Create a checkpoint
     * For 1.9.0 and priors - Create a new SVN tag on svn repo, by running
       command below to duplicate the current trunk to a new tag:
