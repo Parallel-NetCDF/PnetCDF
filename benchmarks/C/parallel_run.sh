@@ -45,7 +45,7 @@ for i in ${check_PROGRAMS} ; do
         if test "$i" = "aggregation" ; then
            OPTS="-b -c -i -j"
         fi
-        echo "${MPIRUN} ./$i -q ${OPTS} -l 10 ${TESTOUTDIR}/$i.nc"
+        # echo "${MPIRUN} ./$i -q ${OPTS} -l 10 ${TESTOUTDIR}/$i.nc"
         ${MPIRUN} ./$i -q ${OPTS} -l 10 ${TESTOUTDIR}/$i.nc
         if test $? = 0 ; then
            echo "PASS:  C  parallel run on $1 processes --------------- $i"

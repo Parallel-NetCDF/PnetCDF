@@ -42,7 +42,7 @@ for i in ${check_PROGRAMS} ; do
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 
         OPTS="-l 100 -w 100"
-        echo "${MPIRUN} ./$i -q ${OPTS} ${TESTOUTDIR}/$i.nc"
+        # echo "${MPIRUN} ./$i -q ${OPTS} ${TESTOUTDIR}/$i.nc"
         ${MPIRUN} ./$i -q ${OPTS} ${TESTOUTDIR}/$i.nc
         if test $? = 0 ; then
            echo "PASS:  C  parallel run on $1 processes --------------- $i"
