@@ -1,5 +1,5 @@
-.SUFFIXES: .o .exe77 .exe90 .77o .90o
-.PRECIOUS: %.o %.77o %.90o
+.SUFFIXES: .o .exe77 .exe90 .77o .90o .testcases77o
+.PRECIOUS: %.o %.77o %.90o %.testcases77o
 
 CPPFLAGS = -I$(PNETCDF_DIR)/include -I../common
 CFLAGS = $(CPPFLAGS)
@@ -41,7 +41,9 @@ testcases_src = ../testcases/add_var.c \
                 ../testcases/collective_error.c \
                 ../testcases/flexible.c \
                 ../testcases/flexible2.c \
+                ../testcases/flexible_var.c \
                 ../testcases/flexible_varm.c \
+                ../testcases/tst_grow_header.c \
                 ../testcases/inq_num_vars.c \
                 ../testcases/inq_recsize.c \
                 ../testcases/ivarn.c \
@@ -64,9 +66,12 @@ testcases_src = ../testcases/add_var.c \
                 ../testcases/test_vard_rec.c \
                 ../testcases/test_varm.c \
                 ../testcases/tst_def_var_fill.c \
+                ../testcases/tst_del_attr.c \
                 ../testcases/tst_dimsizes.c \
                 ../testcases/tst_free_comm.c \
                 ../testcases/tst_max_var_dims.c \
+                ../testcases/tst_redefine.c \
+                ../testcases/tst_symlink.c \
                 ../testcases/tst_version.c \
                 ../testcases/varn_contig.c \
                 ../testcases/varn_int.c \
@@ -84,6 +89,7 @@ examples_C_src = ../../examples/C/block_cyclic.c \
                  ../../examples/C/create_open.c \
                  ../../examples/C/fill_mode.c \
                  ../../examples/C/flexible_api.c \
+                 ../../examples/C/flexible_bottom.c \
                  ../../examples/C/get_info.c \
                  ../../examples/C/ghost_cell.c \
                  ../../examples/C/global_attributes.c \
@@ -98,6 +104,7 @@ examples_C_src = ../../examples/C/block_cyclic.c \
                  ../../examples/C/time_var.c \
                  ../../examples/C/transpose2D.c \
                  ../../examples/C/transpose.c \
+                 ../../examples/C/vard_bottom.c \
                  ../../examples/C/vard_int.c \
                  ../../examples/C/vard_mvars.c
 EXAMPLE_PROGS += $(examples_C_src:../../examples/C/%.c=%)
@@ -109,6 +116,16 @@ F90_src = ../F90/f90tst_parallel.f90 \
           ../F90/f90tst_parallel3.f90 \
           ../F90/f90tst_parallel4.f90
 TEST_PROGS += $(F90_src:../F90/%.f90=%.exe90)
+
+testcases_F77_src = ../testcases/attrf.f	\
+                    ../testcases/buftype_freef.f \
+                    ../testcases/flexible_api.f \
+                    ../testcases/put_parameter.f \
+                    ../testcases/varn_intf.f
+TEST_PROGS += $(testcases_F77_src:../testcases/%.f=%.exe77)
+
+%.testcases77o: ../testcases/%.f
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -c $< -o $@
 
 examples_F77_src = ../../examples/F77/block_cyclic.f \
                    ../../examples/F77/bput_varn_int8.f \
@@ -161,6 +178,11 @@ f90tst_parallel4.exe90: ../F90/f90tst_parallel4.f90 testutilsf.o
 .77o.exe77:
 	$(FC) $(CPPFLAGS) $(FCFLAGS) -o $@ $< utils.o $(LDFLAGS) -lpnetcdf
 
+attrf.testcases77o: testutilsf.o
+
+.testcases77o.exe77:
+	$(FC) $(CPPFLAGS) $(FCFLAGS) -o $@ $< testutilsf.o $(LDFLAGS) -lpnetcdf
+
 .90o.exe90:
 	$(FC) $(CPPFLAGS) $(FCFLAGS) -o $@ $< utils.o $(LDFLAGS) -lpnetcdf
 
@@ -200,13 +222,15 @@ interactive.sh: interactive.sh.in makefile
 	@sed -i -e "s|__EXAMPLE_PROGS__|$(EXAMPLE_PROGS)|" $@
 	@sed -i -e "s|__RUN_CMD__|$(RUN_CMD)|" $@
 	@sed -i -e "s|__OUT_DIR__|$(OUT_DIR)|" $@
+	@sed -i -e "s|__PNETCDF_DIR__|$(PNETCDF_DIR)|" $@
 
 batch.sh: batch.sh.in makefile
 	@sed -e "s|__TEST_PROGS__|$(TEST_PROGS)|" $< > $@
 	@sed -i -e "s|__EXAMPLE_PROGS__|$(EXAMPLE_PROGS)|" $@
 	@sed -i -e "s|__RUN_CMD__|$(RUN_CMD)|" $@
 	@sed -i -e "s|__OUT_DIR__|$(OUT_DIR)|" $@
+	@sed -i -e "s|__PNETCDF_DIR__|$(PNETCDF_DIR)|" $@
 
 clean:
-	rm -f *.o *.77o *.90o $(TEST_PROGS) $(EXAMPLE_PROGS) batch.sh interactive.sh
+	rm -f *.o *.77o *.90o *.testcases77o $(TEST_PROGS) $(EXAMPLE_PROGS) batch.sh interactive.sh
 

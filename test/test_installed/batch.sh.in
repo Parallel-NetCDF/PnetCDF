@@ -11,7 +11,10 @@
 
 cd $PWD
 
+# exit immediately when any of the runs failed
 set -e
+
+export LD_LIBRARY_PATH=__PNETCDF_DIR__/lib:$LD_LIBRARY_PATH
 
 OUT_DIR=__OUT_DIR__
 
