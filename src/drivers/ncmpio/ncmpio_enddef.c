@@ -119,7 +119,7 @@ move_file_block(NC         *ncp,
             get_size = pread(fd, buf, chunk_size, off_from);
             if (get_size < 0) {
                 fprintf(stderr,
-                "Error at %s line %d: pread file %s offset %ld size %zd (%s)\n",
+                "Error at %s line %d: pread file %s offset %lld size %zd (%s)\n",
                 __func__,__LINE__,path,off_from,chunk_size,strerror(errno));
                 DEBUG_RETURN_ERROR(NC_EREAD)
                 get_size = 0;
@@ -140,7 +140,7 @@ move_file_block(NC         *ncp,
             put_size = pwrite(fd, buf, get_size, off_to);
             if (put_size < 0) {
                 fprintf(stderr,
-                "Error at %s line %d: pwrite file %s offset %ld size %zd (%s)\n",
+                "Error at %s line %d: pwrite file %s offset %lld size %zd (%s)\n",
                 __func__,__LINE__,path,off_to,get_size,strerror(errno));
                 DEBUG_RETURN_ERROR(NC_EREAD)
                 put_size = 0;
