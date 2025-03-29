@@ -2146,11 +2146,14 @@ err_out:
                 free(vars[i].buf);
         free(vars);
     }
+    if (err != NC_NOERR) return err;
 
     /* check if there is any PnetCDF internal malloc residue */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
+    if (err == NC_ENOTENABLED) /* --enable-profiling is not set at configure */
+        return NC_NOERR;
+    else if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
             printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
