@@ -29,10 +29,67 @@
 #include <unistd.h>
 #include <errno.h>
 
+#ifndef TEST_RUN
 #include <mpi.h>
 #include <pnetcdf.h>
 
-static int debug;
+#else
+typedef int nc_type;
+typedef long long MPI_Offset;
+
+/* below define C macros are duplicated from pnetcdf.h */
+#define NC_GLOBAL -1
+#define NC_UNLIMITED 0L
+
+#define NC_NAT          0       /**< Not A Type */
+#define NC_BYTE         1       /**< signed 1 byte integer */
+#define NC_CHAR         2       /**< ISO/ASCII character */
+#define NC_SHORT        3       /**< signed 2 byte integer */
+#define NC_INT          4       /**< signed 4 byte integer */
+#define NC_LONG         NC_INT  /**< \deprecated required for backward compatibility. */
+#define NC_FLOAT        5       /**< single precision floating point number */
+#define NC_DOUBLE       6       /**< double precision floating point number */
+#define NC_UBYTE        7       /**< unsigned 1 byte int */
+#define NC_USHORT       8       /**< unsigned 2-byte int */
+#define NC_UINT         9       /**< unsigned 4-byte int */
+#define NC_INT64        10      /**< signed 8-byte int */
+#define NC_UINT64       11      /**< unsigned 8-byte int */
+#define NC_STRING       12      /**< string */
+
+#define NC_MAX_NFILES   1024
+
+#define NC_NOERR    0      /**< No Error */
+#define NC_EBADID   (-33)
+#define NC_ENFILE   (-34)  /**< Too many netcdfs open */
+#define NC_EBADDIM  (-46)  /**< Invalid dimension id or name */
+#define NC_ENOTNC   (-51)  /**< Not a netcdf file */
+#define NC_EFILE    (-204) /**< Unknown error in file operation */
+#define NC_ENOENT   (-220) /**< File does not exist */
+
+#define ERR { \
+    if (err != NC_NOERR) { \
+        char *err_str; \
+        switch(err) { \
+            case NC_EBADID:  err_str = "Bad ID"; \
+                             break; \
+            case NC_ENFILE:  err_str = "Too many CDL file open"; \
+                             break; \
+            case NC_EBADDIM: err_str = "Invalid dimension id or name"; \
+                             break; \
+            case NC_ENOTNC:  err_str = "Not a CDL file"; \
+                             break; \
+            case NC_EFILE:   err_str = "Unknown error in file operation"; \
+                             break; \
+            case NC_ENOENT:  err_str = "File does not exist"; \
+                             break; \
+            default: err_str = "Other unknown error"; \
+        } \
+        printf("Error at %s:%d : %s\n", __FILE__,__LINE__, err_str); \
+        err = 1; \
+        goto err_out; \
+    } \
+}
+#endif
 
 #define LINE_SIZE 1024
 
@@ -144,11 +201,15 @@ int parse_signature(char **bptr)
         char *signature = strtok(line, " ");
         if (signature == NULL || strcmp(signature, "netcdf"))
             ERR_FORMAT("signature")
-        if (debug) printf("LINE %d signature: %s\n",__LINE__, signature);
+#ifdef TEST_RUN
+        printf("LINE %d signature: %s\n",__LINE__, signature);
+#endif
         char *filename = strtok(NULL, " ");
         if (filename == NULL)
             ERR_FORMAT("input file name")
-        if (debug) printf("LINE %d input file name: %s\n",__LINE__, filename);
+#ifdef TEST_RUN
+        printf("LINE %d input file name: %s\n",__LINE__, filename);
+#endif
     }
 err_out:
     return err;
@@ -185,7 +246,10 @@ int parse_format(char       **bptr,
                 header->format = atoi(val);
                 if (*val != '1' && *val != '2' && *val != '5')
                     return NC_ENOTNC;
-                if (debug) printf("LINE %d CDF file format: CDF-%d\n", __LINE__,header->format);
+#ifdef TEST_RUN
+                printf("LINE %d CDF file format: CDF-%d\n",
+                    __LINE__,header->format);
+#endif
             }
             else if (!strcmp(key+3, "global attributes:"))
                 *gattr_sec = 1;
@@ -244,7 +308,9 @@ int parse_dims(char         **bptr,
             dimp->size = atoi(val);
         dims->nelems++;
 
-        if (debug) printf("LINE %d DIM name %s val %s\n",__LINE__, key, val);
+#ifdef TEST_RUN
+        printf("LINE %d DIM name %s val %s\n",__LINE__, key, val);
+#endif
         if (key[0] == '}') return 1;
         if (!strncmp(key, "data:", 5)) return 1; /* data section */
     }
@@ -274,7 +340,10 @@ int parse_attr_value(CDL_attr *attrp,
         char *tail = strrchr(val, '\"');
         *tail = '\0';
         attrp->value = strdup(val+2);
-        if (debug) printf("LINE %d ATTR name %s type NC_CHAR %s\n",__LINE__, attrp->name, (char*)attrp->value);
+#ifdef TEST_RUN
+        printf("LINE %d ATTR name %s type NC_CHAR %s\n",__LINE__,
+            attrp->name, (char*)attrp->value);
+#endif
         attrp->nelems = strlen(attrp->value);
     }
     else { /* not text */
@@ -301,7 +370,10 @@ int parse_attr_value(CDL_attr *attrp,
             key = strtok(NULL, ", ;");
         }
         attrp->xtype = xtype;
-        if (debug) printf("LINE %d ATTR type %d name %s nelems=%d\n",__LINE__, xtype, attrp->name, nelems);
+#ifdef TEST_RUN
+        printf("LINE %d ATTR type %d name %s nelems=%d\n",
+            __LINE__, xtype, attrp->name, nelems);
+#endif
 
         strcpy(str, val);
 
@@ -459,7 +531,10 @@ int parse_vars(char       **bptr,
         val = strtok(NULL, ");");
         if (val == NULL) {
             varp->dimids = NULL;
-            if (debug) printf("LINE %d VAR type %s name %s IS SCALAR\n",__LINE__, type, varp->name);
+#ifdef TEST_RUN
+            printf("LINE %d VAR type %s name %s IS SCALAR\n",
+                __LINE__, type, varp->name);
+#endif
         }
         else {
             char *str=strdup(val);
@@ -468,7 +543,10 @@ int parse_vars(char       **bptr,
                 varp->ndims++;
                 key = strtok(NULL, ", ");
             }
-            if (debug) printf("LINE %d VAR type %s name %s val %s ndims=%d\n",__LINE__, type, varp->name, val, varp->ndims);
+#ifdef TEST_RUN
+            printf("LINE %d VAR type %s name %s val %s ndims=%d\n",
+                __LINE__, type, varp->name, val, varp->ndims);
+#endif
 
             varp->dimids = (int*) malloc(sizeof(int) * varp->ndims);
             strcpy(str, val);
@@ -565,6 +643,10 @@ int cdl_hdr_close(int hid)
     return err;
 }
 
+/*----< cdl_hdr_open() >-----------------------------------------------------*/
+/* Reads a CDL header file, parses it, and stores the metadata in an internal
+ * buffer. Returns an ID for future inquery APIs to retrive the metadata.
+ */
 int cdl_hdr_open(const char *filename,
                  int        *hid)
 {
@@ -642,6 +724,12 @@ err_out:
     return NC_NOERR;
 }
 
+/*----< cdl_hdr_inq_format() >-----------------------------------------------*/
+/* Returns the format ID of an opened CDL header file ID.
+ * 1: classic CDF-1 format
+ * 2: classic CDF-2 format
+ * 5: classic CDF-5 format
+ */
 int cdl_hdr_inq_format(int  hid,
                        int *format)
 {
@@ -657,6 +745,8 @@ int cdl_hdr_inq_format(int  hid,
     return NC_NOERR;
 }
 
+/*----< cdl_hdr_inq_ndims() >------------------------------------------------*/
+/* Returns the number of dimensions defined in the CDL header file. */
 int cdl_hdr_inq_ndims(int  hid,
                       int *ndims)
 {
@@ -672,6 +762,11 @@ int cdl_hdr_inq_ndims(int  hid,
     return NC_NOERR;
 }
 
+/*----< cdl_hdr_inq_dim() >--------------------------------------------------*/
+/* Returns the metadata of a given dimension, specified by its ID, 'dimid',
+ * including its name and size. Note users should not alter the contents of
+ * character string pointed by 'name'.
+ */
 int cdl_hdr_inq_dim(int          hid,
                     int          dimid,
                     char       **name,
@@ -694,6 +789,10 @@ int cdl_hdr_inq_dim(int          hid,
     return NC_NOERR;
 }
 
+/*----< cdl_hdr_inq_nattrs() >-----------------------------------------------*/
+/* Returns the number of attributes of a given variable, specified by its ID,
+ * 'varid'.
+ */
 int cdl_hdr_inq_nattrs(int  hid,
                        int  varid,
                        int *nattrs)
@@ -717,6 +816,14 @@ int cdl_hdr_inq_nattrs(int  hid,
     return NC_NOERR;
 }
 
+/*----< cdl_hdr_inq_attr() >-------------------------------------------------*/
+/* Returns the metadata of an attribute of a given attribute ID, specified by
+ * it ID 'attrid' of a given variable, specified by its ID, 'varid'. The
+ * returned metadata includes the attribute's name, external netCDF data type,
+ * number of elements, and a pointer to its contents in the external format,
+ * i.e. in Big-Endian. Note users should not alter the contents pointed by
+ * arguments 'name' and 'value'.
+ */
 int cdl_hdr_inq_attr(int          hid,
                      int          varid,
                      int          attrid,
@@ -757,6 +864,10 @@ int cdl_hdr_inq_attr(int          hid,
     return NC_NOERR;
 }
 
+/*----< cdl_hdr_inq_nvars() >------------------------------------------------*/
+/* Returns the number of variables defined in the CDL file, specified by its
+ * header ID, 'hid'.
+ */
 int cdl_hdr_inq_nvars(int  hid,
                       int *nvars)
 {
@@ -775,6 +886,13 @@ int cdl_hdr_inq_nvars(int  hid,
     return NC_NOERR;
 }
 
+/*----< cdl_hdr_inq_var() >--------------------------------------------------*/
+/* Returns the metadata of a variable, specified by its ID, 'varid'. The
+ * returned metadata includes the variable's name, external netCDF data type,
+ * number of dimensions, and a pointer to an arrays storing all the dimension
+ * IDs.  Note users should not alter the contents pointed by arguments 'name'
+ * and 'dimids'.
+ */
 int cdl_hdr_inq_var(int       hid,
                     int       varid,
                     char    **name,
@@ -802,126 +920,89 @@ int cdl_hdr_inq_var(int       hid,
     return NC_NOERR;
 }
 
+
 #ifdef TEST_RUN
-#define ERR { \
-    if (err != NC_NOERR) { \
-        printf("Error at %s:%d : %s\n", __FILE__,__LINE__, \
-               ncmpi_strerrno(err)); \
-        err = 1; \
-        goto err_out; \
-    } \
-}
-
-
 int main(int argc, char **argv)
 {
-    int i, j, err=0, hid;
-
-    MPI_Init(&argc, &argv);
+    char *name;
+    int i, j, err=0, hid, format, ndims, *dimids, nvars, nattrs;
+    void *value;
+    nc_type xtype;
+    MPI_Offset size, nelems;
 
     if (argc != 2) {
         printf("Usage: %s <CDL file>\n",argv[0]);
         exit(1);
     }
 
-    debug=1;
-
+    /* open the input file in CDL format */
     err = cdl_hdr_open(argv[1], &hid);
     if (err != NC_NOERR) exit(1);
+    printf("Input CDF file : %s\n", argv[1]);
 
-    if (debug) printf("==================================================\n");
-
-    /* create a new netcdf file */
-    int ncid, cmode, format;
-
+    /* retrieve the input file in CDL format */
     err = cdl_hdr_inq_format(hid, &format); ERR
+    printf("CDF file format: CDF-%d\n", format);
 
-    if (debug) printf("CDF file format: CDF-%d\n", format);
-
-    cmode = NC_CLOBBER;
-    if (format == 2) cmode |= NC_64BIT_OFFSET;
-    else if (format == 5) cmode |= NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, "testfile.nc", cmode, MPI_INFO_NULL, &ncid);
-    ERR
-
-    char *name;
-    int ndims, *dimids, nvars, nattrs;
-    void *value;
-    nc_type xtype;
-    MPI_Offset size, nelems;
-
-    /* define dimensions */
+    /* retrieve the number of dimensions defined in the CDL file */
     err = cdl_hdr_inq_ndims(hid, &ndims); ERR
-    if (debug) printf("dim: ndims %d\n", ndims);
+    printf("Number of dimensions: %d\n", ndims);
 
+    /* retrieve metadata of each dimension defined in the CDL file */
     for (i=0; i<ndims; i++) {
-        int dimid;
-
         err = cdl_hdr_inq_dim(hid, i, &name, &size); ERR
-        if (debug) ("\t name %s size %lld\n",name, size);
-
-        err = ncmpi_def_dim(ncid, name, size, &dimid); ERR
+        printf("\t name %s size %lld\n",name, size);
     }
 
-    /* define variables */
+    /* retrieve number of variables defined in the CDL file */
     err = cdl_hdr_inq_nvars(hid, &nvars); ERR
-    if (debug) printf("var: nvars %d\n", nvars);
+    printf("Number of variables: %d\n", nvars);
 
+    /* retrieve metadata of each variable defined in the CDL file */
     for (i=0; i<nvars; i++) {
-        int varid;
-
         err = cdl_hdr_inq_var(hid, i, &name, &xtype, &ndims, &dimids); ERR
 
-        err = ncmpi_def_var(ncid, name, xtype, ndims, dimids, &varid); ERR
-
-        /* define local attributes */
+        /* retrieve variable i's attributes */
         err = cdl_hdr_inq_nattrs(hid, i, &nattrs); ERR
 
-        if (debug) {
-            printf("\t name %s type %d ndims %d nattr %d\n",
-                          name, xtype, ndims, nattrs);
-            for (j=0; j<ndims; j++)
-                printf("\t\tdimid %d\n",dimids[j]);
-        }
+        printf("\t name %s type %d ndims %d nattr %d\n",
+               name, xtype, ndims, nattrs);
+        for (j=0; j<ndims; j++)
+             printf("\t\tdimid %d\n",dimids[j]);
 
         for (j=0; j<nattrs; j++) {
-            err = cdl_hdr_inq_attr(hid, i, j, &name, &xtype, &nelems, &value); ERR
-            if (debug) {
-                if (xtype == NC_CHAR)
-                    printf("\t\tattr %s type %d nelems %lld (%s)\n",
-                            name, xtype,nelems,(char*)value);
-                else
-                    printf("\t\tattr %s type %d nelems %lld\n",
-                           name, xtype, nelems);
-            }
-
-            err = ncmpi_put_att(ncid, varid, name, xtype, nelems, value); ERR
+            err = cdl_hdr_inq_attr(hid, i, j, &name, &xtype, &nelems, &value);
+            ERR
+            if (xtype == NC_CHAR)
+                printf("\t\tattr %s type %d nelems %lld (%s)\n",
+                       name, xtype,nelems,(char*)value);
+            else
+                printf("\t\tattr %s type %d nelems %lld\n",
+                       name, xtype, nelems);
         }
     }
 
-    /* define global attributes */
+    /* retrieve metadata of global attributes */
     err = cdl_hdr_inq_nattrs(hid, NC_GLOBAL, &nattrs); ERR
-    if (debug) printf("global attrs: nattrs %d\n", nattrs);
+#ifdef TEST_RUN
+    printf("global attrs: nattrs %d\n", nattrs);
+#endif
 
     for (i=0; i<nattrs; i++) {
         err = cdl_hdr_inq_attr(hid, NC_GLOBAL, i, &name, &xtype, &nelems, &value);
-        if (debug) {
-            if (xtype == NC_CHAR)
-                printf("\t name %s type %d nelems %lld (%s)\n",
-                        name, xtype, nelems,(char*)value);
-            else
-                printf("\t name %s type %d nelems %lld\n",
-                        name, xtype, nelems);
-        }
-
-        err = ncmpi_put_att(ncid, NC_GLOBAL, name, xtype, nelems, value); ERR
+        ERR
+        if (xtype == NC_CHAR)
+            printf("\t name %s type %d nelems %lld (%s)\n",
+                    name, xtype, nelems,(char*)value);
+        else
+            printf("\t name %s type %d nelems %lld\n",
+                    name, xtype, nelems);
     }
-    err = ncmpi_close(ncid); ERR
 
 err_out:
+    /* close CDL file */
     err = cdl_hdr_close(hid); ERR
 
-    MPI_Finalize();
     return err;
 }
 #endif
