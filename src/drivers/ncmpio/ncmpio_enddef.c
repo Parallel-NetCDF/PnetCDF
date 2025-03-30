@@ -36,7 +36,6 @@
  */
 #define MOVE_UNIT 16777216
 
-#define USE_POSIX_IO_TO_MOVE
 #ifdef USE_POSIX_IO_TO_MOVE
 /*----< move_file_block() >-------------------------------------------------*/
 /* Call POSIX I/O subroutines to move data */
