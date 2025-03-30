@@ -1277,6 +1277,16 @@ int main(int argc, char *argv[]) {
     if (argv[optind] == NULL) strcpy(filename, OUTPUT_NAME);
     else                      snprintf(filename, 256, "%s", argv[optind]);
 
+    if (verbose && rank == 0) {
+        printf("-------------------------------------------------------------------\n");
+        printf("Output NetCDF file name:                %s\n", "testfile.nc");
+        printf("Number of MPI processes:                %d\n", nproc);
+        printf("Total number of variables:              %d\n", num_vars);
+        printf("Number of dimensions per variable:      %d\n", num_dims_per_var);
+        printf("Number of attributes per variable:      %d\n", num_attrs_per_var);
+        printf("Hash table size for var and dim:        %d\n", hash_size);
+    }
+
     generate_metadata(rank, nproc, &local_hdr, num_vars, num_dims_per_var, num_attrs_per_var, dim_size, attr_size);
     
     MPI_Barrier(MPI_COMM_WORLD);
@@ -1331,10 +1341,7 @@ int main(int argc, char *argv[]) {
     snprintf(hash_size_str, sizeof(hash_size_str), "%d", hash_size);
     MPI_Info_set(info, "nc_hash_size_dim", hash_size_str);
     MPI_Info_set(info, "nc_hash_size_var", hash_size_str);
-    if (rank == 0 && verbose){ 
-        printf("Hash table size for dim: %d\n", hash_size);
-        printf("Hash table size for var: %d\n", hash_size);
-    }
+
     if (mem_track){
         app_check_crt_mem(MPI_COMM_WORLD, 0);
     }
@@ -1383,6 +1390,11 @@ int main(int argc, char *argv[]) {
     app_check_crt_mem(MPI_COMM_WORLD, 4);
     pnetcdf_check_crt_mem(MPI_COMM_WORLD, 4);
     }
+    MPI_Offset header_size;
+    MPI_Offset header_extent;
+    err = ncmpi_inq_header_size(ncid, &header_size); ERR
+    err = ncmpi_inq_header_extent(ncid, &header_extent); ERR
+    
     err = ncmpi_close(ncid); ERR
     end_time = MPI_Wtime();
     close_time = end_time - end_time3;
@@ -1391,17 +1403,24 @@ int main(int argc, char *argv[]) {
 
 
     double times[6] = {end_to_end_time, mpi_time, io_time, enddef_time, total_def_time, close_time};
-    char *names[6] = {"end-end", "mpi-phase", "write", "enddef", "def_dim/var", "close"};
+    char *names[6] = {"end to end    ", "metadata synchronization", "write  ", "enddef  ", "data object create", "file close   "};
     double max_times[6], min_times[6];
 
 
     MPI_Reduce(&times[0], &max_times[0], 6, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
     MPI_Reduce(&times[0], &min_times[0], 6, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
-    for (int i = 0; i < 6; i++) {
-        if (rank == 0 && verbose) {
-            printf("Min %s time: %f seconds\n", names[i], min_times[i]);
-            printf("Max %s time: %f seconds\n", names[i], max_times[i]);
+    if (rank == 0 && verbose) {
+        printf("Output NetCDF file header size:         %lld B\n", header_size);
+        printf("Output NetCDF file header extent:       %lld B\n", header_extent);
+        printf("-------------------------------------------------------------------\n");
+        double mib = total_recv_size / (1024.0);
+        double gib = total_recv_size / (1024.0 * 1024.0);
+        printf("Total metadata amount        = %10d B = %10.2f MiB = %8.2f GiB\n", total_recv_size, mib, gib);
+        for (int i = 0; i < 6; i++) {
+            // printf("Min %s time: %f seconds\n", names[i], min_times[i]);
+            printf("Max %-25s time =     %.4f sec\n", names[i], max_times[i]);
         }
+        printf("-------------------------------------------------------------------\n");
     }
     if (mem_track){
     app_check_crt_mem(MPI_COMM_WORLD, 5);
