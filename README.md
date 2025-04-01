@@ -34,9 +34,9 @@ Northwestern University and Argonne National Laboratory.
 * Required software
   + MPI compilers, e.g. [MPICH](https://www.mpich.org) and
     [OpenMPI](https://www.open-mpi.org)
-  + [autoconfig](https://www.gnu.org/software/autoconf) version 2.70
+  + [autoconfig](https://www.gnu.org/software/autoconf) version 2.71
   + [automake](https://www.gnu.org/software/automake) version 1.16.5
-  + [libtool](https://www.gnu.org/software/libtool) version 2.4.6
+  + [libtool](https://www.gnu.org/software/libtool) version 2.5.4
   + [m4](https://www.gnu.org/software/m4) version 1.4.17
 * Clone, build, and installation commands:
   ```console
