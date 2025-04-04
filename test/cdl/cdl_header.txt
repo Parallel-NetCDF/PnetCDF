@@ -1,0 +1,56 @@
+netcdf testfile {
+
+// file format: CDF-5 (big variables)
+//
+
+//
+
+dimensions:
+
+//
+
+	Y = 4 ;
+    time = UNLIMITED ; // (1 currently)
+
+	X = 10 ;
+//
+	chars = 101 ;
+
+variables:
+	int var_int(Y, X) ;
+        var_int:FieldType = 104 ;
+        var_int:MemoryOrder = "XY " ;
+
+
+    float scalar_var ;
+        scalar_var:units = "K" ;
+
+    double time(time) ;
+        time:long_name = "time" ;
+        time:units = "days since 0001-01-01 00:00:00" ;
+        time:calendar = "noleap" ;
+        time:bounds = "time_bnds" ;
+
+    char date_written(time, chars) ;
+
+//
+
+// global attributes:
+
+//
+
+        :TITLE = " OUTPUT FROM A CLIMATE MODEL Va.b.c " ;
+        :EMPTY_STR = "" ;
+//
+
+        :SOME_INT = 0 ;
+//
+
+        :SOME_FLOAT = 1.f, 2.f ;
+
+//
+data:
+
+ scalar_var = 0 ;
+
+}

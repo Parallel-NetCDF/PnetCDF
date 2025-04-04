@@ -80,12 +80,18 @@ TEST_PROGS += $(testcases_src:../testcases/%.c=%)
 %.o: ../testcases/%.c
 	$(CC) $(CFLAGS) -c $<
 
+cdl_src = ../cdl/tst_cdl_hdr_parser.c
+TEST_PROGS += $(cdl_src:../cdl/%.c=%)
+%.o: ../cdl/%.c
+	$(CC) $(CFLAGS) -c $<
+
 EXAMPLE_PROGS =
 examples_C_src = ../../examples/C/block_cyclic.c \
                  ../../examples/C/bput_varn_int64.c \
                  ../../examples/C/bput_varn_uint.c \
                  ../../examples/C/collective_write.c \
                  ../../examples/C/column_wise.c \
+                 ../../examples/C/create_from_cdl.c \
                  ../../examples/C/create_open.c \
                  ../../examples/C/fill_mode.c \
                  ../../examples/C/flexible_api.c \

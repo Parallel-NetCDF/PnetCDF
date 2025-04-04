@@ -4550,10 +4550,38 @@ ncmpi_mget_varm_ulonglong_all(int ncid, int num, int *varids,
 
 /* End {mput,mget}_var */
 
-/* End: more prototypes to be included for Fortran binding conversion */
-/* ################################################################## */
+/* Prototypes for CDF file header parser APIs */
+extern int
+cdl_hdr_open(const char *filename, int *hid);
+
+extern int
+cdl_hdr_close(int hid);
+
+extern int
+cdl_hdr_inq_format(int hid, int *format);
+
+extern int
+cdl_hdr_inq_ndims(int hid, int *ndims);
+
+extern int
+cdl_hdr_inq_dim(int hid, int dimid, char **name, MPI_Offset *size);
+
+extern int
+cdl_hdr_inq_nvars(int hid, int *nvars);
+
+extern int
+cdl_hdr_inq_var(int hid, int varid, char **name, nc_type *xtype, int *ndims,
+                int **dimids);
+
+extern int
+cdl_hdr_inq_nattrs(int hid, int varid, int *nattrs);
+
+extern int
+cdl_hdr_inq_attr(int hid, int varid, int attrid, char **name, nc_type *xtype,
+                 MPI_Offset *nelems, void **value);
 
 /* End Prototypes */
+/* ################################################################## */
 
 
 /* Macros below are defined in serial netcdf (3.5.0) for backwards
@@ -4582,3 +4610,4 @@ ncmpi_mget_varm_ulonglong_all(int ncid, int num, int *varids,
 }
 #endif
 #endif
+

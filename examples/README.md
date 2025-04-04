@@ -338,16 +338,21 @@ with C, C++, F77, and F90 versions.
   + These examples show how to define, write, and read record variables.
 
 * ./adios/read_var.c
-  + This examples shows how to read variables from a BP file using PnetCDF
+  + This example shows how to read variables from a BP file using PnetCDF
     blocking APIs
 
 * ./adios/read_var_nb.c
-  + This examples shows how to read variable from a BP file using PnetCDF
+  + This example shows how to read variable from a BP file using PnetCDF
     non-blocking APIs
 
 * ./adios/read_metadata.c
-  + This examples shows how to enumerate all variables, dimensions, and
+  + This example shows how to enumerate all variables, dimensions, and
     attributes from a BP file
+
+* ./C/create_from_cdl.c
+  + This example shows how to call the CDL header file parser APIs. It reads
+    a text file in the CDL format and creates a new netCDF file with the same
+    metadata from the CDL file.
 
 Copyright (C) 2012, Northwestern University and Argonne National Laboratory.
 See COPYRIGHT notice in top-level directory.

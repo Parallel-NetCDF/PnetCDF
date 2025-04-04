@@ -18,12 +18,16 @@ run_BURST_BUFFER=ENABLE_BURST_BUFFER
 run_NETCDF4=ENABLE_NETCDF4
 
 for i in check_PROGRAMS ; do
+    CMD_OPTS="-q ${OUTDIR}/$i.nc"
     if test $i = get_vara ; then
        # get_vara reads the file 'put_vara.nc' created by put_vara
-       ${MPIRUN} ./$i -q ${OUTDIR}/put_vara.nc
-    else
-       ${MPIRUN} ./$i -q ${OUTDIR}/$i.nc
+       CMD_OPTS="-q ${OUTDIR}/put_vara.nc"
+    elif test $i = create_from_cdl ; then
+       # create_from_cdl reads a CDL header file
+       CMD_OPTS="-q -o ${OUTDIR}/$i.nc ./cdl_header.txt"
     fi
+    ${MPIRUN} ./$i ${CMD_OPTS}
+
     if test $? = 0 ; then
        echo "PASS:  C  parallel run on ${NPROCS} processes --------------- $i"
     fi
@@ -31,11 +35,15 @@ for i in check_PROGRAMS ; do
     if test "x${run_BURST_BUFFER}" = x1 ; then
        # echo "test burst buffering feature"
        export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${OUTDIR};nc_burst_buf_overwrite=enable"
+       CMD_OPTS="-q ${OUTDIR}/$i.bb.nc"
        if test $i = get_vara ; then
-          ${MPIRUN} ./$i -q ${OUTDIR}/put_vara.bb.nc
-       else
-          ${MPIRUN} ./$i -q ${OUTDIR}/$i.bb.nc
+          # get_vara reads the file 'put_vara.nc' created by put_vara
+          CMD_OPTS="-q ${OUTDIR}/put_vara.bb.nc"
+       elif test $i = create_from_cdl ; then
+          # create_from_cdl reads a CDL header file
+          CMD_OPTS="-q -o ${OUTDIR}/$i.bb.nc ./cdl_header.txt"
        fi
+       ${MPIRUN} ./$i ${CMD_OPTS}
        if test $? = 0 ; then
           echo "PASS:  C  parallel run on ${NPROCS} processes --------------- $i"
        fi
@@ -44,7 +52,9 @@ for i in check_PROGRAMS ; do
 
     if test "x${run_NETCDF4}" = x1 ; then
        # echo "test netCDF-4 feature"
-       ${MPIRUN} ./$i ${OUTDIR}/$i.nc4 4
+       if test $i != create_from_cdl ; then
+          ${MPIRUN} ./$i ${OUTDIR}/$i.nc4 4
+       fi
     fi
 
     # delete output file
