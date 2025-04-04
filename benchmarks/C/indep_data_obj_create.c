@@ -22,6 +22,91 @@
 #include <assert.h>
 
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * This program creates a large number of data objects and writes substantial metadata
+ * to an output file. Each MPI process is responsible for creating a distinct, non-overlapping
+ * subset of data objects, including variables, dimensions and variable attributes. All processes 
+ * participate in MPI communication to synchronize metadata definitions, ensuring that each process
+ * holds a consistent copy of metadata required to collectively define variables, dimensions, and 
+ * attributes. The metadata is stored in the header of the output file, and the data objects created by
+ * each process are independent (i.e., not shared across processes).
+ *
+ * The compile and run commands are given below, together with an ncmpidump (header only) of
+ * the output file.
+ *
+ *    % mpicc -O2 -o indep_data_obj_create indep_data_obj_create.c -lpnetcdf
+ *
+ *    % mpiexec -n 4 ./indep_data_obj_create -n 20 ./testfile.nc
+ *
+ *    % ncmpidump -h ./testfile.nc
+ *    netcdf testfile {
+ *      // file format: CDF-5 (big variables)
+ *    dimensions:
+ *           process_0_var_0_dim_0 = 10 ;
+ *           process_0_var_0_dim_1 = 10 ;
+ *           process_0_var_1_dim_0 = 10 ;
+ *           process_0_var_1_dim_1 = 10 ;
+ *           process_0_var_2_dim_0 = 10 ;
+ *           process_0_var_2_dim_1 = 10 ;
+ *           process_0_var_3_dim_0 = 10 ;
+ *           process_0_var_3_dim_1 = 10 ;
+ *           process_0_var_4_dim_0 = 10 ;
+ *           process_0_var_4_dim_1 = 10 ;
+ *           process_1_var_5_dim_0 = 10 ;
+ *           process_1_var_5_dim_1 = 10 ;
+ *           process_1_var_6_dim_0 = 10 ;
+ *           process_1_var_6_dim_1 = 10 ;
+ *           process_1_var_7_dim_0 = 10 ;
+ *           process_1_var_7_dim_1 = 10 ;
+ *           process_1_var_8_dim_0 = 10 ;
+ *           process_1_var_8_dim_1 = 10 ;
+ *           process_1_var_9_dim_0 = 10 ;
+ *           process_1_var_9_dim_1 = 10 ;
+ *           process_2_var_10_dim_0 = 10 ;
+ *           process_2_var_10_dim_1 = 10 ;
+ *           process_2_var_11_dim_0 = 10 ;
+ *           process_2_var_11_dim_1 = 10 ;
+ *           process_2_var_12_dim_0 = 10 ;
+ *           process_2_var_12_dim_1 = 10 ;
+ *           process_2_var_13_dim_0 = 10 ;
+ *           process_2_var_13_dim_1 = 10 ;
+ *           process_2_var_14_dim_0 = 10 ;
+ *           process_2_var_14_dim_1 = 10 ;
+ *           process_3_var_15_dim_0 = 10 ;
+ *           process_3_var_15_dim_1 = 10 ;
+ *           process_3_var_16_dim_0 = 10 ;
+ *           process_3_var_16_dim_1 = 10 ;
+ *           process_3_var_17_dim_0 = 10 ;
+ *           process_3_var_17_dim_1 = 10 ;
+ *           process_3_var_18_dim_0 = 10 ;
+ *           process_3_var_18_dim_1 = 10 ;
+ *           process_3_var_19_dim_0 = 10 ;
+ *           process_3_var_19_dim_1 = 10 ;
+ *    variables:
+ *           int process_0_var_0(process_0_var_0_dim_0, process_0_var_0_dim_1) ;
+ *           int process_0_var_1(process_0_var_1_dim_0, process_0_var_1_dim_1) ;
+ *           int process_0_var_2(process_0_var_2_dim_0, process_0_var_2_dim_1) ;
+ *           int process_0_var_3(process_0_var_3_dim_0, process_0_var_3_dim_1) ;
+ *           int process_0_var_4(process_0_var_4_dim_0, process_0_var_4_dim_1) ;
+ *           int process_1_var_0(process_1_var_5_dim_0, process_1_var_5_dim_1) ;
+ *           int process_1_var_1(process_1_var_6_dim_0, process_1_var_6_dim_1) ;
+ *           int process_1_var_2(process_1_var_7_dim_0, process_1_var_7_dim_1) ;
+ *           int process_1_var_3(process_1_var_8_dim_0, process_1_var_8_dim_1) ;
+ *           int process_1_var_4(process_1_var_9_dim_0, process_1_var_9_dim_1) ;
+ *           int process_2_var_0(process_2_var_10_dim_0, process_2_var_10_dim_1) ;
+ *           int process_2_var_1(process_2_var_11_dim_0, process_2_var_11_dim_1) ;
+ *           int process_2_var_2(process_2_var_12_dim_0, process_2_var_12_dim_1) ;
+ *           int process_2_var_3(process_2_var_13_dim_0, process_2_var_13_dim_1) ;
+ *           int process_2_var_4(process_2_var_14_dim_0, process_2_var_14_dim_1) ;
+ *           int process_3_var_0(process_3_var_15_dim_0, process_3_var_15_dim_1) ;
+ *           int process_3_var_1(process_3_var_16_dim_0, process_3_var_16_dim_1) ;
+ *           int process_3_var_2(process_3_var_17_dim_0, process_3_var_17_dim_1) ;
+ *           int process_3_var_3(process_3_var_18_dim_0, process_3_var_18_dim_1) ;
+ *           int process_3_var_4(process_3_var_19_dim_0, process_3_var_19_dim_1) ;
+ *    }
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 
 static int verbose;
 
