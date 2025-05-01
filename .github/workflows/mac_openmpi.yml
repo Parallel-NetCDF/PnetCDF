@@ -156,11 +156,11 @@ jobs:
             echo "---- test make install prefix=${prefix_path}"
             make install prefix=${prefix_path}
             test/tst_install.sh ${prefix_path}
-            prefix_path=pnetcdf_install
-            destdir_path=${GITHUB_WORKSPACE}/inst/
+            prefix_path="/pnetcdf_install"
+            destdir_path=${GITHUB_WORKSPACE}/inst
             echo "---- test make install prefix=${prefix_path} DESTDIR=${destdir_path}"
             make install prefix=${prefix_path} DESTDIR=${destdir_path}
-            test/tst_install.sh ${destdir_path}${prefix_path}
+            test/tst_install.sh ${prefix_path} ${destdir_path}
         - name: Cleanup
           if: ${{ always() }}
           run: |

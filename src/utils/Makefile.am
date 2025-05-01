@@ -36,6 +36,6 @@ dist-hook:
 # GNU autoconf allows DESTDIR variable when running 'make install' which will
 # prepend it before all installation names.
 install-exec-hook:
-	$(SED_I) -e 's|INSTALL_PREFIX|$(DESTDIR)$(prefix)|g ; s|INSTALL_EXEC_PREFIX|$(DESTDIR)$(exec_prefix)|g' $(DESTDIR)$(bindir)/pnetcdf-config
+	$(SED_I) -e 's|INSTALL_PREFIX|$(prefix)|g ; s|INSTALL_EXEC_PREFIX|$(exec_prefix)|g' $(DESTDIR)$(bindir)/pnetcdf-config
 	chmod +x $(DESTDIR)$(bindir)/pnetcdf-config
 
