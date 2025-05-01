@@ -7,24 +7,35 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-# This requires one command-line option, the installation path
+# echo all commands (used for debugging)
+# set -x
+
+# This shell script requires one or two command-line options: prefx_path and
+# optinal destdir_path
 if [ "x$1" = x ] ; then
-   echo "Usage: $0 /pnetcdf/install/path"
+   echo "Usage: $0 prefx_path [destdir_path]"
    exit 1
 fi
 
-installation_path=$1
+# Note command "make install prefix=/path/of/install DESTDIR=/path/to/dest"
+# does not install the library. It copies all install files into folder
+# "$DESTDIR/$prefix", so one can cd to $DESTDIR and pack the folder $prefix
+# there into a tar ball.
 
-# check if folder installation_path exists
-if [ ! -d $installation_path ]; then
-    echo "Error: folder $installation_path cannot be found"
-    exit 1
-fi
+prefx_path=$1
+destdir_path=$2
 
 # remove trailing '/' character
-# Note on Mac OSX, realpath does not support option -s
-# Ideally, -s should be used to avoid expanding a symlink
-installation_path=$(realpath $installation_path)
+prefx_path=$(echo "$prefx_path" | sed 's:/*$::')
+if [ "x$destdir_path" != x ] ; then
+   destdir_path=$(echo "$destdir_path" | sed 's:/*$::')
+fi
+
+installation_path=$destdir_path$prefx_path
+
+# echo "prefx_path=$prefx_path"
+# echo "destdir_path=$destdir_path"
+# echo "installation_path=$installation_path"
 
 # check if pnetcdf_version exists in the install folder
 if [ ! -x $installation_path/bin/pnetcdf_version ]; then
@@ -45,20 +56,20 @@ if [ ! -x $installation_path/bin/pnetcdf-config ]; then
 else
    # check if --prefix is correctly reflecting the install path
    prefixdir=`$installation_path/bin/pnetcdf-config --prefix`
-   if [ $prefixdir != $installation_path ] ; then
-       echo "Error: expecting '$installation_path' from 'pnetcdf-config --prefix' but got $prefixdir"
+   if [ $prefixdir != $prefx_path ] ; then
+       echo "Error: expecting '$prefx_path' from 'pnetcdf-config --prefix' but got $prefixdir"
        exit 1
    fi
    # check if --libdir is correctly reflecting the install path
    libdir=`$installation_path/bin/pnetcdf-config --libdir`
-   if [ $libdir != $installation_path/lib ] ; then
-       echo "Error: expecting '$installation_path/lib' from 'pnetcdf-config --libdir' but got $libdir"
+   if [ $libdir != $prefx_path/lib ] ; then
+       echo "Error: expecting '$prefx_path/lib' from 'pnetcdf-config --libdir' but got $libdir"
        exit 1
    fi
    # check if --includedir is correctly reflecting the install path
    incdir=`$installation_path/bin/pnetcdf-config --includedir`
-   if [ $incdir != $installation_path/include ] ; then
-       echo "Error: expecting '$installation_path/include' from 'pnetcdf-config --includedir' but got $incdir"
+   if [ $incdir != $prefx_path/include ] ; then
+       echo "Error: expecting '$prefx_path/include' from 'pnetcdf-config --includedir' but got $incdir"
        exit 1
    fi
 fi
