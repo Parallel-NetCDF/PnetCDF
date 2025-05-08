@@ -40,7 +40,8 @@ check_PROGRAMS = collective_write \
                  req_all \
                  vard_mvars \
                  time_var \
-                 create_from_cdl
+                 create_from_cdl \
+                 chunk_compress
 
 if INSTALL_EXAMPLES
    example_execbin_PROGRAMS = $(check_PROGRAMS)
