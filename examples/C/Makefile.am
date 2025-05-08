@@ -42,6 +42,10 @@ check_PROGRAMS = collective_write \
                  time_var \
                  create_from_cdl
 
+if ENABLE_COMPRESSION
+  check_PROGRAMS += chunk_compress
+endif
+
 if INSTALL_EXAMPLES
    example_execbin_PROGRAMS = $(check_PROGRAMS)
    example_execbindir = $(DESTDIR)$(exec_prefix)/pnetcdf_examples/C
