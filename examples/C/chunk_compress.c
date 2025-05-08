@@ -177,7 +177,7 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode)
     /* check the current record dimension size */
     MPI_Offset dim_len;
     err = ncmpi_inq_dimlen(ncid, 0, &dim_len); ERR
-    if (rank == 0)
+    if (verbose && rank == 0)
         printf("Time dimension length = %lld\n", dim_len);
 
     err = ncmpi_close(ncid); ERR

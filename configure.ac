@@ -2591,9 +2591,12 @@ fi
 AC_SUBST(ENABLE_SZ)
 AM_CONDITIONAL(ENABLE_SZ, [test x$enable_sz = xyes])
 
+has_compression=0
 if test "x${have_zlib}" = xyes || test "x$enable_sz" = "xyes" ; then
-   AC_DEFINE(ENABLE_COMPRESSION, [1], [Defined if compression is enabled])
+   has_compression=1
 fi
+AC_DEFINE(ENABLE_COMPRESSION, [$has_compression], [Defined if compression is enabled])
+AM_CONDITIONAL(ENABLE_COMPRESSION, [test x$has_compression = x1])
 
 if test "x$enable_sz" = "xyes" ; then
    SZ_INSTALL=""
