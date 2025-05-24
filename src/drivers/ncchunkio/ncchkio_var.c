@@ -58,7 +58,7 @@
 
 int ncchkio_def_var (
 	void *ncdp, const char *name, nc_type xtype, int ndims, const int *dimids, int *varidp) {
-	int i, err;
+	int i, err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 	NC_chk_var *varp;
 
@@ -130,7 +130,7 @@ int ncchkio_def_var (
 }
 
 int ncchkio_inq_varid (void *ncdp, const char *name, int *varid) {
-	int i, vid, err;
+	int i, vid, err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	NC_CHK_TIMER_START (NC_CHK_TIMER_TOTAL)
@@ -163,7 +163,7 @@ int ncchkio_inq_var (void *ncdp,
 					 MPI_Offset *offsetp,
 					 int *no_fillp,
 					 void *fill_valuep) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 	NC_chk_var *varp;
 
@@ -187,7 +187,7 @@ int ncchkio_inq_var (void *ncdp,
 }
 
 int ncchkio_rename_var (void *ncdp, int varid, const char *newname) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 	NC_chk_var *varp;
 
@@ -210,7 +210,7 @@ int ncchkio_get_var (void *ncdp,
 					 MPI_Offset bufcount,
 					 MPI_Datatype buftype,
 					 int reqMode) {
-	int err = NC_NOERR, status = NC_NOERR, ret;
+	int err=NC_NOERR, status = NC_NOERR, ret;
 	void *cbuf = (void *)buf;
 	void *xbuf = (void *)buf;
 	MPI_Offset nelem;
@@ -323,7 +323,7 @@ int ncchkio_put_var (void *ncdp,
 					 MPI_Offset bufcount,
 					 MPI_Datatype buftype,
 					 int reqMode) {
-	int err	   = NC_NOERR, ret;
+	int err=NC_NOERR, ret;
 	void *cbuf = (void *)buf;
 	void *xbuf = (void *)buf;
 	NC_chk_var *varp;
@@ -448,9 +448,7 @@ int ncchkio_iget_var (void *ncdp,
 					  MPI_Datatype buftype,
 					  int *reqid,
 					  int reqMode) {
-	int err;
-	void *cbuf = (void *)buf;
-	void *xbuf = (void *)buf;
+	int err=NC_NOERR;
 	NC_chk_var *varp;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
@@ -492,7 +490,7 @@ int ncchkio_iput_var (void *ncdp,
 					  MPI_Datatype buftype,
 					  int *reqid,
 					  int reqMode) {
-	int err	   = NC_NOERR;
+	int err=NC_NOERR;
 	void *cbuf = (void *)buf;
 	void *xbuf = (void *)buf;
 	NC_chk_var *varp;
@@ -579,7 +577,7 @@ err_out:;
 }
 
 int ncchkio_buffer_attach (void *ncdp, MPI_Offset bufsize) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	err = ncchkp->driver->buffer_attach (ncchkp->ncp, bufsize);
@@ -589,7 +587,7 @@ int ncchkio_buffer_attach (void *ncdp, MPI_Offset bufsize) {
 }
 
 int ncchkio_buffer_detach (void *ncdp) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	err = ncchkp->driver->buffer_detach (ncchkp->ncp);
@@ -609,7 +607,7 @@ int ncchkio_bput_var (void *ncdp,
 					  MPI_Datatype buftype,
 					  int *reqid,
 					  int reqMode) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i;
 	void *cbuf = (void *)buf;
 	void *xbuf;
@@ -704,7 +702,7 @@ int ncchkio_get_varn (void *ncdp,
 					  MPI_Offset bufcount,
 					  MPI_Datatype buftype,
 					  int reqMode) {
-	int err = NC_NOERR, ret;
+	int err=NC_NOERR, ret;
 	int i;
 	void *cbuf = (void *)buf;
 	void *xbuf = (void *)buf;
@@ -820,7 +818,7 @@ int ncchkio_put_varn (void *ncdp,
 					  MPI_Offset bufcount,
 					  MPI_Datatype buftype,
 					  int reqMode) {
-	int err	   = NC_NOERR, ret;
+	int err=NC_NOERR, ret;
 	void *cbuf = (void *)buf;
 	void *xbuf = (void *)buf;
 	NC_chk_var *varp;
@@ -914,9 +912,7 @@ int ncchkio_iget_varn (void *ncdp,
 					   MPI_Datatype buftype,
 					   int *reqid,
 					   int reqMode) {
-	int err;
-	void *cbuf = (void *)buf;
-	void *xbuf = (void *)buf;
+	int err=NC_NOERR;
 	NC_chk_var *varp;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
@@ -937,7 +933,6 @@ int ncchkio_iget_varn (void *ncdp,
 		return NC_NOERR;
 	}
 
-	xbuf = cbuf;
 	err	 = ncchkioi_iget_varn (ncchkp, varid, num, starts, counts, buf, bufcount, buftype, reqid);
 	if (err != NC_NOERR) return err;
 	if (reqid != NULL) { (*reqid) *= 2; }
@@ -959,7 +954,7 @@ int ncchkio_iput_varn (void *ncdp,
 					   MPI_Datatype buftype,
 					   int *reqid,
 					   int reqMode) {
-	int err;
+	int err=NC_NOERR;
 	int i;
 	void *cbuf = (void *)buf;
 	void *xbuf = (void *)buf;
@@ -1032,7 +1027,7 @@ int ncchkio_bput_varn (void *ncdp,
 					   MPI_Datatype buftype,
 					   int *reqid,
 					   int reqMode) {
-	int err;
+	int err=NC_NOERR;
 	int i, j;
 	void *cbuf = (void *)buf;
 	void *xbuf = (void *)buf;
@@ -1100,7 +1095,7 @@ int ncchkio_get_vard (void *ncdp,
 					  MPI_Offset bufcount,
 					  MPI_Datatype buftype,
 					  int reqMode) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	DEBUG_RETURN_ERROR (NC_ENOTSUPPORT);
@@ -1118,7 +1113,7 @@ int ncchkio_put_vard (void *ncdp,
 					  MPI_Offset bufcount,
 					  MPI_Datatype buftype,
 					  int reqMode) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	DEBUG_RETURN_ERROR (NC_ENOTSUPPORT);

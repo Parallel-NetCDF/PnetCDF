@@ -39,7 +39,7 @@ int ncchk_zlib_inq_cpsize(void *in, int in_len, int *out_len, int ndim, int *dim
  * If out_len is NULL, we assume out is large enough for compressed data
  */
 int ncchk_zlib_compress(void *in, int in_len, void *out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
-    int err;
+    int err=NC_NOERR;
 
     // zlib struct
     z_stream defstream;
@@ -91,7 +91,7 @@ int ncchk_zlib_compress(void *in, int in_len, void *out, int *out_len, int ndim,
  * If out_len is not NULL, it will be set to buffer size allocated
  */
 int ncchk_zlib_compress_alloc(void *in, int in_len, void **out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
-    int err;
+    int err=NC_NOERR;
     int bsize; // Start by 1/8 of the in_len
     char *buf;
 
@@ -129,7 +129,7 @@ int ncchk_zlib_compress_alloc(void *in, int in_len, void **out, int *out_len, in
             buf = (char*)realloc(buf, bsize << 1); 
 
             // Reset buffer info in stream
-            defstream.next_out = buf + bsize;
+            defstream.next_out = (Bytef *)(buf + bsize);
             defstream.avail_out = bsize;
 
             // Reocrd new buffer size
@@ -166,7 +166,7 @@ int ncchk_zlib_inq_dcsize(void *in, int in_len, int *out_len, int ndim, int *dim
  * If out_len is NULL, we assume out is large enough for decompressed data
  */
 int ncchk_zlib_decompress(void *in, int in_len, void *out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
-    int err;
+    int err=NC_NOERR;
 
     // zlib struct
     z_stream infstream;
@@ -218,7 +218,7 @@ int ncchk_zlib_decompress(void *in, int in_len, void *out, int *out_len, int ndi
  * If out_len is not NULL, it will be set to buffer size allocated
  */
 int ncchk_zlib_decompress_alloc(void *in, int in_len, void **out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
-    int err;
+    int err=NC_NOERR;
     int bsize = in_len << 1; // Start by 2 times of the in_len
     char *buf;
 
@@ -252,7 +252,7 @@ int ncchk_zlib_decompress_alloc(void *in, int in_len, void **out, int *out_len, 
             buf = (char*)realloc(buf, bsize << 1); 
 
             // Reset buffer info in stream
-            infstream.next_out = buf + bsize;
+            infstream.next_out = (Bytef *)(buf + bsize);
             infstream.avail_out = bsize;
 
             // Reocrd new buffer size

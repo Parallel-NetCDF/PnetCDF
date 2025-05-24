@@ -36,11 +36,7 @@ static inline int ncchkioi_init_put_req (NC_chk *ncchkp,
 										 const MPI_Offset *stride,
 										 const void *xbuf,
 										 const void *buf) {
-	int err = NC_NOERR;
-	int i, j, k, l;
-	int *tsize, *tssize, *tstart;  // Size for sub-array type
-	int overlapsize, packoff;
-	MPI_Datatype ptype;	 // Pack datatype
+	int err=NC_NOERR;
 	NC_chk_var *varp = ncchkp->vars.data + varid;
 
 	// Zero out the request
@@ -78,7 +74,7 @@ int ncchkioi_iput_var (NC_chk *ncchkp,
 					   const void *xbuf,
 					   const void *buf,
 					   int *reqid) {
-	int err;
+	int err=NC_NOERR;
 	int req_id;
 	NC_chk_req req;
 
@@ -90,7 +86,7 @@ int ncchkioi_iput_var (NC_chk *ncchkp,
 
 	if (reqid != NULL) { *reqid = req_id * 2 + 1; }
 
-	return NC_NOERR;
+	return err;
 }
 
 static inline int ncchkioi_init_put_varn_req (NC_chk *ncchkp,
@@ -101,7 +97,7 @@ static inline int ncchkioi_init_put_varn_req (NC_chk *ncchkp,
 											  MPI_Offset *const *counts,
 											  const void *xbuf,
 											  const void *buf) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i, j;
 	MPI_Offset rsize, boff;
 	NC_chk_var *varp = ncchkp->vars.data + varid;
@@ -157,7 +153,7 @@ int ncchkioi_iput_varn (NC_chk *ncchkp,
 						const void *xbuf,
 						const void *buf,
 						int *reqid) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int req_id;
 	NC_chk_req req;
 

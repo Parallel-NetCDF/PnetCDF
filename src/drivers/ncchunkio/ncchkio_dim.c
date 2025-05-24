@@ -33,7 +33,7 @@ ncchkio_def_dim(void       *ncdp,
               MPI_Offset  size,
               int        *dimidp)
 {
-    int err;
+    int err=NC_NOERR;
     NC_chk *ncchkp = (NC_chk*)ncdp;
 
     err = ncchkp->driver->def_dim(ncchkp->ncp, name, size, dimidp);
@@ -51,7 +51,7 @@ ncchkio_inq_dimid(void       *ncdp,
                 const char *name,
                 int        *dimid)
 {
-    int err;
+    int err=NC_NOERR;
     NC_chk *ncchkp = (NC_chk*)ncdp;
 
     err = ncchkp->driver->inq_dimid(ncchkp->ncp, name, dimid);
@@ -66,7 +66,7 @@ ncchkio_inq_dim(void       *ncdp,
               char       *name,
               MPI_Offset *sizep)
 {
-    int err;
+    int err=NC_NOERR;
     NC_chk *ncchkp = (NC_chk*)ncdp;
 
     err = ncchkp->driver->inq_dim(ncchkp->ncp, dimid, name, sizep);
@@ -86,7 +86,7 @@ ncchkio_rename_dim(void       *ncdp,
                  int         dimid,
                  const char *newname)
 {
-    int err;
+    int err=NC_NOERR;
     NC_chk *ncchkp = (NC_chk*)ncdp;
 
     err = ncchkp->driver->rename_dim(ncchkp->ncp, dimid, newname);

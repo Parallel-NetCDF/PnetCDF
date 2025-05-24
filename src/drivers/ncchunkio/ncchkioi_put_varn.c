@@ -28,13 +28,6 @@
 
 #include "ncchkio_internal.h"
 
-int printbuf (int rank, char *buf, int len) {
-	int i;
-	printf ("Rank %d: ", rank);
-	for (i = 0; i < len; i++) { printf ("%02x ", buf[i]); }
-	printf ("\n");
-}
-
 int ncchkioi_put_varn_cb_chunk (NC_chk *ncchkp,
 								NC_chk_var *varp,
 								int nreq,
@@ -42,8 +35,8 @@ int ncchkioi_put_varn_cb_chunk (NC_chk *ncchkp,
 								MPI_Offset *const *counts,
 								MPI_Offset *const *strides,
 								void **bufs) {
-	int err = NC_NOERR;
-	int i, j, k;
+	int err=NC_NOERR;
+	int i, j;
 	int cid, req;  // Chunk and request iterator
 
 	int *tsize, *tssize, *tstart, *tsizep, *tstartp;  // Size for sub-array type
@@ -415,7 +408,7 @@ int ncchkioi_put_varn_cb_proc (NC_chk *ncchkp,
 							   MPI_Offset *const *starts,
 							   MPI_Offset *const *counts,
 							   void **bufs) {
-	int err;
+	int err=NC_NOERR;
 	int i, j, k;
 	int cid, cown;	// Chunk iterator and owner
 	int req;
@@ -431,7 +424,6 @@ int ncchkioi_put_varn_cb_proc (NC_chk *ncchkp,
 	int *rids;
 
 	int overlapsize;	  // Size of overlaping region of request and chunk
-	int max_tbuf = 0;	  // Size of intermediate buffer
 	char *tbuf	 = NULL;  // Intermediate buffer
 
 	int packoff;		 // Pack offset
@@ -764,7 +756,7 @@ int ncchkioi_put_varn (NC_chk *ncchkp,
 					   MPI_Offset *const *starts,
 					   MPI_Offset *const *counts,
 					   const void *buf) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i, j;
 	MPI_Offset rsize;
 	char *bptr = (char *)buf;

@@ -30,7 +30,7 @@
 #include "ncchkio_internal.h"
 
 int ncchkioi_save_var (NC_chk *ncchkp, NC_chk_var *varp) {
-	int i, j, k, l, err = NC_NOERR;
+	int i, k, l, err = NC_NOERR;
 	int *zsizes = NULL, *zsizes_all = NULL;
 	MPI_Datatype mtype, ftype;	// Memory and file datatype
 	int wcnt;
@@ -298,14 +298,13 @@ err_out:;
 }
 
 int ncchkioi_save_nvar (NC_chk *ncchkp, int nvar, int *varids) {
-	int i, j, k, l, err = NC_NOERR;
+	int i, k, l, err = NC_NOERR;
 	int vid;  // Iterator for variable id
 	int cid;  // Iterator for chunk id
 	int total_nchunks = 0;
 	int *zsizes = NULL, *zsizes_all = NULL, *zsizesp = NULL, *zsizes_allp = NULL;
-	int nreq;
 	MPI_Offset *zoffs = NULL, *zoffsp;
-	MPI_Offset start, count, oldzoff, voff;
+	MPI_Offset voff;
 	MPI_Datatype mtype, ftype;	// Memory and file datatype
 	int wcnt, ccnt, wcur, ccur;
 	int *lens		 = NULL;
@@ -319,7 +318,6 @@ int ncchkioi_save_nvar (NC_chk *ncchkp, int nvar, int *varids) {
 	char name[128];	 // Name of objects
 	NC_chk_var *varp;
 	NC *ncp = (NC *)(ncchkp->ncp);
-	NC_var *ncvarp;
 
 	NC_CHK_TIMER_START (NC_CHK_TIMER_PUT_IO)
 	NC_CHK_TIMER_START (NC_CHK_TIMER_PUT_IO_INIT)
@@ -371,7 +369,7 @@ int ncchkioi_save_nvar (NC_chk *ncchkp, int nvar, int *varids) {
 
 		NC_CHK_TIMER_START (NC_CHK_TIMER_PUT_IO_COM)
 
-		oldzoff = zoffs[varp->nchunk];
+		// oldzoff = zoffs[varp->nchunk];
 
 		memset (zsizesp, 0, sizeof (int) * varp->nchunk);
 

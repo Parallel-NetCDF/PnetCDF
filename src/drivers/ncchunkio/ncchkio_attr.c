@@ -37,7 +37,7 @@ ncchkio_inq_attname(void *ncdp,
                   int   attid,
                   char *name)
 {
-    int err;
+    int err=NC_NOERR;
     NC_chk *ncchkp = (NC_chk*)ncdp;
 
     err = ncchkp->driver->inq_attname(ncchkp->ncp, varid, attid, name);
@@ -52,7 +52,7 @@ ncchkio_inq_attid(void       *ncdp,
                 const char *name,
                 int        *attidp)
 {
-    int err;
+    int err=NC_NOERR;
     NC_chk *ncchkp = (NC_chk*)ncdp;
 
     err = ncchkp->driver->inq_attid(ncchkp->ncp, varid, name, attidp);
@@ -68,7 +68,7 @@ ncchkio_inq_att(void       *ncdp,
               nc_type    *datatypep,
               MPI_Offset *lenp)
 {
-    int err;
+    int err=NC_NOERR;
     NC_chk *ncchkp = (NC_chk*)ncdp;
 
     err = ncchkp->driver->inq_att(ncchkp->ncp, varid, name, datatypep, lenp);
@@ -83,7 +83,7 @@ ncchkio_rename_att(void       *ncdp,
                  const char *name,
                  const char *newname)
 {
-    int err;
+    int err=NC_NOERR;
     NC_chk *ncchkp = (NC_chk*)ncdp;
 
     err = ncchkp->driver->rename_att(ncchkp->ncp, varid, name, newname);
@@ -100,7 +100,7 @@ ncchkio_copy_att(void       *ncdp_in,
                void       *ncdp_out,
                int         varid_out)
 {
-    int err;
+    int err=NC_NOERR;
     NC_chk *foo_in  = (NC_chk*)ncdp_in;
     NC_chk *foo_out = (NC_chk*)ncdp_out;
 
@@ -116,7 +116,7 @@ ncchkio_del_att(void       *ncdp,
               int         varid,
               const char *name)
 {
-    int err;
+    int err=NC_NOERR;
     NC_chk *ncchkp = (NC_chk*)ncdp;
 
     err = ncchkp->driver->del_att(ncchkp->ncp, varid, name);
@@ -132,7 +132,7 @@ ncchkio_get_att(void         *ncdp,
               void         *buf,
               MPI_Datatype  itype)
 {
-    int err;
+    int err=NC_NOERR;
     NC_chk *ncchkp = (NC_chk*)ncdp;
 
     err = ncchkp->driver->get_att(ncchkp->ncp, varid, name, buf, itype);
@@ -150,7 +150,7 @@ ncchkio_put_att(void         *ncdp,
               const void   *buf,
               MPI_Datatype  itype)
 {
-    int err;
+    int err=NC_NOERR;
     NC_chk *ncchkp = (NC_chk*)ncdp;
 
     err = ncchkp->driver->put_att(ncchkp->ncp, varid, name, xtype, nelems, buf,

@@ -85,7 +85,6 @@ int ncchkioi_chunk_itr_init(NC_chk_var *varp, const MPI_Offset *start, const MPI
 
 int ncchkioi_chunk_itr_next(NC_chk_var *varp, const MPI_Offset *start, const MPI_Offset *count, MPI_Offset *citr, int *cid){
     int i, j;
-    int nchk = 1;
 
     i = varp->ndim - 1;
     citr[i] += varp->chunkdim[i];
@@ -125,7 +124,6 @@ int ncchkioi_chunk_itr_init_ex(NC_chk_var *varp, const MPI_Offset *start, const 
 
 int ncchkioi_chunk_itr_next_ex(NC_chk_var *varp, const MPI_Offset *start, const MPI_Offset *count, MPI_Offset *citr, int *cid, MPI_Offset *ostart, MPI_Offset *ocount){
     int i, j;
-    int nchk = 1;
 
     i = varp->ndim - 1;
     citr[i] += varp->chunkdim[i];

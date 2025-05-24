@@ -166,7 +166,7 @@ int ncchkioi_calc_chunk_overlap (NC_chk *ncchkp,
 								 MPI_Offset **starts,
 								 MPI_Offset **counts,
 								 ncchkioi_chunk_overlap_t *ocnt) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i, j, k;
 	int cid;  // Chunk iterator
 	int req;
@@ -291,7 +291,7 @@ int ncchkioi_sync_ocnt_reduce (NC_chk *ncchkp,
 							   ncchkioi_chunk_overlap_t *ocnt,
 							   ncchkioi_chunk_overlap_t *ocnt_all,
 							   MPI_Request *req) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i;
 
 	// Construct MPI type for overlap if not already constructed
@@ -330,7 +330,7 @@ int ncchkioi_sync_ocnt_gather (NC_chk *ncchkp,
 							   ncchkioi_chunk_overlap_t *ocnt,
 							   MPI_Offset **ocnt_all,
 							   MPI_Request *req) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 
 	// Construct MPI type for overlap if not already constructed
 	if (ncchkp->overlaptype == MPI_DATATYPE_NULL) {
@@ -366,7 +366,7 @@ int ncchkioi_sync_ocnt_gather_bcast (NC_chk *ncchkp,
 									 MPI_Offset **ocnt_in,
 									 ncchkioi_chunk_overlap_t *ocnt_all,
 									 MPI_Request *req) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i, j, k;
 	MPI_Offset *cown_size;
 
@@ -400,12 +400,7 @@ err_out:;
 
 int ncchkioi_calc_chunk_owner_reduce (
 	NC_chk *ncchkp, NC_chk_var *varp, int nreq, MPI_Offset **starts, MPI_Offset **counts) {
-	int err = NC_NOERR;
-	int i, j, k;
-	int cid;  // Chunk iterator
-	int req;
-	double noise, noise_step;
-	MPI_Offset overlapsize;
+	int err=NC_NOERR;
 	ncchkioi_chunk_overlap_t *ocnt, *ocnt_all;
 
 	NC_CHK_TIMER_START (NC_CHK_TIMER_VAR_INIT_COWN)
@@ -441,7 +436,7 @@ err_out:;
 
 static inline int ncchkioi_reduce_max_csize_n (
 	NC_chk *ncchkp, int nvar, NC_chk_var **varps, MPI_Offset **ocnts, int **cowns) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i, j, k, v;
 	int nchunk;
 	MPI_Offset **ocnts_all[2];
@@ -481,9 +476,14 @@ static inline int ncchkioi_reduce_max_csize_n (
 			ocnts_all[1][i] = ocnts_all[1][i - 1] + nchunk;
 		}
 
-		err = MPI_Igather (ocnt, varp->nchunkrec, MPI_LONG_LONG, ocnt_all, varp->nchunkrec,
-						   MPI_LONG_LONG, 0, ncchkp->comm, &req);
-		CHK_ERR
+        if (nvar > 0) {
+			varp	 = varps[0];
+			ocnt	 = ocnts[0];
+			ocnt_all = ocnts_all[0];
+		    err = MPI_Igather (ocnt, varp->nchunkrec, MPI_LONG_LONG, ocnt_all, varp->nchunkrec,
+						    MPI_LONG_LONG, 0, ncchkp->comm, &req);
+		    CHK_ERR
+        }
 
 		for (v = 0; v < nvar; v++) {
 			cown	 = cowns[v];
@@ -526,7 +526,7 @@ static inline int ncchkioi_reduce_max_csize_n (
 							  varps[v]->nchunkrec, MPI_LONG_LONG, 0, ncchkp->comm);
 			CHK_ERR
 			// Recv result
-			err = MPI_Ibcast (cowns[v], varp->nchunkrec, MPI_INT, 0, ncchkp->comm, bcast_reqs + v);
+			err = MPI_Ibcast (cowns[v], varps[v]->nchunkrec, MPI_INT, 0, ncchkp->comm, bcast_reqs + v);
 			CHK_ERR
 		}
 	}
@@ -547,13 +547,9 @@ err_out:;
 
 int ncchkioi_calc_chunk_owner_gather (
 	NC_chk *ncchkp, int nvar, NC_chk_var **varps, int nput, int *putreqs, int nget, int *getreqs) {
-	int err = NC_NOERR;
-	int i, j, k;
-	int cid;  // Chunk iterator
-	int req;
-	int max_ndim;
+	int err=NC_NOERR;
+	int i, j;
 	int nchunks;
-	MPI_Offset overlapsize;
 	MPI_Offset *ostart, *osize;
 	MPI_Offset *citr;  // Bounding box for chunks overlapping my own write region
 	MPI_Offset **ocnts;
@@ -618,8 +614,6 @@ int ncchkioi_calc_chunk_owner_gather (
 	NCI_Free (ocnts);
 	NCI_Free (cowns);
 	NCI_Free (idmap);
-
-err_out:;
 
 	NC_CHK_TIMER_STOP (NC_CHK_TIMER_VAR_INIT_COWN)
 

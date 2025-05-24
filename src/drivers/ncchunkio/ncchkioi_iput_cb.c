@@ -32,15 +32,13 @@
  * We pack all request as a large varn request
  */
 int ncchkioi_iput_cb_chunk (NC_chk *ncchkp, int nreq, int *reqids, int *stats) {
-	int err;
 	int i, j;
 	int vid;	 // Iterators for variable id
 	int *nreqs;	 // Number of reqids in each variable
 	int *nums;	 // Number of reqs in each varn
 	int **vreqids;
 	int num, maxnum = 0;
-	MPI_Offset **starts, **counts, **strides;
-	MPI_Offset rsize;
+	MPI_Offset **starts, **counts;
 	char **bufs;
 	NC_chk_req *req;
 
@@ -135,7 +133,7 @@ int ncchkioi_iput_cb_chunk (NC_chk *ncchkp, int nreq, int *reqids, int *stats) {
  * We pack all request as a large varn request
  */
 int ncchkioi_iput_cb_proc (NC_chk *ncchkp, int nreq, int *reqids, int *stats) {
-	int err;
+	int err=NC_NOERR;
 	int i, j, k;
 	int cid, cown;	// Chunk iterator and owner
 	int vid;

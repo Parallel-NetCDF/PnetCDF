@@ -32,7 +32,6 @@
  * We pack all request as a large varn request
  */
 int ncchkioi_iget_cb_chunk (NC_chk *ncchkp, int nreq, int *reqids, int *stats) {
-	int err;
 	int i, j;
 	int nvar;
 	int vid;  // Iterators for variable id
@@ -41,8 +40,7 @@ int ncchkioi_iget_cb_chunk (NC_chk *ncchkp, int nreq, int *reqids, int *stats) {
 	int *nums;	 // Number of reqs in each varn
 	int **vreqids;
 	int num, maxnum = 0;
-	MPI_Offset **starts, **counts, **strides;
-	MPI_Offset rsize;
+	MPI_Offset **starts, **counts;
 	char **bufs;
 	NC_chk_req *req;
 
@@ -152,7 +150,7 @@ int ncchkioi_iget_cb_chunk (NC_chk *ncchkp, int nreq, int *reqids, int *stats) {
 }
 
 int ncchkioi_iget_cb_proc (NC_chk *ncchkp, int nreq, int *reqids, int *stats) {
-	int err;
+	int err=NC_NOERR;
 	int i, j, k;
 	int cid, cown;	// Chunk iterator
 	int vid;
@@ -182,7 +180,6 @@ int ncchkioi_iget_cb_proc (NC_chk *ncchkp, int nreq, int *reqids, int *stats) {
 	MPI_Status *sstat, rstat, *sstat_re;						  // Send and recv status
 	char **sbuf, **sbufp, **rbuf, **rbufp, **sbuf_re, **rbuf_re;  // Send and recv buffer
 	int *rsize, *ssize, *rsize_re, *ssize_re;					  // recv size of each message
-	int *roff, *roff_re;										  // recv size of each message
 	int *sdst;													  // recv size of each message
 	int *smap;
 	MPI_Message rmsg;  // Receive message

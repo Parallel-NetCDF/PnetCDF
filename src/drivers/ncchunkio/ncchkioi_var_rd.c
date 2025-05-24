@@ -30,7 +30,7 @@
 #include "ncchkio_internal.h"
 
 int ncchkioi_load_var (NC_chk *ncchkp, NC_chk_var *varp, int nchunk, int *cids) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i;
 	int cid;
 	int get_size;
@@ -182,9 +182,9 @@ err_out:;
 }
 
 int ncchkioi_load_nvar (NC_chk *ncchkp, int nvar, int *varids, int *lo, int *hi) {
-	int err = NC_NOERR;
-	int i, j, k, l;
-	int cid, vid;
+	int err=NC_NOERR;
+	int i, j, k;
+	int cid;
 	int get_size;
 
 	int nchunk;
@@ -201,7 +201,6 @@ int ncchkioi_load_nvar (NC_chk *ncchkp, int nvar, int *varids, int *lo, int *hi)
 
 	NC *ncp = (NC *)(ncchkp->ncp);
 	NC_chk_var *varp;
-	NC_var *ncvarp;
 
 	NC_CHK_TIMER_START (NC_CHK_TIMER_GET_IO)
 	NC_CHK_TIMER_START (NC_CHK_TIMER_GET_IO_INIT)
@@ -394,7 +393,7 @@ err_out:;
 }
 
 int ncchkioi_load_var_bg (NC_chk *ncchkp, NC_chk_var *varp, int nchunk, int *cids) {
-	int err;
+	int err=NC_NOERR;
 	int i;
 	int cid;
 	int get_size;
@@ -546,9 +545,9 @@ err_out:;
 }
 
 int ncchkioi_load_nvar_bg (NC_chk *ncchkp, int nvar, int *varids, int *lo, int *hi) {
-	int err = NC_NOERR;
-	int i, j, k, l;
-	int cid, vid;
+	int err=NC_NOERR;
+	int i, j, k;
+	int cid;
 	int get_size;
 
 	int nchunk;
@@ -565,7 +564,6 @@ int ncchkioi_load_nvar_bg (NC_chk *ncchkp, int nvar, int *varids, int *lo, int *
 
 	NC *ncp = (NC *)(ncchkp->ncp);
 	NC_chk_var *varp;
-	NC_var *ncvarp;
 
 	NC_CHK_TIMER_START (NC_CHK_TIMER_PUT_BG)
 	NC_CHK_TIMER_START (NC_CHK_TIMER_PUT_BG_INIT)

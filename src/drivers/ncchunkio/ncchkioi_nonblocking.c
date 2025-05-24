@@ -151,7 +151,7 @@ int ncchkioi_req_list_free(NC_chk_req_list *lp)
  */
 int ncchkioi_req_list_add(NC_chk_req_list *lp, int *id)
 {
-    int err;
+    int err=NC_NOERR;
 
     /* Increase size if necessary */
     if (lp->nused == lp->nalloc) {

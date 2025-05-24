@@ -212,7 +212,7 @@ extern int ncchkioi_get_default_chunk_dim (NC_chk *);
 extern int ncchkioi_subarray_off_len (int, int *, int *, int *, MPI_Offset *, int *);
 extern void ncchkioi_idx_in_swapn (NC_chk_chunk_index_entry *, MPI_Offset);
 #ifdef PNETCDF_PROFILING
-extern int ncchkioi_print_profile (NC_chk *);
+extern void ncchkioi_print_profile (NC_chk *);
 extern void ncchkioi_profile_add_time (NC_chk *ncchkp, int id, double t);
 #endif
 

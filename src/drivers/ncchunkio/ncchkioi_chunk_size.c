@@ -45,7 +45,7 @@ int smaller (const void *a, const void *b) { return (*(MPI_Offset *)b - *(MPI_Of
 
 int ncchkioi_calc_chunk_size (
 	NC_chk *ncchkp, NC_chk_var *varp, int nreq, MPI_Offset **starts, MPI_Offset **counts) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int r, i, j;
 	int primes[] = {2,	3,	5,	7,	11, 13, 17, 19, 23, 29, 31, 37, 41,
 					43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97};
@@ -152,7 +152,7 @@ int ncchkioi_calc_chunk_size (
 			j		= i;
 			r		= (j - 1) / 2;
 			while (j > 0 && chunkdim[heap[j]] < chunkdim[heap[r]]) {
-				tmp - heap[j];
+				tmp = heap[j];
 				heap[j] = heap[r];
 				heap[r] = tmp;
 				j		= r;

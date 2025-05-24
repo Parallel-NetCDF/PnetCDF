@@ -46,7 +46,7 @@ err_out:;
 }
 
 int ncchkioi_cache_alloc (NC_chk *ncchkp, MPI_Offset size, NC_chk_cache **ref) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	NC_chk_cache *target;
 
 	// Evict cached data if no space

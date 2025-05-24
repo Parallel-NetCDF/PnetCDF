@@ -34,7 +34,7 @@ int ncchkioi_get_var_cb_chunk (NC_chk *ncchkp,
 							   const MPI_Offset *count,
 							   const MPI_Offset *stride,
 							   void *buf) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i, j, k;
 	int cid;  // Chunk iterator
 
@@ -449,7 +449,7 @@ int ncchkioi_get_var_cb_proc (NC_chk *ncchkp,
 							  const MPI_Offset *count,
 							  const MPI_Offset *stride,
 							  void *buf) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i, j, k;
 	int cid, cown;	// Chunk iterator
 
@@ -462,7 +462,6 @@ int ncchkioi_get_var_cb_proc (NC_chk *ncchkp,
 	int rrange_local[2], rrange_all[2];	 // Number of processes that writes to each chunk
 
 	int overlapsize;	  // Size of overlaping region of request and chunk
-	int max_tbuf = 0;	  // Size of intermediate buffer
 	char *tbuf	 = NULL;  // Intermediate buffer
 
 	int packoff;		 // Pack offset

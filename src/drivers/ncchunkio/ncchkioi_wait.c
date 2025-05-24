@@ -32,9 +32,8 @@
  * We pack all request as a large varn request
  */
 int ncchkioi_wait_put_reqs (NC_chk *ncchkp, int nreq, int *reqids, int *stats) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i;
-	unsigned int j;
 	int nvar, nflag;
 	unsigned int *flag, *flag_all;
 	int *vids;
@@ -99,9 +98,8 @@ err_out:;
  * We pack all request as a large varn request
  */
 int ncchkioi_wait_get_reqs (NC_chk *ncchkp, int nreq, int *reqids, int *stats) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i;
-	unsigned int j;
 	int nvar, nflag;
 	unsigned int *flag, *flag_all;
 	int *vids;
@@ -172,7 +170,7 @@ err_out:;
 }
 
 int ncchkioi_wait (NC_chk *ncchkp, int nreqs, int *reqids, int *stats, int reqMode) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i;
 	int nput = 0, nget = 0;
 	int *putreqs = NULL, *getreqs = NULL;

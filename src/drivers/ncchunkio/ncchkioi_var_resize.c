@@ -31,19 +31,15 @@
 
 int ncchkioi_var_resize (NC_chk *ncchkp, NC_chk_var *varp) {
 	int err=NC_NOERR;
-	int i, j;
+	int i;
 	int cid;
-	int valid;
-	MPI_Offset len;
-	NC_chk_var *var;
 
 	if (varp->varkind == NC_CHK_VAR_COMPRESSED && varp->isrec) {
 		if (varp->dimsize[0] < ncchkp->recsize) {
-			int oldnchunk, oldnrec;
-			int chunkperrec;
+			int oldnchunk;
 			int oldnmychunk;
 
-			oldnrec		= varp->nrec;
+			// oldnrec		= varp->nrec;
 			oldnchunk	= varp->nchunk;
 			oldnmychunk = varp->nmychunk;
 			varp->nrec = varp->dimsize[0] = varp->nchunks[0] = ncchkp->recsize;
@@ -128,14 +124,11 @@ err_out:;
 }
 
 int ncchkioi_resize_nvar (NC_chk *ncchkp, int nput, int *putreqs, int nget, int *getreqs) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i;
 	int nflag;
 	unsigned int *flag = NULL, *flag_all;
-	int nvar;
-	int *vids;
 	NC_chk_req *req;
-	NC_chk_var *varp;
 
 	CHK_ERR_ALLREDUCE (MPI_IN_PLACE, &(ncchkp->recsize), 1, MPI_LONG_LONG, MPI_MAX,
 					   ncchkp->comm);  // Sync number of recs
@@ -159,7 +152,6 @@ int ncchkioi_resize_nvar (NC_chk *ncchkp, int nput, int *putreqs, int nget, int 
 	CHK_ERR_ALLREDUCE (flag, flag_all, nflag, MPI_UNSIGNED, MPI_BOR, ncchkp->comm);
 
 	// Resize each var
-	nvar = 0;
 	for (i = 0; i < ncchkp->vars.cnt; i++) {
 		if (flag_all[i >> 5] & (1u << (i % 32))) {
 			flag_all[i >> 5] ^= (1u << (i % 32));

@@ -40,10 +40,6 @@ ncchkioi_init_get_req( NC_chk *ncchkp,
                         void              *buf,
                         MPI_Offset        bufcount,
                         MPI_Datatype      buftype) {
-    int err;
-    int *tsize, *tssize, *tstart;   // Size for sub-array type
-    int overlapsize, packoff;
-    MPI_Datatype ptype; // Pack datatype
     NC_chk_var *varp = ncchkp->vars.data + varid;
 
     // Zero out the request
@@ -104,7 +100,7 @@ ncchkioi_iget_var(NC_chk        *ncchkp,
               MPI_Datatype      buftype,
               int               *reqid)
 {
-    int err;
+    int err=NC_NOERR;
     int req_id;
     NC_chk_req req;
 
@@ -119,7 +115,7 @@ ncchkioi_iget_var(NC_chk        *ncchkp,
         *reqid = req_id * 2;
     }
 
-    return NC_NOERR;
+    return err;
 }
 
 static inline int
@@ -207,7 +203,7 @@ ncchkioi_iget_varn(NC_chk        *ncchkp,
               MPI_Datatype      buftype,
               int               *reqid)
 {
-    int err;
+    int err=NC_NOERR;
     int req_id;
     NC_chk_req req;
 
@@ -226,5 +222,5 @@ ncchkioi_iget_varn(NC_chk        *ncchkp,
         *reqid = req_id * 2;
     }
 
-    return NC_NOERR;
+    return err;
 }

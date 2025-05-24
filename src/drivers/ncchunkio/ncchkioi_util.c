@@ -155,7 +155,7 @@ int ncchkioi_extract_hint (NC_chk *ncchkp, MPI_Info info) {
 	ncchkp->cache_limit_hint = 0;
 	MPI_Info_get (info, "nc_chk_buffer_size", MPI_MAX_INFO_VAL - 1, value, &flag);
 	if (flag) {
-		sscanf (value, "%lld", &(ncchkp->cache_limit_hint));
+		sscanf (value, "%zd", &(ncchkp->cache_limit_hint));
 
 		if (ncchkp->cache_limit_hint > 0) { ncchkp->cache_limit = ncchkp->cache_limit_hint; }
 	}
@@ -208,7 +208,7 @@ int ncchkioi_export_hint (NC_chk *ncchkp, MPI_Info info) {
 	}
 
 	// Additional reserved space in file header
-	sprintf (value, "%lld", ncchkp->hdr_reserve);
+	sprintf (value, "%zd", ncchkp->hdr_reserve);
 	MPI_Info_set (info, "nc_chk_hdr_reserve", value);
 
 	// Reserve space for records
@@ -232,7 +232,7 @@ int ncchkioi_export_hint (NC_chk *ncchkp, MPI_Info info) {
 	}
 
 	// Buffer size
-	sprintf (value, "%lld", ncchkp->cache_limit);
+	sprintf (value, "%zd", ncchkp->cache_limit);
 	MPI_Info_set (info, "nc_chk_buffer_size", value);
 
 	return NC_NOERR;
@@ -314,7 +314,6 @@ int ncchkioi_print_buffer_int64 (char *prefix, long long *buf, int len) {
 
 void ncchkioi_sort_file_offset (int len, MPI_Aint *fdisps, MPI_Aint *mdisps, int *lens) {
 	int i, j, p;
-	MPI_Aint at;
 
 	if (len < 16) {
 		j = 1;
@@ -348,7 +347,7 @@ void ncchkioi_sort_file_offset (int len, MPI_Aint *fdisps, MPI_Aint *mdisps, int
 
 int ncchkioi_subarray_off_len (
 	int ndim, int *tsize, int *tssize, int *tstart, MPI_Offset *off, int *len) {
-	int err;
+	int err=NC_NOERR;
 	int i;
 
 	// Try single row

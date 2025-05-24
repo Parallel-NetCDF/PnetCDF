@@ -52,7 +52,7 @@ void ncchkioi_profile_add_time (NC_chk *ncchkp, int id, double t) {
 	ncchkp->profile.cnt[id]++;
 }
 
-int ncchkioi_print_profile(NC_chk *ncchkp){
+void ncchkioi_print_profile(NC_chk *ncchkp){
     int i;
 
 	MPI_Reduce (ncchkp->profile.tt, tmax, NC_CHK_NTIMER, MPI_DOUBLE, MPI_MAX, 0, ncchkp->comm);

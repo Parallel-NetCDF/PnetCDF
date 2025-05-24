@@ -92,7 +92,7 @@ int ncchk_sz_inq_cpsize(void *in, int in_len, int *out_len, int ndim, int *dims,
  * If out_len is NULL, we assume out is large enough for compressed data
  */
 int ncchk_sz_compress(void *in, int in_len, void *out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
-    int err;
+    int err=NC_NOERR;
     int i;
     int szdtype;
     size_t r[4];
@@ -145,7 +145,7 @@ out:
  * If out_len is not NULL, it will be set to buffer size allocated
  */
 int ncchk_sz_compress_alloc(void *in, int in_len, void **out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
-    int err;
+    int err=NC_NOERR;
     int i;
     int szdtype;
     size_t r[4];
@@ -196,7 +196,7 @@ int ncchk_sz_inq_dcsize(void *in, int in_len, int *out_len, int ndim, int *dims,
  * If out_len is NULL, we assume out is large enough for decompressed data
  */
 int ncchk_sz_decompress(void *in, int in_len, void *out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
-    int err;
+    int err=NC_NOERR;
     int i;
     size_t r[4];
     int szdtype;
@@ -252,7 +252,7 @@ out:
  * If out_len is not NULL, it will be set to buffer size allocated
  */
 int ncchk_sz_decompress_alloc(void *in, int in_len, void **out, int *out_len, int ndim, int *dims, MPI_Datatype dtype) {
-    int err;
+    int err=NC_NOERR;
     int i;
     size_t r[4];
     int szdtype;

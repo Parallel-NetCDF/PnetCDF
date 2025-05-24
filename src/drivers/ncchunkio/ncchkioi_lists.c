@@ -25,7 +25,7 @@ int ncchkioi_var_list_init(NC_chk_var_list *list) {
 }
 
 int ncchkioi_var_list_free(NC_chk_var_list *list) {
-    int i, j;
+    int i;
     if (list->nalloc > 0){
         for(i = 0; i < list->cnt; i++){
             ncchkioi_var_free(list->data + i);

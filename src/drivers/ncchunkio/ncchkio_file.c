@@ -51,14 +51,13 @@
 int ncchkio_create (
 	MPI_Comm comm, const char *path, int cmode, int ncid, MPI_Info info, void **ncpp) /* OUT */
 {
-	int err;
+	int err=NC_NOERR;
 	int one	  = 1;
 	void *ncp = NULL;
 	NC_chk *ncchkp;
 	PNC_driver *driver = NULL;
 #ifdef PNETCDF_PROFILING
-	double t0, t1;
-
+	double t0;
 	t0 = MPI_Wtime ();
 #endif
 
@@ -110,7 +109,7 @@ int ncchkio_create (
 
 int ncchkio_open (
 	MPI_Comm comm, const char *path, int omode, int ncid, MPI_Info info, void **ncpp) {
-	int err;
+	int err=NC_NOERR;
 	int one			   = 0;
 	void *ncp		   = NULL;
 	NC_chk *ncchkp	   = NULL;
@@ -203,7 +202,7 @@ errout:
 }
 
 int ncchkio_close (void *ncdp) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 #ifdef PNETCDF_PROFILING
 	MPI_Offset put_size, get_size;
 	char *_env_str = getenv ("PNETCDF_SHOW_PERFORMANCE_INFO");
@@ -313,7 +312,7 @@ err_out:;
 }
 
 int ncchkio_enddef (void *ncdp) {
-	int err = NC_NOERR, ret;
+	int err=NC_NOERR, ret;
 	int i;
 	MPI_Offset logrecnalloc, drecnalloc;
 	MPI_Offset rsize;
@@ -446,7 +445,7 @@ int ncchkio__enddef (void *ncdp,
 					 MPI_Offset v_align,
 					 MPI_Offset v_minfree,
 					 MPI_Offset r_align) {
-	int err = NC_NOERR, ret;
+	int err=NC_NOERR, ret;
 	int i;
 	MPI_Offset logrecnalloc, drecnalloc;
 	MPI_Offset rsize;
@@ -574,7 +573,7 @@ err_out:;
 }
 
 int ncchkio_redef (void *ncdp) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	err = ncchkp->driver->redef (ncchkp->ncp);
@@ -584,7 +583,7 @@ int ncchkio_redef (void *ncdp) {
 }
 
 int ncchkio_begin_indep_data (void *ncdp) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	err = ncchkp->driver->begin_indep_data (ncchkp->ncp);
@@ -594,7 +593,7 @@ int ncchkio_begin_indep_data (void *ncdp) {
 }
 
 int ncchkio_end_indep_data (void *ncdp) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	err = ncchkp->driver->end_indep_data (ncchkp->ncp);
@@ -604,7 +603,7 @@ int ncchkio_end_indep_data (void *ncdp) {
 }
 
 int ncchkio_abort (void *ncdp) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	if (ncchkp == NULL) DEBUG_RETURN_ERROR (NC_EBADID)
@@ -618,7 +617,7 @@ int ncchkio_abort (void *ncdp) {
 }
 
 int ncchkio_inq (void *ncdp, int *ndimsp, int *nvarsp, int *nattsp, int *xtendimp) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	err = ncchkp->driver->inq (ncchkp->ncp, ndimsp, NULL, nattsp, xtendimp);
@@ -645,7 +644,7 @@ int ncchkio_inq_misc (void *ncdp,
 					  int *nreqs,
 					  MPI_Offset *usage,
 					  MPI_Offset *buf_size) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	err = ncchkp->driver->inq_misc (ncchkp->ncp, pathlen, path, num_fix_varsp, num_rec_varsp,
@@ -665,7 +664,7 @@ int ncchkio_inq_misc (void *ncdp,
 }
 
 int ncchkio_cancel (void *ncdp, int num_req, int *req_ids, int *statuses) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	err = ncchkp->driver->cancel (ncchkp->ncp, num_req, req_ids, statuses);
@@ -768,7 +767,7 @@ done:;
 }
 
 int ncchkio_set_fill (void *ncdp, int fill_mode, int *old_fill_mode) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	err = ncchkp->driver->set_fill (ncchkp->ncp, fill_mode, old_fill_mode);
@@ -778,7 +777,7 @@ int ncchkio_set_fill (void *ncdp, int fill_mode, int *old_fill_mode) {
 }
 
 int ncchkio_fill_var_rec (void *ncdp, int varid, MPI_Offset recno) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	err = ncchkp->driver->fill_var_rec (ncchkp->ncp, varid, recno);
@@ -788,7 +787,7 @@ int ncchkio_fill_var_rec (void *ncdp, int varid, MPI_Offset recno) {
 }
 
 int ncchkio_def_var_fill (void *ncdp, int varid, int no_fill, const void *fill_value) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	err = ncchkp->driver->def_var_fill (ncchkp->ncp, varid, no_fill, fill_value);
@@ -798,7 +797,7 @@ int ncchkio_def_var_fill (void *ncdp, int varid, int no_fill, const void *fill_v
 }
 
 int ncchkio_sync_numrecs (void *ncdp) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	err = ncchkp->driver->sync_numrecs (ncchkp->ncp);
@@ -808,7 +807,7 @@ int ncchkio_sync_numrecs (void *ncdp) {
 }
 
 int ncchkio_sync (void *ncdp) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	err = ncchkp->driver->sync (ncchkp->ncp);
@@ -818,7 +817,7 @@ int ncchkio_sync (void *ncdp) {
 }
 
 int ncchkio_flush (void *ncdp) {
-	int err;
+	int err=NC_NOERR;
 	NC_chk *ncchkp = (NC_chk *)ncdp;
 
 	err = ncchkp->driver->flush (ncchkp->ncp);

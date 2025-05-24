@@ -31,12 +31,11 @@
 
 int ncchkioi_var_init_core (
 	NC_chk *ncchkp, NC_chk_var *varp, int nreq, MPI_Offset **starts, MPI_Offset **counts) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int ret;
 	int i, j;
 	int valid;
 	MPI_Offset len;
-	NC_chk_var *var;
 
 	if (varp->varkind == NC_CHK_VAR_COMPRESSED) {
 		if (varp->chunkdim == NULL) {  // This is a new uninitialized variable
@@ -204,7 +203,7 @@ err_out:;
 
 int ncchkioi_var_init (
 	NC_chk *ncchkp, NC_chk_var *varp, int nreq, MPI_Offset **starts, MPI_Offset **counts) {
-	int err;
+	int err=NC_NOERR;
 
 	err = ncchkioi_var_init_core (ncchkp, varp, nreq, starts, counts);
 	CHK_ERR
@@ -219,7 +218,6 @@ err_out:;
 }
 
 void ncchkioi_var_free (NC_chk_var *varp) {
-	int i;
 
 	if (varp->chunkdim != NULL) {
 		NCI_Free (varp->dimsize);
@@ -247,7 +245,7 @@ int ncchkioi_init_nvar_core_gather (NC_chk *ncchkp,
 									int *roff,
 									MPI_Offset **starts,
 									MPI_Offset **counts) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i, j;
 	NC_chk_var *varp;
 	ncchkioi_chunk_overlap_t *ocnt[2], *ocnt_all[2];
@@ -313,7 +311,7 @@ int ncchkioi_init_nvar_core_reduce (NC_chk *ncchkp,
 									int *roff,
 									MPI_Offset **starts,
 									MPI_Offset **counts) {
-	int err = NC_NOERR;
+	int err=NC_NOERR;
 	int i, j;
 	NC_chk_var *varp;
 	ncchkioi_chunk_overlap_t *ocnt[2], *ocnt_all[2];

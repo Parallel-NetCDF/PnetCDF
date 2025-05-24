@@ -20,7 +20,7 @@
 #include "ncchkio_internal.h"
 
 int ncchkioi_init (NC_chk *ncchkp, int isnew) {
-	int err;
+	int err=NC_NOERR;
 
 	ncchkp->max_ndim		= 0;
 	ncchkp->max_chunk_size	= 0;
@@ -77,7 +77,7 @@ err_out:;
 }
 
 int ncchkioi_parse_var_info (NC_chk *ncchkp) {
-	int err = NC_NOERR, ret;
+	int err=NC_NOERR, ret;
 	int vid;
 	int i;
 	int nvar;

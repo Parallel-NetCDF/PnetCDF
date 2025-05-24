@@ -44,7 +44,7 @@ ncchkioi_get_var_old(NC_chk        *ncchkp,
               MPI_Datatype      buftype,
               int               reqMode)
 {
-    int i, j, err;
+    int i, j, err=NC_NOERR;
     nc_type xtype;
     int *cstart, *cend, *ccord;
     int nb, bsize;
@@ -177,7 +177,7 @@ ncchkioi_put_var_old(NC_chk        *ncchkp,
               const MPI_Offset *stride,
               void       *buf)
 {
-    int i, j, k, err;
+    int i, j, k, err=NC_NOERR;
     nc_type xtype;  // Variable data type in NC
     MPI_Datatype etype; // Variable element type in MPI
     int esize;  // Variable element size
