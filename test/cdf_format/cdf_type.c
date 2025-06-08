@@ -60,8 +60,8 @@
 
 /*----< test_attr_types() >---------------------------------------------------*/
 static
-int test_attr_types(char *filename,
-                    int   format)
+int test_attr_types(const char *filename,
+                    int         format)
 {
     int i, err, rank, ncid, cmode, nerrs=0, attr=0;
     nc_type xtype[5]={NC_UBYTE, NC_USHORT, NC_UINT, NC_INT64, NC_UINT64};
@@ -70,7 +70,10 @@ int test_attr_types(char *filename,
     cmode = NC_CLOBBER|format;
 
     /* create a file in CDF-1 or CDF-2 format */
-    err = FileCreate(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
+    err = FileCreate(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    MPI_Allreduce(MPI_IN_PLACE, &err, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    if (err != NC_NOERR) return 1;
+
     for (i=0; i<5; i++) {
         char name[32];
         sprintf(name, "gattr_%d", i);
@@ -90,6 +93,7 @@ int test_attr_types(char *filename,
 #endif
     }
 
+    err = EndDef(ncid); CHECK_ERR
     err = FileClose(ncid); CHECK_ERR
 
     return nerrs;
