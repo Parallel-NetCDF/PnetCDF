@@ -113,9 +113,9 @@ int ncmpi_diff(char *filename1, char *filename2)
 
     str[0] = '\0';
     err = ncmpi_open(comm, filename1, NC_NOWRITE, MPI_INFO_NULL, &ncid1);
-    CHECK_ERR
+    CHECK_ERROUT
     err = ncmpi_open(comm, filename2, NC_NOWRITE, MPI_INFO_NULL, &ncid2);
-    CHECK_ERR
+    CHECK_ERROUT
 
     /**
      * Inquire the dataset definitions of input dataset AND
@@ -295,6 +295,7 @@ int ncmpi_diff(char *filename1, char *filename2)
     err = ncmpi_close(ncid2);
     CHECK_ERR
 
+err_out:
     return nerrs;
 }
 
@@ -402,6 +403,9 @@ int main(int argc, char **argv)
         bufcount *= length;
     }
     MPI_Dims_create(nprocs, ndims, array_of_psizes);
+    if (verbose)
+        printf("rank %d: array_of_psizes[3]=%d %d %d\n",
+               rank,array_of_psizes[0],array_of_psizes[1],array_of_psizes[2]);
 
     /* subarray in each process is len x len x len */
     for (i=0; i<ndims; i++)
@@ -413,23 +417,26 @@ int main(int argc, char **argv)
     rank_dim[0] =  rank / (array_of_psizes[2]  * array_of_psizes[1]);
     if (verbose)
         printf("rank %d: rank_dim[3]=%d %d %d\n",
-               rank,rank_dim[0],rank_dim[2],rank_dim[2]);
+               rank,rank_dim[0],rank_dim[1],rank_dim[2]);
 
     /* starting coordinates of the subarray in each dimension */
     for (i=0; i<ndims; i++)
         array_of_starts[i] = length * rank_dim[i];
+    if (verbose)
+        printf("rank %d: array_of_starts[3]=%lld %lld %lld\n",
+               rank,array_of_starts[0],array_of_starts[1],array_of_starts[2]);
 
     for (i=0; i<nvars; i++) {
         for (j=0; j<ndims; j++) {
            starts[i][j] = array_of_starts[j];
-           counts[i][j]  = length;
+           counts[i][j] = length;
         }
         bufcounts[i] = bufcount;
         datatype_list[i] = MPI_INT;
     }
     if (verbose)
         printf("rank %d: starts[0][3]=%lld %lld %lld counts[0][3]=%lld %lld %lld\n",
-               rank,starts[0][0],starts[0][2],starts[0][2], counts[0][0],counts[0][1],counts[0][2]);
+               rank,starts[0][0],starts[0][1],starts[0][2], counts[0][0],counts[0][1],counts[0][2]);
 
     buf[0] = (int *) malloc(sizeof(int) * bufcount * nvars);
     if (buf[0] == NULL) {
