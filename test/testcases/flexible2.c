@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 {
     char filename[256];
     int i, j, rank, nprocs, err, nerrs=0, req, status, ghost_len=3;
-    int ncid, cmode, varid0, varid1, dimid[3], *buf_zy;
+    int ncid, cmode, varid0, varid1, dimid[3], *buf_zy, verbose=0;
     int array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     double *buf_yx;
     MPI_Offset start[2], count[2];
@@ -142,6 +142,14 @@ int main(int argc, char** argv)
     MPI_Type_create_subarray(2, array_of_sizes, array_of_subsizes,
                              array_of_starts, MPI_ORDER_C, MPI_INT, &subarray);
     MPI_Type_commit(&subarray);
+
+    if (verbose && rank == 0) {
+        printf("ghost_len = %d\n", ghost_len);
+        printf("local array size    = %d x %d\n", array_of_sizes[0], array_of_sizes[1]);
+        printf("local array subsize = %d x %d\n", array_of_subsizes[0], array_of_subsizes[1]);
+        printf("local array start   = %d x %d\n", array_of_starts[0], array_of_starts[1]);
+        printf("local array end     = %d x %d\n", array_of_starts[0]+array_of_subsizes[0], array_of_starts[1]+array_of_subsizes[1]);
+    }
 
     int buffer_len = (NZ+2*ghost_len) * (NY+2*ghost_len);
     buf_zy = (int*) malloc(sizeof(int) * buffer_len);
@@ -234,21 +242,17 @@ int main(int argc, char** argv)
     /* check the contents of iget buffer */
     for (i=0; i<array_of_sizes[0]; i++) {
         for (j=0; j<array_of_sizes[1]; j++) {
+            double exp;
             int index = i*array_of_sizes[1] + j;
             if (i < ghost_len || ghost_len+array_of_subsizes[0] <= i ||
-                j < ghost_len || ghost_len+array_of_subsizes[1] <= j) {
-                if (buf_yx[index] != -1) {
-                    printf("Unexpected get buffer[%d][%d]=%f\n",
-                           i,j,buf_yx[index]);
-                    nerrs++;
-                }
-            }
-            else {
-                if (buf_yx[index] != rank+10) {
-                    printf("Unexpected get buffer[%d][%d]=%f\n",
-                           i,j,buf_yx[index]);
-                    nerrs++;
-                }
+                j < ghost_len || ghost_len+array_of_subsizes[1] <= j)
+                exp = -1;
+            else
+                exp = rank+10;
+            if (buf_yx[index] != exp) {
+                printf("Error at %d: expect buffer[%d][%d]=%.1f but got %.1f\n",
+                       __LINE__,i,j,exp,buf_yx[index]);
+                nerrs++;
             }
         }
     }
