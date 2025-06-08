@@ -24,6 +24,9 @@ endif
 TESTPROGRAMS = pres_temp_4D_wr \
                pres_temp_4D_rd
 
+pres_temp_4D_wr_SOURCES = pres_temp_4D_wr.c pres_temp_4D.h
+pres_temp_4D_rd_SOURCES = pres_temp_4D_rd.c pres_temp_4D.h
+
 check_PROGRAMS = $(TESTPROGRAMS)
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
