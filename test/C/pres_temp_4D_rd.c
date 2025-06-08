@@ -27,41 +27,7 @@
 #include <mpi.h>
 #include <testutils.h>
 
-/* This is the name of the data file we will read. */
-#define FILE_NAME "pres_temp_4D.nc"
-
-/* We are reading 4D data, a 2 x 6 x 12 lvl-lat-lon grid, with 2
-   timesteps of data. */
-#define NDIMS 4
-#define NLAT 6
-#define NLON 12
-#define LAT_NAME "latitude"
-#define LON_NAME "longitude"
-#define NREC 2
-#define REC_NAME "time"
-#define LVL_NAME "level"
-#define NLVL 10
-
-/* Names of things. */
-#define PRES_NAME "pressure"
-#define TEMP_NAME "temperature"
-#define UNITS "units"
-#define DEGREES_EAST "degrees_east"
-#define DEGREES_NORTH "degrees_north"
-
-/* These are used to calculate the values we expect to find. */
-#define SAMPLE_PRESSURE 900.0
-#define SAMPLE_TEMP 9.0
-#define START_LAT 25.0
-#define START_LON -125.0
-
-/* For the units attributes. */
-#define UNITS "units"
-#define PRES_UNITS "hPa"
-#define TEMP_UNITS "celsius"
-#define LAT_UNITS "degrees_north"
-#define LON_UNITS "degrees_east"
-#define MAX_ATT_LEN 80
+#include "pres_temp_4D.h"
 
 int main(int argc, char **argv)
 {
@@ -103,7 +69,11 @@ int main(int argc, char **argv)
 
     /* Open the file. */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
-    CHECK_ERR
+    if (err != NC_NOERR) { /* fatal error */
+        if (rank == 0)
+            fprintf(stderr,"Error: failed to open file %s (%s)\n",filename,ncmpi_strerror(err));
+        goto err_out;
+    }
 
     if (rank == 0) {
         char *cmd_str = (char *)malloc(strlen(argv[0]) + 256);
@@ -132,31 +102,34 @@ int main(int argc, char **argv)
     CHECK_ERR
 
     /* Check the coordinate variable data. */
-    for (lat = 0; lat < NLAT; lat++)
-        if (lats[lat] != START_LAT + 5. * lat) {
-            printf("\nError at line %d in %s: expect %e but got %e\n",
-            __LINE__, __FILE__, START_LAT + 5. * lat, lats[lat]);
+    for (lat = 0; lat < NLAT; lat++) {
+        float exp =  START_LAT + 5. * lat;
+        if (lats[lat] != exp) {
+            printf("\nError at line %d in %s: lats[%d] expect %.1f but got %.1f\n",
+            __LINE__, __FILE__, lat, exp, lats[lat]);
             nerrs++;
-            goto fn_exit;
+            break;
         }
-    for (lon = 0; lon < NLON; lon++)
+    }
+    for (lon = 0; lon < NLON; lon++) {
+        float exp =  START_LON + 5. * lon;
         if (lons[lon] != START_LON + 5. * lon) {
-            printf("\nError at line %d in %s: expect %e but got %e\n",
-            __LINE__, __FILE__, START_LON + 5. * lon, lons[lon]);
+            printf("\nError at line %d in %s: lons[%d] expect %.1f but got %.1f\n",
+            __LINE__, __FILE__, lon, exp, lons[lon]);
             nerrs++;
-            goto fn_exit;
+            break;
         }
+    }
 
-    /* Get the varids of the pressure and temperature netCDF
-    * variables. */
+    /* Get the varids of the pressure and temperature netCDF variables. */
     err = ncmpi_inq_varid(ncid, PRES_NAME, &pres_varid);
     CHECK_ERR
     err = ncmpi_inq_varid(ncid, TEMP_NAME, &temp_varid);
     CHECK_ERR
 
-    /* Read the data. Since we know the contents of the file we know
-    * that the data arrays in this program are the correct size to
-    * hold one timestep. */
+    /* Read the data. Since we know the contents of the file we know that the
+     * data arrays in this program are the correct size to hold one timestep.
+     */
     count[0] = 1;
     count[2] = NLAT;
     count[3] = NLON;
@@ -201,21 +174,23 @@ int main(int argc, char **argv)
         for (lvl = 0; lvl < count[1]; lvl++)
         for (lat = 0; lat < NLAT; lat++)
         for (lon = 0; lon < NLON; lon++) {
-            if (pres_in[lvl][lat * NLON + lon] != SAMPLE_PRESSURE + i) {
-                printf("\nError at line %d in %s: expect %e but got %e\n",
-                __LINE__, __FILE__, SAMPLE_PRESSURE + i, pres_in[lvl][lat * NLON + lon]);
+            float exp = SAMPLE_PRESSURE + i;
+            int indx = lat * NLON + lon;
+            if (pres_in[lvl][indx] != exp) {
+                printf("\nError at line %d in %s: %s[%d][%d][%d][%d] expect %.1f but got %.1f\n",
+                __LINE__, __FILE__, PRES_NAME, rec, lvl, lat, lon, exp, pres_in[lvl][indx]);
                 nerrs++;
                 goto fn_exit;
             }
-            if (temp_in[lvl][lat * NLON + lon] != SAMPLE_TEMP + i) {
-                printf("\nError at line %d in %s: expect %e but got %e\n",
-                __LINE__, __FILE__, SAMPLE_TEMP + i, temp_in[lvl][lat * NLON + lon]);
+            exp = SAMPLE_TEMP + i;
+            if (temp_in[lvl][indx] != exp) {
+                printf("\nError at line %d in %s: %s[%d][%d][%d][%d] expect %.1f but got %.1f\n",
+                __LINE__, __FILE__, TEMP_NAME, rec, lvl, lat, lon, exp, temp_in[lvl][indx]);
                 nerrs++;
                 goto fn_exit;
             }
             i++;
         }
-
     } /* next record */
 
 fn_exit:
@@ -240,6 +215,7 @@ fn_exit:
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
+err_out:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs)
