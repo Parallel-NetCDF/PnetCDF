@@ -68,8 +68,8 @@ int test_collective_error(char *filename, int safe_mode, int cmode)
     buf[0] = 1.0;
     buf[1] = 2.0;
 
-    err = ncmpi_put_vara_all(ncid, varid, start, count,
-			     buf, count[0], MPI_DOUBLE);
+    err = ncmpi_put_vara_all(ncid, varid, start, count, buf, count[0],
+                             MPI_DOUBLE);
     if ((safe_mode && nproc > 1) || rank == 1) EXP_ERR(NC_EINVALCOORDS)
     else                                       EXP_ERR(NC_NOERR)
 
@@ -179,26 +179,36 @@ int main(int argc, char *argv[])
     /* test in non-safe mode */
     setenv("PNETCDF_SAFE_MODE", "0", 1);
     nerrs += test_collective_error(filename, 0, 0);
+    if (nerrs) goto err_out;
     nerrs += test_collective_error(filename, 0, NC_64BIT_OFFSET);
+    if (nerrs) goto err_out;
     if (!bb_enabled) {
 #ifdef ENABLE_NETCDF4
         nerrs += test_collective_error(filename, 0, NC_NETCDF4);
+        if (nerrs) goto err_out;
         nerrs += test_collective_error(filename, 0, NC_NETCDF4 | NC_CLASSIC_MODEL);
+        if (nerrs) goto err_out;
 #endif
     }
     nerrs += test_collective_error(filename, 0, NC_64BIT_DATA);
+    if (nerrs) goto err_out;
 
     /* test in safe mode */
     setenv("PNETCDF_SAFE_MODE", "1", 1);
     nerrs += test_collective_error(filename, 1, 0);
+    if (nerrs) goto err_out;
     nerrs += test_collective_error(filename, 1, NC_64BIT_OFFSET);
+    if (nerrs) goto err_out;
     if (!bb_enabled) {
 #ifdef ENABLE_NETCDF4
         nerrs += test_collective_error(filename, 1, NC_NETCDF4);
+        if (nerrs) goto err_out;
         nerrs += test_collective_error(filename, 1, NC_NETCDF4 | NC_CLASSIC_MODEL);
+        if (nerrs) goto err_out;
 #endif
     }
     nerrs += test_collective_error(filename, 1, NC_64BIT_DATA);
+    if (nerrs) goto err_out;
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -211,6 +221,7 @@ int main(int argc, char *argv[])
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
+err_out:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
