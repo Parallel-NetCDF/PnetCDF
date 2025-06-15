@@ -75,6 +75,8 @@ static int verbose, debug;
     }                                                   \
 }
 
+#define HINT ((flag)?(value):("NOT SET"))
+
 typedef struct {
     int varid;
     char *name;
@@ -683,17 +685,25 @@ int wrf_w_benchmark(char       *out_file,
         printf("                                %.2f GiB/s\n", bw/1024.0/max_t[0]);
         printf("-----------------------------------------------------------\n");
         MPI_Info_get(info_used, "striping_factor",  MPI_MAX_INFO_VAL, value, &flag);
-        printf("MPI-IO hint striping_factor:        %s\n", value);
+        printf("MPI-IO hint striping_factor:        %s\n", HINT);
         MPI_Info_get(info_used, "striping_unit",    MPI_MAX_INFO_VAL, value, &flag);
-        printf("MPI-IO hint striping_unit:          %s\n", value);
+        printf("MPI-IO hint striping_unit:          %s\n", HINT);
         MPI_Info_get(info_used, "cb_buffer_size",   MPI_MAX_INFO_VAL, value, &flag);
-        printf("MPI-IO hint cb_buffer_size:         %s\n", value);
-        MPI_Info_get(info_used, "aggr_list",        MPI_MAX_INFO_VAL, value, &flag);
-        printf("MPI-IO hint aggr_list:              %s\n", value);
+        printf("MPI-IO hint cb_buffer_size:         %s\n", HINT);
         MPI_Info_get(info_used, "cb_nodes",         MPI_MAX_INFO_VAL, value, &flag);
-        printf("MPI-IO hint cb_nodes:               %s\n", value);
+        printf("MPI-IO hint cb_nodes:               %s\n", HINT);
+        MPI_Info_get(info_used, "cb_config_list",   MPI_MAX_INFO_VAL, value, &flag);
+        printf("MPI-IO hint cb_config_list:         %s\n", HINT);
+        MPI_Info_get(info_used, "cb_node_list",     MPI_MAX_INFO_VAL, value, &flag);
+        printf("MPI-IO hint cb_node_list:           %s\n", HINT);
         MPI_Info_get(info_used, "nc_num_aggrs_per_node",MPI_MAX_INFO_VAL, value, &flag);
-        printf("PnetCDF hint nc_num_aggrs_per_node: %s\n", value);
+        printf("PnetCDF hint nc_num_aggrs_per_node: %s\n", HINT);
+        MPI_Info_get(info_used, "nc_ina_node_list", MPI_MAX_INFO_VAL, value, &flag);
+        printf("PnetCDF hint nc_ina_node_list:      %s\n", HINT);
+        MPI_Info_get(info_used, "cray_cb_nodes_multiplier", MPI_MAX_INFO_VAL, value, &flag);
+        printf("Hint cray_cb_nodes_multiplier:      %s\n", HINT);
+        MPI_Info_get(info_used, "cray_cb_write_lock_mode", MPI_MAX_INFO_VAL, value, &flag);
+        printf("Hint cray_cb_write_lock_mode:      %s\n", HINT);
         printf("-----------------------------------------------------------\n");
     }
     MPI_Info_free(&info_used);
@@ -843,6 +853,7 @@ int wrf_r_benchmark(char       *in_file,
             if (vars[i].nelems == 0) continue;
 
             /* set record ID */
+/* TODO: check number of records in input file, must be >= ntimes */
             vars[i].start[0] = j;
 
             if (vars[i].xtype == NC_FLOAT)
@@ -913,17 +924,25 @@ int wrf_r_benchmark(char       *in_file,
         printf("                                %.2f GiB/s\n", bw/1024.0/max_t[0]);
         printf("-----------------------------------------------------------\n");
         MPI_Info_get(info_used, "striping_factor",  MPI_MAX_INFO_VAL, value, &flag);
-        printf("MPI-IO hint striping_factor:        %s\n", value);
+        printf("MPI-IO hint striping_factor:        %s\n", HINT);
         MPI_Info_get(info_used, "striping_unit",    MPI_MAX_INFO_VAL, value, &flag);
-        printf("MPI-IO hint striping_unit:          %s\n", value);
+        printf("MPI-IO hint striping_unit:          %s\n", HINT);
         MPI_Info_get(info_used, "cb_buffer_size",   MPI_MAX_INFO_VAL, value, &flag);
-        printf("MPI-IO hint cb_buffer_size:         %s\n", value);
-        MPI_Info_get(info_used, "cb_node_list",     MPI_MAX_INFO_VAL, value, &flag);
-        printf("MPI-IO hint cb_node_list:           %s\n", value);
+        printf("MPI-IO hint cb_buffer_size:         %s\n", HINT);
         MPI_Info_get(info_used, "cb_nodes",         MPI_MAX_INFO_VAL, value, &flag);
-        printf("MPI-IO hint cb_nodes:               %s\n", value);
+        printf("MPI-IO hint cb_nodes:               %s\n", HINT);
+        MPI_Info_get(info_used, "cb_config_list",   MPI_MAX_INFO_VAL, value, &flag);
+        printf("MPI-IO hint cb_config_list:         %s\n", HINT);
+        MPI_Info_get(info_used, "cb_node_list",     MPI_MAX_INFO_VAL, value, &flag);
+        printf("MPI-IO hint cb_node_list:           %s\n", HINT);
         MPI_Info_get(info_used, "nc_num_aggrs_per_node",MPI_MAX_INFO_VAL, value, &flag);
-        printf("PnetCDF hint nc_num_aggrs_per_node: %s\n", value);
+        printf("PnetCDF hint nc_num_aggrs_per_node: %s\n", HINT);
+        MPI_Info_get(info_used, "nc_ina_node_list", MPI_MAX_INFO_VAL, value, &flag);
+        printf("PnetCDF hint nc_ina_node_list:      %s\n", HINT);
+        MPI_Info_get(info_used, "cray_cb_nodes_multiplier", MPI_MAX_INFO_VAL, value, &flag);
+        printf("Hint cray_cb_nodes_multiplier:      %s\n", HINT);
+        MPI_Info_get(info_used, "cray_cb_write_lock_mode", MPI_MAX_INFO_VAL, value, &flag);
+        printf("Hint cray_cb_write_lock_mode:      %s\n", HINT);
         printf("-----------------------------------------------------------\n");
     }
     MPI_Info_free(&info_used);
