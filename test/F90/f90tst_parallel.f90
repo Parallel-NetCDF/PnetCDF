@@ -139,7 +139,10 @@ program f90tst_parallel
   if (my_rank .LT. 4) then
      do x = 1, NX / 2
         do y = 1, NY / 2
-           if (data_in(y, x) .ne. my_rank) stop 4
+           if (data_in(y, x) .ne. my_rank) then
+               print *, 'Error: expect buf(',y,',',x,') ',my_rank,' but got ',data_in(y,x)
+               stop 4
+           endif
         end do
      end do
   endif
