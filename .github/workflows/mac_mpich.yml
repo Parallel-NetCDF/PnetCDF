@@ -23,7 +23,7 @@ on:
       - 'test/test_installed/*'
 
 env:
-   MPICH_VERSION: 4.2.0
+   MPICH_VERSION: 4.3.0
    AUTOCONF_VERSION: 2.71
    AUTOMAKE_VERSION: 1.17
    LIBTOOL_VERSION: 2.5.4
