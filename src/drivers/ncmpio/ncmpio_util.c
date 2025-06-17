@@ -151,7 +151,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
             MPI_Offset ibuf_size;
             errno = 0;  /* errno must set to zero before calling strtoll */
             ibuf_size = strtoll(value, NULL, 10);
-            if (errno == 0 && ibuf_size > 0) ncp->ibuf_size = ibuf_size;
+            if (errno == 0 && ibuf_size >= 0) ncp->ibuf_size = ibuf_size;
         }
     }
     sprintf(value, "%lld", ncp->ibuf_size);
