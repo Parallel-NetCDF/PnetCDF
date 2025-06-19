@@ -673,11 +673,11 @@ int ncchkioi_get_var_cb_proc (NC_chk *ncchkp,
 	nread = 0;
 	for (i = j; i < k; i++) {
 		cid = varp->mychunks[i];
-						printf("checking chunk %d, size is %d\n",cid, varp->chunk_index[cid].len);
+        // printf("checking chunk %d, size is %d\n",cid, varp->chunk_index[cid].len);
 		if (varp->chunk_cache[cid] == NULL) {
 			// err = ncchkioi_cache_alloc(ncchkp, varp->chunksize, varp->chunk_cache + cid);
 			// varp->chunk_cache[cid] = (char*)NCI_Malloc(varp->chunksize);
-			if (varp->chunk_index[cid].len > 0) { rids[nread++] = cid; printf("chunk %d need read\n",cid);}
+			if (varp->chunk_index[cid].len > 0) { rids[nread++] = cid; /* printf("chunk %d need read\n",cid); */ }
 		} else {
 			// ncchkioi_cache_visit(ncchkp, varp->chunk_cache[cid]);
 		}
