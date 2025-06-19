@@ -147,6 +147,14 @@ int ncchk_zlib_compress_alloc(void *in, int in_len, void **out, int *out_len, in
     // Size of comrpessed data
     if (out_len != NULL){
         *out_len = defstream.total_out;
+
+        char *env_str;
+        if ((env_str = getenv("PNETCDF_COMPRESS_VERBOSE")) != NULL) {
+            int rank;
+            MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+            printf("rank %d (%s at %d) compress data size %d into size %d\n",
+                    rank,__func__,__LINE__,in_len,*out_len);
+        }
     }
 
     // Compressed data
@@ -208,6 +216,14 @@ int ncchk_zlib_decompress(void *in, int in_len, void *out, int *out_len, int ndi
     // Size of decomrpessed data
     if (out_len != NULL){
         *out_len = infstream.total_out;
+
+        char *env_str;
+        if ((env_str = getenv("PNETCDF_COMPRESS_VERBOSE")) != NULL) {
+            int rank;
+            MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+            printf("rank %d (%s at %d) decompress data size %d into size %d\n",
+                    rank,__func__,__LINE__,in_len,*out_len);
+        }
     }
 
     return NC_NOERR;
