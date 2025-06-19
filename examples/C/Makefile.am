@@ -43,7 +43,7 @@ check_PROGRAMS = collective_write \
                  create_from_cdl
 
 if ENABLE_COMPRESSION
-  check_PROGRAMS += chunk_compress
+  check_PROGRAMS += chunk_compress chunk_io
 endif
 
 if INSTALL_EXAMPLES
