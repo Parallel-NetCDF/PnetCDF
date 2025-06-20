@@ -284,8 +284,8 @@ static int
 decompress(MPI_Comm comm, char *filename)
 {
     char name[64];
-    int i, j, rank, nprocs, err, nerrs=0, ncid, varid[NVARS], ulimit_dimid;
-    int dimids[3], filter, chunk_dim[3], psize[2], rank_y, rank_x;
+    int i, j, rank, nprocs, err, nerrs=0, ncid, *varid, ulimit_dimid;
+    int nvars, dimids[3], filter, chunk_dim[3], psize[2], rank_y, rank_x;
     MPI_Offset nrecs, global_ny, global_nx;
     MPI_Offset start[3], count[3];
     MPI_Info info;
@@ -328,8 +328,16 @@ decompress(MPI_Comm comm, char *filename)
     err = ncmpi_inq_dimlen(ncid, dimids[2], &global_nx);
     PNC_ERR("ncmpi_inq_dimlen")
 
+    /* obtain the number of record variables */
+    err = ncmpi_inq_num_rec_vars(ncid, &nvars);
+    PNC_ERR("ncmpi_inq_num_rec_vars")
+    if (verbose && rank == 0)
+        printf("Number of record variables = %d\n", nvars);
+
+    varid = (int*) malloc(sizeof(int) * nvars);
+
     /* obtain variable ID and dimension info */
-    for (i=0; i<NVARS; i++) {
+    for (i=0; i<nvars; i++) {
         snprintf(name, 64, "var_%d", i);
         err = ncmpi_inq_varid(ncid, name, &varid[i]);
         PNC_ERR("ncmpi_inq_varid")
@@ -346,7 +354,7 @@ decompress(MPI_Comm comm, char *filename)
         printf("Time dimension length = %lld\n", nrecs);
 
     /* get chunking */
-    for (i=0; i<NVARS; i++) {
+    for (i=0; i<nvars; i++) {
         err = ncmpi_inq_varname(ncid, varid[i], name);;
         PNC_ERR("ncmpi_inq_varname")
         err = ncmpi_var_get_chunk(ncid, varid[i], chunk_dim);;
@@ -377,27 +385,32 @@ decompress(MPI_Comm comm, char *filename)
         printf("rank %d: start=%lld %lld %lld count=%lld %lld %lld\n", rank,
                start[0],start[1],start[2], count[0],count[1],count[2]);
 
-    /* allocate write buffer of size count[1] x count[2] */
-    int *buf = (int*) malloc(sizeof(int) * count[1] * count[2]);
-    for (i=0; i<count[1]*count[2]; i++) buf[i] = -1;
+    /* allocate read buffers, one for each variable */
+    size_t buf_size = nrecs * count[1] * count[2];
+    int **buf = (int**) malloc(sizeof(int*) * nvars);
+    for (i=0; i<nvars; i++)
+        buf[i] = (int*) malloc(sizeof(int) * buf_size);
 
     /* Each rank reads a subarray, one at a time. */
-    for (i=0; i<NTIMES; i++) {
+    for (i=0; i<nrecs; i++) {
         start[0] = i;
-        for (j=0; j<NVARS; j++) {
-            err = ncmpi_iget_vara_int(ncid, varid[j], start, count, buf, NULL);
+        for (j=0; j<nvars; j++) {
+            int *ptr = buf[j] + i * count[1] * count[2];
+            err = ncmpi_iget_vara_int(ncid, varid[j], start, count, ptr, NULL);
             PNC_ERR("ncmpi_iget_vara_int")
         }
-
-        /* wait for nonblocking request to complete */
-        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
-        PNC_ERR("ncmpi_wait_all")
     }
+
+    /* wait for nonblocking request to complete */
+    err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+    PNC_ERR("ncmpi_wait_all")
 
     err = ncmpi_close(ncid);
     PNC_ERR("ncmpi_close")
 
+    for (i=0; i<nvars; i++) free(buf[i]);
     free(buf);
+    free(varid);
 
 err_out:
     return nerrs;
