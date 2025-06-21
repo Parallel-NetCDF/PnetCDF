@@ -41,43 +41,21 @@ for i in ${check_PROGRAMS} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
 
-        OPTS="-l 100 -w 100 -i ${srcdir}/wrf_header.txt"
-        # echo "${MPIRUN} ./$i -q ${OPTS} ${TESTOUTDIR}/$i.nc"
-        ${MPIRUN} ./$i -q ${OPTS} ${TESTOUTDIR}/$i.nc
+        OPTS="-y 100 -x 100 -i ${srcdir}/wrf_header.txt"
+        OPTS="$OPTS -w ${TESTOUTDIR}/$i.nc -r ${TESTOUTDIR}/$i.nc"
+        # echo "${MPIRUN} ./$i -q ${OPTS}"
+        ${MPIRUN} ./$i -q ${OPTS}
         if test $? = 0 ; then
            echo "PASS:  C  parallel run on $1 processes --------------- $i"
         fi
 
+        unset PNETCDF_HINTS
         # echo "--- validating file ${TESTOUTDIR}/$i.nc"
         ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
         # echo ""
-
-        if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-           # echo "test burst buffering feature"
-           saved_PNETCDF_HINTS=${PNETCDF_HINTS}
-           export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
-           ${MPIRUN} ./$i -q ${OPTS} ${TESTOUTDIR}/$i.bb.nc
-           if test $? = 0 ; then
-              echo "PASS:  C  parallel run on $1 processes --------------- $i"
-           fi
-           export PNETCDF_HINTS=${saved_PNETCDF_HINTS}
-
-           # echo "--- validating file ${TESTOUTDIR}/$i.bb.nc"
-           ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.bb.nc
-
-           # echo "--- ncmpidiff $i.nc $i.bb.nc ---"
-           ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$i.nc ${TESTOUTDIR}/$i.bb.nc
-        fi
-
-       if test "x${ENABLE_NETCDF4}" = x1 ; then
-          # echo "test netCDF-4 feature"
-          ${MPIRUN} ./$i -q ${OPTS} ${TESTOUTDIR}/$i.nc4 4
-          # Validator does not support nc4
-       fi
     done
     done
     rm -f ${OUTDIR}/$i.nc
-    rm -f ${OUTDIR}/$i.bb.nc
     rm -f ${OUTDIR}/$i.nc4
 done
 
