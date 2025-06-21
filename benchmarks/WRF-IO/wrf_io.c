@@ -26,7 +26,7 @@
  *    % mpicc -O2 wrf_io.c -o wrf_io -lpnetcdf
  *
  * An example of run command:
- *    % mpiexec -n 4 ./wrf_io -w -y 100 -x 100 -n 2 -i wrf_header.txt ./wrf_io.nc
+ *    % mpiexec -n 4 ./wrf_io -y 100 -x 100 -n 2 -i wrf_header.txt -w ./wrf_io.nc
  *
  *    -----------------------------------------------------------
  *    ---- WRF-IO write benchmark ----
@@ -732,6 +732,10 @@ int wrf_r_benchmark(char       *in_file,
     err = ncmpi_open(MPI_COMM_WORLD, in_file, NC_NOWRITE, info, &ncid);
     CHECK_ERR("ncmpi_open")
 
+    /* start the timer */
+    MPI_Barrier(MPI_COMM_WORLD);
+    timing[0] = MPI_Wtime();
+
     err = ncmpi_inq_dimid(ncid, "south_north", &dimid);
     CHECK_ERR("ncmpi_inq_dimid")
     err = ncmpi_inq_dimlen(ncid, dimid, &longitude);
@@ -797,10 +801,7 @@ int wrf_r_benchmark(char       *in_file,
         assert(mem_alloc == buf_size);
     }
 
-    /* start the timer */
-    MPI_Barrier(MPI_COMM_WORLD);
-    timing[0] = MPI_Wtime();
-
+    timing[1] = MPI_Wtime() - timing[0];
     timing[2] = timing[3] = 0;
 
     /* ntimes is the number of records */
@@ -880,7 +881,7 @@ int wrf_r_benchmark(char       *in_file,
         printf("                                %.2f GiB\n", (float)sum_r_size/1073741824);
         double bw = (double)sum_r_size / 1048576;
         printf("Max open-to-close time:         %.4f sec\n", max_t[0]);
-        printf("Max define metadata time:       %.4f sec\n", max_t[1]);
+        printf("Max inquire metadata time:      %.4f sec\n", max_t[1]);
         printf("Max iget posting  time:         %.4f sec\n", max_t[2]);
         printf("Max wait_all      time:         %.4f sec\n", max_t[3]);
         printf("Read  bandwidth:                %.2f MiB/s\n", bw/max_t[0]);
@@ -907,6 +908,7 @@ err_out:
         for (i=0; i<nvars; i++) {
             if (vars[i].nelems > 0) free(vars[i].buf);
             if (vars[i].name != NULL) free(vars[i].name);
+            if (vars[i].dimids != NULL) free(vars[i].dimids);
         }
         free(vars);
     }
@@ -939,9 +941,13 @@ err_out:
     return err;
 }
 
+/*---- parse_str() >---------------------------------------------------------*/
+/* This subroutine parses an input string, in_str, into substring tokens,
+ * separated by comma, and returns the number of substrings.
+ */
 static
-int parse_str(char  *in_str,
-              int  **int_arr)
+int parse_str(char   *in_str,
+              char ***str_arr)
 {
     char *token, *str_dup;
     int nelems=0;
@@ -962,16 +968,16 @@ int parse_str(char  *in_str,
 
     free(str_dup);
 
-    /* allocate int_arr */
-    *int_arr = (int*) malloc(sizeof(int) * nelems);
+    /* allocate str_arr */
+    *str_arr = (char**) malloc(sizeof(char*) * nelems);
 
-    /* populate int_arr[] */
+    /* populate str_arr[] */
     str_dup = strdup(in_str);
     token = strtok(str_dup, ",");
-    (*int_arr)[0] = atoi(token);
+    (*str_arr)[0] = strdup(token);
     nelems = 1;
     while ((token = strtok(NULL, ",")) != NULL)
-        (*int_arr)[nelems++] = atoi(token);
+        (*str_arr)[nelems++] = strdup(token);
 
     free(str_dup);
     return nelems;
@@ -985,12 +991,11 @@ usage(char *argv0)
     "       [-h] print this help\n"
     "       [-q] quiet mode\n"
     "       [-d] debug mode\n"
-    "       [-r filename] benchmark read peformance\n"
-    "       [-w filename] benchmark write peformance\n"
+    "       [-r file1,file2,...] benchmark read  performance\n"
+    "       [-w file1,file2,...] benchmark write performance\n"
     "       [-y num] longitude of global 2D grid\n"
     "       [-x num] latitude of global 2D grid\n"
     "       [-n num] number of time steps\n"
-    "       [-c str] a list of cb_nodes separated by commas\n"
     "       [-i cdf_file] input text file containing CDL header\n";
     fprintf(stderr, help, argv0);
 }
@@ -999,11 +1004,9 @@ int main(int argc, char** argv)
 {
     extern int optind;
     extern char *optarg;
-    char out_file[1024], in_file[1024], int_str[24];
-    char *cdl_file, *cb_nodes_str;
-    int i, j, err, nerrs=0, nprocs, rank, ntimes, psizes[2], hid;
-    int num_cb_nodes, num_intra_nodes, *cb_nodes, do_read, do_write;
-    int nc_num_aggrs_per_node[]={0};
+    char *out_files, *in_files, *cdl_file, **fname;
+    int i, err, nerrs=0, nprocs, rank, ntimes, psizes[2], hid;
+    int nfiles, do_read, do_write;
     MPI_Offset longitude, latitude;
     MPI_Info info=MPI_INFO_NULL;
 
@@ -1012,16 +1015,16 @@ int main(int argc, char** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    verbose  = 1;
-    debug    = 0;
-    do_read  = 0;
-    do_write = 0;
-    ntimes   = 1;
-    cdl_file = NULL;
+    verbose   = 1;
+    debug     = 0;
+    do_read   = 0;
+    do_write  = 0;
+    ntimes    = 1;
+    cdl_file  = NULL;
+    in_files  = NULL;
+    out_files = NULL;
     longitude = -1; /* default to use west_east from cdl file */
-    latitude = -1; /* default to use south_north from cdl file */
-    cb_nodes     = NULL;
-    cb_nodes_str = NULL;
+    latitude  = -1; /* default to use south_north from cdl file */
 
     while ((i = getopt(argc, argv, "hqdr:w:y:x:n:c:i:")) != EOF)
         switch(i) {
@@ -1030,16 +1033,14 @@ int main(int argc, char** argv)
             case 'd': debug = 1;
                       break;
             case 'r': do_read = 1;
-                      snprintf(in_file, 1024, "%s", optarg);
+                      in_files = strdup(optarg);
                       break;
             case 'w': do_write = 1;
-                      snprintf(out_file, 1024, "%s", optarg);
+                      out_files = strdup(optarg);
                       break;
             case 'y': longitude = atoll(optarg);
                       break;
             case 'x': latitude = atoll(optarg);
-                      break;
-            case 'c': cb_nodes_str = strdup(optarg);
                       break;
             case 'n': ntimes = atoi(optarg);
                       break;
@@ -1063,104 +1064,71 @@ int main(int argc, char** argv)
 
     /* input CDL file is required for write benchmark */
     if (do_write && cdl_file == NULL) {
-        if (rank == 0) usage(argv[0]);
+        if (rank == 0) {
+            fprintf(stderr, "Error: write benchmark requires input CDL file\n");
+            usage(argv[0]);
+        }
         MPI_Finalize();
         return 1;
-    }
-
-    /* parse CDL header file */
-    if (do_write) {
-        err = cdl_hdr_open(cdl_file, &hid);
-        free(cdl_file);
-        if (err != NC_NOERR) goto err_out;
     }
 
     /* set up the 2D block-block data partitioning pattern */
     psizes[0] = psizes[1] = 0;
     MPI_Dims_create(nprocs, 2, psizes);
 
-    if (debug && do_write && rank == 0) {
-        printf("longitude=%lld latitude=%lld psizes=%d x %d\n",
-               longitude,latitude,psizes[0],psizes[1]);
-        fflush(stdout);
-    }
-
-    if (cb_nodes_str != NULL) {
-        num_cb_nodes = parse_str(cb_nodes_str, &cb_nodes);
-        free(cb_nodes_str);
-    }
-    else
-        num_cb_nodes = 1;
-
-    num_intra_nodes = sizeof(nc_num_aggrs_per_node) / sizeof(int);
-
-    /* set PnetCDF I/O hints */
-    MPI_Info_create(&info);
-
     if (do_write) {
-        for (i=0; i<num_cb_nodes; i++) {
-            /* set hint cb_nodes */
-            if (cb_nodes != NULL) {
-                sprintf(int_str, "%d", cb_nodes[i]);
-                MPI_Info_set(info, "cb_nodes", int_str);
-            }
+        /* parse CDL header file */
+        err = cdl_hdr_open(cdl_file, &hid);
+        free(cdl_file);
+        if (err != NC_NOERR) goto err_out;
 
-            for (j=0; j<num_intra_nodes; j++) {
-                snprintf(int_str, 24, "%d", nc_num_aggrs_per_node[j]);
-                MPI_Info_set(info, "nc_num_aggrs_per_node", int_str);
-
-                if (debug && rank == 0) {
-                    printf("Info cb_nodes set to %d nc_num_aggrs_per_node set to=%d\n",
-                           cb_nodes[i],nc_num_aggrs_per_node[j]);
-                    fflush(stdout);
-                }
-
-                MPI_Barrier(MPI_COMM_WORLD);
-
-                err = wrf_w_benchmark(out_file, hid, psizes, longitude, latitude,
-                                      ntimes, info);
-
-                if (err != NC_NOERR)
-                    printf("%d: Error at %s line=%d: i=%d j=%d error=%s\n",
-                           rank, argv[0], __LINE__, i, j, ncmpi_strerror(err));
-            }
+        if (debug && rank == 0) {
+            printf("longitude=%lld latitude=%lld psizes=%d x %d\n",
+                longitude,latitude,psizes[0],psizes[1]);
+            fflush(stdout);
         }
+
+        /* Example of out_files: "0.nc,1.nc,2.nc", i.e. 3 output files */
+        nfiles = parse_str(out_files, &fname);
+
+        for (i=0; i<nfiles; i++) {
+            MPI_Barrier(MPI_COMM_WORLD);
+
+            err = wrf_w_benchmark(fname[i], hid, psizes, longitude, latitude,
+                                  ntimes, info);
+
+            if (err != NC_NOERR)
+                printf("%d: Error at %s line=%d: i=%d error=%s\n",
+                       rank, argv[0], __LINE__, i, ncmpi_strerror(err));
+
+            free(fname[i]);
+        }
+        if (nfiles > 0) free(fname);
     }
 
     if (do_read) {
-        for (i=0; i<num_cb_nodes; i++) {
-            /* set hint cb_nodes */
-            if (cb_nodes != NULL) {
-                sprintf(int_str, "%d", cb_nodes[i]);
-                MPI_Info_set(info, "cb_nodes", int_str);
-            }
+        /* Example of in_files: "0.nc,1.nc,2.nc", i.e. 3 input files */
+        nfiles = parse_str(in_files, &fname);
 
-            for (j=0; j<num_intra_nodes; j++) {
-                snprintf(int_str, 24, "%d", nc_num_aggrs_per_node[j]);
-                MPI_Info_set(info, "nc_num_aggrs_per_node", int_str);
+        for (i=0; i<nfiles; i++) {
+            MPI_Barrier(MPI_COMM_WORLD);
 
-                if (debug && rank == 0) {
-                    printf("Info cb_nodes set to %d nc_num_aggrs_per_node set to=%d\n",
-                           cb_nodes[i],nc_num_aggrs_per_node[j]);
-                    fflush(stdout);
-                }
+            err = wrf_r_benchmark(fname[i], psizes, ntimes, info);
 
-                MPI_Barrier(MPI_COMM_WORLD);
+            if (err != NC_NOERR)
+                printf("%d: Error at %s line=%d: i=%d error=%s\n",
+                       rank, argv[0], __LINE__, i, ncmpi_strerror(err));
 
-                err = wrf_r_benchmark(in_file, psizes, ntimes, info);
-
-                if (err != NC_NOERR)
-                    printf("%d: Error at %s line=%d: i=%d j=%d error=%s\n",
-                           rank, argv[0], __LINE__, i, j, ncmpi_strerror(err));
-            }
+            free(fname[i]);
         }
+        if (nfiles > 0) free(fname);
     }
-
-    MPI_Info_free(&info);
-    if (cb_nodes != NULL) free(cb_nodes);
 
 err_out:
     cdl_hdr_close(hid);
+    if (out_files != NULL) free(out_files);
+    if (in_files  != NULL) free(in_files);
+    if (info != MPI_INFO_NULL) MPI_Info_free(&info);
 
     MPI_Finalize();
     return (nerrs > 0);
