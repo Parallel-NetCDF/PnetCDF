@@ -84,10 +84,11 @@ This is essentially a placeholder for the next release note ...
 * New programs for I/O benchmarks
   + WRF-IO contains an extraction of the I/O kernel of WRF (Wether Research
     and Forecast Model, a weather prediction computer simulation program
-    developed at NCAR) that can be used to evaluate the file write performance
+    developed at NCAR) that can be used to evaluate the file I/O performance
     of WRF. It's data partitioning pattern is a 2D block-block checkerboard
     pattern, along the longitude and latitude.
-    See [PR #165](https://github.com/Parallel-NetCDF/PnetCDF/pull/165).
+    See [PR #165](https://github.com/Parallel-NetCDF/PnetCDF/pull/165)
+    and [PR #181](https://github.com/Parallel-NetCDF/PnetCDF/pull/181).
 
 * New test program
   + test/cdf/tst_cdl_hdr_parser.c tests the new CDL header APIs.
