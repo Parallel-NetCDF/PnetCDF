@@ -555,7 +555,11 @@ int wrf_w_benchmark(char       *out_file,
     /* create the output file */
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, out_file, cmode, info, &ncid);
-    CHECK_ERR("ncmpi_create")
+    if (err != NC_NOERR) {
+        printf("Error at line=%d: creating file %s (%s)\n",
+               __LINE__, out_file, ncmpi_strerror(err));
+        goto err_out;
+    }
 
     /* define dimension, variables, and attributes */
     err = def_dims_vars(ncid, hid, &longitude, &latitude, vars);
@@ -730,7 +734,11 @@ int wrf_r_benchmark(char       *in_file,
 
     /* open input file */
     err = ncmpi_open(MPI_COMM_WORLD, in_file, NC_NOWRITE, info, &ncid);
-    CHECK_ERR("ncmpi_open")
+    if (err != NC_NOERR) {
+        printf("Error at line=%d: opening file %s (%s)\n",
+               __LINE__, in_file, ncmpi_strerror(err));
+        goto err_out;
+    }
 
     /* start the timer */
     MPI_Barrier(MPI_COMM_WORLD);
@@ -1097,13 +1105,13 @@ int main(int argc, char** argv)
             err = wrf_w_benchmark(fname[i], hid, psizes, longitude, latitude,
                                   ntimes, info);
 
-            if (err != NC_NOERR)
-                printf("%d: Error at %s line=%d: i=%d error=%s\n",
-                       rank, argv[0], __LINE__, i, ncmpi_strerror(err));
-
+            if (err != NC_NOERR) goto err_out;
             free(fname[i]);
         }
+
         if (nfiles > 0) free(fname);
+        cdl_hdr_close(hid);
+        if (out_files != NULL) free(out_files);
     }
 
     if (do_read) {
@@ -1115,19 +1123,15 @@ int main(int argc, char** argv)
 
             err = wrf_r_benchmark(fname[i], psizes, ntimes, info);
 
-            if (err != NC_NOERR)
-                printf("%d: Error at %s line=%d: i=%d error=%s\n",
-                       rank, argv[0], __LINE__, i, ncmpi_strerror(err));
-
+            if (err != NC_NOERR) goto err_out;
             free(fname[i]);
         }
+
         if (nfiles > 0) free(fname);
+        if (in_files  != NULL) free(in_files);
     }
 
 err_out:
-    cdl_hdr_close(hid);
-    if (out_files != NULL) free(out_files);
-    if (in_files  != NULL) free(in_files);
     if (info != MPI_INFO_NULL) MPI_Info_free(&info);
 
     MPI_Finalize();
