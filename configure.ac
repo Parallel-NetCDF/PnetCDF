@@ -1261,6 +1261,8 @@ if test "x${debug}" = xyes; then
       AC_DEFINE(PNC_MALLOC_TRACE)
    fi
    PNETCDF_DEBUG=1
+else
+   AC_DEFINE(NDEBUG, 1, [Remove assert() macro at compile time.])
 fi
 AC_SUBST(PNETCDF_DEBUG)
 AM_CONDITIONAL(PNETCDF_DEBUG, [test x"$PNETCDF_DEBUG" = x1])
