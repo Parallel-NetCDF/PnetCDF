@@ -186,7 +186,15 @@ ifdef(`PNETCDF', ``#'if 1', ``#'if 0')
     }
     else {
         w_len = write(fd, "0123456789abcdefghijklmnopqrstuvwxyz", 36);
+#ifdef NDEBUG
+        if (w_len < 0) {
+            fprintf(stderr, "Error %s at %d: write() (%s)",
+                    __func__,__LINE__,strerror(errno));
+            abort();
+        }
+#else
         assert(w_len >= 0);
+#endif
         close(fd);
     }
 
