@@ -65,7 +65,7 @@ inRange_uchar(const int     cdf_format,
 static int
 inRange_float(const double value, const nc_type xtype)
 {
-    double min, max;
+    double min=(-FLT_MAX), max=FLT_MAX;
 
     switch (xtype) {
         /* for NC_CHAR, no type conversion will happen. Thus no NC_ERANGE */
@@ -100,7 +100,12 @@ inRange_float(const double value, const nc_type xtype)
         case NC_UINT64: min = 0;
                         max = (double)X_UINT64_MAX;
                         break;
-        default: assert(0);
+        default:
+#ifdef NDEBUG
+                        abort();
+#else
+                        assert(0);
+#endif
     }
     if (!( value >= min && value <= max)) {
 #if 0    /* DEBUG */
