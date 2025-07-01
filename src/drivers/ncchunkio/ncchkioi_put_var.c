@@ -505,7 +505,8 @@ int ncchkioi_put_var_cb_proc (NC_chk *ncchkp,
 	if (nsend > 0) {
 		sbuf[0] = sbufp[0] = (char *)NCI_Malloc (bsize);
 		CHK_PTR (sbuf[0])
-		for (i = 1; i < nsend; i++) { sbuf[i] = sbufp[i] = sbuf[0] + ssize[i]; }
+		for (i = 1; i < nsend; i++)
+            sbuf[i] = sbufp[i] = sbuf[i-1] + ssize[i-1];
 	}
 
 	// Pack requests
@@ -540,7 +541,8 @@ int ncchkioi_put_var_cb_proc (NC_chk *ncchkp,
 
 			// Data
 			packoff = 0;
-			CHK_ERR_PACK (buf, 1, ptype, sbufp[j], ssize[j], &packoff, MPI_COMM_SELF);
+            int outsize = ssize[j] - sizeof(int) * (varp->ndim * 2 + 1);
+			CHK_ERR_PACK (buf, 1, ptype, sbufp[j], outsize, &packoff, MPI_COMM_SELF);
 			sbufp[j] += packoff;
 			MPI_Type_free (&ptype);
 		}
