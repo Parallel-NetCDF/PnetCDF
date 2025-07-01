@@ -164,8 +164,7 @@ int ncchkioi_put_var_cb_chunk (NC_chk *ncchkp,
 			CHK_ERR_TYPE_COMMIT (&ptype);
 
 			// Pack data
-			CHK_ERR_PACK (buf, 1, ptype, sbufs[nsend], packoff + overlapsize, &packoff,
-						  ncchkp->comm);
+			CHK_ERR_PACK (buf, 1, ptype, sbufs[nsend], packoff + overlapsize, &packoff, MPI_COMM_SELF);
 
 			MPI_Type_free (&ptype);
 
@@ -275,7 +274,7 @@ int ncchkioi_put_var_cb_chunk (NC_chk *ncchkp,
 
 				// Pack data into intermediate buffer
 				packoff = 0;
-				CHK_ERR_PACK (buf, 1, ptype, tbuf, varp->chunksize, &packoff, ncchkp->comm);
+				CHK_ERR_PACK (buf, 1, ptype, tbuf, varp->chunksize, &packoff, MPI_COMM_SELF);
 				overlapsize = packoff;
 
 				MPI_Type_free (&ptype);
@@ -291,8 +290,7 @@ int ncchkioi_put_var_cb_chunk (NC_chk *ncchkp,
 
 				// Unpack data into chunk buffer
 				packoff = 0;
-				CHK_ERR_UNPACK (tbuf, overlapsize, &packoff, varp->chunk_cache[cid]->buf, 1, ptype,
-								ncchkp->comm);
+				CHK_ERR_UNPACK (tbuf, overlapsize, &packoff, varp->chunk_cache[cid]->buf, 1, ptype, MPI_COMM_SELF);
 
 				MPI_Type_free (&ptype);
 
@@ -328,8 +326,7 @@ int ncchkioi_put_var_cb_chunk (NC_chk *ncchkp,
 			CHK_ERR_TYPE_COMMIT (&ptype);
 
 			// Data
-			CHK_ERR_UNPACK (rbufs[j], rsizes[j], &packoff, varp->chunk_cache[cid]->buf, 1, ptype,
-							ncchkp->comm);
+			CHK_ERR_UNPACK (rbufs[j], rsizes[j], &packoff, varp->chunk_cache[cid]->buf, 1, ptype, MPI_COMM_SELF);
 			MPI_Type_free (&ptype);
 
 			// Mark chunk as dirty
@@ -543,7 +540,7 @@ int ncchkioi_put_var_cb_proc (NC_chk *ncchkp,
 
 			// Data
 			packoff = 0;
-			CHK_ERR_PACK (buf, 1, ptype, sbufp[j], ssize[j], &packoff, ncchkp->comm);
+			CHK_ERR_PACK (buf, 1, ptype, sbufp[j], ssize[j], &packoff, MPI_COMM_SELF);
 			sbufp[j] += packoff;
 			MPI_Type_free (&ptype);
 		}
@@ -626,7 +623,7 @@ int ncchkioi_put_var_cb_proc (NC_chk *ncchkp,
 
 			// Pack data into intermediate buffer
 			packoff = 0;
-			CHK_ERR_PACK (buf, 1, ptype, tbuf, varp->chunksize, &packoff, ncchkp->comm);
+			CHK_ERR_PACK (buf, 1, ptype, tbuf, varp->chunksize, &packoff, MPI_COMM_SELF);
 			MPI_Type_free (&ptype);
 			overlapsize = packoff;
 
@@ -641,8 +638,7 @@ int ncchkioi_put_var_cb_proc (NC_chk *ncchkp,
 
 			// Unpack data into chunk buffer
 			packoff = 0;
-			CHK_ERR_UNPACK (tbuf, overlapsize, &packoff, varp->chunk_cache[cid]->buf, 1, ptype,
-							ncchkp->comm);
+			CHK_ERR_UNPACK (tbuf, overlapsize, &packoff, varp->chunk_cache[cid]->buf, 1, ptype, MPI_COMM_SELF);
 			MPI_Type_free (&ptype);
 
 			// Mark chunk as dirty
@@ -679,8 +675,7 @@ int ncchkioi_put_var_cb_proc (NC_chk *ncchkp,
 
 			// Data
 			packoff = 0;
-			CHK_ERR_UNPACK (rbufp[j], rsize[j], &packoff, varp->chunk_cache[cid]->buf, 1, ptype,
-							ncchkp->comm);
+			CHK_ERR_UNPACK (rbufp[j], rsize[j], &packoff, varp->chunk_cache[cid]->buf, 1, ptype, MPI_COMM_SELF);
 			rbufp[j] += packoff;
 			MPI_Type_free (&ptype);
 
