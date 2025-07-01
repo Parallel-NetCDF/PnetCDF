@@ -200,7 +200,7 @@ compress(MPI_Comm comm, char *filename, int cmode)
      * partitioning pattern.
      */
     CALC_START_COUNT(NY, psize[0], rank_y, start[1], count[1])
-    CALC_START_COUNT(NY, psize[1], rank_x, start[2], count[2])
+    CALC_START_COUNT(NX, psize[1], rank_x, start[2], count[2])
     start[0] = 0;
     count[0] = 1;
     if (verbose)
