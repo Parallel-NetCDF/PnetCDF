@@ -37,8 +37,7 @@ inRange(const double value, const nc_type xtype)
         case NC_INT64:  return value >= (double)X_INT64_MIN  && value <= (double)X_INT64_MAX;
         case NC_UINT64: return value >= 0            && value <= (double)X_UINT64_MAX;
         default:
-            assert(0);
-            return(0);
+            abort();
     }
 }
 
@@ -464,7 +463,7 @@ hash(const nc_type     xtype,
                     case NC_INT64:  return X_INT_MIN - 128.0; /* slight smaller
                                                                  than INT_MIN */
                     case NC_UINT64: return 0;
-                    default:  assert(0);
+                    default:  abort();
                 }
             case 1:
                 switch (xtype) {  /* test if can get/put MAX value */
@@ -483,7 +482,7 @@ hash(const nc_type     xtype,
                                     /* slightly bigger than INT_MAX */
                     case NC_UINT64: return X_UINT_MAX + 128.0;
                                     /* slightly bigger than UINT_MAX */
-                    default:  assert(0);
+                    default:  abort();
                 }
             case 2:
                 switch (xtype) {  /* test if can detect out-of-boundary value */
@@ -500,7 +499,7 @@ hash(const nc_type     xtype,
                     case NC_UINT:   return -1.0;
                     case NC_INT64:  return -1.0;  /* skip test */
                     case NC_UINT64: return -1.0;
-                    default:  assert(0);
+                    default:  abort();
                 }
             case 3:
                 switch (xtype) {  /* test if can detect out-of-boundary value */
@@ -517,7 +516,7 @@ hash(const nc_type     xtype,
                     case NC_UINT:   return X_UINT_MAX  +1.0;
                     case NC_INT64:  return 1.0;    /* skip test */
                     case NC_UINT64: return 1.0;    /* skip test */
-                    default:  assert(0);
+                    default:  abort();
                 }
         }
     } else { /* for array with more than 4 elements, pick some random numbers */
@@ -538,7 +537,7 @@ hash(const nc_type     xtype,
             case NC_UINT64:  base =  20;  break;
             default:
                 base = 0;
-                assert(0);
+                abort();
         }
         if (rank < 0) { /* attribute */
             result = base * 7;
@@ -602,7 +601,7 @@ char2type(char letter) {
         case 'u': return NC_UINT;
         case 'x': return NC_INT64;
         case 'z': return NC_UINT64;
-        default:  assert(0);
+        default:  abort();
     }
     return NC_CHAR;  /* Just to keep compiler happy */
 }
