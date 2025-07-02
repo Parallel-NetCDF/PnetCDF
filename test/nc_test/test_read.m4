@@ -140,7 +140,6 @@ TestFunc(open)(void)
     int err, ncid, ncid2, nok=0;
 ifdef(`PNETCDF', ``#'if 1', ``#'if 0')
     int fd;
-    ssize_t w_len;
 #endif
 
     /* Try to open a nonexistent file */
@@ -185,16 +184,10 @@ ifdef(`PNETCDF', ``#'if 1', ``#'if 0')
         error("Error: creating a non-CDF file (%s)", strerror(errno));
     }
     else {
+        ssize_t w_len;
         w_len = write(fd, "0123456789abcdefghijklmnopqrstuvwxyz", 36);
-#ifdef NDEBUG
-        if (w_len < 0) {
-            fprintf(stderr, "Error %s at %d: write() (%s)",
-                    __func__,__LINE__,strerror(errno));
-            abort();
-        }
-#else
-        assert(w_len >= 0);
-#endif
+        if (w_len < 0)
+            error("Error: writing to a non-CDF file (%s)", strerror(errno));
         close(fd);
     }
 
