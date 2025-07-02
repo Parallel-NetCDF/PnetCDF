@@ -76,7 +76,7 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
     NC_bb_metadataentry *entryp;
     NC_bb_metadataheader *headerp;
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double t1, t2, t3, t4, t5;
     t1 = MPI_Wtime();
 #endif
@@ -199,7 +199,7 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
     ncbbio_metaidx_add(ncbbp, (NC_bb_metadataentry*)((char*)entryp -
                        (char*)(ncbbp->metadata.buffer)));
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     t2 = MPI_Wtime();
 #endif
 
@@ -210,7 +210,7 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
     err = ncbbio_sharedfile_write(ncbbp->datalog_fd, buf, put_size);
     if (err != NC_NOERR) return err;
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     t3 = MPI_Wtime();
 #endif
 
@@ -228,7 +228,7 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
     err = ncbbio_sharedfile_write(ncbbp->metalog_fd, buffer, esize);
     if (err != NC_NOERR) return err;
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     t4 = MPI_Wtime();
 #endif
 
@@ -239,7 +239,7 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
                                    SIZEOF_MPI_OFFSET, 56);
     if (err != NC_NOERR) return err;
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     t5 = MPI_Wtime();
     ncbbp->put_data_wr_time += t3 - t2;
     ncbbp->put_meta_wr_time += t4 - t3;
@@ -281,7 +281,7 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
     NC_bb_metadataentry *entryp;
     NC_bb_metadataheader *headerp;
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double t1, t2, t3, t4, t5;
     t1 = MPI_Wtime();
 #endif
@@ -418,7 +418,7 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
     ncbbio_metaidx_add(ncbbp, (NC_bb_metadataentry*)((char*)entryp -
                     (char*)(ncbbp->metadata.buffer)));
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     t2 = MPI_Wtime();
 #endif
 
@@ -435,7 +435,7 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
     err = ncbbio_sharedfile_write(ncbbp->datalog_fd, buf, total_put_size);
     if (err != NC_NOERR) return err;
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     t3 = MPI_Wtime();
 #endif
 
@@ -453,7 +453,7 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
     err = ncbbio_sharedfile_write(ncbbp->metalog_fd, buffer, esize);
     if (err != NC_NOERR) return err;
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     t4 = MPI_Wtime();
 #endif
 
@@ -464,7 +464,7 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
                                    SIZEOF_MPI_OFFSET, 56);
     if (err != NC_NOERR) return err;
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     t5 = MPI_Wtime();
     ncbbp->put_data_wr_time += t3 - t2;
     ncbbp->put_meta_wr_time += t4 - t3;

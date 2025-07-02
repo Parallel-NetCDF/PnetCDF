@@ -451,7 +451,7 @@ struct NC {
     int  my_aggr;            /* rank ID of my aggregator */
     int  num_nonaggrs;       /* number of non-aggregators assigned */
     int *nonaggr_ranks;      /* ranks of assigned non-aggregators */
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double aggr_time;
 #endif
 };

@@ -173,7 +173,7 @@ typedef struct NC_bb {
     MPI_Offset recdimsize;
     MPI_Offset flushbuffersize;
     MPI_Offset maxentrysize;
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     /* Profiling information */
     MPI_Offset total_data;
     MPI_Offset total_meta;

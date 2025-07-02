@@ -189,7 +189,7 @@ ncmpio_intra_node_aggr_init(NC *ncp)
     ncp->num_nonaggrs = 0;     /* number of non-aggregators assigned */
     ncp->nonaggr_ranks = NULL; /* ranks of assigned non-aggregators */
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     ncp->aggr_time = 0.0;
 #endif
 
@@ -197,7 +197,7 @@ ncmpio_intra_node_aggr_init(NC *ncp)
         /* disable intra-node aggregation */
         return NC_NOERR;
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double timing = MPI_Wtime();
 #endif
 
@@ -404,7 +404,7 @@ ncmpio_intra_node_aggr_init(NC *ncp)
      * of processes are allocated on the same node.
      */
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     ncp->aggr_time = MPI_Wtime() - timing;
 #endif
 
@@ -831,7 +831,7 @@ intra_node_aggregation(NC           *ncp,
     MPI_Datatype recvTypes, fileType=MPI_BYTE;
     MPI_File fh;
     MPI_Request *req=NULL;
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double timing = MPI_Wtime();
 #endif
 #ifdef HAVE_MPI_LARGE_COUNT
@@ -1232,7 +1232,7 @@ intra_node_aggregation(NC           *ncp,
         NCI_Free(lengths);
     }
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     ncp->aggr_time += MPI_Wtime() - timing;
 #endif
 
@@ -1281,7 +1281,7 @@ ncmpio_intra_node_aggregation_nreqs(NC         *ncp,
     int *lengths=NULL;
 #endif
     MPI_Datatype bufType=MPI_BYTE;
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double timing = MPI_Wtime();
 #endif
 
@@ -1313,7 +1313,7 @@ ncmpio_intra_node_aggregation_nreqs(NC         *ncp,
     if (put_list != NULL)
         NCI_Free(put_list);
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     ncp->aggr_time += MPI_Wtime() - timing;
 #endif
 
@@ -1365,7 +1365,7 @@ ncmpio_intra_node_aggregation(NC               *ncp,
     MPI_Aint *offsets=NULL;
     int *lengths=NULL;
 #endif
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double timing = MPI_Wtime();
 #endif
 
@@ -1390,7 +1390,7 @@ ncmpio_intra_node_aggregation(NC               *ncp,
     }
     status = err;
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     ncp->aggr_time += MPI_Wtime() - timing;
 #endif
 

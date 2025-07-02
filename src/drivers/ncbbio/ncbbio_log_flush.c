@@ -84,7 +84,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
     char *databuffer, *databufferoff;
     NC_bb_metadataheader *headerp;
     NC_bb_metadataptr *ip;
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double t1, t2, t3, t4;
 
     t1 = MPI_Wtime();
@@ -106,7 +106,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
         databuffersize = ncbbp->maxentrysize;
     }
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     if ((size_t)(ncbbp->max_buffer) < databuffersize){
         ncbbp->max_buffer = databuffersize;
     }
@@ -184,14 +184,14 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
                  * We read only what needed by pending requests
                  */
                 if (dataread < databufferused){
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
                     t2 = MPI_Wtime();
 #endif
                     err = ncbbio_sharedfile_read(ncbbp->datalog_fd, databuffer + dataread, databufferused - dataread);
                     if (err != NC_NOERR){
                         return err;
                     }
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
                     t3 = MPI_Wtime();
                     ncbbp->flush_data_rd_time += t3 - t2;
 #endif
@@ -211,14 +211,14 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
          * We read only what needed by pending requests
          */
         if (dataread < databufferused){
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
             t2 = MPI_Wtime();
 #endif
             err = ncbbio_sharedfile_read(ncbbp->datalog_fd, databuffer + dataread, databufferused - dataread);
             if (err != NC_NOERR){
                 return err;
             }
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
             t3 = MPI_Wtime();
             ncbbp->flush_data_rd_time += t3 - t2;
 #endif
@@ -250,7 +250,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
                         stride = NULL;
                     }
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
                     t2 = MPI_Wtime();
 #endif
 
@@ -260,7 +260,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
                         status = err;
                     }
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
                     t3 = MPI_Wtime();
                     ncbbp->flush_put_time += t3 - t2;
 #endif
@@ -294,7 +294,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
                         return err;
                     }
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
                     t2 = MPI_Wtime();
 #endif
 
@@ -309,7 +309,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
                         status = err;
                     }
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
                     t3 = MPI_Wtime();
                     ncbbp->flush_put_time += t3 - t2;
 #endif
@@ -324,7 +324,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
             entryp = (NC_bb_metadataentry*)(((char*)entryp) + entryp->esize);
         }
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
         t2 = MPI_Wtime();
 #endif
         /*
@@ -340,7 +340,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
             status = err;
         }
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
         t3 = MPI_Wtime();
         ncbbp->flush_wait_time += t3 - t2;
 #endif
@@ -388,7 +388,7 @@ int ncbbio_log_flush_core(NC_bb *ncbbp) {
     if (starts != NULL)
         NCI_Free(starts);
 
-#ifdef PNETCDF_PROFILING
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     t4 = MPI_Wtime();
     ncbbp->flush_replay_time += t4 - t1;
 #endif
