@@ -2525,7 +2525,6 @@ if test "x$enable_profiling" = "xyes" ; then
    fi
 fi
 AC_SUBST(PNETCDF_PROFILING)
-AM_CONDITIONAL(PNETCDF_PROFILING, [test x$enable_profiling = xyes])
 
 dnl build test programs and benchmark programs
 AM_CONDITIONAL(BUILD_TESTSETS, [true])
