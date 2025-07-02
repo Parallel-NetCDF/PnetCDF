@@ -178,15 +178,18 @@
     break;                                                                   \
 }
 
-#define CHECK_VAR_DIFF(type, func) {                                         \
+#define  ABS(x) ((x) >= 0) ? (x) : (-x)
+#define UABS(x) (x)
+
+#define CHECK_VAR_DIFF(type, func, xabs) {                                   \
     int pos, isDiff, worst = -1;                                             \
     type *b1, *b2;                                                           \
     b1 = (type *)calloc(varsize * 2, sizeof(type));                          \
     if (!b1) OOM_ERROR                                                       \
     b2 = b1 + varsize;                                                       \
-    err = func(ncid[0], varid1, start, shape, b1);                           \
+    err = ncmpi_get_vara_##func(ncid[0], varid1, start, shape, b1);          \
     HANDLE_ERROR                                                             \
-    err = func(ncid[1], varid2, start, shape, b2);                           \
+    err = ncmpi_get_vara_##func(ncid[1], varid2, start, shape, b2);          \
     HANDLE_ERROR                                                             \
     if (!check_tolerance) {                                                  \
         for (pos=0; pos<varsize; pos++) {                                    \
@@ -197,8 +200,8 @@
         for (pos=0; pos<varsize; pos++) {                                    \
             double abs_b1, abs_b2, abs_max, diff, ratio;                     \
             if ( b1[pos] == b2[pos] ) continue;                              \
-            abs_b1 = (b1[pos] >= 0) ? b1[pos] : -b1[pos];                    \
-            abs_b2 = (b2[pos] >= 0) ? b2[pos] : -b2[pos];                    \
+            abs_b1 = xabs(b1[pos]);                                          \
+            abs_b2 = xabs(b2[pos]);                                          \
             abs_max = (abs_b1 > abs_b2) ? abs_b1 : abs_b2;                   \
             diff = b1[pos] - b2[pos];                                        \
             diff = (diff >= 0) ? diff : -diff;                               \
@@ -1012,16 +1015,16 @@ cmp_vars:
 
         /* compare the variable contents */
         switch (xtype[0]) {
-            case NC_CHAR:   CHECK_VAR_DIFF(char,   ncmpi_get_vara_text_all);
-            case NC_SHORT:  CHECK_VAR_DIFF(short,  ncmpi_get_vara_short_all);
-            case NC_INT:    CHECK_VAR_DIFF(int,    ncmpi_get_vara_int_all);
-            case NC_FLOAT:  CHECK_VAR_DIFF(float,  ncmpi_get_vara_float_all);
-            case NC_DOUBLE: CHECK_VAR_DIFF(double, ncmpi_get_vara_double_all);
-            case NC_UBYTE:  CHECK_VAR_DIFF(ubyte,  ncmpi_get_vara_uchar_all);
-            case NC_USHORT: CHECK_VAR_DIFF(ushort, ncmpi_get_vara_ushort_all);
-            case NC_UINT:   CHECK_VAR_DIFF(uint,   ncmpi_get_vara_uint_all);
-            case NC_INT64:  CHECK_VAR_DIFF(int64,  ncmpi_get_vara_longlong_all);
-            case NC_UINT64: CHECK_VAR_DIFF(uint64, ncmpi_get_vara_ulonglong_all);
+            case NC_CHAR:   CHECK_VAR_DIFF(char,   text_all,       ABS);
+            case NC_SHORT:  CHECK_VAR_DIFF(short,  short_all,      ABS);
+            case NC_INT:    CHECK_VAR_DIFF(int,    int_all,        ABS);
+            case NC_FLOAT:  CHECK_VAR_DIFF(float,  float_all,      ABS);
+            case NC_DOUBLE: CHECK_VAR_DIFF(double, double_all,     ABS);
+            case NC_UBYTE:  CHECK_VAR_DIFF(ubyte,  uchar_all,     UABS);
+            case NC_USHORT: CHECK_VAR_DIFF(ushort, ushort_all,    UABS);
+            case NC_UINT:   CHECK_VAR_DIFF(uint,   uint_all,      UABS);
+            case NC_INT64:  CHECK_VAR_DIFF(int64,  longlong_all,   ABS);
+            case NC_UINT64: CHECK_VAR_DIFF(uint64, ulonglong_all, UABS);
             default: ; /* TODO: handle unexpected types */
         }
         free(shape);
