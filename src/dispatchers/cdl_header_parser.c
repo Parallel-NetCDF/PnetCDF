@@ -411,7 +411,7 @@ int parse_attr(char          **bptr,
         *bptr += strlen(line) + 1;
         while (**bptr == '\n') (*bptr)++;
 
-        strcpy(line_cpy, line);
+        strncpy(line_cpy, line, LINE_SIZE-1);
 
         prefix_len = strspn(line_cpy, " \t");
         key = line_cpy + prefix_len;
@@ -499,7 +499,7 @@ int parse_vars(char       **bptr,
         *bptr += strlen(line) + 1;
         while (**bptr == '\n') (*bptr)++;
 
-        strncpy(orig_line, line, LINE_SIZE);
+        strncpy(orig_line, line, LINE_SIZE-1);
 
         prefix_len = strspn(line, " \t");
         line += prefix_len;
