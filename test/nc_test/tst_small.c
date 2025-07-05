@@ -25,7 +25,7 @@
 #define NUM_FORMATS 3
 
 #define ATT_NAME "Atom"
-#define MAX_LEN 7
+#define MAX_LEN 16
 
 #define ERR {if (err != NC_NOERR) {printf("Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
 
@@ -33,17 +33,19 @@ static int
 test_small_atts(const char *testfile, int cmode)
 {
    int ncid, err;
-   char att[MAX_LEN + 1], att_in[MAX_LEN + 1], source[MAX_LEN + 1] = "0123456";
+   char att[MAX_LEN], att_in[MAX_LEN], source[MAX_LEN]="0123456";
    int ndims, nvars, natts, unlimdimid;
    MPI_Offset len_in;
-   int t, f;
+   size_t t, f, src_len;
+
+   src_len = strlen(source);
 
    /* Run this with and without fill mode. */
    for (f = 0; f < 2; f++)
    {
       /* Create small files with an attribute that grows by one each
        * time. */
-      for (t = 1; t < MAX_LEN; t++)
+      for (t = 1; t < src_len; t++)
       {
 	 /* Create null-terminated text string of correct length. */
 	 strncpy(att, source, t);
