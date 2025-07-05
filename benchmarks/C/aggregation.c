@@ -106,9 +106,9 @@
     } \
 }
 
-#define DBG_PRINT(pattern, i, j) { \
-    printf("%s i=%d j=%d: start=%lld %lld count=%lld %lld\n", \
-           pattern, i, j, start[0], start[1], count[0], count[1]); \
+#define DBG_PRINT(pattern, n, i) { \
+    printf("%s n=%d i=%d: start=%lld %lld count=%lld %lld\n", \
+           pattern, n, i, start[0], start[1], count[0], count[1]); \
 }
 
 static int debug;
@@ -169,6 +169,9 @@ int benchmark_write(char       *filename,
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
+
+    for (i=0; i<3; i++)
+        bb_gsizes[i] = sc_gsizes[i] = bs_gsizes[i] = sb_gsizes[i] = 0;
 
     /* set PnetCDF I/O hints */
     MPI_Info_create(&info);
@@ -310,7 +313,7 @@ int benchmark_write(char       *filename,
                     err = ncmpi_iput_vara_double(ncid, varid[v], start, count,
                                                  buf[v], &reqs[k++]);
                 ERR(err)
-                if (debug) DBG_PRINT("block-block", i, 0)
+                if (debug) DBG_PRINT("block-block", n, i);
                 v++;
             }
             if (cfg->star_cyclic) {
@@ -327,7 +330,7 @@ int benchmark_write(char       *filename,
                     err = ncmpi_iput_vars_double(ncid, varid[v], start, count,
                                                  stride, buf[v], &reqs[k++]);
                 ERR(err)
-                if (debug) DBG_PRINT("*-cyclic", i, j)
+                if (debug) DBG_PRINT("*-cyclic", n, i);
                 v++;
             }
             if (cfg->block_star) {
@@ -342,7 +345,7 @@ int benchmark_write(char       *filename,
                     err = ncmpi_iput_vara_double(ncid, varid[v], start, count,
                                                  buf[v], &reqs[k++]);
                 ERR(err)
-                if (debug) DBG_PRINT("block-*", i, 0)
+                if (debug) DBG_PRINT("block-*", n, i);
                 v++;
             }
             if (cfg->star_block) {
@@ -357,7 +360,7 @@ int benchmark_write(char       *filename,
                     err = ncmpi_iput_vara_double(ncid, varid[v], start, count,
                                                  buf[v], &reqs[k++]);
                 ERR(err)
-                if (debug) DBG_PRINT("*-block", i, 0)
+                if (debug) DBG_PRINT("*-block", n, i);
                 v++;
             }
         }
