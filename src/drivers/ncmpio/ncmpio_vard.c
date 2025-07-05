@@ -59,7 +59,7 @@ getput_vard(NC               *ncp,
     MPI_File fh;
     MPI_Offset nelems=0, fnelems=0, bnelems=0, offset=0;
     MPI_Datatype etype=MPI_DATATYPE_NULL, xtype=MPI_BYTE;
-    MPI_Offset filetype_size;
+    MPI_Offset filetype_size=0;
 #ifdef HAVE_MPI_TYPE_SIZE_C
     MPI_Count true_lb=0, true_ub=0, true_extent=0;
     MPI_Count type_size;
