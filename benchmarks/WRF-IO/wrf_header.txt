@@ -2,7 +2,7 @@ netcdf wrfout_d01_2022-06-22_00_00_00 {
 // file format: CDF-2 (large file)
 dimensions:
 	Time = UNLIMITED ; // (13 currently)
-	DateStrLen = 19 ;
+	DateStrLen = 20 ;
 	west_east = 1900 ;
 	south_north = 1300 ;
 	bottom_top = 34 ;
