@@ -266,7 +266,7 @@ compress(MPI_Comm comm, char *filename, int cmode)
     PNC_ERR("ncmpi_inq_dimlen")
     if (verbose && rank == 0)
         printf("Time dimension length (expect %lld) and got %lld\n",
-                NTIMES * nprocs, dim_len);
+                NTIMES, dim_len);
 
     err = ncmpi_close(ncid);
     PNC_ERR("ncmpi_close")
