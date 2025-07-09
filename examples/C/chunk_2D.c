@@ -33,37 +33,55 @@
  *    netcdf testfile {
  *    // file format: CDF-5 (big variables)
  *    dimensions:
- *        time = UNLIMITED ; // (0 currently)
- *        Y = 10 ;
- *        X = 10 ;
- *        _datablock_dim_0 = 131484 ;
- *        _datablock_dim_1 = 412 ;
+ *            time = UNLIMITED ; // (0 currently)
+ *            Y = 10 ;
+ *            X = 10 ;
+ *            _datablock_dim_0 = 131484 ;
+ *            _datablock_dim_1 = 412 ;
+ *            _datablock_dim_2 = 412 ;
+ *            _datablock_dim_3 = 412 ;
+ *            _datablock_dim_4 = 412 ;
+ *            _datablock_dim_5 = 412 ;
+ *            _datablock_dim_6 = 412 ;
+ *            _datablock_dim_7 = 412 ;
  *    variables:
- *        int var_0 ;
- *            var_0:_ndim = 3 ;
- *            var_0:_dimids = 0, 1, 2 ;
- *            var_0:_datatype = 4 ;
- *            var_0:_varkind = 1 ;
- *            var_0:_chunkdim = 1, 5, 5 ;
- *            var_0:_filter = 2 ;
- *            var_0:_metaoffset = 8LL ;
- *        int var_1 ;
- *            var_1:_ndim = 3 ;
- *            var_1:_dimids = 0, 1, 2 ;
- *            var_1:_datatype = 4 ;
- *            var_1:_varkind = 1 ;
- *            var_1:_chunkdim = 1, 5, 5 ;
- *            var_1:_filter = 2 ;
- *            var_1:_metaoffset = 65544LL ;
- *        byte _datablock_0(_datablock_dim_0) ;
- *            _datablock_0:_varkind = 2 ;
- *        byte _datablock_1(_datablock_dim_1) ;
- *            _datablock_1:_varkind = 2 ;
+ *            int var_0 ;
+ *                    var_0:_ndim = 3 ;
+ *                    var_0:_dimids = 0, 1, 2 ;
+ *                    var_0:_datatype = 4 ;
+ *                    var_0:_varkind = 1 ;
+ *                    var_0:_chunkdim = 1, 5, 5 ;
+ *                    var_0:_filter = 2 ;
+ *                    var_0:_metaoffset = 8LL ;
+ *            int var_1 ;
+ *                    var_1:_ndim = 3 ;
+ *                    var_1:_dimids = 0, 1, 2 ;
+ *                    var_1:_datatype = 4 ;
+ *                    var_1:_varkind = 1 ;
+ *                    var_1:_chunkdim = 1, 5, 5 ;
+ *                    var_1:_filter = 2 ;
+ *                    var_1:_metaoffset = 65544LL ;
+ *            byte _datablock_0(_datablock_dim_0) ;
+ *                    _datablock_0:_varkind = 2 ;
+ *            byte _datablock_1(_datablock_dim_1) ;
+ *                    _datablock_1:_varkind = 2 ;
+ *            byte _datablock_2(_datablock_dim_2) ;
+ *                    _datablock_2:_varkind = 2 ;
+ *            byte _datablock_3(_datablock_dim_3) ;
+ *                    _datablock_3:_varkind = 2 ;
+ *            byte _datablock_4(_datablock_dim_4) ;
+ *                    _datablock_4:_varkind = 2 ;
+ *            byte _datablock_5(_datablock_dim_5) ;
+ *                    _datablock_5:_varkind = 2 ;
+ *            byte _datablock_6(_datablock_dim_6) ;
+ *                    _datablock_6:_varkind = 2 ;
+ *            byte _datablock_7(_datablock_dim_7) ;
+ *                    _datablock_7:_varkind = 2 ;
  *
  *    // global attributes:
- *            :_comressed = 1 ;
- *            :_nwrite = 2 ;
- *            :_recsize = 2LL ;
+ *                    :_comressed = 1 ;
+ *                    :_nwrite = 8 ;
+ *                    :_recsize = 8LL ;
  *    }
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -74,7 +92,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define NTIMES 2
+#define NTIMES 8
 #define NY 10
 #define NX 10
 #define NVARS 2
@@ -165,7 +183,6 @@ compress(MPI_Comm comm, char *filename, int cmode)
     char name[64];
     int i, j, rank, nprocs, err, nerrs=0, ncid, varid[NVARS];
     int dimid[3], psize[2], rank_y, rank_x;
-    MPI_Offset  global_ny, global_nx;
     MPI_Offset start[3], count[3];
     MPI_Info info;
 
@@ -265,7 +282,7 @@ compress(MPI_Comm comm, char *filename, int cmode)
     err = ncmpi_inq_dimlen(ncid, 0, &dim_len);
     PNC_ERR("ncmpi_inq_dimlen")
     if (verbose && rank == 0)
-        printf("Time dimension length (expect %lld) and got %lld\n",
+        printf("Time dimension length (expect %d) and got %lld\n",
                 NTIMES, dim_len);
 
     err = ncmpi_close(ncid);
@@ -416,6 +433,136 @@ err_out:
     return nerrs;
 }
 
+/*----< partition_time() >---------------------------------------------------*/
+/* Use block-partitioning along time dimension only, i.e. each entire record of
+ * a variable is read by one process only. Each process may read one or more
+ * time records of a variable.
+ */
+static int
+partition_time(MPI_Comm comm, char *filename)
+{
+    char name[64];
+    int i, rank, nprocs, err, nerrs=0, ncid, *varid, ulimit_dimid;
+    int nvars, dimids[3], filter, chunk_dim[3];
+    MPI_Offset nrecs, global_ny, global_nx;
+    MPI_Offset start[3], count[3];
+    MPI_Info info;
+
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &nprocs);
+
+    /* open the file for reading with chunking and compression enabled */
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "nc_chunking", "enable");
+
+    err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid);
+    PNC_ERR("ncmpi_open")
+
+    MPI_Info_free(&info);
+
+    /* obtain dimension info */
+    err = ncmpi_inq_dimid(ncid, "Y", &dimids[1]);
+    PNC_ERR("ncmpi_inq_dimlen")
+
+    err = ncmpi_inq_dimid(ncid, "X", &dimids[2]);
+    PNC_ERR("ncmpi_inq_dimlen")
+
+    err = ncmpi_inq_dimlen(ncid, dimids[1], &global_ny);
+    PNC_ERR("ncmpi_inq_dimlen")
+
+    err = ncmpi_inq_dimlen(ncid, dimids[2], &global_nx);
+    PNC_ERR("ncmpi_inq_dimlen")
+
+    /* obtain the number of record variables */
+    err = ncmpi_inq_num_rec_vars(ncid, &nvars);
+    PNC_ERR("ncmpi_inq_num_rec_vars")
+    if (verbose && rank == 0)
+        printf("Number of record variables = %d\n", nvars);
+
+    varid = (int*) malloc(sizeof(int) * nvars);
+
+    /* obtain variable ID and dimension info */
+    for (i=0; i<nvars; i++) {
+        snprintf(name, 64, "var_%d", i);
+        err = ncmpi_inq_varid(ncid, name, &varid[i]);
+        PNC_ERR("ncmpi_inq_varid")
+    }
+
+    /* obtain unlimited dimension ID */
+    err = ncmpi_inq_unlimdim(ncid, &ulimit_dimid);
+    PNC_ERR("ncmpi_inq_unlimdim")
+
+    /* check the current record dimension size */
+    err = ncmpi_inq_dimlen(ncid, ulimit_dimid, &nrecs);
+    PNC_ERR("ncmpi_inq_dimlen")
+    if (verbose && rank == 0)
+        printf("Time dimension length = %lld\n", nrecs);
+
+    /* get chunking */
+    for (i=0; i<nvars; i++) {
+        err = ncmpi_inq_varname(ncid, varid[i], name);;
+        PNC_ERR("ncmpi_inq_varname")
+        err = ncmpi_var_get_chunk(ncid, varid[i], chunk_dim);;
+        PNC_ERR("ncmpi_var_get_chunk")
+        if (verbose && rank == 0)
+            printf("var %s chunk_dim[3]=%d %d %d\n", name,
+                chunk_dim[0],chunk_dim[1],chunk_dim[2]);
+
+        /* get filter */
+        err = ncmpi_var_get_filter(ncid, varid[i], &filter);
+        PNC_ERR("ncmpi_var_get_filter")
+        if (verbose && rank == 0)
+            printf("var %s filter is %s\n", name,
+                (filter == NC_FILTER_DEFLATE) ?
+                "NC_FILTER_DEFLATE": (filter == NC_FILTER_SZ) ?
+                "NC_FILTER_SZ" : "UNKNOWN");
+    }
+
+    /* block-partition all records of a variable among processes */
+    count[0] = nrecs / nprocs;
+    start[0] = count[0] * rank;
+    if (rank < nrecs % nprocs) {
+        start[0] += rank;
+        count[0]++;
+    }
+    else
+        start[0] += nrecs % nprocs;
+
+    /* no partitioning along Y and X dimensions */
+    start[1] = 0;
+    start[2] = 0;
+    count[1] = global_ny;
+    count[2] = global_nx;
+    if (verbose)
+        printf("rank %d: start=%lld %lld %lld count=%lld %lld %lld\n", rank,
+               start[0],start[1],start[2], count[0],count[1],count[2]);
+
+    /* allocate read buffer */
+    size_t buf_size = count[0] * count[1] * count[2];
+    int **buf = (int**) malloc(sizeof(int*) * nvars);
+    for (i=0; i<nvars; i++)
+        buf[i] = (int*) malloc(sizeof(int) * buf_size);
+
+    for (i=0; i<nvars; i++) {
+        err = ncmpi_iget_vara_int(ncid, varid[i], start, count, buf[i], NULL);
+        PNC_ERR("ncmpi_iget_vara_int")
+    }
+
+    /* wait for nonblocking request to complete */
+    err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+    PNC_ERR("ncmpi_wait_all")
+
+    err = ncmpi_close(ncid);
+    PNC_ERR("ncmpi_close")
+
+    for (i=0; i<nvars; i++) free(buf[i]);
+    free(buf);
+    free(varid);
+
+err_out:
+    return nerrs;
+}
+
 int main(int argc, char** argv)
 {
     extern int optind;
@@ -457,6 +604,9 @@ int main(int argc, char** argv)
     if (err != 0) goto err_out;
 
     err = decompress(MPI_COMM_WORLD, filename);
+    if (err != 0) goto err_out;
+
+    err = partition_time(MPI_COMM_WORLD, filename);
     if (err != 0) goto err_out;
 
     err = pnetcdf_check_mem_usage(MPI_COMM_WORLD);
