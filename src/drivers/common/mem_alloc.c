@@ -52,7 +52,7 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 #if 0
-/*----< ncmpii_init_malloc_tracing() >----------------------------------------*/
+/*----< ncmpii_init_malloc_tracing() >---------------------------------------*/
 void ncmpii_init_malloc_tracing(void)
 {
     ncmpii_mem_alloc     = 0;
@@ -88,7 +88,7 @@ void walker(const void *node, const VISIT which, const int depth) {
         fprintf(stdout, "Warning: malloc yet to be freed (buf=%p size=%zd filename=%s func=%s line=%d)\n", f->buf, f->size, f->filename, f->func, f->lineno);
 }
 
-/*----< ncmpii_add_mem_entry() >----------------------------------------------*/
+/*----< ncmpii_add_mem_entry() >---------------------------------------------*/
 /* add a new malloc entry to the table */
 static
 void ncmpii_add_mem_entry(void       *buf,
@@ -178,8 +178,8 @@ fn_exit:
 }
 #endif
 
-/*----< NCI_Malloc_fn() >-----------------------------------------------------*/
-/* This subroutine is esstentially the same as calling malloc().
+/*----< NCI_Malloc_fn() >----------------------------------------------------*/
+/* This subroutine is essentially the same as calling malloc().
  * According to malloc man page, If size is 0, then malloc() returns either
  * NULL, or a unique pointer value that can later be successfully passed to
  * free(). Thus, there is no need to check whether size is zero.
@@ -190,46 +190,52 @@ void *NCI_Malloc_fn(size_t      size,
                     const char *filename)
 {
     void *buf = malloc(size);
-#ifdef PNETCDF_DEBUG
+
     if (size > 0 && buf == NULL)
         fprintf(stderr, "malloc(%zd) failed in file %s func %s line %d\n",
                 size, filename, func, lineno);
-#endif
+
 #ifdef PNC_MALLOC_TRACE
     ncmpii_add_mem_entry(buf, size, lineno, func, filename);
 #endif
+
     return buf;
 }
 
 
 /*----< NCI_Strdup() >-------------------------------------------------------*/
-/* This subroutine is esstentially the same as calling strdup().
+/* This subroutine is essentially the same as calling strdup().
  */
 void *NCI_Strdup_fn(const char *src,
                     const int   lineno,
                     const char *func,
                     const char *filename)
 {
+    size_t len;
+    void *buf;
+
     if (src == NULL) return NULL;
 
-    size_t len = strlen(src);
-    void *buf = malloc(len + 1);
-#ifdef PNETCDF_DEBUG
+    len = strlen(src);
+    buf = malloc(len + 1);
+
     if (len >= 0 && buf == NULL)
         fprintf(stderr, "malloc(%zd) failed in file %s func %s line %d\n",
                 len, filename, func, lineno);
-#endif
+
     if (len > 0) memcpy(buf, src, len);
+
     ((char*)buf)[len] = '\0';
+
 #ifdef PNC_MALLOC_TRACE
     ncmpii_add_mem_entry(buf, len, lineno, func, filename);
 #endif
+
     return buf;
 }
 
-
-/*----< NCI_Calloc_fn() >-----------------------------------------------------*/
-/* This subroutine is esstentially the same as calling calloc().
+/*----< NCI_Calloc_fn() >----------------------------------------------------*/
+/* This subroutine is essentially the same as calling calloc().
  * According to calloc man page, If nelem is 0, then calloc() returns either
  * NULL, or a unique pointer value that can later be successfully passed to
  * free(). Thus, there is no need to check whether nelem is zero.
@@ -241,20 +247,21 @@ void *NCI_Calloc_fn(size_t      nelem,
                     const char *filename)
 {
     void *buf = calloc(nelem, elsize);
-#ifdef PNETCDF_DEBUG
+
     if (nelem > 0 && buf == NULL)
         fprintf(stderr, "calloc(%zd, %zd) failed in file %s func %s line %d\n",
                 nelem, elsize, filename, func, lineno);
-#endif
+
 #ifdef PNC_MALLOC_TRACE
     ncmpii_add_mem_entry(buf, nelem * elsize, lineno, func, filename);
 #endif
+
     return buf;
 }
 
 
-/*----< NCI_Realloc_fn() >----------------------------------------------------*/
-/* This subroutine is esstentially the same as calling realloc().
+/*----< NCI_Realloc_fn() >---------------------------------------------------*/
+/* This subroutine is essentially the same as calling realloc().
  * According to realloc man page, if ptr is NULL, then the call is equivalent
  * to malloc(size), for all values of size; if size is equal to zero, and ptr
  * is not NULL, then the call is equivalent to free(ptr). Unless ptr is NULL,
@@ -268,6 +275,8 @@ void *NCI_Realloc_fn(void       *ptr,
                      const char *func,
                      const char *filename)
 {
+    void *buf;
+
     if (ptr == NULL) return NCI_Malloc_fn(size, lineno, func, filename);
 
     if (size == 0) {
@@ -277,24 +286,25 @@ void *NCI_Realloc_fn(void       *ptr,
 
 #ifdef PNC_MALLOC_TRACE
     if (ncmpii_del_mem_entry(ptr) != 0)
-	fprintf(stderr, "realloc failed in file %s func %s line %d\n",
+        fprintf(stderr, "realloc failed in file %s func %s line %d\n",
                 filename, func, lineno);
 #endif
-    void *buf = (void *) realloc(ptr, size);
-#ifdef PNETCDF_DEBUG
+
+    buf = (void *) realloc(ptr, size);
     if (buf == NULL)
-	fprintf(stderr, "realloc failed in file %s func %s line %d\n",
+        fprintf(stderr, "realloc failed in file %s func %s line %d\n",
                 filename, func, lineno);
-#endif
+
 #ifdef PNC_MALLOC_TRACE
     ncmpii_add_mem_entry(buf, size, lineno, func, filename);
 #endif
+
     return buf;
 }
 
 
-/*----< NCI_Free_fn() >-------------------------------------------------------*/
-/* This subroutine is esstentially the same as calling free().
+/*----< NCI_Free_fn() >------------------------------------------------------*/
+/* This subroutine is essentially the same as calling free().
  * According to free man page, free() frees the memory space pointed to by ptr,
  * which must have been returned by a previous call to malloc(), calloc() or
  * realloc(). Otherwise, or if free(ptr) has already been called before,
@@ -306,11 +316,13 @@ void NCI_Free_fn(void       *ptr,
                  const char *filename)
 {
     if (ptr == NULL) return;
+
 #ifdef PNC_MALLOC_TRACE
     if (ncmpii_del_mem_entry(ptr) != 0)
-	fprintf(stderr, "free failed in file %s func %s line %d\n",
+        fprintf(stderr, "free failed in file %s func %s line %d\n",
                 filename, func, lineno);
 #endif
+
     free(ptr);
 }
 
