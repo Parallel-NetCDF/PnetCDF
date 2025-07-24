@@ -118,7 +118,6 @@ jobs:
                         --with-pthread \
                         --disable-fortran \
                         --with-mpi=${GITHUB_WORKSPACE}/OPENMPI \
-                        TESTMPIRUN="${GITHUB_WORKSPACE}/OPENMPI/bin/mpiexec --oversubscribe -n NP" \
                         TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output
             make -j 8 tests
         - name: Print config.log
