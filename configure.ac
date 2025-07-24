@@ -2538,6 +2538,9 @@ if test "x${TESTMPIRUN}" = x ; then
    dnl set default to "mpiexec -n NP"
    UD_MPI_PATH_PROGS([TESTMPIRUN], [mpiexec mpirun srun])
    if test "x${TESTMPIRUN}" != x ; then
+      if test "x${ax_cv_mpi_compiler_vendor}" = xOpenMPI ; then
+         TESTMPIRUN="$TESTMPIRUN --oversubscribe"
+      fi
       TESTMPIRUN="$TESTMPIRUN -n NP"
    fi
 fi
