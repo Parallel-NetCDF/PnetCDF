@@ -102,11 +102,14 @@ int construct_vars(int         hid, /* CDL header ID */
     nc_type xtype;
 
     /* determine whether to use longitude, latitude set at command line */
+
+    /* retrieve the number of dimensions defined in the CDL file */
     err = cdl_hdr_inq_ndims(hid, &ndims);
     CHECK_ERR("cdl_hdr_inq_ndims")
 
     if (*longitude <= 0) {
         for (i=0; i<ndims; i++) {
+            /* retrieve metadata of dimension i */
             err = cdl_hdr_inq_dim(hid, i, &name, &dimlen);
             CHECK_ERR("cdl_hdr_inq_dim")
 
@@ -119,6 +122,7 @@ int construct_vars(int         hid, /* CDL header ID */
     }
     if (*latitude <= 0) {
         for (i=0; i<ndims; i++) {
+            /* retrieve metadata of dimension i */
             err = cdl_hdr_inq_dim(hid, i, &name, &dimlen);
             CHECK_ERR("cdl_hdr_inq_dim")
 
@@ -164,7 +168,7 @@ int construct_vars(int         hid, /* CDL header ID */
 
     *buf_size = 0;
 
-    /* variables */
+    /* retrieve number of variables defined in the CDL file */
     err = cdl_hdr_inq_nvars(hid, &nvars);
     CHECK_ERR("cdl_hdr_inq_nvars")
     if (debug) printf("var: nvars %d\n", nvars);
@@ -173,6 +177,7 @@ int construct_vars(int         hid, /* CDL header ID */
         char *dname1, *dname2, *dname3;
         MPI_Offset dim1, dim2, dim3;
 
+        /* retrieve metadata of variable i defined in the CDL file */
         err = cdl_hdr_inq_var(hid, i, &name, &xtype, &ndims, &dimids);
         CHECK_ERR(name)
 
@@ -394,6 +399,8 @@ int def_dims_vars(int         ncid,
     nc_type xtype;
 
     /* define dimensions */
+
+    /* retrieve the number of dimensions defined in the CDL file */
     err = cdl_hdr_inq_ndims(hid, &ndims);
     CHECK_ERR("cdl_hdr_inq_ndims")
     if (debug) printf("dim: ndims %d\n", ndims);
@@ -401,6 +408,7 @@ int def_dims_vars(int         ncid,
     for (i=0; i<ndims; i++) {
         int dimid;
 
+        /* retrieve metadata of dimension i */
         err = cdl_hdr_inq_dim(hid, i, &name, &size);
         CHECK_ERR("cdl_hdr_inq_dim")
         if (debug) printf("\t name %s size %lld\n",name, size);
@@ -414,6 +422,7 @@ int def_dims_vars(int         ncid,
         CHECK_ERR("ncmpi_def_dim")
     }
 
+    /* retrieve number of variables defined in the CDL file */
     err = cdl_hdr_inq_nvars(hid, &nvars);
     CHECK_ERR("cdl_hdr_inq_nvars")
 
@@ -424,6 +433,8 @@ int def_dims_vars(int         ncid,
         CHECK_ERR(name)
 
         /* define local attributes */
+
+        /* retrieve metadata of attribute j associated with variable i */
         err = cdl_hdr_inq_nattrs(hid, i, &nattrs);
         CHECK_ERR("cdl_hdr_inq_nattrs")
 
@@ -435,6 +446,7 @@ int def_dims_vars(int         ncid,
         }
 
         for (j=0; j<nattrs; j++) {
+            /* retrieve metadata of attribute j associated with variable i */
             err = cdl_hdr_inq_attr(hid, i, j, &name, &xtype, &nelems, &value);
             CHECK_ERR("cdl_hdr_inq_attr")
             if (debug) {
@@ -452,11 +464,14 @@ int def_dims_vars(int         ncid,
     }
 
     /* define global attributes */
+
+    /* retrieve the number of global attributes */
     err = cdl_hdr_inq_nattrs(hid, NC_GLOBAL, &nattrs);
     CHECK_ERR("cdl_hdr_inq_nattrs")
     if (debug) printf("global attrs: nattrs %d\n", nattrs);
 
     for (i=0; i<nattrs; i++) {
+        /* retrieve metadata of global attribute i */
         err = cdl_hdr_inq_attr(hid, NC_GLOBAL, i, &name, &xtype, &nelems, &value);
         CHECK_ERR("cdl_hdr_inq_attr")
         if (debug) {
@@ -496,6 +511,8 @@ int wrf_w_benchmark(char       *out_file,
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     /* allocate space for storing variable metadata */
+
+    /* retrieve number of variables defined in the CDL file */
     err = cdl_hdr_inq_nvars(hid, &nvars);
     CHECK_ERR("cdl_hdr_inq_nvars")
 
@@ -1085,7 +1102,7 @@ int main(int argc, char** argv)
     MPI_Dims_create(nprocs, 2, psizes);
 
     if (do_write) {
-        /* parse CDL header file */
+        /* read and parse the input CDL header file */
         err = cdl_hdr_open(cdl_file, &hid);
         free(cdl_file);
         if (err != NC_NOERR) goto err_out;
@@ -1110,6 +1127,8 @@ int main(int argc, char** argv)
         }
 
         if (nfiles > 0) free(fname);
+
+        /* close the CDL file */
         cdl_hdr_close(hid);
         if (out_files != NULL) free(out_files);
     }
