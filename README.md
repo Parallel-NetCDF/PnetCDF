@@ -60,6 +60,7 @@ Northwestern University and Argonne National Laboratory.
 * [Utility Programs](./src/utils#readme)
 * [NetCDF4 vs. PnetCDF](./doc/netcdf4_vs_pnetcdf.md)
 * PnetCDF [blocking vs. non-blocking APIs](./doc/blocking_vs_nonblocking.md)
+* [CDL header API references](./doc/cdl_api_guide.md)
 
 ### Mailing List
 * parallel-netcdf@mcs.anl.gov
