@@ -797,6 +797,9 @@ int cdl_hdr_inq_format(int  hid,
     if (hid >= NC_MAX_NFILES || cdl_filelist[hid] == NULL)
         return NC_EBADID;
 
+   if (format == NULL)
+       return NC_NOERR;
+
     header = cdl_filelist[hid];
 
     *format = header->format;
@@ -813,6 +816,9 @@ int cdl_hdr_inq_ndims(int  hid,
     /* check if hid is valid */
     if (hid >= NC_MAX_NFILES || cdl_filelist[hid] == NULL)
         return NC_EBADID;
+
+    if (ndims == NULL)
+        return NC_NOERR;
 
     header = cdl_filelist[hid];
 
@@ -998,7 +1004,7 @@ int main(int argc, char **argv)
     if (err != NC_NOERR) exit(1);
     printf("Input CDF file : %s\n", argv[1]);
 
-    /* retrieve the input file in CDL format */
+    /* retrieve file format information of the input file */
     err = cdl_hdr_inq_format(hid, &format); ERR
     printf("CDF file format: CDF-%d\n", format);
 
@@ -1020,7 +1026,7 @@ int main(int argc, char **argv)
     for (i=0; i<nvars; i++) {
         err = cdl_hdr_inq_var(hid, i, &name, &xtype, &ndims, &dimids); ERR
 
-        /* retrieve variable i's attributes */
+        /* retrieve the number of attributes associated with variable i */
         err = cdl_hdr_inq_nattrs(hid, i, &nattrs); ERR
 
         printf("\t name %s type %d ndims %d nattr %d\n",
@@ -1029,6 +1035,7 @@ int main(int argc, char **argv)
              printf("\t\tdimid %d\n",dimids[j]);
 
         for (j=0; j<nattrs; j++) {
+            /* retrieve metadata of attribute j associated with variable j */
             err = cdl_hdr_inq_attr(hid, i, j, &name, &xtype, &nelems, &value);
             ERR
             if (xtype == NC_CHAR)
@@ -1040,12 +1047,13 @@ int main(int argc, char **argv)
         }
     }
 
-    /* retrieve metadata of global attributes */
+    /* retrieve the number of global attributes */
     err = cdl_hdr_inq_nattrs(hid, NC_GLOBAL, &nattrs); ERR
 #ifdef TEST_RUN
     printf("global attrs: nattrs %d\n", nattrs);
 #endif
 
+    /* retrieve metadata of each global attribute */
     for (i=0; i<nattrs; i++) {
         err = cdl_hdr_inq_attr(hid, NC_GLOBAL, i, &name, &xtype, &nelems, &value);
         ERR
