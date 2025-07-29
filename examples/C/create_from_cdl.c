@@ -133,7 +133,7 @@ int main(int argc, char **argv)
     err = ncmpi_create(MPI_COMM_WORLD, outfile, cmode, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
-    /* define dimensions */
+    /* retrieve the number of dimensions defined in the CDL file */
     err = cdl_hdr_inq_ndims(hid, &ndims);
     CHECK_ERR
     if (verbose) printf("Number of dimensions : %d\n", ndims);
@@ -142,14 +142,16 @@ int main(int argc, char **argv)
         int dimid;
         MPI_Offset dimlen;
 
+        /* retrieve metadata of dimension i */
         err = cdl_hdr_inq_dim(hid, i, &name, &dimlen);
-         CHECK_ERR
+        CHECK_ERR
 
+        /* define a new dimension in the new file */
         err = ncmpi_def_dim(ncid, name, dimlen, &dimid);
         CHECK_ERR
     }
 
-    /* define variables */
+    /* retrieve number of variables defined in the CDL file */
     err = cdl_hdr_inq_nvars(hid, &nvars);
     CHECK_ERR
     if (verbose) printf("Number of variables : %d\n", nvars);
@@ -158,13 +160,15 @@ int main(int argc, char **argv)
         int varid, *dimids;
         nc_type xtype;
 
+        /* retrieve metadata of variable i defined in the CDL file */
         err = cdl_hdr_inq_var(hid, i, &name, &xtype, &ndims, &dimids);
         CHECK_ERR
 
+        /* define a new variable in the new file */
         err = ncmpi_def_var(ncid, name, xtype, ndims, dimids, &varid);
         CHECK_ERR
 
-        /* define variable's attributes */
+        /* retrieve metadata of attribute j associated with variable i */
         err = cdl_hdr_inq_nattrs(hid, i, &nattrs);
         CHECK_ERR
 
@@ -173,14 +177,17 @@ int main(int argc, char **argv)
             nc_type xtype;
             MPI_Offset nelems;
 
+            /* retrieve metadata of attribute j associated with variable i */
             err = cdl_hdr_inq_attr(hid, i, j, &name, &xtype, &nelems, &value);
             CHECK_ERR
+
+            /* define a new attribute and associate it to variable, varid */
             err = ncmpi_put_att(ncid, varid, name, xtype, nelems, value);
             CHECK_ERR
         }
     }
 
-    /* define global attributes */
+    /* retrieve the number of global attributes */
     err = cdl_hdr_inq_nattrs(hid, NC_GLOBAL, &nattrs);
     CHECK_ERR
     if (verbose) printf("Number of global attributes: %d\n", nattrs);
@@ -190,15 +197,21 @@ int main(int argc, char **argv)
         nc_type xtype;
         MPI_Offset nelems;
 
+        /* retrieve metadata of global attribute i */
         err = cdl_hdr_inq_attr(hid, NC_GLOBAL, i, &name, &xtype, &nelems,
                                &value);
         CHECK_ERR
+
+        /* define a global attribute in the new file */
         err = ncmpi_put_att(ncid, NC_GLOBAL, name, xtype, nelems, value);
         CHECK_ERR
     }
+
+    /* close the NetCDF file */
     err = ncmpi_close(ncid);
     CHECK_ERR
 
+    /* close the CDL file */
     err = cdl_hdr_close(hid);
     CHECK_ERR
 
