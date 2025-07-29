@@ -7,7 +7,11 @@
     codes.  PnetCDF uses the same constants and error codes as NetCDF. See
     "Conform with netCDF" below.
 
- 2. Set the release version
+ 2. create a new branch, for example named "prepare-1.14.1"
+    git checkout -B prepare-1.14.1
+    git add the bullet points 3 and 4 below to the new branch
+
+ 3. Set the release version
     In file `configure.ac`, variable `$PNETCDF_VERSION` indicates the version.
     It is automatically generated from the 2nd argument of `AC_INIT` call.
     Revise that string to the right release version. For example,
@@ -17,7 +21,7 @@
     ```
     For setting shared library version (ABI versioning), see below.
 
- 3. Update file `RELEASE_NOTES`
+ 4. Update file `RELEASE_NOTES`
     Copy the contents of file `sneak_peek.md` to the top of file `RELEASE_NOTES`.
     Clear up file `sneak_peek.md` (reset all items to none).
     + 1.9.0 and later - the release version and date in `RELEASE_NOTES` will
@@ -25,7 +29,7 @@
     + 1.8.1 and priors - add the release version and date at the top
       of file `RELEASE_NOTES`.
 
- 4. Update the release date (1.8.1 and priors)
+ 5. Update the release date (1.8.1 and priors only)
     For more info, see below section "Setting PnetCDF software release date".
     Run command `svn commit` to get the svn property \$LastChangedDate\$
     updated in file `configure.in`. That string will be used as the official
@@ -34,14 +38,17 @@
     svn commit -m "set release date of version 1.6.1 to today"
     ```
 
- 5. Commit all changes to repo servers
+ 6. Commit all changes to repo servers
     * 1.8.1 and priors -- run `svn commit` to upload changes to SVN server.
-    * 1.9.0 and after -- run `git push origin master` to upload changes to
-      github.com.
+    * 1.9.0 and after --
+        + `git commit -m "prepare release of 1.14.1"
+        + `git push origin prepare-1.14.1` to upload changes to github.com.
+        + Create a pull request at github.com
+        + When all github actions passed, merge the PR.
 
- 6. Generate release tar ball (use it for testing)
+ 7. Generate release tar ball (use it for testing)
     * Generate a new `configure` file
-      + Run command `autoreconf` to generate file `configure` to be included
+      + Run command `autoreconf -i` to generate file `configure` to be included
         in the release (but ignored by the SVN/Git repo).
       + Must use the bug-fixed autotools of version 2.69 or higher to run
         `autoreconf`. See [README.Fujitsu](doc/README.Fujitsu) for the bug in
@@ -57,7 +64,7 @@
         `make dist`. This setting will be done automatically, unlike step 4
         above that manually update the release date.
 
- 7. Test the new release tar ball (not source codes from the repo)
+ 8. Test the new release tar ball (not source codes from the repo)
     * build under the same directory as source
       - run `configure` (with command-line options: `--enable-strict`,
         `--enable-coverage`, `--disable-cxx`, `--disable-fortran` and their
@@ -125,7 +132,7 @@
       run instructions. Remember to add new test/example programs added in the
       new release.
 
- 8. Create a checkpoint
+ 9. Create a checkpoint
     * For 1.9.0 and priors - Create a new SVN tag on svn repo, by running
       command below to duplicate the current trunk to a new tag:
       ```
@@ -139,7 +146,7 @@
       git tag -a checkpoint.1.11.0 -m "Checkpoint right before 1.11.0 release"
       git push origin checkpoint.1.11.0
       ```
- 9. Generate SHA1 checksums
+ 10. Generate SHA1 checksums
     * Run command:
       ```
       openssl sha1 pnetcdf-1.11.0.tar.gz`
@@ -148,7 +155,7 @@
       ```
       SHA1(pnetcdf-1.11.0.tar.gz)= 495d42f0a41abbd09d276262dce0f7c1c535968a
       ```
-10. Update PnetCDF Web Page
+11. Update PnetCDF Web Page
     * https://github.com/Parallel-NetCDF/Parallel-NetCDF.github.io
     * Create a new file of release note Parallel-NetCDF.github.io/Release_notes/1.11.0.md.
     * Add a news item in index.html to announce the new release version.
@@ -208,6 +215,23 @@
          the old version at runtime: set revision to 0, bump current and age.
       3. Programs may need to be changed, recompiled, and relinked in order to
          use the new version. Bump current, set revision and age to 0.
+
+   libtool Chapter 7.2 Libtool’s versioning system
+      So, libtool library versions are described by three integers:
+
+      current
+          The most recent interface number that this library implements.
+
+      revision
+          The implementation number of the current interface.
+
+      age
+          The difference between the newest and oldest interfaces that this
+          library implements. In other words, the library implements all the
+          interface numbers in the range from number current - age to current.
+
+      If two libraries have identical current and age numbers, then the dynamic
+      linker chooses the library with the greater revision number.
   ```
 ---
 ### Note on adding new MPI compiler candidates
@@ -319,6 +343,9 @@
 
 ---
 ### config.guess, config.sub, install-sh in directory scripts
+There 3 files are automatically added when running command "autoreconf -i"
+Below is just FYI.
+
 Copy config.guess, config.sub, and install-sh from GNU libtool.
 http://www.gnu.org/software/libtool/
 

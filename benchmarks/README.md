@@ -12,7 +12,7 @@ using various I/O access patterns.
 ---
 
 ### WRF-IO
-   + WRF (Wether Research and Forecast Model) is a weather prediction computer
+   + WRF (Weather Research and Forecast Model) is a weather prediction computer
      simulation program, https://github.com/wrf-model/WRF, developed at NCAR.
    + This benchmark is an extraction of the I/O kernel of WRF and can be used
      to evaluate the file write performance of WRF.

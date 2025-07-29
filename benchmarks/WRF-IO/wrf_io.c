@@ -6,7 +6,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This program evaluates the file write and read performance of WRF (Wether
+ * This program evaluates the file write and read performance of WRF (Weather
  * Research and Forecast Model, https://github.com/wrf-model/WRF) developed at
  * NCAR. It's data partitioning pattern is a 2D block-block checkerboard
  * pattern, along the longitude and latitude. This benchmark program reads a
