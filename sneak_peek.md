@@ -42,6 +42,9 @@ This is essentially a placeholder for the next release note ...
     * `cdl_hdr_inq_nattrs()` returns number of attributes of a given variable
     * `cdl_hdr_inq_attr()` returns metadata of an attribute
     * `cdl_hdr_close()` closes the CDL file
+  + The CDL Header C Reference Manual is available in
+    [cdl_api_guide.md](doc/cdl_api_guide.md). See
+    [PR #184](https://github.com/Parallel-NetCDF/PnetCDF/pull/184).
 
 * API syntax changes
   + none
