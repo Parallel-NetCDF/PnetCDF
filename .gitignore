@@ -9,6 +9,8 @@
 /scripts/ar-lib
 /scripts/compile
 /scripts/depcomp
+/scripts/config.guess
+/scripts/config.sub
 /scripts/install-sh
 /scripts/missing
 /scripts/test-driver
