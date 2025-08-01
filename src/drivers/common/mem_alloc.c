@@ -25,6 +25,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h> /* strcpy(), strlen() */
+
+#ifdef HAVE_STDINT_H
+#include <stdint.h> /*PTRDIFF_MAX */
+#endif
+#ifndef PTRDIFF_MAX
+#define PTRDIFF_MAX SIZE_MAX
+#endif
+
 #include <errno.h>  /* EINVAL */
 #include <assert.h>
 
@@ -189,11 +197,28 @@ void *NCI_Malloc_fn(size_t      size,
                     const char *func,
                     const char *filename)
 {
-    void *buf = malloc(size);
+    void *buf;
 
-    if (size > 0 && buf == NULL)
-        fprintf(stderr, "malloc(%zd) failed in file %s func %s line %d\n",
+    /* Many C library implementations, particularly those designed to work with
+     * GCC and Clang, limit single malloc allocations to PTRDIFF_MAX - 1 bytes.
+     * ptrdiff_t is a signed integer type used for the difference between two
+     * pointers, and PTRDIFF_MAX is its maximum value. This limitation exists
+     * because some compiler optimizations and internal library operations may
+     * rely on pointer differences being representable within ptrdiff_t.
+     */
+    if (size > PTRDIFF_MAX - 1) {
+        fprintf(stderr, "NCI_Malloc(%zd) failed in file %s func %s line %d\n",
                 size, filename, func, lineno);
+        return NULL;
+    }
+
+    buf = malloc(size);
+
+    if (size > 0 && buf == NULL) {
+        fprintf(stderr, "NCI_Malloc(%zd) failed in file %s func %s line %d\n",
+                size, filename, func, lineno);
+        return NULL;
+    }
 
 #ifdef PNC_MALLOC_TRACE
     ncmpii_add_mem_entry(buf, size, lineno, func, filename);
@@ -216,16 +241,25 @@ void *NCI_Strdup_fn(const char *src,
 
     if (src == NULL) return NULL;
 
-    len = strlen(src);
-    buf = malloc(len + 1);
+    len = strlen(src) + 1;
 
-    if (len >= 0 && buf == NULL)
-        fprintf(stderr, "malloc(%zd) failed in file %s func %s line %d\n",
+    if (len > PTRDIFF_MAX - 1) {
+        fprintf(stderr, "NCI_Strdup(%zd) failed in file %s func %s line %d\n",
                 len, filename, func, lineno);
+        return NULL;
+    }
 
-    if (len > 0) memcpy(buf, src, len);
+    buf = malloc(len);
 
-    ((char*)buf)[len] = '\0';
+    if (buf == NULL) {
+        fprintf(stderr, "NCI_Strdup(%zd) failed in file %s func %s line %d\n",
+                len, filename, func, lineno);
+        return NULL;
+    }
+
+    memcpy(buf, src, len - 1);
+
+    ((char*)buf)[len - 1] = '\0';
 
 #ifdef PNC_MALLOC_TRACE
     ncmpii_add_mem_entry(buf, len, lineno, func, filename);
@@ -246,11 +280,22 @@ void *NCI_Calloc_fn(size_t      nelem,
                     const char *func,
                     const char *filename)
 {
-    void *buf = calloc(nelem, elsize);
+    void *buf;
 
-    if (nelem > 0 && buf == NULL)
-        fprintf(stderr, "calloc(%zd, %zd) failed in file %s func %s line %d\n",
+    if (nelem * elsize > PTRDIFF_MAX - 1) {
+        fprintf(stderr, "NCI_Calloc(%zd, %zd) failed in file %s func %s line %d\n",
                 nelem, elsize, filename, func, lineno);
+        return NULL;
+    }
+
+    /* calloc() accepts zero size, to allow free() to be called later */
+    buf = calloc(nelem, elsize);
+
+    if (nelem > 0 && buf == NULL) {
+        fprintf(stderr, "NCI_Calloc(%zd, %zd) failed in file %s func %s line %d\n",
+                nelem, elsize, filename, func, lineno);
+        return NULL;
+    }
 
 #ifdef PNC_MALLOC_TRACE
     ncmpii_add_mem_entry(buf, nelem * elsize, lineno, func, filename);
@@ -277,6 +322,12 @@ void *NCI_Realloc_fn(void       *ptr,
 {
     void *buf;
 
+    if (size > PTRDIFF_MAX - 1) {
+        fprintf(stderr, "NCI_Realloc(_, %zd) failed in file %s func %s line %d\n",
+                size, filename, func, lineno);
+        return NULL;
+    }
+
     if (ptr == NULL) return NCI_Malloc_fn(size, lineno, func, filename);
 
     if (size == 0) {
@@ -285,15 +336,19 @@ void *NCI_Realloc_fn(void       *ptr,
     }
 
 #ifdef PNC_MALLOC_TRACE
-    if (ncmpii_del_mem_entry(ptr) != 0)
-        fprintf(stderr, "realloc failed in file %s func %s line %d\n",
-                filename, func, lineno);
+    if (ncmpii_del_mem_entry(ptr) != 0) {
+        fprintf(stderr, "NCI_Realloc(_, %zd) failed in file %s func %s line %d\n",
+                size, filename, func, lineno);
+        return NULL;
+    }
 #endif
 
     buf = (void *) realloc(ptr, size);
-    if (buf == NULL)
-        fprintf(stderr, "realloc failed in file %s func %s line %d\n",
-                filename, func, lineno);
+    if (buf == NULL) {
+        fprintf(stderr, "NCI_Realloc(_, %zd) failed in file %s func %s line %d\n",
+                size, filename, func, lineno);
+        return NULL;
+    }
 
 #ifdef PNC_MALLOC_TRACE
     ncmpii_add_mem_entry(buf, size, lineno, func, filename);
@@ -319,7 +374,7 @@ void NCI_Free_fn(void       *ptr,
 
 #ifdef PNC_MALLOC_TRACE
     if (ncmpii_del_mem_entry(ptr) != 0)
-        fprintf(stderr, "free failed in file %s func %s line %d\n",
+        fprintf(stderr, "NCI_Free failed in file %s func %s line %d\n",
                 filename, func, lineno);
 #endif
 
