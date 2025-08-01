@@ -1244,10 +1244,11 @@ ncmpi_inq_file_format(const char *filename,
     if (rlen != 8) {
         close(fd); /* ignore error */
         if (rlen == 0 && errno == 0)
-            fprintf(stderr, "Error: empty file %s\n", filename);
+            fprintf(stderr, "Error in %s at %d: empty file %s\n",
+                    __func__,__LINE__,filename);
         else
-            fprintf(stderr, "Error: fail to read signature of file %s\n",
-                    filename);
+            fprintf(stderr, "Error in %s at %d: fail to read signature of file %s\n",
+                    __func__,__LINE__,filename);
         DEBUG_RETURN_ERROR(NC_EFILE)
     }
     if (close(fd) == -1) {
