@@ -10,7 +10,7 @@ C Use for logging error messages
 C
         subroutine error(msg)
         implicit        none
-        character*(*)   msg
+        character(LEN=*)   msg
         include "pnetcdf.inc"
 #include "tests.inc"
 
@@ -24,7 +24,7 @@ C Use for logging error conditions
 C
         subroutine errori(msg, i)
         implicit        none
-        character*(*)   msg
+        character(LEN=*)   msg
         integer         i
         include "pnetcdf.inc"
 #include "tests.inc"
@@ -39,7 +39,7 @@ C Use for logging error conditions
 C
         subroutine errord(msg, d)
         implicit        none
-        character*(*)   msg
+        character(LEN=*)   msg
         doubleprecision d
         include "pnetcdf.inc"
 #include "tests.inc"
@@ -54,8 +54,8 @@ C Use for logging error conditions
 C
         subroutine errorc(msg, string)
         implicit        none
-        character*(*)   msg
-        character*(*)   string
+        character(LEN=*)   msg
+        character(LEN=*)   string
         include "pnetcdf.inc"
 #include "tests.inc"
 
@@ -71,7 +71,7 @@ C Use for logging error conditions
 C
         subroutine errore(msg, err)
         implicit        none
-        character*(*)   msg
+        character(LEN=*)   msg
         integer         err
         include "pnetcdf.inc"
 #include "tests.inc"

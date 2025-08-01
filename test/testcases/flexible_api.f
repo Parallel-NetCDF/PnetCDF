@@ -7,7 +7,7 @@
 ! argument is a predefined MPI datatype
 !
        INTEGER FUNCTION XTRIM(STRING)
-           CHARACTER*(*) STRING
+           CHARACTER(LEN=*) STRING
            INTEGER I, N
            N = LEN(STRING)
            DO I = N, 1, -1
@@ -21,8 +21,8 @@
           include "mpif.h"
           include "pnetcdf.inc"
           integer err, XTRIM
-          character*(*) message
-          character*128 msg
+          character(LEN=*) message
+          character(LEN=128) msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
@@ -38,7 +38,7 @@
           include "mpif.h"
           include "pnetcdf.inc"
 
-          character*256 filename, cmd, msg
+          character(LEN=256) filename, cmd, msg
           integer XTRIM
           integer err, ierr, nerrs, nprocs, rank, i, j
           integer cmode, ncid, varid, dimid(2), ghost_len, get_args

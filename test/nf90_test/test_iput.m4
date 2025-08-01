@@ -161,7 +161,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
         double precision val
         integer err_w, reqid(1), st(1), infoused
         logical flag, bb_enable
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
 
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
@@ -290,7 +290,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
         doubleprecision val
         integer err_w, reqid(1), st(1), infoused
         logical flag, bb_enable
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -491,7 +491,7 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         integer ud_shift
         integer err_w, reqid(1), st(1), infoused
         logical flag, bb_enable
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -728,7 +728,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         integer ud_shift
         integer err_w, reqid(1), st(1), infoused
         logical flag, bb_enable
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -1008,7 +1008,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         integer ud_shift
         integer err_w, reqid(1), st(1), infoused
         logical flag, bb_enable
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF90_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)

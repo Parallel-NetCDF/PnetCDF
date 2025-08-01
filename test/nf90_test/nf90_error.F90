@@ -11,7 +11,7 @@
         subroutine error(msg)
         use pnetcdf
         implicit        none
-        character*(*)   msg
+        character(LEN=*)   msg
 #include "tests.inc"
 
         nfails = nfails + 1
@@ -25,7 +25,7 @@
         subroutine errori(msg, i)
         use pnetcdf
         implicit        none
-        character*(*)   msg
+        character(LEN=*)   msg
         integer         i
 #include "tests.inc"
 
@@ -40,7 +40,7 @@
         subroutine errord(msg, d)
         use pnetcdf
         implicit        none
-        character*(*)   msg
+        character(LEN=*)   msg
         doubleprecision d
 #include "tests.inc"
 
@@ -55,8 +55,8 @@
         subroutine errorc(msg, string)
         use pnetcdf
         implicit        none
-        character*(*)   msg
-        character*(*)   string
+        character(LEN=*)   msg
+        character(LEN=*)   string
 #include "tests.inc"
 
         nfails = nfails + 1
@@ -71,7 +71,7 @@
         subroutine errore(msg, err)
         use pnetcdf
         implicit        none
-        character*(*)   msg
+        character(LEN=*)   msg
         integer         err
 #include "tests.inc"
 

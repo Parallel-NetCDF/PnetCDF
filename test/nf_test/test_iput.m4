@@ -61,7 +61,7 @@ define([ARITH_VAR1], [ifelse($1, text, ichar($2), $2)])
 dnl  DATATYPE(funf_suffix)
 dnl
 define([DATATYPE], [dnl
-ifelse($1, text, character*MAX_NELS $2,
+ifelse($1, text, character(LEN=MAX_NELS) $2,
 ifelse($1, int1, NF_INT1_T $2$3,
 ifelse($1, int2, NF_INT2_T $2$3,
 ifelse($1, int, integer $2$3,
@@ -164,7 +164,7 @@ define([TEST_NFMPI_IPUT_VAR1],dnl
         doubleprecision val
         integer reqid(1), st(1), err_w, infoused
         logical flag, bb_enable
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
 
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
@@ -302,7 +302,7 @@ define([TEST_NFMPI_IPUT_VAR],dnl
         doubleprecision val
         integer err_w, reqid(1), st(1), infoused
         logical flag, bb_enable
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -506,7 +506,7 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         integer ud_shift
         integer err_w, reqid(1), st(1), infoused
         logical flag, bb_enable
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -756,7 +756,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         integer ud_shift
         integer err_w, reqid(1), st(1), infoused
         logical flag, bb_enable
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF_CLOBBER, extra_flags)
         err = FileCreate(scratch, flags)
@@ -1050,7 +1050,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         integer ud_shift
         integer err_w, reqid(1), st(1), infoused
         logical flag, bb_enable
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
 
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = FileCreate(scratch, flags)

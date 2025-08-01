@@ -49,7 +49,7 @@
           integer ncid, varid0, varid1
 
           ! local variables
-          character*(MPI_MAX_INFO_VAL) value
+          character(LEN=MPI_MAX_INFO_VAL) value
           integer err, len, info_used
           logical flag
           integer(kind=MPI_OFFSET_KIND) header_size, header_extent

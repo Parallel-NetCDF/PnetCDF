@@ -165,8 +165,8 @@
 
 !    /* Global variables - filenames */
 
-      CHARACTER*80      testfile  !/* netCDF read-only test data */
-      CHARACTER*80      scratch   !/* netCDF test file for writing */
+      CHARACTER(LEN=80)      testfile  !/* netCDF read-only test data */
+      CHARACTER(LEN=80)      scratch   !/* netCDF test file for writing */
 
 !    /* Global variables - command-line arguments */
 
@@ -177,24 +177,24 @@
 
 !    /* Global variables - test data */
 
-      CHARACTER*2               DIM_NAME(NDIMS)
+      CHARACTER(LEN=2)               DIM_NAME(NDIMS)
       INTEGER*8                 DIM_LEN(NDIMS)
-      CHARACTER*(2+MAX_RANK)    VAR_NAME(NVARS)
+      CHARACTER(LEN=2+MAX_RANK)    VAR_NAME(NVARS)
       INTEGER                   VAR_TYPE(NVARS)
       INTEGER                   VAR_RANK(NVARS)
       INTEGER                   VAR_DIMID(MAX_RANK,NVARS)
       INTEGER*8                 VAR_SHAPE(MAX_RANK,NVARS)
       INTEGER                   VAR_NELS(NVARS)
       INTEGER                   VAR_NATTS(NVARS)
-      CHARACTER*2               ATTNAME(MAX_NATTS,NVARS)
-      CHARACTER*2               GATT_NAME(NGATTS)
+      CHARACTER(LEN=2)               ATTNAME(MAX_NATTS,NVARS)
+      CHARACTER(LEN=2)               GATT_NAME(NGATTS)
       INTEGER                   ATTTYPE(NGATTS,NVARS)
       INTEGER                   GATT_TYPE(NGATTS)
       INTEGER                   ATTLEN(MAX_NATTS,NVARS)
       INTEGER*8                 GATT_LEN(NGATTS)
 
 !    /* Miscellaneous global variables: */
-      CHARACTER*128              PROGNAME   !/* name of the program */
+      CHARACTER(LEN=128)              PROGNAME   !/* name of the program */
       INTEGER                   COMM       !/* MPI communicator */
 
       INTEGER                   NFAILSTOTAL

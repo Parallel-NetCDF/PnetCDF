@@ -68,7 +68,7 @@
           include 'mpif.h'
           include 'pnetcdf.inc'
 
-          character*256 filename
+          character(LEN=256) filename
           integer mode
 
           ! local variables
@@ -176,7 +176,7 @@
           include 'mpif.h'
           include 'pnetcdf.inc'
 
-          character*256 filename
+          character(LEN=256) filename
 
           ! local variables
           integer j, err, nprocs, rank
@@ -184,7 +184,7 @@
           integer*8 i, nx, ny, global_nx, global_ny, time_len, local_nx
           integer*8 start(2), count(2), str_len
           PARAMETER(nx=3, ny=4)
-          character*256 str_att
+          character(LEN=256) str_att
           double precision buf(nx,ny), expect
 
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
@@ -311,7 +311,7 @@
           include 'mpif.h'
           include 'pnetcdf.inc'
 
-          character*256 filename, cmd
+          character(LEN=256) filename, cmd
           integer err, ierr, rank, get_args, dummy
           integer*8 malloc_size, sum_size
           logical verbose

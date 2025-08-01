@@ -39,7 +39,7 @@ C implementation of the netCDF library.
 
         subroutine report_test
         implicit        none
-        character*1024   msg
+        character(LEN=1024)   msg
 #include "tests.inc"
 
         integer MY_LEN_TRIM
@@ -62,8 +62,8 @@ C implementation of the netCDF library.
 
         subroutine test(name, func)
         implicit        none
-        character*(*)   name
-        character*25    name_str
+        character(LEN=*)   name
+        character(LEN=25)    name_str
         integer         name_len
         external        func
         include "pnetcdf.inc"
@@ -94,7 +94,7 @@ C implementation of the netCDF library.
         subroutine getarg(iarg, carg)
         implicit        none
         integer iarg
-        character*(*)   carg
+        character(LEN=*)   carg
         integer ilen
         integer ierror
         call PXFGETARG(iarg, carg, ilen, ierror)
@@ -122,10 +122,10 @@ C implementation of the netCDF library.
 #include "tests.inc"
 
         integer         argc
-        character*80    arg
+        character(LEN=80)    arg
         integer         iarg
         integer         iopt
-        character*1     opt
+        character(LEN=1)     opt
         integer         lastopt
         logical         skiparg
         integer         err

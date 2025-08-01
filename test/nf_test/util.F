@@ -534,7 +534,7 @@
 
       integer function char2type(letter)
       implicit          none
-      character*1       letter
+      character(LEN=1)       letter
       include "pnetcdf.inc"
 #include "tests.inc"
 
@@ -568,7 +568,7 @@
 
       subroutine init_dims(digit)
       implicit          none
-      character*1       digit(NDIMS)
+      character(LEN=1)       digit(NDIMS)
       include "pnetcdf.inc"
 #include "tests.inc"
 
@@ -586,7 +586,7 @@
 
       subroutine init_gatts(type_letter)
       implicit          none
-      character*1       type_letter(NTYPES)
+      character(LEN=1)       type_letter(NTYPES)
       include "pnetcdf.inc"
 #include "tests.inc"
 
@@ -631,8 +631,8 @@
         integer index2ncindexes
 
         integer*8       max_dim_len(MAX_RANK)
-        character*1     type_letter(NTYPES)
-        character*1     digit(10)
+        character(LEN=1)     type_letter(NTYPES)
+        character(LEN=1)     digit(10)
 
         integer rank
         integer vn              !/* var number */
@@ -786,7 +786,7 @@
 #include "tests.inc"
         integer VARID, NATTS, ATT_TYPE, ATT_LEN
         integer*8   ATT_LEN_LL
-        CHARACTER*2 ATT_NAME
+        CHARACTER(LEN=2) ATT_NAME
         double precision hash
         logical inrange
 
@@ -798,7 +798,7 @@
         integer*8               ndx(1)
         logical                 allInRange
         doubleprecision         att(MAX_NELS)
-        character*(MAX_NELS+2)  catt
+        character(LEN=MAX_NELS+2)  catt
 
         do 1, i = 0, numVars      !/* var 0 => NF_GLOBAL attributes */
             do 2, j = 1, NATTS(i)
@@ -872,10 +872,10 @@
         integer                 i
         integer                 j
         doubleprecision         value(MAX_NELS)
-        character*(MAX_NELS+2)  text
+        character(LEN=MAX_NELS+2)  text
         logical                 allInRange
         logical                 flag, bb_enabled
-        character*(MPI_MAX_INFO_VAL)     hint
+        character(LEN=MPI_MAX_INFO_VAL)     hint
         integer                 infoused
 
         ! Determine if burst buffer driver is being used
@@ -954,7 +954,7 @@
 ! Create & write all of specified file using global variables */
         subroutine write_file(filename)
         implicit        none
-        character*(*)   filename
+        character(LEN=*)   filename
         include "pnetcdf.inc"
 #include "tests.inc"
 
@@ -995,7 +995,7 @@
         include "pnetcdf.inc"
 #include "tests.inc"
 
-        character*(NF_MAX_NAME) name
+        character(LEN=NF_MAX_NAME) name
         integer*8               length
         integer                 i
         integer                 err           !/* netCDF status */
@@ -1031,7 +1031,7 @@
         integer                 err             !/* netCDF status */
         integer                 i
         integer                 j
-        character*1             text
+        character(LEN=1)             text
         doubleprecision         value
         integer                 datatype
         integer                 ndims
@@ -1039,7 +1039,7 @@
         integer                 dimids(MAX_RANK)
         logical                 isChar
         doubleprecision         expect
-        character*(NF_MAX_NAME) name
+        character(LEN=NF_MAX_NAME) name
         integer*8               length
         integer                 nok             !/* count of valid comparisons */
 
@@ -1125,7 +1125,7 @@
         include "pnetcdf.inc"
 #include "tests.inc"
         integer VARID, NATTS, ATT_TYPE, ATT_LEN
-        CHARACTER*2 ATT_NAME
+        CHARACTER(LEN=2) ATT_NAME
         double precision hash
         logical inrange, equal
 
@@ -1136,9 +1136,9 @@
         integer                 vid             !/* "variable" ID */
         integer                 datatype
         integer*8               ndx(1)
-        character*(NF_MAX_NAME) name
+        character(LEN=NF_MAX_NAME) name
         integer*8               length
-        character*(MAX_NELS)    text
+        character(LEN=MAX_NELS)    text
         doubleprecision         value(MAX_NELS)
         doubleprecision         expect
         integer                 nok             !/* count of valid comparisons */
@@ -1214,7 +1214,7 @@
 ! Check file (dims, vars, atts) corresponds to global variables */
         subroutine check_file(filename)
         implicit        none
-        character*(*)   filename
+        character(LEN=*)   filename
         include "pnetcdf.inc"
 #include "tests.inc"
 
@@ -1269,7 +1269,7 @@
       END
 
 
-      character*2 FUNCTION ATT_NAME(J,VID)
+      character(LEN=2) FUNCTION ATT_NAME(J,VID)
       IMPLICIT  NONE
       INTEGER J
       INTEGER VID
@@ -1540,7 +1540,7 @@
 
 ! Returns length of string ignoring trailing blanks
        INTEGER FUNCTION MY_LEN_TRIM(STRING)
-           CHARACTER*(*) STRING
+           CHARACTER(LEN=*) STRING
            DO I = LEN(STRING), 1, -1
                IF (STRING(I:I) .NE. ' ') go to 10
            ENDDO

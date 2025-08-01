@@ -111,9 +111,9 @@ C    check file: vars & atts
         integer                 dimid           !/* dimension id */
         integer                 vid             !/* variable id */
         integer                 err
-        character*(title_len)   title
+        character(LEN=title_len)   title
         doubleprecision         var
-        character*(NF_MAX_NAME) name
+        character(LEN=NF_MAX_NAME) name
         integer*8               start(1)
         integer*8               length
         integer                 intlen
@@ -440,7 +440,7 @@ C    try after writing variable
         integer nok, flags
         integer infoused
         logical flag
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
 
         nok = 0
 
@@ -707,7 +707,7 @@ C    try with bad dimension handle, check error
 
         integer ncid
         integer err             !/* status */
-        character*(NF_MAX_NAME) name
+        character(LEN=NF_MAX_NAME) name
         integer nok, flags
 
         nok = 0
@@ -782,7 +782,7 @@ C    try with bad dimension ids, check error
         integer i
         integer ndims
         integer na
-        character*(NF_MAX_NAME) name
+        character(LEN=NF_MAX_NAME) name
         integer dimids(MAX_RANK)
         integer datatype
         integer nok, flags
@@ -914,7 +914,7 @@ C    try in data mode, check error
         integer vid
         integer err
         integer i
-        character*(NF_MAX_NAME) name
+        character(LEN=NF_MAX_NAME) name
         integer nok, flags
 
         nok = 0
@@ -1016,7 +1016,7 @@ C    try with same ncid for source and target, same variable
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer VARID, NATTS, ATT_LEN
 
         integer ncid_in
@@ -1025,10 +1025,10 @@ C    try with same ncid for source and target, same variable
         integer err
         integer i
         integer j
-        character*(NF_MAX_NAME) name    !/* of att */
+        character(LEN=NF_MAX_NAME) name    !/* of att */
         integer datatype                !/* of att */
         integer*8 length  !/* of att */
-        character*1     value
+        character(LEN=1)     value
         integer nok, flags
 
         nok = 0
@@ -1179,7 +1179,7 @@ C    try in data mode, check error
         include "pnetcdf.inc"
 #include "tests.inc"
         integer MY_LEN_TRIM
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer VARID, ATT_TYPE, NATTS, ATT_LEN
         double precision hash
         logical equal, inrange
@@ -1191,17 +1191,17 @@ C    try in data mode, check error
         integer j
         integer  k
         integer attnum
-        character*(NF_MAX_NAME) atnam
-        character*(NF_MAX_NAME) name
-        character*(NF_MAX_NAME) oldname
-        character*(NF_MAX_NAME) newname
+        character(LEN=NF_MAX_NAME) atnam
+        character(LEN=NF_MAX_NAME) name
+        character(LEN=NF_MAX_NAME) oldname
+        character(LEN=NF_MAX_NAME) newname
         integer nok             !/* count of valid comparisons */
         integer datatype
         integer attyp
         integer*8 length
         integer*8 attlength
         integer*8 ndx(1)
-        character*(MAX_NELS)    text
+        character(LEN=MAX_NELS)    text
         doubleprecision value(MAX_NELS)
         doubleprecision expect
 
@@ -1352,7 +1352,7 @@ C      nfmpi_inq_attid, nfmpi_inq_natts, nfmpi_inq_varnatts
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer VARID, NATTS
 
         integer ncid
@@ -1363,7 +1363,7 @@ C      nfmpi_inq_attid, nfmpi_inq_natts, nfmpi_inq_varnatts
         integer na
         integer numatts
         integer vid
-        character*(NF_MAX_NAME)  name           !/* of att */
+        character(LEN=NF_MAX_NAME)  name           !/* of att */
         integer nok             !/* count of valid comparisons */
 
         nok = 0
@@ -1494,7 +1494,7 @@ C    close file & create again for test using attribute _FillValue
         implicit none
         include "pnetcdf.inc"
 #include "tests.inc"
-        ! character*2 ATT_NAME
+        ! character(LEN=2) ATT_NAME
         ! integer VARID, ATT_TYPE, NATTS
 
         integer MY_LEN_TRIM
@@ -1504,7 +1504,7 @@ C    close file & create again for test using attribute _FillValue
         integer i
         integer j
         integer old_fillmode
-        character*1 text
+        character(LEN=1) text
         doubleprecision value
         doubleprecision fill
         integer*8 index(MAX_RANK)
@@ -1810,7 +1810,7 @@ C     This function looks in a file for the netCDF magic number.
         include "pnetcdf.inc"
 #include "tests.inc"
 
-      character*(*) path
+      character(LEN=*) path
       integer version
       character magic*4
       integer ver

@@ -6,7 +6,7 @@
 !
 
       INTEGER FUNCTION XTRIM(STRING)
-           CHARACTER*(*) STRING
+           CHARACTER(LEN=*) STRING
            INTEGER I, N
            N = LEN(STRING)
            DO I = N, 1, -1
@@ -44,9 +44,9 @@
       integer*8 imap(2)
       integer*8 dim_size, bufsize, inq_bufsize
       real  var(6,4)
-      character*256 filename, cmd, msg
+      character(LEN=256) filename, cmd, msg
       integer*8 usage, acc_usage
-      character*512 hints
+      character(LEN=512) hints
 
       call MPI_INIT(ierr)
       call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierr)

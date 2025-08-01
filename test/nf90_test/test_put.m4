@@ -215,7 +215,7 @@ define([CHECK_VARS],dnl
         double precision hash4
         logical equal, inRange3, in_internal_range
 
-        character*(*)   filename
+        character(LEN=*)   filename
         integer  ncid          ! netCDF id
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         integer  err
@@ -228,7 +228,7 @@ define([CHECK_VARS],dnl
         integer dimids(MAX_RANK)
         integer ngatts
         doubleprecision expect
-        character*(NF90_MAX_NAME) name
+        character(LEN=NF90_MAX_NAME) name
         integer(kind=MPI_OFFSET_KIND) length
         logical canConvert      ! Both text or both numeric
         integer nok             ! count of valid comparisons
@@ -325,7 +325,7 @@ define([CHECK_ATTS],dnl
         use pnetcdf
         implicit        none
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer ATT_TYPE, NATTS, ATT_LEN
         double precision hash4
         logical equal, inRange3, in_internal_range
@@ -442,7 +442,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         DATATYPE_VAR1($1, value)
         doubleprecision val
         logical flag, bb_enable
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
 
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
@@ -558,7 +558,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
         DATATYPE($1, value, MAX_NELS)
         doubleprecision val
         logical flag, bb_enable
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
         integer infoused
 
         flags = IOR(NF90_CLOBBER, extra_flags)
@@ -755,7 +755,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
         doubleprecision val
         integer ud_shift
         logical flag, bb_enable, skip_zero_len_test
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
         integer infoused
 
         flags = IOR(NF90_CLOBBER, extra_flags)
@@ -999,7 +999,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
         doubleprecision val
         integer ud_shift
         logical flag, bb_enable, skip_zero_len_test
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
         integer infoused
 
         flags = IOR(NF90_CLOBBER, extra_flags)
@@ -1288,7 +1288,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
         doubleprecision val
         integer ud_shift
         logical flag, bb_enable, skip_zero_len_test
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
         integer infoused
 
         flags = IOR(NF90_CLOBBER, extra_flags)
@@ -1567,7 +1567,7 @@ define([TEST_NFMPI_PUT_ATT],dnl
         use pnetcdf
         implicit        none
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer ATT_TYPE, NATTS, ATT_LEN
         integer(kind=MPI_OFFSET_KIND) ATT_LEN_LL
         double precision hash_$1
@@ -1747,7 +1747,7 @@ TEST_NFMPI_PUT_VARM(double)
         use pnetcdf
         implicit        none
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer ATT_TYPE, NATTS, ATT_LEN
         double precision hash
 

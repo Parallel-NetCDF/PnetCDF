@@ -1078,7 +1078,7 @@ define([TEST_NFMPI_GET_ATT],dnl
         use pnetcdf
         implicit        none
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer ATT_TYPE, NATTS, ATT_LEN
         double precision hash4
         logical equal, inRange3, in_internal_range

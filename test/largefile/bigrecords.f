@@ -15,7 +15,7 @@
 ! time variable will be garbled.
 
        INTEGER FUNCTION XTRIM(STRING)
-           CHARACTER*(*) STRING
+           CHARACTER(LEN=*) STRING
            INTEGER I, N
            N = LEN(STRING)
            DO I = N, 1, -1
@@ -88,7 +88,7 @@
      + 377.5, 367.59, 360.06, 353.85999, 348.66, 342.5, 336, 328.5, 320,
      + 310, 300, 290, 280, 270, 260, 250, 240, 230, 220, 210, 199.10001/
 
-      character*256 filename, cmd, msg
+      character(LEN=256) filename, cmd, msg
 
 ! attribute vectors
 ! enter define mode
@@ -271,7 +271,7 @@
       include "mpif.h"
       include "pnetcdf.inc"
 
-      character*(*) cmd
+      character(LEN=*) cmd
 ! netCDF id
       integer  ncid
 ! variable ids
@@ -328,7 +328,7 @@
 
       include "pnetcdf.inc"
 
-      character*(*) cmd, msg
+      character(LEN=*) cmd, msg
       integer iret
       integer  XTRIM
 

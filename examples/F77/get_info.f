@@ -40,7 +40,7 @@
         include "mpif.h"
         include "pnetcdf.inc"
 
-        character*256 filename, cmd
+        character(LEN=256) filename, cmd
         integer ncid, rank, info, cmode, err, ierr, get_args
         integer*8 malloc_size, sum_size
         logical verbose
@@ -102,7 +102,7 @@
             integer info_used
 
             ! local variables
-            character*(MPI_MAX_INFO_VAL) key, value
+            character(LEN=MPI_MAX_INFO_VAL) key, value
             integer nkeys, i, err
             logical flag
 
@@ -126,7 +126,7 @@
             include "mpif.h"
             include "pnetcdf.inc"
 
-            character*(*) err_msg
+            character(LEN=*) err_msg
             integer       errcode
 
             ! local variables
