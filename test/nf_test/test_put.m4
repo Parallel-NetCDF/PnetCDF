@@ -72,7 +72,7 @@ define([ARITH_VAR1], [ifelse($1, text, ichar($2), $2)])
 dnl  DATATYPE(funf_suffix)
 dnl
 define([DATATYPE], [dnl
-ifelse($1, text, character*MAX_NELS $2,
+ifelse($1, text, character(LEN=MAX_NELS) $2,
 ifelse($1, int1, NF_INT1_T $2$3,
 ifelse($1, int2, NF_INT2_T $2$3,
 ifelse($1, int, integer $2$3,
@@ -196,7 +196,7 @@ C
         double precision hash4
         logical equal, inRange3, in_internal_range
 
-        character*(*)   filename
+        character(LEN=*)   filename
         integer  ncid          !/* netCDF id */
         integer*8 index(MAX_RANK)
         integer  err
@@ -209,7 +209,7 @@ C
         integer dimids(MAX_RANK)
         integer ngatts
         doubleprecision expect
-        character*(NF_MAX_NAME) name
+        character(LEN=NF_MAX_NAME) name
         integer*8 length
         logical canConvert      !/* Both text or both numeric */
         integer nok             !/* count of valid comparisons */
@@ -300,7 +300,7 @@ C
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer ATT_TYPE, NATTS, ATT_LEN
         double precision hash4
         logical equal, inRange3, in_internal_range
@@ -417,7 +417,7 @@ define([TEST_NFMPI_PUT_VAR1],dnl
         DATATYPE_VAR1($1, value)
         doubleprecision val
         logical flag, bb_enable
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
 
         value = MAKE_TYPE($1, 5)!/* any value would do - only for error cases */
 
@@ -535,7 +535,7 @@ define([TEST_NFMPI_PUT_VAR],dnl
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         logical flag, bb_enable
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
         integer infoused
 
         flags = IOR(NF_CLOBBER, extra_flags)
@@ -733,7 +733,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
         doubleprecision val
         integer ud_shift
         logical flag, bb_enable, skip_zero_len_test
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
         integer infoused
 
         flags = IOR(NF_CLOBBER, extra_flags)
@@ -984,7 +984,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
         doubleprecision val
         integer ud_shift
         logical flag, bb_enable, skip_zero_len_test
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
         integer infoused
 
         flags = IOR(NF_CLOBBER, extra_flags)
@@ -1273,7 +1273,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
         doubleprecision val
         integer ud_shift
         logical flag, bb_enable, skip_zero_len_test
-        character*(MPI_MAX_INFO_VAL) hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
         integer infoused
 
         flags = IOR(NF_CLOBBER, extra_flags)
@@ -1547,7 +1547,7 @@ define([TEST_NFMPI_PUT_ATT],dnl
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer ATT_TYPE, NATTS, ATT_LEN
         integer*8 ATT_LEN_LL
         double precision hash_$1
@@ -1733,7 +1733,7 @@ TEST_NFMPI_PUT_VARM(double)
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer ATT_TYPE, NATTS, ATT_LEN
         integer*8 ATT_LEN_LL
         double precision hash
@@ -1744,7 +1744,7 @@ TEST_NFMPI_PUT_VARM(double)
         integer*8 k
         integer*8 ndx(1)
         integer err, flags
-        character*MAX_NELS value
+        character(LEN=MAX_NELS) value
 
         flags = IOR(NF_NOCLOBBER, extra_flags)
         err = FileCreate(scratch, flags)

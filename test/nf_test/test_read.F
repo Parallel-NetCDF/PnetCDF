@@ -19,8 +19,8 @@ C
 
         integer         i, msg_len
         integer         status(number_of_messages)
-        character*80    message, unknown_err_msg
-        character*80    msg(number_of_messages)
+        character(LEN=80) message, unknown_err_msg
+        character(LEN=80) msg(number_of_messages)
         integer         nok
 
         data    status(1)  / NF_NOERR/
@@ -72,7 +72,7 @@ C
         data msg(17) / 'NetCDF: Variable not found' /
         data msg(18) / 'NetCDF: Action prohibited on NC_GLOBAL varid' /
 
-        character*68 ENOTNC_str
+        character(LEN=68) ENOTNC_str
         parameter(ENOTNC_str='NetCDF: Unknown file format (file '//
      +                       'format violates CDF specification)')
         data msg(19) / ENOTNC_str /
@@ -697,7 +697,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer ncid
         integer i
         integer err
-        character*(NF_MAX_NAME) name
+        character(LEN=NF_MAX_NAME) name
         integer*8 length
         integer intlen
         integer nok
@@ -793,7 +793,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer ncid
         integer i
         integer err
-        character*(NF_MAX_NAME)  name
+        character(LEN=NF_MAX_NAME)  name
         integer nok
 
         nok = 0
@@ -884,7 +884,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer ncid
         integer i
         integer err
-        character*(NF_MAX_NAME) name
+        character(LEN=NF_MAX_NAME) name
         integer datatype
         integer ndims
         integer dimids(MAX_RANK)
@@ -992,7 +992,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         integer ncid
         integer i
         integer err
-        character*(NF_MAX_NAME) name
+        character(LEN=NF_MAX_NAME) name
         integer nok
 
         nok = 0
@@ -1168,7 +1168,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer ATT_TYPE, NATTS, ATT_LEN
 
         integer ncid
@@ -1230,7 +1230,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer NATTS, ATT_LEN
 
         integer ncid
@@ -1290,7 +1290,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer ATT_TYPE, NATTS
 
         integer ncid
@@ -1351,14 +1351,14 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer NATTS
 
         integer ncid
         integer i
         integer j
         integer err
-        character*(NF_MAX_NAME) name
+        character(LEN=NF_MAX_NAME) name
         integer nok
 
         nok = 0
@@ -1415,7 +1415,7 @@ C               /* Make sure nfmpi_inq stills sees additions in data mode */
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer NATTS
 
         integer ncid

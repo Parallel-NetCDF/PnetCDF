@@ -14,7 +14,7 @@
 !
 
        INTEGER FUNCTION XTRIM(STRING)
-           CHARACTER*(*) STRING
+           CHARACTER(LEN=*) STRING
            INTEGER I, N
            N = LEN(STRING)
            DO I = N, 1, -1
@@ -28,8 +28,8 @@
           include "mpif.h"
           include "pnetcdf.inc"
           integer err, nerrs, XTRIM
-          character*(*) message
-          character*128 msg
+          character(LEN=*) message
+          character(LEN=128) msg
 
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
@@ -51,7 +51,7 @@
           integer*2 buf_int2
           integer*8 buf_int8, one
 
-          character*256 filename, cmd, msg
+          character(LEN=256) filename, cmd, msg
           integer ncid, err, ierr, nerrs, nprocs, rank, get_args
           integer*8 malloc_size, sum_size
 

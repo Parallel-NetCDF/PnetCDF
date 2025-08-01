@@ -58,7 +58,7 @@ define([ARITH3], [ifelse($1, text, ichar($2($3:$3)), $2($3))])
 dnl  DATATYPE(funf_suffix)
 dnl
 define([DATATYPE], [dnl
-ifelse($1, text, character*MAX_NELS $2,
+ifelse($1, text, character(LEN=MAX_NELS) $2,
 ifelse($1, int1, NF_INT1_T $2$3,
 ifelse($1, int2, NF_INT2_T $2$3,
 ifelse($1, int, integer $2$3,
@@ -1100,7 +1100,7 @@ define([TEST_NFMPI_GET_ATT],dnl
         implicit        none
         include "pnetcdf.inc"
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer ATT_TYPE, NATTS, ATT_LEN
         double precision hash4
         logical equal, inRange3, in_internal_range

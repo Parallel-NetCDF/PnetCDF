@@ -57,7 +57,7 @@ define([ARITH3], [ifelse($1, text, ichar($2($3:$3)), $2($3))])
 dnl  DATATYPE(funf_suffix)
 dnl
 define([DATATYPE], [dnl
-ifelse($1, text, character*MAX_NELS $2,
+ifelse($1, text, character(LEN=MAX_NELS) $2,
 ifelse($1, int1, NF_INT1_T $2$3,
 ifelse($1, int2, NF_INT2_T $2$3,
 ifelse($1, int, integer $2$3,

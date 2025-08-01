@@ -49,7 +49,7 @@
 
         subroutine report_test
         implicit        none
-        character*1024  msg
+        character(LEN=1024)  msg
 #include "tests.inc"
 
         if (cdf_format .EQ. 4) then
@@ -69,7 +69,7 @@
         subroutine test(name, func)
         use pnetcdf
         implicit        none
-        character*(*)   name
+        character(LEN=*)   name
         character(len=25) name_str
         integer           name_len
         external        func
@@ -100,7 +100,7 @@
         use pnetcdf
         implicit        none
         integer iarg
-        character*(*)   carg
+        character(LEN=*)   carg
         integer ilen
         integer ierror
         call PXFGETARG(iarg, carg, ilen, ierror)
@@ -128,10 +128,10 @@
 #include "tests.inc"
 
         integer         argc
-        character*80    arg
+        character(LEN=80)    arg
         integer         iarg
         integer         iopt
-        character*1     opt
+        character(LEN=1)     opt
         integer         lastopt
         logical         skiparg
         integer         err

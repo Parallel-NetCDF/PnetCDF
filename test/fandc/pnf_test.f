@@ -240,7 +240,7 @@
 !     Argument declarations.
 !     ----------------------
 
-      character*(*) filename
+      character(LEN=*) filename
       integer nwrites
       integer mype
       integer comm_cart
@@ -385,7 +385,7 @@
 !     Argument declarations.
 !     ----------------------
 
-      character*(*) filename
+      character(LEN=*) filename
       integer nreads
       integer mype
       integer comm_cart

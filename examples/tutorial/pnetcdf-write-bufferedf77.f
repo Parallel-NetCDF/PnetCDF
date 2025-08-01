@@ -29,7 +29,7 @@
       integer*8 start(2), count(2), stride(2), imap(2)
       integer*8 bufsize, put_size, dim_size
       real  var(6,4)
-      character*256 filename, cmd
+      character(LEN=256) filename, cmd
       logical verbose
 
       call MPI_INIT(err)

@@ -101,7 +101,7 @@
             integer, intent(in) :: info_used
 
             ! local variables
-            character*(MPI_MAX_INFO_VAL) key, value
+            character(LEN=MPI_MAX_INFO_VAL) key, value
             integer nkeys, i, err
             logical flag
 
@@ -125,7 +125,7 @@
             use pnetcdf
             implicit none
 
-            character*(*), intent(in) :: err_msg
+            character(LEN=*), intent(in) :: err_msg
             integer,       intent(in) :: errcode
 
             ! local variables

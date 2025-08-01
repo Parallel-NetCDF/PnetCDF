@@ -532,8 +532,8 @@
 
       integer function char2type(letter)
       use pnetcdf
-      implicit          none
-      character*1       letter
+      implicit         none
+      character(LEN=1) letter
 #include "tests.inc"
 
       if (letter .eq. 'c') then
@@ -566,8 +566,8 @@
 
       subroutine init_dims(digit)
       use pnetcdf
-      implicit          none
-      character*1       digit(NDIMS)
+      implicit         none
+      character(LEN=1) digit(NDIMS)
 #include "tests.inc"
 
       integer   dimid                   !/* index of dimension */
@@ -584,8 +584,8 @@
 
       subroutine init_gatts(type_letter)
       use pnetcdf
-      implicit          none
-      character*1       type_letter(NTYPES)
+      implicit         none
+      character(LEN=1) type_letter(NTYPES)
 #include "tests.inc"
 
       integer   attid
@@ -628,8 +628,8 @@
 #include "tests.inc"
         integer                       index2ncindexes
         integer(kind=MPI_OFFSET_KIND) max_dim_len(MAX_RANK)
-        character*1                   type_letter(NTYPES)
-        character*1                   digit(10)
+        character(LEN=1)              type_letter(NTYPES)
+        character(LEN=1)              digit(10)
 
         integer rank
         integer vn              !/* var number */
@@ -782,19 +782,19 @@
 #include "tests.inc"
         integer(kind=MPI_OFFSET_KIND) ATT_LEN_LL
         integer VARID, NATTS, ATT_TYPE, ATT_LEN
-        CHARACTER*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         double precision hash
         logical inrange
 
-        integer                 err             !/* netCDF status */
-        integer                 i               !/* variable index (0 => global
-                                                ! * attribute */
-        integer                 k               !/* attribute index */
-        integer                 j               !/* index of attribute */
-        integer(kind=MPI_OFFSET_KIND)                 ndx(1)
-        logical                 allInRange
-        double precision        att(MAX_NELS)
-        character*(MAX_NELS+2)  catt
+        integer err             !/* netCDF status */
+        integer i               !/* variable index (0 => global
+                                ! * attribute */
+        integer k               !/* attribute index */
+        integer j               !/* index of attribute */
+        integer(kind=MPI_OFFSET_KIND) ndx(1)
+        logical                       allInRange
+        double precision              att(MAX_NELS)
+        character(LEN=MAX_NELS+2)     catt
 
         do 1, i = 0, numVars      !/* var 0 => NF90_GLOBAL attributes */
             do 2, j = 1, NATTS(i)
@@ -867,10 +867,10 @@
         integer                 j
         doubleprecision         value(MAX_NELS)
         doubleprecision         value1
-        character*(MAX_NELS+2)  text
+        character(LEN=MAX_NELS+2)  text
         logical                 allInRange
         logical                 flag, bb_enabled
-        character*(MPI_MAX_INFO_VAL)     hint
+        character(LEN=MPI_MAX_INFO_VAL) hint
         integer                 infoused, nc_fmt
         logical                 is_nc4
 
@@ -1006,7 +1006,7 @@
       integer                 j
       doubleprecision         value(MAX_NELS)
       doubleprecision         value1
-      character*(MAX_NELS+2)  text
+      character(LEN=MAX_NELS+2) text
       logical                 allInRange
 
       do 1, j = 1, MAX_RANK
@@ -1079,7 +1079,7 @@
         implicit none
 #include "tests.inc"
 
-        character*(*) filename
+        character(LEN=*) filename
         integer ncid            !/* netCDF id */
         integer err             !/* netCDF status */
         integer flags
@@ -1114,10 +1114,10 @@
         integer         ncid
 #include "tests.inc"
 
-        character*(NF90_MAX_NAME) name
-        integer(kind=MPI_OFFSET_KIND)                 length
-        integer                 i
-        integer                 err           !/* netCDF status */
+        character(LEN=NF90_MAX_NAME)  name
+        integer(kind=MPI_OFFSET_KIND) length
+        integer i
+        integer err           !/* netCDF status */
 
         do 1, i = 1, NDIMS
             err = nf90mpi_inquire_dimension(ncid, i, name, length)
@@ -1146,11 +1146,11 @@
         double precision hash
         logical inrange, equal
 
-        integer(kind=MPI_OFFSET_KIND)                 index(MAX_RANK)
-        integer                 err             !/* netCDF status */
+        integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
+        integer                 err  !/* netCDF status */
         integer                 i
         integer                 j
-        character*1             text
+        character(LEN=1)        text
         doubleprecision         value
         integer                 datatype
         integer                 ndims
@@ -1158,9 +1158,9 @@
         integer                 dimids(MAX_RANK)
         logical                 isChar
         doubleprecision         expect
-        character*(NF90_MAX_NAME) name
-        integer(kind=MPI_OFFSET_KIND)                 length
-        integer                 nok             !/* count of valid comparisons */
+        character(LEN=NF90_MAX_NAME)  name
+        integer(kind=MPI_OFFSET_KIND) length
+        integer                 nok   !/* count of valid comparisons */
 
         nok = 0
         err = nf90mpi_begin_indep_data(ncid)
@@ -1240,7 +1240,7 @@
         integer         ncid
 #include "tests.inc"
         integer VARID, NATTS, ATT_TYPE, ATT_LEN
-        CHARACTER*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         double precision hash
         logical inrange, equal
 
@@ -1250,13 +1250,13 @@
         integer                 k
         integer                 vid             !/* "variable" ID */
         integer                 datatype
-        integer(kind=MPI_OFFSET_KIND)                 ndx(1)
-        character*(NF90_MAX_NAME) name
-        integer(kind=MPI_OFFSET_KIND)                 length
-        character*(MAX_NELS)    text
-        doubleprecision         value(MAX_NELS)
-        doubleprecision         expect
-        integer                 nok             !/* count of valid comparisons */
+        integer(kind=MPI_OFFSET_KIND) ndx(1)
+        character(LEN=NF90_MAX_NAME)  name
+        integer(kind=MPI_OFFSET_KIND) length
+        character(LEN=MAX_NELS)       text
+        doubleprecision value(MAX_NELS)
+        doubleprecision expect
+        integer         nok !/* count of valid comparisons */
 
         nok = 0
 
@@ -1329,8 +1329,8 @@
 ! Check file (dims, vars, atts) corresponds to global variables */
         subroutine check_file(filename)
       use pnetcdf
-        implicit        none
-        character*(*)   filename
+        implicit         none
+        character(LEN=*) filename
 #include "tests.inc"
 
         integer ncid            !/* netCDF id */
@@ -1385,7 +1385,7 @@
       END
 
 
-      character*2 FUNCTION ATT_NAME(J,VID)
+      character(LEN=2) FUNCTION ATT_NAME(J,VID)
       USE PNETCDF
       IMPLICIT  NONE
       INTEGER J

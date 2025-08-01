@@ -114,9 +114,9 @@
         integer                 dimid           !/* dimension id */
         integer                 vid             !/* variable id */
         integer                 err, flags
-        character*(title_len)   title
+        character(LEN=title_len)   title
         doubleprecision         var
-        character*(NF90_MAX_NAME) name
+        character(LEN=NF90_MAX_NAME) name
         integer(kind=MPI_OFFSET_KIND)                 start(1)
         integer(kind=MPI_OFFSET_KIND)                 length
         integer                 intlen
@@ -437,7 +437,7 @@
         integer recdim
         integer nok
         logical                 flag, bb_enable
-        character*(MPI_MAX_INFO_VAL)     hint
+        character(LEN=MPI_MAX_INFO_VAL)     hint
         integer                 infoused
 
         nok = 0
@@ -715,7 +715,7 @@
 
         integer ncid
         integer err             !/* status */
-        character*(NF90_MAX_NAME) name
+        character(LEN=NF90_MAX_NAME) name
         integer nok, flags
 
         nok = 0
@@ -791,7 +791,7 @@
         integer i
         integer ndims
         integer na
-        character*(NF90_MAX_NAME) name
+        character(LEN=NF90_MAX_NAME) name
         integer dimids(MAX_RANK)
         integer datatype
         integer nok, flags
@@ -919,7 +919,7 @@
         integer vid
         integer err
         integer i
-        character*(NF90_MAX_NAME) name
+        character(LEN=NF90_MAX_NAME) name
         integer nok, flags
 
         nok = 0
@@ -1022,7 +1022,7 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer VARID, NATTS, ATT_LEN
 
         integer ncid_in
@@ -1031,10 +1031,10 @@
         integer err
         integer i
         integer j
-        character*(NF90_MAX_NAME) name    !/* of att */
+        character(LEN=NF90_MAX_NAME) name    !/* of att */
         integer datatype                !/* of att */
         integer(kind=MPI_OFFSET_KIND) length                  !/* of att */
-        character*1     value
+        character(LEN=1)     value
         integer nok, flags
 
         nok = 0
@@ -1188,7 +1188,7 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer VARID, ATT_TYPE, NATTS, ATT_LEN
         double precision hash
         logical equal, inrange
@@ -1200,17 +1200,17 @@
         integer j
         integer  k
         integer attnum
-        character*(NF90_MAX_NAME) atnam
-        character*(NF90_MAX_NAME) name
-        character*(NF90_MAX_NAME) oldname
-        character*(NF90_MAX_NAME) newname
+        character(LEN=NF90_MAX_NAME) atnam
+        character(LEN=NF90_MAX_NAME) name
+        character(LEN=NF90_MAX_NAME) oldname
+        character(LEN=NF90_MAX_NAME) newname
         integer nok             !/* count of valid comparisons */
         integer datatype
         integer attyp
         integer(kind=MPI_OFFSET_KIND) length
         integer(kind=MPI_OFFSET_KIND) attlength
         integer(kind=MPI_OFFSET_KIND) ndx(1)
-        character*(MAX_NELS)    text
+        character(LEN=MAX_NELS)    text
         doubleprecision value(MAX_NELS)
         doubleprecision expect
 
@@ -1363,7 +1363,7 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer VARID, NATTS
 
         integer ncid
@@ -1374,7 +1374,7 @@
         integer na
         integer numatts
         integer vid
-        character*(NF90_MAX_NAME)  name           !/* of att */
+        character(LEN=NF90_MAX_NAME)  name           !/* of att */
         integer nok             !/* count of valid comparisons */
 
         nok = 0
@@ -1508,7 +1508,7 @@
         use pnetcdf
         implicit none
 #include "tests.inc"
-        ! character*2 ATT_NAME
+        ! character(LEN=2) ATT_NAME
         ! integer VARID, ATT_TYPE, NATTS
 
         integer ncid
@@ -1517,7 +1517,7 @@
         integer i
         integer j
         integer old_fillmode
-        character*1 text
+        character(LEN=1) text
         doubleprecision value
         doubleprecision fill, fills(1)
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
@@ -1815,7 +1815,7 @@
       implicit none
 #include "tests.inc"
 
-      character*(*) path
+      character(LEN=*) path
       integer version
       character magic*4
       integer ver

@@ -18,8 +18,8 @@
 
         integer         i, msg_len
         integer         status(number_of_messages)
-        character*80    message, unknown_err_msg
-        character*80    msg(number_of_messages)
+        character(LEN=80)    message, unknown_err_msg
+        character(LEN=80)    msg(number_of_messages)
         integer         nok
 
         data    status(1)  / NF90_NOERR/
@@ -669,7 +669,7 @@
         integer ncid
         integer i
         integer err
-        character*(NF90_MAX_NAME) name
+        character(LEN=NF90_MAX_NAME) name
         integer(kind=MPI_OFFSET_KIND) length
         integer intlen
         integer nok
@@ -765,7 +765,7 @@
         integer ncid
         integer i
         integer err
-        character*(NF90_MAX_NAME)  name
+        character(LEN=NF90_MAX_NAME)  name
         integer nok
 
         nok = 0
@@ -857,7 +857,7 @@
         integer ncid
         integer i
         integer err
-        character*(NF90_MAX_NAME) name
+        character(LEN=NF90_MAX_NAME) name
         integer datatype
         integer ndims
         integer dimids(MAX_RANK)
@@ -966,7 +966,7 @@
         integer ncid
         integer i
         integer err
-        character*(NF90_MAX_NAME) name
+        character(LEN=NF90_MAX_NAME) name
         integer nok
 
         nok = 0
@@ -1148,7 +1148,7 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer ATT_TYPE, ATT_LEN, NATTS
 
         integer ncid, i, j, err, type, nok
@@ -1212,7 +1212,7 @@
         implicit        none
 #include "tests.inc"
         integer ATT_LEN, NATTS
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
 
         integer ncid
         integer i
@@ -1272,7 +1272,7 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer ATT_TYPE, NATTS
 
         integer ncid
@@ -1334,14 +1334,14 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer NATTS
 
         integer ncid
         integer i
         integer j
         integer err
-        character*(NF90_MAX_NAME) name
+        character(LEN=NF90_MAX_NAME) name
         integer nok
 
         nok = 0
@@ -1399,7 +1399,7 @@
         use pnetcdf
         implicit        none
 #include "tests.inc"
-        character*2 ATT_NAME
+        character(LEN=2) ATT_NAME
         integer NATTS
 
         integer ncid

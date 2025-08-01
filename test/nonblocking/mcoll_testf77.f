@@ -18,7 +18,7 @@
 !=============================================================================
 
        INTEGER FUNCTION XTRIM(STRING)
-           CHARACTER*(*) STRING
+           CHARACTER(LEN=*) STRING
            INTEGER I, N
            N = LEN(STRING)
            DO I = N, 1, -1
@@ -69,7 +69,7 @@
                                           !   zero is specified
 
       integer rank, Write_File
-      character*256 filename, cmd, msg
+      character(LEN=256) filename, cmd, msg
 
       real*4  filsiz
 
@@ -229,7 +229,7 @@
 !     Argument declarations.
 !     ----------------------
 
-      character*(*) filename
+      character(LEN=*) filename
       integer nwrites
       integer comm_cart
       integer*8 istart, jstart, kstart
