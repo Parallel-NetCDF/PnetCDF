@@ -929,4 +929,11 @@ The problem is reported in https://llvm.org/bugs/show_bug.cgi?id=14713
      through the ncmpio driver directly.
 
 ---
+### Note on Fortran programming
+* Unlike C, the Fortran standard does not mandate or prohibit short-circuit
+  evaluation for logical expressions. Thus, Fortran does not guarantee that
+  the .AND.  operator will skip evaluating the second logical expression if
+  the first one is false. See PR #189.
+
+---
 

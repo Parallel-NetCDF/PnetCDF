@@ -539,11 +539,20 @@ C           /* try nfmpi_abort in data mode - should just close */
         err = nfmpi_inq_file_info(ncid, infoused)
         if (err .eq. NF_NOERR) then
             call MPI_Info_get(infoused, "nc_burst_buf",
-     +           MPI_MAX_INFO_VAL, hint, flag, err)
-            if (flag .AND. hint .EQ. 'enable') then
-                err = nfmpi_flush(ncid)
-                if (err .ne. NF_NOERR)
-     +              call errore('nfmpi_flush: ', err)
+     +                        MPI_MAX_INFO_VAL-1, hint, flag, err)
+            ! The Fortran standard does not mandate or prohibit
+            ! short-circuit evaluation for logical expressions.
+            ! Fortran does not guarantee that the .and. operator will
+            ! skip evaluating the second logical expression if the
+            ! first one is false.
+            !
+            ! if (flag .AND. hint .EQ. 'enable') then
+            if (flag) then
+                if (hint .EQ. 'enable') then
+                    err = nfmpi_flush(ncid)
+                    if (err .ne. NF_NOERR)
+     +                  call errore('nfmpi_flush: ', err)
+                endif
             endif
             call MPI_Info_free(infoused, err);
         endif
