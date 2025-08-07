@@ -1339,7 +1339,11 @@ AC_CHECK_FUNCS([MPI_Type_create_subarray_c \
                 MPI_Bcast_c \
                 MPI_Get_count_c \
                 MPI_Pack_c \
-                MPI_Unpack_c], [], [have_mpi_large_count_apis=no])
+                MPI_Unpack_c \
+                MPI_File_read_at_c \
+                MPI_File_read_at_all_c \
+                MPI_File_write_at_c \
+                MPI_File_write_at_all_c], [], [have_mpi_large_count_apis=no])
 # If one of the above APIs is not available, have_mpi_large_count_apis will be
 # set to no
 UD_MSG_DEBUG([have_mpi_large_count_apis=$have_mpi_large_count_apis])
