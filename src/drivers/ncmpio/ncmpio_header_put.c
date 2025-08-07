@@ -514,6 +514,7 @@ ncmpio_hdr_put_NC(NC *ncp, void *buf)
  */
 int ncmpio_write_header(NC *ncp)
 {
+    char *mpi_name;
     int status=NC_NOERR, mpireturn, err;
     size_t i, ntimes;
     MPI_File fh;
@@ -562,15 +563,16 @@ int ncmpio_write_header(NC *ncp)
              */
             memset(&mpistatus, 0, sizeof(MPI_Status));
 
-            if (fIsSet(ncp->flags, NC_HCOLL)) /* header collective write */
-                TRACE_IO(MPI_File_write_at_all)(fh, offset, buf_ptr, writeLen,
-                                                MPI_BYTE, &mpistatus);
-            else /* header independent write */
-                TRACE_IO(MPI_File_write_at)(fh, offset, buf_ptr, writeLen,
-                                            MPI_BYTE, &mpistatus);
-
+            if (fIsSet(ncp->flags, NC_HCOLL)) { /* header collective write */
+                TRACE_IO(MPI_File_write_at_all, (fh, offset, buf_ptr, writeLen,
+                                                 MPI_BYTE, &mpistatus));
+            }
+            else { /* header independent write */
+                TRACE_IO(MPI_File_write_at, (fh, offset, buf_ptr, writeLen,
+                                             MPI_BYTE, &mpistatus));
+            }
             if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
+                err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
                 if (status == NC_NOERR) {
                     err = (err == NC_EFILE) ? NC_EWRITE : err;
                     DEBUG_ASSIGN_ERROR(status, err)
@@ -597,8 +599,9 @@ int ncmpio_write_header(NC *ncp)
     }
     else if (fIsSet(ncp->flags, NC_HCOLL)) { /* header collective write */
         /* collective write: other processes participate the collective call */
-        for (i=0; i<ntimes; i++)
-            TRACE_IO(MPI_File_write_at_all)(fh, 0, NULL, 0, MPI_BYTE, &mpistatus);
+        for (i=0; i<ntimes; i++) {
+            TRACE_IO(MPI_File_write_at_all, (fh, 0, NULL, 0, MPI_BYTE, &mpistatus));
+        }
     }
 
     if (ncp->safe_mode == 1) {

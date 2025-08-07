@@ -39,7 +39,7 @@ ncmpio_open(MPI_Comm     comm,
             MPI_Info     user_info, /* user's and env info combined */
             void       **ncpp)
 {
-    char *env_str;
+    char *env_str, *mpi_name;
     int i, mpiomode, err, status=NC_NOERR, mpireturn;
     MPI_File fh;
     MPI_Info info_used;
@@ -74,14 +74,14 @@ ncmpio_open(MPI_Comm     comm,
     /* open file collectively ---------------------------------------------- */
     mpiomode = fIsSet(omode, NC_WRITE) ? MPI_MODE_RDWR : MPI_MODE_RDONLY;
 
-    TRACE_IO(MPI_File_open)(comm, (char *)path, mpiomode, user_info, &fh);
+    TRACE_IO(MPI_File_open, (comm, (char *)path, mpiomode, user_info, &fh));
     if (mpireturn != MPI_SUCCESS)
-        return ncmpii_error_mpi2nc(mpireturn, "MPI_File_open");
+        return ncmpii_error_mpi2nc(mpireturn, mpi_name);
 
     /* get the file info used/modified by MPI-IO */
-    mpireturn = MPI_File_get_info(fh, &info_used);
+    TRACE_IO(MPI_File_get_info, (fh, &info_used));
     if (mpireturn != MPI_SUCCESS)
-        return ncmpii_error_mpi2nc(mpireturn, "MPI_File_get_info");
+        return ncmpii_error_mpi2nc(mpireturn, mpi_name);
 
     /* Now the file has been successfully opened, allocate/set NC object */
 

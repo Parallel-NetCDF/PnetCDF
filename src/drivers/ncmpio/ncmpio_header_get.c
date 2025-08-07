@@ -321,6 +321,7 @@ hdr_len_NC_vararray(const NC_vararray *ncap,
  */
 static int
 hdr_fetch(bufferinfo *gbp) {
+    char *mpi_name;
     int rank, nprocs, err=NC_NOERR, mpireturn;
     MPI_Status mpistatus;
 
@@ -359,14 +360,16 @@ hdr_fetch(bufferinfo *gbp) {
 
         /* fileview is already entire file visible and MPI_File_read_at does
            not change the file pointer */
-        if (gbp->coll_mode == 1) /* collective read */
-            TRACE_IO(MPI_File_read_at_all)(gbp->collective_fh, gbp->offset, readBuf,
-                                           readLen, MPI_BYTE, &mpistatus);
-        else
-            TRACE_IO(MPI_File_read_at)(gbp->collective_fh, gbp->offset, readBuf,
-                                       readLen, MPI_BYTE, &mpistatus);
+        if (gbp->coll_mode == 1) { /* collective read */
+            TRACE_IO(MPI_File_read_at_all, (gbp->collective_fh, gbp->offset, readBuf,
+                                            readLen, MPI_BYTE, &mpistatus));
+        }
+        else {
+            TRACE_IO(MPI_File_read_at, (gbp->collective_fh, gbp->offset, readBuf,
+                                        readLen, MPI_BYTE, &mpistatus));
+        }
         if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at");
+            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD)
         }
         else {
@@ -394,8 +397,12 @@ hdr_fetch(bufferinfo *gbp) {
     }
     else if (gbp->coll_mode == 1) { /* collective read */
         /* other processes participate the collective call */
-        TRACE_IO(MPI_File_read_at_all)(gbp->collective_fh, 0, NULL,
-                                       0, MPI_BYTE, &mpistatus);
+        TRACE_IO(MPI_File_read_at_all, (gbp->collective_fh, 0, NULL,
+                                        0, MPI_BYTE, &mpistatus));
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
+            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD)
+        }
     }
 
     if (gbp->safe_mode == 1 && nprocs > 1) {

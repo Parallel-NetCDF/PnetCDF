@@ -167,6 +167,7 @@ move_file_block(NC         *ncp,
                 MPI_Offset  from,   /* source      starting file offset */
                 MPI_Offset  nbytes) /* amount to be moved */
 {
+    char *mpi_name;
     int rank, nprocs, mpireturn, err, status=NC_NOERR, do_coll;
     void *buf;
     size_t num_moves, mv_amnt, p_units;
@@ -239,14 +240,16 @@ move_file_block(NC         *ncp,
         mpireturn = MPI_SUCCESS;
 
         /* read from file at off_from for amount of chunk_size */
-        if (do_coll)
-            TRACE_IO(MPI_File_read_at_all)(fh, off_from, buf, chunk_size,
-                                           MPI_BYTE, &mpistatus);
-        else if (chunk_size > 0)
-            TRACE_IO(MPI_File_read_at)(fh, off_from, buf, chunk_size,
-                                           MPI_BYTE, &mpistatus);
+        if (do_coll) {
+            TRACE_IO(MPI_File_read_at_all, (fh, off_from, buf, chunk_size,
+                                            MPI_BYTE, &mpistatus));
+        }
+        else if (chunk_size > 0) {
+            TRACE_IO(MPI_File_read_at, (fh, off_from, buf, chunk_size,
+                                        MPI_BYTE, &mpistatus));
+        }
         if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at_all");
+            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
             if (status == NC_NOERR && err == NC_EFILE)
                 DEBUG_ASSIGN_ERROR(status, NC_EREAD)
             get_size = chunk_size;
@@ -282,16 +285,18 @@ move_file_block(NC         *ncp,
          * call to MPI_Get_count() above returns the actual amount of data read
          * from the file, i.e. get_size.
          */
-        if (do_coll)
-            TRACE_IO(MPI_File_write_at_all)(fh, off_to, buf,
-                                            get_size /* NOT chunk_size */,
-                                            MPI_BYTE, &mpistatus);
-        else if (get_size > 0)
-            TRACE_IO(MPI_File_write_at)(fh, off_to, buf,
-                                            get_size /* NOT chunk_size */,
-                                            MPI_BYTE, &mpistatus);
+        if (do_coll) {
+            TRACE_IO(MPI_File_write_at_all, (fh, off_to, buf,
+                                             get_size /* NOT chunk_size */,
+                                             MPI_BYTE, &mpistatus));
+        }
+        else if (get_size > 0) {
+            TRACE_IO(MPI_File_write_at, (fh, off_to, buf,
+                                         get_size /* NOT chunk_size */,
+                                         MPI_BYTE, &mpistatus));
+        }
         if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
+            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
             if (status == NC_NOERR && err == NC_EFILE)
                 DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
         }
@@ -597,6 +602,7 @@ NC_begins(NC *ncp)
 static int
 write_NC(NC *ncp)
 {
+    char *mpi_name;
     int status=NC_NOERR, mpireturn, err, is_coll;
     MPI_Offset i, header_wlen, ntimes;
     MPI_File fh;
@@ -680,14 +686,16 @@ write_NC(NC *ncp)
         buf_ptr = buf;
         for (i=0; i<ntimes; i++) {
             int bufCount = (int) MIN(remain, NC_MAX_INT);
-            if (is_coll)
-                TRACE_IO(MPI_File_write_at_all)(fh, offset, buf_ptr, bufCount,
-                                                MPI_BYTE, &mpistatus);
-            else
-                TRACE_IO(MPI_File_write_at)(fh, offset, buf_ptr, bufCount,
-                                            MPI_BYTE, &mpistatus);
+            if (is_coll) {
+                TRACE_IO(MPI_File_write_at_all, (fh, offset, buf_ptr, bufCount,
+                                                 MPI_BYTE, &mpistatus));
+            }
+            else {
+                TRACE_IO(MPI_File_write_at, (fh, offset, buf_ptr, bufCount,
+                                             MPI_BYTE, &mpistatus));
+            }
             if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
+                err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
                 /* write has failed, which is more serious than inconsistency */
                 if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
             }
@@ -711,9 +719,9 @@ write_NC(NC *ncp)
     }
     else if (fIsSet(ncp->flags, NC_HCOLL)) {
         /* other processes participate the collective call */
-        for (i=0; i<ntimes; i++)
-            TRACE_IO(MPI_File_write_at_all)(fh, 0, NULL, 0, MPI_BYTE,
-                                            &mpistatus);
+        for (i=0; i<ntimes; i++) {
+            TRACE_IO(MPI_File_write_at_all, (fh, 0, NULL, 0, MPI_BYTE, &mpistatus));
+        }
     }
 
 fn_exit:

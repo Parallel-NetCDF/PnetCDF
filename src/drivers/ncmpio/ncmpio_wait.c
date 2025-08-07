@@ -52,6 +52,7 @@ static int mgetput(NC *ncp, int num_reqs, NC_req *reqs, int rw_flag,
 int
 ncmpio_getput_zero_req(NC *ncp, int reqMode)
 {
+    char *mpi_name;
     int err, mpireturn, status=NC_NOERR;
     MPI_Status mpistatus;
     MPI_File fh;
@@ -61,26 +62,29 @@ ncmpio_getput_zero_req(NC *ncp, int reqMode)
 
     fh = ncp->collective_fh;
 
-    TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
-                                MPI_INFO_NULL);
+    TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL));
 
     if (fIsSet(reqMode, NC_REQ_RD)) {
-        if (ncp->nprocs > 1)
-            TRACE_IO(MPI_File_read_at_all)(fh, 0, NULL, 0, MPI_BYTE, &mpistatus);
-        else
-            TRACE_IO(MPI_File_read_at)(fh, 0, NULL, 0, MPI_BYTE, &mpistatus);
+        if (ncp->nprocs > 1) {
+            TRACE_IO(MPI_File_read_at_all, (fh, 0, NULL, 0, MPI_BYTE, &mpistatus));
+        }
+        else {
+            TRACE_IO(MPI_File_read_at, (fh, 0, NULL, 0, MPI_BYTE, &mpistatus));
+        }
         if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at_all");
+            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
             err = (err == NC_EFILE) ? NC_EREAD : err;
             DEBUG_ASSIGN_ERROR(status, err)
         }
     } else { /* write request */
-        if (ncp->nprocs > 1)
-            TRACE_IO(MPI_File_write_at_all)(fh, 0, NULL, 0, MPI_BYTE, &mpistatus);
-        else
-            TRACE_IO(MPI_File_write_at)(fh, 0, NULL, 0, MPI_BYTE, &mpistatus);
+        if (ncp->nprocs > 1) {
+            TRACE_IO(MPI_File_write_at_all, (fh, 0, NULL, 0, MPI_BYTE, &mpistatus));
+        }
+        else {
+            TRACE_IO(MPI_File_write_at, (fh, 0, NULL, 0, MPI_BYTE, &mpistatus));
+        }
         if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
+            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
             err = (err == NC_EFILE) ? NC_EWRITE : err;
             DEBUG_ASSIGN_ERROR(status, err)
         }
@@ -88,8 +92,8 @@ ncmpio_getput_zero_req(NC *ncp, int reqMode)
 
     /* No longer need to reset the file view, as the root's fileview includes
      * the whole file header.
-     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
-                                 MPI_INFO_NULL);
+     TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, MPI_BYTE, "native",
+                                  MPI_INFO_NULL));
      */
 
     return status;
@@ -2083,8 +2087,8 @@ req_aggregation(NC     *ncp,
 
     /* No longer need to reset the file view, as the root's fileview includes
      * the whole file header.
-     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
-                                 MPI_INFO_NULL);
+     TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, MPI_BYTE, "native",
+                                  MPI_INFO_NULL));
      */
 
     return status;
@@ -2507,8 +2511,8 @@ mpi_io:
 
     /* No longer need to reset the file view, as the root's fileview includes
      * the whole file header.
-     TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE, "native",
-                                 MPI_INFO_NULL);
+     TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, MPI_BYTE, "native",
+                                  MPI_INFO_NULL));
      */
 
     return status;

@@ -60,29 +60,30 @@ ncmpio_free_NC(NC *ncp)
 /*----< ncmpio_close_files() >-----------------------------------------------*/
 int
 ncmpio_close_files(NC *ncp, int doUnlink) {
+    char *mpi_name;
     int mpireturn;
 
     assert(ncp != NULL); /* this should never occur */
 
     if (ncp->independent_fh != MPI_FILE_NULL) {
-        TRACE_IO(MPI_File_close)(&ncp->independent_fh);
+        TRACE_IO(MPI_File_close, (&ncp->independent_fh));
         if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, "MPI_File_close");
+            return ncmpii_error_mpi2nc(mpireturn, mpi_name);
     }
 
     if (ncp->nprocs > 1 && ncp->collective_fh != MPI_FILE_NULL) {
-        TRACE_IO(MPI_File_close)(&ncp->collective_fh);
+        TRACE_IO(MPI_File_close, (&ncp->collective_fh));
         if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, "MPI_File_close");
+            return ncmpii_error_mpi2nc(mpireturn, mpi_name);
     }
 
     if (doUnlink) {
         /* called from ncmpi_abort, if the file is being created and is still
          * in define mode, the file is deleted */
         if (ncp->rank == 0) {
-            TRACE_IO(MPI_File_delete)((char *)ncp->path, ncp->mpiinfo);
+            TRACE_IO(MPI_File_delete, ((char *)ncp->path, ncp->mpiinfo));
             if (mpireturn != MPI_SUCCESS)
-                return ncmpii_error_mpi2nc(mpireturn, "MPI_File_delete");
+                return ncmpii_error_mpi2nc(mpireturn, mpi_name);
         }
         if (ncp->nprocs > 1)
             MPI_Barrier(ncp->comm);
@@ -186,31 +187,31 @@ ncmpio_close(void *ncdp)
 #else
             MPI_File fh;
             int mpireturn;
-            mpireturn = MPI_File_open(MPI_COMM_SELF, ncp->path, MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
+            TRACE_IO(MPI_File_open, (MPI_COMM_SELF, ncp->path, MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
             if (mpireturn == MPI_SUCCESS) {
                 /* obtain file size */
                 MPI_Offset *file_size;
-                mpireturn = MPI_File_get_size(fh, &file_size);
+                TRACE_IO(MPI_File_get_size, (fh, &file_size));
                 if (mpireturn != MPI_SUCCESS) {
-                    err = ncmpii_error_mpi2nc(mpireturn,"MPI_File_get_size");
+                    err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
                     if (status == NC_NOERR) status = err;
                 }
                 /* truncate file size to header size, if larger than header */
                 if (file_size > ncp->xsz) {
-                    mpireturn = MPI_File_set_size(fh, ncp->xsz);
+                    TRACE_IO(MPI_File_set_size, (fh, ncp->xsz));
                     if (mpireturn != MPI_SUCCESS) {
-                        err = ncmpii_error_mpi2nc(mpireturn,"MPI_File_set_size");
+                        err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
                         if (status == NC_NOERR) status = err;
                     }
                 }
-                mpireturn = MPI_File_close(&fh);
+                TRACE_IO(MPI_File_close, (&fh));
                 if (mpireturn != MPI_SUCCESS) {
-                    err = ncmpii_error_mpi2nc(mpireturn,"MPI_File_close");
+                    err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
                     if (status == NC_NOERR) status = err;
                 }
             }
             else {
-                err = ncmpii_error_mpi2nc(mpireturn,"MPI_File_open");
+                err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
                 if (status == NC_NOERR) status = err;
             }
 #endif

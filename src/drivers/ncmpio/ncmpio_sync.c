@@ -33,21 +33,22 @@
  */
 int
 ncmpio_file_sync(NC *ncp) {
+    char *mpi_name;
     int mpireturn;
 
     if (ncp->independent_fh != MPI_FILE_NULL) {
-        TRACE_IO(MPI_File_sync)(ncp->independent_fh);
+        TRACE_IO(MPI_File_sync, (ncp->independent_fh));
         if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, "MPI_File_sync");
+            return ncmpii_error_mpi2nc(mpireturn, mpi_name);
     }
     /* when nprocs == 1, ncp->collective_fh == ncp->independent_fh */
     if (ncp->nprocs == 1) return NC_NOERR;
 
     /* ncp->collective_fh is never MPI_FILE_NULL as collective mode is
      * default in PnetCDF */
-    TRACE_IO(MPI_File_sync)(ncp->collective_fh);
+    TRACE_IO(MPI_File_sync, (ncp->collective_fh));
     if (mpireturn != MPI_SUCCESS)
-        return ncmpii_error_mpi2nc(mpireturn, "MPI_File_sync");
+        return ncmpii_error_mpi2nc(mpireturn, mpi_name);
 
     /* Barrier is not necessary ...
     TRACE_COMM(MPI_Barrier)(ncp->comm);
@@ -68,6 +69,7 @@ int
 ncmpio_write_numrecs(NC         *ncp,
                      MPI_Offset  new_numrecs)
 {
+    char *mpi_name;
     int mpireturn, err;
     MPI_File fh;
     MPI_Status mpistatus;
@@ -85,8 +87,9 @@ ncmpio_write_numrecs(NC         *ncp,
 
     if (ncp->rank > 0 && fIsSet(ncp->flags, NC_HCOLL)) {
         /* other processes participate the collective call */
-        TRACE_IO(MPI_File_write_at_all)(fh, 0, NULL, 0, MPI_BYTE, &mpistatus);
-        return NC_NOERR;
+        TRACE_IO(MPI_File_write_at_all, (fh, 0, NULL, 0, MPI_BYTE, &mpistatus));
+        return (mpireturn == MPI_SUCCESS) ? NC_NOERR :
+               ncmpii_error_mpi2nc(mpireturn, mpi_name);
     }
 
     if (new_numrecs > ncp->numrecs || NC_ndirty(ncp)) {
@@ -118,14 +121,16 @@ ncmpio_write_numrecs(NC         *ncp,
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
         /* root's file view always includes the entire file header */
-        if (fIsSet(ncp->flags, NC_HCOLL) && ncp->nprocs > 1)
-            TRACE_IO(MPI_File_write_at_all)(fh, NC_NUMRECS_OFFSET, (void*)pos,
-                                            len, MPI_BYTE, &mpistatus);
-        else
-            TRACE_IO(MPI_File_write_at)(fh, NC_NUMRECS_OFFSET, (void*)pos,
-                                        len, MPI_BYTE, &mpistatus);
+        if (fIsSet(ncp->flags, NC_HCOLL) && ncp->nprocs > 1) {
+            TRACE_IO(MPI_File_write_at_all, (fh, NC_NUMRECS_OFFSET, (void*)pos,
+                                             len, MPI_BYTE, &mpistatus));
+        }
+        else {
+            TRACE_IO(MPI_File_write_at, (fh, NC_NUMRECS_OFFSET, (void*)pos,
+                                         len, MPI_BYTE, &mpistatus));
+        }
         if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
+            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
             if (err == NC_EFILE) DEBUG_RETURN_ERROR(NC_EWRITE)
         }
         else {
