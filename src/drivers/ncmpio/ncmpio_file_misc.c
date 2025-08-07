@@ -81,6 +81,7 @@ dup_NC(const NC *ref)
 int
 ncmpio_redef(void *ncdp)
 {
+    char *mpi_name;
     int err, status=NC_NOERR, mpireturn;
     NC *ncp = (NC*)ncdp;
 
@@ -107,18 +108,18 @@ ncmpio_redef(void *ncdp)
     fSet(ncp->flags, NC_MODE_DEF);
 
     /* must reset fileview as header extent may later change in enddef() */
-    TRACE_IO(MPI_File_set_view)(ncp->collective_fh, 0, MPI_BYTE,
-                                MPI_BYTE, "native", MPI_INFO_NULL);
+    TRACE_IO(MPI_File_set_view, (ncp->collective_fh, 0, MPI_BYTE,
+                                 MPI_BYTE, "native", MPI_INFO_NULL));
     if (mpireturn != MPI_SUCCESS) {
-        err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_set_view");
+        err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
         DEBUG_ASSIGN_ERROR(status, err)
     }
 
     if (ncp->independent_fh != MPI_FILE_NULL) {
-        TRACE_IO(MPI_File_set_view)(ncp->independent_fh, 0, MPI_BYTE,
-                                    MPI_BYTE, "native", MPI_INFO_NULL);
+        TRACE_IO(MPI_File_set_view, (ncp->independent_fh, 0, MPI_BYTE,
+                                     MPI_BYTE, "native", MPI_INFO_NULL));
         if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_set_view");
+            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
             DEBUG_ASSIGN_ERROR(status, err)
         }
     }
@@ -131,6 +132,7 @@ ncmpio_redef(void *ncdp)
 int
 ncmpio_begin_indep_data(void *ncdp)
 {
+    char *mpi_name;
     NC *ncp = (NC*)ncdp;
 
     if (NC_indef(ncp))  /* must not be in define mode */
@@ -158,11 +160,11 @@ ncmpio_begin_indep_data(void *ncdp)
      */
     if (ncp->independent_fh == MPI_FILE_NULL) {
         int mpireturn;
-        TRACE_IO(MPI_File_open)(MPI_COMM_SELF, ncp->path,
-                                ncp->mpiomode, ncp->mpiinfo,
-                                &ncp->independent_fh);
+        TRACE_IO(MPI_File_open, (MPI_COMM_SELF, ncp->path,
+                                 ncp->mpiomode, ncp->mpiinfo,
+                                 &ncp->independent_fh));
         if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, "MPI_File_open");
+            return ncmpii_error_mpi2nc(mpireturn, mpi_name);
     }
     return NC_NOERR;
 }
@@ -442,11 +444,12 @@ int
 ncmpi_delete(const char *filename,
              MPI_Info    info)
 {
+    char *mpi_name;
     int err=NC_NOERR, mpireturn;
 
-    TRACE_IO(MPI_File_delete)((char*)filename, info);
+    TRACE_IO(MPI_File_delete, ((char*)filename, info));
     if (mpireturn != MPI_SUCCESS)
-        err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_delete");
+        err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
     return err;
 }
 

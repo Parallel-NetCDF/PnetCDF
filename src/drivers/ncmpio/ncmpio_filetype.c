@@ -620,12 +620,13 @@ ncmpio_file_set_view(const NC     *ncp,
                      MPI_Offset   *offset,  /* IN/OUT */
                      MPI_Datatype  filetype)
 {
+    char *mpi_name;
     int err, mpireturn, status=NC_NOERR;
 
     if (filetype == MPI_BYTE) {
         /* filetype is a contiguous space, make the whole file visible */
-        TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, MPI_BYTE,
-                                    "native", MPI_INFO_NULL);
+        TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, MPI_BYTE,
+                                     "native", MPI_INFO_NULL));
         return NC_NOERR;
     }
 
@@ -685,8 +686,8 @@ ncmpio_file_set_view(const NC     *ncp,
 #ifndef HAVE_MPI_LARGE_COUNT
 err_out:
 #endif
-        TRACE_IO(MPI_File_set_view)(fh, 0, MPI_BYTE, root_filetype, "native",
-                                    MPI_INFO_NULL);
+        TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, root_filetype, "native",
+                                     MPI_INFO_NULL));
         if (root_filetype != MPI_BYTE)
             MPI_Type_free(&root_filetype);
 
@@ -694,13 +695,13 @@ err_out:
         *offset = ncp->begin_var;
     }
     else {
-        TRACE_IO(MPI_File_set_view)(fh, *offset, MPI_BYTE, filetype, "native",
-                                    MPI_INFO_NULL);
+        TRACE_IO(MPI_File_set_view, (fh, *offset, MPI_BYTE, filetype, "native",
+                                     MPI_INFO_NULL));
         /* the explicit offset is already set in fileview */
         *offset = 0;
     }
     if (mpireturn != MPI_SUCCESS) {
-        err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_set_view");
+        err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
         if (status == NC_NOERR) status = err;
     }
 
