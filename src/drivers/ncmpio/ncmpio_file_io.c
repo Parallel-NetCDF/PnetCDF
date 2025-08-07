@@ -28,6 +28,7 @@ ncmpio_read_write(NC           *ncp,
                   void         *buf,
                   int           buftype_is_contig)
 {
+    char *mpi_name;
     int status=NC_NOERR, err=NC_NOERR, mpireturn;
     MPI_Status mpistatus;
     MPI_File fh;
@@ -37,16 +38,19 @@ ncmpio_read_write(NC           *ncp,
     MPI_Count btype_size;
     /* MPI_Type_size_c is introduced in MPI 4.0 */
     mpireturn = MPI_Type_size_c(buf_type, &btype_size);
+    mpi_name = "MPI_Type_size_c";
 #elif defined(HAVE_MPI_TYPE_SIZE_X)
     MPI_Count btype_size;
     /* MPI_Type_size_x is introduced in MPI 3.0 */
     mpireturn = MPI_Type_size_x(buf_type, &btype_size);
+    mpi_name = "MPI_Type_size_x";
 #else
     int btype_size;
     mpireturn = MPI_Type_size(buf_type, &btype_size);
+    mpi_name = "MPI_Type_size";
 #endif
     if (mpireturn != MPI_SUCCESS) {
-        err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_size");
+        err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
         /* return the first encountered error if there is any */
         err = (err == NC_EFILE) ? NC_EREAD : err;
     }
@@ -85,22 +89,14 @@ ncmpio_read_write(NC           *ncp,
 
     if (rw_flag == NC_REQ_RD) {
         void         *xbuf=buf;
-        int           xlen=(int)buf_count;
         MPI_Datatype  xbuf_type=buf_type;
 
-        if (buf_count > NC_MAX_INT) {
 #ifdef HAVE_MPI_LARGE_COUNT
-            mpireturn = MPI_Type_contiguous_c((MPI_Count)buf_count, buf_type, &xbuf_type);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous_c");
-                if (coll_indep == NC_REQ_COLL)
-                    DEBUG_ASSIGN_ERROR(status, err)
-                else
-                    DEBUG_RETURN_ERROR(err)
-            }
-            MPI_Type_commit(&xbuf_type);
-            xlen = 1;
+        MPI_Count xlen = (MPI_Count)buf_count;
 #else
+        int xlen = (int)buf_count;
+
+        if (buf_count > NC_MAX_INT) {
             if (coll_indep == NC_REQ_COLL) {
 #ifdef PNETCDF_DEBUG
                 fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buf_count=%lld\n",
@@ -112,17 +108,21 @@ ncmpio_read_write(NC           *ncp,
             }
             else
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-#endif
         }
-        else if (buf_count > 0 && !buftype_is_contig &&
-                 req_size <= ncp->ibuf_size) {
+#endif
+
+        if (xlen > 0 && !buftype_is_contig && req_size <= ncp->ibuf_size) {
             /* if read buffer is noncontiguous and size is < ncp->ibuf_size,
              * allocate a temporary buffer and use it to read, as some MPI,
              * e.g. Cray on KNL, can be significantly slow when read buffer is
              * noncontiguous.
              */
+#ifdef HAVE_MPI_LARGE_COUNT
+            xbuf_type = MPI_BYTE;
+            xlen = (MPI_Count)req_size;
+#else
             if (req_size > NC_MAX_INT) {
-                mpireturn = MPI_Type_contiguous((int)buf_count, buf_type, &xbuf_type);
+                mpireturn = MPI_Type_contiguous(xlen, buf_type, &xbuf_type);
                 if (mpireturn != MPI_SUCCESS) {
                     err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous");
                     if (coll_indep == NC_REQ_COLL)
@@ -137,33 +137,32 @@ ncmpio_read_write(NC           *ncp,
                 xbuf_type = MPI_BYTE;
                 xlen = (int)req_size;
             }
+#endif
             xbuf = NCI_Malloc((size_t)req_size);
         }
 
         if (ncp->nprocs > 1 && coll_indep == NC_REQ_COLL) {
-            TRACE_IO(MPI_File_read_at_all)(fh, offset, xbuf, xlen, xbuf_type,
-                                           &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at_all");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR) {
-                    err = (err == NC_EFILE) ? NC_EREAD : err;
-                    DEBUG_ASSIGN_ERROR(status, err)
-                }
-            }
+#ifdef HAVE_MPI_LARGE_COUNT
+            TRACE_IO(MPI_File_read_at_all_c, (fh, offset, xbuf, xlen, xbuf_type, &mpistatus));
+#else
+            TRACE_IO(MPI_File_read_at_all, (fh, offset, xbuf, xlen, xbuf_type, &mpistatus));
+#endif
         } else {
-            TRACE_IO(MPI_File_read_at)(fh, offset, xbuf, xlen, xbuf_type,
-                                       &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_read_at");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR) {
-                    err = (err == NC_EFILE) ? NC_EREAD : err;
-                    DEBUG_RETURN_ERROR(err)
-                }
+#ifdef HAVE_MPI_LARGE_COUNT
+            TRACE_IO(MPI_File_read_at_c, (fh, offset, xbuf, xlen, xbuf_type, &mpistatus));
+#else
+            TRACE_IO(MPI_File_read_at, (fh, offset, xbuf, xlen, xbuf_type, &mpistatus));
+#endif
+        }
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
+            /* return the first encountered error if there is any */
+            if (status == NC_NOERR) {
+                err = (err == NC_EFILE) ? NC_EREAD : err;
+                DEBUG_ASSIGN_ERROR(status, err)
             }
         }
-        if (mpireturn == MPI_SUCCESS) {
+        else {
             /* update the number of bytes read since file open */
 #ifdef HAVE_MPI_GET_COUNT_C
             MPI_Count get_size;
@@ -193,13 +192,15 @@ ncmpio_read_write(NC           *ncp,
             MPI_Count pos=0;
             mpireturn = MPI_Unpack_c(xbuf, xlen, &pos, buf, (MPI_Count)buf_count,
                                      buf_type, MPI_COMM_SELF);
+            mpi_name = "MPI_Unpack_c";
 #else
             int pos=0;
             mpireturn = MPI_Unpack(xbuf, xlen, &pos, buf, (int)buf_count,
                                    buf_type, MPI_COMM_SELF);
+            mpi_name = "MPI_Unpack";
 #endif
             if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_Unpack");
+                err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
                 if (coll_indep == NC_REQ_COLL)
                     DEBUG_ASSIGN_ERROR(status, err)
                 else
@@ -211,22 +212,13 @@ ncmpio_read_write(NC           *ncp,
             MPI_Type_free(&xbuf_type);
     } else { /* NC_REQ_WR */
         void         *xbuf=buf;
-        int           xlen=(int)buf_count;
         MPI_Datatype  xbuf_type=buf_type;
 
-        if (buf_count > NC_MAX_INT) {
 #ifdef HAVE_MPI_LARGE_COUNT
-            mpireturn = MPI_Type_contiguous_c((MPI_Count)buf_count, buf_type, &xbuf_type);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous_c");
-                if (coll_indep == NC_REQ_COLL)
-                    DEBUG_ASSIGN_ERROR(status, err)
-                else
-                    DEBUG_RETURN_ERROR(err)
-            }
-            MPI_Type_commit(&xbuf_type);
-            xlen = 1;
+        MPI_Count xlen = (MPI_Count)buf_count;
 #else
+        int xlen = (int)buf_count;
+        if (buf_count > NC_MAX_INT) {
             if (coll_indep == NC_REQ_COLL) {
 #ifdef PNETCDF_DEBUG
                 fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buf_count=%lld\n",
@@ -238,87 +230,71 @@ ncmpio_read_write(NC           *ncp,
             }
             else
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-#endif
         }
-        else if (buf_count > 0 && !buftype_is_contig &&
-                 req_size <= ncp->ibuf_size) {
+#endif
+
+        if (xlen > 0 && !buftype_is_contig && req_size <= ncp->ibuf_size) {
             /* if write buffer is noncontiguous and size is < ncp->ibuf_size,
              * allocate a temporary buffer and use it to write, as some MPI,
              * e.g. Cray on KNL, can be significantly slow when write buffer is
              * noncontiguous.
              */
-            if (req_size > NC_MAX_INT) {
 #ifdef HAVE_MPI_LARGE_COUNT
-                MPI_Count pos=0;
-                xbuf = NCI_Malloc(req_size);
-                mpireturn = MPI_Pack_c(buf, (MPI_Count)buf_count, buf_type, xbuf,
-                                       (MPI_Count)req_size, &pos, MPI_COMM_SELF);
-                if (mpireturn != MPI_SUCCESS) {
-                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_Pack_c");
-                    if (coll_indep == NC_REQ_COLL)
-                        DEBUG_ASSIGN_ERROR(status, err)
-                    else
-                        DEBUG_RETURN_ERROR(err)
-                }
-                mpireturn = MPI_Type_contiguous_c((MPI_Count)req_size, MPI_BYTE, &xbuf_type);
-                if (mpireturn != MPI_SUCCESS) {
-                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous_c");
-                    if (coll_indep == NC_REQ_COLL) {
-                        DEBUG_ASSIGN_ERROR(status, err)
-                        xlen = 0;
-                    }
-                    else
-                        DEBUG_RETURN_ERROR(err)
-                }
-                MPI_Type_commit(&xbuf_type);
-                xlen = 1;
+            MPI_Count pos=0;
+            xbuf_type = MPI_BYTE;
+            xlen = (MPI_Count)req_size;
+            xbuf = NCI_Malloc(req_size);
+            mpireturn = MPI_Pack_c(buf, (MPI_Count)buf_count, buf_type, xbuf,
+                                   (MPI_Count)req_size, &pos, MPI_COMM_SELF);
+            mpi_name = "MPI_Pack_c";
 #else
+            if (req_size > NC_MAX_INT) {
                 /* skip packing write data into a temp buffer */
                 xlen = (int)buf_count;
                 xbuf_type = buf_type;
-#endif
+                mpireturn = MPI_SUCCESS;
             }
             else {
                 int pos=0;
+                xbuf_type = MPI_BYTE;
                 xlen = (int)req_size;
                 xbuf = NCI_Malloc(xlen);
                 mpireturn = MPI_Pack(buf, (int)buf_count, buf_type, xbuf,
                                      xlen, &pos, MPI_COMM_SELF);
-                if (mpireturn != MPI_SUCCESS) {
-                    err = ncmpii_error_mpi2nc(mpireturn, "MPI_Pack");
-                    if (coll_indep == NC_REQ_COLL)
-                        DEBUG_ASSIGN_ERROR(status, err)
-                    else
-                        DEBUG_RETURN_ERROR(err)
-                }
-                xbuf_type = MPI_BYTE;
+                mpi_name = "MPI_Pack";
+            }
+#endif
+            if (mpireturn != MPI_SUCCESS) {
+                err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
+                if (coll_indep == NC_REQ_COLL)
+                    DEBUG_ASSIGN_ERROR(status, err)
+                else
+                    DEBUG_RETURN_ERROR(err)
             }
         }
 
         if (ncp->nprocs > 1 && coll_indep == NC_REQ_COLL) {
-            TRACE_IO(MPI_File_write_at_all)(fh, offset, xbuf, xlen, xbuf_type,
-                                            &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at_all");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR) {
-                    err = (err == NC_EFILE) ? NC_EWRITE : err;
-                    DEBUG_ASSIGN_ERROR(status, err)
-                }
-            }
+#ifdef HAVE_MPI_LARGE_COUNT
+            TRACE_IO(MPI_File_write_at_all_c, (fh, offset, xbuf, xlen, xbuf_type, &mpistatus));
+#else
+            TRACE_IO(MPI_File_write_at_all, (fh, offset, xbuf, xlen, xbuf_type, &mpistatus));
+#endif
         } else {
-            TRACE_IO(MPI_File_write_at)(fh, offset, xbuf, xlen, xbuf_type,
-                                        &mpistatus);
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_write_at");
-                /* return the first encountered error if there is any */
-                if (status == NC_NOERR) {
-                    err = (err == NC_EFILE) ? NC_EWRITE : err;
-                    DEBUG_RETURN_ERROR(err)
-                }
+#ifdef HAVE_MPI_LARGE_COUNT
+            TRACE_IO(MPI_File_write_at_c, (fh, offset, xbuf, xlen, xbuf_type, &mpistatus));
+#else
+            TRACE_IO(MPI_File_write_at, (fh, offset, xbuf, xlen, xbuf_type, &mpistatus));
+#endif
+        }
+        if (mpireturn != MPI_SUCCESS) {
+            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
+            /* return the first encountered error if there is any */
+            if (status == NC_NOERR) {
+                err = (err == NC_EFILE) ? NC_EWRITE : err;
+                DEBUG_ASSIGN_ERROR(status, err)
             }
         }
-        if (mpireturn == MPI_SUCCESS) {
+        else {
             /* update the number of bytes written since file open */
 #ifdef HAVE_MPI_GET_COUNT_C
             MPI_Count put_size;
