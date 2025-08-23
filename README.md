@@ -17,6 +17,10 @@ Northwestern University and Argonne National Laboratory.
   contains more information about PnetCDF.
 
 ### PnetCDF official software releases
+* The latest stable release is
+  [pnetcdf-1.14.1.tar.gz](https://parallel-netcdf.github.io/Release/pnetcdf-1.14.1.tar.gz)
+  ([release note](https://github.com/Parallel-NetCDF/Parallel-NetCDF.github.io/blob/master/Release_notes/1.14.1.md)),
+  available since July 31, 2025.
 * All **official released versions** can be found in
   https://parallel-netcdf.github.io/wiki/Download.html
 * Note the ["releases"](https://github.com/Parallel-NetCDF/PnetCDF/releases)
