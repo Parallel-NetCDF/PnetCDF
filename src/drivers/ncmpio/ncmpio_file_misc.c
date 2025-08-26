@@ -382,10 +382,10 @@ ncmpio_inq_misc(void       *ncdp,
          * user.
          */
 
-        sprintf(value, "%lld", ncp->v_align);
+        sprintf(value, OFFFMT, ncp->v_align);
         MPI_Info_set(*info_used, "nc_var_align_size", value);
 
-        sprintf(value, "%lld", ncp->r_align);
+        sprintf(value, OFFFMT, ncp->r_align);
         MPI_Info_set(*info_used, "nc_record_align_size", value);
 
         sprintf(value, "%d", ncp->chunk);
@@ -398,7 +398,7 @@ ncmpio_inq_misc(void       *ncdp,
         else
             MPI_Info_set(*info_used, "nc_in_place_swap", "auto");
 
-        sprintf(value, "%lld", ncp->ibuf_size);
+        sprintf(value, OFFFMT, ncp->ibuf_size);
         MPI_Info_set(*info_used, "nc_ibuf_size", value);
 
 #ifdef ENABLE_SUBFILING

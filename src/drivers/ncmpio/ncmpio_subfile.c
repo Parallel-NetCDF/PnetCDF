@@ -378,7 +378,7 @@ int ncmpio_subfile_partition(NC *ncp)
                     max = (MPI_Offset)yy-(yy-(MPI_Offset)yy==0.0?1:0);
                     if (max >= dim_sz0) max = dim_sz0-1;
 #ifdef SUBFILE_DEBUG
-                    if (myrank == 0) printf("subfile(%d): min=%lld, max=%lld\n", jj, min, max);
+                    if (myrank == 0) printf("subfile(%d): min="OFFFMT", max="OFFFMT"\n", jj, min, max);
 #endif
                     if (j == par_dim_id) { /* partitioning dims? */
                         sf_range[jj][j][0] = min;
@@ -621,12 +621,12 @@ ncmpio_subfile_getput_vars(NC               *ncp,
                     jj++;
                 else {
 #ifdef SUBFILE_DEBUG
-                    printf("rank(%d): var(%s): i=%d, j=%d, ii=%lld, jj=%lld, kk=%lld, jx=%d\n", myrank, varp->name, i, j, ii, jj, kk, jx);
+                    printf("rank(%d): var(%s): i=%d, j=%d, ii="OFFFMT", jj="OFFFMT", kk="OFFFMT", jx=%d\n", myrank, varp->name, i, j, ii, jj, kk, jx);
 #endif
                     if (kk == 0) {
                         my_req[aproc].start[jx] = ii;
 #ifdef SUBFILE_DEBUG
-                        printf("rank(%d): var(%s): my_req[%d].start[%d]=%lld\n",
+                        printf("rank(%d): var(%s): my_req[%d].start[%d]="OFFFMT"\n",
                                myrank, varp->name, aproc, jx, ii);
 #endif
                     }
@@ -817,7 +817,7 @@ ncmpio_subfile_getput_vars(NC               *ncp,
         /* making diff is necessary?? */
         diff[i] = ABS(my_req[myrank].start_org[i]-start[i])/stride_count;
 #ifdef SUBFILE_DEBUG
-        if (myrank == 0) printf("rank(%d): my_req[%d].start_org[%d]=%d, start[%d]=%d, diff[%d]=%lld\n", myrank,
+        if (myrank == 0) printf("rank(%d): my_req[%d].start_org[%d]=%d, start[%d]=%d, diff[%d]="OFFFMT"\n", myrank,
                myrank, i, my_req[myrank].start_org[i], i, start[i], i, diff[i]);
 #endif
     }

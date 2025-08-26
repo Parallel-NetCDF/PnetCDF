@@ -118,7 +118,7 @@ move_file_block(NC         *ncp,
             get_size = pread(fd, buf, chunk_size, off_from);
             if (get_size < 0) {
                 fprintf(stderr,
-                "Error at %s line %d: pread file %s offset %lld size %zd (%s)\n",
+                "Error at %s line %d: pread file %s offset "OFFFMT" size %zd (%s)\n",
                 __func__,__LINE__,path,off_from,chunk_size,strerror(errno));
                 DEBUG_RETURN_ERROR(NC_EREAD)
             }
@@ -138,7 +138,7 @@ move_file_block(NC         *ncp,
             put_size = pwrite(fd, buf, get_size, off_to);
             if (put_size < 0) {
                 fprintf(stderr,
-                "Error at %s line %d: pwrite file %s offset %lld size %zd (%s)\n",
+                "Error at %s line %d: pwrite file %s offset "OFFFMT" size %zd (%s)\n",
                 __func__,__LINE__,path,off_to,get_size,strerror(errno));
                 DEBUG_RETURN_ERROR(NC_EREAD)
             }
@@ -953,7 +953,7 @@ ncmpio_NC_check_voffs(NC *ncp)
         NC_var *varp = ncp->vars.value[i];
         if (varp->begin < ncp->xsz) {
             if (ncp->safe_mode) {
-                printf("Variable %s begin offset (%lld) is less than file header extent (%lld)\n",
+                printf("Variable %s begin offset ("OFFFMT") is less than file header extent ("OFFFMT")\n",
                        varp->name, varp->begin, ncp->xsz);
             }
             NCI_Free(var_off_len);
@@ -982,7 +982,7 @@ ncmpio_NC_check_voffs(NC *ncp)
             if (ncp->safe_mode) {
                 NC_var *var_cur = ncp->vars.value[var_off_len[i].ID];
                 NC_var *var_prv = ncp->vars.value[var_off_len[i-1].ID];
-                printf("Variable %s begin offset (%lld) overlaps variable %s (begin=%lld, length=%lld)\n",
+                printf("Variable %s begin offset ("OFFFMT") overlaps variable %s (begin="OFFFMT", length="OFFFMT")\n",
                        var_cur->name, var_cur->begin, var_prv->name, var_prv->begin, var_prv->len);
             }
             NCI_Free(var_off_len);
@@ -994,7 +994,7 @@ ncmpio_NC_check_voffs(NC *ncp)
 
     if (ncp->begin_rec < max_var_end) {
         if (ncp->safe_mode)
-            printf("Record variable section begin (%lld) is less than fixed-size variable section end (%lld)\n",
+            printf("Record variable section begin ("OFFFMT") is less than fixed-size variable section end ("OFFFMT")\n",
                    ncp->begin_rec, max_var_end);
         NCI_Free(var_off_len);
         DEBUG_RETURN_ERROR(NC_ENOTNC)
@@ -1030,7 +1030,7 @@ check_rec_var:
             if (ncp->safe_mode) {
                 NC_var *var_cur = ncp->vars.value[var_off_len[i].ID];
                 NC_var *var_prv = ncp->vars.value[var_off_len[i-1].ID];
-                printf("Variable %s begin offset (%lld) overlaps variable %s (begin=%lld, length=%lld)\n",
+                printf("Variable %s begin offset ("OFFFMT") overlaps variable %s (begin="OFFFMT", length="OFFFMT")\n",
                        var_cur->name, var_cur->begin, var_prv->name, var_prv->begin, var_prv->len);
             }
             NCI_Free(var_off_len);
@@ -1052,10 +1052,10 @@ check_rec_var:
         if (varp->begin < prev_off) {
             if (ncp->safe_mode) {
                 if (i == 0)
-                    printf("Variable \"%s\" begin offset (%lld) is less than header extent (%lld)\n",
+                    printf("Variable \"%s\" begin offset ("OFFFMT") is less than header extent ("OFFFMT")\n",
                            varp->name, varp->begin, prev_off);
                 else
-                    printf("Variable \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n",
+                    printf("Variable \"%s\" begin offset ("OFFFMT") is less than previous variable \"%s\" end offset ("OFFFMT")\n",
                            varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
             }
             DEBUG_RETURN_ERROR(NC_ENOTNC)
@@ -1066,7 +1066,7 @@ check_rec_var:
 
     if (ncp->begin_rec < prev_off) {
         if (ncp->safe_mode)
-            printf("Record variable section begin offset (%lld) is less than fixed-size variable section end offset (%lld)\n",
+            printf("Record variable section begin offset ("OFFFMT") is less than fixed-size variable section end offset ("OFFFMT")\n",
                    ncp->begin_rec, prev_off);
         DEBUG_RETURN_ERROR(NC_ENOTNC)
     }
@@ -1083,13 +1083,13 @@ check_rec_var:
 
         if (varp->begin < prev_off) {
             if (ncp->safe_mode) {
-                printf("Variable \"%s\" begin offset (%lld) is less than previous variable end offset (%lld)\n",
+                printf("Variable \"%s\" begin offset ("OFFFMT") is less than previous variable end offset ("OFFFMT")\n",
                            varp->name, varp->begin, prev_off);
                 if (i == 0)
-                    printf("Variable \"%s\" begin offset (%lld) is less than record variable section begin offset (%lld)\n",
+                    printf("Variable \"%s\" begin offset ("OFFFMT") is less than record variable section begin offset ("OFFFMT")\n",
                            varp->name, varp->begin, prev_off);
                 else
-                    printf("Variable \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n",
+                    printf("Variable \"%s\" begin offset ("OFFFMT") is less than previous variable \"%s\" end offset ("OFFFMT")\n",
                            varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
             }
             DEBUG_RETURN_ERROR(NC_ENOTNC)
@@ -1312,9 +1312,9 @@ ncmpio__enddef(void       *ncdp,
     /* reflect the hint changes to the MPI info object, so the user can inquire
      * what the true hint values are being used
      */
-    sprintf(value, "%lld", ncp->v_align);
+    sprintf(value, OFFFMT, ncp->v_align);
     MPI_Info_set(ncp->mpiinfo, "nc_var_align_size", value);
-    sprintf(value, "%lld", ncp->r_align);
+    sprintf(value, OFFFMT, ncp->r_align);
     MPI_Info_set(ncp->mpiinfo, "nc_record_align_size", value);
 
 #ifdef ENABLE_SUBFILING

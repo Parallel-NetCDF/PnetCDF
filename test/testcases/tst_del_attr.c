@@ -124,7 +124,7 @@ tst_fmt(char *filename, int cmode)
             file_size = lseek(fd, 0, SEEK_END);
 
             if (!(cmode & NC_NETCDF4) && file_size != header_size)
-                printf("Warning: expected file size %lld but got %lld\n",
+                printf("Warning: expected file size "OFFFMT" but got %lld\n",
                        header_size, (long long)file_size);
 
             close(fd);
@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }

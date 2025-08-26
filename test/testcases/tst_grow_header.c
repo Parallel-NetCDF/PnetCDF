@@ -121,9 +121,9 @@ err_out:
     err = ncmpi_inq_header_size(ncid, &hsize); CHECK_ERR \
     err = ncmpi_inq_header_extent(ncid, &extent); CHECK_ERR \
     if (verbose && rank == 0) { \
-        printf("Line %d: header size   old = %6lld new = %6lld\n", \
+        printf("Line %d: header size   old = "OFFFMT" new = "OFFFMT"\n", \
                __LINE__,old_hsize, hsize); \
-        printf("Line %d: header extent old = %6lld new = %6lld\n", \
+        printf("Line %d: header extent old = "OFFFMT" new = "OFFFMT"\n", \
                __LINE__,old_extent, extent); \
     } \
 }
@@ -131,12 +131,12 @@ err_out:
 #define CHECK_HEADER_SIZE { \
     if (hsize != exp_hsize) { \
         nerrs++; \
-        printf("Error at line %d in %s: header size expecting %lld but got %lld\n", \
+        printf("Error at line %d in %s: header size expecting "OFFFMT" but got "OFFFMT"\n", \
                __LINE__,__FILE__, exp_hsize, hsize); \
     } \
     if (extent != exp_extent) { \
         nerrs++; \
-        printf("Error at line %d in %s: header extent expecting %lld but got %lld\n", \
+        printf("Error at line %d in %s: header extent expecting "OFFFMT" but got "OFFFMT"\n", \
                __LINE__,__FILE__, exp_extent, extent); \
     } \
     /* read variables back and check contents */ \
@@ -157,7 +157,7 @@ err_out:
     CHECK_ERR \
     free(attr); \
     if (verbose && rank == 0) \
-        printf("Line %d: grow header size from %6lld to %6lld\n", \
+        printf("Line %d: grow header size from "OFFFMT" to "OFFFMT"\n", \
                __LINE__,hsize, hsize+growth); \
 }
 
@@ -429,7 +429,7 @@ int main(int argc, char** argv)
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }

@@ -111,7 +111,7 @@ int main(int argc, char **argv)
         int dimid;
 
         err = cdl_hdr_inq_dim(hid, i, &name, &size); CHECK_ERR
-        if (verbose) printf("\t name %s size %lld\n",name, size);
+        if (verbose) printf("\t name %s size "OFFFMT"\n",name, size);
 
         err = ncmpi_def_dim(ncid, name, size, &dimid); CHECK_ERR
     }
@@ -141,10 +141,10 @@ int main(int argc, char **argv)
             err = cdl_hdr_inq_attr(hid, i, j, &name, &xtype, &nelems, &value); CHECK_ERR
             if (verbose) {
                 if (xtype == NC_CHAR)
-                    printf("\t\tattr %s type %d nelems %lld (%s)\n",
+                    printf("\t\tattr %s type %d nelems "OFFFMT" (%s)\n",
                             name, xtype,nelems,(char*)value);
                 else
-                    printf("\t\tattr %s type %d nelems %lld\n",
+                    printf("\t\tattr %s type %d nelems "OFFFMT"\n",
                            name, xtype, nelems);
             }
 
@@ -160,10 +160,10 @@ int main(int argc, char **argv)
         err = cdl_hdr_inq_attr(hid, NC_GLOBAL, i, &name, &xtype, &nelems, &value);
         if (verbose) {
             if (xtype == NC_CHAR)
-                printf("\t name %s type %d nelems %lld (%s)\n",
+                printf("\t name %s type %d nelems "OFFFMT" (%s)\n",
                         name, xtype, nelems,(char*)value);
             else
-                printf("\t name %s type %d nelems %lld\n",
+                printf("\t name %s type %d nelems "OFFFMT"\n",
                         name, xtype, nelems);
         }
 
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }

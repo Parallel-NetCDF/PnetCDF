@@ -146,8 +146,8 @@ int main(int argc, char** argv) {
 
 #ifdef VERBOSE
     if (rank == 0) {
-        printf("\nheader_size = %lld\n",header_size);
-        printf("header_extent=%lld\n\n",header_extent);
+        printf("\nheader_size = "OFFFMT"\n",header_size);
+        printf("header_extent="OFFFMT"\n\n",header_extent);
     }
 #endif
 
@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
         MPI_Info_get(info_used, "nc_var_align_size", len+1, value, &flag);
         expect = PNETCDF_RNDUP(197, 4);
         if (expect != strtoll(value,NULL,10)) {
-            printf("Error: nc_var_align_size expect %lld but got %lld\n",
+            printf("Error: nc_var_align_size expect "OFFFMT" but got %lld\n",
                    expect, strtoll(value,NULL,10));
             nerrs++;
         }
@@ -220,7 +220,7 @@ int main(int argc, char** argv) {
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }

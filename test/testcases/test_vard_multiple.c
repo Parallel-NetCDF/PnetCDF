@@ -300,7 +300,7 @@ int main(int argc, char **argv) {
     err = ncmpi_inq_unlimdim(ncid, &unlimit_dimid); CHECK_ERR
     err = ncmpi_inq_dimlen(ncid, unlimit_dimid, &len); CHECK_ERR
     if (len != 2)
-        printf("Error at line %d in %s: number of records should be 2 but got %lld\n",
+        printf("Error at line %d in %s: number of records should be 2 but got "OFFFMT"\n",
         __LINE__,__FILE__,len);
 
     MPI_Type_free(&vtype[0]);
@@ -317,7 +317,7 @@ int main(int argc, char **argv) {
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }

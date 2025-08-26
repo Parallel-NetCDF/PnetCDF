@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
   MPI_Barrier(comm_cart);
 
   if (verbose)
-  printf("%3d   %2d %2d %2d  %4lld %4lld %4lld    %4lld %4lld %4lld   %6lld %6lld %6lld\n",
+  printf("%3d   %2d %2d %2d  "OFFFMT OFFFMT OFFFMT OFFFMT OFFFMT OFFFMT OFFFMT OFFFMT OFFFMT"\n",
          mype, pe_coords[0], pe_coords[1], pe_coords[2],
          totsiz_3d[0], totsiz_3d[1], totsiz_3d[2],
          locsiz_3d[0], locsiz_3d[1], locsiz_3d[2],
@@ -191,7 +191,7 @@ int main(int argc, char *argv[]) {
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (mype == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
     }
 

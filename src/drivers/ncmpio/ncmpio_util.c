@@ -57,7 +57,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
     if (ncp->info_v_align == -1)
         sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
     else
-        sprintf(value, "%lld", ncp->info_v_align);
+        sprintf(value, OFFFMT, ncp->info_v_align);
     MPI_Info_set(info_used, "nc_var_align_size", value);
 
     if (user_info != MPI_INFO_NULL) {
@@ -78,7 +78,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
          */
         if (info_h_align >= 0 && ncp->info_v_align == -1) {
             ncp->info_v_align = info_h_align;
-            sprintf(value, "%lld", ncp->info_v_align);
+            sprintf(value, OFFFMT, ncp->info_v_align);
             MPI_Info_set(info_used, "nc_var_align_size", value);
         }
     }
@@ -98,7 +98,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
     if (ncp->info_r_align == -1)
         sprintf(value, "%d", FILE_ALIGNMENT_DEFAULT);
     else
-        sprintf(value, "%lld", ncp->info_r_align);
+        sprintf(value, OFFFMT, ncp->info_r_align);
     MPI_Info_set(info_used, "nc_record_align_size", value);
 
     ncp->chunk = PNC_DEFAULT_CHUNKSIZE;
@@ -154,7 +154,7 @@ void ncmpio_set_pnetcdf_hints(NC *ncp,
             if (errno == 0 && ibuf_size >= 0) ncp->ibuf_size = ibuf_size;
         }
     }
-    sprintf(value, "%lld", ncp->ibuf_size);
+    sprintf(value, OFFFMT, ncp->ibuf_size);
     MPI_Info_set(info_used, "nc_ibuf_size", value);
 
 #ifdef ENABLE_SUBFILING

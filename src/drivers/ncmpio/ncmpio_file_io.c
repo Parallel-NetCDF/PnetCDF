@@ -56,7 +56,7 @@ ncmpio_read_write(NC           *ncp,
     }
     else if (btype_size == MPI_UNDEFINED) {
 #ifdef PNETCDF_DEBUG
-        fprintf(stderr,"%d: %s line %d: btype_size MPI_UNDEFINED buf_count=%lld\n",
+        fprintf(stderr,"%d: %s line %d: btype_size MPI_UNDEFINED buf_count="OFFFMT"\n",
                 ncp->rank, __func__,__LINE__,buf_count);
 #endif
         DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
@@ -99,7 +99,7 @@ ncmpio_read_write(NC           *ncp,
         if (buf_count > NC_MAX_INT) {
             if (coll_indep == NC_REQ_COLL) {
 #ifdef PNETCDF_DEBUG
-                fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buf_count=%lld\n",
+                fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buf_count="OFFFMT"\n",
                         ncp->rank, __func__,__LINE__,buf_count);
 #endif
                 DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
@@ -221,7 +221,7 @@ ncmpio_read_write(NC           *ncp,
         if (buf_count > NC_MAX_INT) {
             if (coll_indep == NC_REQ_COLL) {
 #ifdef PNETCDF_DEBUG
-                fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buf_count=%lld\n",
+                fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buf_count="OFFFMT"\n",
                         ncp->rank, __func__,__LINE__,buf_count);
 #endif
                 DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)

@@ -67,7 +67,7 @@ tst_fmt(char *filename, int cmode)
 
     err = ncmpi_inq_dimlen(ncid, dimid[0], &num_records); CHECK_ERR
     if (num_records != Y_LEN) {
-        printf("Error at %s:%d: expect num_records=%d but got %lld\n",
+        printf("Error at %s:%d: expect num_records=%d but got "OFFFMT"\n",
                __FILE__,__LINE__,Y_LEN,num_records);
         nerrs++;
     }
@@ -77,7 +77,7 @@ tst_fmt(char *filename, int cmode)
 
     err = ncmpi_inq_dimlen(ncid, dimid[0], &num_records); CHECK_ERR
     if (num_records != Y_LEN) {
-        printf("Error at %s:%d: expect num_records=%d but got %lld\n",
+        printf("Error at %s:%d: expect num_records=%d but got "OFFFMT"\n",
                __FILE__,__LINE__,Y_LEN,num_records);
         nerrs++;
     }
@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
