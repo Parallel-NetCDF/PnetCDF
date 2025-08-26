@@ -1284,6 +1284,47 @@ if test "$ac_cv_sizeof_MPI_Offset" -lt "8"; then
    -----------------------------------------------------------------------])
 fi
 
+MPI_OFFSET_FMT="%lld"
+if test "x$GCC" = xyes ; then
+   # check if MPI_Offset is long long int or long int.
+   AC_MSG_CHECKING([MPI_Offset type])
+   saved_CFLAGS=$CFLAGS
+   MPI_Offset_type="unknown"
+   CFLAGS="$CFLAGS -Werror=format"
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
+                                        #include <mpi.h>]],
+                                      [[printf("%lld\n", (MPI_Offset)1);]])],
+                     [MPI_Offset_is_long_long=yes],
+                     [MPI_Offset_is_long_long=no])
+   if test $MPI_Offset_is_long_long = no ; then
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
+                                           #include <mpi.h>]],
+                                         [[printf("%ld\n", (MPI_Offset)1);]])],
+                        [MPI_Offset_is_long=yes],
+                        [MPI_Offset_is_long=no])
+      if test $MPI_Offset_is_long = no ; then
+         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
+                                              #include <mpi.h>]],
+                                            [[printf("%d\n", (MPI_Offset)1);]])],
+                           [MPI_Offset_is_int=yes],
+                           [MPI_Offset_is_int=no])
+         if test $MPI_Offset_is_int = yes ; then
+            MPI_Offset_type="int"
+            MPI_OFFSET_FMT="%d"
+         fi
+      else
+         MPI_Offset_type="long"
+         MPI_OFFSET_FMT="%ld"
+      fi
+   else
+      MPI_Offset_type="long long"
+      MPI_OFFSET_FMT="%lld"
+   fi
+   AC_MSG_RESULT([$MPI_Offset_type])
+   CFLAGS=$saved_CFLAGS
+fi
+AC_DEFINE_UNQUOTED([OFFFMT], ["$MPI_OFFSET_FMT"], [MPI_Offset printf format])
+
 AC_CHECK_SIZEOF([MPI_Aint], [], [#include <mpi.h>])
 AM_CONDITIONAL(SIZEOF_MPI_AINT_IS_4, [test x$ac_cv_sizeof_MPI_Aint = x4])
 
