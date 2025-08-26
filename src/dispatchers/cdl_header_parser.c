@@ -63,6 +63,7 @@ typedef long long MPI_Offset;
 #define NC_ENFILE   (-34)  /**< Too many netcdfs open */
 #define NC_EBADDIM  (-46)  /**< Invalid dimension id or name */
 #define NC_ENOTNC   (-51)  /**< Not a netcdf file */
+#define NC_ENOMEM   (-61)  /**< Memory allocation (malloc) failure */
 #define NC_EFILE    (-204) /**< Unknown error in file operation */
 #define NC_ENOENT   (-220) /**< File does not exist */
 
@@ -1015,7 +1016,7 @@ int main(int argc, char **argv)
     /* retrieve metadata of each dimension defined in the CDL file */
     for (i=0; i<ndims; i++) {
         err = cdl_hdr_inq_dim(hid, i, &name, &size); ERR
-        printf("\t name %s size %lld\n",name, size);
+        printf("\t name %s size " OFFFMT "\n",name, size);
     }
 
     /* retrieve number of variables defined in the CDL file */
@@ -1039,10 +1040,10 @@ int main(int argc, char **argv)
             err = cdl_hdr_inq_attr(hid, i, j, &name, &xtype, &nelems, &value);
             ERR
             if (xtype == NC_CHAR)
-                printf("\t\tattr %s type %d nelems %lld (%s)\n",
+                printf("\t\tattr %s type %d nelems "OFFFMT" (%s)\n",
                        name, xtype,nelems,(char*)value);
             else
-                printf("\t\tattr %s type %d nelems %lld\n",
+                printf("\t\tattr %s type %d nelems "OFFFMT"\n",
                        name, xtype, nelems);
         }
     }
@@ -1058,10 +1059,10 @@ int main(int argc, char **argv)
         err = cdl_hdr_inq_attr(hid, NC_GLOBAL, i, &name, &xtype, &nelems, &value);
         ERR
         if (xtype == NC_CHAR)
-            printf("\t name %s type %d nelems %lld (%s)\n",
+            printf("\t name %s type %d nelems "OFFFMT" (%s)\n",
                     name, xtype, nelems,(char*)value);
         else
-            printf("\t name %s type %d nelems %lld\n",
+            printf("\t name %s type %d nelems "OFFFMT"\n",
                     name, xtype, nelems);
     }
 

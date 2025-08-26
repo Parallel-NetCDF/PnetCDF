@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
 
     start[0] = 0; start[1] = NX*rank;
     count[0] = 2; count[1] = NX;
-    if (debug) printf("put start=%lld %lld count=%lld %lld\n",start[0],start[1],count[0],count[1]);
+    if (debug) printf("put start="OFFFMT" "OFFFMT" count="OFFFMT" "OFFFMT"\n",start[0],start[1],count[0],count[1]);
 
     /* call flexible API */
     err = ncmpi_put_vara_all(ncid, varid1, start, count, bufptr, 1, buftype); CHECK_ERR
@@ -209,7 +209,7 @@ int main(int argc, char **argv) {
     /* read back variable */
     start[0] = 0; start[1] = NX*rank;
     count[0] = 2; count[1] = NX;
-    if (debug) printf("get start=%lld %lld count=%lld %lld\n",start[0],start[1],count[0],count[1]);
+    if (debug) printf("get start="OFFFMT" "OFFFMT" count="OFFFMT" "OFFFMT"\n",start[0],start[1],count[0],count[1]);
 
     err = ncmpi_get_vara_int_all(ncid, varid1, start, count, buf[0]); CHECK_ERR
 
@@ -328,7 +328,7 @@ int main(int argc, char **argv) {
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }

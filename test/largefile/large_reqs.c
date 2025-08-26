@@ -75,7 +75,7 @@ int tst_one_var(char *filename, MPI_Comm comm)
             printf("\nglobal array is of size %d x %d = %.1f GiB\n",
                    NY*psize[0], NX*psize[1], len/1073741824);
         }
-        printf("rank %d start=%lld %lld\n", rank, start[1],start[2]);
+        printf("rank %d start="OFFFMT" "OFFFMT"\n", rank, start[1],start[2]);
     }
 
     /* user buffer is contiguous */
@@ -226,7 +226,7 @@ int tst_vars(char *filename, MPI_Comm comm)
     count[2] = lsize[1];
 
     if (verbose)
-        printf("rank %d start=%lld %lld count=%lld %lld\n",
+        printf("rank %d start="OFFFMT" "OFFFMT" count="OFFFMT" "OFFFMT"\n",
                rank, start[1],start[2], count[1],count[2]);
 
     if (verbose)
@@ -328,7 +328,7 @@ int main(int argc, char** argv)
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
     }
     if (malloc_size > 0) ncmpi_inq_malloc_list();

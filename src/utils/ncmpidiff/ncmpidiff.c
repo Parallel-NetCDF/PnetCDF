@@ -237,13 +237,13 @@
                 pos /= shape[_i];                                            \
             }                                                                \
             if (worst == -1)                                                 \
-                printf("DIFF: variable \"%s\" of type \"%s\" at element [%lld", \
+                printf("DIFF: variable \"%s\" of type \"%s\" at element ["OFFFMT, \
                        name[0], get_type(xtype[0]), diffStart[0]);           \
             else                                                             \
-                printf("DIFF (tolerance): variable \"%s\" of type \"%s\" at element [%lld", \
+                printf("DIFF (tolerance): variable \"%s\" of type \"%s\" at element ["OFFFMT, \
                        name[0], get_type(xtype[0]), diffStart[0]);           \
             for (_i=1; _i<ndims[0]; _i++)                                    \
-                printf(", %lld", diffStart[_i]);                             \
+                printf(", "OFFFMT, diffStart[_i]);                           \
             printf("] of value %g vs %g (difference = %e)\n", v1,v2,v1-v2);  \
             free(diffStart);                                                 \
         }                                                                    \
@@ -569,13 +569,13 @@ int main(int argc, char **argv)
             /* compare attribute length */
             if (attlen[0] != attlen[1]) {
                 if (!quiet)
-                    printf("DIFF: global attribute \"%s\" length (%lld) != (%lld)\n",
+                    printf("DIFF: global attribute \"%s\" length ("OFFFMT") != ("OFFFMT")\n",
                            name[0],attlen[0],attlen[1]);
                 numHeadDIFF++;
                 continue; /* loop i */
             }
             else if (verbose)
-                printf("\tSAME: length (%lld)\n",attlen[0]);
+                printf("\tSAME: length ("OFFFMT")\n",attlen[0]);
 
             /* compare attribute contents */
             switch (xtype[0]) {
@@ -634,13 +634,13 @@ int main(int argc, char **argv)
             if (dimlen[0] != dimlen[1]) {
                 /* cast to quiet warning on 32 bit platforms */
                 if (!quiet)
-                    printf("DIFF: dimension \"%s\" length (%lld) != (%lld)\n",
-                           name[0],(long long int)dimlen[0],(long long int)dimlen[1]);
+                    printf("DIFF: dimension \"%s\" length ("OFFFMT") != ("OFFFMT")\n",
+                           name[0],dimlen[0],dimlen[1]);
                 numHeadDIFF++;
             }
             else if (verbose)
-                printf("\tSAME: dimension \"%s\" length (%lld)\n",
-                       name[0],(long long int)dimlen[0]);
+                printf("\tSAME: dimension \"%s\" length ("OFFFMT")\n",
+                       name[0],dimlen[0]);
         }
 
         /* check dimensions in 2nd file but not in 1st file */
@@ -739,12 +739,12 @@ cmp_vars:
                     /* compare variable dimension j's length */
                     if (dimlen[0] != dimlen[1]) {
                         if (!quiet)
-                            printf("DIFF: variable \"%s\" of type \"%s\" dimension %d's length (%lld) != (%lld)\n",
-                                   name[0],get_type(xtype[0]),j,(long long int)dimlen[0],(long long int)dimlen[1]);
+                            printf("DIFF: variable \"%s\" of type \"%s\" dimension %d's length ("OFFFMT") != ("OFFFMT")\n",
+                                   name[0],get_type(xtype[0]),j,dimlen[0],dimlen[1]);
                         numHeadDIFF++;
                     }
                     else if (verbose)
-                        printf("\t\tSAME: length (%lld)\n",(long long int)dimlen[0]);
+                        printf("\t\tSAME: length ("OFFFMT")\n",dimlen[0]);
                 }
             }
 
@@ -791,13 +791,13 @@ cmp_vars:
                 /* compare attribute nelems */
                 if (attlen[0] != attlen[1]) {
                     if (!quiet)
-                        printf("DIFF: variable \"%s\" attribute \"%s\" length (%lld) != (%lld)\n",
-                               name[0],attrname,(long long int)attlen[0],(long long int)attlen[1]);
+                        printf("DIFF: variable \"%s\" attribute \"%s\" length ("OFFFMT") != ("OFFFMT")\n",
+                               name[0],attrname,attlen[0],attlen[1]);
                     numHeadDIFF++;
                     continue; /* skip this attribute */
                 }
                 else if (verbose)
-                    printf("\t\tSAME: length (%lld)\n",(long long int)attlen[0]);
+                    printf("\t\tSAME: length ("OFFFMT")\n",attlen[0]);
 
                 /* compare attribute contents */
                 switch (xtype[0]) {
@@ -959,15 +959,15 @@ cmp_vars:
             if (dimlen[0] != dimlen[1]) {
                 if (!check_header) { /* if header has not been checked */
                     if (!rank && !quiet)
-                        printf("DIFF: variable \"%s\" of type \"%s\" dimension %d's length (%lld) != (%lld)\n",
-                               name[0],get_type(xtype[0]),j,(long long int)dimlen[0],(long long int)dimlen[1]);
+                        printf("DIFF: variable \"%s\" of type \"%s\" dimension %d's length ("OFFFMT") != ("OFFFMT")\n",
+                               name[0],get_type(xtype[0]),j,dimlen[0],dimlen[1]);
                     numHeadDIFF++;
                     numVarDIFF++;
                 }
                 break; /* skip this variable */
             }
             else if (!check_header && !rank && verbose)
-                printf("\t\tSAME: length (%lld)\n",(long long int)dimlen[0]);
+                printf("\t\tSAME: length ("OFFFMT")\n",dimlen[0]);
             shape[j] = dimlen[0];
         }
         if (j != ndims[0]) {

@@ -2068,7 +2068,7 @@ create_file(char *filename, int cmode)
 
     err=ncmpi_inq_dimlen(ncid, Dr_dim, &num_records); ERR
     if (num_records != 2) {
-        printf("Error at %s:%d expecting number of records = 2, but got %lld\n",
+        printf("Error at %s:%d expecting number of records = 2, but got "OFFFMT"\n",
                __FILE__,__LINE__,num_records);
         return 1;
     }
@@ -2242,7 +2242,7 @@ int main(int argc, char *argv[])
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
     }
 

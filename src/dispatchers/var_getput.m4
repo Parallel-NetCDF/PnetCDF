@@ -116,10 +116,10 @@ int check_EEDGE(const MPI_Offset *start,
             pncp->driver->inq_var(pncp->ncp, varid, name, NULL, NULL,       \
                                   NULL, NULL, NULL, NULL, NULL);            \
             if (stride != NULL)                                             \
-                fprintf(stderr, "Rank %d: NC_EEDGE variable %s: shape[%d]=%lld but start[%d]=%lld count[%d]=%lld stride[%d]=%lld\n", \
+                fprintf(stderr, "Rank %d: NC_EEDGE variable %s: shape[%d]="OFFFMT" but start[%d]="OFFFMT" count[%d]="OFFFMT" stride[%d]="OFFFMT"\n", \
                 _rank, name, dim, shape[dim], dim, start[dim], dim, count[dim], dim, stride[dim]); \
             else                                                            \
-                fprintf(stderr, "Rank %d: NC_EEDGE variable %s: shape[%d]=%lld but start[%d]=%lld count[%d]=%lld\n", \
+                fprintf(stderr, "Rank %d: NC_EEDGE variable %s: shape[%d]="OFFFMT" but start[%d]="OFFFMT" count[%d]="OFFFMT"\n", \
                 _rank, name, dim, shape[dim], dim, start[dim], dim, count[dim]); \
         }                                                                   \
     }                                                                       \

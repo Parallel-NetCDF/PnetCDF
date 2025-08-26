@@ -298,14 +298,14 @@ annotate(
       case LANG_C:
 	/* C variable indices */
 	for (id = 0; id < vrank-1; id++)
-	  Printf("%lld,", cor[id]);
-	Printf("%lld", cor[id] + iel);
+	  Printf(OFFFMT",", cor[id]);
+	Printf(OFFFMT, cor[id] + iel);
 	break;
       case LANG_F:
 	/* Fortran variable indices */
-	Printf("%lld", cor[vrank-1] + iel + 1);
+	Printf(OFFFMT, cor[vrank-1] + iel + 1);
 	for (id = vrank-2; id >=0 ; id--) {
-	    Printf(",%lld", 1 + cor[id]);
+	    Printf(","OFFFMT, 1 + cor[id]);
 	}
 	break;
     }

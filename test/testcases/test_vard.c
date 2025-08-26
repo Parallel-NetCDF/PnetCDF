@@ -285,7 +285,7 @@ int main(int argc, char **argv) {
     if (rank == 0) expected_put_size += (format == NC_FORMAT_CDF5) ? 8 : 4;
      */
     if (expected_put_size != new_put_size - put_size) {
-        printf("Error at line %d in %s: unexpected put size (%lld) reported, expecting %d\n",
+        printf("Error at line %d in %s: unexpected put size ("OFFFMT") reported, expecting %d\n",
                __LINE__,__FILE__,new_put_size-put_size, expected_put_size);
         nerrs++;
     }
@@ -305,7 +305,7 @@ int main(int argc, char **argv) {
     err = ncmpi_inq_put_size(ncid, &new_put_size); CHECK_ERR
     expected_put_size = buftype_size;
     if (expected_put_size != new_put_size - put_size) {
-        printf("Error at line %d in %s: unexpected put size (%lld) reported, expecting %d\n",
+        printf("Error at line %d in %s: unexpected put size ("OFFFMT") reported, expecting %d\n",
                __LINE__,__FILE__,new_put_size-put_size, expected_put_size);
         nerrs++;
     }
@@ -506,7 +506,7 @@ int main(int argc, char **argv) {
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }

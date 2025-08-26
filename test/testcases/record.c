@@ -62,7 +62,7 @@ int test_only_record_var_1D(char *filename, int cmode)
 
     err = ncmpi_inq_dimlen(ncid, dimid, &length); CHECK_ERR
     if (length != 2) {
-        printf("Error at line %d in %s: expecting 2 records, but got %lld record(s)\n",
+        printf("Error at line %d in %s: expecting 2 records, but got "OFFFMT" record(s)\n",
         __LINE__,__FILE__,length);
         nerrs++;
     }
@@ -81,7 +81,7 @@ int test_only_record_var_1D(char *filename, int cmode)
 
         err = ncmpi_inq_dimlen(ncid, dimid, &length); CHECK_ERR
         if (length != 4) {
-            printf("Error at line %d in %s: expecting 4 records, but got %lld record(s)\n",
+            printf("Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
                    __LINE__,__FILE__,length);
             nerrs++;
         }
@@ -123,7 +123,7 @@ int test_only_record_var_3D(char *filename, int cmode)
 
     err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
     if (length != 2) {
-        printf("Error at line %d in %s: expecting 2 records, but got %lld record(s)\n",
+        printf("Error at line %d in %s: expecting 2 records, but got "OFFFMT" record(s)\n",
         __LINE__,__FILE__,length);
         nerrs++;
     }
@@ -142,7 +142,7 @@ int test_only_record_var_3D(char *filename, int cmode)
 
         err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
         if (length != 4) {
-            printf("Error at line %d in %s: expecting 4 records, but got %lld record(s)\n",
+            printf("Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
                    __LINE__,__FILE__,length);
             nerrs++;
         }
@@ -183,7 +183,7 @@ int test_two_record_var(char *filename, int cmode)
 
     err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
     if (length != 2) {
-        printf("Error at line %d in %s: expecting 2 records, but got %lld record(s)\n",
+        printf("Error at line %d in %s: expecting 2 records, but got "OFFFMT" record(s)\n",
         __LINE__,__FILE__,length);
         nerrs++;
     }
@@ -214,7 +214,7 @@ int test_two_record_var(char *filename, int cmode)
 
         err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
         if (length != 4) {
-            printf("Error at line %d in %s: expecting 4 records, but got %lld record(s)\n",
+            printf("Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
                    __LINE__,__FILE__,length);
             nerrs++;
         }
@@ -237,7 +237,7 @@ int test_two_record_var(char *filename, int cmode)
 
     err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
     if (length != 4) {
-        printf("Error at line %d in %s: expecting 4 records, but got %lld record(s)\n",
+        printf("Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
         __LINE__,__FILE__,length);
         nerrs++;
     }
@@ -268,7 +268,7 @@ int test_two_record_var(char *filename, int cmode)
 
         err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
         if (length != 4) {
-            printf("Error at line %d in %s: expecting 4 records, but got %lld record(s)\n",
+            printf("Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
                    __LINE__,__FILE__,length);
             nerrs++;
         }
@@ -353,7 +353,7 @@ int main(int argc, char** argv) {
     MPI_Offset malloc_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR && malloc_size > 0) { /* this test is for running 1 process */
-        printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+        printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                malloc_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }

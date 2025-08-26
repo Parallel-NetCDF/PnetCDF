@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 
     buf = (unsigned char*) calloc(TWO_G+1024,1);
     if (buf == NULL) {
-        printf("malloc failed for size %lld\n", TWO_G+1024);
+        printf("malloc failed for size "OFFFMT"\n", TWO_G+1024);
         MPI_Finalize();
         return 1;
     }
@@ -200,7 +200,7 @@ int main(int argc, char** argv)
     CHECK_ERR
     for (i=0; i<20; i++) {
         if (buf[i] != 'a'+i) {
-            printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
+            printf("%d (at line %d): expect buf["OFFFMT"]=%zd but got %d\n",
                    rank, __LINE__, ONE_G-10+i, i+'a', buf[i]);
             nerrs++;
         }
@@ -213,7 +213,7 @@ int main(int argc, char** argv)
     CHECK_ERR
     for (i=0; i<20; i++) {
         if (buf[i] != 'A'+i) {
-            printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
+            printf("%d (at line %d): expect buf["OFFFMT"]=%zd but got %d\n",
                    rank, __LINE__, TWO_G-10+i, i+'A', buf[i]);
             nerrs++;
         }
@@ -242,7 +242,7 @@ int main(int argc, char** argv)
 
     for (i=0; i<20; i++) {
         if (buf[ONE_G-10+i] != 'a'+i) {
-            printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
+            printf("%d (at line %d): expect buf["OFFFMT"]=%zd but got %d\n",
                    rank, __LINE__, ONE_G-10+i, i+'a', buf[i]);
             nerrs++;
         }
@@ -250,7 +250,7 @@ int main(int argc, char** argv)
 
     for (i=0; i<20; i++) {
         if (buf[TWO_G-10+i] != 'A'+i) {
-            printf("%d (at line %d): expect buf[%lld]=%zd but got %d\n",
+            printf("%d (at line %d): expect buf["OFFFMT"]=%zd but got %d\n",
                    rank, __LINE__, TWO_G-10+i, i+'A', buf[i]);
             nerrs++;
         }
@@ -271,7 +271,7 @@ int main(int argc, char** argv)
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
     }
     if (malloc_size > 0) ncmpi_inq_malloc_list();

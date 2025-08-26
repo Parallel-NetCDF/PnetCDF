@@ -86,7 +86,7 @@ int main(int argc, char** argv)
 
     err = ncmpi_inq_attlen(ncid, NC_GLOBAL, "large_attr", &inq_nelems);
     if (inq_nelems != nelems) {
-        printf("Error at %s line %d: expecting attr nelems %lld but got %lld\n",
+        printf("Error at %s line %d: expecting attr nelems "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,nelems,inq_nelems);
         nerrs++;
     }
@@ -139,7 +139,7 @@ int main(int argc, char** argv)
 
     err = ncmpi_inq_attlen(ncid, varid, "large_attr", &inq_nelems);
     if (inq_nelems != nelems) {
-        printf("Error at %s line %d: expecting attr len %lld but got %lld\n",
+        printf("Error at %s line %d: expecting attr len "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,nelems,inq_nelems);
         nerrs++;
     }
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
     name = "large_attr_0";
     err = ncmpi_inq_attlen(ncid, NC_GLOBAL, name, &inq_nelems);
     if (inq_nelems != nelems) {
-        printf("Error at %s line %d: expecting attr %s nelems %lld but got %lld\n",
+        printf("Error at %s line %d: expecting attr %s nelems "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,name, nelems,inq_nelems);
         nerrs++;
     }
@@ -212,7 +212,7 @@ int main(int argc, char** argv)
     name = "large_attr_1";
     err = ncmpi_inq_attlen(ncid, NC_GLOBAL, name, &inq_nelems);
     if (inq_nelems != nelems) {
-        printf("Error at %s line %d: expecting attr %s nelems %lld but got %lld\n",
+        printf("Error at %s line %d: expecting attr %s nelems "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,name, nelems,inq_nelems);
         nerrs++;
     }
@@ -273,7 +273,7 @@ int main(int argc, char** argv)
     name = "large_attr_0";
     err = ncmpi_inq_attlen(ncid, varid, name, &inq_nelems);
     if (inq_nelems != nelems) {
-        printf("Error at %s line %d: expecting attr %s len %lld but got %lld\n",
+        printf("Error at %s line %d: expecting attr %s len "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,name,nelems,inq_nelems);
         nerrs++;
     }
@@ -295,7 +295,7 @@ int main(int argc, char** argv)
     name = "large_attr_1";
     err = ncmpi_inq_attlen(ncid, varid, name, &inq_nelems);
     if (inq_nelems != nelems) {
-        printf("Error at %s line %d: expecting attr %s len %lld but got %lld\n",
+        printf("Error at %s line %d: expecting attr %s len "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,name,nelems,inq_nelems);
         nerrs++;
     }
@@ -326,7 +326,7 @@ int main(int argc, char** argv)
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0) {
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         }
     }

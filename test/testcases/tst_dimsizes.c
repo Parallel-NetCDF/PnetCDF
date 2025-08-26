@@ -91,7 +91,7 @@ main(int argc, char **argv)
     err = ncmpi_inq_dimid(ncid, "testdim", &dimid); CHECK_ERR
     err = ncmpi_inq_dimlen(ncid, dimid, &dimsize); CHECK_ERR
     if (dimsize != DIMMAXCLASSIC) {
-        printf("Error at line %d in %s: expecting dimsize %d but got %lld\n", __LINE__,__FILE__,DIMMAXCLASSIC,dimsize);
+        printf("Error at line %d in %s: expecting dimsize %d but got "OFFFMT"\n", __LINE__,__FILE__,DIMMAXCLASSIC,dimsize);
         nerrs++;
     }
     err = ncmpi_close(ncid); CHECK_ERR
@@ -111,7 +111,7 @@ main(int argc, char **argv)
     err = ncmpi_inq_dimid(ncid, "testdim", &dimid); CHECK_ERR
     err = ncmpi_inq_dimlen(ncid, dimid, &dimsize); CHECK_ERR
     if (dimsize != DIMMAX64OFFSET) {
-        printf("Error at line %d in %s: expecting dimsize %d but got %lld\n", __LINE__,__FILE__,DIMMAX64OFFSET,dimsize);
+        printf("Error at line %d in %s: expecting dimsize %d but got "OFFFMT"\n", __LINE__,__FILE__,DIMMAX64OFFSET,dimsize);
         nerrs++;
     }
     err = ncmpi_close(ncid); CHECK_ERR
@@ -129,7 +129,7 @@ main(int argc, char **argv)
     err = ncmpi_inq_dimid(ncid, "testdim", &dimid); CHECK_ERR
     err = ncmpi_inq_dimlen(ncid, dimid, &dimsize); CHECK_ERR
     if (dimsize != DIMMAX64DATA) {
-        printf("Error at line %d in %s: expecting dimsize %lld but got %lld\n", __LINE__,__FILE__,DIMMAX64DATA,dimsize);
+        printf("Error at line %d in %s: expecting dimsize %lld but got "OFFFMT"\n", __LINE__,__FILE__,(long long)DIMMAX64DATA,dimsize);
         nerrs++;
     }
     err = ncmpi_close(ncid); CHECK_ERR
@@ -140,7 +140,7 @@ main(int argc, char **argv)
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }

@@ -134,14 +134,14 @@ int check_attached_buffer_usage(int ncid,
     err = ncmpi_inq_buffer_size(ncid, &buf_size);
     CHECK_ERR
     if (expected_size != buf_size) {
-        printf("Error at line %d in %s: expect buffer size %lld but got %lld\n",
+        printf("Error at line %d in %s: expect buffer size "OFFFMT" but got "OFFFMT"\n",
                lineno, __FILE__,expected_size, buf_size);
         nerrs++;
     }
 
     err = ncmpi_inq_buffer_usage(ncid, &usage); CHECK_ERR
     if (expected_usage != usage) {
-        printf("Error at line %d in %s: expect buffer usage %lld but got %lld\n",
+        printf("Error at line %d in %s: expect buffer usage "OFFFMT" but got "OFFFMT"\n",
                lineno, __FILE__,expected_usage, usage);
         nerrs++;
     }
@@ -640,7 +640,7 @@ int main(int argc, char** argv)
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }

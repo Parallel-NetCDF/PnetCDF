@@ -118,15 +118,15 @@ err_out:
     err = ncmpi_inq_varoffset(ncid, varid[0], &r_begin); CHECK_ERR \
     v_free = r_begin - (extent + fix_v_size); \
     if (verbose && rank == 0) { \
-        printf("Line %d: header size   old = %6lld new = %6lld\n", \
+        printf("Line %d: header size   old = "OFFFMT" new = "OFFFMT"\n", \
                __LINE__,old_hsize, hsize); \
-        printf("Line %d: header extent old = %6lld new = %6lld\n", \
+        printf("Line %d: header extent old = "OFFFMT" new = "OFFFMT"\n", \
                __LINE__,old_extent, extent); \
-        printf("Line %d: header free   old = %6lld new = %6lld\n", \
+        printf("Line %d: header free   old = "OFFFMT" new = "OFFFMT"\n", \
                __LINE__,old_h_free, h_free); \
-        printf("Line %d: record begin  old = %6lld new = %6lld\n", \
+        printf("Line %d: record begin  old = "OFFFMT" new = "OFFFMT"\n", \
                __LINE__,old_r_begin, r_begin); \
-        printf("Line %d: var free      old = %6lld new = %6lld\n", \
+        printf("Line %d: var free      old = "OFFFMT" new = "OFFFMT"\n", \
                __LINE__,old_v_free, v_free); \
     } \
 }
@@ -134,27 +134,27 @@ err_out:
 #define CHECK_HEADER_SIZE { \
     if (hsize != exp_hsize) { \
         nerrs++; \
-        printf("Error at line %d in %s: header size expecting %lld but got %lld\n", \
+        printf("Error at line %d in %s: header size expecting "OFFFMT" but got "OFFFMT"\n", \
                __LINE__,__FILE__, exp_hsize, hsize); \
     } \
     if (extent != exp_extent) { \
         nerrs++; \
-        printf("Error at line %d in %s: header extent expecting %lld but got %lld\n", \
+        printf("Error at line %d in %s: header extent expecting "OFFFMT" but got "OFFFMT"\n", \
                __LINE__,__FILE__, exp_extent, extent); \
     } \
     if (extent - hsize < exp_h_free) { \
         nerrs++; \
-        printf("Error at line %d in %s: header free expecting %lld but got %lld\n", \
+        printf("Error at line %d in %s: header free expecting "OFFFMT" but got "OFFFMT"\n", \
                __LINE__,__FILE__, exp_h_free, extent - hsize); \
     } \
     if (has_fix_vars && v_free != exp_v_free) { \
         nerrs++; \
-        printf("Error at line %d in %s: v_free expecting %lld but got %lld\n", \
+        printf("Error at line %d in %s: v_free expecting "OFFFMT" but got "OFFFMT"\n", \
                __LINE__,__FILE__, exp_v_free, v_free); \
     } \
     if (r_begin != exp_r_begin) { \
         nerrs++; \
-        printf("Error at line %d in %s: record begin expecting %lld but got %lld\n", \
+        printf("Error at line %d in %s: record begin expecting "OFFFMT" but got "OFFFMT"\n", \
                __LINE__,__FILE__, exp_r_begin, r_begin); \
     } \
     /* read variables back and check contents */ \
@@ -175,7 +175,7 @@ err_out:
     CHECK_ERR \
     free(attr); \
     if (verbose && rank == 0) \
-        printf("Line %d: grow header size from %6lld to %6lld\n", \
+        printf("Line %d: grow header size from "OFFFMT" to "OFFFMT"\n", \
                __LINE__,hsize, hsize+growth); \
 }
 
@@ -252,21 +252,21 @@ tst_fmt(char       *filename,
         info_r_align = info_align[2]; /* 0 means unset in MPI info */
         MPI_Info_create(&info);
         if (info_h_align) {
-            sprintf(str, "%lld", info_h_align);
+            sprintf(str, OFFFMT, info_h_align);
             MPI_Info_set(info, "nc_header_align_size", str);
         }
         if (info_v_align) {
-            sprintf(str, "%lld", info_v_align);
+            sprintf(str, OFFFMT, info_v_align);
             MPI_Info_set(info, "nc_var_align_size", str);
         }
         if (info_r_align) {
-            sprintf(str, "%lld", info_r_align);
+            sprintf(str, OFFFMT, info_r_align);
             MPI_Info_set(info, "nc_record_align_size", str);
         }
         if (info_v_align == 0) info_v_align = info_h_align;
     }
     if (verbose && rank == 0)
-        printf("---- cmode=%d has_fix_vars=%d env_align=%lld %lld %lld info_align=%lld %lld %lld\n",
+        printf("---- cmode=%d has_fix_vars=%d env_align="OFFFMT" "OFFFMT" "OFFFMT" info_align="OFFFMT" "OFFFMT" "OFFFMT"\n",
                cmode,has_fix_vars,env_h_align,env_v_align,env_r_align,
                info_h_align,info_v_align,info_r_align);
 
@@ -562,7 +562,7 @@ int main(int argc, char** argv)
         env_align[0] = 68;  /* 17 x 4 */
         env_align[1] = 76;  /* 19 x 4 */
         env_align[2] = 92;  /* 23 x 4 */
-        sprintf(str, "nc_header_align_size=%lld;nc_var_align_size=%lld;nc_record_align_size=%lld\n",
+        sprintf(str, "nc_header_align_size="OFFFMT";nc_var_align_size="OFFFMT";nc_record_align_size="OFFFMT"\n",
                 env_align[0], env_align[1], env_align[2]);
         setenv("PNETCDF_HINTS", str, 1);
 
@@ -586,7 +586,7 @@ int main(int argc, char** argv)
         env_align[0] = 68;  /* 17 x 4 */
         env_align[1] = 0;
         env_align[2] = 92;  /* 23 x 4 */
-        sprintf(str, "nc_header_align_size=%lld;nc_record_align_size=%lld\n",
+        sprintf(str, "nc_header_align_size="OFFFMT";nc_record_align_size="OFFFMT"\n",
                 env_align[0], env_align[2]);
         setenv("PNETCDF_HINTS", str, 1);
 
@@ -602,7 +602,7 @@ int main(int argc, char** argv)
         env_align[0] = 0;
         env_align[1] = 76;  /* 19 x 4 */
         env_align[2] = 92;  /* 23 x 4 */
-        sprintf(str, "nc_var_align_size=%lld;nc_record_align_size=%lld\n",
+        sprintf(str, "nc_var_align_size="OFFFMT";nc_record_align_size="OFFFMT"\n",
                 env_align[1], env_align[2]);
         setenv("PNETCDF_HINTS", str, 1);
 
@@ -618,7 +618,7 @@ int main(int argc, char** argv)
         env_align[0] = 0;
         env_align[1] = 76;  /* 19 x 4 */
         env_align[2] = 0;
-        sprintf(str, "nc_var_align_size=%lld\n", env_align[1]);
+        sprintf(str, "nc_var_align_size="OFFFMT"\n", env_align[1]);
         setenv("PNETCDF_HINTS", str, 1);
 
         /* Set hints in environment variable PNETCDF_HINTS.
@@ -633,7 +633,7 @@ int main(int argc, char** argv)
         env_align[0] = 0;  /* 17 x 4 */
         env_align[1] = 0;
         env_align[2] = 92;  /* 23 x 4 */
-        sprintf(str, "nc_record_align_size=%lld\n", env_align[2]);
+        sprintf(str, "nc_record_align_size="OFFFMT"\n", env_align[2]);
         setenv("PNETCDF_HINTS", str, 1);
 
         /* Set hints in environment variable PNETCDF_HINTS.
@@ -652,7 +652,7 @@ int main(int argc, char** argv)
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }

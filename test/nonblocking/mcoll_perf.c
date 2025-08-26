@@ -153,7 +153,7 @@ int ncmpi_diff(char *filename1, char *filename2)
             sprintf(str,"attribute[%d] %s: type1(%d) != type2(%d)",i,name1,type1,type2);
         HANDLE_DIFF(str)
         if (attlen1 != attlen2)
-            sprintf(str,"attribute[%d] %s: attlen1(%lld) != attlen2(%lld)",i,name1, attlen1, attlen2);
+            sprintf(str,"attribute[%d] %s: attlen1("OFFFMT") != attlen2("OFFFMT")",i,name1, attlen1, attlen2);
         HANDLE_DIFF(str)
         switch (type1) {
             case NC_CHAR:   CHECK_GLOBAL_ATT_DIFF(char,   ncmpi_get_att_text,   NC_CHAR)
@@ -172,7 +172,7 @@ int ncmpi_diff(char *filename1, char *filename2)
         err = ncmpi_inq_dim(ncid2, i, name2, &dimlen2);
         CHECK_ERR
         if (dimlen1 != dimlen2)
-            sprintf(str,"dimension[%d] %s: dimlen1(%lld) != dimlen2(%lld)",i,name1,dimlen1,dimlen2);
+            sprintf(str,"dimension[%d] %s: dimlen1("OFFFMT") != dimlen2("OFFFMT")",i,name1,dimlen1,dimlen2);
         HANDLE_DIFF(str)
     }
 
@@ -227,7 +227,7 @@ int ncmpi_diff(char *filename1, char *filename2)
                 sprintf(str,"variable[%d] %s: attr type[%d] (%d) != (%d)",i,name,j,type1,type2);
             HANDLE_DIFF(str)
             if (attlen1 != attlen2)
-                sprintf(str,"variable[%d] %s: attr attlen[%d] (%lld) != (%lld)",i,name,j, attlen1, attlen2);
+                sprintf(str,"variable[%d] %s: attr attlen[%d] ("OFFFMT") != ("OFFFMT")",i,name,j, attlen1, attlen2);
             HANDLE_DIFF(str)
 
             switch (type1) {
@@ -423,7 +423,7 @@ int main(int argc, char **argv)
     for (i=0; i<ndims; i++)
         array_of_starts[i] = length * rank_dim[i];
     if (verbose)
-        printf("rank %d: array_of_starts[3]=%lld %lld %lld\n",
+        printf("rank %d: array_of_starts[3]="OFFFMT" "OFFFMT" "OFFFMT"\n",
                rank,array_of_starts[0],array_of_starts[1],array_of_starts[2]);
 
     for (i=0; i<nvars; i++) {
@@ -435,7 +435,7 @@ int main(int argc, char **argv)
         datatype_list[i] = MPI_INT;
     }
     if (verbose)
-        printf("rank %d: starts[0][3]=%lld %lld %lld counts[0][3]=%lld %lld %lld\n",
+        printf("rank %d: starts[0][3]="OFFFMT" "OFFFMT" "OFFFMT" counts[0][3]="OFFFMT" "OFFFMT" "OFFFMT"\n",
                rank,starts[0][0],starts[0][1],starts[0][2], counts[0][0],counts[0][1],counts[0][2]);
 
     buf[0] = (int *) malloc(sizeof(int) * bufcount * nvars);
@@ -720,7 +720,7 @@ printf("filename2=%s filename3=%s\n",filename2, filename3);
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0) {
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         }
         if (malloc_size > 0) ncmpi_inq_malloc_list();

@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
 
     err = ncmpi_inq_dimlen(ncid, dimid[0], start); CHECK_ERR
     if (start[0] != (MPI_Offset)nprocs){
-        printf("Error at line %d of %s: expect NC_UNLIMITED dimension X of len %lld but got %lld\n",
+        printf("Error at line %d of %s: expect NC_UNLIMITED dimension X of len "OFFFMT" but got "OFFFMT"\n",
                 __LINE__,__FILE__,(MPI_Offset)nprocs,start[0]);
         nerrs++;
     }
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 
     err = ncmpi_inq_recsize(ncid, start);  CHECK_ERR
     if (start[0] != 8){
-        printf("Error at line %d of %s: expect recsize %lld but got %lld\n",
+        printf("Error at line %d of %s: expect recsize "OFFFMT" but got "OFFFMT"\n",
                 __LINE__,__FILE__, (MPI_Offset)8, start[0]);
         nerrs++;
     }  
@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
     }
 

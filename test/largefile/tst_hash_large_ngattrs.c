@@ -121,7 +121,7 @@ int main(int argc, char** argv)
                (float)max_size[1]/1048576);
         printf("After ncmpi_enddef,  PnetCDF memory footprint                %6.1f MB\n",
                (float)max_size[0]/1048576);
-        printf("NetCDF file header size %lld extent %lld\n",header_size,header_extent);
+        printf("NetCDF file header size "OFFFMT" extent "OFFFMT"\n",header_size,header_extent);
     }
     fflush(stdout);
 #endif
@@ -152,7 +152,7 @@ int main(int argc, char** argv)
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size[0], &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0) {
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         }
     }

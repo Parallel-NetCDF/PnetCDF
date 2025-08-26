@@ -322,7 +322,7 @@ int main(int argc, char** argv)
     MPI_Offset malloc_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
     if (err == NC_NOERR && malloc_size > 0) {
-        printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n", malloc_size);
+        printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n", malloc_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 

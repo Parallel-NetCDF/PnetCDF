@@ -202,30 +202,30 @@ int main(int argc, char** argv) {
     err = ncmpi_inq_header_extent(ncid, &header_extent[1]); CHECK_ERR
     if (rank == 0 && verbose) {
         printf("NX = %d (integer type)\n",NX);
-        printf("old header_size  =%lld new header_size  =%lld\n",header_size[0],header_size[1]);
-        printf("old header_extent=%lld new header_extent=%lld\n",header_extent[0],header_extent[1]);
+        printf("old header_size  ="OFFFMT" new header_size  ="OFFFMT"\n",header_size[0],header_size[1]);
+        printf("old header_extent="OFFFMT" new header_extent="OFFFMT"\n",header_extent[0],header_extent[1]);
 
 #ifdef TEST_FIXED_VAR
         for (i=1; i<NVARS; i+=2) {
             err = ncmpi_inq_varoffset(ncid, varid[i], &new_var_off[i]); CHECK_ERR
-            printf("old fixed  var[%2d] old offset=%4lld new offset=%4lld\n",i,old_var_off[i],new_var_off[i]);
+            printf("old fixed  var[%2d] old offset="OFFFMT" new offset="OFFFMT"\n",i,old_var_off[i],new_var_off[i]);
         }
         for (i=NVARS; i<2*NVARS; i++) {
             if (i%2 == 0) {
                 err = ncmpi_inq_varoffset(ncid, new_varid[i-NVARS], &new_var_off[i]); CHECK_ERR
-                printf("new fixed  var[%2d]                 new offset=%4lld\n",i,new_var_off[i]);
+                printf("new fixed  var[%2d]                 new offset="OFFFMT"\n",i,new_var_off[i]);
             }
         }
 #endif
 #ifdef TEST_RECORD_VAR
         for (i=0; i<NVARS; i+=2) {
             err = ncmpi_inq_varoffset(ncid, varid[i], &new_var_off[i]); CHECK_ERR
-            printf("old record var[%2d] old offset=%4lld new offset=%4lld\n",i,old_var_off[i],new_var_off[i]);
+            printf("old record var[%2d] old offset="OFFFMT" new offset="OFFFMT"\n",i,old_var_off[i],new_var_off[i]);
         }
         for (i=NVARS; i<2*NVARS; i++) {
             if (i%2) {
                 err = ncmpi_inq_varoffset(ncid, new_varid[i-NVARS], &new_var_off[i]); CHECK_ERR
-                printf("new record var[%2d]                 new offset=%4lld\n",i,new_var_off[i]);
+                printf("new record var[%2d]                 new offset="OFFFMT"\n",i,new_var_off[i]);
             }
         }
 #endif
@@ -323,7 +323,7 @@ int main(int argc, char** argv) {
     if (err == NC_NOERR) {
         MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
         if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
                    sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
