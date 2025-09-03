@@ -33,8 +33,9 @@
 #define NVARS 8
 #define NX 5
 
-int main(int argc, char** argv) {
-    char filename[256];
+static int tst_mode(char *filename,
+                    int   mode)
+{
     int i, j, rank, nprocs, err, verbose=0, nerrs=0;
     int ncid, cmode, varid[NVARS], dimid[2], *buf;
     char str[32];
@@ -43,24 +44,8 @@ int main(int argc, char** argv) {
     MPI_Offset header_size[2], header_extent[2];
     MPI_Info info=MPI_INFO_NULL;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "redef1.nc");
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for alignment ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
@@ -90,6 +75,11 @@ int main(int argc, char** argv) {
     }
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (mode != MODE_COLL) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     /* write all variables */
     buf = (int*) malloc(sizeof(int) * NX);
     for (i=0; i<NVARS; i++) {
@@ -98,7 +88,12 @@ int main(int argc, char** argv) {
         if (i%2) {
             start[0] = NX*rank;
             count[0] = NX;
-            err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf); CHECK_ERR
+            if (mode == MODE_COLL)
+                err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf);
+            else
+                err = ncmpi_put_vara_int(ncid, varid[i], start, count, buf);
+            CHECK_ERR
+
             /* check if user put buffer contents altered */
             for (j=0; j<NX; j++) {
                 if (buf[j] != rank*1000 + i*10 + j) {
@@ -113,10 +108,18 @@ int main(int argc, char** argv) {
         if (i%2 == 0) {
             start[0] = 0; start[1] = NX*rank;
             count[0] = 1; count[1] = NX;
-            err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf); CHECK_ERR
+            if (mode == MODE_COLL)
+                err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf);
+            else
+                err = ncmpi_put_vara_int(ncid, varid[i], start, count, buf);
+            CHECK_ERR
             for (j=0; j<NX; j++) buf[j] = rank*1000 + 100 + i*10 + j;
             start[0] = 1; /* write 2nd record */
-            err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf); CHECK_ERR
+            if (mode == MODE_COLL)
+                err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf);
+            else
+                err = ncmpi_put_vara_int(ncid, varid[i], start, count, buf);
+            CHECK_ERR
             /* check if user put buffer contents altered */
             for (j=0; j<NX; j++) {
                 if (buf[j] != rank*1000 + 100 + i*10 + j) {
@@ -196,6 +199,11 @@ int main(int argc, char** argv) {
     }
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (mode != MODE_COLL) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     /* get the new header size and extent, also all variables' starting
        file offsets */
     err = ncmpi_inq_header_size(ncid, &header_size[1]); CHECK_ERR
@@ -238,7 +246,11 @@ int main(int argc, char** argv) {
         if (i%2 == 0) {
             start[0] = NX*rank;
             count[0] = NX;
-            err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); CHECK_ERR
+            if (mode == MODE_COLL)
+                err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf);
+            else
+                err = ncmpi_put_vara_int(ncid, new_varid[i], start, count, buf);
+            CHECK_ERR
             sprintf(str,"fixed_var_%d",i);
             /* check if user put buffer contents altered */
             for (j=0; j<NX; j++) {
@@ -254,10 +266,18 @@ int main(int argc, char** argv) {
         if (i%2 == 1) {
             start[0] = 0; start[1] = NX*rank;
             count[0] = 1; count[1] = NX;
-            err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); CHECK_ERR
+            if (mode == MODE_COLL)
+                err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf);
+            else
+                err = ncmpi_put_vara_int(ncid, new_varid[i], start, count, buf);
+            CHECK_ERR
             for (j=0; j<NX; j++) buf[j] = -1 * (100 + i*10 + j);
             start[0] = 1; /* write 2nd record */
-            err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf); CHECK_ERR
+            if (mode == MODE_COLL)
+                err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf);
+            else
+                err = ncmpi_put_vara_int(ncid, new_varid[i], start, count, buf);
+            CHECK_ERR
             sprintf(str,"record_var_%d",i);
             /* check if user put buffer contents altered */
             for (j=0; j<NX; j++) {
@@ -278,7 +298,11 @@ int main(int argc, char** argv) {
             start[0] = NX*rank;
             count[0] = NX;
             for (j=0; j<NX; j++) buf[j] = -1;
-            err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf); CHECK_ERR
+            if (mode == MODE_COLL)
+                err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf);
+            else
+                err = ncmpi_get_vara_int(ncid, varid[i], start, count, buf);
+            CHECK_ERR
             sprintf(str,"fixed_var_%d",i);
             for (j=0; j<NX; j++)
                 if (buf[j] != rank*1000 + i*10 + j) {
@@ -293,7 +317,11 @@ int main(int argc, char** argv) {
         if (i%2 == 0) {
             start[0] = 0; start[1] = NX*rank;
             count[0] = 1; count[1] = NX;
-            err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf); CHECK_ERR
+            if (mode == MODE_COLL)
+                err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf);
+            else
+                err = ncmpi_get_vara_int(ncid, varid[i], start, count, buf);
+            CHECK_ERR
             for (j=0; j<NX; j++)
                 if (buf[j] != rank*1000+i*10+j) {
                     printf("read error at %d: i=%d buf[j=%d]=%d != %d\n",__LINE__,i,j,buf[j],rank*1000+i*10+j);
@@ -301,7 +329,11 @@ int main(int argc, char** argv) {
                     break;
                 }
             start[0] = 1;
-            err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf); CHECK_ERR
+            if (mode == MODE_COLL)
+                err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf);
+            else
+                err = ncmpi_get_vara_int(ncid, varid[i], start, count, buf);
+            CHECK_ERR
             sprintf(str,"record_var_%d",i);
             for (j=0; j<NX; j++)
                 if (buf[j] != rank*1000 + 100 + i*10 + j) {
@@ -317,6 +349,39 @@ int main(int argc, char** argv) {
     MPI_Info_free(&info);
     free(buf);
 
+err_out:
+    return nerrs;
+}
+
+int main(int argc, char** argv) {
+    char filename[256];
+    int rank, nprocs, err, nerrs=0;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for alignment ", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
+    }
+
+    nerrs += tst_mode(filename, MODE_COLL);
+    if (nerrs > 0) goto err_out;
+
+    nerrs += tst_mode(filename, MODE_INDEP);
+    if (nerrs > 0) goto err_out;
+
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
@@ -328,13 +393,13 @@ int main(int argc, char** argv) {
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
+err_out:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
         else       printf(PASS_STR);
     }
 
-err_out:
     MPI_Finalize();
     return (nerrs > 0);
 }
