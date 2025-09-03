@@ -16,12 +16,25 @@
 #include <string.h>
 #include <limits.h>
 
+#define MODE_COLL  1
+#define MODE_INDEP 0
+
 #define CHECK_ERR { \
     if (err != NC_NOERR) { \
         nerrs++; \
         printf("Error at line %d in %s: (%s)\n", \
         __LINE__,__FILE__,ncmpi_strerrno(err)); \
     } \
+}
+
+#define CHECK_ERR_ALL { \
+    if (err != NC_NOERR) { \
+        nerrs++; \
+        printf("Error at line %d in %s: (%s)\n", \
+        __LINE__,__FILE__,ncmpi_strerrno(err)); \
+    } \
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD); \
+    if (nerrs > 0) goto fn_exit; \
 }
 
 #define CHECK_ERROUT { \
@@ -38,7 +51,7 @@
         nerrs++; \
         printf("Error at line %d in %s: (%s)\n", \
         __LINE__,__FILE__,ncmpi_strerrno(err)); \
-        MPI_Abort(MPI_COMM_WORLD, -1); \
+        goto fn_exit; \
     } \
 }
 
@@ -48,6 +61,21 @@
         printf("Error at line %d in %s: expecting %s but got %s\n", \
         __LINE__,__FILE__,ncmpi_strerrno(exp), ncmpi_strerrno(err)); \
     } \
+}
+
+#define CHECK_EXP_ERR_ALL(exp) { \
+    if (err != exp) { \
+        nerrs++; \
+        printf("Error at line %d in %s: expecting %s but got %s\n", \
+        __LINE__,__FILE__,ncmpi_strerrno(exp), ncmpi_strerrno(err)); \
+    } \
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD); \
+    if (nerrs > 0) goto fn_exit; \
+}
+
+#define CHECK_NERRS_ALL { \
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD); \
+    if (nerrs > 0) goto fn_exit; \
 }
 
 int inq_env_hint(char *hint_key, char **hint_value);
