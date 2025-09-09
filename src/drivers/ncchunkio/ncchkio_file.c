@@ -696,7 +696,8 @@ int ncchkio_wait (void *ncdp, int num_reqs, int *req_ids, int *statuses, int req
 	if (num_reqs > 0) {
 		// Count number of get and put requests
 		for (i = 0; i < num_reqs; i++) {
-			if (req_ids[i] & 1) { nraw++; }
+			if (req_ids[i] != NC_REQ_NULL) nraw++;
+			// if (req_ids[i] & 1) { nraw++; }
 		}
 
 		// Allocate buffer
@@ -727,12 +728,12 @@ int ncchkio_wait (void *ncdp, int num_reqs, int *req_ids, int *statuses, int req
 		comstats = NULL;
 	}
 
-	if (nraw > 0) {
+	if (nraw > 0 || reqMode == NC_REQ_COLL) {
 		err = ncchkp->driver->wait (ncchkp->ncp, nraw, rawreqs, rawstats, reqMode);
 		if (status == NC_NOERR) { status = err; }
 	}
 
-	if (ncom > 0) {
+	if (ncom > 0 || reqMode == NC_REQ_COLL) {
 		err = ncchkioi_wait (ncchkp, ncom, comreqs, comstats, reqMode);
 		if (status == NC_NOERR) { status = err; }
 	}

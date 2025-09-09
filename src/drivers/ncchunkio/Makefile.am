@@ -34,7 +34,7 @@ M4_SRCS = ncchkioi_profile.m4 \
 
 M4H_SRCS = ncchkioi_profile.m4h
 
-H_SRCS = ncchkio_driver.h 
+H_SRCS = ncchkio_driver.h
 
 C_SRCS = ncchkio_attr.c \
          ncchkio_dim.c \
@@ -61,9 +61,8 @@ C_SRCS = ncchkio_attr.c \
          ncchkioi_var_wr.c \
          ncchkioi_var_rd.c \
          ncchkioi_lists.c \
-         ncchkioi_nonblocking.c \
          ncchkioi_wait.c \
-         ncchk_filter_dummy.c 
+         ncchk_filter_dummy.c
 
 if ENABLE_ZLIB
    C_SRCS += ncchk_filter_zlib.c
