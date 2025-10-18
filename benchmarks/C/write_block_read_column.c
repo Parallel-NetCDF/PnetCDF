@@ -42,6 +42,8 @@
 
 #define NVARS 4
 
+static int verbose;
+
 #define ERR(e) {if((e)!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(e));nerrs++;}}
 
 /*----< print_info() >------------------------------------------------------*/
@@ -124,6 +126,8 @@ int benchmark_write(char       *filename,
     psizes[0] = psizes[1] = 0;
     MPI_Dims_create(nprocs, 2, psizes);
 
+    if (verbose && rank == 0) printf("psizes = %d %d\n",psizes[0],psizes[1]);
+
     gsizes[0] = len * psizes[0];
     gsizes[1] = len * psizes[1];
 
@@ -157,10 +161,13 @@ int benchmark_write(char       *filename,
     timing[2] = end_t - start_t;
     start_t = end_t;
 
-    start[0] = len * (rank % psizes[0]);
-    start[1] = len * ((rank / psizes[1]) % psizes[1]);
+    start[0] = len * (rank / psizes[1]);
+    start[1] = len * (rank % psizes[1]);
     count[0] = len;
     count[1] = len;
+
+    if (verbose)
+        printf("%d: start=%lld %lld count=%lld %lld\n",rank,start[0],start[1],count[0],count[1]);
 
     for (i=0; i<NVARS; i++) {
         if (i % 4 == 0) {
@@ -272,6 +279,8 @@ int benchmark_read(char       *filename,
     timing[2] = end_t - start_t;
     start_t = end_t;
 
+    if (verbose) printf("%d: start=%lld %lld count=%lld %lld\n",rank,start[0],start[1],count[0],count[1]);
+
     for (i=0; i<nvars; i++) {
         if (i % 4 == 0) {
             err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, (int*)buf[i]);
@@ -331,7 +340,7 @@ int main(int argc, char** argv) {
     extern int optind;
     extern char *optarg;
     char filename[256];
-    int i, rank, nprocs, verbose=1, nerrs=0;
+    int i, rank, nprocs, nerrs=0;
     double timing[10], max_t[10];
     MPI_Offset len=0, w_size, r_size, sum_w_size, sum_r_size;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -342,6 +351,7 @@ int main(int argc, char** argv) {
     MPI_Comm_size(comm, &nprocs);
 
     /* get command-line arguments */
+    verbose = 1;
     while ((i = getopt(argc, argv, "hql:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
