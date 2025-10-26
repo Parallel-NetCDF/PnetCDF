@@ -6,6 +6,44 @@ PnetCDF Release Notes
 Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
 -------------------------------------
 
+* New feature
+  + Intra-node aggregation for read requests is added. This is the complement
+    of the write requests first implemented in version 1.14.0. Now intra-node
+    aggregation supports both write and read operations. This feature can be
+    enabled by setting hint "nc_num_aggrs_per_node" to the desired number of
+    aggregators per compute node.
+
+* New optimization
+  + A new internal I/O driver, named "pncio", is added which implements several
+    strategies for performance improvement. A significant portion of this
+    driver was developed to improve performance when Lustre is used. It
+    includes the followings.
+    * When creating a new file, it try to set the Lustre file striping count
+      to the number of compute nodes allocated to the MPI communicator passed
+      to "ncmpi_create()", when I/O hint "striping_factor" is not explicitly
+      set by the applications.
+    * It automatically sets a good value for hint "cb_nodes" when it is not
+      explicitly set by the applications.
+
+* API deprecated
+  + "vard" APIs introduced in version 1.6.0 are now deprecated. These are the
+    API family that take an argument of MPI derived data type describing the
+    file access layout, which is used as the fileview by the underlying MPI
+    library.
+
+* New error code
+  + "NC_EFSTYPE" indicates an error when an invalid file system type is
+    detected.
+
+* New PnetCDF hint
+  + "nc_pncio" -- To disable or enable the use of the internal "pncio" driver.
+    Its string value is either "enable" or "disable". The default is "enable".
+
+
+-------------------------------------
+Version 1.14.1 (July 31, 2025)
+-------------------------------------
+
 * New optimization
   + When file header extent size grows, moving the data section to a higher
     file offset has changed to be done in chunks of 16 MB per process.
