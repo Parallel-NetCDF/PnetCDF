@@ -826,7 +826,7 @@ assert(mpi_io_mode & MPI_MODE_CREATE);
     str_unit           = fd->hints->striping_unit;
     str_factor         = fd->hints->striping_factor;
     start_iodev        = fd->hints->start_iodevice;
-    overstriping_ratio = fd->hints->fs_hints.lustre.overstriping_ratio;
+    overstriping_ratio = fd->hints->lustre_overstriping_ratio;
 
     /* obtain the total number of OSTs available */
     total_num_OSTs = get_total_avail_osts(fd->filename);
@@ -847,7 +847,7 @@ assert(mpi_io_mode & MPI_MODE_CREATE);
      * fd->hints->striping_factor = 0;
      * fd->hints->striping_unit = 0;
      * fd->hints->start_iodevice = -1;
-     * fd->hints->fs_hints.lustre.overstriping_ratio = 1;
+     * fd->hints->lustre_overstriping_ratio = 1;
      */
 
     /* In many cases, the Lustre striping configuration of the file to be
@@ -1017,8 +1017,8 @@ err_out:
     fd->hints->striping_factor = stripin_info[1];
     fd->hints->start_iodevice  = stripin_info[2];
     if (fd->file_system == PNCIO_LUSTRE) {
-        fd->hints->fs_hints.lustre.num_osts = stripin_info[3];
-        fd->hints->fs_hints.lustre.overstriping_ratio = stripin_info[1] / stripin_info[3];
+        fd->hints->lustre_num_osts = stripin_info[3];
+        fd->hints->lustre_overstriping_ratio = stripin_info[1] / stripin_info[3];
     }
 
     if (rank > 0) { /* non-root processes */
@@ -1035,10 +1035,10 @@ err_out:
 
     MPI_Info_set(fd->info, "romio_filesystem_type", "LUSTRE:");
 
-    snprintf(int_str, 16, "%d", fd->hints->fs_hints.lustre.num_osts);
+    snprintf(int_str, 16, "%d", fd->hints->lustre_num_osts);
     MPI_Info_set(fd->info, "lustre_num_osts", int_str);
 
-    snprintf(int_str, 16, "%d", fd->hints->fs_hints.lustre.overstriping_ratio);
+    snprintf(int_str, 16, "%d", fd->hints->lustre_overstriping_ratio);
     MPI_Info_set(fd->info, "lustre_overstriping_ratio", int_str);
 
     return err;
@@ -1119,18 +1119,18 @@ err_out:
     fd->hints->striping_unit   = stripin_info[0];
     fd->hints->striping_factor = stripin_info[1];
     fd->hints->start_iodevice  = stripin_info[2];
-    fd->hints->fs_hints.lustre.num_osts = stripin_info[3];
-    fd->hints->fs_hints.lustre.overstriping_ratio = stripin_info[1] / stripin_info[3];
+    fd->hints->lustre_num_osts = stripin_info[3];
+    fd->hints->lustre_overstriping_ratio = stripin_info[1] / stripin_info[3];
 
     /* construct cb_nodes rank list */
     Lustre_set_cb_node_list(fd);
 
     MPI_Info_set(fd->info, "romio_filesystem_type", "LUSTRE:");
 
-    snprintf(int_str, 16, "%d", fd->hints->fs_hints.lustre.num_osts);
+    snprintf(int_str, 16, "%d", fd->hints->lustre_num_osts);
     MPI_Info_set(fd->info, "lustre_num_osts", int_str);
 
-    snprintf(int_str, 16, "%d", fd->hints->fs_hints.lustre.overstriping_ratio);
+    snprintf(int_str, 16, "%d", fd->hints->lustre_overstriping_ratio);
     MPI_Info_set(fd->info, "lustre_overstriping_ratio", int_str);
 
     return err;

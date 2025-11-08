@@ -15,7 +15,7 @@
         if (writebuf_len) {                                                   \
             w_len = PNCIO_WriteContig(fd, writebuf, writebuf_len,             \
                                       writebuf_off);                          \
-            if (!fd->atomicity && fd->hints->ds_write == PNCIO_HINT_DISABLE)  \
+            if (!fd->atomicity && fd->hints->romio_ds_write == PNCIO_HINT_DISABLE)  \
                 PNCIO_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len);       \
             if (w_len < 0) {                                                  \
                 NCI_Free(writebuf);                                           \
@@ -29,7 +29,7 @@
         writebuf_len = MIN(end_offset - writebuf_off + 1,                     \
                            (writebuf_off / stripe_size + 1) * stripe_size     \
                            - writebuf_off);                                   \
-        if (!fd->atomicity && fd->hints->ds_write == PNCIO_HINT_DISABLE)      \
+        if (!fd->atomicity && fd->hints->romio_ds_write == PNCIO_HINT_DISABLE)      \
             PNCIO_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len);       \
         r_len = PNCIO_ReadContig(fd, writebuf, writebuf_len, writebuf_off);   \
         if (r_len < 0) {                                                      \
@@ -42,7 +42,7 @@
            write_sz);                                                         \
     while (write_sz != req_len) {                                             \
         w_len = PNCIO_WriteContig(fd, writebuf, writebuf_len, writebuf_off);  \
-        if (!fd->atomicity && fd->hints->ds_write == PNCIO_HINT_DISABLE)      \
+        if (!fd->atomicity && fd->hints->romio_ds_write == PNCIO_HINT_DISABLE)      \
             PNCIO_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len);           \
         if (w_len < 0) {                                                      \
             NCI_Free(writebuf);                                               \
@@ -56,7 +56,7 @@
         writebuf_len = MIN(end_offset - writebuf_off + 1,                     \
                            (writebuf_off / stripe_size + 1) * stripe_size     \
                            - writebuf_off);                                   \
-        if (!fd->atomicity && fd->hints->ds_write == PNCIO_HINT_DISABLE)      \
+        if (!fd->atomicity && fd->hints->romio_ds_write == PNCIO_HINT_DISABLE)      \
             PNCIO_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len);       \
         r_len = PNCIO_ReadContig(fd, writebuf, writebuf_len, writebuf_off);   \
         if (r_len < 0) {                                                      \
@@ -127,7 +127,7 @@ MPI_Offset PNCIO_LUSTRE_WriteStrided(PNCIO_File *fd,
 
 // printf("%s at %d:\n",__func__,__LINE__);
 
-    if (fd->hints->ds_write == PNCIO_HINT_DISABLE) {
+    if (fd->hints->romio_ds_write == PNCIO_HINT_DISABLE) {
         /* if user has disabled data sieving on writes, use naive
          * approach instead.
          */
@@ -162,7 +162,7 @@ if (fd->flat_file.count > 0) assert(offset == 0); /* not whole file visible */
         /* if atomicity is true or data sieving is not disable, lock the region
          * to be accessed
          */
-        if (fd->atomicity || fd->hints->ds_write != PNCIO_HINT_DISABLE)
+        if (fd->atomicity || fd->hints->romio_ds_write != PNCIO_HINT_DISABLE)
             PNCIO_WRITE_LOCK(fd, start_off, SEEK_SET, bufsize);
 
         for (i = 0; i < buf_view.count; i++) {
@@ -176,7 +176,7 @@ if (fd->flat_file.count > 0) assert(offset == 0); /* not whole file visible */
         /* write the buffer out the last round */
         w_len = PNCIO_WriteContig(fd, writebuf, writebuf_len, writebuf_off);
 
-        if (fd->atomicity || fd->hints->ds_write != PNCIO_HINT_DISABLE)
+        if (fd->atomicity || fd->hints->romio_ds_write != PNCIO_HINT_DISABLE)
             PNCIO_UNLOCK(fd, start_off, SEEK_SET, bufsize);
 
         NCI_Free(writebuf);
@@ -223,13 +223,13 @@ assert(disp == 0);
             BUFFERED_WRITE_WITHOUT_READ;
 
             /* write the buffer out the last round */
-            if (fd->hints->ds_write != PNCIO_HINT_DISABLE)
+            if (fd->hints->romio_ds_write != PNCIO_HINT_DISABLE)
                 PNCIO_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len);
 
             w_len = PNCIO_WriteContig(fd, writebuf, writebuf_len, writebuf_off);
             if (w_len > 0) total_w_len += w_len;
 
-            if (fd->hints->ds_write != PNCIO_HINT_DISABLE)
+            if (fd->hints->romio_ds_write != PNCIO_HINT_DISABLE)
                 PNCIO_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len);
 
             NCI_Free(writebuf);
@@ -255,7 +255,7 @@ assert(j < fd->flat_file.count);
 
         /* if atomicity is true or data sieving is not disable, lock the region
          * to be accessed */
-        if (fd->atomicity || fd->hints->ds_write != PNCIO_HINT_DISABLE)
+        if (fd->atomicity || fd->hints->romio_ds_write != PNCIO_HINT_DISABLE)
             PNCIO_WRITE_LOCK(fd, start_off, SEEK_SET, end_offset-start_off+1);
 
         writebuf_off = 0;
@@ -348,12 +348,12 @@ assert(k < buf_view.count);
         /* write the buffer out the last round */
         if (writebuf_len) {
             w_len = PNCIO_WriteContig(fd, writebuf, writebuf_len, writebuf_off);
-            if (!fd->atomicity && fd->hints->ds_write == PNCIO_HINT_DISABLE)
+            if (!fd->atomicity && fd->hints->romio_ds_write == PNCIO_HINT_DISABLE)
                 PNCIO_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len);
             if (w_len < 0) return w_len;
             total_w_len += w_len;
         }
-        if (fd->atomicity || fd->hints->ds_write != PNCIO_HINT_DISABLE)
+        if (fd->atomicity || fd->hints->romio_ds_write != PNCIO_HINT_DISABLE)
             PNCIO_UNLOCK(fd, start_off, SEEK_SET, end_offset - start_off + 1);
 
         NCI_Free(writebuf);

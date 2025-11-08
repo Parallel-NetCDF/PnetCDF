@@ -110,24 +110,25 @@ enum {
 typedef struct {
     int striping_factor;
     int striping_unit;
-    int cb_read;
-    int cb_write;
+    int start_iodevice;
     int cb_nodes;
     int cb_buffer_size;
-    int ds_read;
-    int ds_write;
-    int no_indep_rw;
     int ind_rd_buffer_size;
     int ind_wr_buffer_size;
-    int start_iodevice;
+
+    int romio_cb_read;
+    int romio_cb_write;
+    int romio_ds_read;
+    int romio_ds_write;
+    int romio_no_indep_rw;
+
+    /* Hints for Lustre file system */
+    int lustre_overstriping_ratio;
+
+    /* Hints set by PnetCDF internally */
+    int lustre_num_osts;
     int *ranklist;
 
-    union {
-        struct {
-            int num_osts;
-            int overstriping_ratio;
-        } lustre;
-    } fs_hints;
 } PNCIO_Hints;
 
 typedef struct {
