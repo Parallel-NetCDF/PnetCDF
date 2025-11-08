@@ -101,11 +101,9 @@
 #define PNCIO_TYPE_OVERLAP  0x00000002  /* if contains overlapping regions */
 #define PNCIO_TYPE_NEGATIVE 0x00000004  /* if one of displacements is negative */
 
-enum {
-    PNCIO_HINT_AUTO = 0,
-    PNCIO_HINT_ENABLE = 1,
-    PNCIO_HINT_DISABLE = 2
-};
+#define PNCIO_HINT_AUTO -1
+#define PNCIO_HINT_DISABLE 0
+#define PNCIO_HINT_ENABLE 1
 
 typedef struct {
     int striping_factor;
