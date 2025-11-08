@@ -289,6 +289,8 @@ ncmpi_strerror(int err)
             return "Variable fill value is inconsistent among processes.";
         case NC_EMULTIDEFINE_CMODE:
             return "File create mode is inconsistent among processes.";
+        case NC_EMULTIDEFINE_HINTS:
+            return "I/O hints are not consistent among processes.";
         case NC_EBADLOG:
             return "Unrecognized burst buffering log file format.";
         case NC_EFLUSHED:
@@ -747,6 +749,8 @@ ncmpi_strerrno(int err)
         case (NC_EMULTIDEFINE_VAR_FILL_MODE):	return "NC_EMULTIDEFINE_VAR_FILL_MODE";
         case (NC_EMULTIDEFINE_VAR_FILL_VALUE):	return "NC_EMULTIDEFINE_VAR_FILL_VALUE";
         case (NC_EMULTIDEFINE_CMODE):		return "NC_EMULTIDEFINE_CMODE";
+        case (NC_EMULTIDEFINE_HINTS):		return "NC_EMULTIDEFINE_HINTS";
+
         default:
               sprintf(unknown_str,"Unknown code %d",err);
     }
