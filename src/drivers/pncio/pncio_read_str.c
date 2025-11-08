@@ -55,7 +55,7 @@ MPI_Offset PNCIO_GEN_ReadStrided(PNCIO_File *fd,
 
 // printf("%s at %d:\n",__func__,__LINE__);
 
-    if (fd->hints->ds_read == PNCIO_HINT_DISABLE) {
+    if (fd->hints->romio_ds_read == PNCIO_HINT_DISABLE) {
         /* if user has disabled data sieving on reads, use naive
          * approach instead.
          */

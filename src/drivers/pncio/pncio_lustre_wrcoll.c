@@ -638,7 +638,7 @@ double curT = MPI_Wtime();
     if (buf_view.count > 1)
         buf_view.rem = buf_view.len[0];
 
-    if (fd->hints->cb_write == PNCIO_HINT_DISABLE) {
+    if (fd->hints->romio_cb_write == PNCIO_HINT_DISABLE) {
         /* collective write is explicitly disabled by user */
         do_collect = 0;
     }
@@ -700,14 +700,14 @@ double curT = MPI_Wtime();
         NCI_Free(st_end_all);
 
 // if (myrank==0) printf("%s %d: do_collect=%d is_interleaved=%d buf_view size=%lld count=%lld is_contig=%d start_offset=%lld end_offset=%lld\n",__func__,__LINE__, do_collect,is_interleaved,buf_view.size,buf_view.count,buf_view.is_contig, start_offset,end_offset);
-        if (fd->hints->cb_write == PNCIO_HINT_ENABLE) {
+        if (fd->hints->romio_cb_write == PNCIO_HINT_ENABLE) {
             /* explicitly enabled by user */
             do_collect = 1;
         }
-        else if (fd->hints->cb_write == PNCIO_HINT_AUTO) {
+        else if (fd->hints->romio_cb_write == PNCIO_HINT_AUTO) {
 // if (myrank==0) printf("%s %d: large_indv_req=%d cb_nodes=%d striping_factor=%d\n",__func__,__LINE__, large_indv_req,fd->hints->cb_nodes , fd->hints->striping_factor);
             /* Check if collective write is actually necessary, only when
-             * cb_write hint is set to PNCIO_HINT_AUTO.
+             * romio_cb_write hint is set to PNCIO_HINT_AUTO.
              *
              * Two typical access patterns can benefit from collective write.
              *   1) access file regions of all processes are interleaved, and
@@ -811,7 +811,7 @@ double curT = MPI_Wtime();
      */
     LUSTRE_Calc_my_req(fd, buf_view.is_contig, &my_req, buf_idx);
 
-    if (fd->hints->ds_write != PNCIO_HINT_DISABLE) {
+    if (fd->hints->romio_ds_write != PNCIO_HINT_DISABLE) {
         /* When data sieving is considered, below check the current file size
          * first. If the aggregate access region of this collective write is
          * beyond the current file size, then we can safely skip the read of
@@ -1952,12 +1952,12 @@ int Exchange_data_recv(
 #endif
         srt_off_len->off[0] = others_req[j].offsets[start_pos[j]];
         srt_off_len->len[0] = others_req[j].lens[start_pos[j]];
-    } else if (fd->hints->ds_write == PNCIO_HINT_ENABLE) {
+    } else if (fd->hints->romio_ds_write == PNCIO_HINT_ENABLE) {
         /* skip building of srt_off_len and proceed to read-modify-write */
         build_srt_off_len = 0;
         /* assuming there are holes */
         hole = 1;
-    } else if (fd->hints->ds_write == PNCIO_HINT_AUTO) {
+    } else if (fd->hints->romio_ds_write == PNCIO_HINT_AUTO) {
         if (DO_HEAP_MERGE(nprocs_recv, srt_off_len->num)) {
             /* When the number of sorted offset-length lists or the total
              * number of offset-length pairs are too large, the heap-merge sort
@@ -1983,7 +1983,7 @@ int Exchange_data_recv(
             fd->write_counter[6] = MAX(fd->write_counter[6], nprocs_recv);
         }
 #endif
-    } else { /* if (fd->hints->ds_write == PNCIO_HINT_DISABLE) */
+    } else { /* if (fd->hints->romio_ds_write == PNCIO_HINT_DISABLE) */
         /* User explicitly disable data sieving to skip read-modify-write.
          * Whether or not there is a hole is not important. However,
          * srt_off_len must be constructed to merge all others_req[] into a
@@ -2027,11 +2027,11 @@ int Exchange_data_recv(
         hole = (srt_off_len->num > 1);
     }
 
-// printf("%s at %d: ds_write=%s build_srt_off_len=%d hole=%d skip_read=%d srt_off_len->num=%lld\n",__func__,__LINE__, (fd->hints->ds_write == PNCIO_HINT_ENABLE)?"ENABLE": (fd->hints->ds_write == PNCIO_HINT_DISABLE)?"DISABLE":"AUTO", build_srt_off_len,hole,fd->skip_read,srt_off_len->num);
-// printf("%s at %d: ds_write=%s build_srt_off_len=%d hole=%d nprocs_recv=%d(PNCIO_DS_WR_NAGGRS_LB=%d) numx=%lld(PNCIO_DS_WR_NPAIRS_LB=%d)\n",__func__,__LINE__, (fd->hints->ds_write == PNCIO_HINT_ENABLE)?"ENABLE": (fd->hints->ds_write == PNCIO_HINT_DISABLE)?"DISABLE":"AUTO", build_srt_off_len,hole,nprocs_recv,PNCIO_DS_WR_NAGGRS_LB,numx,PNCIO_DS_WR_NPAIRS_LB);
+// printf("%s at %d: romio_ds_write=%s build_srt_off_len=%d hole=%d skip_read=%d srt_off_len->num=%lld\n",__func__,__LINE__, (fd->hints->romio_ds_write == PNCIO_HINT_ENABLE)?"ENABLE": (fd->hints->romio_ds_write == PNCIO_HINT_DISABLE)?"DISABLE":"AUTO", build_srt_off_len,hole,fd->skip_read,srt_off_len->num);
+// printf("%s at %d: romio_ds_write=%s build_srt_off_len=%d hole=%d nprocs_recv=%d(PNCIO_DS_WR_NAGGRS_LB=%d) numx=%lld(PNCIO_DS_WR_NPAIRS_LB=%d)\n",__func__,__LINE__, (fd->hints->romio_ds_write == PNCIO_HINT_ENABLE)?"ENABLE": (fd->hints->romio_ds_write == PNCIO_HINT_DISABLE)?"DISABLE":"AUTO", build_srt_off_len,hole,nprocs_recv,PNCIO_DS_WR_NAGGRS_LB,numx,PNCIO_DS_WR_NPAIRS_LB);
 
     /* data sieving */
-    if (fd->hints->ds_write != PNCIO_HINT_DISABLE && hole) {
+    if (fd->hints->romio_ds_write != PNCIO_HINT_DISABLE && hole) {
         if (fd->skip_read)
             memset(write_buf, 0, range_size);
         else {

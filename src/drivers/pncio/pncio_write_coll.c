@@ -83,8 +83,8 @@ double curT = MPI_Wtime();
      */
     nprocs_for_coll = fd->hints->cb_nodes;
 
-    /* only check for interleaving if cb_write isn't disabled */
-    if (fd->hints->cb_write != PNCIO_HINT_DISABLE) {
+    /* only check for interleaving if romio_cb_write isn't disabled */
+    if (fd->hints->romio_cb_write != PNCIO_HINT_DISABLE) {
         /* For this process's request, calculate the file start and end
          * offsets. Note: end_offset points to the last byte-offset that will
          * be accessed, e.g., if start_offset=0 and 100 bytes to be read,
@@ -127,11 +127,11 @@ double curT = MPI_Wtime();
                 interleave_count++;
     }
 
-    if (fd->hints->cb_write == PNCIO_HINT_DISABLE ||
-        (!interleave_count && (fd->hints->cb_write == PNCIO_HINT_AUTO))) {
+    if (fd->hints->romio_cb_write == PNCIO_HINT_DISABLE ||
+        (!interleave_count && (fd->hints->romio_cb_write == PNCIO_HINT_AUTO))) {
 
         /* use independent accesses */
-        if (fd->hints->cb_write != PNCIO_HINT_DISABLE)
+        if (fd->hints->romio_cb_write != PNCIO_HINT_DISABLE)
             NCI_Free(st_offsets);
         if (buf_view.size == 0) return 0;
 
