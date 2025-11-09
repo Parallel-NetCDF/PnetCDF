@@ -34,6 +34,8 @@ FILE_EXTS="ncmpi_chk_0000 ncmpi_plt_cnt_0000 ncmpi_plt_crn_0000"
 
 fixed_length=23
 
+TEST_MPIIO_MODES="0 1"
+
 for i in ${check_PROGRAMS} ; do
 
     for j in ${safe_modes} ; do
@@ -46,7 +48,7 @@ for i in ${check_PROGRAMS} ; do
         fi
         OUT_PREFIX="${TESTOUTDIR}/$i"
 
-    for mpiio_mode in 0 1 ; do
+    for mpiio_mode in ${TEST_MPIIO_MODES} ; do
         if test "$mpiio_mode" = 1 ; then
            USEMPIO_HINTS="nc_pncio=disable"
            DRIVER_OUT_FILE="${OUT_PREFIX}.mpio"
@@ -134,12 +136,14 @@ for i in ${check_PROGRAMS} ; do
     done # mpiio_mode
 
     for ext in $FILE_EXTS ; do
-       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc ---"
-       $MPIRUN $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc
-       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.$ext.nc ---"
-       $MPIRUN $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.$ext.nc
-       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc ---"
-       $MPIRUN $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc
+       if test "x$TEST_MPIIO_MODES" = "x0 1" ; then
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc ---"
+          $MPIRUN $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.$ext.nc ---"
+          $MPIRUN $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.$ext.nc
+       fi
+       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.pncio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc ---"
+       $MPIRUN $NCMPIDIFF -q $OUT_PREFIX.pncio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc
     done # ext
 
     done # safe_modes
