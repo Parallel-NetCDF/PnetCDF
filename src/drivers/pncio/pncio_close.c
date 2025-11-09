@@ -22,9 +22,11 @@ int PNCIO_File_close(PNCIO_File *fh)
 {
     int err = NC_NOERR;
 
-    err = close(fh->fd_sys);
-    if (err != 0)
-        err = ncmpii_error_posix2nc("close");
+    if (fh->is_open) {
+        err = close(fh->fd_sys);
+        if (err != 0)
+            err = ncmpii_error_posix2nc("close");
+    }
 
     if (fh->hints->ranklist != NULL)
         NCI_Free(fh->hints->ranklist);

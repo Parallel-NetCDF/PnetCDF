@@ -139,6 +139,7 @@ if (rank == 0) { printf("\nxxxx %s at %d: ---- %s\n",__func__,__LINE__,fd->filen
         err = ncmpii_error_posix2nc("open");
         goto err_out;
     }
+    fd->is_open = 1;
 
 err_out:
     MPI_Bcast(stripin_info, 4, MPI_INT, 0, fd->comm);
@@ -154,6 +155,7 @@ err_out:
                     __func__,__LINE__, rank, fd->filename, strerror(errno));
             return ncmpii_error_posix2nc("ioctl");
         }
+        fd->is_open = 1;
     }
 
     /* construct cb_nodes rank list */
@@ -196,6 +198,7 @@ if (rank == 0) { printf("\nxxxx %s at %d: ---- %s\n",__func__,__LINE__,fd->filen
         err = ncmpii_error_posix2nc("open");
         goto err_out;
     }
+    fd->is_open = 1;
 
     /* Only root obtains the striping information and bcast to all other
      * processes.
@@ -233,7 +236,7 @@ int PNCIO_File_open(MPI_Comm    comm,
      * called to check the file system type.
      */
     char value[MPI_MAX_INFO_VAL + 1], int_str[16];
-    int i, err, min_err;
+    int i, err, min_err, status=NC_NOERR;
 
     fd->comm        = comm;
     fd->filename    = filename;  /* without file system type name prefix */
@@ -256,9 +259,13 @@ int PNCIO_File_open(MPI_Comm    comm,
     else
         MPI_Info_dup(info, &fd->info);
 
-    err = PNCIO_File_SetInfo(fd, fd->info);
-    if (err != NC_NOERR)
-        return err;
+    status = PNCIO_File_SetInfo(fd, fd->info);
+    if (status != NC_NOERR && status != NC_EMULTIDEFINE_HINTS) {
+        /* Inconsistent I/O hints is not a fatal error.
+         * In PNCIO_File_SetInfo(), root's hints overwrite local's.
+         */
+        goto err_out;
+    }
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     for (i=0; i<NMEASURES; i++) {
@@ -269,6 +276,10 @@ int PNCIO_File_open(MPI_Comm    comm,
 
     assert(fd->file_system != PNCIO_FSTYPE_MPIIO);
 
+    /* TODO: When hint romio_no_indep_rw hint is set to true, only aggregators open
+     * the file.
+     * Note because fd->is_agg is set at the end of create/open call.
+     */
     if (fd->file_system == PNCIO_LUSTRE) {
         if (amode & MPI_MODE_CREATE)
             err = PNCIO_Lustre_create(fd, amode);
@@ -281,11 +292,10 @@ int PNCIO_File_open(MPI_Comm    comm,
         else
             err = GEN_open(fd);
     }
-    if (err != NC_NOERR) goto err_out;
-
-    /* TODO: when hint no_indep_rw hint is set to true, only aggregators open
-     * the file */
-    fd->is_open = 1;
+    if (err != NC_NOERR) { /* fatal error */
+        status = err;
+        goto err_out;
+    }
 
     /* set file striping hints */
     snprintf(int_str, 16, "%d", fd->hints->striping_unit);
@@ -323,15 +333,17 @@ int PNCIO_File_open(MPI_Comm    comm,
     /* collective buffer is used only by I/O aggregators only */
     if (fd->is_agg) {
         fd->io_buf = NCI_Calloc(1, fd->hints->cb_buffer_size);
-        if (fd->io_buf == NULL)
-            return NC_ENOMEM;
+        if (fd->io_buf == NULL) /* fatal error */
+            status = NC_ENOMEM;
     }
 
 err_out:
-    MPI_Allreduce(&err, &min_err, 1, MPI_INT, MPI_MIN, comm);
+    MPI_Allreduce(&status, &min_err, 1, MPI_INT, MPI_MIN, comm);
     /* All NC errors are < 0 */
-    if (min_err < 0) {
-        if (err == 0) /* close file if opened successfully */
+
+    if (min_err != NC_NOERR) {
+        if (status == NC_NOERR && fd->is_open)
+            /* close file if opened successfully */
             close(fd->fd_sys);
         NCI_Free(fd->hints);
         if (fd->info != MPI_INFO_NULL)
@@ -339,6 +351,6 @@ err_out:
         if (fd->io_buf != NULL)
             NCI_Free(fd->io_buf);
     }
-    return err;
+    return status;
 }
 

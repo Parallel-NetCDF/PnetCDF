@@ -973,6 +973,7 @@ assert(mpi_io_mode & MPI_MODE_CREATE);
         err = ncmpii_error_posix2nc("Lustre set striping");
         goto err_out;
     }
+    fd->is_open = 1;
 
     /* Obtain Lustre file striping parameters actually set. */
     numOSTs = get_striping(fd->fd_sys, fd->filename, &pattern,
@@ -993,6 +994,7 @@ assert(mpi_io_mode & MPI_MODE_CREATE);
         err = ncmpii_error_posix2nc("open");
         goto err_out;
     }
+    fd->is_open = 1;
 
     char *env_str = getenv("MIMIC_STRIPE_SIZE");
     if (env_str != NULL)
@@ -1028,6 +1030,7 @@ err_out:
                     __FILE__,__LINE__, rank, fd->filename, strerror(errno));
             return ncmpii_error_posix2nc("ioctl");
         }
+        fd->is_open = 1;
     }
 
     /* construct cb_nodes rank list */
@@ -1080,6 +1083,7 @@ static int wkl=0; if (wkl == 0 && rank == 0) { printf("\nxxxx %s at %d: %s ---- 
         err = ncmpii_error_posix2nc("open");
         goto err_out;
     }
+    fd->is_open = 1;
 
     /* Only root obtains the striping information and bcast to all other
      * processes.
