@@ -205,8 +205,8 @@ assert(f_index < fd->flat_file.count);
                     total_w_len += w_len;
                 }
 
-                if (tmp_bufsize >= bufsize) break;
                 tmp_bufsize += size;
+                if (tmp_bufsize >= bufsize) break;
 
                 if (size == fwr_size) {
                     f_index++;
