@@ -25,7 +25,7 @@
  *
  *    % m4 column_wise.m4 > column_wise.c
  *    % mpicc -O2 -o column_wise column_wise.c -lpnetcdf
- *    % mpiexec -l -n 4 ./column_wise /pvfs2/wkliao/testfile.nc
+ *    % mpiexec -l -n 4 ./column_wise -l 4 /pvfs2/wkliao/testfile.nc
  *    0:  0: myOff=  0 myNX=  4
  *    1:  1: myOff=  4 myNX=  4
  *    2:  2: myOff=  8 myNX=  4
@@ -67,22 +67,26 @@
 #include <stdlib.h>
 #include <string.h> /* strcpy() */
 #include <libgen.h> /* basename() */
+#include <unistd.h> /* getopt() */
+
 #include <mpi.h>
 #include <pnetcdf.h>
 
 #include <testutils.h>
 
 #define NY 10
-#define NX 4
+#define NX 70
 
 typedef char text;
 
 include(`foreach.m4')dnl
 include(`utils.m4')dnl
 
+define(`TEST_DATA_TYPE',`test_column_wise_$1(filename, cdf_formats[fmt], coll_io, len)')
+
 define(`TEST_COLUMN_WISE',`dnl
 static
-int test_column_wise_$1(char *filename, int cdf)
+int test_column_wise_$1(char *filename, int cdf, int coll_io, int len)
 {
     int i, j, nerrs=0, rank, nprocs, err, myNX, G_NX, myOff, num_reqs;
     int ncid, cmode, varid, dimid[2], *reqs, *sts;
@@ -100,10 +104,10 @@ int test_column_wise_$1(char *filename, int cdf)
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
-    /* the global array is NY * (NX * nprocs) */
-    G_NX  = NX * nprocs;
-    myOff = NX * rank;
-    myNX  = NX;
+    /* the global array is NY * (len * nprocs) */
+    G_NX  = len * nprocs;
+    myOff = len * rank;
+    myNX  = len;
 
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", G_NX, &dimid[1]); CHECK_ERR
@@ -123,6 +127,11 @@ int test_column_wise_$1(char *filename, int cdf)
      * skipped due to overlaping domain
      */
     err = ncmpi_flush(ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     /* initialize the buffer with rank ID. Also make the case interesting,
        by allocatsing buffersd separately */
@@ -187,7 +196,11 @@ int test_column_wise_$1(char *filename, int cdf)
         reqs[2*i+1] = tmp;
     }
 
-    err = ncmpi_wait_all(ncid, num_reqs, reqs, sts); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, num_reqs, reqs, sts);
+    else
+        err = ncmpi_wait(ncid, num_reqs, reqs, sts);
+    CHECK_ERR
 
     /* check if write buffer contents have been altered after wait */
     for (i=0; i<myNX; i++) {
@@ -221,6 +234,11 @@ int test_column_wise_$1(char *filename, int cdf)
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
 
     /* read back using the same access pattern */
@@ -248,7 +266,12 @@ int test_column_wise_$1(char *filename, int cdf)
                                  &reqs[num_reqs++]); CHECK_ERR
         start[1] += nprocs;
     }
-    err = ncmpi_wait_all(ncid, num_reqs, reqs, sts); CHECK_ERR
+
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, num_reqs, reqs, sts);
+    else
+        err = ncmpi_wait(ncid, num_reqs, reqs, sts);
+    CHECK_ERR
 
     /* check status of all requests */
     for (i=0; i<num_reqs; i++)
@@ -294,23 +317,42 @@ TEST_COLUMN_WISE(double)
 TEST_COLUMN_WISE(longlong)
 TEST_COLUMN_WISE(ulonglong)
 
+#define FILE_NAME "testfile.nc"
+
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [OPTIONS]...[filename]\n"
+    "       [-h] Print help\n"
+    "       [-l num]: X dimension size of local array\n"
+    "       [filename]: output netCDF file name (default: %s)\n";
+    fprintf(stderr, help, argv0, FILE_NAME);
+}
+
 int main(int argc, char** argv)
 {
+    extern int optind;
+    extern char *optarg;
     char filename[256];
-    int i, nerrs=0, rank, err;
+    int i, fmt, nerrs=0, rank, err, len, coll_io;
     int cdf_formats[3]={NC_FORMAT_CLASSIC, NC_FORMAT_CDF2, NC_FORMAT_CDF5};
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    len = NX;
+    while ((i = getopt(argc, argv, "hl:")) != EOF)
+        switch(i) {
+            case 'l': len = atoi(optarg);
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 1;
+        }
+    if (argv[optind] == NULL) strcpy(filename, FILE_NAME);
+    else                      snprintf(filename, 256, "%s", argv[optind]);
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
@@ -319,30 +361,21 @@ int main(int argc, char** argv)
         free(cmd_str);
     }
 
-    for (i=0; i<3; i++) {
-        nerrs += test_column_wise_text(filename, cdf_formats[i]);
-        if (nerrs > 0) break;
-        nerrs += test_column_wise_schar(filename, cdf_formats[i]);
-        if (nerrs > 0) break;
-        nerrs += test_column_wise_short(filename, cdf_formats[i]);
-        if (nerrs > 0) break;
-        nerrs += test_column_wise_int(filename, cdf_formats[i]);
-        if (nerrs > 0) break;
-        nerrs += test_column_wise_float(filename, cdf_formats[i]);
-        if (nerrs > 0) break;
-        nerrs += test_column_wise_double(filename, cdf_formats[i]);
-        if (nerrs > 0) break;
-        if (cdf_formats[i] == NC_FORMAT_CDF5) {
-            nerrs += test_column_wise_uchar(filename, cdf_formats[i]);
-            if (nerrs > 0) break;
-            nerrs += test_column_wise_ushort(filename, cdf_formats[i]);
-            if (nerrs > 0) break;
-            nerrs += test_column_wise_uint(filename, cdf_formats[i]);
-            if (nerrs > 0) break;
-            nerrs += test_column_wise_longlong(filename, cdf_formats[i]);
-            if (nerrs > 0) break;
-            nerrs += test_column_wise_ulonglong(filename, cdf_formats[i]);
-            if (nerrs > 0) break;
+    for (coll_io=0; coll_io<2; coll_io++) {
+        for (fmt=0; fmt<3; fmt++) {
+            nerrs = TEST_DATA_TYPE(text);   if (nerrs > 0) goto err_out;
+            nerrs = TEST_DATA_TYPE(schar);  if (nerrs > 0) goto err_out;
+            nerrs = TEST_DATA_TYPE(short);  if (nerrs > 0) goto err_out;
+            nerrs = TEST_DATA_TYPE(int);    if (nerrs > 0) goto err_out;
+            nerrs = TEST_DATA_TYPE(float);  if (nerrs > 0) goto err_out;
+            nerrs = TEST_DATA_TYPE(double); if (nerrs > 0) goto err_out;
+            if (cdf_formats[fmt] == NC_FORMAT_CDF5) {
+                nerrs = TEST_DATA_TYPE(uchar);     if (nerrs > 0) goto err_out;
+                nerrs = TEST_DATA_TYPE(ushort);    if (nerrs > 0) goto err_out;
+                nerrs = TEST_DATA_TYPE(uint);      if (nerrs > 0) goto err_out;
+                nerrs = TEST_DATA_TYPE(longlong);  if (nerrs > 0) goto err_out;
+                nerrs = TEST_DATA_TYPE(ulonglong); if (nerrs > 0) goto err_out;
+            }
         }
     }
 
@@ -357,6 +390,7 @@ int main(int argc, char** argv)
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
+err_out:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
