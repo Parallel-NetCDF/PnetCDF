@@ -403,7 +403,8 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
          * non-aggregators can skip.
          */
         if (comm == MPI_COMM_NULL) {
-            MPI_Info_create(&ncp->mpiinfo);
+            if (user_info != MPI_INFO_NULL)
+                MPI_Info_dup(user_info, &ncp->mpiinfo);
             goto fn_exit;
         }
     }
