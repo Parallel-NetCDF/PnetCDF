@@ -9,10 +9,10 @@
 
 #include <pncio.h>
 
-MPI_Offset PNCIO_GEN_WriteStrided_naive(PNCIO_File      *fd,
-                                        const void      *buf,
+MPI_Offset PNCIO_GEN_WriteStrided_naive(PNCIO_File *fd,
+                                        const void *buf,
                                         PNCIO_View  buf_view,
-                                        MPI_Offset       offset)
+                                        MPI_Offset  offset)
 {
     int b_index;
     MPI_Count bufsize;
@@ -79,6 +79,10 @@ assert(fd->filetype == MPI_BYTE);
          */
 
         disp = fd->disp;
+
+/* noncontiguous in fileview, disp and offset should be 0 for PnetCDF */
+assert(fd->disp == 0);
+assert(offset == 0);
 
         size_in_filetype = offset;
 
