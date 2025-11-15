@@ -136,14 +136,20 @@ for i in ${check_PROGRAMS} ; do
     done # mpiio_mode
 
     for ext in $FILE_EXTS ; do
-       if test "x$TEST_MPIIO_MODES" = "x0 1" ; then
+       if test "x$TEST_MPIIO_MODES" = "x0" ; then
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.pncio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc ---"
+          $NCMPIDIFF -q $OUT_PREFIX.pncio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc
+       elif test "x$TEST_MPIIO_MODES" = "x1" ; then
           # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc ---"
-          $MPIRUN $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc
+          $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc
+       elif test "x$TEST_MPIIO_MODES" = "x0 1" ; then
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc ---"
+          $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc
           # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.$ext.nc ---"
-          $MPIRUN $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.$ext.nc
+          $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.$ext.nc
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.pncio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc ---"
+          $NCMPIDIFF -q $OUT_PREFIX.pncio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc
        fi
-       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.pncio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc ---"
-       $MPIRUN $NCMPIDIFF -q $OUT_PREFIX.pncio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc
     done # ext
 
     done # safe_modes
