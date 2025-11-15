@@ -85,9 +85,9 @@ for i in ${check_PROGRAMS} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
 
-        CMD_OPTS="-q -l 10"
+        CMD_OPTS="-q -l 500"
         if test "$i" = "aggregation" ; then
-           CMD_OPTS+=" -b -c -i -j"
+           CMD_OPTS+=" -b -a -x -n 12 -t 2"
         fi
 
         # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPTS ${OUT_FILE}.nc"
