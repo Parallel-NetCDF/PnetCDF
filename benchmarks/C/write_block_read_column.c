@@ -68,6 +68,7 @@ void print_info(MPI_Info *info_used)
 /*----< benchmark_write() >---------------------------------------------------*/
 static
 int benchmark_write(char       *filename,
+                    int         indep_io,
                     MPI_Offset  len,
                     MPI_Offset *w_size,
                     MPI_Info   *w_info_used,
@@ -157,6 +158,12 @@ int benchmark_write(char       *filename,
     }
 
     err = ncmpi_enddef(ncid); ERR(err)
+
+    if (indep_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        ERR(err)
+    }
+
     end_t = MPI_Wtime();
     timing[2] = end_t - start_t;
     start_t = end_t;
@@ -171,19 +178,31 @@ int benchmark_write(char       *filename,
 
     for (i=0; i<NVARS; i++) {
         if (i % 4 == 0) {
-            err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, (int*)buf[i]);
+            if (indep_io)
+                err = ncmpi_put_vara_int(ncid, varid[i], start, count, (int*)buf[i]);
+            else
+                err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, (int*)buf[i]);
             ERR(err)
         }
         else if (i % 4 == 1) {
-            err = ncmpi_put_vara_float_all(ncid, varid[i], start, count, (float*)buf[i]);
+            if (indep_io)
+                err = ncmpi_put_vara_float(ncid, varid[i], start, count, (float*)buf[i]);
+            else
+                err = ncmpi_put_vara_float_all(ncid, varid[i], start, count, (float*)buf[i]);
             ERR(err)
         }
         else if (i % 4 == 2) {
-            err = ncmpi_put_vara_short_all(ncid, varid[i], start, count, (short*)buf[i]);
+            if (indep_io)
+                err = ncmpi_put_vara_short(ncid, varid[i], start, count, (short*)buf[i]);
+            else
+                err = ncmpi_put_vara_short_all(ncid, varid[i], start, count, (short*)buf[i]);
             ERR(err)
         }
         else {
-            err = ncmpi_put_vara_double_all(ncid, varid[i], start, count, (double*)buf[i]);
+            if (indep_io)
+                err = ncmpi_put_vara_double(ncid, varid[i], start, count, (double*)buf[i]);
+            else
+                err = ncmpi_put_vara_double_all(ncid, varid[i], start, count, (double*)buf[i]);
             ERR(err)
         }
     }
@@ -212,6 +231,7 @@ int benchmark_write(char       *filename,
 /*----< benchmark_read() >---------------------------------------------------*/
 static
 int benchmark_read(char       *filename,
+                   int         indep_io,
                    MPI_Offset  len,
                    MPI_Offset *r_size,
                    MPI_Info   *r_info_used,
@@ -240,6 +260,11 @@ int benchmark_read(char       *filename,
     start_t = MPI_Wtime();
     timing[1] = start_t - timing[0];
     MPI_Info_free(&info);
+
+    if (indep_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        ERR(err)
+    }
 
     err = ncmpi_inq_nvars(ncid, &nvars); ERR(err)
     err = ncmpi_inq_dimid(ncid, "Y", &dimid[0]); ERR(err)
@@ -283,19 +308,31 @@ int benchmark_read(char       *filename,
 
     for (i=0; i<nvars; i++) {
         if (i % 4 == 0) {
-            err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, (int*)buf[i]);
+            if (indep_io)
+                err = ncmpi_get_vara_int(ncid, varid[i], start, count, (int*)buf[i]);
+            else
+                err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, (int*)buf[i]);
             ERR(err)
         }
         else if (i % 4 == 1) {
-            err = ncmpi_get_vara_float_all(ncid, varid[i], start, count, (float*)buf[i]);
+            if (indep_io)
+                err = ncmpi_get_vara_float(ncid, varid[i], start, count, (float*)buf[i]);
+            else
+                err = ncmpi_get_vara_float_all(ncid, varid[i], start, count, (float*)buf[i]);
             ERR(err)
         }
         else if (i % 4 == 2) {
-            err = ncmpi_get_vara_short_all(ncid, varid[i], start, count, (short*)buf[i]);
+            if (indep_io)
+                err = ncmpi_get_vara_short(ncid, varid[i], start, count, (short*)buf[i]);
+            else
+                err = ncmpi_get_vara_short_all(ncid, varid[i], start, count, (short*)buf[i]);
             ERR(err)
         }
         else {
-            err = ncmpi_get_vara_double_all(ncid, varid[i], start, count, (double*)buf[i]);
+            if (indep_io)
+                err = ncmpi_get_vara_double(ncid, varid[i], start, count, (double*)buf[i]);
+            else
+                err = ncmpi_get_vara_double_all(ncid, varid[i], start, count, (double*)buf[i]);
             ERR(err)
         }
     }
@@ -327,9 +364,10 @@ static void
 usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-h] | [-q] [-l len] [file_name]\n"
+    "Usage: %s [-h] | [-q] [-a] [-l len] [file_name]\n"
     "       [-h] Print help\n"
     "       [-q] Quiet mode\n"
+    "       [-a] use indepedent I/O APIs\n"
     "       [-l len]: local variable of size len x len (default 10)\n"
     "       [filename]: output netCDF file name (default ./testfile.nc)\n";
     fprintf(stderr, help, argv0);
@@ -340,7 +378,7 @@ int main(int argc, char** argv) {
     extern int optind;
     extern char *optarg;
     char filename[256];
-    int i, rank, nprocs, nerrs=0;
+    int i, rank, nprocs, nerrs=0, indep_io;
     double timing[10], max_t[10];
     MPI_Offset len=0, w_size, r_size, sum_w_size, sum_r_size;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -352,9 +390,12 @@ int main(int argc, char** argv) {
 
     /* get command-line arguments */
     verbose = 1;
-    while ((i = getopt(argc, argv, "hql:")) != EOF)
+    indep_io = 0;
+    while ((i = getopt(argc, argv, "hqal:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
+                      break;
+            case 'a': indep_io = 1;
                       break;
             case 'l': len = atoi(optarg);
                       break;
@@ -368,8 +409,8 @@ int main(int argc, char** argv) {
 
     len = (len <= 0) ? 10 : len;
 
-    nerrs += benchmark_write(filename, len, &w_size, &w_info_used, timing);
-    nerrs += benchmark_read (filename, len, &r_size, &r_info_used, timing+5);
+    nerrs += benchmark_write(filename, indep_io, len, &w_size, &w_info_used, timing);
+    nerrs += benchmark_read (filename, indep_io, len, &r_size, &r_info_used, timing+5);
 
     MPI_Reduce(&timing, &max_t,     10, MPI_DOUBLE, MPI_MAX, 0, comm);
     MPI_Reduce(&w_size, &sum_w_size, 1, MPI_OFFSET, MPI_SUM, 0, comm);
