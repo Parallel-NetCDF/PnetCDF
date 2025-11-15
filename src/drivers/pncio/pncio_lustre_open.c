@@ -791,7 +791,8 @@ first_ost_id = -1;
     MPI_Comm_rank(fd->comm, &rank);
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-static int wkl=0; if (wkl == 0 && rank == 0) { printf("\nxxxx %s at %d: %s ---- %s\n",__func__,__LINE__,(fd->file_system == PNCIO_LUSTRE)?"PNCIO_LUSTRE":"PNCIO_UFS",fd->filename); wkl++; fflush(stdout);}
+int world_rank; MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+static int wkl=0; if (wkl == 0 && world_rank == 0) { printf("\nxxxx %s at %d: %s ---- %s\n",__func__,__LINE__,(fd->file_system == PNCIO_LUSTRE)?"PNCIO_LUSTRE":"PNCIO_UFS",fd->filename); wkl++; fflush(stdout);}
 #endif
 
 #if defined(HAVE_LUSTRE) || defined(MIMIC_LUSTRE)
@@ -1066,7 +1067,8 @@ first_ost_id = -1;
     MPI_Comm_rank(fd->comm, &rank);
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-static int wkl=0; if (wkl == 0 && rank == 0) { printf("\nxxxx %s at %d: %s ---- %s\n",__func__,__LINE__,(fd->file_system == PNCIO_LUSTRE)?"PNCIO_LUSTRE":"PNCIO_UFS",fd->filename); wkl++; fflush(stdout);}
+int world_rank; MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+static int wkl=0; if (wkl == 0 && world_rank == 0) { printf("\nxxxx %s at %d: %s ---- %s\n",__func__,__LINE__,(fd->file_system == PNCIO_LUSTRE)?"PNCIO_LUSTRE":"PNCIO_UFS",fd->filename); wkl++; fflush(stdout);}
 #endif
 
     old_mask = umask(022);

@@ -117,7 +117,8 @@ GEN_create(PNCIO_File *fd,
     MPI_Comm_rank(fd->comm, &rank);
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-if (rank == 0) { printf("\nxxxx %s at %d: ---- %s\n",__func__,__LINE__,fd->filename); fflush(stdout);}
+int world_rank; MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+if (world_rank == 0) { printf("\nxxxx %s at %d: ---- %s\n",__func__,__LINE__,fd->filename); fflush(stdout);}
 #endif
 
     amode = O_CREAT;
@@ -178,7 +179,8 @@ GEN_open(PNCIO_File *fd)
     MPI_Comm_rank(fd->comm, &rank);
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-if (rank == 0) { printf("\nxxxx %s at %d: ---- %s\n",__func__,__LINE__,fd->filename); fflush(stdout);}
+int world_rank; MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+if (world_rank == 0) { printf("\nxxxx %s at %d: ---- %s\n",__func__,__LINE__,fd->filename); fflush(stdout);}
 #endif
 
     old_mask = umask(022);
