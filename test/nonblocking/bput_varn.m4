@@ -35,28 +35,28 @@ dnl
  *    data:
  *
  *     var0 =
- *      13, 13, 13, 11, 11, 10, 10, 12, 11, 11,
- *      10, 12, 12, 12, 13, 11, 11, 12, 12, 12,
- *      11, 11, 12, 13, 13, 13, 10, 10, 11, 11,
- *      10, 10, 10, 12, 11, 11, 11, 13, 13, 13 ;
+ *      3, 3, 3, 1, 1, 0, 0, 2, 1, 1,
+ *      0, 2, 2, 2, 3, 1, 1, 2, 2, 2,
+ *      1, 1, 2, 3, 3, 3, 0, 0, 1, 1,
+ *      0, 0, 0, 2, 1, 1, 1, 3, 3, 3 ;
  *     var1 =
- *      12, 12, 12, 10, 10, 13, 13, 11, 10, 10,
- *      13, 11, 11, 11, 12, 10, 10, 11, 11, 11,
- *      10, 10, 11, 12, 12, 12, 13, 13, 10, 10,
- *      13, 13, 13, 11, 10, 10, 10, 12, 12, 12 ;
+ *      2, 2, 2, 0, 0, 3, 3, 1, 0, 0,
+ *      3, 1, 1, 1, 2, 0, 0, 1, 1, 1,
+ *      0, 0, 1, 2, 2, 2, 3, 3, 0, 0,
+ *      3, 3, 3, 1, 0, 0, 0, 2, 2, 2 ;
 
  *
  *     var2 =
- *      11, 11, 11, 13, 13, 12, 12, 10, 13, 13,
- *      12, 10, 10, 10, 11, 13, 13, 10, 10, 10,
- *      13, 13, 10, 11, 11, 11, 12, 12, 13, 13,
- *      12, 12, 12, 10, 13, 13, 13, 11, 11, 11 ;
+ *      1, 1, 1, 3, 3, 2, 2, 0, 3, 3,
+ *      2, 0, 0, 0, 1, 3, 3, 0, 0, 0,
+ *      3, 3, 0, 1, 1, 1, 2, 2, 3, 3,
+ *      2, 2, 2, 0, 3, 3, 3, 1, 1, 1 ;
  *
  *     var3 =
- *      10, 10, 10, 12, 12, 11, 11, 13, 12, 12,
- *      11, 13, 13, 13, 10, 12, 12, 13, 13, 13,
- *      12, 12, 13, 10, 10, 10, 11, 11, 12, 12,
- *      11, 11, 11, 13, 12, 12, 12, 10, 10, 10 ;
+ *      0, 0, 0, 2, 2, 1, 1, 3, 2, 2,
+ *      1, 3, 3, 3, 0, 2, 2, 3, 3, 3,
+ *      2, 2, 3, 0, 0, 0, 1, 1, 2, 2,
+ *      1, 1, 1, 3, 2, 2, 2, 0, 0, 0 ;
  *    }
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -68,6 +68,8 @@ dnl
 #include <stdlib.h>
 #include <string.h> /* strcpy() */
 #include <libgen.h> /* basename() */
+#include <unistd.h> /* getopt() */
+
 #include <mpi.h>
 #include <pnetcdf.h>
 
@@ -76,6 +78,7 @@ dnl
 #define NLOOPS 4
 #define MAX_NREQS 6
 #define NDIMS 2
+#define NVARS 4
 
 #define NY 4
 #define NX 10
@@ -92,6 +95,7 @@ include(`utils.m4')dnl
             printf("Error at line %d in %s: err[%d] %s\n", __LINE__, __FILE__, _i, \
                    ncmpi_strerrno((a)[_i])); \
             nerrs++; \
+            goto err_out; \
         } \
     } \
 }
@@ -162,70 +166,82 @@ void permute(MPI_Offset *a, MPI_Offset *b)
 
 define(`TEST_BPUT_VARN',`dnl
 static
-int clear_file_contents_$1(int ncid, int *varid)
+int clear_file_contents_$1(int ncid, int *varid, int coll_io)
 {
-    int i, err, nerrs=0, rank;
+    int i, err, nerrs=0;
     $1 *w_buffer = ($1*) malloc(sizeof($1) * NY*NX);
-    for (i=0; i<NY*NX; i++) w_buffer[i] = 99;
+    $1 fillv = NC_FILL_VALUE($1);
 
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    for (i=0; i<NY*NX; i++) w_buffer[i] = fillv;
 
-    for (i=0; i<4; i++) {
-        err = ncmpi_put_var_$1_all(ncid, varid[i], w_buffer);
+    for (i=0; i<NVARS; i++) {
+        if (coll_io)
+            err = ncmpi_put_var_$1_all(ncid, varid[i], w_buffer);
+        else
+            err = ncmpi_put_var_$1(ncid, varid[i], w_buffer);
         CHECK_ERR
     }
-    free(w_buffer);
-
     err = ncmpi_flush(ncid);
     CHECK_ERR
+
+    free(w_buffer);
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     return nerrs;
 }
 
 static
-int check_contents_for_fail_$1(int ncid, int *varid)
+int check_contents_for_fail_$1(int ncid, int *varid, int coll_io)
 {
     /* all processes read entire variables back and check contents */
     int i, j, err, nerrs=0, nprocs;
+    $1 fillv = NC_FILL_VALUE($1);
     $1 expected[4][NY*NX] =
-                            {{13, 13, 13, 11, 11, 10, 10, 12, 11, 11,
-                              10, 12, 12, 12, 13, 11, 11, 12, 12, 12,
-                              11, 11, 12, 13, 13, 13, 10, 10, 11, 11,
-                              10, 10, 10, 12, 11, 11, 11, 13, 13, 13},
-                             {12, 12, 12, 10, 10, 13, 13, 11, 10, 10,
-                              13, 11, 11, 11, 12, 10, 10, 11, 11, 11,
-                              10, 10, 11, 12, 12, 12, 13, 13, 10, 10,
-                              13, 13, 13, 11, 10, 10, 10, 12, 12, 12},
-                             {11, 11, 11, 13, 13, 12, 12, 10, 13, 13,
-                              12, 10, 10, 10, 11, 13, 13, 10, 10, 10,
-                              13, 13, 10, 11, 11, 11, 12, 12, 13, 13,
-                              12, 12, 12, 10, 13, 13, 13, 11, 11, 11},
-                             {10, 10, 10, 12, 12, 11, 11, 13, 12, 12,
-                              11, 13, 13, 13, 10, 12, 12, 13, 13, 13,
-                              12, 12, 13, 10, 10, 10, 11, 11, 12, 12,
-                              11, 11, 11, 13, 12, 12, 12, 10, 10, 10}};
+                            {{3, 3, 3, 1, 1, 0, 0, 2, 1, 1,
+                              0, 2, 2, 2, 3, 1, 1, 2, 2, 2,
+                              1, 1, 2, 3, 3, 3, 0, 0, 1, 1,
+                              0, 0, 0, 2, 1, 1, 1, 3, 3, 3},
+                             {2, 2, 2, 0, 0, 3, 3, 1, 0, 0,
+                              3, 1, 1, 1, 2, 0, 0, 1, 1, 1,
+                              0, 0, 1, 2, 2, 2, 3, 3, 0, 0,
+                              3, 3, 3, 1, 0, 0, 0, 2, 2, 2},
+                             {1, 1, 1, 3, 3, 2, 2, 0, 3, 3,
+                              2, 0, 0, 0, 1, 3, 3, 0, 0, 0,
+                              3, 3, 0, 1, 1, 1, 2, 2, 3, 3,
+                              2, 2, 2, 0, 3, 3, 3, 1, 1, 1},
+                             {0, 0, 0, 2, 2, 1, 1, 3, 2, 2,
+                              1, 3, 3, 3, 0, 2, 2, 3, 3, 3,
+                              2, 2, 3, 0, 0, 0, 1, 1, 2, 2,
+                              1, 1, 1, 3, 2, 2, 2, 0, 0, 0}};
 
     $1 *r_buffer = ($1*) malloc(sizeof($1) * NY*NX);
 
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-    if (nprocs > 4) MPI_Barrier(MPI_COMM_WORLD);
 
-    for (i=0; i<4; i++) {
-        for (j=0; j<NY*NX; j++) r_buffer[j] = 99;
-        err = ncmpi_get_var_$1_all(ncid, varid[i], r_buffer);
+    for (i=0; i<NVARS; i++) {
+        for (j=0; j<NY*NX; j++) r_buffer[j] = fillv;
+        if (coll_io)
+            err = ncmpi_get_var_$1_all(ncid, varid[i], r_buffer);
+        else
+            err = ncmpi_get_var_$1(ncid, varid[i], r_buffer);
         CHECK_ERR
 
         /* check if the contents of buf are expected */
         for (j=0; j<NY*NX; j++) {
             /* when nprocs is less than 4, skip the comparison */
-            if (expected[i][j] >= 10+nprocs) continue;
-            if (r_buffer[j] != expected[i][j]) {
-                printf("Expected read $1 buf[%d][%d]=%d, but got %d\n",
-                       i,j,(int)expected[i][j],(int)r_buffer[j]);
+            $1 exp = (expected[i][j] >= nprocs) ? fillv : expected[i][j];
+            if (r_buffer[j] != exp) {
+                char var_name[16];
+                ncmpi_inq_varname(ncid, varid[i], var_name);
+                printf("Expected var %s read $1 buf[%d][%d]=%d, but got %d\n",
+                       var_name,i,j,(int)exp,(int)r_buffer[j]);
                 nerrs++;
-                goto fn_exit;
+                break;
             }
         }
+        MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+        if (nerrs > 0) goto fn_exit;
     }
 fn_exit:
     free(r_buffer);
@@ -233,7 +249,7 @@ fn_exit:
 }
 
 static int
-test_bput_varn_$1(char *filename, int cdf)
+test_bput_varn_$1(char *filename, int cdf, int coll_io)
 {
     int i, j, k, rank, err, nerrs=0, bb_enabled;
     int ncid, cmode, varid[NLOOPS], dimid[2], nreqs, reqs[NLOOPS], sts[NLOOPS];
@@ -299,15 +315,6 @@ test_bput_varn_$1(char *filename, int cdf)
         MPI_Info_free(&infoused);
     }
 
-    /* create a global array of size NY * NX */
-    err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
-    err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var0", NC_TYPE($1), NDIMS, dimid, &varid[0]); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var1", NC_TYPE($1), NDIMS, dimid, &varid[1]); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var2", NC_TYPE($1), NDIMS, dimid, &varid[2]); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var3", NC_TYPE($1), NDIMS, dimid, &varid[3]); CHECK_ERR
-    err = ncmpi_enddef(ncid); CHECK_ERR
-
     /* allocate space for starts and counts */
     starts[0] = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * 4 * 6);
     counts[0] = (MPI_Offset**) malloc(sizeof(MPI_Offset*) * 4 * 6);
@@ -338,16 +345,31 @@ test_bput_varn_$1(char *filename, int cdf)
         }
     }
 
+    /* only rank 0, 1, 2, and 3 do I/O:
+     * each of ranks 0 to 3 write nreqs nonblocking requests */
+    nreqs = 4;
+    if (rank >= 4) nreqs = 0;
+
+    /* create a global array of size NY * NX */
+    err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]); CHECK_ERR
+    for (i=0; i<NVARS; i++) {
+        char name[20];
+        snprintf(name, 20, "var%d", i);
+        err = ncmpi_def_var(ncid, name, NC_TYPE($1), NDIMS, dimid, &varid[i]); CHECK_ERR
+    }
+    err = ncmpi_enddef(ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     if (!bb_enabled) {
         /* test error code: NC_ENULLABUF */
         err = ncmpi_bput_varn_$1(ncid, varid[0], 1, NULL, NULL, NULL, &reqs[0]);
         EXP_ERR(NC_ENULLABUF)
     }
-
-    /* only rank 0, 1, 2, and 3 do I/O:
-     * each of ranks 0 to 3 write 4 nonblocking requests */
-    nreqs = 4;
-    if (rank >= 4) nreqs = 0;
 
     /* bufsize must be max of data type converted before and after */
     MPI_Offset bufsize = 0;
@@ -364,7 +386,7 @@ test_bput_varn_$1(char *filename, int cdf)
 
         /* allocate I/O buffer and initialize its contents */
         buffer[i] = ($1*) malloc(sizeof($1) * req_lens[i]);
-        for (j=0; j<req_lens[i]; j++) buffer[i][j] = ($1)rank+10;
+        for (j=0; j<req_lens[i]; j++) buffer[i][j] = ($1)rank;
         bufsize += req_lens[i];
     }
     bufsize *= sizeof($1);
@@ -380,38 +402,63 @@ test_bput_varn_$1(char *filename, int cdf)
     else if (bufsize == 0) EXP_ERR(NC_ENULLABUF)
     else CHECK_ERR
 
-    nerrs += clear_file_contents_$1(ncid, varid);
+    nerrs += clear_file_contents_$1(ncid, varid, coll_io);
+    if (nerrs > 0) goto err_out;
 
     /* write using varn API, one bput call per variable */
     for (i=0; i<nreqs; i++) {
         err = ncmpi_bput_varn_$1(ncid, varid[i], my_nsegs[i], starts[i],
                                  counts[i], buffer[i], &reqs[i]);
         CHECK_ERR
+        if (err != NC_NOERR) goto err_out;
     }
     /* check if write buffer contents have been altered */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
-            if (buffer[i][j] != ($1)rank+10) {
+            if (buffer[i][j] != ($1)rank) {
                 printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
                        __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
+                i = nreqs;
+                break;
             }
         }
     }
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+    if (nerrs > 0) goto err_out;
+
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
-    if (!bb_enabled)
+    if (nerrs > 0) goto err_out;
+    if (!bb_enabled) {
         /* burst buffering driver does not use attached memory */
         nerrs += check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
+        if (nerrs > 0) goto err_out;
+    }
 
-    err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    else
+        err = ncmpi_wait(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
-    if (!bb_enabled)
+    if (!coll_io) {
+        /* When in independent I/O mode, some processes may read before other
+         * write completion from previous writes.
+         */
+        err = ncmpi_flush(ncid);
+        if (err != NC_NOERR) goto err_out;
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
+
+    if (!bb_enabled) {
         /* now usgae of attached memory should be 0 */
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
+        if (nerrs > 0) goto err_out;
+    }
 
     /* all processes read entire variables back and check contents */
-    nerrs += check_contents_for_fail_$1(ncid, varid);
+    nerrs += check_contents_for_fail_$1(ncid, varid, coll_io);
+    if (nerrs > 0) goto err_out;
 
     /* permute write order: so starts[*] are not in an increasing order:
      * swap segment 0 with segment 2 and swap segment 1 with segment 3
@@ -422,88 +469,140 @@ test_bput_varn_$1(char *filename, int cdf)
     }
 
     /* write using varn API, one bput call per variable */
-    nerrs += clear_file_contents_$1(ncid, varid);
+    nerrs += clear_file_contents_$1(ncid, varid, coll_io);
+    if (nerrs > 0) goto err_out;
     for (i=0; i<nreqs; i++) {
         err = ncmpi_bput_varn_$1(ncid, varid[i], my_nsegs[i], starts[i],
                                  counts[i], buffer[i], &reqs[i]);
         CHECK_ERR
+        if (err != NC_NOERR) goto err_out;
     }
     /* check if write buffer contents have been altered */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
-            if (buffer[i][j] != ($1)rank+10) {
+            if (buffer[i][j] != ($1)rank) {
                 printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
                        __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
+                i = nreqs;
+                break;
             }
         }
     }
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+    if (nerrs > 0) goto err_out;
+
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
-    if (!bb_enabled)
+    if (nerrs > 0) goto err_out;
+    if (!bb_enabled) {
         /* burst buffering driver does not use attached memory */
         nerrs += check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
+        if (nerrs > 0) goto err_out;
+    }
 
-    err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    else
+        err = ncmpi_wait(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
 
-    if (!bb_enabled)
+    if (!coll_io) {
+        /* When in independent I/O mode, some processes may read before other
+         * write completion from previous writes.
+         */
+        err = ncmpi_flush(ncid);
+        if (err != NC_NOERR) goto err_out;
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
+
+    if (!bb_enabled) {
         /* now usgae of attached memory should be 0 */
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
+        if (nerrs > 0) goto err_out;
+    }
 
     /* all processes read entire variables back and check contents */
-    nerrs += check_contents_for_fail_$1(ncid, varid);
+    nerrs += check_contents_for_fail_$1(ncid, varid, coll_io);
+    if (nerrs > 0) goto err_out;
 
     for (i=0; i<nreqs; i++) free(buffer[i]);
 
     /* test flexible API, using a noncontiguous buftype */
-    nerrs += clear_file_contents_$1(ncid, varid);
+    nerrs += clear_file_contents_$1(ncid, varid, coll_io);
     for (i=0; i<nreqs; i++) {
         MPI_Datatype buftype;
         MPI_Type_vector(req_lens[i], 1, 2, ITYPE2MPI($1), &buftype);
         MPI_Type_commit(&buftype);
         buffer[i] = ($1*)malloc(sizeof($1) * req_lens[i]*2);
-        for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = ($1)rank+10;
+        for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = ($1)rank;
 
         err = ncmpi_bput_varn(ncid, varid[i], my_nsegs[i], starts[i],
                               counts[i], buffer[i], 1, buftype, &reqs[i]);
         CHECK_ERR
         MPI_Type_free(&buftype);
+        if (err != NC_NOERR) goto err_out;
     }
     /* check if write buffer contents have been altered */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]*2; j++) {
-            if (buffer[i][j] != ($1)rank+10) {
+            if (buffer[i][j] != ($1)rank) {
                 printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
                        __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
+                i = nreqs;
+                break;
             }
         }
     }
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+    if (nerrs > 0) goto err_out;
+
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
-    if (!bb_enabled)
+    if (!bb_enabled) {
         /* burst buffering driver does not use attached memory */
         nerrs += check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
+        if (nerrs > 0) goto err_out;
+    }
 
-    err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    else
+        err = ncmpi_wait(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
+
+    if (!coll_io) {
+        /* When in independent I/O mode, some processes may read before other
+         * write completion from previous writes.
+         */
+        err = ncmpi_flush(ncid);
+        if (err != NC_NOERR) goto err_out;
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
 
     /* check if write buffer contents have been altered */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]*2; j++) {
-            if (buffer[i][j] != ($1)rank+10) {
+            if (buffer[i][j] != ($1)rank) {
                 printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
                        __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
+                i = nreqs;
+                break;
             }
         }
     }
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+    if (nerrs > 0) goto err_out;
 
-    if (!bb_enabled)
+    if (!bb_enabled) {
         /* now usgae of attached memory should be 0 */
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
+        if (nerrs > 0) goto err_out;
+    }
 
     /* all processes read entire variables back and check contents */
-    nerrs += check_contents_for_fail_$1(ncid, varid);
+    nerrs += check_contents_for_fail_$1(ncid, varid, coll_io);
+    if (nerrs > 0) goto err_out;
 
     /* permute back to original order */
     for (i=0; i<nreqs; i++) {
@@ -513,54 +612,82 @@ test_bput_varn_$1(char *filename, int cdf)
 
     /* test flexible API, using a noncontiguous buftype, one bput call per
      * variable */
-    nerrs += clear_file_contents_$1(ncid, varid);
+    nerrs += clear_file_contents_$1(ncid, varid, coll_io);
+    if (nerrs > 0) goto err_out;
     for (i=0; i<nreqs; i++) {
         MPI_Datatype buftype;
         MPI_Type_vector(req_lens[i], 1, 2, ITYPE2MPI($1), &buftype);
         MPI_Type_commit(&buftype);
-        for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = ($1)rank+10;
+        for (j=0; j<req_lens[i]*2; j++) buffer[i][j] = ($1)rank;
 
         err = ncmpi_bput_varn(ncid, varid[i], my_nsegs[i], starts[i],
                               counts[i], buffer[i], 1, buftype, &reqs[i]);
         CHECK_ERR
         MPI_Type_free(&buftype);
+        if (err != NC_NOERR) goto err_out;
     }
     /* check if write buffer contents have been altered */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]*2; j++) {
-            if (buffer[i][j] != ($1)rank+10) {
+            if (buffer[i][j] != ($1)rank) {
                 printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
                        __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
+                i = nreqs;
+                break;
             }
         }
     }
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+    if (nerrs > 0) goto err_out;
+
     nerrs += check_num_pending_reqs(ncid, nreqs, __LINE__);
-    if (!bb_enabled)
+    if (!bb_enabled) {
         /* burst buffering driver does not use attached memory */
         nerrs += check_attached_buffer_usage(ncid, bufsize, bufsize, __LINE__);
+        if (nerrs > 0) goto err_out;
+    }
 
-    err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, nreqs, reqs, sts);
+    else
+        err = ncmpi_wait(ncid, nreqs, reqs, sts);
     ERRS(nreqs, sts)
+
+    if (!coll_io) {
+        /* When in independent I/O mode, some processes may read before other
+         * write completion from previous writes.
+         */
+        err = ncmpi_flush(ncid);
+        if (err != NC_NOERR) goto err_out;
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
 
     /* check if write buffer contents have been altered */
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]*2; j++) {
-            if (buffer[i][j] != ($1)rank+10) {
+            if (buffer[i][j] != ($1)rank) {
                 printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
                        __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
+                i = nreqs;
+                break;
             }
         }
     }
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+    if (nerrs > 0) goto err_out;
 
-    if (!bb_enabled)
+    if (!bb_enabled) {
         /* now usgae of attached memory should be 0 */
         nerrs += check_attached_buffer_usage(ncid, bufsize, 0, __LINE__);
+        if (nerrs > 0) goto err_out;
+    }
 
     /* all processes read entire variables back and check contents */
-    nerrs += check_contents_for_fail_$1(ncid, varid);
+    nerrs += check_contents_for_fail_$1(ncid, varid, coll_io);
 
+err_out:
     /* free the buffer space for bput */
     if (bufsize > 0) {
         err = ncmpi_buffer_detach(ncid); CHECK_ERR
@@ -593,23 +720,41 @@ TEST_BPUT_VARN(double)
 TEST_BPUT_VARN(longlong)
 TEST_BPUT_VARN(ulonglong)
 
+
+define(`TEST_DATA_TYPE',`test_bput_varn_$1(filename, cdf_formats[fmt], coll_io)')
+
+#define FILE_NAME "testfile.nc"
+
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [OPTIONS]...[filename]\n"
+    "       [-h] Print help\n"
+    "       [filename]: output netCDF file name (default: %s)\n";
+    fprintf(stderr, help, argv0, FILE_NAME);
+}
+
 int main(int argc, char** argv)
 {
+    extern int optind;
+    extern char *optarg;
     char filename[256];
-    int i, rank, err, nerrs=0;
+    int i, fmt, coll_io, rank, err, nerrs=0;
     int cdf_formats[3]={NC_FORMAT_CLASSIC, NC_FORMAT_CDF2, NC_FORMAT_CDF5};
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    while ((i = getopt(argc, argv, "h")) != EOF)
+        switch(i) {
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 1;
+        }
+    if (argv[optind] == NULL) strcpy(filename, FILE_NAME);
+    else                      snprintf(filename, 256, "%s", argv[optind]);
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
@@ -618,19 +763,24 @@ int main(int argc, char** argv)
         free(cmd_str);
     }
 
-    for (i=0; i<3; i++) {
-        nerrs += test_bput_varn_text(filename, cdf_formats[i]);
-        nerrs += test_bput_varn_schar(filename, cdf_formats[i]);
-        nerrs += test_bput_varn_short(filename, cdf_formats[i]);
-        nerrs += test_bput_varn_int(filename, cdf_formats[i]);
-        nerrs += test_bput_varn_float(filename, cdf_formats[i]);
-        nerrs += test_bput_varn_double(filename, cdf_formats[i]);
-        if (cdf_formats[i] == NC_FORMAT_CDF5) {
-            nerrs += test_bput_varn_uchar(filename, cdf_formats[i]);
-            nerrs += test_bput_varn_ushort(filename, cdf_formats[i]);
-            nerrs += test_bput_varn_uint(filename, cdf_formats[i]);
-            nerrs += test_bput_varn_longlong(filename, cdf_formats[i]);
-            nerrs += test_bput_varn_ulonglong(filename, cdf_formats[i]);
+    for (coll_io=0; coll_io<2; coll_io++) {
+        /* test both independent and collective I/O modes */
+        for (fmt=0; fmt<3; fmt++) {
+            /* test CDF-1, CDF-2, and CDF-5 file formats */
+            nerrs += TEST_DATA_TYPE(text);   if (nerrs > 0) goto err_out;
+            nerrs += TEST_DATA_TYPE(schar);  if (nerrs > 0) goto err_out;
+            nerrs += TEST_DATA_TYPE(short);  if (nerrs > 0) goto err_out;
+            nerrs += TEST_DATA_TYPE(int);    if (nerrs > 0) goto err_out;
+            nerrs += TEST_DATA_TYPE(float);  if (nerrs > 0) goto err_out;
+            nerrs += TEST_DATA_TYPE(double); if (nerrs > 0) goto err_out;
+            if (nerrs > 0) goto err_out;
+            if (cdf_formats[fmt] == NC_FORMAT_CDF5) {
+                nerrs += TEST_DATA_TYPE(uchar);     if (nerrs > 0) goto err_out;
+                nerrs += TEST_DATA_TYPE(ushort);    if (nerrs > 0) goto err_out;
+                nerrs += TEST_DATA_TYPE(uint);      if (nerrs > 0) goto err_out;
+                nerrs += TEST_DATA_TYPE(longlong);  if (nerrs > 0) goto err_out;
+                nerrs += TEST_DATA_TYPE(ulonglong); if (nerrs > 0) goto err_out;
+            }
         }
     }
 
@@ -645,6 +795,7 @@ int main(int argc, char** argv)
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
+err_out:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
