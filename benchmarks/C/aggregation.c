@@ -122,6 +122,7 @@ typedef struct {
     int star_block;
     int blocking_io;
     int double_xtype;
+    int indep_io;
     MPI_Offset len;
     MPI_Offset w_size;
     MPI_Offset r_size;
@@ -287,6 +288,11 @@ int benchmark_write(char       *filename,
     sts  = (int*) malloc(sizeof(int) * num_reqs);
 
     err = ncmpi_enddef(ncid); ERR(err)
+    if (cfg->indep_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        ERR(err)
+    }
+
     err = ncmpi_inq_header_size(ncid, &cfg->header_size); ERR(err)
     err = ncmpi_inq_header_extent(ncid, &cfg->header_extent); ERR(err)
     end_t = MPI_Wtime();
@@ -306,12 +312,17 @@ int benchmark_write(char       *filename,
                 start[1] = cfg->len * (rank / psizes[1]);
                 count[1] = cfg->len;
                 count[2] = cfg->len;
-                if (cfg->blocking_io)
-                    err = ncmpi_put_vara_double_all(ncid, varid[v], start,
+                if (cfg->blocking_io) {
+                    if (cfg->indep_io)
+                        err = ncmpi_put_vara_double(ncid, varid[v], start,
                                                     count, buf[v]);
+                    else
+                        err = ncmpi_put_vara_double_all(ncid, varid[v], start,
+                                                        count, buf[v]);
+                }
                 else
                     err = ncmpi_iput_vara_double(ncid, varid[v], start, count,
-                                                 buf[v], &reqs[k++]);
+                                                    buf[v], &reqs[k++]);
                 ERR(err)
                 if (debug) DBG_PRINT("block-block", n, i);
                 v++;
@@ -323,9 +334,14 @@ int benchmark_write(char       *filename,
                 count[2] = cfg->len;
                 stride[1] = 1;
                 stride[2] = nprocs;
-                if (cfg->blocking_io)
-                    err = ncmpi_put_vars_double_all(ncid, varid[v], start,
+                if (cfg->blocking_io) {
+                    if (cfg->indep_io)
+                        err = ncmpi_put_vars_double(ncid, varid[v], start,
                                                     count, stride, buf[v]);
+                    else
+                        err = ncmpi_put_vars_double_all(ncid, varid[v], start,
+                                                        count, stride, buf[v]);
+                }
                 else
                     err = ncmpi_iput_vars_double(ncid, varid[v], start, count,
                                                  stride, buf[v], &reqs[k++]);
@@ -338,9 +354,14 @@ int benchmark_write(char       *filename,
                 start[2] = 0;
                 count[1] = cfg->len;
                 count[2] = bs_gsizes[2];
-                if (cfg->blocking_io)
-                    err = ncmpi_put_vara_double_all(ncid, varid[v], start,
+                if (cfg->blocking_io) {
+                    if (cfg->indep_io)
+                        err = ncmpi_put_vara_double(ncid, varid[v], start,
                                                     count, buf[v]);
+                    else
+                        err = ncmpi_put_vara_double_all(ncid, varid[v], start,
+                                                        count, buf[v]);
+                }
                 else
                     err = ncmpi_iput_vara_double(ncid, varid[v], start, count,
                                                  buf[v], &reqs[k++]);
@@ -353,9 +374,14 @@ int benchmark_write(char       *filename,
                 start[2] = cfg->len * rank;
                 count[1] = sb_gsizes[1];
                 count[2] = cfg->len;
-                if (cfg->blocking_io)
-                    err = ncmpi_put_vara_double_all(ncid, varid[v], start,
+                if (cfg->blocking_io) {
+                    if (cfg->indep_io)
+                        err = ncmpi_put_vara_double(ncid, varid[v], start,
                                                     count, buf[v]);
+                    else
+                        err = ncmpi_put_vara_double_all(ncid, varid[v], start,
+                                                        count, buf[v]);
+                }
                 else
                     err = ncmpi_iput_vara_double(ncid, varid[v], start, count,
                                                  buf[v], &reqs[k++]);
@@ -372,13 +398,13 @@ int benchmark_write(char       *filename,
 
         if (!cfg->blocking_io) {
             start_t = end_t;
-#ifdef USE_INDEP_MODE
-            err = ncmpi_begin_indep_data(ncid);          ERR(err)
-            err = ncmpi_wait(ncid, num_reqs, reqs, sts); ERR(err)
-            err = ncmpi_end_indep_data(ncid);            ERR(err)
-#else
-            err = ncmpi_wait_all(ncid, num_reqs, reqs, sts); ERR(err)
-#endif
+
+            if (cfg->indep_io)
+                err = ncmpi_wait(ncid, num_reqs, reqs, sts);
+            else
+                err = ncmpi_wait_all(ncid, num_reqs, reqs, sts);
+            ERR(err)
+
             /* check status of all requests */
             for (i=0; i<num_reqs; i++) ERR(sts[i])
 
@@ -452,6 +478,11 @@ int benchmark_read(char       *filename,
     start_t = MPI_Wtime();
     timing[1] = start_t - timing[0];
 
+    if (cfg->indep_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        ERR(err)
+    }
+
     /* Note that PnetCDF read the file in chunks of size 256KB, thus the read
      * amount may be more than the file header size
      */
@@ -518,8 +549,12 @@ int benchmark_read(char       *filename,
                 start[1] = cfg->len * (rank / psizes[1]);
                 count[1] = cfg->len;
                 count[2] = cfg->len;
-                if (cfg->blocking_io)
-                    err = ncmpi_get_vara_double_all(ncid, v, start, count, buf[v]);
+                if (cfg->blocking_io) {
+                    if (cfg->indep_io)
+                        err = ncmpi_get_vara_double(ncid, v, start, count, buf[v]);
+                    else
+                        err = ncmpi_get_vara_double_all(ncid, v, start, count, buf[v]);
+                }
                 else
                     err = ncmpi_iget_vara_double(ncid, v, start, count, buf[v],
                                                  &reqs[k++]);
@@ -533,9 +568,14 @@ int benchmark_read(char       *filename,
                 count[2] = cfg->len;
                 stride[1] = 1;
                 stride[2] = nprocs;
-                if (cfg->blocking_io)
-                    err = ncmpi_get_vars_double_all(ncid, v, start, count,
+                if (cfg->blocking_io) {
+                    if (cfg->indep_io)
+                        err = ncmpi_get_vars_double(ncid, v, start, count,
                                                     stride, buf[v]);
+                    else
+                        err = ncmpi_get_vars_double_all(ncid, v, start, count,
+                                                        stride, buf[v]);
+                }
                 else
                     err = ncmpi_iget_vars_double(ncid, v, start, count, stride,
                                                  buf[v], &reqs[k++]);
@@ -547,8 +587,12 @@ int benchmark_read(char       *filename,
                 start[2] = 0;
                 count[1] = cfg->len;
                 count[2] = bs_gsizes[2];
-                if (cfg->blocking_io)
-                    err = ncmpi_get_vara_double_all(ncid, v, start, count, buf[v]);
+                if (cfg->blocking_io) {
+                    if (cfg->indep_io)
+                        err = ncmpi_get_vara_double(ncid, v, start, count, buf[v]);
+                    else
+                        err = ncmpi_get_vara_double_all(ncid, v, start, count, buf[v]);
+                }
                 else
                     err = ncmpi_iget_vara_double(ncid, v, start, count, buf[v],
                                                  &reqs[k++]);
@@ -560,8 +604,12 @@ int benchmark_read(char       *filename,
                 start[2] = cfg->len * rank;
                 count[1] = sb_gsizes[1];
                 count[2] = cfg->len;
-                if (cfg->blocking_io)
-                    err = ncmpi_get_vara_double_all(ncid, v, start, count, buf[v]);
+                if (cfg->blocking_io) {
+                    if (cfg->indep_io)
+                        err = ncmpi_get_vara_double(ncid, v, start, count, buf[v]);
+                    else
+                        err = ncmpi_get_vara_double_all(ncid, v, start, count, buf[v]);
+                }
                 else
                     err = ncmpi_iget_vara_double(ncid, v, start, count, buf[v],
                                                  &reqs[k++]);
@@ -578,13 +626,12 @@ int benchmark_read(char       *filename,
         if (!cfg->blocking_io) {
             start_t = end_t;
 
-#ifdef USE_INDEP_MODE
-            err = ncmpi_begin_indep_data(ncid);          ERR(err)
-            err = ncmpi_wait(ncid, num_reqs, reqs, sts); ERR(err)
-            err = ncmpi_end_indep_data(ncid);            ERR(err)
-#else
-            err = ncmpi_wait_all(ncid, num_reqs, reqs, sts); ERR(err)
-#endif
+            if (cfg->indep_io)
+                err = ncmpi_wait(ncid, num_reqs, reqs, sts);
+            else
+                err = ncmpi_wait_all(ncid, num_reqs, reqs, sts);
+            ERR(err)
+
             /* check status of all requests */
             for (i=0; i<num_reqs; i++) ERR(sts[i])
 
@@ -629,6 +676,7 @@ usage(char *argv0)
     "       [-c] *-cyclic    partitioning pattern\n"
     "       [-i] block-*     partitioning pattern\n"
     "       [-j] *-block     partitioning pattern\n"
+    "       [-a] use independent I/O\n"
     "       [-m] use double type in both memory buffer and file\n"
     "       [-l len]: local variable of size len x len (default 10)\n"
     "       [-n num]: number of variables each pattern (default 1)\n"
@@ -646,7 +694,7 @@ int main(int argc, char** argv) {
     char filename[256];
     int i, rank, nprocs, verbose=1, nerrs=0, enable_read, enable_write;
     int nvars, block_block, star_cyclic, block_star, star_block, num_records;
-    int blocking_io, double_xtype;
+    int blocking_io, double_xtype, indep_io;
     double timing[11], max_t[11];
     MPI_Offset len=0, sum_w_size, sum_r_size;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -666,10 +714,11 @@ int main(int argc, char** argv) {
     num_records  = 1;
     blocking_io  = 0;
     double_xtype = 0;
+    indep_io     = 0;
 
     /* get command-line arguments */
     debug = 0;
-    while ((i = getopt(argc, argv, "hqdbcijmrwxl:n:t:")) != EOF)
+    while ((i = getopt(argc, argv, "hqdabcijkmrwxl:n:t:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
                       break;
@@ -682,6 +731,8 @@ int main(int argc, char** argv) {
             case 'i': block_star = 1;
                       break;
             case 'j': star_block = 1;
+                      break;
+            case 'a': indep_io = 1;
                       break;
             case 'm': double_xtype = 1;
                       break;
@@ -720,6 +771,7 @@ int main(int argc, char** argv) {
     cfg.num_records = num_records;
     cfg.blocking_io = blocking_io;
     cfg.double_xtype = double_xtype;
+    cfg.indep_io     = indep_io;
 
     if (enable_read == 0 && enable_write == 0)
         enable_read = enable_write = 1;
