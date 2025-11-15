@@ -93,7 +93,8 @@ pnetcdf_io(char *filename,
            int kind,
            int len,
            int nvars,
-           int ntimes)
+           int ntimes,
+           int indep_io)
 {
     char name[128], str_att[128], *file_kind;
     int i, j, rank, nprocs, err, nerrs=0;
@@ -175,6 +176,11 @@ pnetcdf_io(char *filename,
     /* exit define mode */
     err = ncmpi_enddef(ncid); ERR
 
+    if (indep_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        ERR
+    }
+
     /* set up the access pattern */
     start[0] = 0;
     start[1] = len * (rank / psizes[1]);
@@ -190,14 +196,22 @@ pnetcdf_io(char *filename,
             if (nonblocking)
                 err = ncmpi_iput_vara_float(ncid, varid[i], start,
                                             count, buf[i], NULL);
-            else
-                err = ncmpi_put_vara_float_all(ncid, varid[i], start,
+            else {
+                if (indep_io)
+                    err = ncmpi_put_vara_float(ncid, varid[i], start,
                                                count, buf[i]);
+                else
+                    err = ncmpi_put_vara_float_all(ncid, varid[i], start,
+                                                count, buf[i]);
+            }
             ERR
         }
     }
     if (nonblocking) {
-        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+        if (indep_io)
+            err = ncmpi_wait(ncid, NC_REQ_ALL, NULL, NULL);
+        else
+            err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
         ERR
     }
     timing[1] = MPI_Wtime() - timing[1];
@@ -246,9 +260,10 @@ static void
 usage(char *argv0)
 {
     char *help =
-    "Usage: %s [-h | -q | -i | -k num |-l num | -n num | -t num] [file_name]\n"
+    "Usage: %s [-h | -q | -a | -i | -k num |-l num | -n num | -t num] [file_name]\n"
     "       [-h] Print help\n"
     "       [-q] Quiet mode (reports when fail)\n"
+    "       [-a] Use PnetCDF independent APIs\n"
     "       [-i] Use PnetCDF nonblocking APIs\n"
     "       [-k format] file format: 1 for CDF-1,\n"
     "                                2 for CDF-2,\n"
@@ -266,7 +281,7 @@ int main(int argc, char** argv)
     extern char *optarg;
     char filename[512];
     int i, rank, kind, nerrs=0;
-    int nonblocking, nvars, len, ntimes;
+    int nonblocking, nvars, len, ntimes, indep_io;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -277,11 +292,14 @@ int main(int argc, char** argv)
     nvars = 4;
     len = 32;
     ntimes = 1;
+    indep_io = 0;
 
     /* get command-line arguments */
-    while ((i = getopt(argc, argv, "hqik:l:n:t:")) != EOF)
+    while ((i = getopt(argc, argv, "hqaik:l:n:t:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
+                      break;
+            case 'a': indep_io = 1;
                       break;
             case 'i': nonblocking = 1;
                       break;
@@ -303,7 +321,7 @@ int main(int argc, char** argv)
 
     MPI_Bcast(filename, 512, MPI_CHAR, 0, MPI_COMM_WORLD);
 
-    nerrs += pnetcdf_io(filename, nonblocking, kind, len, nvars, ntimes);
+    nerrs += pnetcdf_io(filename, nonblocking, kind, len, nvars, ntimes, indep_io);
 
     MPI_Finalize();
     return (nerrs > 0);
