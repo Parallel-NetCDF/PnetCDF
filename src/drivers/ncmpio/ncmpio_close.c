@@ -249,6 +249,10 @@ ncmpio_close(void *ncdp)
     if (ncp->ina_comm != MPI_COMM_NULL)
         MPI_Comm_free(&ncp->ina_comm);
 
+    /* collectively return the same error code */
+    if (ncp->nprocs > 1)
+        MPI_Allreduce(MPI_IN_PLACE, &status, 1, MPI_INT, MPI_MIN, ncp->comm);
+
     /* free up space occupied by the header metadata */
     ncmpio_free_NC(ncp);
 
