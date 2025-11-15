@@ -22,18 +22,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h> /* getopt() */
 #include <libgen.h> /* basename() */
-#include <pnetcdf.h>
+
 #include <mpi.h>
+#include <pnetcdf.h>
 #include <testutils.h>
 
 #include "pres_temp_4D.h"
 
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [OPTIONS]...[filename]\n"
+    "       [-h] Print help\n"
+    "       [-a] use independent I/O\n"
+    "       [-f num]: output file format: 1,2,5 for classic, 4 for netCDF4\n"
+    "       [filename]: output netCDF file name (default: %s)\n";
+    fprintf(stderr, help, argv0, FILE_NAME);
+}
+
 int main(int argc, char **argv)
 {
+    extern int optind;
+    extern char *optarg;
+    char filename[256];
+
     /* IDs for the netCDF file, dimensions, and variables. */
     int nprocs, rank, nerrs = 0;
-    int ncid;
+    int ncid, indep_io, fmt;
     int lon_dimid, lat_dimid, lvl_dimid, rec_dimid;
     int lat_varid, lon_varid, pres_varid, temp_varid;
     int dimids[NDIMS];
@@ -57,23 +75,34 @@ int main(int argc, char **argv)
     /* Error handling. */
     int err;
 
-    char *filename = FILE_NAME;
-
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 3) {
-        if (!rank)
-            printf("Usage: %s [filename]\n", argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
+    indep_io = 0;
+    fmt = 1;
+    while ((i = getopt(argc, argv, "haf:")) != EOF)
+        switch(i) {
+            case 'a': indep_io = 1;
+                      break;
+            case 'f': fmt = atoi(optarg);
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 1;
+        }
+    if (argv[optind] == NULL) strcpy(filename, FILE_NAME);
+    else                      snprintf(filename, 256, "%s", argv[optind]);
 
-    if (argc > 1) filename = argv[1];
-
-    if (argc > 2 && atoi(argv[2]) == 4)
+    if (fmt == 1)
+        format = NC_FORMAT_CLASSIC;
+    else if (fmt == 2)
+        format = NC_FORMAT_64BIT_OFFSET;
+    else if (fmt == 4)
         format = NC_FORMAT_NETCDF4;
+    else if (fmt == 5)
+        format = NC_FORMAT_64BIT_DATA;
 
     if (rank == 0) {
         char *cmd_str = (char *)malloc(strlen(argv[0]) + 256);
@@ -161,6 +190,11 @@ int main(int argc, char **argv)
     err = ncmpi_enddef(ncid);
     CHECK_ERR
 
+    if (indep_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     err = ncmpi_begin_indep_data(ncid);
     /* Write the coordinate variable data. This will put the latitudes
       and longitudes of our data grid into the netCDF file. */
@@ -224,9 +258,15 @@ int main(int argc, char **argv)
 
     for (rec = 0; rec < NREC; rec++) {
         start[0] = rec;
-        err = ncmpi_put_vara_float_all(ncid, pres_varid, start, count, &pres_out[0][0]);
+        if (indep_io)
+            err = ncmpi_put_vara_float(ncid, pres_varid, start, count, &pres_out[0][0]);
+        else
+            err = ncmpi_put_vara_float_all(ncid, pres_varid, start, count, &pres_out[0][0]);
         CHECK_ERR
-        err = ncmpi_put_vara_float_all(ncid, temp_varid, start, count, &temp_out[0][0]);
+        if (indep_io)
+            err = ncmpi_put_vara_float(ncid, temp_varid, start, count, &temp_out[0][0]);
+        else
+            err = ncmpi_put_vara_float_all(ncid, temp_varid, start, count, &temp_out[0][0]);
         CHECK_ERR
     }
 

@@ -8,7 +8,7 @@
 #define NREC 2
 #define REC_NAME "time"
 #define LVL_NAME "level"
-#define NLVL 10
+#define NLVL 512
 
 /* Names of things. */
 #define PRES_NAME "pressure"
