@@ -31,7 +31,7 @@
 #include <testutils.h>
 
 #define NVARS 8
-#define NX 5
+#define NX 70
 
 static int tst_mode(char *filename,
                     int   mode)
