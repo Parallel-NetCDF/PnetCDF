@@ -290,6 +290,11 @@ for i in ${check_PROGRAMS} ; do
     fi
 
     done # safe_modes
-    rm -f ${OUTDIR}/$i*nc*
+
+    if test "x$i" = xpres_temp_4D_wr ; then
+       rm -f ${OUTDIR}/pres_temp_4D*.nc*
+    else
+       rm -f ${OUTDIR}/$i*nc*
+    fi
 done # check_PROGRAMS
 
