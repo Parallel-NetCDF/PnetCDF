@@ -22,16 +22,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h> /* getopt() */
 #include <libgen.h> /* basename() */
-#include <pnetcdf.h>
+
 #include <mpi.h>
+#include <pnetcdf.h>
 #include <testutils.h>
 
 #include "pres_temp_4D.h"
 
+static void
+usage(char *argv0)
+{
+    char *help =
+    "Usage: %s [OPTIONS]...[filename]\n"
+    "       [-h] Print help\n"
+    "       [-a] use independent I/O\n"
+    "       [filename]: input netCDF file name (default: %s)\n";
+    fprintf(stderr, help, argv0, FILE_NAME);
+}
+
 int main(int argc, char **argv)
 {
-    int rank, nprocs, ncid, pres_varid, temp_varid;
+    extern int optind;
+    extern char *optarg;
+    char filename[256];
+    int rank, nprocs, ncid, pres_varid, temp_varid, indep_io;
     int lat_varid, lon_varid;
 
     /* The start and count arrays will tell the netCDF library where to
@@ -52,20 +68,22 @@ int main(int argc, char **argv)
     /* Error handling. */
     int err, nerrs = 0;
 
-    char *filename = FILE_NAME;
-
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 3) {
-        if (!rank)
-            printf("Usage: %s [filename]\n", argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-
-    if (argc > 1) filename = argv[1];
+    indep_io = 0;
+    while ((i = getopt(argc, argv, "ha")) != EOF)
+        switch(i) {
+            case 'a': indep_io = 1;
+                      break;
+            case 'h':
+            default:  if (rank==0) usage(argv[0]);
+                      MPI_Finalize();
+                      return 1;
+        }
+    if (argv[optind] == NULL) strcpy(filename, FILE_NAME);
+    else                      snprintf(filename, 256, "%s", argv[optind]);
 
     /* Open the file. */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
@@ -73,6 +91,11 @@ int main(int argc, char **argv)
         if (rank == 0)
             fprintf(stderr,"Error: failed to open file %s (%s)\n",filename,ncmpi_strerror(err));
         goto err_out;
+    }
+
+    if (indep_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
     }
 
     if (rank == 0) {
@@ -96,9 +119,15 @@ int main(int argc, char **argv)
     /* Read the coordinate variable data. */
     memset(lats, 0, sizeof(float) * NLAT);
     memset(lons, 0, sizeof(float) * NLON);
-    err = ncmpi_get_var_float_all(ncid, lat_varid, &lats[0]);
+    if (indep_io)
+        err = ncmpi_get_var_float(ncid, lat_varid, &lats[0]);
+    else
+        err = ncmpi_get_var_float_all(ncid, lat_varid, &lats[0]);
     CHECK_ERR
-    err = ncmpi_get_var_float_all(ncid, lon_varid, &lons[0]);
+    if (indep_io)
+        err = ncmpi_get_var_float(ncid, lat_varid, &lats[0]);
+    else
+        err = ncmpi_get_var_float_all(ncid, lon_varid, &lons[0]);
     CHECK_ERR
 
     /* Check the coordinate variable data. */
@@ -164,9 +193,15 @@ int main(int argc, char **argv)
     /* Read and check one record at a time. */
     for (rec = 0; rec < NREC; rec++) {
         start[0] = rec;
-        err = ncmpi_get_vara_float_all(ncid, pres_varid, start, count, &pres_in[0][0]);
+        if (indep_io)
+            err = ncmpi_get_vara_float(ncid, pres_varid, start, count, &pres_in[0][0]);
+        else
+            err = ncmpi_get_vara_float_all(ncid, pres_varid, start, count, &pres_in[0][0]);
         CHECK_ERR
-        err = ncmpi_get_vara_float_all(ncid, temp_varid, start, count, &temp_in[0][0]);
+        if (indep_io)
+            err = ncmpi_get_vara_float(ncid, temp_varid, start, count, &temp_in[0][0]);
+        else
+            err = ncmpi_get_vara_float_all(ncid, temp_varid, start, count, &temp_in[0][0]);
         CHECK_ERR
 
         /* Check the data. */
