@@ -117,13 +117,13 @@ jobs:
             mkdir -p pnetcdf_output
             ./configure --prefix=${GITHUB_WORKSPACE}/PnetCDF \
                         --enable-option-checking=fatal \
-                        --enable-profiling \
                         pnc_ac_debug=yes \
                         --enable-burst_buffering \
                         --enable-subfiling \
                         --enable-thread-safe \
                         --with-pthread \
                         --with-mpi=${GITHUB_WORKSPACE}/OPENMPI \
+                        MIMIC_LUSTRE=yes \
                         TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output
             make -j 8 tests
         - name: Print config.log
