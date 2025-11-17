@@ -122,13 +122,13 @@ jobs:
             autoreconf -i
             ./configure --prefix=${GITHUB_WORKSPACE}/PnetCDF \
                         --enable-option-checking=fatal \
-                        --enable-profiling \
                         pnc_ac_debug=yes \
                         --enable-burst_buffering \
                         --enable-subfiling \
                         --enable-thread-safe \
                         --with-pthread \
-                        --with-mpi=${GITHUB_WORKSPACE}/MPICH
+                        --with-mpi=${GITHUB_WORKSPACE}/MPICH \
+                        MIMIC_LUSTRE=yes
             make -j 8 tests
         - name: Print config.log
           if: ${{ always() }}

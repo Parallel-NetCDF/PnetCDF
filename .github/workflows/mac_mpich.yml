@@ -108,7 +108,6 @@ jobs:
             autoreconf -i
             mkdir -p pnetcdf_output
             ./configure --enable-option-checking=fatal \
-                        --enable-profiling \
                         pnc_ac_debug=yes \
                         --enable-burst_buffering \
                         --enable-subfiling \
@@ -116,6 +115,7 @@ jobs:
                         --with-pthread \
                         --disable-fortran \
                         --with-mpi=${GITHUB_WORKSPACE}/MPICH \
+                        MIMIC_LUSTRE=yes \
                         TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output
             make -j 8 tests
         - name: Print config.log
