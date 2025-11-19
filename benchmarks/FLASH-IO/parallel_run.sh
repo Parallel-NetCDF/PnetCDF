@@ -36,6 +36,8 @@ fixed_length=23
 
 TEST_MPIIO_MODES="0 1"
 
+DATA_MODE="indep coll"
+
 for i in ${check_PROGRAMS} ; do
 
     for j in ${safe_modes} ; do
@@ -47,6 +49,8 @@ for i in ${check_PROGRAMS} ; do
            safe_hint="NOSAFE"
         fi
         OUT_PREFIX="${TESTOUTDIR}/$i"
+
+    for data_mode in ${DATA_MODE} ; do
 
     for mpiio_mode in ${TEST_MPIIO_MODES} ; do
         if test "$mpiio_mode" = 1 ; then
@@ -88,6 +92,9 @@ for i in ${check_PROGRAMS} ; do
         # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
 
         CMD_OPTS="-q -f ${OUT_FILE}."
+        if test "$data_mode" = indep ; then
+           CMD_OPTS="-i $CMD_OPTS"
+        fi
 
         # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPTS"
         ${MPIRUN} ./$i $CMD_OPTS
@@ -110,6 +117,9 @@ for i in ${check_PROGRAMS} ; do
            saved_PNETCDF_HINTS=${PNETCDF_HINTS}
            export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
            CMD_OPTS="-q -f ${OUT_FILE}.bb."
+           if test "$data_mode" = indep ; then
+              CMD_OPTS="-i $CMD_OPTS"
+           fi
            # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPTS"
            ${MPIRUN} ./$i $CMD_OPTS
 
@@ -152,6 +162,7 @@ for i in ${check_PROGRAMS} ; do
        fi
     done # ext
 
+    done # data_mode
     done # safe_modes
     rm -f ${OUTDIR}/$i*nc*
 done # check_PROGRAMS
