@@ -33,6 +33,9 @@
 #define NVARS 8
 #define NX 70
 
+#define TEST_FIXED_VAR
+#define TEST_RECORD_VAR
+
 static int tst_mode(char *filename,
                     int   mode)
 {
@@ -56,8 +59,6 @@ static int tst_mode(char *filename,
     err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", NX*nprocs, &dimid[1]); CHECK_ERR
 
-#define TEST_FIXED_VAR
-#define TEST_RECORD_VAR
     /* Odd numbers are fixed variables, even numbers are record variables */
     for (i=0; i<NVARS; i++) {
 #ifdef TEST_FIXED_VAR
@@ -376,10 +377,10 @@ int main(int argc, char** argv) {
         free(cmd_str);
     }
 
-    nerrs += tst_mode(filename, MODE_COLL);
+    nerrs += tst_mode(filename, MODE_INDEP);
     if (nerrs > 0) goto err_out;
 
-    nerrs += tst_mode(filename, MODE_INDEP);
+    nerrs += tst_mode(filename, MODE_COLL);
     if (nerrs > 0) goto err_out;
 
     /* check if PnetCDF freed all internal malloc */
