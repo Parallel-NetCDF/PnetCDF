@@ -192,11 +192,13 @@ int construct_vars(int         hid, /* CDL header ID */
 
         if (ndims == 1) {
             vars->nelems = (rank == 0) ? 1 : 0;
+            if (vars->nelems == 0) vars->count[0] = 0;
         }
         else if (ndims == 2) {
             err = cdl_hdr_inq_dim(hid, dimids[1], NULL, &dim1);
             CHECK_ERR("cdl_hdr_inq_dim")
             vars->nelems = (rank == 0) ? dim1 : 0;
+            if (vars->nelems == 0) vars->count[0] = 0;
             vars->count[1] = dim1; /* dimension dim1 is not partitioned */
             vars->start[1] = 0;    /* dimension dim1 is not partitioned */
         }
@@ -343,10 +345,13 @@ int inquire_vars(int         ncid,
         vars->count[0] = 1;    /* time dimension */
 
         /* In WRF, the first dimension is always NC_UNLIMITED */
-        if (ndims == 1)
+        if (ndims == 1) {
             vars->nelems = (rank == 0) ? 1 : 0;
+            if (vars->nelems == 0) vars->count[0] = 0;
+        }
         else if (ndims == 2) {
             vars->nelems = (rank == 0) ? dim1 : 0;
+            if (vars->nelems == 0) vars->count[0] = 0;
             vars->count[1] = dim1; /* dimension dim1 is not partitioned */
             vars->start[1] = 0;    /* dimension dim1 is not partitioned */
         }
@@ -500,6 +505,7 @@ int wrf_w_benchmark(char       *out_file,
                     MPI_Offset  longitude,
                     MPI_Offset  latitude,
                     int         ntimes,
+                    int         blocking,
                     MPI_Info    info)
 {
     int i, j, err=NC_NOERR, nprocs, rank;
@@ -534,7 +540,7 @@ int wrf_w_benchmark(char       *out_file,
     if (debug) mem_alloc = 0;
 
     for (i=0; i<nvars; i++) {
-        if (vars[i].nelems == 0) continue;
+        if (!blocking && vars[i].nelems == 0) continue;
 
         if (vars[i].xtype == NC_FLOAT) {
             float *flt_ptr = (float*) malloc(sizeof(float) * vars[i].nelems);
@@ -591,8 +597,10 @@ int wrf_w_benchmark(char       *out_file,
     /* tell PnetCDF how much space for storing pending write requests before
      * flushing it.
      */
-    err = ncmpi_buffer_attach(ncid, buf_size);
-    CHECK_ERR("ncmpi_buffer_attach")
+    if (!blocking) {
+        err = ncmpi_buffer_attach(ncid, buf_size);
+        CHECK_ERR("ncmpi_buffer_attach")
+    }
 
     timing[1] = MPI_Wtime() - timing[0];
     timing[2] = timing[3] = 0;
@@ -608,20 +616,41 @@ int wrf_w_benchmark(char       *out_file,
         }
 
         for (i=0; i<nvars; i++) {
-            if (vars[i].nelems == 0) continue;
+            if (!blocking && vars[i].nelems == 0) continue;
 
             /* set record ID */
             vars[i].start[0] = j;
 
-            if (vars[i].xtype == NC_FLOAT)
-                err = ncmpi_bput_vara_float(ncid, vars[i].varid, vars[i].start,
-                                            vars[i].count, vars[i].buf, NULL);
-            else if (vars[i].xtype == NC_INT)
-                err = ncmpi_bput_vara_int(ncid, vars[i].varid, vars[i].start,
-                                            vars[i].count, vars[i].buf, NULL);
-            else if (vars[i].xtype == NC_CHAR)
-                err = ncmpi_bput_vara_text(ncid, vars[i].varid, vars[i].start,
-                                            vars[i].count, vars[i].buf, NULL);
+            if (vars[i].xtype == NC_FLOAT) {
+                if (blocking)
+                    err = ncmpi_put_vara_float_all(ncid, vars[i].varid,
+                                                vars[i].start, vars[i].count,
+                                                vars[i].buf);
+                else
+                    err = ncmpi_bput_vara_float(ncid, vars[i].varid,
+                                                vars[i].start, vars[i].count,
+                                                vars[i].buf, NULL);
+            }
+            else if (vars[i].xtype == NC_INT) {
+                if (blocking)
+                    err = ncmpi_put_vara_int_all(ncid, vars[i].varid,
+                                              vars[i].start, vars[i].count,
+                                              vars[i].buf);
+                else
+                    err = ncmpi_bput_vara_int(ncid, vars[i].varid,
+                                              vars[i].start, vars[i].count,
+                                              vars[i].buf, NULL);
+            }
+            else if (vars[i].xtype == NC_CHAR) {
+                if (blocking)
+                    err = ncmpi_put_vara_text_all(ncid, vars[i].varid,
+                                               vars[i].start, vars[i].count,
+                                               vars[i].buf);
+                else
+                    err = ncmpi_bput_vara_text(ncid, vars[i].varid,
+                                               vars[i].start, vars[i].count,
+                                               vars[i].buf, NULL);
+            }
             CHECK_ERR(vars[i].name)
 
         }
@@ -634,16 +663,20 @@ int wrf_w_benchmark(char       *out_file,
             fflush(stdout);
         }
 
-        /* flush all nonblocking write requests */
-        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
-        CHECK_ERR("ncmpi_wait_all")
-        end_t = MPI_Wtime();
-        timing[3] += end_t - start_t;
+        if (!blocking) {
+            /* flush all nonblocking write requests */
+            err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+            CHECK_ERR("ncmpi_wait_all")
+            end_t = MPI_Wtime();
+            timing[3] += end_t - start_t;
+        }
     }
 
-    /* tell PnetCDF to release the nonblocking buffer */
-    err = ncmpi_buffer_detach(ncid);
-    CHECK_ERR("ncmpi_buffer_detach")
+    if (!blocking) {
+        /* tell PnetCDF to release the nonblocking buffer */
+        err = ncmpi_buffer_detach(ncid);
+        CHECK_ERR("ncmpi_buffer_detach")
+    }
 
     /* obtain the accumulated data amount written by this rank */
     err = ncmpi_inq_put_size(ncid, &w_size);
@@ -676,11 +709,19 @@ int wrf_w_benchmark(char       *out_file,
         printf("Total write amount:             %lld B\n", sum_w_size);
         printf("                                %.2f MiB\n", (float)sum_w_size/1048576);
         printf("                                %.2f GiB\n", (float)sum_w_size/1073741824);
+        if (blocking)
+            printf("Using PnetCDF blocking APIs\n");
+        else
+            printf("Using PnetCDF non-blocking APIs\n");
         double bw = (double)sum_w_size / 1048576;
         printf("Max open-to-close time:         %.4f sec\n", max_t[0]);
         printf("Max define metadata time:       %.4f sec\n", max_t[1]);
-        printf("Max bput posting  time:         %.4f sec\n", max_t[2]);
-        printf("Max wait_all      time:         %.4f sec\n", max_t[3]);
+        if (blocking)
+            printf("Max put time:                   %.4f sec\n", max_t[2]);
+        else {
+            printf("Max bput posting  time:         %.4f sec\n", max_t[2]);
+            printf("Max wait_all      time:         %.4f sec\n", max_t[3]);
+        }
         printf("Write bandwidth:                %.2f MiB/s\n", bw/max_t[0]);
         printf("                                %.2f GiB/s\n", bw/1024.0/max_t[0]);
         printf("-----------------------------------------------------------\n");
@@ -750,6 +791,7 @@ static
 int wrf_r_benchmark(char       *in_file,
                     int         psizes[2],
                     int         ntimes,
+                    int         blocking,
                     MPI_Info    info)
 {
     int i, j, err=NC_NOERR, nprocs, rank, ncid, nvars, dimid;
@@ -805,7 +847,7 @@ int wrf_r_benchmark(char       *in_file,
     if (debug) mem_alloc = 0;
 
     for (i=0; i<nvars; i++) {
-        if (vars[i].nelems == 0) continue;
+        if (!blocking && vars[i].nelems == 0) continue;
 
         if (vars[i].xtype == NC_FLOAT) {
             float *flt_ptr = (float*) malloc(sizeof(float) * vars[i].nelems);
@@ -852,21 +894,42 @@ int wrf_r_benchmark(char       *in_file,
         }
 
         for (i=0; i<nvars; i++) {
-            if (vars[i].nelems == 0) continue;
+            if (!blocking && vars[i].nelems == 0) continue;
 
             /* set record ID */
 /* TODO: check number of records in input file, must be >= ntimes */
             vars[i].start[0] = j;
 
-            if (vars[i].xtype == NC_FLOAT)
-                err = ncmpi_iget_vara_float(ncid, vars[i].varid, vars[i].start,
-                                            vars[i].count, vars[i].buf, NULL);
-            else if (vars[i].xtype == NC_INT)
-                err = ncmpi_iget_vara_int(ncid, vars[i].varid, vars[i].start,
-                                            vars[i].count, vars[i].buf, NULL);
-            else if (vars[i].xtype == NC_CHAR)
-                err = ncmpi_iget_vara_text(ncid, vars[i].varid, vars[i].start,
-                                            vars[i].count, vars[i].buf, NULL);
+            if (vars[i].xtype == NC_FLOAT) {
+                if (blocking)
+                    err = ncmpi_get_vara_float_all(ncid, vars[i].varid,
+                                                vars[i].start, vars[i].count,
+                                                vars[i].buf);
+                else
+                    err = ncmpi_iget_vara_float(ncid, vars[i].varid,
+                                                vars[i].start, vars[i].count,
+                                                vars[i].buf, NULL);
+            }
+            else if (vars[i].xtype == NC_INT) {
+                if (blocking)
+                    err = ncmpi_get_vara_int_all(ncid, vars[i].varid,
+                                              vars[i].start, vars[i].count,
+                                              vars[i].buf);
+                else
+                    err = ncmpi_iget_vara_int(ncid, vars[i].varid,
+                                              vars[i].start, vars[i].count,
+                                              vars[i].buf, NULL);
+            }
+            else if (vars[i].xtype == NC_CHAR) {
+                if (blocking)
+                    err = ncmpi_get_vara_text_all(ncid, vars[i].varid,
+                                               vars[i].start, vars[i].count,
+                                               vars[i].buf);
+                else
+                    err = ncmpi_iget_vara_text(ncid, vars[i].varid,
+                                               vars[i].start, vars[i].count,
+                                               vars[i].buf, NULL);
+            }
             CHECK_ERR(vars[i].name)
 
         }
@@ -879,11 +942,13 @@ int wrf_r_benchmark(char       *in_file,
             fflush(stdout);
         }
 
-        /* flush all nonblocking read requests */
-        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
-        CHECK_ERR("ncmpi_wait_all")
-        end_t = MPI_Wtime();
-        timing[3] += end_t - start_t;
+        if (!blocking) {
+            /* flush all nonblocking read requests */
+            err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+            CHECK_ERR("ncmpi_wait_all")
+            end_t = MPI_Wtime();
+            timing[3] += end_t - start_t;
+        }
     }
 
     /* obtain the accumulated data amount read by this rank */
@@ -917,11 +982,19 @@ int wrf_r_benchmark(char       *in_file,
         printf("Total read  amount:             %lld B\n", sum_r_size);
         printf("                                %.2f MiB\n", (float)sum_r_size/1048576);
         printf("                                %.2f GiB\n", (float)sum_r_size/1073741824);
+        if (blocking)
+            printf("Using PnetCDF blocking APIs\n");
+        else
+            printf("Using PnetCDF non-blocking APIs\n");
         double bw = (double)sum_r_size / 1048576;
         printf("Max open-to-close time:         %.4f sec\n", max_t[0]);
         printf("Max inquire metadata time:      %.4f sec\n", max_t[1]);
-        printf("Max iget posting  time:         %.4f sec\n", max_t[2]);
-        printf("Max wait_all      time:         %.4f sec\n", max_t[3]);
+        if (blocking)
+            printf("Max get time:                   %.4f sec\n", max_t[2]);
+        else {
+            printf("Max iget posting  time:         %.4f sec\n", max_t[2]);
+            printf("Max wait_all      time:         %.4f sec\n", max_t[3]);
+        }
         printf("Read  bandwidth:                %.2f MiB/s\n", bw/max_t[0]);
         printf("                                %.2f GiB/s\n", bw/1024.0/max_t[0]);
         printf("-----------------------------------------------------------\n");
@@ -1039,6 +1112,7 @@ usage(char *argv0)
     "       [-h] print this help\n"
     "       [-q] quiet mode\n"
     "       [-d] debug mode\n"
+    "       [-b] using PnetCDF blocking APIs (default: nonblocking)\n"
     "       [-r file1,file2,...] benchmark read  performance\n"
     "       [-w file1,file2,...] benchmark write performance\n"
     "       [-y num] longitude of global 2D grid\n"
@@ -1054,7 +1128,7 @@ int main(int argc, char** argv)
     extern char *optarg;
     char *out_files, *in_files, *cdl_file, **fname;
     int i, err, nerrs=0, nprocs, rank, ntimes, psizes[2], hid;
-    int nfiles, do_read, do_write;
+    int nfiles, do_read, do_write, blocking;
     MPI_Offset longitude, latitude;
     MPI_Info info=MPI_INFO_NULL;
 
@@ -1065,6 +1139,7 @@ int main(int argc, char** argv)
 
     verbose   = 1;
     debug     = 0;
+    blocking  = 0;
     do_read   = 0;
     do_write  = 0;
     ntimes    = 1;
@@ -1074,11 +1149,13 @@ int main(int argc, char** argv)
     longitude = -1; /* default to use west_east from cdl file */
     latitude  = -1; /* default to use south_north from cdl file */
 
-    while ((i = getopt(argc, argv, "hqdr:w:y:x:n:c:i:")) != EOF)
+    while ((i = getopt(argc, argv, "hqdbr:w:y:x:n:c:i:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
                       break;
             case 'd': debug = 1;
+                      break;
+            case 'b': blocking = 1;
                       break;
             case 'r': do_read = 1;
                       in_files = strdup(optarg);
@@ -1143,7 +1220,7 @@ int main(int argc, char** argv)
             MPI_Barrier(MPI_COMM_WORLD);
 
             err = wrf_w_benchmark(fname[i], hid, psizes, longitude, latitude,
-                                  ntimes, info);
+                                  ntimes, blocking, info);
 
             if (err != NC_NOERR) goto err_out;
             free(fname[i]);
@@ -1163,7 +1240,7 @@ int main(int argc, char** argv)
         for (i=0; i<nfiles; i++) {
             MPI_Barrier(MPI_COMM_WORLD);
 
-            err = wrf_r_benchmark(fname[i], psizes, ntimes, info);
+            err = wrf_r_benchmark(fname[i], psizes, ntimes, blocking, info);
 
             if (err != NC_NOERR) goto err_out;
             free(fname[i]);
