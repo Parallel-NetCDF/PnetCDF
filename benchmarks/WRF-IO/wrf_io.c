@@ -89,6 +89,25 @@ typedef struct {
     void *buf;
 } WRF_VAR;
 
+static char*
+str_NC_type(nc_type xtype)
+{
+    switch(xtype) {
+        case NC_BYTE:   return "NC_BYTE";
+        case NC_CHAR:   return "NC_CHAR";
+        case NC_UBYTE:  return "NC_UBYTE";
+        case NC_SHORT:  return "NC_SHORT";
+        case NC_USHORT: return "NC_USHORT";
+        case NC_INT:    return "NC_INT";
+        case NC_UINT:   return "NC_UINT";
+        case NC_FLOAT:  return "NC_FLOAT";
+        case NC_DOUBLE: return "NC_DOUBLE";
+        case NC_INT64:  return "NC_INT64";
+        case NC_UINT64: return "NC_UINT64";
+        default: return "";
+    }
+}
+
 static
 int construct_vars(int         hid, /* CDL header ID */
                    WRF_VAR    *vars,
@@ -162,7 +181,7 @@ int construct_vars(int         hid, /* CDL header ID */
         my_start_x += *latitude % psizes[1];
     }
 
-    if (debug) {
+    if (verbose && debug) {
         printf("%2d: rank (%2d, %2d) start %4lld %4lld count %4lld %4lld\n",
                rank, my_rank_y, my_rank_x, my_start_y, my_start_x, my_count_y, my_count_x);
         fflush(stdout);
@@ -173,7 +192,8 @@ int construct_vars(int         hid, /* CDL header ID */
     /* retrieve number of variables defined in the CDL file */
     err = cdl_hdr_inq_nvars(hid, &nvars);
     CHECK_ERR("cdl_hdr_inq_nvars")
-    if (debug) printf("var: nvars %d\n", nvars);
+    if (verbose && debug && rank == 0)
+        printf("var: nvars %d\n", nvars);
 
     for (i=0; i<nvars; i++, vars++) {
         char *dname1, *dname2, *dname3;
@@ -288,7 +308,7 @@ int inquire_vars(int         ncid,
         my_start_x += latitude % psizes[1];
     }
 
-    if (debug) {
+    if (verbose && debug) {
         printf("%2d: rank (%2d, %2d) start %4lld %4lld count %4lld %4lld\n",
                rank, my_rank_y, my_rank_x, my_start_y, my_start_x, my_count_y, my_count_x);
         fflush(stdout);
@@ -401,16 +421,19 @@ int def_dims_vars(int         ncid,
 {
     char *name;
     void *value;
-    int i, j, err=NC_NOERR, ndims, nvars, nattrs;
+    int i, j, err=NC_NOERR, rank, ndims, nvars, nattrs;
     MPI_Offset size, nelems;
     nc_type xtype;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     /* define dimensions */
 
     /* retrieve the number of dimensions defined in the CDL file */
     err = cdl_hdr_inq_ndims(hid, &ndims);
     CHECK_ERR("cdl_hdr_inq_ndims")
-    if (debug) printf("dim: ndims %d\n", ndims);
+    if (verbose && debug && rank == 0)
+        printf("dim: ndims %d\n", ndims);
 
     for (i=0; i<ndims; i++) {
         int dimid;
@@ -418,7 +441,8 @@ int def_dims_vars(int         ncid,
         /* retrieve metadata of dimension i */
         err = cdl_hdr_inq_dim(hid, i, &name, &size);
         CHECK_ERR("cdl_hdr_inq_dim")
-        if (debug) printf("\t name %s size %lld\n",name, size);
+        if (verbose && debug && rank == 0)
+            printf("\t name %s size %lld\n",name, size);
 
              if (!strcmp(name, "south_north"))      size = *longitude;
         else if (!strcmp(name, "south_north_stag")) size = *longitude + 1;
@@ -445,24 +469,27 @@ int def_dims_vars(int         ncid,
         err = cdl_hdr_inq_nattrs(hid, i, &nattrs);
         CHECK_ERR("cdl_hdr_inq_nattrs")
 
-        if (debug) {
-            printf("\t name %s type %d ndims %d nattr %d\n",
-                          name, vars->xtype, ndims, nattrs);
-            for (j=0; j<ndims; j++)
-                printf("\t\tdimid %d\n",vars->dimids[j]);
+        if (verbose && debug && rank == 0) {
+            printf("\t var name %s type %s ndims %d nattr %d\n",
+                   vars->name, str_NC_type(vars->xtype), vars->ndims, nattrs);
+            for (j=0; j<vars->ndims; j++) {
+                char dname[64];
+                ncmpi_inq_dimname(ncid, vars->dimids[j], dname);
+                printf("\t\tdimid %d, name: %s\n",vars->dimids[j], dname);
+            }
         }
 
         for (j=0; j<nattrs; j++) {
             /* retrieve metadata of attribute j associated with variable i */
             err = cdl_hdr_inq_attr(hid, i, j, &name, &xtype, &nelems, &value);
             CHECK_ERR("cdl_hdr_inq_attr")
-            if (debug) {
+            if (verbose && debug && rank == 0) {
                 if (xtype == NC_CHAR)
-                    printf("\t\tattr %s type %d nelems %lld (%s)\n",
-                            name, xtype,nelems,(char*)value);
+                    printf("\t\tattr %s type %s nelems %lld (%s)\n",
+                            name, str_NC_type(xtype),nelems,(char*)value);
                 else
-                    printf("\t\tattr %s type %d nelems %lld\n",
-                           name, xtype, nelems);
+                    printf("\t\tattr %s type %s nelems %lld\n",
+                           name, str_NC_type(xtype), nelems);
             }
 
             err = ncmpi_put_att(ncid, vars->varid, name, xtype, nelems, value);
@@ -475,27 +502,184 @@ int def_dims_vars(int         ncid,
     /* retrieve the number of global attributes */
     err = cdl_hdr_inq_nattrs(hid, NC_GLOBAL, &nattrs);
     CHECK_ERR("cdl_hdr_inq_nattrs")
-    if (debug) printf("global attrs: nattrs %d\n", nattrs);
+    if (verbose && debug && rank == 0)
+        printf("global attrs: nattrs %d\n", nattrs);
 
     for (i=0; i<nattrs; i++) {
         /* retrieve metadata of global attribute i */
         err = cdl_hdr_inq_attr(hid, NC_GLOBAL, i, &name, &xtype, &nelems, &value);
         CHECK_ERR("cdl_hdr_inq_attr")
-        if (debug) {
+        if (verbose && debug && rank == 0) {
             if (xtype == NC_CHAR)
-                printf("\t name %s type %d nelems %lld (%s)\n",
-                        name, xtype, nelems,(char*)value);
+                printf("\t name %s type %s nelems %lld (%s)\n",
+                        name, str_NC_type(xtype), nelems,(char*)value);
             else
-                printf("\t name %s type %d nelems %lld\n",
-                        name, xtype, nelems);
+                printf("\t name %s type %s nelems %lld\n",
+                        name, str_NC_type(xtype), nelems);
         }
 
         err = ncmpi_put_att(ncid, NC_GLOBAL, name, xtype, nelems, value);
         CHECK_ERR("ncmpi_put_att")
     }
+    if (verbose || debug) fflush(stdout);
 
 err_out:
     return err;
+}
+
+static
+int init_buf(int         nvars,
+             WRF_VAR    *vars,
+             int         blocking,
+             MPI_Offset  buf_size,
+             int         val) /* for read, initialize to all -1 */
+{
+    int i, j, rank;
+    MPI_Offset mem_alloc;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    /* allocate and initialize write buffers */
+    if (debug) mem_alloc = 0;
+
+    for (i=0; i<nvars; i++) {
+        if (!blocking && vars[i].nelems == 0) continue;
+
+        if (vars[i].xtype == NC_FLOAT) {
+            float *flt_ptr = (float*) malloc(sizeof(float) * vars[i].nelems);
+            for (j=0; j<vars[i].nelems; j++)
+                flt_ptr[j] = (val == -1) ? -1 : rank + j;
+            vars[i].buf = (void*) flt_ptr;
+            if (debug) mem_alloc += sizeof(float) * vars[i].nelems;
+        }
+        else if (vars[i].xtype == NC_INT) {
+            int *int_ptr = (int*) malloc(sizeof(int) * vars[i].nelems);
+            for (j=0; j<vars[i].nelems; j++)
+                int_ptr[j] = (val == -1) ? -1 : rank + j;
+            vars[i].buf = (void*) int_ptr;
+            if (debug) mem_alloc += sizeof(int) * vars[i].nelems;
+        }
+        else if (vars[i].xtype == NC_CHAR) {
+            char *str_ptr = (char*) malloc(vars[i].nelems);
+            for (j=0; j<vars[i].nelems; j++)
+                str_ptr[j] = (val == -1) ? -1 : ('0' + (rank + j) % 9);
+            vars[i].buf = (void*) str_ptr;
+            if (debug) mem_alloc += vars[i].nelems;
+        }
+    }
+
+    if (debug) {
+        if (mem_alloc != buf_size)
+            printf("%2d: mem_alloc %lld != buf_size %lld\n", rank, mem_alloc,
+                   buf_size);
+        fflush(stdout);
+        assert(mem_alloc == buf_size);
+    }
+
+    return 0;
+}
+
+static
+int check_written_contents(const char *filename,
+                           int         ntimes,
+                           int         nvars,
+                           WRF_VAR    *vars)
+{
+    int i, j, k, rank, err=NC_NOERR, nerrs=0, ncid;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    if (err != NC_NOERR) {
+        printf("Error at line=%d: opening file %s (%s)\n",
+               __LINE__, filename, ncmpi_strerror(err));
+        return err;
+    }
+
+    /* inquire variable IDs */
+    for (i=0; i<nvars; i++) {
+        err = ncmpi_inq_varid(ncid, vars[i].name, &vars[i].varid);
+        CHECK_ERR(vars[i].name);
+    }
+
+    /* reuse vars[].start, vars[].count, and vars[].buf that have been set
+     * during the call to wrf_w_benchmark().
+     */
+
+    /* ntimes is the number of records written */
+    for (j=0; j<ntimes; j++) {
+        for (i=0; i<nvars; i++) {
+
+            /* set record ID */
+            vars[i].start[0] = j;
+
+            if (vars[i].xtype == NC_FLOAT) {
+                float *flt_ptr = vars[i].buf;
+
+                /* reset buffer contents to all -1s */
+                for (k=0; k<vars[i].nelems; k++) flt_ptr[k] = -1;
+
+                err = ncmpi_get_vara_float_all(ncid, vars[i].varid,
+                                               vars[i].start, vars[i].count,
+                                               vars[i].buf);
+                for (k=0; k<vars[i].nelems; k++) {
+                    float exp = rank + k;
+                    if (flt_ptr[k] != exp) {
+                        printf("Error at %d: var %s [%d] expect %.1f but got %.1f\n",
+                               __LINE__,vars[i].name, k, exp, flt_ptr[k]);
+                        nerrs++;
+                        goto err_out;
+                    }
+                }
+            }
+            else if (vars[i].xtype == NC_INT) {
+                int *int_ptr = vars[i].buf;
+
+                /* reset buffer contents to all -1s */
+                for (k=0; k<vars[i].nelems; k++) int_ptr[k] = -1;
+
+                err = ncmpi_get_vara_int_all(ncid, vars[i].varid,
+                                             vars[i].start, vars[i].count,
+                                             vars[i].buf);
+                for (k=0; k<vars[i].nelems; k++) {
+                    int exp = rank + k;
+                    if (int_ptr[k] != exp) {
+                        printf("Error at %d: var %s [%d] expect %d but got %d\n",
+                               __LINE__,vars[i].name, k, exp, int_ptr[k]);
+                        nerrs++;
+                        goto err_out;
+                    }
+                }
+            }
+            else if (vars[i].xtype == NC_CHAR) {
+                char *str_ptr = vars[i].buf;
+
+                /* reset buffer contents to all -1s */
+                for (k=0; k<vars[i].nelems; k++) str_ptr[k] = -1;
+
+                err = ncmpi_get_vara_text_all(ncid, vars[i].varid,
+                                              vars[i].start, vars[i].count,
+                                              vars[i].buf);
+                for (k=0; k<vars[i].nelems; k++) {
+                    char exp = '0' + (rank + k) % 9;
+                    if (str_ptr[k] != exp) {
+                        printf("Error at %d: var %s [%d] expect %d but got %d\n",
+                               __LINE__,vars[i].name, k, (int)exp, (int)str_ptr[k]);
+                        nerrs++;
+                        goto err_out;
+                    }
+                }
+            }
+            CHECK_ERR(vars[i].name)
+        }
+    }
+
+err_out:
+    /* close the output file */
+    err = ncmpi_close(ncid);
+    CHECK_ERR("ncmpi_close")
+
+    return (nerrs) ? NC_EIO : err;
 }
 
 static
@@ -530,48 +714,11 @@ int wrf_w_benchmark(char       *out_file,
     err = construct_vars(hid, vars, &longitude, &latitude, psizes, &buf_size);
     CHECK_ERR("construct_vars")
 
-    if (debug) {
+    if (verbose && debug && rank == 0)
         printf("%2d: buf_size %lld\n", rank, buf_size);
-        fflush(stdout);
-    }
 
-    /* allocate and initialize write buffers */
-    MPI_Offset mem_alloc;
-    if (debug) mem_alloc = 0;
-
-    for (i=0; i<nvars; i++) {
-        if (!blocking && vars[i].nelems == 0) continue;
-
-        if (vars[i].xtype == NC_FLOAT) {
-            float *flt_ptr = (float*) malloc(sizeof(float) * vars[i].nelems);
-            for (j=0; j<vars[i].nelems; j++)
-                flt_ptr[j] = rank + j;
-            vars[i].buf = (void*) flt_ptr;
-            if (debug) mem_alloc += sizeof(float) * vars[i].nelems;
-        }
-        else if (vars[i].xtype == NC_INT) {
-            int *int_ptr = (int*) malloc(sizeof(int) * vars[i].nelems);
-            for (j=0; j<vars[i].nelems; j++)
-                int_ptr[j] = rank + j;
-            vars[i].buf = (void*) int_ptr;
-            if (debug) mem_alloc += sizeof(int) * vars[i].nelems;
-        }
-        else if (vars[i].xtype == NC_CHAR) {
-            char *str_ptr = (char*) malloc(vars[i].nelems);
-            for (j=0; j<vars[i].nelems; j++)
-                str_ptr[j] = '0' + rank + j;
-            vars[i].buf = (void*) str_ptr;
-            if (debug) mem_alloc += vars[i].nelems;
-        }
-    }
-
-    if (debug) {
-        if (mem_alloc != buf_size)
-            printf("%2d: mem_alloc %lld != buf_size %lld\n", rank, mem_alloc,
-                   buf_size);
-        fflush(stdout);
-        assert(mem_alloc == buf_size);
-    }
+    /* allocate and initialize write buffer */
+    init_buf(nvars, vars, blocking, buf_size, 0);
 
     /* start the timer */
     MPI_Barrier(MPI_COMM_WORLD);
@@ -610,7 +757,7 @@ int wrf_w_benchmark(char       *out_file,
         double start_t, end_t;
         start_t = MPI_Wtime();
 
-        if (debug && rank == 0) {
+        if (verbose && debug && rank == 0) {
             printf("Writing record %d\n",j);
             fflush(stdout);
         }
@@ -658,7 +805,7 @@ int wrf_w_benchmark(char       *out_file,
         timing[2] += end_t - start_t;
         start_t = end_t;
 
-        if (debug && rank == 0) {
+        if (verbose && debug && rank == 0) {
             printf("Flush write requests at end of iteration j=%d\n",j);
             fflush(stdout);
         }
@@ -751,6 +898,14 @@ int wrf_w_benchmark(char       *out_file,
     }
     MPI_Info_free(&info_used);
 
+    if (debug) {
+        err = check_written_contents(out_file, ntimes, nvars, vars);
+        MPI_Allreduce(MPI_IN_PLACE, &err, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+        if (verbose && rank == 0)
+            printf("Check file contents: %s\n",
+                    (err == NC_NOERR) ? "SUCCESS" : "FAILED");
+    }
+
 err_out:
     if (vars != NULL) {
         for (i=0; i<nvars; i++)
@@ -794,9 +949,9 @@ int wrf_r_benchmark(char       *in_file,
                     int         blocking,
                     MPI_Info    info)
 {
-    int i, j, err=NC_NOERR, nprocs, rank, ncid, nvars, dimid;
+    int i, j, err=NC_NOERR, nprocs, rank, ncid, nvars, dimid, unlimdimid;
     double timing[4], max_t[4];
-    MPI_Offset buf_size, r_size, sum_r_size, longitude, latitude;
+    MPI_Offset buf_size, r_size, sum_r_size, longitude, latitude, dim_len;
     MPI_Info info_used;
     WRF_VAR *vars=NULL;
 
@@ -824,9 +979,21 @@ int wrf_r_benchmark(char       *in_file,
     err = ncmpi_inq_dimlen(ncid, dimid, &latitude);
     CHECK_ERR("ncmpi_inq_dimlen")
 
-    if (debug && rank == 0)
+    if (verbose && debug && rank == 0)
         printf("%s at %d: longitude=%lld latitude=%lld\n",__func__,__LINE__,
                longitude,latitude);
+
+    /* check number of records in input file, must be >= ntimes */
+    err = ncmpi_inq_unlimdim(ncid, &unlimdimid);
+    CHECK_ERR("ncmpi_inq_unlimdim")
+    err = ncmpi_inq_dimlen(ncid, unlimdimid, &dim_len);
+    CHECK_ERR("ncmpi_inq_dimlen")
+    if (dim_len < ntimes) {
+        if (rank == 0)
+            fprintf(stderr, "Error: input file expects to have at least %d time records but got %lld\n", ntimes, dim_len);
+        err = NC_EIO;
+        goto err_out;
+    }
 
     err = ncmpi_inq_nvars(ncid, &nvars);
     CHECK_ERR("ncmpi_inq_nvars")
@@ -837,48 +1004,11 @@ int wrf_r_benchmark(char       *in_file,
     err = inquire_vars(ncid, vars, psizes, longitude, latitude, &buf_size);
     CHECK_ERR("inquire_vars")
 
-    if (debug) {
+    if (verbose && debug && rank == 0)
         printf("%2d: buf_size %lld\n", rank, buf_size);
-        fflush(stdout);
-    }
 
-    /* allocate and initialize read buffers */
-    MPI_Offset mem_alloc;
-    if (debug) mem_alloc = 0;
-
-    for (i=0; i<nvars; i++) {
-        if (!blocking && vars[i].nelems == 0) continue;
-
-        if (vars[i].xtype == NC_FLOAT) {
-            float *flt_ptr = (float*) malloc(sizeof(float) * vars[i].nelems);
-            for (j=0; j<vars[i].nelems; j++)
-                flt_ptr[j] = rank + j;
-            vars[i].buf = (void*) flt_ptr;
-            if (debug) mem_alloc += sizeof(float) * vars[i].nelems;
-        }
-        else if (vars[i].xtype == NC_INT) {
-            int *int_ptr = (int*) malloc(sizeof(int) * vars[i].nelems);
-            for (j=0; j<vars[i].nelems; j++)
-                int_ptr[j] = rank + j;
-            vars[i].buf = (void*) int_ptr;
-            if (debug) mem_alloc += sizeof(int) * vars[i].nelems;
-        }
-        else if (vars[i].xtype == NC_CHAR) {
-            char *str_ptr = (char*) malloc(vars[i].nelems);
-            for (j=0; j<vars[i].nelems; j++)
-                str_ptr[j] = '0' + rank + j;
-            vars[i].buf = (void*) str_ptr;
-            if (debug) mem_alloc += vars[i].nelems;
-        }
-    }
-
-    if (debug) {
-        if (mem_alloc != buf_size)
-            printf("%2d: mem_alloc %lld != buf_size %lld\n", rank, mem_alloc,
-                   buf_size);
-        fflush(stdout);
-        assert(mem_alloc == buf_size);
-    }
+    /* allocate and initialize read buffer */
+    init_buf(nvars, vars, blocking, buf_size, -1);
 
     timing[1] = MPI_Wtime() - timing[0];
     timing[2] = timing[3] = 0;
@@ -888,7 +1018,7 @@ int wrf_r_benchmark(char       *in_file,
         double start_t, end_t;
         start_t = MPI_Wtime();
 
-        if (debug && rank == 0) {
+        if (verbose && debug && rank == 0) {
             printf("Reading record %d\n",j);
             fflush(stdout);
         }
@@ -897,7 +1027,6 @@ int wrf_r_benchmark(char       *in_file,
             if (!blocking && vars[i].nelems == 0) continue;
 
             /* set record ID */
-/* TODO: check number of records in input file, must be >= ntimes */
             vars[i].start[0] = j;
 
             if (vars[i].xtype == NC_FLOAT) {
@@ -937,7 +1066,7 @@ int wrf_r_benchmark(char       *in_file,
         timing[2] += end_t - start_t;
         start_t = end_t;
 
-        if (debug && rank == 0) {
+        if (verbose && debug && rank == 0) {
             printf("Flush read requests at end of iteration j=%d\n",j);
             fflush(stdout);
         }
@@ -1109,12 +1238,12 @@ usage(char *argv0)
 {
     char *help =
     "Usage: %s [OPTIONS]\n"
-    "       [-h] print this help\n"
-    "       [-q] quiet mode\n"
+    "       [-h] print this help message\n"
+    "       [-q] quiet mode (disable performance output)\n"
     "       [-d] debug mode\n"
     "       [-b] using PnetCDF blocking APIs (default: nonblocking)\n"
-    "       [-r file1,file2,...] benchmark read  performance\n"
-    "       [-w file1,file2,...] benchmark write performance\n"
+    "       [-r file1,file2,...] input files for read benchmark\n"
+    "       [-w file1,file2,...] output files for write benchmark\n"
     "       [-y num] longitude of global 2D grid\n"
     "       [-x num] latitude of global 2D grid\n"
     "       [-n num] number of time steps\n"
@@ -1207,7 +1336,7 @@ int main(int argc, char** argv)
         free(cdl_file);
         if (err != NC_NOERR) goto err_out;
 
-        if (debug && rank == 0) {
+        if (verbose && debug && rank == 0) {
             printf("longitude=%lld latitude=%lld psizes=%d x %d\n",
                 longitude,latitude,psizes[0],psizes[1]);
             fflush(stdout);
