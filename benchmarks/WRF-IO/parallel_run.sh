@@ -85,7 +85,7 @@ for i in ${check_PROGRAMS} ; do
         export PNETCDF_SAFE_MODE=$j
         # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
 
-        CMD_OPTS="-q -y 100 -x 100 -i ${srcdir}/wrf_header.txt"
+        CMD_OPTS="-q -d -y 100 -x 100 -i ${srcdir}/wrf_header.txt"
         # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPTS -w $OUT_FILE.nc -r $OUT_FILE.nc"
         ${MPIRUN} ./$i $CMD_OPTS -w $OUT_FILE.nc -r $OUT_FILE.nc
 
