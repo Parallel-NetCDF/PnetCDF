@@ -44,11 +44,16 @@
 #define NY 2
 #define NX 5
 
-/*----< main() >------------------------------------------------------------*/
-int main(int argc, char **argv) {
+#define INDEP_MODE 0
+#define COLL_MODE 1
 
-    char         filename[256];
-    int          i, j, err, ncid, varid1, varid2, varid3, dimids[2], debug=0;
+static int debug;
+
+/*----< tst_io() >-----------------------------------------------------------*/
+int tst_mode(const char *filename,
+             int         mode)
+{
+    int          i, j, err, ncid, varid1, varid2, varid3, dimids[2];
     int          rank, nprocs, blocklengths[2], buf[NY][NX], *bufptr;
     int         *ncbuf, req, st, nerrs=0;
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
@@ -56,25 +61,8 @@ int main(int argc, char **argv) {
     MPI_Aint     a0, a1, disps[2];
     MPI_Datatype buftype;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for flexible put and get ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
 
     err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL,
                        &ncid); CHECK_ERR
@@ -108,6 +96,11 @@ int main(int argc, char **argv) {
     ncmpi_sync(ncid);
 #endif
 
+    if (mode == INDEP_MODE) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     /* initialize the contents of the array */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = j+rank+10;
 
@@ -127,7 +120,11 @@ int main(int argc, char **argv) {
     if (debug) printf("put start="OFFFMT" "OFFFMT" count="OFFFMT" "OFFFMT"\n",start[0],start[1],count[0],count[1]);
 
     /* call flexible API */
-    err = ncmpi_put_vara_all(ncid, varid1, start, count, bufptr, 1, buftype); CHECK_ERR
+    if (mode == INDEP_MODE)
+        err = ncmpi_put_vara(ncid, varid1, start, count, bufptr, 1, buftype);
+    else
+        err = ncmpi_put_vara_all(ncid, varid1, start, count, bufptr, 1, buftype);
+    CHECK_ERR
 
     /* check if the contents of buf are altered */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
@@ -135,12 +132,15 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,buf[j][i]);
             nerrs++;
-            j = NY;
-            break;
+            goto err_out;
         }
 
     /* call flexible API that do type conversion */
-    err = ncmpi_put_vara_all(ncid, varid2, start, count, bufptr, 1, buftype); CHECK_ERR
+    if (mode == INDEP_MODE)
+        err = ncmpi_put_vara(ncid, varid2, start, count, bufptr, 1, buftype);
+    else
+        err = ncmpi_put_vara_all(ncid, varid2, start, count, bufptr, 1, buftype);
+    CHECK_ERR
 
     /* check if the contents of buf are altered */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
@@ -148,8 +148,7 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,buf[j][i]);
             nerrs++;
-            j = NY;
-            break;
+            goto err_out;
         }
 
     MPI_Type_free(&buftype);
@@ -163,7 +162,11 @@ int main(int argc, char **argv) {
     if (err != MPI_SUCCESS) printf("MPI error MPI_Type_create_hindexed\n");
     MPI_Type_commit(&buftype);
 
-    err = ncmpi_put_vara_all(ncid, varid3, start, count, schar_buf+NX, 1, buftype); CHECK_ERR
+    if (mode == INDEP_MODE)
+        err = ncmpi_put_vara(ncid, varid3, start, count, schar_buf+NX, 1, buftype);
+    else
+        err = ncmpi_put_vara_all(ncid, varid3, start, count, schar_buf+NX, 1, buftype);
+    CHECK_ERR
 
     /* check if the contents of buf are altered */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
@@ -171,13 +174,16 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,schar_buf[j*NX+i]);
             nerrs++;
-            j = NY;
-            break;
+            goto err_out;
         }
 
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) schar_buf[j*NX+i] = -1;
 
-    err = ncmpi_get_vara_all(ncid, varid3, start, count, schar_buf+NX, 1, buftype); CHECK_ERR
+    if (mode == INDEP_MODE)
+        err = ncmpi_get_vara(ncid, varid3, start, count, schar_buf+NX, 1, buftype);
+    else
+        err = ncmpi_get_vara_all(ncid, varid3, start, count, schar_buf+NX, 1, buftype);
+    CHECK_ERR
 
     /* check read contents */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
@@ -185,8 +191,7 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,schar_buf[j*NX+i]);
             nerrs++;
-            j = NY;
-            break;
+            goto err_out;
         }
 
     free(schar_buf);
@@ -197,9 +202,23 @@ int main(int argc, char **argv) {
 
     err = ncmpi_close(ncid); CHECK_ERR
 
+    if (mode == INDEP_MODE) {
+        /* Ensure all write data committed to file system before any rank open
+         * the file for read.
+         */
+        ncmpi_sync(ncid);
+        MPI_Barrier(MPI_COMM_WORLD);
+        ncmpi_sync(ncid);
+    }
+
     /* open the same file and read back for validate */
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
                      &ncid); CHECK_ERR
+
+    if (mode == INDEP_MODE) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     err = ncmpi_inq_varid(ncid, "VAR", &varid1); CHECK_ERR
 
@@ -211,7 +230,11 @@ int main(int argc, char **argv) {
     count[0] = 2; count[1] = NX;
     if (debug) printf("get start="OFFFMT" "OFFFMT" count="OFFFMT" "OFFFMT"\n",start[0],start[1],count[0],count[1]);
 
-    err = ncmpi_get_vara_int_all(ncid, varid1, start, count, buf[0]); CHECK_ERR
+    if (mode == INDEP_MODE)
+        err = ncmpi_get_vara_int(ncid, varid1, start, count, buf[0]);
+    else
+        err = ncmpi_get_vara_int_all(ncid, varid1, start, count, buf[0]);
+    CHECK_ERR
 
     /* check if the contents of buf are expected */
     for (j=0; j<2; j++) {
@@ -221,15 +244,18 @@ int main(int argc, char **argv) {
                 printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                        __FILE__,__LINE__,j,i,expect+rank+10,buf[j][i]);
                 nerrs++;
-                j = 2;
-                break;
+                goto err_out;
             }
     }
 
     /* initialize the contents of the array to a different value */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = -1;
 
-    err = ncmpi_get_vara_int_all(ncid, varid2, start, count, buf[0]); CHECK_ERR
+    if (mode == INDEP_MODE)
+        err = ncmpi_get_vara_int(ncid, varid2, start, count, buf[0]);
+    else
+        err = ncmpi_get_vara_int_all(ncid, varid2, start, count, buf[0]);
+    CHECK_ERR
 
     /* check if the contents of buf are expected */
     for (j=0; j<2; j++) {
@@ -239,8 +265,7 @@ int main(int argc, char **argv) {
                 printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                        __FILE__,__LINE__,j,i,expect+rank+10,buf[j][i]);
                 nerrs++;
-                j = 2;
-                break;
+                goto err_out;
             }
     }
 
@@ -256,7 +281,11 @@ int main(int argc, char **argv) {
                              array_of_starts, MPI_ORDER_C,
                              MPI_INT, &buftype);
     MPI_Type_commit(&buftype);
-    err = ncmpi_get_vara_all(ncid, varid1, start, count, ncbuf, 1, buftype); CHECK_ERR
+    if (mode == INDEP_MODE)
+        err = ncmpi_get_vara(ncid, varid1, start, count, ncbuf, 1, buftype);
+    else
+        err = ncmpi_get_vara_all(ncid, varid1, start, count, ncbuf, 1, buftype);
+    CHECK_ERR
 
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) {
         int getValue = ncbuf[(j+2)*(count[1]+4)+(i+2)];
@@ -264,13 +293,16 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             nerrs++;
-            j = (int)count[0];
-            break;
+            goto err_out;
         }
     }
 
     for (i=0; i<(count[0]+4)*(count[1]+4); i++) ncbuf[i] = -1;
-    err = ncmpi_get_vara_all(ncid, varid2, start, count, ncbuf, 1, buftype); CHECK_ERR
+    if (mode == INDEP_MODE)
+        err = ncmpi_get_vara(ncid, varid2, start, count, ncbuf, 1, buftype);
+    else
+        err = ncmpi_get_vara_all(ncid, varid2, start, count, ncbuf, 1, buftype);
+    CHECK_ERR
 
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) {
         int getValue = ncbuf[(j+2)*(count[1]+4)+(i+2)];
@@ -278,15 +310,18 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             nerrs++;
-            j = (int)count[0];
-            break;
+            goto err_out;
         }
     }
 
     for (i=0; i<(count[0]+4)*(count[1]+4); i++) ncbuf[i] = -1;
 
     err = ncmpi_iget_vara(ncid, varid1, start, count, ncbuf, 1, buftype, &req); CHECK_ERR
-    err = ncmpi_wait_all(ncid, 1, &req, &st); CHECK_ERR
+    if (mode == INDEP_MODE)
+        err = ncmpi_wait(ncid, 1, &req, &st);
+    else
+        err = ncmpi_wait_all(ncid, 1, &req, &st);
+    CHECK_ERR
     err = st; CHECK_ERR
 
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) {
@@ -295,15 +330,18 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             nerrs++;
-            j = (int)count[0];
-            break;
+            goto err_out;
         }
     }
 
     for (i=0; i<(count[0]+4)*(count[1]+4); i++) ncbuf[i] = -1;
 
     err = ncmpi_iget_vara(ncid, varid2, start, count, ncbuf, 1, buftype, &req); CHECK_ERR
-    err = ncmpi_wait_all(ncid, 1, &req, &st); CHECK_ERR
+    if (mode == INDEP_MODE)
+        err = ncmpi_wait(ncid, 1, &req, &st);
+    else
+        err = ncmpi_wait_all(ncid, 1, &req, &st);
+    CHECK_ERR
     err = st; CHECK_ERR
 
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) {
@@ -312,8 +350,7 @@ int main(int argc, char **argv) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             nerrs++;
-            j = (int)count[0];
-            break;
+            goto err_out;
         }
     }
 
@@ -321,6 +358,44 @@ int main(int argc, char **argv) {
     free(ncbuf);
 
     err = ncmpi_close(ncid); CHECK_ERR
+
+err_out:
+    return (nerrs > 0);
+}
+
+/*----< main() >------------------------------------------------------------*/
+int main(int argc, char **argv)
+{
+    char filename[256];
+    int err, nerrs=0, rank, nprocs;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for flexible put and get ", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
+    }
+
+    /* test independent data mode */
+    nerrs = tst_mode(filename, INDEP_MODE);
+    if (nerrs > 0) goto err_out;
+
+    /* test collective data mode */
+    nerrs = tst_mode(filename, COLL_MODE);
+    if (nerrs > 0) goto err_out;
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -333,6 +408,7 @@ int main(int argc, char **argv) {
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
+err_out:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
