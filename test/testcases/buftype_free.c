@@ -25,6 +25,9 @@
 #define NVARS 4
 #define NGHOSTS 2
 
+#define INDEP_MODE 0
+#define COLL_MODE 1
+
 static
 int test_mode(const char *filename,
               int         data_mode) /* 0: independent 1: collective */
@@ -50,7 +53,7 @@ int test_mode(const char *filename,
     err = ncmpi_def_var(ncid, "var3", NC_INT, 2, dimids, &varid[3]); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
-    if (data_mode == 0) {
+    if (data_mode == INDEP_MODE) {
         err = ncmpi_begin_indep_data(ncid);
         CHECK_ERR
     }
@@ -64,7 +67,7 @@ int test_mode(const char *filename,
         for (j=0; j<count[0]*count[1]; j++) buf[i][j] = j + rank*10;
     }
 
-    if (data_mode == 0) {
+    if (data_mode == INDEP_MODE) {
         err = ncmpi_put_vara_int(ncid, varid[0], start, count, buf[0]);
         CHECK_ERR
         err = ncmpi_put_vara_int(ncid, varid[1], start, count, buf[1]);
@@ -128,7 +131,7 @@ int test_mode(const char *filename,
         MPI_Type_free(&buftype[i]);
     }
 
-    if (data_mode == 0)
+    if (data_mode == INDEP_MODE)
         err = ncmpi_wait(ncid, NVARS, req, st);
     else
         err = ncmpi_wait_all(ncid, NVARS, req, st);
@@ -197,10 +200,10 @@ int main(int argc, char **argv) {
     }
 
     /* test independent data mode */
-    nerrs += test_mode(filename, 0);
+    nerrs += test_mode(filename, INDEP_MODE);
 
     /* test collective data mode */
-    nerrs += test_mode(filename, 1);
+    nerrs += test_mode(filename, COLL_MODE);
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
