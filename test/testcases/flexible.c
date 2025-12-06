@@ -42,7 +42,7 @@
 #include <testutils.h>
 
 #define NY 2
-#define NX 5
+#define NX 70
 
 #define INDEP_MODE 0
 #define COLL_MODE 1
