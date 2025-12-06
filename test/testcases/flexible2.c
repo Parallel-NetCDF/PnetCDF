@@ -84,11 +84,15 @@
 
 #define NZ 5
 #define NY 5
-#define NX 5
+#define NX 70
 
-int main(int argc, char** argv)
+#define INDEP_MODE 0
+#define COLL_MODE 1
+
+/*----< tst_io() >-----------------------------------------------------------*/
+int tst_mode(const char *filename,
+             int         mode)
 {
-    char filename[256];
     int i, j, rank, nprocs, err, nerrs=0, req, status, ghost_len=3;
     int ncid, cmode, varid0, varid1, dimid[3], *buf_zy, verbose=0;
     int array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
@@ -96,25 +100,8 @@ int main(int argc, char** argv)
     MPI_Offset start[2], count[2];
     MPI_Datatype  subarray;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for flexible APIs ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
 
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
@@ -131,6 +118,11 @@ int main(int argc, char** argv)
     /* define a variable of size NY * (NX * nprocs) */
     err = ncmpi_def_var(ncid, "var_yx", NC_FLOAT, 2, &dimid[1], &varid1); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
+
+    if (mode == INDEP_MODE) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     /* var_zy is partitioned along Z dimension */
     array_of_sizes[0]    = NZ + 2*ghost_len;
@@ -158,7 +150,10 @@ int main(int argc, char** argv)
     start[0] = NZ * rank; start[1] = 0;
     count[0] = NZ;        count[1] = NY;
     /* calling a blocking flexible API */
-    err = ncmpi_put_vara_all(ncid, varid0, start, count, buf_zy, 1, subarray);
+    if (mode == INDEP_MODE)
+        err = ncmpi_put_vara(ncid, varid0, start, count, buf_zy, 1, subarray);
+    else
+        err = ncmpi_put_vara_all(ncid, varid0, start, count, buf_zy, 1, subarray);
     CHECK_ERR
 
     /* check the contents of put buffer */
@@ -166,12 +161,16 @@ int main(int argc, char** argv)
         if (buf_zy[i] != rank+10) {
             printf("Error at line %d in %s: put buffer[%d] is altered\n",__LINE__,__FILE__,i);
             nerrs++;
+            goto err_out;
         }
     }
 
     for (i=0; i<buffer_len; i++) buf_zy[i] = -1;
     /* calling a blocking flexible API */
-    err = ncmpi_get_vara_all(ncid, varid0, start, count, buf_zy, 1, subarray);
+    if (mode == INDEP_MODE)
+        err = ncmpi_get_vara(ncid, varid0, start, count, buf_zy, 1, subarray);
+    else
+        err = ncmpi_get_vara_all(ncid, varid0, start, count, buf_zy, 1, subarray);
     CHECK_ERR
 
     /* check the contents of get buffer */
@@ -184,6 +183,7 @@ int main(int argc, char** argv)
                     printf("Unexpected get buffer[%d][%d]=%d\n",
                            i,j,buf_zy[index]);
                     nerrs++;
+                    goto err_out;
                 }
             }
             else {
@@ -191,6 +191,7 @@ int main(int argc, char** argv)
                     printf("Unexpected get buffer[%d][%d]=%d\n",
                            i,j,buf_zy[index]);
                     nerrs++;
+                    goto err_out;
                 }
             }
         }
@@ -220,7 +221,11 @@ int main(int argc, char** argv)
     /* calling a non-blocking flexible API */
     err = ncmpi_iput_vara(ncid, varid1, start, count, buf_yx, 1, subarray,&req);
     CHECK_ERR
-    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+    if (mode == INDEP_MODE)
+        err = ncmpi_wait(ncid, 1, &req, &status);
+    else
+        err = ncmpi_wait_all(ncid, 1, &req, &status);
+    CHECK_ERR
     err = status; CHECK_ERR
 
     /* check the contents of put buffer */
@@ -228,6 +233,7 @@ int main(int argc, char** argv)
         if (buf_yx[i] != rank+10) {
             printf("Error at line %d in %s: iput buffer[%d]=%f is altered\n",__LINE__,__FILE__,i,buf_yx[i]);
             nerrs++;
+            goto err_out;
         }
     }
 
@@ -236,7 +242,11 @@ int main(int argc, char** argv)
     /* calling a non-blocking flexible API */
     err = ncmpi_iget_vara(ncid, varid1, start, count, buf_yx, 1, subarray,&req);
     CHECK_ERR
-    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+    if (mode == INDEP_MODE)
+        err = ncmpi_wait(ncid, 1, &req, &status);
+    else
+        err = ncmpi_wait_all(ncid, 1, &req, &status);
+    CHECK_ERR
     err = status; CHECK_ERR
 
     /* check the contents of iget buffer */
@@ -253,6 +263,7 @@ int main(int argc, char** argv)
                 printf("Error at %d: expect buffer[%d][%d]=%.1f but got %.1f\n",
                        __LINE__,i,j,exp,buf_yx[index]);
                 nerrs++;
+                goto err_out;
             }
         }
     }
@@ -260,6 +271,42 @@ int main(int argc, char** argv)
     MPI_Type_free(&subarray);
 
     err = ncmpi_close(ncid); CHECK_ERR
+
+err_out:
+    return (nerrs > 0);
+}
+
+int main(int argc, char** argv)
+{
+    char filename[256];
+    int rank, err, nerrs=0;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for flexible APIs ", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
+    }
+
+    /* test independent data mode */
+    nerrs = tst_mode(filename, INDEP_MODE);
+    if (nerrs > 0) goto err_out;
+
+    /* test collective data mode */
+    nerrs = tst_mode(filename, COLL_MODE);
+    if (nerrs > 0) goto err_out;
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -272,6 +319,7 @@ int main(int argc, char** argv)
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
+err_out:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
