@@ -45,6 +45,14 @@
 #define uint64 unsigned long long
 #endif
 
+static int first_diff;
+static char cmd_opts[1024];
+
+#define PRINT_CMD_OPTS \
+    if (first_diff) { \
+        printf("%s\n", cmd_opts); \
+        first_diff = 0; \
+    }
 
 #define OOM_ERROR { \
     fprintf(stderr, "Error: calloc() out of memory at line %d\n",__LINE__);  \
@@ -89,6 +97,7 @@
         strcat(msg, str);                                                    \
         sprintf(str, "value \"%s\" vs \"%s\"\n", b1, b2);                    \
         strcat(msg, str);                                                    \
+        PRINT_CMD_OPTS \
         printf("%s", msg);                                                   \
         numHeadDIFF++;                                                       \
     }                                                                        \
@@ -119,6 +128,7 @@
         sprintf(str, "value %g vs %g (difference = %e)\n",                   \
                 (double)b1[pos],(double)b2[pos],(double)(b1[pos]-b2[pos]));  \
         strcat(msg, str);                                                    \
+        PRINT_CMD_OPTS \
         printf("%s", msg);                                                   \
         numHeadDIFF++;                                                       \
     }                                                                        \
@@ -148,6 +158,7 @@
         strcat(msg, str);                                                    \
         sprintf(str, "value \"%s\" vs \"%s\"\n", b1, b2);                    \
         strcat(msg, str);                                                    \
+        PRINT_CMD_OPTS \
         printf("%s", msg);                                                   \
         numHeadDIFF++;                                                       \
     }                                                                        \
@@ -178,6 +189,7 @@
         sprintf(str, "value %g vs %g (difference = %e)\n",                   \
                 (double)b1[pos],(double)b2[pos],(double)(b1[pos]-b2[pos]));  \
         strcat(msg, str);                                                    \
+        PRINT_CMD_OPTS \
         printf("%s", msg);                                                   \
         numHeadDIFF++;                                                       \
     }                                                                        \
@@ -225,6 +237,7 @@
     if (pos != varsize || worst != -1) { /* diff is found */                 \
         double v1, v2;                                                       \
         if (ndims[0] == 0) { /* scalar variable */                           \
+            PRINT_CMD_OPTS \
             if (worst == -1)                                                 \
                 printf("DIFF: scalar variable \"%s\" of type \"%s\"\n",      \
                        name[0], get_type(xtype[0]));                         \
@@ -245,6 +258,7 @@
                 diffStart[_i] = pos % shape[_i] + start[_i];                 \
                 pos /= shape[_i];                                            \
             }                                                                \
+            PRINT_CMD_OPTS \
             if (worst == -1)                                                 \
                 printf("DIFF: variable \"%s\" of type \"%s\" at element ["OFFFMT, \
                        name[0], get_type(xtype[0]), diffStart[0]);           \
@@ -378,6 +392,16 @@ int main(int argc, char **argv)
     MPI_Comm_size(comm, &nprocs);
     MPI_Comm_rank(comm, &rank);
 
+    if (nprocs == 1)
+        strcpy(cmd_opts, "ncmpidiff");
+    else
+        sprintf(cmd_opts, "Rank %d: ncmpidiff", rank);
+
+    for (i=1; i<argc; i++) {
+        strcat(cmd_opts, " ");
+        strcat(cmd_opts, argv[i]);
+    }
+
     verbose             = 0;
     quiet               = 0;
     check_header        = 0;
@@ -386,6 +410,7 @@ int main(int argc, char **argv)
     var_list.names      = NULL;
     var_list.nvars      = 0;
     check_tolerance     = 0;
+    first_diff          = 1;
 
     while ((c = getopt(argc, argv, "bhqt:v:")) != -1) {
         char *str, *ptr;
