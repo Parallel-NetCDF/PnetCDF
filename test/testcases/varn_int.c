@@ -55,7 +55,7 @@
 #define NDIMS 2
 
 static
-int check_contents_for_fail(int *buffer)
+int check_contents_for_fail(char *var_name, int *buffer)
 {
     int i, nprocs;
     int expected[NY*NX] = {13, 13, 13, 11, 11, 10, 10, 12, 11, 11,
@@ -67,10 +67,10 @@ int check_contents_for_fail(int *buffer)
 
     /* check if the contents of buf are expected */
     for (i=0; i<NY*NX; i++) {
-        if (expected[i] >= nprocs) continue;
+        if (expected[i] >= nprocs+10) continue;
         if (buffer[i] != expected[i]) {
-            printf("Expected read buf[%d]=%d, but got %d\n",
-                   i,expected[i],buffer[i]);
+            printf("Error: var %s expect read buf[%d]=%d, but got %d\n",
+                   var_name, i,expected[i],buffer[i]);
             return 1;
         }
     }
@@ -247,13 +247,24 @@ int main(int argc, char** argv)
             goto err_out;
         }
     }
-    if (nprocs > 4) MPI_Barrier(MPI_COMM_WORLD);
+
+    if (nprocs > 4) {
+        /* This program was designed to run on 4 processes. If running on more
+         * than 4, then we need to sync/flush writes before reading, espacially
+         * for processes of rank >= 4.
+         */
+        MPI_Barrier(MPI_COMM_WORLD);
+        err = ncmpi_flush(ncid);
+        CHECK_ERR
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
+
 
     /* read back and check contents */
     memset(r_buffer, 0, NY*NX*sizeof(int));
     err = ncmpi_get_var_int_all(ncid, varid[0], r_buffer);
     CHECK_ERR
-    nerrs += check_contents_for_fail(r_buffer);
+    nerrs += check_contents_for_fail("fix_var", r_buffer);
     if (nerrs > 0) goto err_out;
 
     /* permute write order */
@@ -276,16 +287,27 @@ int main(int argc, char** argv)
         }
     }
 
+    if (nprocs > 4) {
+        /* This program was designed to run on 4 processes. If running on more
+         * than 4, then we need to sync/flush writes before reading, espacially
+         * for processes of rank >= 4.
+         */
+        MPI_Barrier(MPI_COMM_WORLD);
+        err = ncmpi_flush(ncid);
+        CHECK_ERR
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
+
     /* read back using get_var API and check contents */
     memset(r_buffer, 0, NY*NX*sizeof(int));
     err = ncmpi_get_var_int_all(ncid, varid[1], r_buffer);
     CHECK_ERR
-    nerrs += check_contents_for_fail(r_buffer);
+    nerrs += check_contents_for_fail("rec_var", r_buffer);
     if (nerrs > 0) goto err_out;
 
     /* read back using get_varn API and check contents */
     for (i=0; i<w_len; i++) buffer[i] = -1;
-    err = ncmpi_get_varn_int_all(ncid, varid[0], num_reqs, starts, counts, buffer);
+    err = ncmpi_get_varn_int_all(ncid, varid[1], num_reqs, starts, counts, buffer);
     CHECK_ERR
 
     for (i=0; i<w_len; i++) {
@@ -304,7 +326,7 @@ int main(int argc, char** argv)
     free(buffer);
     buffer = (int*) malloc(sizeof(int) * w_len * 2);
     for (i=0; i<2*w_len; i++) buffer[i] = -1;
-    err = ncmpi_get_varn_all(ncid, varid[0], num_reqs, starts, counts, buffer, 1, buftype);
+    err = ncmpi_get_varn_all(ncid, varid[1], num_reqs, starts, counts, buffer, 1, buftype);
     CHECK_ERR
     MPI_Type_free(&buftype);
 
@@ -316,7 +338,7 @@ int main(int argc, char** argv)
             goto err_out;
         }
         if (i%2 == 0 && buffer[i] != rank+10) {
-            printf("Error at line %d in %s: expecting buffer[%d]=%d but got %d\n",
+            printf("Error at line %d in %s: expecting rec_var buffer[%d]=%d but got %d\n",
                    __LINE__,__FILE__,i,rank+10,buffer[i]);
             nerrs++;
             goto err_out;
