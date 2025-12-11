@@ -151,7 +151,7 @@ ncmpio_close(void *ncdp)
 
         if (max_npairs_put > 0) { /* put npairs > 0 */
             put_time = ncp->ina_time_init + ncp->ina_time_flatten;
-            ntimers = 4;
+            ntimers = 5;
             for (i=0; i<ntimers; i++) {
                 tt[i]     = ncp->ina_time_put[i];
                 put_time += tt[i];
@@ -163,12 +163,12 @@ ncmpio_close(void *ncdp)
             MPI_Reduce(tt, max_t, ntimers+3, MPI_DOUBLE, MPI_MAX, 0, ncp->comm);
             put_time = max_t[ntimers+2];
             if (ncp->rank == 0)
-                printf("%s: INA put timing %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f = %5.2f\n",
-                __func__, max_t[ntimers],max_t[ntimers+1],max_t[0],max_t[1],max_t[2],max_t[3],put_time);
+                printf("%s: INA put timing %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f = %5.2f\n",
+                __func__, max_t[ntimers],max_t[ntimers+1],max_t[0],max_t[1],max_t[2],max_t[3],max_t[4],put_time);
         }
         if (max_npairs_get > 0) { /* get npairs > 0 */
             get_time = ncp->ina_time_init + ncp->ina_time_flatten;
-            ntimers = 4;
+            ntimers = 5;
             for (i=0; i<ntimers; i++) {
                 tt[i]     = ncp->ina_time_get[i];
                 get_time += tt[i];
@@ -179,8 +179,8 @@ ncmpio_close(void *ncdp)
 
             MPI_Reduce(tt, max_t, ntimers+3, MPI_DOUBLE, MPI_MAX, 0, ncp->comm);
             if (ncp->rank == 0)
-                printf("%s: INA get timing %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f = %5.2f\n",
-                __func__, max_t[ntimers],max_t[ntimers+1],max_t[0],max_t[1],max_t[2],max_t[3],max_t[ntimers+2]);
+                printf("%s: INA get timing %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f = %5.2f\n",
+                __func__, max_t[ntimers],max_t[ntimers+1],max_t[0],max_t[1],max_t[2],max_t[3],max_t[4],max_t[ntimers+2]);
         }
     }
 #endif
