@@ -1571,7 +1571,7 @@ int ina_put(NC         *ncp,
 {
     int i, j, err, mpireturn, status=NC_NOERR;
     char *recv_buf=NULL, *wr_buf = NULL;
-    MPI_Aint npairs=0, *meta=NULL, *count=NULL;
+    MPI_Aint npairs=0, *meta=NULL, *count=NULL, *bufAddr=NULL;
     MPI_Offset wr_amnt=0;
 #ifdef HAVE_MPI_LARGE_COUNT
     MPI_Count *off_ptr, *len_ptr;
@@ -1738,20 +1738,24 @@ int ina_put(NC         *ncp,
 
         if (do_sort && indv_sorted) {
             /* Interleaved offsets are found but individual offsets are already
-             * sorted. In this case, heap_merge() is called to merge all
-             * offsets into one single sorted offset list. Note count[] is
-             * initialized and will be used in heap_merge()
+             * sorted. This is commonly seen from the checkerboard domain
+             * partitioning pattern. In this case, heap_merge() must be called
+             * to merge all individually already-sorted offsets into one single
+             * sorted offset list. Note count[] is initialized and will be used
+             * in heap_merge()
              */
-            count = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) *ncp->num_nonaggrs);
+            count = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint)*ncp->num_nonaggrs);
             for (i=0; i<ncp->num_nonaggrs; i++) count[i] = meta[i*3];
         }
 
         /* Construct an array of buffer addresses containing a mapping of the
          * buffer used to receive write data from non-aggregators and the
          * buffer used to write to file. bufAddr[] is calculated based on the
-         * assumption that the write buffer is contiguous.
+         * assumption that the write buffer of this aggregator is contiguous,
+         * i.e. buf_view.is_contig being 1. For non-aggregators, their write
+         * data will always be received into a contiguous buffer.
          */
-        MPI_Aint *bufAddr = (MPI_Aint*)NCI_Malloc(sizeof(MPI_Aint) * npairs);
+        bufAddr = (MPI_Aint*)NCI_Malloc(sizeof(MPI_Aint) * npairs);
         bufAddr[0] = 0;
         for (i=1; i<npairs; i++)
             bufAddr[i] = bufAddr[i-1] + len_ptr[i-1];
@@ -1876,17 +1880,21 @@ if (fake_overlap == 0) assert(npairs == i+1);
 
         if (recv_buf != buf) {
             /* Pack this aggregator's write data into front of recv_buf */
+            if (buf_view.is_contig && buf_view.type == MPI_BYTE)
+                memcpy(recv_buf, buf, buf_view.size);
+            else {
 #ifdef HAVE_MPI_LARGE_COUNT
-            MPI_Count pos=0;
-            MPI_Count num = (buf_view.is_contig) ? buf_view.size : 1;
-            MPI_Pack_c(buf, num, buf_view.type, recv_buf, buf_view.size, &pos,
-                       MPI_COMM_SELF);
+                MPI_Count pos=0;
+                MPI_Count num = (buf_view.is_contig) ? buf_view.size : 1;
+                MPI_Pack_c(buf, num, buf_view.type, recv_buf, buf_view.size,
+                           &pos, MPI_COMM_SELF);
 #else
-            int pos=0;
-            MPI_Count num = (buf_view.is_contig) ? buf_view.size : 1;
-            MPI_Pack(buf, num, buf_view.type, recv_buf, buf_view.size, &pos,
-                     MPI_COMM_SELF);
+                int pos=0;
+                MPI_Count num = (buf_view.is_contig) ? buf_view.size : 1;
+                MPI_Pack(buf, num, buf_view.type, recv_buf, buf_view.size,
+                         &pos, MPI_COMM_SELF);
 #endif
+            }
         }
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
@@ -1932,6 +1940,12 @@ if (fake_overlap == 0) assert(npairs == i+1);
         }
         NCI_Free(req);
 
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+    endT = MPI_Wtime();
+    if (ncp->rank == ncp->my_aggr) ncp->ina_time_put[3] += endT - startT;
+    startT = endT;
+#endif
+
         /* Now all write data has been collected into recv_buf. In case of any
          * overlap, we must coalesce recv_buf into wr_buf using off_ptr[],
          * len_ptr[], and bufAddr[]. For overlapped regions, requests with
@@ -1942,13 +1956,47 @@ if (fake_overlap == 0) assert(npairs == i+1);
          * wr_buf, a contiguous buffer, wr_buf, which will later be used in a
          * call to MPI-IO/PNCIO file write.
          */
-        if (!do_sort && wr_amnt == recv_amnt)
+        if (!do_sort && wr_amnt == recv_amnt) {
             wr_buf = recv_buf;
+
+            if (wr_buf != buf) {
+                /* If write data has been packed in wr_buf, a contiguous buffer,
+                 * update buf_view before passing it to the MPI-IO/PNCIO file
+                 * write.
+                 */
+                buf_view.size = wr_amnt;
+                buf_view.type = MPI_BYTE;
+                buf_view.is_contig = 1;
+            }
+            /* else case is when user's buffer, buf, can be used to write */
+        }
+#if 0
+        /* Note copying write data into a contiguous buffer in most cases will
+         * run faster in MPI-IO and PNCIO.
+         */
+        else if (buf_view.is_contig && !overlap) {
+            /* Note we can reuse bufAddr[] and len_ptr[] as buf_view.off and
+             * buf_view.len only when buf_view.is_contig is true, because
+             * bufAddr[] is constructed based on the assumption that the write
+             * buffer is contiguous.
+             */
+            wr_buf = recv_buf;
+            buf_view.size = wr_amnt;
+            buf_view.type = MPI_BYTE;
+            buf_view.is_contig = (npairs <= 1);
+            buf_view.off = (MPI_Offset*)bufAddr; /* based on recv_buf */
+            buf_view.len = len_ptr;
+            buf_view.count = npairs;
+        }
+#endif
         else {
             /* do_sort means buffer's offsets and lengths have been moved
              * around in order to make file offset-length pairs monotonically
-             * non-decreasing. We need to copy write data into a temporary
-             * buffer, wr_buf, and write it to the file.
+             * non-decreasing. We need to re-arrange the write buffer
+             * accordingly by copying write data into a temporary buffer,
+             * wr_buf, and write it to the file.  Copying write data into a
+             * contiguous buffer in most cases will run faster in MPI-IO and
+             * PNCIO.
              */
             wr_buf = NCI_Malloc(wr_amnt);
             ptr = wr_buf;
@@ -1957,18 +2005,23 @@ if (fake_overlap == 0) assert(npairs == i+1);
                 memcpy(ptr, recv_buf + bufAddr[j], len_ptr[j]);
                 ptr += len_ptr[j];
             }
+            /* Write data has been packed in wr_buf, a contiguous buffer,
+             * update buf_view before passing it to the MPI-IO/PNCIO file
+             * write.
+             */
+            buf_view.size = wr_amnt;
+            buf_view.type = MPI_BYTE;
+            buf_view.is_contig = 1;
 
             if (recv_buf != buf) NCI_Free(recv_buf);
         }
-
-        NCI_Free(bufAddr);
     } /* if (npairs > 0) */
 
     NCI_Free(meta);
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     endT = MPI_Wtime();
-    if (ncp->rank == ncp->my_aggr) ncp->ina_time_put[3] += endT - startT;
+    if (ncp->rank == ncp->my_aggr) ncp->ina_time_put[4] += endT - startT;
 #endif
 
     /* set the fileview */
@@ -1983,22 +2036,12 @@ if (fake_overlap == 0) assert(npairs == i+1);
     ncp->maxmem_put[4] = MAX(ncp->maxmem_put[4], mem_max);
 #endif
 
-    if (wr_buf != buf) {
-        /* If write data has been packed in wr_buf, a contiguous buffer,
-         * buf_view must be updated before passing it to the MPI-IO/PNCIO file
-         * write.
-         */
-        buf_view.size = wr_amnt;
-        buf_view.type = MPI_BYTE;
-        buf_view.is_contig = 1;
-    }
-    /* else case is when the user's buffer, buf, can be used to write */
-
     /* carry out write request to file */
     err = ncmpio_read_write(ncp, NC_REQ_WR, 0, buf_view, wr_buf);
     if (status == NC_NOERR) status = err;
 
     if (wr_buf != buf)  NCI_Free(wr_buf);
+    if (bufAddr != NULL) NCI_Free(bufAddr);
 
     /* Must free offsets and lengths now, as they may be realloc-ed in
      * ina_collect_md()
