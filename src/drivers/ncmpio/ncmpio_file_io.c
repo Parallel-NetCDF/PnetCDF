@@ -576,7 +576,7 @@ printf("%s at %d: buf_view count=%lld off=%lld %lld len=%lld %lld\n",__func__,__
 int wkl[21];
 #endif
             for (i=0; i<buf_view.count; i++) {
-                in_ptr = (char*)buf + (buf_view.off[i] - buf_view.off[0]);
+                in_ptr = (char*)buf + buf_view.off[i];
 #if 0
 memcpy(wkl, in_ptr, buf_view.len[i]);
 ncmpii_in_swapn(wkl, buf_view.len[i]/4, 4);
