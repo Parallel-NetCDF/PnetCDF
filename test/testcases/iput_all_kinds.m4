@@ -9,7 +9,6 @@ dnl
  *  See COPYRIGHT notice in top-level directory.
  *
  *********************************************************************/
-/* $Id: transpose.c 3078 2017-05-29 22:46:50Z wkliao $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +20,12 @@ dnl
 #include <testutils.h>
 
 #define NDIMS 3
-#define LEN   2
+#define LEN   16
+
+#define INDEP_MODE 0
+#define COLL_MODE 1
+
+static int debug;
 
 include(`foreach.m4')dnl
 include(`utils.m4')dnl
@@ -46,12 +50,27 @@ include(`utils.m4')dnl
 #define ulonglong unsigned long long
 #endif
 
+#define INIT_BUF(buf, len) { \
+    for (i=0; i<len; i++) \
+        buf[i] = (rank + i + 1) % 128; \
+}
+
+#define ZERO_OUT_BUF(buf, len) { \
+    for (i=0; i<len; i++) \
+        buf[i] = 0; \
+}
+
+define(`MALLOC_ITYPE', `ifelse(`$1',`text',`char $2 = (char*) malloc(sizeof(char) * $3);',
+                                             `$1 $2 = ($1*)   malloc(sizeof($1)   * $3);')')
+
 define(`TEST_NON_BLOCKING_PUT',dnl
 `dnl
 static int
-non_blocking_put_$1(int         rank,
+non_blocking_put_$1(int     rank,
+                int         mode,
                 int         ncid,
                 int        *dimids,
+                MPI_Offset *gsize,
                 MPI_Offset *start,
                 MPI_Offset *count,
                 MPI_Offset *startS,
@@ -59,46 +78,214 @@ non_blocking_put_$1(int         rank,
                 MPI_Offset *stride,
                 MPI_Offset *startM,
                 MPI_Offset *countM,
-                MPI_Offset *imap,
-                ifelse(`$1',`text',`char',`double') *buf)
+                MPI_Offset *imap)
 {
-    int err, nerrs=0;
+    int i, err, nerrs=0, exp;
     int var1_id, vara_id, vars_id, varm_id;
     int dimid, dimidsT[NDIMS];
     MPI_Offset start1[1];
+    size_t bufsize, bufsizeS, bufsizeM;
+
+    bufsize = bufsizeS = bufsizeM = 1;
+    for (i=0; i<NDIMS; i++) {
+        bufsize  *= count[i];
+        bufsizeS *= countS[i];
+        bufsizeM *= countM[i];
+    }
+
+    MALLOC_ITYPE($1, *buf1, 1)
+    MALLOC_ITYPE($1, *bufa, bufsize)
+    MALLOC_ITYPE($1, *bufs, bufsizeS)
+    MALLOC_ITYPE($1, *bufm, bufsizeM)
+
+    INIT_BUF(buf1, 1)
+    INIT_BUF(bufa, bufsize)
+    INIT_BUF(bufs, bufsizeS)
+    INIT_BUF(bufm, bufsizeM)
 
     /* re-enter define mode, so we can add more variables */
-    err = ncmpi_redef(ncid); CHECK_ERR
-    err = ncmpi_inq_dimid(ncid, "nprocs", &dimid); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var1_$1", NC_TYPE($1),     1, &dimid, &var1_id); CHECK_ERR
-    err = ncmpi_def_var(ncid, "vara_$1", NC_TYPE($1), NDIMS, dimids, &vara_id); CHECK_ERR
-    err = ncmpi_def_var(ncid, "vars_$1", NC_TYPE($1), NDIMS, dimids, &vars_id); CHECK_ERR
-    err = ncmpi_def_var_fill(ncid, var1_id, 0, NULL); CHECK_ERR
+    err = ncmpi_redef(ncid); CHECK_ERROUT
+    err = ncmpi_inq_dimid(ncid, "nprocs", &dimid); CHECK_ERROUT
+    err = ncmpi_def_var(ncid, "var1_$1", NC_TYPE($1),     1, &dimid, &var1_id); CHECK_ERROUT
+    err = ncmpi_def_var(ncid, "vara_$1", NC_TYPE($1), NDIMS, dimids, &vara_id); CHECK_ERROUT
+    err = ncmpi_def_var(ncid, "vars_$1", NC_TYPE($1), NDIMS, dimids, &vars_id); CHECK_ERROUT
+    err = ncmpi_def_var_fill(ncid, var1_id, 0, NULL); CHECK_ERROUT
 
     /* define variable with transposed file layout: ZYX -> YXZ */
     dimidsT[0] = dimids[1]; dimidsT[1] = dimids[2]; dimidsT[2] = dimids[0];
-    err = ncmpi_def_var(ncid, "varm_$1", NC_TYPE($1), NDIMS, dimidsT, &varm_id); CHECK_ERR
+    err = ncmpi_def_var(ncid, "varm_$1", NC_TYPE($1), NDIMS, dimidsT, &varm_id); CHECK_ERROUT
 
     /* exit the define mode */
-    err = ncmpi_enddef(ncid); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERROUT
 
-    /* write the whole variable in parallel */
+    if (mode == INDEP_MODE) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERROUT
+    }
+
+    /* write the variable in parallel */
     start1[0] = rank;
-    err = `ncmpi_iput_var1_'ifelse(`$1',`text',`$1',`double')(ncid, var1_id, start1, buf, NULL); CHECK_ERR
+    err = `ncmpi_iput_var1_'$1(ncid, var1_id, start1, buf1, NULL); CHECK_ERROUT
 
-    err = `ncmpi_iput_vara_'ifelse(`$1',`text',`$1',`double')(ncid, vara_id, start, count, buf, NULL); CHECK_ERR
+    err = `ncmpi_iput_vara_'$1(ncid, vara_id, start, count, bufa, NULL); CHECK_ERROUT
 
-    err = `ncmpi_iput_vars_'ifelse(`$1',`text',`$1',`double')(ncid, vars_id, startS, countS, stride, buf, NULL); CHECK_ERR
+    err = `ncmpi_iput_vars_'$1(ncid, vars_id, startS, countS, stride, bufs, NULL); CHECK_ERROUT
 
-    err = `ncmpi_iput_varm_'ifelse(`$1',`text',`$1',`double')(ncid, varm_id, startM, countM, NULL, imap, buf, NULL); CHECK_ERR
+    err = `ncmpi_iput_varm_'$1(ncid, varm_id, startM, countM, NULL, imap, bufm, NULL); CHECK_ERROUT
+
+    /* commit all nonblocking requests */
+    if (mode == INDEP_MODE)
+        err = ncmpi_wait(ncid, NC_REQ_ALL, NULL, NULL);
+    else
+        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+    CHECK_ERROUT
+
+    /* Check write buffer contents, which should not be altered. */
+    exp = (rank + 1) % 128;
+    if (buf1[0] != exp) {
+        printf("Error %s at %d: buf1 expects %.f but got %.f\n",
+               __func__,__LINE__, (float)exp, (float)buf1[0]);
+        nerrs++;
+        goto err_out;
+    }
+    for (i=0; i<bufsizeM; i++) {
+        exp = (rank + i + 1) % 128;
+        if (bufa[i] != exp) {
+            printf("Error %s at %d: bufa[%d] expects %.f but got %.f\n",
+                   __func__,__LINE__, i, (float)exp, (float)bufa[i]);
+            nerrs++;
+            goto err_out;
+        }
+        if (bufs[i] != exp) {
+            printf("Error %s at %d: bufs[%d] expects %.f but got %.f\n",
+                   __func__,__LINE__, i, (float)exp, (float)bufs[i]);
+            nerrs++;
+            goto err_out;
+        }
+        if (bufm[i] != exp) {
+            printf("Error %s at %d: buf[%d] expects %.f but got %.f\n",
+                   __func__,__LINE__, i, (float)exp, (float)bufm[i]);
+            nerrs++;
+            goto err_out;
+        }
+    }
+
+err_out:
+    free(buf1);
+    free(bufa);
+    free(bufs);
+    free(bufm);
+
+    return nerrs;
+}
+')dnl
+
+define(`TEST_NON_BLOCKING_GET',dnl
+`dnl
+static int
+non_blocking_get_$1(int     rank,
+                int         mode,
+                int         ncid,
+                int        *dimids,
+                MPI_Offset *gsize,
+                MPI_Offset *start,
+                MPI_Offset *count,
+                MPI_Offset *startS,
+                MPI_Offset *countS,
+                MPI_Offset *stride,
+                MPI_Offset *startM,
+                MPI_Offset *countM,
+                MPI_Offset *imap)
+{
+    int i, err, nerrs=0, exp;
+    int var1_id, vara_id, vars_id, varm_id, dimid;
+    MPI_Offset start1[1];
+    size_t bufsize, bufsizeS, bufsizeM;
+
+    bufsize = bufsizeS = bufsizeM = 1;
+    for (i=0; i<NDIMS; i++) {
+        bufsize  *= count[i];
+        bufsizeS *= countS[i];
+        bufsizeM *= countM[i];
+    }
+
+    MALLOC_ITYPE($1, *buf1, 1)
+    MALLOC_ITYPE($1, *bufa, bufsize)
+    MALLOC_ITYPE($1, *bufs, bufsizeS)
+    MALLOC_ITYPE($1, *bufm, bufsizeM)
+
+    ZERO_OUT_BUF(buf1, 1)
+    ZERO_OUT_BUF(bufa, bufsize)
+    ZERO_OUT_BUF(bufs, bufsizeS)
+    ZERO_OUT_BUF(bufm, bufsizeM)
+
+    err = ncmpi_inq_dimid(ncid, "nprocs", &dimid); CHECK_ERROUT
+    err = ncmpi_inq_varid(ncid, "var1_$1", &var1_id); CHECK_ERROUT
+    err = ncmpi_inq_varid(ncid, "vara_$1", &vara_id); CHECK_ERROUT
+    err = ncmpi_inq_varid(ncid, "vars_$1", &vars_id); CHECK_ERROUT
+    err = ncmpi_inq_varid(ncid, "varm_$1", &varm_id); CHECK_ERROUT
+
+    /* write the variable in parallel */
+    start1[0] = rank;
+    err = `ncmpi_iget_var1_'$1(ncid, var1_id, start1, buf1, NULL); CHECK_ERROUT
+
+    err = `ncmpi_iget_vara_'$1(ncid, vara_id, start, count, bufa, NULL); CHECK_ERROUT
+
+    err = `ncmpi_iget_vars_'$1(ncid, vars_id, startS, countS, stride, bufs, NULL); CHECK_ERROUT
+
+    err = `ncmpi_iget_varm_'$1(ncid, varm_id, startM, countM, NULL, imap, bufm, NULL); CHECK_ERROUT
+
+    /* commit all nonblocking requests */
+    if (mode == INDEP_MODE)
+        err = ncmpi_wait(ncid, NC_REQ_ALL, NULL, NULL);
+    else
+        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+    CHECK_ERROUT
+
+    /* Check read contents */
+    exp = (rank + 1) % 128;
+    if (buf1[0] != exp) {
+        printf("Error %s at %d: buf1 expects %.f but got %.f\n",
+               __func__,__LINE__, (float)exp, (float)buf1[0]);
+        nerrs++;
+        goto err_out;
+    }
+    for (i=0; i<bufsizeM; i++) {
+        exp = (rank + i + 1) % 128;
+        if (bufa[i] != exp) {
+            printf("Error %s at %d: bufa[%d] expects %.f but got %.f\n",
+                   __func__,__LINE__, i, (float)exp, (float)bufa[i]);
+            nerrs++;
+            goto err_out;
+        }
+        if (bufs[i] != exp) {
+            printf("Error %s at %d: bufs[%d] expects %.f but got %.f\n",
+                   __func__,__LINE__, i, (float)exp, (float)bufs[i]);
+            nerrs++;
+            goto err_out;
+        }
+        if (bufm[i] != exp) {
+            printf("Error %s at %d: buf[%d] expects %.f but got %.f\n",
+                   __func__,__LINE__, i, (float)exp, (float)bufm[i]);
+            nerrs++;
+            goto err_out;
+        }
+    }
+
+err_out:
+    free(buf1);
+    free(bufa);
+    free(bufs);
+    free(bufm);
 
     return nerrs;
 }
 ')dnl
 
 foreach(`itype',(`text,schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong'),`TEST_NON_BLOCKING_PUT(itype)')
+foreach(`itype',(`text,schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong'),`TEST_NON_BLOCKING_GET(itype)')
 
-define(`TEST_CDF_FORMAT',dnl
+define(`TEST_CDF_FORMAT_PUT',dnl
 `dnl
 /* create a new $1 file */
     cmode = NC_CLOBBER;
@@ -116,45 +303,171 @@ define(`TEST_CDF_FORMAT',dnl
 
     /* define dimensions */
     _nprocs = ((nprocs + 3) / 4) * 4; /* round up 4 bytes */
-    err = ncmpi_def_dim(ncid, "nprocs", _nprocs,  &dimids[0]); CHECK_ERR
-    err = ncmpi_def_dim(ncid, "Z",      gsize[0], &dimids[0]); CHECK_ERR
-    err = ncmpi_def_dim(ncid, "Y",      gsize[1], &dimids[1]); CHECK_ERR
-    err = ncmpi_def_dim(ncid, "X",      gsize[2], &dimids[2]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "nprocs", _nprocs,  &dimids[0]); CHECK_ERROUT
+    err = ncmpi_def_dim(ncid, "Z",      gsize[0], &dimids[0]); CHECK_ERROUT
+    err = ncmpi_def_dim(ncid, "Y",      gsize[1], &dimids[1]); CHECK_ERROUT
+    err = ncmpi_def_dim(ncid, "X",      gsize[2], &dimids[2]); CHECK_ERROUT
     err = ncmpi_enddef(ncid);
 
-    nerrs += non_blocking_put_text(rank, ncid, dimids, start, count,
-             startS, countS, stride, startM, countM, imap, cbuf);
+    if (mode == INDEP_MODE) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERROUT
+    }
+
+    nerrs += non_blocking_put_text(rank, mode, ncid, dimids, gsize, start, count,
+             startS, countS, stride, startM, countM, imap);
     foreach(`itype',(`schar, short, int, long, float, double'),`
-    _CAT(`nerrs += non_blocking_put_',itype)'`(rank, ncid, dimids, start, count,
-             startS, countS, stride, startM, countM, imap, buf);')
+    _CAT(`nerrs += non_blocking_put_',itype)'`(rank, mode, ncid, dimids, gsize, start,
+             count, startS, countS, stride, startM, countM, imap);')
 
 ifelse(`$1', `NC_FORMAT_64BIT_DATA',
     foreach(`itype',(`uchar,ushort,uint,longlong,ulonglong'),`
-    _CAT(`nerrs += non_blocking_put_',itype)'`(rank, ncid, dimids, start, count,
-             startS, countS, stride, startM, countM, imap, buf);'))
+    _CAT(`nerrs += non_blocking_put_',itype)'`(rank, mode, ncid, dimids, gsize, start,
+             count, startS, countS, stride, startM, countM, imap);'))
 
-    /* wait for all input */
-    err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
-    CHECK_ERR
+    if (mode == INDEP_MODE) {
+        /* When running in independent data mode, flushing writes is necessary
+         * before reading the data back.
+         */
+        MPI_Barrier(MPI_COMM_WORLD);
+        err = ncmpi_sync(ncid);
+        CHECK_ERR
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
 
     /* close the file */
     err = ncmpi_close(ncid);
-    CHECK_ERR
+    CHECK_ERROUT
 ')dnl
 
-/*----< main() >------------------------------------------------------------*/
-int main(int argc, char **argv)
+define(`TEST_CDF_FORMAT_GET',dnl
+`dnl
+/* open file in format $1 */
+
+    sprintf(fname, "%s%d",filename, $1);
+    err = ncmpi_open(MPI_COMM_WORLD, fname, NC_NOWRITE, info, &ncid);
+    if (err != NC_NOERR) {
+        printf("Error at line %d in %s: ncmpi_open() file %s (%s)\n",
+        __LINE__,__FILE__,fname,ncmpi_strerror(err));
+        MPI_Abort(MPI_COMM_WORLD, -1);
+        exit(1);
+    }
+
+    /* inquire dimensions */
+    _nprocs = ((nprocs + 3) / 4) * 4; /* round up 4 bytes */
+    err = ncmpi_inq_dimid(ncid, "nprocs", &dimids[0]); CHECK_ERROUT
+    err = ncmpi_inq_dimid(ncid, "Z",      &dimids[0]); CHECK_ERROUT
+    err = ncmpi_inq_dimid(ncid, "Y",      &dimids[1]); CHECK_ERROUT
+    err = ncmpi_inq_dimid(ncid, "X",      &dimids[2]); CHECK_ERROUT
+
+    if (mode == INDEP_MODE) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERROUT
+    }
+
+    nerrs += non_blocking_get_text(rank, mode, ncid, dimids, gsize, start, count,
+             startS, countS, stride, startM, countM, imap);
+    foreach(`itype',(`schar, short, int, long, float, double'),`
+    _CAT(`nerrs += non_blocking_get_',itype)'`(rank, mode, ncid, dimids, gsize, start,
+             count, startS, countS, stride, startM, countM, imap);')
+
+ifelse(`$1', `NC_FORMAT_64BIT_DATA',
+    foreach(`itype',(`uchar,ushort,uint,longlong,ulonglong'),`
+    _CAT(`nerrs += non_blocking_get_',itype)'`(rank, mode, ncid, dimids, gsize, start,
+             count, startS, countS, stride, startM, countM, imap);'))
+
+    /* commit all nonblocking requests */
+    if (mode == INDEP_MODE)
+        err = ncmpi_wait(ncid, NC_REQ_ALL, NULL, NULL);
+    else
+        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+    CHECK_ERROUT
+
+    /* close the file */
+    err = ncmpi_close(ncid);
+    CHECK_ERROUT
+')dnl
+
+static
+int tst_io(const char *filename,
+           int         mode,
+           MPI_Info    info)
 {
-    char filename[256], fname[512], *cbuf;
-    int i, j, k, rank, nprocs, ncid, bufsize, err, nerrs=0, cmode;
+    char fname[512];
+    int i, rank, nprocs, ncid, err, nerrs=0, cmode;
     int psize[NDIMS], dimids[NDIMS], dim_rank[NDIMS];
-    double *buf;
     MPI_Offset _nprocs;
     MPI_Offset gsize[NDIMS], stride[NDIMS], imap[NDIMS];
     MPI_Offset start[NDIMS], count[NDIMS];
     MPI_Offset startS[NDIMS], countS[NDIMS];
     MPI_Offset startM[NDIMS], countM[NDIMS];
-    MPI_Info info;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+    /* calculate number of processes along each dimension */
+    for (i=0; i<NDIMS; i++) psize[i] = 0;
+    MPI_Dims_create(nprocs, NDIMS, psize);
+
+    /* for each MPI rank, find its local rank IDs along each dimension in
+     * dim_rank[] */
+    int lower_dims=1;
+    for (i=NDIMS-1; i>=0; i--) {
+        dim_rank[i] = rank / lower_dims % psize[i];
+        lower_dims *= psize[i];
+    }
+
+    /* calculate gsize[], global array sizes and set arguments start and count
+     * for vara APIs */
+    for (i=0; i<NDIMS; i++) {
+        gsize[i]  = (MPI_Offset)LEN * psize[i];    /* global array size */
+        start[i]  = (MPI_Offset)LEN * dim_rank[i]; /* start indices */
+        count[i]  = (MPI_Offset)LEN;               /* array elements */
+    }
+    if (debug)
+        printf("start=%lld %lld %lld count=%lld %lld %lld\n",
+               start[0],start[1],start[2],count[0],count[1],count[2]);
+
+    /* set arguments start, count, stride for vars APIs */
+    for (i=0; i<NDIMS; i++) {
+        startS[i] = dim_rank[i];
+        countS[i] = gsize[i] / psize[i];
+        stride[i] = psize[i];
+    }
+    if (debug)
+        printf("startS=%lld %lld %lld countS=%lld %lld %lld stride=%lld %lld %lld\n",
+               start[0],start[1],start[2],count[0],count[1],count[2],
+               stride[0],stride[1],stride[2]);
+
+    /* ZYX -> YXZ: (this is borrowed from examples/C/transpose.c */
+    imap[1] = 1; imap[0] = count[2]; imap[2] = count[1]*count[2];
+    startM[0] = start[1]; startM[1] = start[2]; startM[2] = start[0];
+    countM[0] = count[1]; countM[1] = count[2]; countM[2] = count[0];
+    if (debug)
+        printf("startM=%lld %lld %lld countM=%lld %lld %lld stride=%lld %lld %lld imap=%lld %lld %lld\n",
+               start[0],start[1],start[2],count[0],count[1],count[2],
+               stride[0],stride[1],stride[2], imap[0],imap[1],imap[2]);
+
+    /* test CDF-1, 2, and 5 formats separately */
+    TEST_CDF_FORMAT_PUT(NC_FORMAT_CLASSIC)
+    TEST_CDF_FORMAT_GET(NC_FORMAT_CLASSIC)
+
+    TEST_CDF_FORMAT_PUT(NC_FORMAT_64BIT_OFFSET)
+    TEST_CDF_FORMAT_GET(NC_FORMAT_64BIT_OFFSET)
+
+    TEST_CDF_FORMAT_PUT(NC_FORMAT_64BIT_DATA)
+    TEST_CDF_FORMAT_GET(NC_FORMAT_64BIT_DATA)
+
+err_out:
+    return nerrs;
+}
+
+/*----< main() >------------------------------------------------------------*/
+int main(int argc, char **argv)
+{
+    char filename[256];
+    int rank, nprocs, err, nerrs=0;
+    MPI_Info info=MPI_INFO_NULL;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -176,66 +489,26 @@ int main(int argc, char **argv)
         free(cmd_str);
     }
 
-    /* calculate number of processes along each dimension */
-    for (i=0; i<NDIMS; i++) psize[i] = 0;
-    MPI_Dims_create(nprocs, NDIMS, psize);
+    debug = 0;
 
-    /* for each MPI rank, find its local rank IDs along each dimension in
-     * dim_rank[] */
-    int lower_dims=1;
-    for (i=NDIMS-1; i>=0; i--) {
-        dim_rank[i] = rank / lower_dims % psize[i];
-        lower_dims *= psize[i];
-    }
-
-    /* calculate gsize[], global array sizes and set arguments start and count
-     * for vara APIs */
-    bufsize = 1;
-    for (i=0; i<NDIMS; i++) {
-        gsize[i]  = (MPI_Offset)LEN * psize[i];    /* global array size */
-        start[i]  = (MPI_Offset)LEN * dim_rank[i]; /* start indices */
-        count[i]  = (MPI_Offset)LEN;               /* array elements */
-        bufsize  *= LEN;
-    }
-
-    /* allocate buffer and initialize with contiguous numbers */
-    buf = (double *) malloc(sizeof(double) * bufsize);
-    for (k=0; k<count[0]; k++)
-    for (j=0; j<count[1]; j++)
-    for (i=0; i<count[2]; i++)
-        buf[k*count[1]*count[2] +
-                     j*count[2] + i] = (start[0]+k)*gsize[1]*gsize[2]
-                                     + (start[1]+j)*gsize[2]
-                                     + (start[2]+i); // + 1000*(rank+1);
-
-    cbuf = (char *) malloc(bufsize);
-    for (i=0; i<bufsize; i++) cbuf[i] = '0'+rank;
-
-    /* set an MPI-IO hint to disable file offset alignment for fixed-size
-     * variables */
+    /* disable file offset alignment for fixed-size variables */
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_var_align_size", "1");
 
-    /* set arguments start, count, stride for vars APIs */
-    for (i=0; i<NDIMS; i++) {
-        startS[i] = dim_rank[i];
-        countS[i] = gsize[i] / psize[i];
-        stride[i] = psize[i];
-    }
+    /* disable PnetCDF internal buffering */
+    MPI_Info_set(info, "nc_ibuf_size", "0");
 
-    /* ZYX -> YXZ: (this is borrowed from examples/C/transpose.c */
-    imap[1] = 1; imap[0] = count[2]; imap[2] = count[1]*count[2];
-    startM[0] = start[1]; startM[1] = start[2]; startM[2] = start[0];
-    countM[0] = count[1]; countM[1] = count[2]; countM[2] = count[0];
+    nerrs = tst_io(filename, INDEP_MODE, MPI_INFO_NULL);
+    if (nerrs > 0) goto err_out;
 
-    /* test CDF-1, 2, and 5 formats separately */
-    TEST_CDF_FORMAT(NC_FORMAT_CLASSIC)
-    TEST_CDF_FORMAT(NC_FORMAT_64BIT_OFFSET)
-    TEST_CDF_FORMAT(NC_FORMAT_64BIT_DATA)
+    nerrs = tst_io(filename, COLL_MODE, MPI_INFO_NULL);
+    if (nerrs > 0) goto err_out;
 
-    free(cbuf);
-    free(buf);
-    MPI_Info_free(&info);
+    nerrs = tst_io(filename, INDEP_MODE, info);
+    if (nerrs > 0) goto err_out;
+
+    nerrs = tst_io(filename, COLL_MODE, info);
+    if (nerrs > 0) goto err_out;
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -247,6 +520,9 @@ int main(int argc, char **argv)
                    sum_size);
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
+
+err_out:
+    if (info != MPI_INFO_NULL) MPI_Info_free(&info);
 
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
