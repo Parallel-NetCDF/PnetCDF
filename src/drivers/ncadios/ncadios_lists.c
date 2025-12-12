@@ -73,7 +73,7 @@ int ncadiosi_var_list_add(NC_ad_var_list *list, NC_ad_var data) {
 
     if (list->nalloc == 0){
         list->nalloc = 16;
-        list->data = NCI_Malloc(sizeof(NC_ad_varp) * list->nalloc);
+        list->data = NCI_Malloc(sizeof(NC_ad_var) * list->nalloc);
     }
     else if (list->nalloc == id){
         list->nalloc *= 2;
