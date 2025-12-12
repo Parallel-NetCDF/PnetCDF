@@ -53,8 +53,12 @@
 
 #include <testutils.h>
 
+/* Smaller NY and NX are for demonstration, producing outputs as shown above.
 #define NY 6
 #define NX 4
+*/
+#define NY 32
+#define NX 128
 #define GHOST 2
 
 #define PRINT_PUT_BUF(Y, X, buf) { \
@@ -143,9 +147,10 @@
         } \
     }
 
-int main(int argc, char** argv)
+static
+int tst_io(const char *filename,
+           MPI_Info    info)
 {
-    char filename[256];
     int i, j, rank, nprocs, err, nerrs=0, req, status;
     int ncid, cmode, varid, dimid[2];
     int array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
@@ -154,29 +159,12 @@ int main(int argc, char** argv)
     MPI_Offset bufcount, start[2], count[2];
     MPI_Datatype subarray;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for flexible var APIs ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERROUT
 
     /* define 2 dimensions */
@@ -485,6 +473,46 @@ int main(int argc, char** argv)
 
     err = ncmpi_close(ncid); CHECK_ERROUT
 
+err_out:
+    return (nerrs > 0);
+}
+
+int main(int argc, char** argv)
+{
+    char filename[256];
+    int rank, nprocs, err, nerrs=0;
+    MPI_Info info=MPI_INFO_NULL;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for flexible var APIs ", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
+    }
+
+    nerrs = tst_io(filename, MPI_INFO_NULL);
+    if (nerrs > 0) goto err_out;
+
+    /* disable PnetCDF internal buffering */
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "nc_ibuf_size", "0");
+
+    nerrs = tst_io(filename, info);
+    if (nerrs > 0) goto err_out;
+
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
@@ -497,6 +525,8 @@ int main(int argc, char** argv)
     }
 
 err_out:
+    if (info != MPI_INFO_NULL) MPI_Info_create(&info);
+
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
