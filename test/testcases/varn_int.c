@@ -57,7 +57,7 @@
 static
 int check_contents_for_fail(char *var_name, int *buffer)
 {
-    int i, nprocs;
+    int i, err=0, nprocs;
     int expected[NY*NX] = {13, 13, 13, 11, 11, 10, 10, 12, 11, 11,
                            10, 12, 12, 12, 13, 11, 11, 12, 12, 12,
                            11, 11, 12, 13, 13, 13, 10, 10, 11, 11,
@@ -71,10 +71,13 @@ int check_contents_for_fail(char *var_name, int *buffer)
         if (buffer[i] != expected[i]) {
             printf("Error: var %s expect read buf[%d]=%d, but got %d\n",
                    var_name, i,expected[i],buffer[i]);
-            return 1;
+            err = 1;
+            break;
         }
     }
-    return 0;
+    MPI_Allreduce(MPI_IN_PLACE, &err, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+
+    return (err > 0);
 }
 
 static
@@ -87,41 +90,24 @@ void permute(MPI_Offset a[NDIMS], MPI_Offset b[NDIMS])
     }
 }
 
-int main(int argc, char** argv)
+#define INDEP_MODE 0
+#define COLL_MODE 1
+
+static
+int tst_io(const char *filename,
+           int         mode,
+           MPI_Info    info)
 {
-    char filename[256];
     int i, j, rank, nprocs, err, nerrs=0;
     int ncid, cmode, varid[2], dimid[2], num_reqs, *buffer, *r_buffer;
     MPI_Offset w_len, **starts=NULL, **counts=NULL;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for ncmpi_put_varn_int_all() ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-#ifdef DEBUG
-    if (nprocs != 4 && rank == 0)
-        printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
-#endif
-
     /* create a new file for writing ----------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERR
 
     /* create a global array of size NY * NX */
@@ -146,6 +132,11 @@ int main(int argc, char** argv)
         for (i=0; i<4; i++) { /* total 4 records */
             err = ncmpi_fill_var_rec(ncid, varid[1], i); CHECK_ERR
         }
+    }
+
+    if (mode == INDEP_MODE) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
     }
 
     /* pick arbitrary numbers of requests for 4 processes */
@@ -231,11 +222,17 @@ int main(int argc, char** argv)
     for (i=0; i<w_len; i++) buffer[i] = rank+10;
 
     /* check error code: NC_ENULLSTART */
-    err = ncmpi_put_varn_int_all(ncid, varid[0], 1, NULL, NULL, NULL);
+    if (mode == INDEP_MODE)
+        err = ncmpi_put_varn_int(ncid, varid[0], 1, NULL, NULL, NULL);
+    else
+        err = ncmpi_put_varn_int_all(ncid, varid[0], 1, NULL, NULL, NULL);
     EXP_ERR(NC_ENULLSTART)
 
     /* write using varn API */
-    err = ncmpi_put_varn_int_all(ncid, varid[0], num_reqs, starts, counts, buffer);
+    if (mode == INDEP_MODE)
+        err = ncmpi_put_varn_int(ncid, varid[0], num_reqs, starts, counts, buffer);
+    else
+        err = ncmpi_put_varn_int_all(ncid, varid[0], num_reqs, starts, counts, buffer);
     CHECK_ERR
 
     /* check if user put buffer contents altered */
@@ -248,21 +245,24 @@ int main(int argc, char** argv)
         }
     }
 
-    if (nprocs > 4) {
+    if (nprocs > 4 || mode == INDEP_MODE) {
         /* This program was designed to run on 4 processes. If running on more
-         * than 4, then we need to sync/flush writes before reading, espacially
-         * for processes of rank >= 4.
+         * than 4, then we need to sync writes before reading, especially for
+         * processes of rank >= 4. Similarly, when running in independent data
+         * mode, flushing writes is necessary before reading the data back.
          */
         MPI_Barrier(MPI_COMM_WORLD);
-        err = ncmpi_flush(ncid);
+        err = ncmpi_sync(ncid);
         CHECK_ERR
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
-
     /* read back and check contents */
     memset(r_buffer, 0, NY*NX*sizeof(int));
-    err = ncmpi_get_var_int_all(ncid, varid[0], r_buffer);
+    if (mode == INDEP_MODE)
+        err = ncmpi_get_var_int(ncid, varid[0], r_buffer);
+    else
+        err = ncmpi_get_var_int_all(ncid, varid[0], r_buffer);
     CHECK_ERR
     nerrs += check_contents_for_fail("fix_var", r_buffer);
     if (nerrs > 0) goto err_out;
@@ -274,7 +274,10 @@ int main(int argc, char** argv)
     }
 
     /* write using varn API */
-    err = ncmpi_put_varn_int_all(ncid, varid[1], num_reqs, starts, counts, buffer);
+    if (mode == INDEP_MODE)
+        err = ncmpi_put_varn_int(ncid, varid[1], num_reqs, starts, counts, buffer);
+    else
+        err = ncmpi_put_varn_int_all(ncid, varid[1], num_reqs, starts, counts, buffer);
     CHECK_ERR
 
     /* check if user put buffer contents altered */
@@ -287,27 +290,34 @@ int main(int argc, char** argv)
         }
     }
 
-    if (nprocs > 4) {
+    if (nprocs > 4 || mode == INDEP_MODE) {
         /* This program was designed to run on 4 processes. If running on more
-         * than 4, then we need to sync/flush writes before reading, espacially
-         * for processes of rank >= 4.
+         * than 4, then we need to sync writes before reading, especially for
+         * processes of rank >= 4. Similarly, when running in independent data
+         * mode, flushing writes is necessary before reading the data back.
          */
         MPI_Barrier(MPI_COMM_WORLD);
-        err = ncmpi_flush(ncid);
+        err = ncmpi_sync(ncid);
         CHECK_ERR
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
     /* read back using get_var API and check contents */
     memset(r_buffer, 0, NY*NX*sizeof(int));
-    err = ncmpi_get_var_int_all(ncid, varid[1], r_buffer);
+    if (mode == INDEP_MODE)
+        err = ncmpi_get_var_int(ncid, varid[1], r_buffer);
+    else
+        err = ncmpi_get_var_int_all(ncid, varid[1], r_buffer);
     CHECK_ERR
     nerrs += check_contents_for_fail("rec_var", r_buffer);
     if (nerrs > 0) goto err_out;
 
     /* read back using get_varn API and check contents */
     for (i=0; i<w_len; i++) buffer[i] = -1;
-    err = ncmpi_get_varn_int_all(ncid, varid[1], num_reqs, starts, counts, buffer);
+    if (mode == INDEP_MODE)
+        err = ncmpi_get_varn_int(ncid, varid[1], num_reqs, starts, counts, buffer);
+    else
+        err = ncmpi_get_varn_int_all(ncid, varid[1], num_reqs, starts, counts, buffer);
     CHECK_ERR
 
     for (i=0; i<w_len; i++) {
@@ -326,7 +336,10 @@ int main(int argc, char** argv)
     free(buffer);
     buffer = (int*) malloc(sizeof(int) * w_len * 2);
     for (i=0; i<2*w_len; i++) buffer[i] = -1;
-    err = ncmpi_get_varn_all(ncid, varid[1], num_reqs, starts, counts, buffer, 1, buftype);
+    if (mode == INDEP_MODE)
+        err = ncmpi_get_varn(ncid, varid[1], num_reqs, starts, counts, buffer, 1, buftype);
+    else
+        err = ncmpi_get_varn_all(ncid, varid[1], num_reqs, starts, counts, buffer, 1, buftype);
     CHECK_ERR
     MPI_Type_free(&buftype);
 
@@ -358,6 +371,56 @@ err_out:
         free(counts);
     }
 
+    return (nerrs > 0);
+}
+
+int main(int argc, char** argv)
+{
+    char filename[256];
+    int rank, nprocs, err, nerrs=0;
+    MPI_Info info=MPI_INFO_NULL;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+    if (argc > 2) {
+        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
+    else           strcpy(filename, "testfile.nc");
+    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for ncmpi_put_varn_int_all() ", basename(argv[0]));
+        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        free(cmd_str);
+    }
+
+#ifdef DEBUG
+    if (nprocs != 4 && rank == 0)
+        printf("Warning: %s is intended to run on 4 processes\n",argv[0]);
+#endif
+
+    nerrs = tst_io(filename, INDEP_MODE, MPI_INFO_NULL);
+    if (nerrs > 0) goto err_out;
+
+    nerrs = tst_io(filename, COLL_MODE, MPI_INFO_NULL);
+    if (nerrs > 0) goto err_out;
+
+    /* disable PnetCDF internal buffering */
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "nc_ibuf_size", "0");
+
+    nerrs = tst_io(filename, INDEP_MODE, info);
+    if (nerrs > 0) goto err_out;
+
+    nerrs = tst_io(filename, COLL_MODE, info);
+    if (nerrs > 0) goto err_out;
+
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
     err = ncmpi_inq_malloc_size(&malloc_size);
@@ -369,6 +432,8 @@ err_out:
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
+err_out:
+    if (info != MPI_INFO_NULL) MPI_Info_create(&info);
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
