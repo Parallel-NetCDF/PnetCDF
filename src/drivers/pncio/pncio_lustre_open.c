@@ -829,12 +829,17 @@ assert(mpi_io_mode & MPI_MODE_CREATE);
     start_iodev        = fd->hints->start_iodevice;
     overstriping_ratio = fd->hints->lustre_overstriping_ratio;
 
+    if (overstriping_ratio <= 0) /* hint not set of disabled */
+        overstriping_ratio = 1;
+
     /* obtain the total number of OSTs available */
     total_num_OSTs = get_total_avail_osts(fd->filename);
     if (total_num_OSTs <= 0) /* failed to obtain number of available OSTs */
         total_num_OSTs = PNCIO_LUSTRE_MAX_OSTS;
-    if (str_factor > total_num_OSTs)
-        str_factor = total_num_OSTs;
+
+    /* make sure str_factor <= overstriping_ratio * total_num_OSTs */
+    if (str_factor > overstriping_ratio * total_num_OSTs)
+        str_factor = overstriping_ratio * total_num_OSTs;
 
     numOSTs=0;
     pattern = LLAPI_LAYOUT_DEFAULT;
