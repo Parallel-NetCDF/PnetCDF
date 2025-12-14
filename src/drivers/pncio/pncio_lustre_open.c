@@ -85,8 +85,8 @@ int get_total_avail_osts(const char *filename)
     dd = open(dname, O_RDONLY, 0600);
     if (dd < 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
-        fprintf(stderr,"Error at %s (%d) fails to open folder %s (%s)\n",
-                __FILE__,__LINE__, dname, strerror(errno));
+        printf("Error at %s (%d) fails to open folder %s (%s)\n",
+               __FILE__,__LINE__, dname, strerror(errno));
 #endif
         goto err_out;
     }
@@ -95,8 +95,8 @@ int get_total_avail_osts(const char *filename)
     layout = llapi_layout_get_by_fd(dd, LLAPI_LAYOUT_GET_COPY);
     if (layout == NULL) {
 #ifdef PNETCDF_LUSTRE_DEBUG
-        fprintf(stderr,"Error at %s (%d) llapi_layout_get_by_fd() fails (%s)\n",
-                __FILE__, __LINE__,strerror(errno));
+        printf("Error at %s (%d) llapi_layout_get_by_fd() fails (%s)\n",
+               __FILE__, __LINE__,strerror(errno));
 #endif
         goto err_out;
     }
@@ -105,14 +105,14 @@ int get_total_avail_osts(const char *filename)
     err = llapi_layout_pool_name_get(layout, pool_name, sizeof(pool_name)-1);
     if (err < 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
-        fprintf(stderr,"Error at %s (%d) llapi_layout_pool_name_get() fails (%s)\n",
-                __FILE__, __LINE__,strerror(errno));
+        printf("Error at %s (%d) llapi_layout_pool_name_get() fails (%s)\n",
+               __FILE__, __LINE__,strerror(errno));
 #endif
         goto err_out;
     }
     else if (pool_name[0] == '\0') {
 #ifdef PNETCDF_LUSTRE_DEBUG
-        fprintf(stderr,"%s at %d: %s has NO Pool Name\n",__FILE__, __LINE__,dname);
+        printf("%s at %d: %s has NO Pool Name\n",__FILE__, __LINE__,dname);
 #endif
         goto err_out;
     }
@@ -129,8 +129,8 @@ int get_total_avail_osts(const char *filename)
     err = llapi_getname(dname, fsname, 63);
     if (err < 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
-        fprintf(stderr,"Error at %s (%d) llapi_getname() fails (%s)\n",
-                __FILE__, __LINE__,strerror(errno));
+        printf("Error at %s (%d) llapi_getname() fails (%s)\n",
+               __FILE__, __LINE__,strerror(errno));
 #endif
         goto err_out;
     }
@@ -211,8 +211,8 @@ int sort_ost_ids(struct llapi_layout *layout,
     for (i=0; i<stripe_count; i++) {
         if (llapi_layout_ost_index_get(layout, i, &osts[i]) != 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
-            fprintf(stderr,"Error at %s (%d) llapi_layout_ost_index_get(%lu) (%s)\n",
-                    __FILE__,__LINE__,i,strerror(errno));
+            printf("Error at %s (%d) llapi_layout_ost_index_get(%lu) (%s)\n",
+                   __FILE__,__LINE__,i,strerror(errno));
 #endif
             return stripe_count;
         }
@@ -254,7 +254,7 @@ uint64_t get_striping(int         fd,
     layout = llapi_layout_get_by_fd(fd, LLAPI_LAYOUT_GET_COPY);
     if (layout == NULL) {
 #ifdef PNETCDF_LUSTRE_DEBUG
-        fprintf(stderr,"Error at %s (%d) llapi_layout_get_by_fd() fails\n",
+        printf("Error at %s (%d) llapi_layout_get_by_fd() fails\n",
                 __FILE__, __LINE__);
 #endif
         goto err_out;
@@ -264,7 +264,7 @@ uint64_t get_striping(int         fd,
     if (err != 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
         snprintf(int_str, 32, "%lu", *pattern);
-        fprintf(stderr,"Error at %s (%d) llapi_layout_pattern_get() fails to get patter %s\n",
+        printf("Error at %s (%d) llapi_layout_pattern_get() fails to get patter %s\n",
                 __FILE__, __LINE__, PATTERN_STR(*pattern, int_str));
 #endif
         goto err_out;
@@ -275,7 +275,7 @@ uint64_t get_striping(int         fd,
     if (err != 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
         snprintf(int_str, 32, "%lu", *stripe_count);
-        fprintf(stderr,"Error at %s (%d) llapi_layout_stripe_count_get() fails to get stripe count %s\n",
+        printf("Error at %s (%d) llapi_layout_stripe_count_get() fails to get stripe count %s\n",
             __FILE__, __LINE__, PATTERN_STR(*stripe_count, int_str));
 #endif
         goto err_out;
@@ -286,7 +286,7 @@ uint64_t get_striping(int         fd,
     if (err != 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
         snprintf(int_str, 32, "%lu", *stripe_size);
-        fprintf(stderr,"Error at %s (%d) llapi_layout_stripe_size_get() fails to get stripe size %s\n",
+        printf("Error at %s (%d) llapi_layout_stripe_size_get() fails to get stripe size %s\n",
             __FILE__,__LINE__, PATTERN_STR(*stripe_size, int_str));
 #endif
         goto err_out;
@@ -322,7 +322,7 @@ uint64_t get_striping(int         fd,
         if (!S_ISREG(path_stat.st_mode) && /* not a regular file */
             !S_ISDIR(path_stat.st_mode)) { /* not a folder */
 #ifdef PNETCDF_LUSTRE_DEBUG
-            fprintf(stderr,"Error at %s (%d) calling fstat() file %s (neither a regular file nor a folder)\n", \
+            printf("Error at %s (%d) calling fstat() file %s (neither a regular file nor a folder)\n", \
                     __FILE__, __LINE__, path);
 #endif
             goto err_out;
@@ -359,8 +359,8 @@ int set_striping(const char *path,
     struct llapi_layout *layout = llapi_layout_alloc();
     if (layout == NULL) {
 #ifdef PNETCDF_LUSTRE_DEBUG
-        fprintf(stderr,"Error at %s (%d) llapi_layout_alloc() fails (%s)\n",
-                __FILE__, __LINE__, strerror(errno));
+        printf("Error at %s (%d) llapi_layout_alloc() fails (%s)\n",
+               __FILE__, __LINE__, strerror(errno));
 #endif
         goto err_out;
     }
@@ -372,8 +372,8 @@ int set_striping(const char *path,
     err = llapi_layout_stripe_count_set(layout, stripe_count);
     if (err != 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
-        fprintf(stderr,"Error at %s (%d) llapi_layout_stripe_count_set() fails set stripe count %lu (%s)\n",
-                __FILE__, __LINE__, stripe_count, strerror(errno));
+        printf("Error at %s (%d) llapi_layout_stripe_count_set() fails set stripe count %lu (%s)\n",
+               __FILE__, __LINE__, stripe_count, strerror(errno));
 #endif
         goto err_out;
     }
@@ -381,8 +381,8 @@ int set_striping(const char *path,
     err = llapi_layout_stripe_size_set(layout, stripe_size);
     if (err != 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
-        fprintf(stderr,"Error at %s (%d) llapi_layout_stripe_size_set() fails to set strpe size %lu (%s)\n",
-                __FILE__, __LINE__, stripe_size, strerror(errno));
+        printf("Error at %s (%d) llapi_layout_stripe_size_set() fails to set strpe size %lu (%s)\n",
+               __FILE__, __LINE__, stripe_size, strerror(errno));
 #endif
         goto err_out;
     }
@@ -396,8 +396,8 @@ int set_striping(const char *path,
             err = llapi_layout_ost_index_set(layout, i, ost_id);
             if (err != 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
-                fprintf(stderr,"Error at %s (%d) llapi_layout_ost_index_set() fails to set OST index %lu to %lu (%s)\n",
-                        __FILE__, __LINE__, i, ost_id, strerror(errno));
+                printf("Error at %s (%d) llapi_layout_ost_index_set() fails to set OST index %lu to %lu (%s)\n",
+                       __FILE__, __LINE__, i, ost_id, strerror(errno));
 #endif
                 goto err_out;
             }
@@ -411,8 +411,8 @@ int set_striping(const char *path,
         err = llapi_layout_ost_index_set(layout, 0, start_iodevice);
         if (err != 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
-            fprintf(stderr,"Error at %s (%d) llapi_layout_ost_index_set() fails to set start iodevice %lu (%s)\n",
-                    __FILE__, __LINE__, start_iodevice, strerror(errno));
+            printf("Error at %s (%d) llapi_layout_ost_index_set() fails to set start iodevice %lu (%s)\n",
+                   __FILE__, __LINE__, start_iodevice, strerror(errno));
 #endif
             goto err_out;
         }
@@ -423,8 +423,8 @@ int set_striping(const char *path,
 #ifdef PNETCDF_LUSTRE_DEBUG
         char int_str[32];
         snprintf(int_str, 32, "%lu", pattern);
-        fprintf(stderr,"Error at %s (%d) llapi_layout_pattern_set() fails ito set pattern %s (%s)\n",
-                __FILE__, __LINE__, PATTERN_STR(pattern, int_str), strerror(errno));
+        printf("Error at %s (%d) llapi_layout_pattern_set() fails ito set pattern %s (%s)\n",
+               __FILE__, __LINE__, PATTERN_STR(pattern, int_str), strerror(errno));
 #endif
         goto err_out;
     }
@@ -433,8 +433,8 @@ int set_striping(const char *path,
     fd = llapi_layout_file_create(path, O_CREAT|O_RDWR, PNCIO_PERM, layout);
     if (fd < 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
-        fprintf(stderr,"Error at %s (%d) llapi_layout_file_create() fails (%s)\n",
-                __FILE__, __LINE__, strerror(errno));
+        printf("Error at %s (%d) llapi_layout_file_create() fails (%s)\n",
+               __FILE__, __LINE__, strerror(errno));
 #endif
         goto err_out;
     }
@@ -444,7 +444,7 @@ err_out:
 
 #ifdef PNETCDF_LUSTRE_DEBUG
     if (fd < 0)
-        fprintf(stderr,"Error at %s (%d) fails to create file %s with desired file striping. PnetCDF now tries to inherit it from the parent folder.\n",
+        printf("Error at %s (%d) fails to create file %s with desired file striping. PnetCDF now tries to inherit it from the parent folder.\n",
                 __FILE__,__LINE__, path);
 #endif
 
@@ -995,8 +995,8 @@ assert(mpi_io_mode & MPI_MODE_CREATE);
 #elif defined(MIMIC_LUSTRE)
     fd->fd_sys = open(fd->filename, amode, perm);
     if (fd->fd_sys == -1) {
-        fprintf(stderr,"%s line %d: rank %d fails to create file %s (%s)\n",
-                __FILE__,__LINE__, rank, fd->filename, strerror(errno));
+        printf("%s line %d: rank %d fails to create file %s (%s)\n",
+               __FILE__,__LINE__, rank, fd->filename, strerror(errno));
         err = ncmpii_error_posix2nc("open");
         goto err_out;
     }
@@ -1085,7 +1085,7 @@ static int wkl=0; if (wkl == 0 && world_rank == 0) { printf("\nxxxx %s at %d: %s
     /* All processes open the file. */
     fd->fd_sys = open(fd->filename, omode, perm);
     if (fd->fd_sys == -1) {
-        fprintf(stderr, "%s line %d: rank %d fails to open file %s (%s)\n",
+        fprintf(stderr,"%s line %d: rank %d fails to open file %s (%s)\n",
                 __FILE__,__LINE__, rank, fd->filename, strerror(errno));
         err = ncmpii_error_posix2nc("open");
         goto err_out;
