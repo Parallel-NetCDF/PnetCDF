@@ -392,7 +392,7 @@ int set_striping(const char *path,
         if (start_iodevice == LLAPI_LAYOUT_DEFAULT)
             start_iodevice = 0;
         for (i=0; i<stripe_count; i++) {
-            ost_id = start_iodevice + (i % numOSTs);
+            ost_id = (start_iodevice + i) % numOSTs;
             err = llapi_layout_ost_index_set(layout, i, ost_id);
             if (err != 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
@@ -403,7 +403,7 @@ int set_striping(const char *path,
             }
         }
     }
-    else {
+    else if (start_iodevice != LLAPI_LAYOUT_DEFAULT) {
         /* When an abnormally large start_iodevice is set by users, Lustre may
          * return an error. Instead fail will occur later at calling
          * llapi_layout_file_create().
