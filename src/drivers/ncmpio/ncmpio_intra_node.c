@@ -1583,7 +1583,8 @@ int ina_put(NC         *ncp,
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double endT, startT = MPI_Wtime();
     MPI_Offset mem_max;
-    ncmpi_inq_malloc_size(&mem_max);
+    // ncmpi_inq_malloc_size(&mem_max);
+    ncmpi_inq_malloc_max_size(&mem_max);
     ncp->maxmem_put[0] = MAX(ncp->maxmem_put[0], mem_max);
 #endif
 
@@ -1660,7 +1661,8 @@ int ina_put(NC         *ncp,
     /* The remaining of this subroutine is for aggregators only */
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    ncmpi_inq_malloc_size(&mem_max);
+    // ncmpi_inq_malloc_size(&mem_max);
+    ncmpi_inq_malloc_max_size(&mem_max);
     ncp->maxmem_put[1] = MAX(ncp->maxmem_put[1], mem_max);
     endT = MPI_Wtime();
     if (ncp->rank == ncp->my_aggr) ncp->ina_time_put[0] += endT - startT;
@@ -1845,7 +1847,8 @@ if (fake_overlap == 0) assert(npairs == i+1);
         npairs = i+1;
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-        ncmpi_inq_malloc_size(&mem_max);
+        // ncmpi_inq_malloc_size(&mem_max);
+        ncmpi_inq_malloc_max_size(&mem_max);
         ncp->maxmem_put[2] = MAX(ncp->maxmem_put[2], mem_max);
 
         endT = MPI_Wtime();
@@ -1874,7 +1877,8 @@ if (fake_overlap == 0) assert(npairs == i+1);
             recv_buf = (char*) NCI_Malloc(recv_amnt);
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-        ncmpi_inq_malloc_size(&mem_max);
+        // ncmpi_inq_malloc_size(&mem_max);
+        ncmpi_inq_malloc_max_size(&mem_max);
         ncp->maxmem_put[3] = MAX(ncp->maxmem_put[3], mem_max);
 #endif
 
@@ -2037,7 +2041,8 @@ if (fake_overlap == 0) assert(npairs == i+1);
     }
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    ncmpi_inq_malloc_size(&mem_max);
+    // ncmpi_inq_malloc_size(&mem_max);
+    ncmpi_inq_malloc_max_size(&mem_max);
     ncp->maxmem_put[4] = MAX(ncp->maxmem_put[4], mem_max);
 #endif
 
@@ -2056,7 +2061,8 @@ if (fake_overlap == 0) assert(npairs == i+1);
     if (lengths != NULL) NCI_Free(lengths);
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    ncmpi_inq_malloc_size(&mem_max);
+    // ncmpi_inq_malloc_size(&mem_max);
+    ncmpi_inq_malloc_max_size(&mem_max);
     ncp->maxmem_put[5] = MAX(ncp->maxmem_put[5], mem_max);
 #endif
 
@@ -2134,7 +2140,8 @@ int ina_get(NC         *ncp,
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double endT, startT = MPI_Wtime();
     MPI_Offset mem_max;
-    ncmpi_inq_malloc_size(&mem_max);
+    // ncmpi_inq_malloc_size(&mem_max);
+    ncmpi_inq_malloc_max_size(&mem_max);
     ncp->maxmem_get[0] = MAX(ncp->maxmem_get[0], mem_max);
 #endif
 
@@ -2230,7 +2237,8 @@ int ina_get(NC         *ncp,
     len_ptr      = lengths;
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    ncmpi_inq_malloc_size(&mem_max);
+    // ncmpi_inq_malloc_size(&mem_max);
+    ncmpi_inq_malloc_max_size(&mem_max);
     ncp->maxmem_get[1] = MAX(ncp->maxmem_get[1], mem_max);
 #endif
 
@@ -2328,7 +2336,8 @@ int ina_get(NC         *ncp,
         }
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-        ncmpi_inq_malloc_size(&mem_max);
+        // ncmpi_inq_malloc_size(&mem_max);
+        ncmpi_inq_malloc_max_size(&mem_max);
         ncp->maxmem_get[2] = MAX(ncp->maxmem_get[2], mem_max);
         ncp->ina_npairs_get = MAX(ncp->ina_npairs_get, npairs);
 #endif
@@ -2373,7 +2382,8 @@ int ina_get(NC         *ncp,
         npairs = i+1;
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-        ncmpi_inq_malloc_size(&mem_max);
+        // ncmpi_inq_malloc_size(&mem_max);
+        ncmpi_inq_malloc_max_size(&mem_max);
         ncp->maxmem_get[3] = MAX(ncp->maxmem_get[3], mem_max);
 #endif
     } /* if (npairs > 0) */
@@ -2415,7 +2425,8 @@ int ina_get(NC         *ncp,
     }
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    ncmpi_inq_malloc_size(&mem_max);
+    // ncmpi_inq_malloc_size(&mem_max);
+    ncmpi_inq_malloc_max_size(&mem_max);
     ncp->maxmem_get[4] = MAX(ncp->maxmem_get[4], mem_max);
     endT = MPI_Wtime();
     ncp->ina_time_get[0] += endT - startT;
@@ -2425,7 +2436,8 @@ int ina_get(NC         *ncp,
     if (status == NC_NOERR) status = err;
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    ncmpi_inq_malloc_size(&mem_max);
+    // ncmpi_inq_malloc_size(&mem_max);
+    ncmpi_inq_malloc_max_size(&mem_max);
     ncp->maxmem_get[5] = MAX(ncp->maxmem_get[5], mem_max);
     startT = MPI_Wtime();
 #endif
