@@ -1569,7 +1569,7 @@ int ina_put(NC         *ncp,
             PNCIO_View  buf_view,
             void       *buf)       /* user buffer */
 {
-    int i, j, err, mpireturn, status=NC_NOERR;
+    int i, j, err, mpireturn, status=NC_NOERR, free_buf_view_off=0;
     char *recv_buf=NULL, *wr_buf = NULL;
     MPI_Aint npairs=0, *meta=NULL, *count=NULL, *bufAddr=NULL;
     MPI_Offset wr_amnt=0;
@@ -1970,10 +1970,6 @@ if (fake_overlap == 0) assert(npairs == i+1);
             }
             /* else case is when user's buffer, buf, can be used to write */
         }
-#if 0
-        /* Note copying write data into a contiguous buffer in most cases will
-         * run faster in MPI-IO and PNCIO.
-         */
         else if (buf_view.is_contig && !overlap) {
             /* Note we can reuse bufAddr[] and len_ptr[] as buf_view.off and
              * buf_view.len only when buf_view.is_contig is true, because
@@ -1981,22 +1977,31 @@ if (fake_overlap == 0) assert(npairs == i+1);
              * buffer is contiguous.
              */
             wr_buf = recv_buf;
-            buf_view.size = wr_amnt;
-            buf_view.type = MPI_BYTE;
+            buf_view.size      = wr_amnt;
+            buf_view.type      = MPI_BYTE;
             buf_view.is_contig = (npairs <= 1);
+            buf_view.len       = len_ptr;
+            buf_view.count     = npairs;
+#if SIZEOF_MPI_AINT == SIZEOF_MPI_OFFSET
             buf_view.off = (MPI_Offset*)bufAddr; /* based on recv_buf */
-            buf_view.len = len_ptr;
-            buf_view.count = npairs;
-        }
+#else
+            buf_view.off = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * npairs);
+            for (j=0; j<npairs; j++)
+                buf_view.off[j] = (MPI_Offset)bufAddr[j];
+            free_buf_view_off = 1;
 #endif
+        }
         else {
             /* do_sort means buffer's offsets and lengths have been moved
              * around in order to make file offset-length pairs monotonically
              * non-decreasing. We need to re-arrange the write buffer
              * accordingly by copying write data into a temporary buffer,
-             * wr_buf, and write it to the file.  Copying write data into a
-             * contiguous buffer in most cases will run faster in MPI-IO and
-             * PNCIO.
+             * wr_buf, and write it to the file. Note when npairs and wr_amnt
+             * are large, copying write data into a contiguous buffer can be
+             * expensive, making INA cost high. Although it makes the two-phase
+             * I/O MPI-IO and PNCIO run faster, this memory copy cost may not
+             * be worthy. Besides, the memory footprint high-water mark is
+             * doubled.
              */
             wr_buf = NCI_Malloc(wr_amnt);
             ptr = wr_buf;
@@ -2040,6 +2045,7 @@ if (fake_overlap == 0) assert(npairs == i+1);
     err = ncmpio_read_write(ncp, NC_REQ_WR, 0, buf_view, wr_buf);
     if (status == NC_NOERR) status = err;
 
+    if (free_buf_view_off) NCI_Free(buf_view.off);
     if (wr_buf != buf)  NCI_Free(wr_buf);
     if (bufAddr != NULL) NCI_Free(bufAddr);
 
