@@ -423,7 +423,17 @@ ncmpio_inq_misc(void       *ncdp,
 
     if (recsize != NULL) *recsize = ncp->recsize;
 
-    if (header_size != NULL) *header_size = ncp->xsz;
+    if (header_size != NULL) {
+        if (NC_indef(ncp))
+            /* When called in define mode, calculate and return the current
+             * header size. Cannot do the same for header extent, as the empty
+             * space depends on arguments h_minfree and v_align of
+             * ncmpi__enddef().
+             */
+            *header_size = ncmpio_hdr_len_NC(ncp);
+        else
+            *header_size = ncp->xsz;
+    }
 
     if (header_extent != NULL) *header_extent = ncp->begin_var;
 

@@ -26,7 +26,14 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * API semantics updates
-  + none
+  + API ncmpi_inq_header_size() now can be called in the define mode. This API
+    returns the file header size with metadata defined by the time of the call.
+    This information can be helpful to pick proper values for arguments
+    h_minfree, v_align, v_minfree, r_align when calling ncmpi__enddef() to
+    allocate a sufficiently large free space for file header extent and
+    variable data sections to grow without moving data already stored in the
+    file, i.e. when adding new variables, dimensions, or attributes.
+    See [PR #201](https://github.com/Parallel-NetCDF/PnetCDF/pull/201).
 
 * New error code precedence
   + none
