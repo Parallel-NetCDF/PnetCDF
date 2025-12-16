@@ -587,7 +587,9 @@ err_check:
         if (status == NC_NOERR) status = err;
     }
 
-    if (xbuf != buf) NCI_Free(xbuf);
+    if (varp != NULL && xbuf != buf)
+        /* xbuf may be allocated only if this is a non-zero-sized request */
+        NCI_Free(xbuf);
 
     return status;
 }
@@ -629,7 +631,19 @@ ncmpio_$1_var(void             *ncdp,
 
 {
     NC     *ncp=(NC*)ncdp;
-    NC_var *varp=NULL;
+    NC_var *varp;
+
+    /* Check if this is a true zero-sized request. Note NC_REQ_ZERO is added to
+     * reqMode only when an error is detected at the dispatcher level.
+     */
+    if (!fIsSet(reqMode, NC_REQ_ZERO)) {
+        int i;
+        for (i=0; i<ncp->vars.value[varid]->ndims; i++)
+            if (count[i] == 0) {
+                reqMode |= NC_REQ_ZERO;
+                break;
+            }
+    }
 
     /* sanity check has been done at dispatchers */
 
