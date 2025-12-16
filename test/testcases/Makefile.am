@@ -100,7 +100,8 @@ TESTPROGRAMS = file_create_open \
                tst_redefine \
                tst_grow_header \
                tst_varn_var1 \
-               tst_multi_redefine
+               tst_multi_redefine \
+               tst_inq_header_size
 
 M4_SRCS      = put_all_kinds.m4 \
                erange_fill.m4 \
