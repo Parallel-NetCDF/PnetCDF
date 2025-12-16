@@ -2372,6 +2372,7 @@ num_memcpy++;
             send_total_size -= len;
             if (send_total_size == 0) break;
         }
+        if (send_total_size == 0) break;
 
         /* done with this off-len pair, move on to the next */
         if (fd->flat_file.rem == 0) {
