@@ -53,7 +53,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Bug fixes
-  + none
+  + Fix data movement when new record variables are added to an existing file
+    that does not change the starting offset of record variable section.
+    See [PR #199](https://github.com/Parallel-NetCDF/PnetCDF/pull/199).
 
 * New example programs
   + none
@@ -62,7 +64,10 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New test program
-  + none
+  + test/testcases/tst_grow_data.c -- adding new variables by re-entering the
+    define mode multiple time, but does not cause file header extent to grow.
+    It also tests a case when adding a new record variable that does not change
+    the starting offset of the record variable section in the file.
 
 * Issues with NetCDF library
   + none

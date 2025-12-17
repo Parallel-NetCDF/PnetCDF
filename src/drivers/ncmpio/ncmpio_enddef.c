@@ -1346,10 +1346,11 @@ ncmpio__enddef(void       *ncdp,
             mov_done = 1;
         }
         else {
-            if (ncp->begin_rec > ncp->old->begin_rec) {
-                /* beginning of record variable section grows. The entire
-                 * record variable section must be moved to a higher file
-                 * offset.
+            /* move record variable section first */
+            if (ncp->begin_rec > ncp->old->begin_rec ||
+                ncp->vars.num_rec_vars > ncp->old->vars.num_rec_vars) {
+                /* Either Beginning of record variable section has grown or
+                 * it has not but new record variables have been added.
                  */
 
                 /* Make sure all processes finish their I/O before any process
@@ -1358,9 +1359,9 @@ ncmpio__enddef(void       *ncdp,
                 if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
 
                 if (ncp->vars.num_rec_vars == ncp->old->vars.num_rec_vars) {
-                    /* no new record variable has been added, then the entire
-                     * record variable section can be moved as a single
-                     * contiguous block
+                    /* If no new record variable has been added, then we can
+                     * move the entire record variable section as a single
+                     * contiguous block.
                      */
 
                     /* amount of data to be moved */
@@ -1371,7 +1372,7 @@ ncmpio__enddef(void       *ncdp,
                     if (status == NC_NOERR) status = err;
                 }
                 else {
-                    /* new record variables have been added. Must move one
+                    /* New record variables have been added. We must move one
                      * record at a time, because all records of record
                      * variables are stored interleaved in the file.
                      */
@@ -1381,6 +1382,7 @@ ncmpio__enddef(void       *ncdp,
                 mov_done = 1;
             }
 
+            /* Now move fix-sized variable section */
             if (ncp->begin_var > ncp->old->begin_var) {
                 /* beginning of fix-sized variable section grows. The fix-sized
                  * variable section must be moved to a higher file offset.
