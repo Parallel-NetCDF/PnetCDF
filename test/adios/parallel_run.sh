@@ -81,5 +81,6 @@ for i in ${check_PROGRAMS} ; do
        fi
     done
     done
+    done
 done
 
