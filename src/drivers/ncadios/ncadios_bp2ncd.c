@@ -525,7 +525,7 @@ int ncadiosi_parse_header_bp2ncd (NC_ad *ncid)
     pg = pg_root;
     while (pg)
     {
-        int i,j;
+        int j;
         int var_dims_count = 0;
         struct var_dim * var_dims = 0;
 
