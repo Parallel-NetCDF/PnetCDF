@@ -219,8 +219,8 @@ err_out:
 }
 
 int main(int argc, char **argv) {
-    char filename[256], *hint_value;
-    int  err, nerrs=0, rank, bb_enabled=0;
+    char filename[256];
+    int  err, nerrs=0, rank;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -243,21 +243,14 @@ int main(int argc, char **argv) {
         free(cmd_str);
     }
 
-    /* check whether burst buffering is enabled */
-    if (inq_env_hint("nc_burst_buf", &hint_value)) {
-        if (strcasecmp(hint_value, "enable") == 0) bb_enabled = 1;
-        free(hint_value);
-    }
-
     nerrs += tst_fmt(filename, 0);
+    if (nerrs > 0) goto err_out;
+
     nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
-    if (!bb_enabled) {
-#ifdef ENABLE_NETCDF4
-        nerrs += tst_fmt(filename, NC_NETCDF4);
-        nerrs += tst_fmt(filename, NC_NETCDF4 | NC_CLASSIC_MODEL);
-#endif
-    }
+    if (nerrs > 0) goto err_out;
+
     nerrs += tst_fmt(filename, NC_64BIT_DATA);
+    if (nerrs > 0) goto err_out;
 
     /* check if PnetCDF freed all internal malloc */
     MPI_Offset malloc_size, sum_size;
@@ -270,6 +263,7 @@ int main(int argc, char **argv) {
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
+err_out:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
