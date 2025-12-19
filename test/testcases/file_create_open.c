@@ -21,6 +21,7 @@ int main(int argc, char **argv)
     char filename[512];
     int i, err, nprocs, rank, nerrs=0, ncid;
     int format[3] = {0, NC_64BIT_OFFSET, NC_64BIT_DATA};
+    MPI_Info info=MPI_INFO_NULL;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -41,10 +42,15 @@ int main(int argc, char **argv)
         free(cmd_str);
     }
 
+    MPI_Info_create(&info);
+    MPI_Info_set(info, "nc_header_align_size", "100");
+    MPI_Info_set(info, "nc_var_align_size", "200");
+    MPI_Info_set(info, "nc_record_align_size", "300");
+
     for (i=0; i<3; i++) {
         /* Create a new file */
         int cmode = NC_CLOBBER | format[i];
-        err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+        err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
         CHECK_ERR
 
         /* Close the file. */
@@ -52,13 +58,15 @@ int main(int argc, char **argv)
         CHECK_ERR
 
         /* Open the file */
-        err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
+        err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, info, &ncid);
         CHECK_ERR
 
         /* Close the file. */
         err = ncmpi_close(ncid);
         CHECK_ERR
     }
+
+    if (info != MPI_INFO_NULL) MPI_Info_free(&info);
 
     /* check if there is any malloc residue */
     MPI_Offset malloc_size, sum_size;
