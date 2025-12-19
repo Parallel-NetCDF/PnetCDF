@@ -34,6 +34,7 @@ void ncmpio_hint_extract(NC       *ncp,
     char value[MPI_MAX_INFO_VAL];
     int  flag, ival;
     long long llval;
+    MPI_Offset var_align_val, hdr_align_val;
 
     assert(ncp != NULL);
 
@@ -69,17 +70,19 @@ void ncmpio_hint_extract(NC       *ncp,
      */
 
     /* aligns starting file offsets of entire data section */
+    var_align_val = -1;
     MPI_Info_get(info, "nc_var_align_size", MPI_MAX_INFO_VAL-1, value, &flag);
     if (flag) {
         errno = 0;  /* errno must set to zero before calling strtoll */
         llval = strtoll(value, NULL, 10);
         if (errno == 0 && llval >= 0)
-            ncp->info_v_align = llval;
+            var_align_val = llval;
     }
 
     /* Hint nc_header_align_size is now deprecated. But for backward
      * compatibility, let's still check.
      */
+    hdr_align_val = -1;
     MPI_Info_get(info, "nc_header_align_size", MPI_MAX_INFO_VAL-1,
                  value, &flag);
     if (flag) {
@@ -90,9 +93,15 @@ void ncmpio_hint_extract(NC       *ncp,
              * replace hint nc_var_align_size with the value of info_h_align.
              */
             if (llval >= 0 && ncp->info_v_align == -1)
-                ncp->info_v_align = llval;;
+                hdr_align_val = llval;
         }
     }
+
+    /* hint nc_var_align_size supersedes nc_header_align_size */
+    if (var_align_val > 0)
+        ncp->info_v_align = var_align_val;
+    else if (hdr_align_val > 0)
+        ncp->info_v_align = hdr_align_val;
 
     /* aligns starting file offset of the record variable section */
     MPI_Info_get(info, "nc_record_align_size", MPI_MAX_INFO_VAL-1,
