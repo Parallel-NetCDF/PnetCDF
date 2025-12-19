@@ -1,17 +1,23 @@
 /*
  *  Copyright (C) 2024, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
- *
  */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * This program tests all alignment features available from PnetCDF:
- * 1. v_align: header extent alignment (starting file offset of data section)
- * 2. h_minfree: header free space
- * 3. r_align: record variable section alignment
- * 4. v_minfree: free space between record variable section and the end of last
- *    fix-sized variable.
+ * 1. h_minfree: free space in the header section, i.e.
+ *      (header extent) - (header size) >= h_minfree
+ * 2. v_align: alignment of the beginning of the fix-size variable section, i.e.
+ *       (header extent) % v_align == 0
+ *       If no fixed-size variable is defined, v_align is ignored.
+ *       Default value of v_align is 512.
+ * 3. v_minfree: free space between the end of last fix-sized variable and the
+ *       record variable section.
+ *       If no fixed-size variable is defined, v_minfree is ignored.
+ * 4. r_align: alignment of the beginning of the record variable section.
+ *       If no fixed-size variable is defined, default value of r_align is 512.
+ *       Otherwise, default value of r_align is 4.
  *
  * Tests are done by reentering the define mode multiple times.
  *
@@ -28,26 +34,38 @@
 #include <string.h>
 #include <strings.h> /* strcasecmp() */
 #include <libgen.h> /* basename() */
+#include <assert.h>
+
 #include <pnetcdf.h>
 
 #include <testutils.h>
 
 #define LEN 101
 
+#ifndef MAX
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
+#endif
 #define RNDUP(x, unit) ((((x) + (unit) - 1) / (unit)) * (unit))
 
 static int verbose;
 
-#define CHECK_VAL(ncid, varid, ii, val, expect) {                     \
-    if (val != expect) {                                              \
-        char name[16];                                                \
-        err = ncmpi_inq_varname(ncid, varid, name);                   \
-        CHECK_ERROUT                                                  \
-        printf("%s line %d: var %s i=%d expecting %d but got %d\n",   \
-               __func__,__LINE__,name,ii,expect,val);                 \
-        nerrs++;                                                      \
-        goto err_out;                                                 \
-    }                                                                 \
+#define CHECK_VAL(ncid, varid, ii, val, expect) {                           \
+    if (val != expect) {                                                    \
+        char name[16];                                                      \
+        int ndims;                                                          \
+        err = ncmpi_inq_varndims(ncid, varid, &ndims);                      \
+        CHECK_ERROUT                                                        \
+        err = ncmpi_inq_varname(ncid, varid, name);                         \
+        CHECK_ERROUT                                                        \
+        if (ndims == 1)                                                     \
+            printf("%s line %d: var %s[%d] expecting %d but got %d\n",      \
+                   __func__,__LINE__,name,ii,expect,val);                   \
+        else /* record variable */                                          \
+            printf("%s line %d: var %s[%d][%d] expecting %d but got %d\n",  \
+                   __func__,__LINE__,name,ii/LEN,ii%LEN,expect,val);        \
+        nerrs++;                                                            \
+        goto err_out;                                                       \
+    }                                                                       \
 }
 
 /*----< check_vars() >-------------------------------------------------------*/
@@ -182,25 +200,40 @@ err_out:
 #define CHECK_ALIGNMENTS { \
     /* hints set in MPI info precede ncmpi__enddef */ \
     v_align = (env_v_align) ? env_v_align : \
-              (!has_fix_vars && env_r_align) ? env_r_align : \
-              (info_v_align) ? info_v_align : v_align; \
+              (info_v_align) ? info_v_align : \
+              (v_align > 0) ? v_align : 512; \
     r_align = (env_r_align) ? env_r_align : \
-              (info_r_align) ? info_r_align : r_align; \
+              (info_r_align) ? info_r_align : \
+              (r_align > 0) ? r_align : \
+              (has_fix_vars) ? 4 : 512;\
+    if (h_minfree == -1) h_minfree = 0; \
+    if (v_minfree == -1) v_minfree = 0; \
     exp_hsize  = old_hsize + increment; \
-    exp_extent = RNDUP(exp_hsize + h_minfree, v_align); \
-    old_extent = RNDUP(old_extent, v_align); \
-    exp_extent = (exp_extent < old_extent) ? old_extent : exp_extent; \
+    exp_extent = exp_hsize + h_minfree; \
     if (has_fix_vars) { \
-        exp_r_begin = RNDUP(exp_extent + fix_v_size + v_minfree, r_align); \
-        old_r_begin = RNDUP(old_r_begin, r_align); \
+        exp_extent = MAX(exp_extent, old_extent); \
+        exp_extent = RNDUP(exp_extent, v_align); \
+        exp_r_begin = exp_extent + fix_v_size + v_minfree; \
+        exp_r_begin = MAX(exp_r_begin, old_r_begin); \
+        exp_r_begin = RNDUP(exp_r_begin, r_align); \
+    } else { \
+        exp_r_begin = MAX(exp_extent, old_r_begin); \
+        exp_r_begin = RNDUP(exp_r_begin, r_align); \
+        exp_extent = exp_r_begin; \
     } \
-    else /* v_minfree and r_align are ignored */ \
-        exp_r_begin = exp_extent; \
-    exp_r_begin = (exp_r_begin < old_r_begin) ? old_r_begin : exp_r_begin; \
-    exp_h_free  = exp_extent - exp_hsize; \
-    exp_v_free  = exp_r_begin - (exp_extent + fix_v_size); \
+    exp_h_free = exp_extent - exp_hsize; \
+    exp_v_free = exp_r_begin - (exp_extent + fix_v_size); \
     CHECK_HEADER_SIZE \
 }
+
+#define PRINT_HINTS \
+    if (verbose && rank == 0) { \
+        printf("\n========================================\n"); \
+        printf("  Line %d hsize %lld extent %lld r_begin %lld has_fix_vars %d\n", \
+               __LINE__,hsize,extent,r_begin, has_fix_vars); \
+        printf("  Line %d ncmpi__enddef() increment %lld h_minfree %lld v_align %lld v_minfree %lld r_align %lld\n", \
+               __LINE__, increment, h_minfree, v_align, v_minfree, r_align); \
+    }
 
 /* test alignments hints
  * 1. set in environment variable PNETCDF_HINTS,
@@ -220,11 +253,11 @@ tst_fmt(char       *filename,
     MPI_Info info=MPI_INFO_NULL;
     MPI_Offset start[2], count[2], increment, fix_v_size;
 
-    MPI_Offset hsize=0, old_hsize, exp_hsize;
-    MPI_Offset extent=0, old_extent, exp_extent;
+    MPI_Offset hsize=0, old_hsize=-1, exp_hsize=-1;
+    MPI_Offset extent=0, old_extent=-1, exp_extent=-1;
     MPI_Offset h_free=0, old_h_free, exp_h_free;
     MPI_Offset v_free=0, old_v_free, exp_v_free;
-    MPI_Offset r_begin=0, old_r_begin, exp_r_begin;
+    MPI_Offset r_begin=0, old_r_begin=-1, exp_r_begin=-1;
     MPI_Offset h_minfree, v_align, v_minfree, r_align;
     MPI_Offset env_h_align=0, env_v_align=0, env_r_align=0;
     MPI_Offset info_h_align=0, info_v_align=0, info_r_align=0;
@@ -270,7 +303,6 @@ tst_fmt(char       *filename,
                cmode,has_fix_vars,env_h_align,env_v_align,env_r_align,
                info_h_align,info_v_align,info_r_align);
 
-
     /* create a new file */
     cmode |= NC_CLOBBER;
     err = ncmpi_create(comm, filename, cmode, info, &ncid); CHECK_ERR
@@ -287,6 +319,8 @@ tst_fmt(char       *filename,
     }
     err = ncmpi_put_att_text(ncid, NC_GLOBAL, "attr", 0, NULL); CHECK_ERR
 
+    increment = 0; h_minfree = v_minfree = v_align = r_align = -1;
+    PRINT_HINTS
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     /* write to all variables, 2 records */
@@ -316,24 +350,11 @@ tst_fmt(char       *filename,
 
     GET_HEADER_SIZE
 
-    /* PnetCDF default v_align is 512 when no hints given */
-    v_align = (env_v_align) ? env_v_align :
-              (!has_fix_vars && env_r_align) ? env_r_align :
-              (info_v_align) ? info_v_align : 512;
-    r_align = (env_r_align) ? env_r_align : (info_r_align) ? info_r_align : 4;
-    increment = 0;
-    h_minfree = 0;
-    v_minfree = 0;
+    old_hsize   = hsize;
+    old_extent  = extent;
+    old_r_begin = r_begin;
 
-    exp_hsize = hsize;
-    exp_extent = RNDUP(hsize, v_align);
-    if (has_fix_vars)
-        exp_r_begin = RNDUP(exp_extent + fix_v_size, r_align);
-    else /* r_align and v_minfree are ignored */
-        exp_r_begin = exp_extent;
-    exp_h_free = exp_extent - exp_hsize;
-    exp_v_free = v_free;
-    CHECK_HEADER_SIZE
+    CHECK_ALIGNMENTS
 
     /* enter redefine mode -------------------------------------------*/
     err = ncmpi_redef(ncid); CHECK_ERR
@@ -345,6 +366,7 @@ tst_fmt(char       *filename,
     v_minfree = 0;  /* free space between fixed and record variable sections */
     r_align   = 4;  /* alignment for record variable section */
 
+    PRINT_HINTS
     err = ncmpi__enddef(ncid, h_minfree, v_align, v_minfree, r_align);
     CHECK_ERR
 
@@ -388,10 +410,8 @@ tst_fmt(char       *filename,
     GROW_METADATA(increment)
 
     /* exit define mode */
-    h_minfree = 0;
-    v_minfree = 0;
-    v_align = 4;
-    r_align = 4;
+    h_minfree = v_minfree = v_align = r_align = -1;
+    PRINT_HINTS
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     GET_HEADER_SIZE
@@ -406,6 +426,7 @@ tst_fmt(char       *filename,
     v_minfree = 44;
     v_align = 4;
     r_align = 4;
+    PRINT_HINTS
     err = ncmpi__enddef(ncid, h_minfree, v_align, v_minfree, r_align);
     CHECK_ERR
 
@@ -424,6 +445,7 @@ tst_fmt(char       *filename,
     v_minfree = 31;
     v_align = 4;
     r_align = 4;
+    PRINT_HINTS
     err = ncmpi__enddef(ncid, h_minfree, v_align, v_minfree, r_align);
     CHECK_ERR
 
@@ -438,10 +460,8 @@ tst_fmt(char       *filename,
     GROW_METADATA(increment);
 
     /* exit define mode */
-    h_minfree = 0;
-    v_minfree = 0;
-    v_align = 4;
-    r_align = 4;
+    h_minfree = v_minfree = v_align = r_align = -1;
+    PRINT_HINTS
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     GET_HEADER_SIZE
@@ -457,6 +477,7 @@ tst_fmt(char       *filename,
 
     /* increase v_align */
     v_align = extent + 4;
+    PRINT_HINTS
     err = ncmpi__enddef(ncid, h_minfree, v_align, v_minfree, r_align);
     CHECK_ERR
 
@@ -470,10 +491,11 @@ tst_fmt(char       *filename,
     increment = 0;
     h_minfree = 0;
     v_minfree = 31;
-    v_align = 4;
+    v_align = 0;
 
     /* increase r_align */
     r_align = r_begin + 4;
+    PRINT_HINTS
     err = ncmpi__enddef(ncid, h_minfree, v_align, v_minfree, r_align);
     CHECK_ERR
 
@@ -484,13 +506,9 @@ tst_fmt(char       *filename,
     /* enter redefine mode -------------------------------------------*/
     err = ncmpi_redef(ncid); CHECK_ERR
 
-    increment = 0;
-    h_minfree = 0;
-    v_minfree = 0;
-    v_align = 4;
-    r_align = 4;
-
     /* add nothing */
+    increment = 0; h_minfree = v_minfree = v_align = r_align = -1;
+    PRINT_HINTS
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     GET_HEADER_SIZE
