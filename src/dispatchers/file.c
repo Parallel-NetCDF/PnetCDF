@@ -166,6 +166,7 @@ combine_env_hints(MPI_Info  user_info,  /* IN */
 {
     char *warn_str="Warning: skip ill-formed hint set in PNETCDF_HINTS";
     char *env_str;
+    char *hdr_align_val=NULL, *var_align_val=NULL;
 
     /* take hints from the environment variable PNETCDF_HINTS, a string of
      * hints separated by ";" and each hint is in the form of hint=value. E.g.
@@ -182,17 +183,17 @@ combine_env_hints(MPI_Info  user_info,  /* IN */
     if ((env_str = getenv("PNETCDF_HINTS")) != NULL) {
 #ifdef USE_STRTOK_R
         char *env_str_cpy, *env_str_saved, *hint, *key;
-        env_str_cpy = strdup(env_str);
+        env_str_cpy = NCI_Strdup(env_str);
         env_str_saved = env_str_cpy;
         hint = strtok_r(env_str_cpy, ";", &env_str_saved);
         while (hint != NULL) {
-            char *hint_saved = strdup(hint);
+            char *hint_saved = NCI_Strdup(hint);
             char *val = strchr(hint, '=');
             if (val == NULL) { /* ill-formed hint */
                 if (NULL != strtok(hint, " \t"))
                     printf("%s: '%s'\n", warn_str, hint_saved);
                 /* else case: ignore white-spaced hints */
-                free(hint_saved);
+                NCI_Free(hint_saved);
                 hint = strtok_r(NULL, ";", &env_str_saved); /* get next hint */
                 continue;
             }
@@ -203,18 +204,24 @@ combine_env_hints(MPI_Info  user_info,  /* IN */
             else {
                 if (*new_info == MPI_INFO_NULL)
                     MPI_Info_create(new_info); /* ignore error */
-                MPI_Info_set(*new_info, key, val); /* override or add */
+
+                if (!strcmp(key, "nc_header_align_size"))
+                    hdr_align_val = NCI_Strdup(val);
+                else if (!strcmp(key, "nc_var_align_size"))
+                    var_align_val = NCI_Strdup(val);
+                else
+                    MPI_Info_set(*new_info, key, val); /* override or add */
             }
             /* printf("env hint: key=%s val=%s\n",key,val); */
             hint = strtok_r(NULL, ";", &env_str_saved);
-            free(hint_saved);
+            NCI_Free(hint_saved);
         }
-        free(env_str_cpy);
+        NCI_Free(env_str_cpy);
 #else
         char *env_str_cpy, *hint, *next_hint, *key, *val, *deli;
         char *hint_saved=NULL;
 
-        env_str_cpy = strdup(env_str);
+        env_str_cpy = NCI_Strdup(env_str);
         next_hint = env_str_cpy;
 
         do {
@@ -225,14 +232,14 @@ combine_env_hints(MPI_Info  user_info,  /* IN */
                 next_hint = deli + 1;
             }
             else next_hint = "\0";
-            if (hint_saved != NULL) free(hint_saved);
+            if (hint_saved != NULL) NCI_Free(hint_saved);
 
             /* skip all-blank hint */
-            hint_saved = strdup(hint);
+            hint_saved = NCI_Strdup(hint);
             if (strtok(hint, " \t") == NULL) continue;
 
-            free(hint_saved);
-            hint_saved = strdup(hint); /* save hint for error message */
+            NCI_Free(hint_saved);
+            hint_saved = NCI_Strdup(hint); /* save hint for error message */
 
             deli = strchr(hint, '=');
             if (deli == NULL) { /* ill-formed hint */
@@ -257,15 +264,35 @@ combine_env_hints(MPI_Info  user_info,  /* IN */
             }
             if (*new_info == MPI_INFO_NULL)
                 MPI_Info_create(new_info); /* ignore error */
-            MPI_Info_set(*new_info, key, val); /* override or add */
+
+            if (!strcmp(key, "nc_header_align_size"))
+                hdr_align_val = NCI_Strdup(val);
+            else if (!strcmp(key, "nc_var_align_size"))
+                var_align_val = NCI_Strdup(val);
+            else
+                MPI_Info_set(*new_info, key, val); /* override or add */
 
         } while (*next_hint != '\0');
 
-        if (hint_saved != NULL) free(hint_saved);
-        free(env_str_cpy);
+        if (hint_saved != NULL) NCI_Free(hint_saved);
+        NCI_Free(env_str_cpy);
 #endif
+
+        /* nc_var_align_size supersedes nc_header_align_size */
+        if (var_align_val != NULL) {
+            MPI_Info_set(*new_info, "nc_var_align_size", var_align_val);
+            MPI_Info_set(*new_info, "nc_header_align_size", var_align_val);
+        }
+        else if (hdr_align_val != NULL) {
+            MPI_Info_set(*new_info, "nc_var_align_size", hdr_align_val);
+            MPI_Info_set(*new_info, "nc_header_align_size", hdr_align_val);
+        }
     }
     /* return no error as all hints are advisory */
+
+    if (hdr_align_val != NULL) NCI_Free(hdr_align_val);
+    if (var_align_val != NULL) NCI_Free(var_align_val);
+
 }
 
 /*----< ncmpi_create() >-----------------------------------------------------*/
