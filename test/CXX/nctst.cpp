@@ -514,7 +514,7 @@ main(int argc, char* argv[])	// test new netCDF interface
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-   if (argc > 2) {
+   if (argc < 2) {
        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
        MPI_Finalize();
        return 1;
