@@ -302,10 +302,12 @@ test_format_nc$1(char *filename)
     err = ncmpi_enddef(ncid);
     EXP_ERR_MSG(NC_NOERR,"enddef")
 
-    /* fill the 1st record of all variables */dnl
-    foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err = ncmpi_fill_var_rec(ncid, vid_'itype`, 0);
-    EXP_ERR_MSG(NC_NOERR,"fill_var_rec")')')
+    if (!(cmode & NC_NETCDF4)) {
+        /* fill the 1st record of all variables */dnl
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err = ncmpi_fill_var_rec(ncid, vid_'itype`, 0);
+        EXP_ERR_MSG(NC_NOERR,"fill_var_rec")')')
+    }
 
      start[0] =  start[1] = 0;
      count[0] =  count[1] = 1;
