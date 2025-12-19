@@ -119,7 +119,8 @@ for i in ${check_PROGRAMS} ; do
 
         if test "x${ENABLE_NETCDF4}" = x1 ; then
            # echo "${LINENO}: test netCDF-4 feature"
-           ${MPIRUN} ./$i $CMD_OPTS ${OUT_FILE}.nc4 4
+           # echo "${MPIRUN} ./$i $CMD_OPTS -w $OUT_FILE.nc -r $OUT_FILE.nc"
+           ${MPIRUN} ./$i $CMD_OPTS -w $OUT_FILE.nc4 -r $OUT_FILE.nc4
            # Validator does not support nc4
         fi
     done # intra_aggr
