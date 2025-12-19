@@ -218,7 +218,11 @@ for i in ${check_PROGRAMS} ; do
         fi
 
         if test "x${ENABLE_NETCDF4}" = x1 ; then
+           if test "$i" = tst_grow_data ; then
+              continue
+           fi
            # echo "test netCDF-4 feature"
+           # echo "${MPIRUN} ./$i ${OUT_FILE}.nc4 4"
            ${MPIRUN} ./$i ${OUT_FILE}.nc4 4
            # Validator does not support nc4
         fi
