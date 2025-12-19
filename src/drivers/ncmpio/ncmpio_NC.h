@@ -391,8 +391,6 @@ struct NC {
     int           chunk;       /* chunk size for reading header, one chunk at a time */
     MPI_Offset    v_align;     /* alignment of the beginning of fixed-size variables */
     MPI_Offset    r_align;     /* file alignment for record variable section */
-    MPI_Offset    env_v_align; /* v_align set in environment variable */
-    MPI_Offset    env_r_align; /* r_align set in environment variable */
     MPI_Offset    info_v_align;/* v_align set in MPI Info object */
     MPI_Offset    info_r_align;/* r_align set in MPI Info object */
     MPI_Offset    h_minfree;   /* pad at the end of the header section */
@@ -406,6 +404,7 @@ struct NC {
                                   the size of file header extent. */
     MPI_Offset    begin_rec;   /* file offset of the first 'record' */
 
+    MPI_Offset    fix_end;   /* end offset of last fix-sized variable */
     MPI_Offset    recsize;   /* length of 'record': sum of single record sizes
                                 of all the record variables */
     MPI_Offset    numrecs;   /* no. 'records' allocated */

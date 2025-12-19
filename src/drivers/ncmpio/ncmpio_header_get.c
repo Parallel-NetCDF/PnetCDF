@@ -34,7 +34,7 @@
 static int
 compute_var_shape(NC *ncp)
 {
-    int i, err;
+    int i, err, last_fix;
     NC_var *first_var = NULL;       /* first "non-record" var */
     NC_var *first_rec = NULL;       /* first "record" var */
 
@@ -44,6 +44,7 @@ compute_var_shape(NC *ncp)
     ncp->begin_rec = ncp->xsz;
     ncp->recsize   = 0;
 
+    last_fix = -1;
     for (i=0; i<ncp->vars.ndefined; i++) {
         /* ncp->vars.value[i]->len will be recomputed from dimensions in
          * ncmpio_NC_var_shape64() */
@@ -62,8 +63,14 @@ compute_var_shape(NC *ncp)
              */
             ncp->begin_rec = ncp->vars.value[i]->begin
                            + ncp->vars.value[i]->len;
+            last_fix = i;
         }
     }
+    if (last_fix >= 0)
+        ncp->fix_end = ncp->vars.value[last_fix]->begin
+                     + ncp->vars.value[last_fix]->len;
+    else
+        ncp->fix_end = ncp->begin_var;
 
     if (first_rec != NULL) {
         if (ncp->begin_rec > first_rec->begin)
