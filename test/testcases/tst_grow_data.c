@@ -20,8 +20,8 @@
 
 static int debug;
 
-#define NY 100
-#define NX 100
+#define LON 100
+#define LAT 100
 #define NVARS 10
 
 #define PRINT_VAR_OFF \
@@ -133,11 +133,11 @@ tst_fmt(char *filename, int cmode)
     if (debug) printf("rank %d: rank_y=%d rank_x=%d\n",rank,rank_y,rank_x);
 
     start[0] = 0;
-    start[1] = NY * rank_y;
-    start[2] = NX * rank_x;
+    start[1] = LON * rank_y;
+    start[2] = LAT * rank_x;
     count[0] = 1;
-    count[1] = NY;
-    count[2] = NX;
+    count[1] = LON;
+    count[2] = LAT;
     nelems = count[1] * count[2];
 
     /* allocate buffers */
@@ -153,10 +153,10 @@ tst_fmt(char *filename, int cmode)
     err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimids[0]); CHECK_ERR
     CHECK_ERR
 
-    err = ncmpi_def_dim(ncid, "lon", NY*psize[0], &dimids[1]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "lon", LON*psize[0], &dimids[1]); CHECK_ERR
     CHECK_ERR
 
-    err = ncmpi_def_dim(ncid, "lat", NX*psize[1], &dimids[2]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "lat", LAT*psize[1], &dimids[2]); CHECK_ERR
     CHECK_ERR
 
     /* define 4 variables: 2 fix-sized and 2 record */
