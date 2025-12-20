@@ -62,6 +62,52 @@
     printf("\t%-14s = %-25s (0x%lx)\n",#val,PATTERN_STR(val, int_str),val); \
 }
 
+#ifdef HAVE_LLAPI_GET_OBD_COUNT
+
+/*----< get_total_avail_osts() >---------------------------------------------*/
+static
+int get_total_avail_osts(const char *path)
+{
+    char *dir_name=NULL, *path_dup=NULL;
+    int err, ost_count=0, is_mdt=0;
+    struct stat sb;
+
+    path_dup = NCI_Strdup(path);
+
+    err = stat(path_dup, &sb);
+    if (errno == ENOENT) { /* file does not exist, try folder */
+        /* get the parent folder name */
+        dir_name = dirname(path_dup);
+        err = stat(dir_name, &sb);
+    }
+    if (err != 0) {
+        printf("Warning at %s (%d): path \"%s\" stat() failed (%s)\n",
+               __func__,__LINE__,path,strerror(errno));
+        goto err_out;
+    }
+
+    /* llapi_get_obd_count() only works for directories */
+    if (S_ISDIR(sb.st_mode))
+        dir_name = (dir_name == NULL) ? path_dup : dir_name;
+    else
+        /* get the parent folder name */
+        dir_name = dirname(path_dup);
+
+    err = llapi_get_obd_count(dir_name, &ost_count, is_mdt);
+    if (err != 0) {
+        printf("Warning at %d: path \"%s\" llapi_get_obd_count() failed (%s)\n",
+               __LINE__,dir_name,strerror(errno));
+        ost_count = 0;
+    }
+
+err_out:
+    if (path_dup != NULL) NCI_Free(path_dup);
+
+    return ost_count;
+}
+
+#else
+
 /*----< get_total_avail_osts() >---------------------------------------------*/
 static
 int get_total_avail_osts(const char *filename)
@@ -192,6 +238,7 @@ err_out:
 
     return num_members;
 }
+#endif
 
 static
 int compare(const void *a, const void *b)
