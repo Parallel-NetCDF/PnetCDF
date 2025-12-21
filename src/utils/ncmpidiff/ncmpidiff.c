@@ -23,8 +23,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <math.h>   /* INFINITY */
+#include <sys/types.h> /* stat() */
+#include <sys/stat.h>  /* stat() */
+#include <unistd.h>    /* stat() */
+#include <errno.h>     /* errno */
+#include <math.h>      /* INFINITY */
 
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -456,6 +459,26 @@ int main(int argc, char **argv)
     if (quiet) verbose = 0;
 
     if (argc - optind != 2) usage(rank, argv[0]);
+
+    /* check stat of input files, e.g. exist or not */
+    if (rank == 0) {
+        struct stat sb;
+        ncid[0] = (stat(argv[optind],   &sb) != 0) ? errno : 0;
+        ncid[1] = (stat(argv[optind+1], &sb) != 0) ? errno : 0;
+    }
+    MPI_Bcast(ncid, 2, MPI_INT, 0, comm);
+    if (rank == 0) {
+        if (ncid[0] != 0)
+            fprintf(stderr,"Error: ncmpidiff input file \"%s\" (%s)\n",
+                    argv[optind], strerror(ncid[0]));
+        if (ncid[1] != 0)
+            fprintf(stderr,"Error: ncmpidiff input file \"%s\" (%s)\n",
+                    argv[optind+1], strerror(ncid[1]));
+    }
+    if (ncid[0] != 0 || ncid[1] != 0) {
+        MPI_Finalize();
+        exit(EXIT_FAILURE);
+    }
 
     if (verbose && check_tolerance && rank == 0) {
         printf("Tolerance absolute difference = %e\n", tolerance_difference);
