@@ -346,7 +346,7 @@ ncmpio_rename_dim(void       *ncdp,
 #endif
 
 err_check:
-    if (ncp->safe_mode && ncp->nprocs > 1) {
+    if (fIsSet(ncp->flags, NC_MODE_SAFE) && ncp->nprocs > 1) {
         /* check the error so far across processes */
         int status, mpireturn;
 

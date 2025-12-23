@@ -404,7 +404,7 @@ hdr_fetch(bufferinfo *gbp) {
         ncmpio_file_read_at_all(gbp->ncp, 0, NULL, buf_view);
     }
 
-    if (gbp->ncp->safe_mode == 1 && nprocs > 1) {
+    if (fIsSet(gbp->ncp->flags, NC_MODE_SAFE) && nprocs > 1) {
         TRACE_COMM(MPI_Bcast)(&err, 1, MPI_INT, 0, gbp->ncp->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
@@ -1366,7 +1366,7 @@ ncmpio_hdr_get_NC(NC *ncp)
         ncmpix_getn_text((const void **)(&getbuf.pos), 8, signature);
         if (memcmp(signature, hdf5_signature, 8) == 0) {
             DEBUG_ASSIGN_ERROR(err, NC_ENOTNC3)
-            if (ncp->safe_mode)
+            if (fIsSet(ncp->flags, NC_MODE_SAFE))
                 fprintf(stderr,"Error: file %s is HDF5 format\n",ncp->path);
         }
         else

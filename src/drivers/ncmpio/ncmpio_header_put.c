@@ -563,7 +563,7 @@ int ncmpio_write_header(NC *ncp)
         ncmpio_file_write_at_all(ncp, 0, NULL, buf_view);
     }
 
-    if (ncp->safe_mode == 1) {
+    if (fIsSet(ncp->flags, NC_MODE_SAFE)) {
         /* broadcast root's status, because only root writes to the file */
         int root_status = status;
         TRACE_COMM(MPI_Bcast)(&root_status, 1, MPI_INT, 0, ncp->comm);

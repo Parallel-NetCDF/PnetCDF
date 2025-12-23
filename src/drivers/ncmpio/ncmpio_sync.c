@@ -174,7 +174,7 @@ ncmpio_sync_numrecs(void *ncdp)
     /* root process writes max_numrecs to file */
     status = ncmpio_write_numrecs(ncp, max_numrecs);
 
-    if (ncp->nprocs > 1 && ncp->safe_mode == 1) {
+    if (ncp->nprocs > 1 && fIsSet(ncp->flags, NC_MODE_SAFE)) {
         /* broadcast root's status, because only root writes to the file */
         int root_status = status;
         TRACE_COMM(MPI_Bcast)(&root_status, 1, MPI_INT, 0, ncp->comm);
