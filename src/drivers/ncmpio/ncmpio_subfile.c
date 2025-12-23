@@ -131,8 +131,8 @@ subfile_create(NC *ncp)
 */
 
     void *ncp_sf;
-    status = ncmpio_create(ncp->comm_sf, path_sf, ncp->iomode, ncp->ncid, info,
-                           &ncp_sf);
+    status = ncmpio_create(ncp->comm_sf, path_sf, ncp->iomode, ncp->ncid,
+                           ncp->flags, info, &ncp_sf);
     if (status != NC_NOERR && myrank == 0)
         fprintf(stderr, "%s: error in creating file(%s): %s\n",
                 __func__, path_sf, ncmpi_strerror(status));
@@ -188,7 +188,7 @@ ncmpio_subfile_open(NC *ncp)
 
     void *ncp_sf;
     status = ncmpio_open(ncp->comm_sf, path_sf, ncp->iomode, ncp->ncid,
-                         MPI_INFO_NULL, &ncp_sf);
+                         ncp->flags, MPI_INFO_NULL, &ncp_sf);
 
     ncp->ncp_sf = (NC*) ncp_sf;
     return status;

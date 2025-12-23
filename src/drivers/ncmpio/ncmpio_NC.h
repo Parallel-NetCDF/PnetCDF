@@ -381,7 +381,6 @@ struct NC {
     int           mpiomode;     /* mode used in MPI_File_open, passed from
                                  * collective open to independent open */
     int           format;       /* 1, 2, or 5 corresponding to CDF-1, 2, or 5 */
-    int           safe_mode;    /* 0 or 1, for parameter consistency check */
 #ifdef ENABLE_SUBFILING
     int           subfile_mode; /* 0 or 1, for disable/enable subfiling */
     int           num_subfiles; /* no. subfiles */

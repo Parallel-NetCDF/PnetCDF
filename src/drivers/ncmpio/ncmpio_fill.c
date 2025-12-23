@@ -750,7 +750,7 @@ ncmpio_fill_var_rec(void      *ncdp,
     }
 
 err_check:
-    if (ncp->safe_mode && ncp->nprocs > 1) { /* consistency check */
+    if (fIsSet(ncp->flags, NC_MODE_SAFE) && ncp->nprocs > 1) { /* consistency check */
         int root_varid, status, mpireturn;
         MPI_Offset root_recno;
 
@@ -798,7 +798,7 @@ ncmpio_set_fill(void *ncdp,
     int i, mpireturn, oldmode;
     NC *ncp = (NC*)ncdp;
 
-    if (ncp->safe_mode && ncp->nprocs > 1) {
+    if (fIsSet(ncp->flags, NC_MODE_SAFE) && ncp->nprocs > 1) {
         int err, status, root_fill_mode=fill_mode;
 
         TRACE_COMM(MPI_Bcast)(&root_fill_mode, 1, MPI_INT, 0, ncp->comm);
@@ -857,7 +857,7 @@ ncmpio_def_var_fill(void       *ncdp,
     /* sanity check for ncdp and varid has been done in dispatchers */
     varp = ncp->vars.value[varid];
 
-    if (ncp->safe_mode && ncp->nprocs > 1) {
+    if (fIsSet(ncp->flags, NC_MODE_SAFE) && ncp->nprocs > 1) {
         int root_ids[3], my_fill_null, minE, mpireturn;
 
         /* check if varid, no_fill, fill_value, are consistent */

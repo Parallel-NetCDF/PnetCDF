@@ -336,7 +336,7 @@ NC_begins(NC         *ncp,
     /* get the true header size (not header extent) */
     ncp->xsz = ncmpio_hdr_len_NC(ncp);
 
-    if (ncp->safe_mode && ncp->nprocs > 1) {
+    if (fIsSet(ncp->flags, NC_MODE_SAFE) && ncp->nprocs > 1) {
         /* this consistency check is redundant as metadata is kept consistent
          * at all time when safe mode is on
          */
@@ -711,7 +711,7 @@ write_NC(NC *ncp)
     }
 
 fn_exit:
-    if (ncp->safe_mode == 1 && ncp->nprocs > 1) {
+    if (fIsSet(ncp->flags, NC_MODE_SAFE) && ncp->nprocs > 1) {
         /* broadcast root's status, because only root writes to the file */
         int mpireturn, root_status = status;
         TRACE_COMM(MPI_Bcast)(&root_status, 1, MPI_INT, 0, ncp->comm);
@@ -734,7 +734,7 @@ fn_exit:
  * do not get error and proceed to the next subroutine call.
  */
 #define CHECK_ERROR(err) {                                              \
-    if (ncp->safe_mode == 1 && ncp->nprocs > 1) {                       \
+    if (fIsSet(ncp->flags, NC_MODE_SAFE) && ncp->nprocs > 1) {          \
         int min_err;                                                    \
         TRACE_COMM(MPI_Allreduce)(&err, &min_err, 1, MPI_INT, MPI_MIN,  \
                                   ncp->comm);                           \
@@ -941,7 +941,7 @@ ncmpio_NC_check_voffs(NC *ncp)
     for (i=0, j=0; i<ncp->vars.ndefined; i++) {
         NC_var *varp = ncp->vars.value[i];
         if (varp->begin < ncp->xsz) {
-            if (ncp->safe_mode) {
+            if (fIsSet(ncp->flags, NC_MODE_SAFE)) {
                 printf("Variable %s begin offset ("OFFFMT") is less than file header extent ("OFFFMT")\n",
                        varp->name, varp->begin, ncp->xsz);
             }
@@ -968,7 +968,7 @@ ncmpio_NC_check_voffs(NC *ncp)
     max_var_end = var_off_len[0].off + var_off_len[0].len;
     for (i=1; i<num_fix_vars; i++) {
         if (var_off_len[i].off < var_off_len[i-1].off + var_off_len[i-1].len) {
-            if (ncp->safe_mode) {
+            if (fIsSet(ncp->flags, NC_MODE_SAFE)) {
                 NC_var *var_cur = ncp->vars.value[var_off_len[i].ID];
                 NC_var *var_prv = ncp->vars.value[var_off_len[i-1].ID];
                 printf("Variable %s begin offset ("OFFFMT") overlaps variable %s (begin="OFFFMT", length="OFFFMT")\n",
@@ -982,7 +982,7 @@ ncmpio_NC_check_voffs(NC *ncp)
     }
 
     if (ncp->begin_rec < max_var_end) {
-        if (ncp->safe_mode)
+        if (fIsSet(ncp->flags, NC_MODE_SAFE))
             printf("Record variable section begin ("OFFFMT") is less than fixed-size variable section end ("OFFFMT")\n",
                    ncp->begin_rec, max_var_end);
         NCI_Free(var_off_len);
@@ -1016,7 +1016,7 @@ check_rec_var:
 
     for (i=1; i<ncp->vars.num_rec_vars; i++) {
         if (var_off_len[i].off < var_off_len[i-1].off + var_off_len[i-1].len) {
-            if (ncp->safe_mode) {
+            if (fIsSet(ncp->flags, NC_MODE_SAFE)) {
                 NC_var *var_cur = ncp->vars.value[var_off_len[i].ID];
                 NC_var *var_prv = ncp->vars.value[var_off_len[i-1].ID];
                 printf("Variable %s begin offset ("OFFFMT") overlaps variable %s (begin="OFFFMT", length="OFFFMT")\n",
@@ -1039,7 +1039,7 @@ check_rec_var:
         if (IS_RECVAR(varp)) continue;
 
         if (varp->begin < prev_off) {
-            if (ncp->safe_mode) {
+            if (fIsSet(ncp->flags, NC_MODE_SAFE)) {
                 if (i == 0)
                     printf("Variable \"%s\" begin offset ("OFFFMT") is less than header extent ("OFFFMT")\n",
                            varp->name, varp->begin, prev_off);
@@ -1054,7 +1054,7 @@ check_rec_var:
     }
 
     if (ncp->begin_rec < prev_off) {
-        if (ncp->safe_mode)
+        if (fIsSet(ncp->flags, NC_MODE_SAFE))
             printf("Record variable section begin offset ("OFFFMT") is less than fixed-size variable section end offset ("OFFFMT")\n",
                    ncp->begin_rec, prev_off);
         DEBUG_RETURN_ERROR(NC_ENOTNC)
@@ -1071,7 +1071,7 @@ check_rec_var:
         if (!IS_RECVAR(varp)) continue;
 
         if (varp->begin < prev_off) {
-            if (ncp->safe_mode) {
+            if (fIsSet(ncp->flags, NC_MODE_SAFE)) {
                 printf("Variable \"%s\" begin offset ("OFFFMT") is less than previous variable end offset ("OFFFMT")\n",
                            varp->name, varp->begin, prev_off);
                 if (i == 0)
@@ -1245,7 +1245,7 @@ ncmpio__enddef(void       *ncdp,
         ncp->begin_var = saved_begin_var;
     CHECK_ERROR(err)
 
-    if (ncp->safe_mode) {
+    if (fIsSet(ncp->flags, NC_MODE_SAFE)) {
         /* check whether variable begins are in an increasing order.
          * This check is for debugging purpose. */
         err = ncmpio_NC_check_voffs(ncp);
@@ -1258,7 +1258,7 @@ ncmpio__enddef(void       *ncdp,
         err = NC_begins(ncp->ncp_sf, v_align, r_align);
         CHECK_ERROR(err)
 
-        if (ncp->safe_mode) {
+        if (fIsSet(ncp->flags, NC_MODE_SAFE)) {
             /* check whether variable begins are in an increasing order.
              * This check is for debugging purpose. */
             err = ncmpio_NC_check_voffs(ncp->ncp_sf);
@@ -1339,7 +1339,7 @@ ncmpio__enddef(void       *ncdp,
     } /* ... ncp->old != NULL */
 
     /* first sync header objects in memory across all processes, and then root
-     * writes the header to file. Note safe_mode error check will be done in
+     * writes the header to file. Note safe mode error check will be done in
      * write_NC().
      */
     status = write_NC(ncp);

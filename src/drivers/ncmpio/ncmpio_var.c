@@ -415,7 +415,7 @@ ncmpio_def_var(void       *ncdp,
     ncp->vars.ndefined++;
 
 err_check:
-    if (ncp->safe_mode && ncp->nprocs > 1) {
+    if (fIsSet(ncp->flags, NC_MODE_SAFE) && ncp->nprocs > 1) {
         int minE, mpireturn;
 
         /* First check the error code across processes */
@@ -600,7 +600,7 @@ ncmpio_rename_var(void       *ncdp,
 #endif
 
 err_check:
-    if (ncp->safe_mode && ncp->nprocs > 1) {
+    if (fIsSet(ncp->flags, NC_MODE_SAFE) && ncp->nprocs > 1) {
         int minE, mpireturn;
 
         /* First check error code so far across processes */

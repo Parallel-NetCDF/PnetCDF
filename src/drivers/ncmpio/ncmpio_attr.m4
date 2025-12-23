@@ -477,7 +477,7 @@ ncmpio_rename_att(void       *ncdp,
 
 err_check:
     if (nname != NULL) NCI_Free(nname);
-    if (ncp->safe_mode && ncp->nprocs > 1) {
+    if (fIsSet(ncp->flags, NC_MODE_SAFE) && ncp->nprocs > 1) {
         int minE, mpireturn;
 
         /* check error code across processes */
@@ -597,7 +597,7 @@ ncmpio_copy_att(void       *ncdp_in,
     }
 
 err_check:
-    if (ncp_out->safe_mode && ncp_out->nprocs > 1) {
+    if (fIsSet(ncp_out->flags, NC_MODE_SAFE) && ncp_out->nprocs > 1) {
         int minE, mpireturn;
 
         /* check the error code across processes */
@@ -710,7 +710,7 @@ ncmpio_del_att(void       *ncdp,
 
 err_check:
     if (nname != NULL) NCI_Free(nname);
-    if (ncp->safe_mode && ncp->nprocs > 1) {
+    if (fIsSet(ncp->flags, NC_MODE_SAFE) && ncp->nprocs > 1) {
         int minE, mpireturn;
 
         /* find min error code across processes */
@@ -1044,7 +1044,7 @@ ncmpio_put_att(void         *ncdp,
     }
 
 err_check:
-    if (ncp->safe_mode && ncp->nprocs > 1) {
+    if (fIsSet(ncp->flags, NC_MODE_SAFE) && ncp->nprocs > 1) {
         /* check the error code across processes */
         int minE, mpireturn;
 
