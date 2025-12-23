@@ -114,6 +114,10 @@ extern char *strdup(const char *s);
 extern int strcasecmp(const char *s1, const char *s2);
 #endif
 
+extern
 char* remove_file_system_type_prefix(const char *filename);
+
+extern
+int is_relax_coord_bound(void);
 
 #endif

@@ -285,3 +285,22 @@ char* remove_file_system_type_prefix(const char *filename)
     return ret_filename;
 }
 
+int is_relax_coord_bound(void)
+{
+    char *env_str;
+    int relax_coord_bound;
+
+#ifdef RELAX_COORD_BOUND
+    relax_coord_bound = 1;
+#else
+    relax_coord_bound = 0;
+#endif
+    if ((env_str = getenv("PNETCDF_RELAX_COORD_BOUND")) != NULL) {
+        /* the env variable is set */
+        if (*env_str == '0') relax_coord_bound = 0;
+        else                 relax_coord_bound = 1;
+    }
+
+    return relax_coord_bound;
+}
+

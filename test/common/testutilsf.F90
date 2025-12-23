@@ -76,3 +76,25 @@
 #endif
       end subroutine get_env
 
+      LOGICAL FUNCTION relax_coord_bound_f()
+          character(len=256) :: env_str, env_val
+          integer :: ierr
+
+#ifdef RELAX_COORD_BOUND
+          relax_coord_bound_f = .TRUE.
+#else
+          relax_coord_bound_f = .FALSE.
+#endif
+          env_str = "PNETCDF_RELAX_COORD_BOUND"
+          call get_environment_variable(env_str, value=env_val, status=ierr)
+
+          if (ierr == 0) THEN
+              ! Environment variable is set
+              if (env_val(1:1) == '1') then
+                  relax_coord_bound_f = .TRUE.
+              else
+                  relax_coord_bound_f = .FALSE.
+              endif
+          endif
+      END FUNCTION relax_coord_bound_f
+
