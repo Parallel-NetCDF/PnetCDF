@@ -295,6 +295,44 @@ combine_env_hints(MPI_Info  user_info,  /* IN */
 
 }
 
+/*----< set_env_mode() >-----------------------------------------------------*/
+static
+void set_env_mode(int *env_mode)
+{
+    char *env_str;
+
+#ifdef PNETCDF_DEBUG
+    fSet(*env_mode, NC_MODE_SAFE);
+    /* When debug mode is enabled at the configure time, safe mode is by
+     * default enabled. This can be overwritten by the run-time environment
+     * variable PNETCDF_SAFE_MODE.
+     */
+#endif
+    /* get environment variable PNETCDF_SAFE_MODE
+     * if it is set to 1, then we perform a strict parameter consistent test
+     */
+    if ((env_str = getenv("PNETCDF_SAFE_MODE")) != NULL) {
+        if (*env_str == '0') fClr(*env_mode, NC_MODE_SAFE);
+        else                 fSet(*env_mode, NC_MODE_SAFE);
+        /* if PNETCDF_SAFE_MODE is set but without a value, *env_str can
+         * be '\0' (null character). In this case, safe mode is enabled */
+    }
+
+    /* get environment variable PNETCDF_RELAX_COORD_BOUND
+     * if it is set to 0, then we perform a strict start bound check
+     */
+#ifdef RELAX_COORD_BOUND
+    fSet(*env_mode, NC_MODE_STRICT_COORD_BOUND);
+#endif
+    if ((env_str = getenv("PNETCDF_RELAX_COORD_BOUND")) != NULL) {
+        if (*env_str == '0') fClr(*env_mode, NC_MODE_STRICT_COORD_BOUND);
+        else                 fSet(*env_mode, NC_MODE_STRICT_COORD_BOUND);
+        /* if PNETCDF_RELAX_COORD_BOUND is set but without a value, *env_str
+         * can be '\0' (null character). This is equivalent to setting
+         * PNETCDF_RELAX_COORD_BOUND to 1 */
+    }
+}
+
 /*----< ncmpi_create() >-----------------------------------------------------*/
 /* This is a collective subroutine. */
 int
@@ -305,8 +343,7 @@ ncmpi_create(MPI_Comm    comm,
              int        *ncidp)
 {
     int rank, nprocs, status=NC_NOERR, err;
-    int safe_mode=0, mpireturn, relax_coord_bound, format;
-    char *env_str;
+    int env_mode=0, mpireturn, format;
     MPI_Info combined_info;
     void *ncp;
     PNC *pncp;
@@ -321,37 +358,8 @@ ncmpi_create(MPI_Comm    comm,
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
 
-#ifdef PNETCDF_DEBUG
-    safe_mode = 1;
-    /* When debug mode is enabled at the configure time, safe_mode is by
-     * default enabled. This can be overwritten by the run-time environment
-     * variable PNETCDF_SAFE_MODE */
-#endif
-    /* get environment variable PNETCDF_SAFE_MODE
-     * if it is set to 1, then we perform a strict parameter consistent test
-     */
-    if ((env_str = getenv("PNETCDF_SAFE_MODE")) != NULL) {
-        if (*env_str == '0') safe_mode = 0;
-        else                 safe_mode = 1;
-        /* if PNETCDF_SAFE_MODE is set but without a value, *env_str can
-         * be '\0' (null character). In this case, safe_mode is enabled */
-    }
-
-    /* get environment variable PNETCDF_RELAX_COORD_BOUND
-     * if it is set to 0, then we perform a strict start bound check
-     */
-#ifndef RELAX_COORD_BOUND
-    relax_coord_bound = 0;
-#else
-    relax_coord_bound = 1;
-#endif
-    if ((env_str = getenv("PNETCDF_RELAX_COORD_BOUND")) != NULL) {
-        if (*env_str == '0') relax_coord_bound = 0;
-        else                 relax_coord_bound = 1;
-        /* if PNETCDF_RELAX_COORD_BOUND is set but without a value, *env_str
-         * can be '\0' (null character). This is equivalent to setting
-         * relax_coord_bound to 1 */
-    }
+    if (rank == 0)
+        set_env_mode(&env_mode);
 
     /* path's validity is checked in MPI-IO with error code MPI_ERR_BAD_FILE
      * path consistency is checked in MPI-IO with error code MPI_ERR_NOT_SAME
@@ -359,17 +367,19 @@ ncmpi_create(MPI_Comm    comm,
     if (path == NULL || *path == '\0') DEBUG_RETURN_ERROR(NC_EBAD_FILE)
 
     if (nprocs > 1) { /* Check cmode consistency */
-        int root_cmode = cmode; /* only root's matters */
-        TRACE_COMM(MPI_Bcast)(&root_cmode, 1, MPI_INT, 0, comm);
+        int modes[2] = {cmode, env_mode}; /* only root's matters */
+
+        TRACE_COMM(MPI_Bcast)(&modes, 2, MPI_INT, 0, comm);
         NCMPII_HANDLE_ERROR("MPI_Bcast")
 
         /* Overwrite cmode with root's cmode */
-        if (root_cmode != cmode) {
-            cmode = root_cmode;
+        if (modes[0] != cmode) {
+            cmode = modes[0];
             DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_CMODE)
         }
 
-        if (safe_mode) { /* sync status among all processes */
+        env_mode = modes[1];
+        if (fIsSet(env_mode, NC_MODE_SAFE)) { /* sync status among all processes */
             err = status;
             TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
             NCMPII_HANDLE_ERROR("MPI_Allreduce")
@@ -502,6 +512,9 @@ ncmpi_create(MPI_Comm    comm,
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
 
+    pncp->flag = NC_MODE_DEF | NC_MODE_CREATE;
+    fSet(pncp->flag, env_mode);
+
     /* generate a new nc file ID from NCPList */
     err = new_id_PNCList(ncidp, pncp);
     if (err != NC_NOERR) {
@@ -528,8 +541,8 @@ ncmpi_create(MPI_Comm    comm,
         DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* calling the driver's create subroutine */
-    err = driver->create(pncp->comm, pncp->path, cmode, *ncidp, combined_info,
-                         &ncp);
+    err = driver->create(pncp->comm, pncp->path, cmode, *ncidp, env_mode,
+                         combined_info, &ncp);
     if (status == NC_NOERR) status = err;
     if (combined_info != MPI_INFO_NULL) MPI_Info_free(&combined_info);
     if (status != NC_NOERR && status != NC_EMULTIDEFINE_CMODE) {
@@ -549,12 +562,14 @@ ncmpi_create(MPI_Comm    comm,
     pncp->nvars      = 0;
     pncp->nrec_vars  = 0;
     pncp->vars       = NULL;
-    pncp->flag       = NC_MODE_DEF | NC_MODE_CREATE;
     pncp->ncp        = ncp;
     pncp->format     = format;
 
-    if (safe_mode)          pncp->flag |= NC_MODE_SAFE;
-    if (!relax_coord_bound) pncp->flag |= NC_MODE_STRICT_COORD_BOUND;
+    if (fIsSet(env_mode, NC_MODE_SAFE))
+        pncp->flag |= NC_MODE_SAFE;
+
+    if (fIsSet(env_mode, NC_MODE_STRICT_COORD_BOUND))
+        pncp->flag |= NC_MODE_STRICT_COORD_BOUND;
 
     return status;
 }
@@ -571,8 +586,7 @@ ncmpi_open(MPI_Comm    comm,
            int        *ncidp)  /* OUT */
 {
     int i, j, nalloc, rank, nprocs, format, status=NC_NOERR, err;
-    int safe_mode=0, mpireturn, relax_coord_bound, DIMIDS[NDIMS_], *dimids;
-    char *env_str;
+    int env_mode=0, mpireturn, DIMIDS[NDIMS_], *dimids;
     MPI_Info combined_info;
     void *ncp;
     PNC *pncp;
@@ -587,37 +601,8 @@ ncmpi_open(MPI_Comm    comm,
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
 
-#ifdef PNETCDF_DEBUG
-    safe_mode = 1;
-    /* When debug mode is enabled at the configure time, safe_mode is by
-     * default enabled. This can be overwritten by the run-time environment
-     * variable PNETCDF_SAFE_MODE */
-#endif
-    /* get environment variable PNETCDF_SAFE_MODE
-     * if it is set to 1, then we perform a strict parameter consistent test
-     */
-    if ((env_str = getenv("PNETCDF_SAFE_MODE")) != NULL) {
-        if (*env_str == '0') safe_mode = 0;
-        else                 safe_mode = 1;
-        /* if PNETCDF_SAFE_MODE is set but without a value, *env_str can
-         * be '\0' (null character). In this case, safe_mode is enabled */
-    }
-
-    /* get environment variable PNETCDF_RELAX_COORD_BOUND
-     * if it is set to 0, then we perform a strict start bound check
-     */
-#ifndef RELAX_COORD_BOUND
-    relax_coord_bound = 0;
-#else
-    relax_coord_bound = 1;
-#endif
-    if ((env_str = getenv("PNETCDF_RELAX_COORD_BOUND")) != NULL) {
-        if (*env_str == '0') relax_coord_bound = 0;
-        else                 relax_coord_bound = 1;
-        /* if PNETCDF_RELAX_COORD_BOUND is set but without a value, *env_str
-         * can be '\0' (null character). This is equivalent to setting
-         * relax_coord_bound to 1 */
-    }
+    if (rank == 0)
+        set_env_mode(&env_mode);
 
     /* path's validity is checked in MPI-IO with error code MPI_ERR_BAD_FILE
      * path consistency is checked in MPI-IO with error code MPI_ERR_NOT_SAME
@@ -647,32 +632,29 @@ ncmpi_open(MPI_Comm    comm,
     }
 
     if (nprocs > 1) { /* root broadcasts format and omode */
-        int root_omode, msg[2];
+        int modes[3] = {format, omode, env_mode};
 
-        msg[0] = format; /* only root's matters (format or error code) */
-
-        /* Check omode consistency:
+        /* Check consistency:
+         * Note only root's values matter, format, omode, env_mode.
          * Note if omode contains NC_NOWRITE, it is equivalent to NC_CLOBBER.
          * In pnetcdf.h, they both are defined the same value, 0.
-         * Only root's omode matters.
          */
-        msg[1] = omode; /* only root's matters */
 
-        TRACE_COMM(MPI_Bcast)(&msg, 2, MPI_INT, 0, comm);
+        TRACE_COMM(MPI_Bcast)(&modes, 3, MPI_INT, 0, comm);
         NCMPII_HANDLE_ERROR("MPI_Bcast")
 
         /* check format error (a fatal error, must return now) */
-        format = msg[0];
+        format = modes[0];
         if (format < 0) return format; /* all netCDF errors are negative */
 
         /* check omode consistency */
-        root_omode = msg[1];
-        if (root_omode != omode) {
-            omode = root_omode;
+        if (modes[1] != omode) {
+            omode = modes[1];
             DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
         }
 
-        if (safe_mode) { /* sync status among all processes */
+        env_mode = modes[2];
+        if (fIsSet(env_mode, NC_MODE_SAFE)) { /* sync status among all processes */
             err = status;
             TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
             NCMPII_HANDLE_ERROR("MPI_Allreduce")
@@ -765,6 +747,9 @@ ncmpi_open(MPI_Comm    comm,
         DEBUG_RETURN_ERROR(NC_ENOMEM)
     }
 
+    pncp->flag = 0;
+    fSet(pncp->flag, env_mode);
+
     /* generate a new nc file ID from NCPList */
     err = new_id_PNCList(ncidp, pncp);
     if (err != NC_NOERR) return err;
@@ -786,8 +771,8 @@ ncmpi_open(MPI_Comm    comm,
         DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* calling the driver's open subroutine */
-    err = driver->open(pncp->comm, pncp->path, omode, *ncidp, combined_info,
-                       &ncp);
+    err = driver->open(pncp->comm, pncp->path, omode, *ncidp, env_mode,
+                       combined_info, &ncp);
     if (status == NC_NOERR) status = err;
     if (combined_info != MPI_INFO_NULL) MPI_Info_free(&combined_info);
     if (status != NC_NOERR && status != NC_EMULTIDEFINE_OMODE &&
@@ -811,13 +796,17 @@ ncmpi_open(MPI_Comm    comm,
     pncp->nvars      = 0;
     pncp->nrec_vars  = 0;
     pncp->vars       = NULL;
-    pncp->flag       = 0;
     pncp->ncp        = ncp;
     pncp->format     = format;
 
-    if (!fIsSet(omode, NC_WRITE)) pncp->flag |= NC_MODE_RDONLY;
-    if (safe_mode)                pncp->flag |= NC_MODE_SAFE;
-    if (!relax_coord_bound)       pncp->flag |= NC_MODE_STRICT_COORD_BOUND;
+    if (!fIsSet(omode, NC_WRITE))
+        pncp->flag |= NC_MODE_RDONLY;
+
+    if (fIsSet(env_mode, NC_MODE_SAFE))
+        pncp->flag |= NC_MODE_SAFE;
+
+    if (fIsSet(env_mode, NC_MODE_STRICT_COORD_BOUND))
+        pncp->flag |= NC_MODE_STRICT_COORD_BOUND;
 
     /* inquire number of dimensions, variables defined and rec dim ID */
     err = driver->inq(pncp->ncp, &pncp->ndims, &pncp->nvars, NULL,

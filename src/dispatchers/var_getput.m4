@@ -56,21 +56,22 @@ define(`GOTO_CHECK',`{ DEBUG_ASSIGN_ERROR(err, $1) goto err_check; }')dnl
 }
 
 
+#include <assert.h>
 /*----< check_EINVALCOORDS() >-----------------------------------------------*/
 static
-int check_EINVALCOORDS(int        strict_coord_bound,
+int check_EINVALCOORDS(int        relax_coord_bound,
                        MPI_Offset start,
                        MPI_Offset count,
                        MPI_Offset shape)
 {
-    if (strict_coord_bound) {
-        if (start < 0 || start >= shape)
-            DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
-    }
-    else {
+    if (relax_coord_bound) {
         if (start < 0 || start > shape)
             DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
         if (start == shape && count > 0)
+            DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
+    }
+    else {
+        if (start < 0 || start >= shape)
             DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
     }
     return NC_NOERR;
@@ -116,11 +117,11 @@ int check_EEDGE(const MPI_Offset *start,
             pncp->driver->inq_var(pncp->ncp, varid, name, NULL, NULL,       \
                                   NULL, NULL, NULL, NULL, NULL);            \
             if (stride != NULL)                                             \
-                fprintf(stderr, "Rank %d: NC_EEDGE variable %s: shape[%d]="OFFFMT" but start[%d]="OFFFMT" count[%d]="OFFFMT" stride[%d]="OFFFMT"\n", \
-                _rank, name, dim, shape[dim], dim, start[dim], dim, count[dim], dim, stride[dim]); \
+                fprintf(stderr, "Rank %d in %s (%d): NC_EEDGE variable %s: shape[%d]="OFFFMT" but start[%d]="OFFFMT" count[%d]="OFFFMT" stride[%d]="OFFFMT"\n", \
+                _rank, __func__, __LINE__, name, dim, shape[dim], dim, start[dim], dim, count[dim], dim, stride[dim]); \
             else                                                            \
-                fprintf(stderr, "Rank %d: NC_EEDGE variable %s: shape[%d]="OFFFMT" but start[%d]="OFFFMT" count[%d]="OFFFMT"\n", \
-                _rank, name, dim, shape[dim], dim, start[dim], dim, count[dim]); \
+                fprintf(stderr, "Rank %d in %s (%d): NC_EEDGE variable %s: shape[%d]="OFFFMT" but start[%d]="OFFFMT" count[%d]="OFFFMT"\n", \
+                _rank, __func__, __LINE__, name, dim, shape[dim], dim, start[dim], dim, count[dim]); \
         }                                                                   \
     }                                                                       \
 }
@@ -170,7 +171,7 @@ int check_start_count_stride(PNC              *pncp,
             MPI_Offset len = (count == NULL) ? 1 : count[0];
             if (shape[0] == 0 && len > 0) /* no record yet */
                 DEBUG_RETURN_ERROR(NC_EINVALCOORDS)
-            err = check_EINVALCOORDS(pncp->flag & NC_MODE_STRICT_COORD_BOUND,
+            err = check_EINVALCOORDS(fIsSet(pncp->flag, NC_MODE_STRICT_COORD_BOUND),
                                      start[0], len, shape[0]);
             if (err != NC_NOERR) return err;
         }
@@ -181,7 +182,7 @@ int check_start_count_stride(PNC              *pncp,
     ndims = pncp->vars[varid].ndims;
     for (i=firstDim; i<ndims; i++) {
         MPI_Offset len = (count == NULL) ? 1 : count[i];
-        err = check_EINVALCOORDS(pncp->flag & NC_MODE_STRICT_COORD_BOUND,
+        err = check_EINVALCOORDS(fIsSet(pncp->flag, NC_MODE_STRICT_COORD_BOUND),
                                  start[i], len, shape[i]);
         if (err != NC_NOERR) return err;
     }
