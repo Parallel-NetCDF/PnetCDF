@@ -830,14 +830,18 @@ ifdef(`PNETCDF',`dnl
             if (var_dimid[i][j] == RECDIM) continue; /* skip record dim */
             start[j] = var_shape[i][j];
             err = APIFunc(iput_vara)(ncid, i, start, edge, value, 0, datatype, &reqid);
-#ifndef RELAX_COORD_BOUND
-            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                EXPECT_ERR(NC_EINVALCOORDS, err)
-#else
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#endif
-            ELSE_NOK
+
+            if (is_relax_coord_bound()) {
+                IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                    EXPECT_ERR(NC_NOERR, err)
+                ELSE_NOK
+            }
+            else {
+                IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                    EXPECT_ERR(NC_EINVALCOORDS, err)
+                ELSE_NOK
+            }
+
             start[j] = var_shape[i][j]+1; /* out of boundary check */
             err = APIFunc(iput_vara)(ncid, i, start, edge, value, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
@@ -1059,14 +1063,18 @@ ifdef(`PNETCDF',`dnl
                 start[j] = 0;
                 continue;
             }
-#ifndef RELAX_COORD_BOUND
-            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                EXPECT_ERR(NC_EINVALCOORDS, err)
-#else
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#endif
-            ELSE_NOK
+
+            if (is_relax_coord_bound()) {
+                IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                    EXPECT_ERR(NC_NOERR, err)
+                ELSE_NOK
+            }
+            else {
+                IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                    EXPECT_ERR(NC_EINVALCOORDS, err)
+                ELSE_NOK
+            }
+
             start[j] = var_shape[i][j]+1;     /* out of boundary check */
             err = iPutVara($1)(ncid, i, start, edge, value, &reqid);
             IF (err != NC_EINVALCOORDS)
@@ -1280,14 +1288,18 @@ ifdef(`PNETCDF',`dnl
             if (var_dimid[i][j] == 0) continue; /* skip record dim */
             start[j] = var_shape[i][j];
             err = APIFunc(iput_vars)(ncid, i, start, edge, stride, value, 0, datatype, &reqid);
-#ifndef RELAX_COORD_BOUND
-            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                EXPECT_ERR(NC_EINVALCOORDS, err)
-#else
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#endif
-            ELSE_NOK
+
+            if (is_relax_coord_bound()) {
+                IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                    EXPECT_ERR(NC_NOERR, err)
+                ELSE_NOK
+            }
+            else {
+                IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                    EXPECT_ERR(NC_EINVALCOORDS, err)
+                ELSE_NOK
+            }
+
             start[j] = var_shape[i][j]+1; /* out of boundary check */
             err = APIFunc(iput_vars)(ncid, i, start, edge, stride, value, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
@@ -1539,14 +1551,18 @@ ifdef(`PNETCDF',`dnl
                 start[j] = 0;
                 continue;
             }
-#ifndef RELAX_COORD_BOUND
-            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                EXPECT_ERR(NC_EINVALCOORDS, err)
-#else
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#endif
-            ELSE_NOK
+
+            if (is_relax_coord_bound()) {
+                IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                    EXPECT_ERR(NC_NOERR, err)
+                ELSE_NOK
+            }
+            else {
+                IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                    EXPECT_ERR(NC_EINVALCOORDS, err)
+                ELSE_NOK
+            }
+
             start[j] = var_shape[i][j]+1;     /* out of boundary check */
             err = iPutVars($1)(ncid, i, start, edge, stride, value, &reqid);
             IF (err != NC_EINVALCOORDS)
@@ -1783,14 +1799,18 @@ ifdef(`PNETCDF',`dnl
             if (var_dimid[i][j] == 0) continue; /* skip record dim */
             start[j] = var_shape[i][j];
             err = APIFunc(iput_varm)(ncid, i, start, edge, stride, imap, value, 0, datatype, &reqid);
-#ifndef RELAX_COORD_BOUND
-            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                EXPECT_ERR(NC_EINVALCOORDS, err)
-#else
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#endif
-            ELSE_NOK
+
+            if (is_relax_coord_bound()) {
+                IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                    EXPECT_ERR(NC_NOERR, err)
+                ELSE_NOK
+            }
+            else {
+                IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                    EXPECT_ERR(NC_EINVALCOORDS, err)
+                ELSE_NOK
+            }
+
             start[j] = var_shape[i][j]+1; /* out of boundary check */
             err = APIFunc(iput_varm)(ncid, i, start, edge, stride, imap, value, 1, datatype, &reqid);
             IF (err != NC_EINVALCOORDS)
@@ -2048,14 +2068,18 @@ ifdef(`PNETCDF',`dnl
                 start[j] = 0;
                 continue;
             }
-#ifndef RELAX_COORD_BOUND
-            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                EXPECT_ERR(NC_EINVALCOORDS, err)
-#else
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#endif
-            ELSE_NOK
+
+            if (is_relax_coord_bound()) {
+                IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                    EXPECT_ERR(NC_NOERR, err)
+                ELSE_NOK
+            }
+            else {
+                IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                    EXPECT_ERR(NC_EINVALCOORDS, err)
+                ELSE_NOK
+            }
+
             start[j] = var_shape[i][j]+1;     /* out of boundary check */
             err = iPutVarm($1)(ncid, i, start, edge, stride, imap, value, &reqid);
             IF (err != NC_EINVALCOORDS)

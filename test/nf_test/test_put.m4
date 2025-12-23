@@ -729,6 +729,7 @@ define([TEST_NFMPI_PUT_VARA],dnl
         integer*8 index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
+        logical relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
@@ -843,13 +844,14 @@ C           /* Check correct error returned even when nothing to put */
                     if (err .ne. NF_ECHAR)
      +                  call errore('conversion: ', err)
                 else
-#ifdef RELAX_COORD_BOUND
-                    if (err .ne. NF_NOERR)
-     +                  call errore('expect no error: ', err)
-#else
-                    if (err .ne. NF_EINVALCOORDS)
-     +                  call errore('bad start: ', err)
-#endif
+                    relax_coord_bound = relax_coord_bound_f()
+                    if (relax_coord_bound) then
+                        if (err .ne. NF_NOERR)
+     +                      call errore('expect no error: ', err)
+                    else
+                        if (err .ne. NF_EINVALCOORDS)
+     +                      call errore('bad start: ', err)
+                    endif
                 endif
                 start(j) = var_shape(j,i) + 2
                 err = PutVaraAll($1)(ncid, i,
@@ -980,6 +982,7 @@ define([TEST_NFMPI_PUT_VARS],dnl
         integer*8 stride(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
+        logical relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
@@ -1099,13 +1102,14 @@ C           /* Check correct error returned even when nothing to put */
                     if (err .ne. NF_ECHAR)
      +                  call errore('conversion: ', err)
                 else
-#ifdef RELAX_COORD_BOUND
-                    if (err .ne. NF_NOERR)
-     +                  call errore('expect no error: ', err)
-#else
-                    if (err .ne. NF_EINVALCOORDS)
-     +                  call errore('bad start: ', err)
-#endif
+                    relax_coord_bound = relax_coord_bound_f()
+                    if (relax_coord_bound) then
+                        if (err .ne. NF_NOERR)
+     +                      call errore('expect no error: ', err)
+                    else
+                        if (err .ne. NF_EINVALCOORDS)
+     +                      call errore('bad start: ', err)
+                    endif
                 endif
                 start(j) = var_shape(j,i) + 2
                 err = PutVarsAll($1)(ncid, i,
@@ -1269,6 +1273,7 @@ define([TEST_NFMPI_PUT_VARM],dnl
         integer*8 imap(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
+        logical relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
@@ -1388,13 +1393,14 @@ C           /* Check correct error returned even when nothing to put */
                     if (err .ne. NF_ECHAR)
      +                  call errore('conversion: ', err)
                 else
-#ifdef RELAX_COORD_BOUND
-                    if (err .ne. NF_NOERR)
-     +                  call errore('expect no error: ', err)
-#else
-                    if (err .ne. NF_EINVALCOORDS)
-     +                  call errore('bad start: ', err)
-#endif
+                    relax_coord_bound = relax_coord_bound_f()
+                    if (relax_coord_bound) then
+                        if (err .ne. NF_NOERR)
+     +                      call errore('expect no error: ', err)
+                    else
+                        if (err .ne. NF_EINVALCOORDS)
+     +                      call errore('bad start: ', err)
+                    endif
                 endif
                 start(j) = var_shape(j,i) + 2
                 err = PutVarmAll($1)(ncid, i,

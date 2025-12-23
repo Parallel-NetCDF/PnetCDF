@@ -501,6 +501,7 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         integer*8 index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
+        logical relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
@@ -599,13 +600,14 @@ C           /* Check correct error returned even when nothing to put */
                     if (err .ne. NF_ECHAR)
      +                  call errore('wrong type: ', err)
                 else
-#ifdef RELAX_COORD_BOUND
-                    if (err .ne. NF_NOERR)
-     +                  call error(ErrFunc(err))
-#else
-                    if (err .ne. NF_EINVALCOORDS)
-     +                  call errore('bad start: ', err)
-#endif
+                    relax_coord_bound = relax_coord_bound_f()
+                    if (relax_coord_bound) then
+                        if (err .ne. NF_NOERR)
+     +                      call error(ErrFunc(err))
+                    else
+                        if (err .ne. NF_EINVALCOORDS)
+     +                      call errore('bad start: ', err)
+                    endif
                 endif
                 start(j) = var_shape(j,i) + 2
                 err = iPutVara($1)(ncid, i,
@@ -751,6 +753,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         integer*8 stride(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
+        logical relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
@@ -861,13 +864,14 @@ C           /* Check correct error returned even when nothing to put */
                     if (err .ne. NF_ECHAR)
      +                  call errore('wrong type: ', err)
                 else
-#ifdef RELAX_COORD_BOUND
-                    if (err .ne. NF_NOERR)
-     +                  call error(ErrFunc(err))
-#else
-                    if (err .ne. NF_EINVALCOORDS)
-     +                  call errore('bad start: ', err)
-#endif
+                    relax_coord_bound = relax_coord_bound_f()
+                    if (relax_coord_bound) then
+                        if (err .ne. NF_NOERR)
+     +                      call error(ErrFunc(err))
+                    else
+                        if (err .ne. NF_EINVALCOORDS)
+     +                      call errore('bad start: ', err)
+                    endif
                 endif
                 start(j) = var_shape(j,i) + 2
                 err = iPutVars($1)(ncid, i,
@@ -1045,6 +1049,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         integer*8 imap(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
+        logical relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
@@ -1156,13 +1161,14 @@ C           /* Check correct error returned even when nothing to put */
                     if (err .ne. NF_ECHAR)
      +                  call errore('wrong type: ', err)
                 else
-#ifdef RELAX_COORD_BOUND
-                    if (err .ne. NF_NOERR)
-     +                  call error(ErrFunc(err))
-#else
-                    if (err .ne. NF_EINVALCOORDS)
-     +                  call errore('bad start: ', err)
-#endif
+                    relax_coord_bound = relax_coord_bound_f()
+                    if (relax_coord_bound) then
+                        if (err .ne. NF_NOERR)
+     +                      call error(ErrFunc(err))
+                    else
+                        if (err .ne. NF_EINVALCOORDS)
+     +                      call errore('bad start: ', err)
+                    endif
                 endif
                 start(j) = var_shape(j,i) + 2
                 err = iPutVarm($1)(ncid, i,

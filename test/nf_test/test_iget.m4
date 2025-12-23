@@ -322,7 +322,7 @@ define([TEST_NFMPI_IGET_VARA],[dnl
         integer*8 edge(MAX_RANK)
         integer*8 index(MAX_RANK)
         integer*8 mid(MAX_RANK)
-        logical canConvert
+        logical canConvert, relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
@@ -399,13 +399,14 @@ C           /* there is nothing to get (edge(j).eq.0) */
                         if (err .NE. NF_ECHAR)
      +                      call errore('wrong type: ', err)
                     else
-#ifdef RELAX_COORD_BOUND
-                        if (err .ne. NF_NOERR)
-     +                      call error(ErrFunc(err))
-#else
-                        if (err .ne. NF_EINVALCOORDS)
-     +                      call errore('bad start: ', err)
-#endif
+                        relax_coord_bound = relax_coord_bound_f()
+                        if (relax_coord_bound) then
+                            if (err .ne. NF_NOERR)
+     +                          call error(ErrFunc(err))
+                        else
+                            if (err .ne. NF_EINVALCOORDS)
+     +                          call errore('bad start: ', err)
+                        endif
                     endif
                     start(j) = var_shape(j,i) + 2
                     err = iGetVara($1)(ncid, i,
@@ -559,7 +560,7 @@ define([TEST_NFMPI_IGET_VARS],dnl
         integer*8 count(MAX_RANK)
         integer*8 sstride(MAX_RANK)
         integer*8 stride(MAX_RANK)
-        logical canConvert
+        logical canConvert, relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
@@ -648,13 +649,14 @@ C           /* there is nothing to get (edge(j).eq.0) */
                         if (err .NE. NF_ECHAR)
      +                      call errore('wrong type: ', err)
                     else
-#ifdef RELAX_COORD_BOUND
-                        if (err .ne. NF_NOERR)
-     +                      call error(ErrFunc(err))
-#else
-                        if (err .ne. NF_EINVALCOORDS)
-     +                      call errore('bad start: ', err)
-#endif
+                        relax_coord_bound = relax_coord_bound_f()
+                        if (relax_coord_bound) then
+                            if (err .ne. NF_NOERR)
+     +                          call error(ErrFunc(err))
+                        else
+                            if (err .ne. NF_EINVALCOORDS)
+     +                          call errore('bad start: ', err)
+                        endif
                     endif
                     start(j) = var_shape(j,i) + 2
                     err = iGetVars($1)(ncid, i,
@@ -843,7 +845,7 @@ define([TEST_NFMPI_IGET_VARM],dnl
         integer*8 sstride(MAX_RANK)
         integer*8 stride(MAX_RANK)
         integer*8 imap(MAX_RANK)
-        logical canConvert
+        logical canConvert, relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
@@ -933,13 +935,14 @@ C           /* there is nothing to get (edge(j).eq.0) */
                         if (err .NE. NF_ECHAR)
      +                      call errore('wrong type: ', err)
                     else
-#ifdef RELAX_COORD_BOUND
-                        if (err .ne. NF_NOERR)
-     +                      call error(ErrFunc(err))
-#else
-                        if (err .ne. NF_EINVALCOORDS)
-     +                      call errore('bad start: ', err)
-#endif
+                        relax_coord_bound = relax_coord_bound_f()
+                        if (relax_coord_bound) then
+                            if (err .ne. NF_NOERR)
+     +                          call error(ErrFunc(err))
+                        else
+                            if (err .ne. NF_EINVALCOORDS)
+     +                          call errore('bad start: ', err)
+                        endif
                     endif
                     start(j) = var_shape(j,i) + 2
                     err = iGetVarm($1)(ncid, i,

@@ -486,6 +486,7 @@ define([TEST_NFMPI_IPUT_VARA],dnl
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
+        logical relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
@@ -577,13 +578,14 @@ define([TEST_NFMPI_IPUT_VARA],dnl
                     if (err .ne. NF90_ECHAR) &
                         call errore('conversion: ', err)
                 else
-#ifdef RELAX_COORD_BOUND
-                    if (err .ne. NF90_NOERR) &
-                        call error(ErrFunc(err))
-#else
-                    if (err .ne. NF90_EINVALCOORDS) &
-                        call errore('bad start: ', err)
-#endif
+                    relax_coord_bound = relax_coord_bound_f()
+                    if (relax_coord_bound) then
+                        if (err .ne. NF90_NOERR) &
+                            call error(ErrFunc(err))
+                        else
+                        if (err .ne. NF90_EINVALCOORDS) &
+                            call errore('bad start: ', err)
+                        endif
                 endif
                 start(j) = var_shape(j,i) + 2
                 err = iPutVar(ncid, i, value,reqid(1), start, edge)
@@ -723,6 +725,7 @@ define([TEST_NFMPI_IPUT_VARS],dnl
         integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
+        logical relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
@@ -825,13 +828,14 @@ define([TEST_NFMPI_IPUT_VARS],dnl
                     if (err .ne. NF90_ECHAR) &
                         call errore('conversion: ', err)
                 else
-#ifdef RELAX_COORD_BOUND
-                    if (err .ne. NF90_NOERR) &
-                        call error(ErrFunc(err))
-#else
-                    if (err .ne. NF90_EINVALCOORDS) &
-                        call errore('bad start: ', err)
-#endif
+                    relax_coord_bound = relax_coord_bound_f()
+                    if (relax_coord_bound) then
+                        if (err .ne. NF90_NOERR) &
+                            call error(ErrFunc(err))
+                        else
+                        if (err .ne. NF90_EINVALCOORDS) &
+                            call errore('bad start: ', err)
+                        endif
                 endif
                 start(j) = var_shape(j,i) + 2
                 err = iPutVar(ncid, i, value,reqid(1), start, edge, stride)
@@ -1003,6 +1007,7 @@ define([TEST_NFMPI_IPUT_VARM],dnl
         integer(kind=MPI_OFFSET_KIND) imap(MAX_RANK)
         logical canConvert      !/* Both text or both numeric */
         logical allInExtRange   !/* all values within external range? */
+        logical relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision val
         integer ud_shift
@@ -1106,13 +1111,14 @@ define([TEST_NFMPI_IPUT_VARM],dnl
                     if (err .ne. NF90_ECHAR) &
                         call errore('conversion: ', err)
                 else
-#ifdef RELAX_COORD_BOUND
-                    if (err .ne. NF90_NOERR) &
-                        call error(ErrFunc(err))
-#else
-                    if (err .ne. NF90_EINVALCOORDS) &
-                        call errore('bad start: ', err)
-#endif
+                    relax_coord_bound = relax_coord_bound_f()
+                    if (relax_coord_bound) then
+                        if (err .ne. NF90_NOERR) &
+                            call error(ErrFunc(err))
+                        else
+                        if (err .ne. NF90_EINVALCOORDS) &
+                            call errore('bad start: ', err)
+                        endif
                 endif
                 start(j) = var_shape(j,i) + 2
                 err = iPutVar(ncid, i, value,reqid(1), start, edge, stride, imap)
