@@ -53,11 +53,10 @@ int test_collective_error(char *filename, int safe_mode, int cmode)
         start[0] = 0;
         count[0] = 2;
     } else if (rank == 1) {
-#if defined(PNETCDF_RELAX_COORD_BOUND) && PNETCDF_RELAX_COORD_BOUND==1
-        start[0] = 3; /* illegal for a start > defined shape */
-#else
-        start[0] = 2; /* illegal for a start >= defined shape */
-#endif
+        if (is_relax_coord_bound())
+            start[0] = 3; /* illegal for a start > defined shape */
+        else
+            start[0] = 2; /* illegal for a start >= defined shape */
         count[0] = 0;
     }
     else {

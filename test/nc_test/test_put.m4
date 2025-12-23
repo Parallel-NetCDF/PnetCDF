@@ -907,14 +907,18 @@ ifdef(`PNETCDF',`dnl
                 start[j] = 0;
                 continue;
             }
-#ifndef RELAX_COORD_BOUND
-            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                EXPECT_ERR(NC_EINVALCOORDS, err)
-#else
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#endif
-            ELSE_NOK
+
+            if (is_relax_coord_bound()) {
+                IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                    EXPECT_ERR(NC_NOERR, err)
+                ELSE_NOK
+            }
+            else {
+                IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                    EXPECT_ERR(NC_EINVALCOORDS, err)
+                ELSE_NOK
+            }
+
             start[j] = var_shape[i][j]+1; /* out of boundary check */
             err = PutVara($1)(ncid, i, start, edge, value);
             IF (err != NC_EINVALCOORDS)
@@ -1172,14 +1176,18 @@ ifdef(`PNETCDF',`dnl
                 start[j] = 0;
                 continue;
             }
-#ifndef RELAX_COORD_BOUND
-            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                EXPECT_ERR(NC_EINVALCOORDS, err)
-#else
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#endif
-            ELSE_NOK
+
+            if (is_relax_coord_bound()) {
+                IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                    EXPECT_ERR(NC_NOERR, err)
+                ELSE_NOK
+            }
+            else {
+                IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                    EXPECT_ERR(NC_EINVALCOORDS, err)
+                ELSE_NOK
+            }
+
             start[j] = var_shape[i][j]+1; /* out of boundary check */
             err = PutVars($1)(ncid, i, start, edge, stride, value);
             IF (err != NC_EINVALCOORDS)
@@ -1460,14 +1468,18 @@ ifdef(`PNETCDF',`dnl
                 start[j] = 0;
                 continue;
             }
-#ifndef RELAX_COORD_BOUND
-            IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
-                EXPECT_ERR(NC_EINVALCOORDS, err)
-#else
-            IF (err != NC_NOERR) /* allowed when edge[j]==0 */
-                EXPECT_ERR(NC_NOERR, err)
-#endif
-            ELSE_NOK
+
+            if (is_relax_coord_bound()) {
+                IF (err != NC_NOERR) /* allowed when edge[j]==0 */
+                    EXPECT_ERR(NC_NOERR, err)
+                ELSE_NOK
+            }
+            else {
+                IF (err != NC_EINVALCOORDS) /* not allowed even when edge[j]==0 */
+                    EXPECT_ERR(NC_EINVALCOORDS, err)
+                ELSE_NOK
+            }
+
             start[j] = var_shape[i][j]+1; /* out of boundary check */
             err = PutVarm($1)(ncid, i, start, edge, stride, imap, value);
             IF (err != NC_EINVALCOORDS)

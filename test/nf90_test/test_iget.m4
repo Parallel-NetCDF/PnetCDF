@@ -313,7 +313,7 @@ define([TEST_NFMPI_IGET_VARA],[dnl
         integer(kind=MPI_OFFSET_KIND) edge(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) index(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) mid(MAX_RANK)
-        logical canConvert
+        logical canConvert, relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
@@ -383,13 +383,14 @@ define([TEST_NFMPI_IGET_VARA],[dnl
                         if (err .ne. NF90_ECHAR) &
                             call errore('wrong type: ', err)
                     else
-#ifdef RELAX_COORD_BOUND
-                        if (err .ne. NF90_NOERR) &
-                            call error(ErrFunc(err))
-#else
-                        if (err .ne. NF90_EINVALCOORDS) &
-                            call errore('bad start: ', err)
-#endif
+                        relax_coord_bound = relax_coord_bound_f()
+                        if (relax_coord_bound) then
+                            if (err .ne. NF90_NOERR) &
+                                call error(ErrFunc(err))
+                        else
+                            if (err .ne. NF90_EINVALCOORDS) &
+                                call errore('bad start: ', err)
+                        endif
                     endif
                     start(j) = var_shape(j,i) + 2
                     err = GetVar(ncid, i, value,reqid(1), start, edge)
@@ -542,7 +543,7 @@ define([TEST_NFMPI_IGET_VARS],dnl
         integer(kind=MPI_OFFSET_KIND) count(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) sstride(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
-        logical canConvert
+        logical canConvert, relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
@@ -623,13 +624,14 @@ define([TEST_NFMPI_IGET_VARS],dnl
                         if (err .ne. NF90_ECHAR) &
                             call errore('wrong type: ', err)
                     else
-#ifdef RELAX_COORD_BOUND
-                        if (err .ne. NF90_NOERR) &
-                            call error(ErrFunc(err))
-#else
-                        if (err .ne. NF90_EINVALCOORDS) &
-                            call errore('bad start: ', err)
-#endif
+                        relax_coord_bound = relax_coord_bound_f()
+                        if (relax_coord_bound) then
+                            if (err .ne. NF90_NOERR) &
+                                call error(ErrFunc(err))
+                        else
+                            if (err .ne. NF90_EINVALCOORDS) &
+                                call errore('bad start: ', err)
+                        endif
                     endif
                     start(j) = var_shape(j,i) + 2
                     err = GetVar(ncid, i, value,reqid(1), start, edge, stride)
@@ -813,7 +815,7 @@ define([TEST_NFMPI_IGET_VARM],dnl
         integer(kind=MPI_OFFSET_KIND) sstride(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) stride(MAX_RANK)
         integer(kind=MPI_OFFSET_KIND) imap(MAX_RANK)
-        logical canConvert
+        logical canConvert, relax_coord_bound, relax_coord_bound_f
         DATATYPE($1, value, (MAX_NELS))
         doubleprecision expect(MAX_NELS)
         doubleprecision val
@@ -895,13 +897,14 @@ define([TEST_NFMPI_IGET_VARM],dnl
                         if (err .ne. NF90_ECHAR) &
                             call errore('wrong type: ', err)
                     else
-#ifdef RELAX_COORD_BOUND
-                        if (err .ne. NF90_NOERR) &
-                            call error(ErrFunc(err))
-#else
-                        if (err .ne. NF90_EINVALCOORDS) &
-                            call errore('bad start: ', err)
-#endif
+                        relax_coord_bound = relax_coord_bound_f()
+                        if (relax_coord_bound) then
+                            if (err .ne. NF90_NOERR) &
+                                call error(ErrFunc(err))
+                        else
+                            if (err .ne. NF90_EINVALCOORDS) &
+                                call errore('bad start: ', err)
+                        endif
                     endif
                     start(j) = var_shape(j,i) + 2
                     err = GetVar(ncid, i, value,reqid(1), start, edge, stride, imap)
