@@ -1879,8 +1879,9 @@ static void
 usage(char *cmd)
 {
     char *help =
-"Usage: %s [-h] | [-x] | [-sgr] [-v var1[,...]] file\n"
+"Usage: %s [-h | -d | -x | -s | -g | -r | -v var1[,...]] file\n"
 "       [-h]            Print help\n"
+"       [-d]            Enable debug mode (verbose output)\n"
 "       [-v var1[,...]] Output for variable(s) <var1>,... only\n"
 "       [-s]            Output variable size. For record variables, output\n"
 "                       the size of one record only\n"
@@ -1898,7 +1899,7 @@ int main(int argc, char *argv[])
 {
     extern int optind;
     extern char *optarg;
-    char *filename, *env_str;
+    char *filename;
     int i, j, err, opt;
     int print_var_size=0, print_gap=0, check_gap=0, print_all_rec=0;
     NC *ncp;
@@ -1906,8 +1907,10 @@ int main(int argc, char *argv[])
 
     fspecp = (struct fspec*) calloc(1, sizeof(struct fspec));
 
+    verbose_debug = 0;
+
     /* get command-line arguments */
-    while ((opt = getopt(argc, argv, "v:sghqxr")) != EOF) {
+    while ((opt = getopt(argc, argv, "v:dsghqxr")) != EOF) {
         switch(opt) {
             case 'v': make_lvars(optarg, fspecp);
                       break;
@@ -1918,6 +1921,8 @@ int main(int argc, char *argv[])
             case 'r': print_all_rec = 1;
                       break;
             case 'x': check_gap = 1;
+                      break;
+            case 'd': verbose_debug = 1;
                       break;
             case 'h':
             default:  usage(argv[0]);
@@ -1936,10 +1941,6 @@ int main(int argc, char *argv[])
         return 1;
     }
     filename = argv[optind]; /* required argument */
-
-    verbose_debug = 0;
-    env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");
-    if (env_str != NULL && *env_str != '0') verbose_debug = 1;
 
     /* find Endianness of the running machine */
     is_little_endian = check_little_endian();
