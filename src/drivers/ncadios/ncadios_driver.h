@@ -91,10 +91,12 @@ struct NC_ad {
 };
 
 extern int
-ncadios_create(MPI_Comm comm, const char *path, int cmode, int ncid, MPI_Info info, void **ncdp);
+ncadios_create(MPI_Comm comm, const char *path, int cmode, int ncid,
+               int env_mode, MPI_Info info, void **ncdp);
 
 extern int
-ncadios_open(MPI_Comm comm, const char *path, int omode, int ncid, MPI_Info info, void **ncdp);
+ncadios_open(MPI_Comm comm, const char *path, int omode, int ncid,
+             int env_mode, MPI_Info info, void **ncdp);
 
 extern int
 ncadios_close(void *ncdp);

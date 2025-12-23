@@ -51,6 +51,7 @@ ncfoo_create(MPI_Comm     comm,
              const char  *path,
              int          cmode,
              int          ncid,
+             int          env_mode,
              MPI_Info     info,
              void       **ncpp)  /* OUT */
 {
@@ -63,7 +64,7 @@ ncfoo_create(MPI_Comm     comm,
     driver = ncmpio_inq_driver();
     if (driver == NULL) return NC_ENOTNC;
 
-    err = driver->create(comm, path, cmode, ncid, info, &ncp);
+    err = driver->create(comm, path, cmode, ncid, env_mode, info, &ncp);
     if (err != NC_NOERR) return err;
 
     /* Create a NC_foo object and save its driver pointer */
@@ -92,6 +93,7 @@ ncfoo_open(MPI_Comm     comm,
            const char  *path,
            int          omode,
            int          ncid,
+           int          env_mode,
            MPI_Info     info,
            void       **ncpp)
 {
@@ -110,7 +112,7 @@ ncfoo_open(MPI_Comm     comm,
     }
     if (driver == NULL) return NC_ENOTNC;
 
-    err = driver->open(comm, path, omode, ncid, info, &ncp);
+    err = driver->open(comm, path, omode, ncid, env_mode, info, &ncp);
     if (err != NC_NOERR) return err;
 
     /* Create a NC_foo object and save its driver pointer */

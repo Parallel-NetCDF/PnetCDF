@@ -38,10 +38,11 @@ ncmpio_create(MPI_Comm     comm,
               const char  *path,
               int          cmode,
               int          ncid,
+              int          env_mode,
               MPI_Info     user_info, /* user's and env info combined */
               void       **ncpp)
 {
-    char *env_str, *filename, value[MPI_MAX_INFO_VAL + 1], *mpi_name;
+    char *filename, value[MPI_MAX_INFO_VAL + 1], *mpi_name;
     int rank, nprocs, mpiomode, err, mpireturn, default_format, file_exist=1;
     int use_trunc=1, flag;
     MPI_File fh=MPI_FILE_NULL;
@@ -324,25 +325,11 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
     /* PnetCDF default mode is no fill */
     fClr(ncp->flags, NC_MODE_FILL);
 
+    /* incorporate modes set in environment variables */
+    fSet(ncp->flags, env_mode);
+
     /* initialize unlimited_id as no unlimited dimension yet defined */
     ncp->dims.unlimited_id = -1;
-
-#ifdef PNETCDF_DEBUG
-    /* PNETCDF_DEBUG is set at configure time, which will be overwritten by
-     * the run-time environment variable PNETCDF_SAFE_MODE.
-     */
-    ncp->safe_mode = 1;
-#endif
-    /* If environment variable PNETCDF_SAFE_MODE is set to 1, then we perform
-     * a strict consistent test, i.e. arguments used in def_dim/def_var APIs
-     */
-    if ((env_str = getenv("PNETCDF_SAFE_MODE")) != NULL) {
-        if (*env_str == '0') ncp->safe_mode = 0;
-        else                 ncp->safe_mode = 1;
-        /* If PNETCDF_SAFE_MODE is set but without a value, *env_str can
-         * be '\0' (null character). In this case, safe_mode is enabled.
-         */
-    }
 
     /* Construct a list of unique IDs of compute nodes allocated to this job
      * and save it in ncp->node_ids[nprocs], which contains node IDs of each
