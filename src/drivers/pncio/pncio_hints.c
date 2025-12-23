@@ -49,7 +49,7 @@
     if (fd->hints->hint != root_hints->hint) { \
         char int_str[16]; \
         fprintf(stderr, "Error: inconsistent I/O hint %s (%d at rank %d, %d at root)\n", \
-                #hint, fd->hints->hint, root_hints->hint); \
+                #hint, fd->hints->hint, rank, root_hints->hint); \
         /* overwrite local's hint with root's */ \
         snprintf(int_str, 16, "%d", root_hints->hint); \
         MPI_Info_set(fd->info, #hint, int_str); \
