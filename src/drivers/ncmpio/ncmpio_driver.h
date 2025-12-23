@@ -12,10 +12,12 @@
 #include <dispatch.h>
 
 extern int
-ncmpio_create(MPI_Comm comm, const char *path, int cmode, int ncid, MPI_Info info, void **ncdp);
+ncmpio_create(MPI_Comm comm, const char *path, int cmode, int ncid,
+              int env_mode, MPI_Info info, void **ncdp);
 
 extern int
-ncmpio_open(MPI_Comm comm, const char *path, int omode, int ncid, MPI_Info info, void **ncdp);
+ncmpio_open(MPI_Comm comm, const char *path, int omode, int ncid,
+            int env_mode, MPI_Info info, void **ncdp);
 
 extern int
 ncmpio_close(void *ncdp);

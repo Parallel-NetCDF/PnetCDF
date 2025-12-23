@@ -259,11 +259,13 @@ int ncbbio_sharedfile_seek (NC_bb_sharedfile *f, off_t offset, int whence);
 void ncbbio_extract_hint (NC_bb *ncbbp, MPI_Info info);
 void ncbbio_export_hint (NC_bb *ncbbp, MPI_Info *info);
 
-extern int ncbbio_create (
-    MPI_Comm comm, const char *path, int cmode, int ncid, MPI_Info info, void **ncdp);
+extern
+int ncbbio_create(MPI_Comm comm, const char *path, int cmode, int ncid,
+                  int env_mode, MPI_Info info, void **ncdp);
 
-extern int ncbbio_open (
-    MPI_Comm comm, const char *path, int omode, int ncid, MPI_Info info, void **ncdp);
+extern
+int ncbbio_open(MPI_Comm comm, const char *path, int omode, int ncid,
+                int env_mode, MPI_Info info, void **ncdp);
 
 extern int ncbbio_close (void *ncdp);
 
