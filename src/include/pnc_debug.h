@@ -45,6 +45,16 @@
 }
 
 #ifdef PNETCDF_DEBUG
+
+/* PNETCDF_VERBOSE_DEBUG_MODE environment variable can be used to print the
+ * location in the source code where the error code is originated, no matter
+ * the error is intended or not. This run-time environment variable only takes
+ * effect only when PnetCDF is configure with debug mode, i.e. --enable-debug
+ * is set at the configure command line. This feature is mainly for PnetCDF
+ * developers, who are warned that enabling this mode may result in a lot of
+ * debugging messages printed in stderr.
+ */
+
 #define DEBUG_RETURN_ERROR(err) {                                       \
     char *_env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");              \
     if (_env_str != NULL && *_env_str != '0') {                         \
