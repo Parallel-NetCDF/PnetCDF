@@ -68,12 +68,12 @@
  * The "len" parameter is also modified to indicate the amount of data
  * actually available in this file domain.
  */
-int PNCIO_Calc_aggregator(PNCIO_File *fd,
-                          MPI_Offset  off,
-                          MPI_Offset  min_off,
-                          MPI_Offset *len,
-                          MPI_Offset  fd_size,
-                          MPI_Offset *fd_end)
+int PNCIO_Calc_aggregator(const PNCIO_File *fd,
+                          MPI_Offset        off,
+                          MPI_Offset        min_off,
+                          MPI_Offset       *len, /* may be modified when return */
+                          MPI_Offset        fd_size,
+                          const MPI_Offset *fd_end)
 {
     int rank_index, rank;
     MPI_Offset avail_bytes;
@@ -225,16 +225,15 @@ void PNCIO_Calc_file_domains(MPI_Offset  *st_offsets,
  * of this process are located in the file domains of various processes
  * (including this one)
  */
-void PNCIO_Calc_my_req(PNCIO_File    *fd,
-                       MPI_Offset     min_st_offset,
-                       MPI_Offset    *fd_start,
-                       MPI_Offset    *fd_end,
-                       MPI_Offset     fd_size,
-                       int            nprocs,
-                       MPI_Count     *count_my_req_procs_ptr,
-                       MPI_Count    **count_my_req_per_proc_ptr,
-                       PNCIO_Access **my_req_ptr,
-                       MPI_Aint     **buf_idx_ptr)
+void PNCIO_Calc_my_req(PNCIO_File         *fd,
+                       MPI_Offset          min_st_offset,
+                       const MPI_Offset   *fd_end,
+                       MPI_Offset          fd_size,
+                       int                 nprocs,
+                       MPI_Count          *count_my_req_procs_ptr,
+                       MPI_Count         **count_my_req_per_proc_ptr,
+                       PNCIO_Access      **my_req_ptr,
+                       MPI_Aint          **buf_idx_ptr)
 /* Possibly reconsider if buf_idx's are ok as int's, or should they be aints/offsets?
    They are used as memory buffer indices so it seems like the 2G limit is in effect */
 {
