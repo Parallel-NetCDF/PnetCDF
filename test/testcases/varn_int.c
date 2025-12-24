@@ -99,7 +99,7 @@ int tst_io(const char *filename,
            MPI_Info    info)
 {
     int i, j, rank, nprocs, err, nerrs=0;
-    int ncid, cmode, varid[2], dimid[2], num_reqs, *buffer, *r_buffer;
+    int ncid, cmode, varid[2], dimid[2], num_reqs=0, *buffer=NULL, *r_buffer=NULL;
     MPI_Offset w_len, **starts=NULL, **counts=NULL;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -362,8 +362,8 @@ err_out:
     err = ncmpi_close(ncid);
     CHECK_ERR
 
-    free(buffer);
-    free(r_buffer);
+    if (buffer != NULL) free(buffer);
+    if (r_buffer != NULL) free(r_buffer);
     if (num_reqs > 0) {
         free(starts[0]);
         free(counts[0]);
