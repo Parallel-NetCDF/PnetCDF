@@ -71,14 +71,43 @@ MPI_Offset PNCIO_GEN_ReadStridedColl(PNCIO_File *fd,
     MPI_Aint *buf_idx = NULL;
     MPI_Offset r_len, total_r_len=0;
 
-// printf("%s at %d:\n",__func__,__LINE__);
+// printf("%s at %d: offset %lld buf_view size %lld flat_file.count %lld size %lld is_contig %d\n",__func__,__LINE__,offset,buf_view.size,fd->flat_file.count, fd->flat_file.size, fd->flat_file.is_contig);
 
-    MPI_Comm_size(fd->comm, &nprocs);
-    MPI_Comm_rank(fd->comm, &myrank);
+#ifdef HAVE_MPI_LARGE_COUNT
+    MPI_Offset one_len = (MPI_Offset)buf_view.size;
+#else
+    int one_len = (int)buf_view.size;
+#endif
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
 double curT = MPI_Wtime();
 #endif
+
+    MPI_Comm_size(fd->comm, &nprocs);
+    MPI_Comm_rank(fd->comm, &myrank);
+
+    /* PnetCDF never reuses a fileview across two or more PNCIO calls. As this
+     * subroutine may modify the contents of fd->flat_file, we save its
+     * contents and restore it before leaving this sibroutine.
+     */
+    PNCIO_View saved_flat_file = fd->flat_file;
+
+    if (fd->flat_file.count == 0) { /* whole file is visible */
+        /* set flat_file as a single contiguous offset-length pair */
+        fd->flat_file.off       = &offset;
+        fd->flat_file.len       = &one_len;
+        fd->flat_file.size      = one_len;
+        fd->flat_file.count     = 1;
+        fd->flat_file.is_contig = 1;
+        start_offset = offset;
+        end_offset = offset + buf_view.size - 1;
+    }
+    else {
+        /* When flat_file is not contiguous, PnetCDF always calls this
+         * subroutine with offset == 0.
+         */
+        assert(offset == 0);
+    }
 
     /* number of aggregators, cb_nodes, is stored in the hints */
     nprocs_for_coll = fd->hints->cb_nodes;
@@ -89,20 +118,12 @@ double curT = MPI_Wtime();
          * offsets. Note: end_offset points to the last byte-offset that will
          * be accessed, e.g., if start_offset=0 and 100 bytes to be read,
          * end_offset=99
+         *
+         * Note flat_file.off[] is always relative to beginning of file.
          */
-        if (fd->flat_file.size == 0) {
-            start_offset = 0;
-            end_offset = -1;
-        }
-        else if (fd->flat_file.count > 0) {
-            start_offset = offset + fd->flat_file.off[0];
-            end_offset   = fd->flat_file.off[fd->flat_file.count-1]
-                         + fd->flat_file.len[fd->flat_file.count-1] - 1;
-        }
-        else {
-            start_offset = offset;
-            end_offset   = offset + fd->flat_file.size - 1;
-        }
+        start_offset = fd->flat_file.off[0];
+        end_offset   = fd->flat_file.off[fd->flat_file.count-1]
+                     + fd->flat_file.len[fd->flat_file.count-1] - 1;
 
         /* each process communicates its start and end offsets to other
          * processes. The result is an array each of start and end offsets
@@ -130,12 +151,18 @@ double curT = MPI_Wtime();
 
         if (st_offsets != NULL) NCI_Free(st_offsets);
 
-        if (buf_view.size == 0) return 0;
+        /* restore flattend file view before leaving this sibroutine */
+        fd->flat_file = saved_flat_file;
 
-/* PnetCDF always sets this condition, i.e. when fileview is non-contiguous, offset in this call is always 0. */
-if (fd->flat_file.count > 0) assert(offset == 0); /* not whole file visible */
+        if (buf_view.size == 0) /* zero-size request */
+            return 0;
 
         if (buf_view.is_contig && fd->flat_file.is_contig) {
+            /* When fd->flat_file.is_contig, it is still possible
+             * fd->flat_file.count > 0 and when this happens
+             * fd->flat_file.count should be 1, which comes from PnetCDF wait
+             * when the number of nonblocking requests is 1.
+             */
             if (fd->flat_file.count > 0) offset += fd->flat_file.off[0];
             return PNCIO_ReadContig(fd, buf, buf_view.size, offset);
         }
@@ -208,6 +235,9 @@ if (fd->flat_file.count > 0) assert(offset == 0); /* not whole file visible */
     NCI_Free(st_offsets);
     NCI_Free(fd_start);
 
+    /* restore flattend file view before leaving this sibroutine */
+    fd->flat_file = saved_flat_file;
+
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     if (fd->is_agg) fd->read_timing[0] += MPI_Wtime() - curT;
 #endif
@@ -266,7 +296,7 @@ MPI_Offset Read_and_exch(PNCIO_File *fd, void *buf,
         for (MPI_Count j = 0; j < others_req[i].count; j++) {
             st_loc = MIN(st_loc, others_req[i].offsets[j]);
             end_loc = MAX(end_loc, (others_req[i].offsets[j]
-                                        + others_req[i].lens[j] - 1));
+                                  + others_req[i].lens[j] - 1));
         }
 
     /* calculate ntimes, the number of times this process must perform I/O

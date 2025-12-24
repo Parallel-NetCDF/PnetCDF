@@ -137,7 +137,7 @@ int LUSTRE_Calc_aggregator(PNCIO_File *fd,
  *       noncontiguous requests.
  *   IN: buf_is_contig: whether the write buffer is contiguous or not
  *   OUT: my_req_ptr[cb_nodes] offset-length pairs of this process's requests
- *        fall into the file domain of each aggregator
+ *        fall into the file domain of each aggregator.
  *   OUT: buf_idx_ptr[cb_nodes] index pointing to the starting location in
  *        user_buf for data to be sent to each aggregator.
  */
@@ -157,6 +157,11 @@ void LUSTRE_Calc_my_req(PNCIO_File    *fd,
 #endif
     MPI_Offset curr_idx, off;
     PNCIO_Access *my_req;
+
+    /* fd->flat_file.count has been checked and adjusted to a possitive number
+     * at the beginning of PNCIO_LUSTRE_WriteStridedColl().
+     */
+    assert(fd->flat_file.count > 0);
 
     cb_nodes = fd->hints->cb_nodes;
 
@@ -570,14 +575,26 @@ MPI_Offset PNCIO_LUSTRE_WriteStridedColl(PNCIO_File *fd,
     MPI_Offset min_st_loc = -1, max_end_loc = -1;
     MPI_Offset w_len=0;
 
-    MPI_Comm_size(fd->comm, &nprocs);
-    MPI_Comm_rank(fd->comm, &myrank);
+#ifdef HAVE_MPI_LARGE_COUNT
+    MPI_Offset one_len = (MPI_Offset)buf_view.size;
+#else
+    int one_len = (int)buf_view.size;
+#endif
 
 // printf("%s %d: offset=%lld\n",__func__,__LINE__,offset);
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
 MPI_Barrier(fd->comm);
 double curT = MPI_Wtime();
 #endif
+
+    MPI_Comm_size(fd->comm, &nprocs);
+    MPI_Comm_rank(fd->comm, &myrank);
+
+    /* PnetCDF never reuses a fileview across two or more PNCIO calls. As this
+     * subroutine may modify the contents of fd->flat_file, we save its
+     * contents and restore it before leaving this sibroutine.
+     */
+    PNCIO_View saved_flat_file = fd->flat_file;
 
     /* fd->flat_file contains a list of starting file offsets and lengths of
      * write requests made by this rank. Similarly, buf_view contains a list of
@@ -595,47 +612,30 @@ double curT = MPI_Wtime();
      * file access region is of size 100 bytes. If this rank has no data to
      * write, end_offset == (start_offset - 1)
      */
-    MPI_Offset one_off;
-#ifdef HAVE_MPI_LARGE_COUNT
-    MPI_Offset one_len;
-#else
-    int one_len;
-#endif
-
-    if (fd->flat_file.count == 0) { /* TODO: is fd->flat_file.count == 0? */
-        /* whole file is visible */
+    if (fd->flat_file.count == 0) { /* whole file is visible */
+        /* set flat_file as a single contiguous offset-length pair */
+        fd->flat_file.off       = &offset;
+        fd->flat_file.len       = &one_len;
+        fd->flat_file.size      = one_len;
+        fd->flat_file.count     = 1;
+        fd->flat_file.is_contig = 1;
         start_offset = offset;
         end_offset = offset + buf_view.size - 1;
-        if (buf_view.size > 0) { /* no-zero sized request */
-            /* setting fd->flat_file is necessary for constructing my_req */
-            one_off = offset;
-            one_len = buf_view.size;
-            fd->flat_file.off = &one_off;
-            fd->flat_file.len = &one_len;
-            fd->flat_file.count = 1;
-        }
     }
-    else {
-        start_offset = offset + fd->flat_file.off[0];
+    else { /* Note flat_file.off[] is always relative to beginning of file */
+        /* When flat_file is not contiguous, PnetCDF always calls this
+         * subroutine with offset == 0.
+         */
+        assert(offset == 0);
+        start_offset = fd->flat_file.off[0];
         end_offset   = fd->flat_file.off[fd->flat_file.count-1]
                      + fd->flat_file.len[fd->flat_file.count-1] - 1;
     }
-/*
-    else if (fd->flat_file.count > 0) {
-        start_offset = offset + fd->flat_file.off[0];
-        end_offset   = fd->flat_file.off[fd->flat_file.count-1]
-                     + fd->flat_file.len[fd->flat_file.count-1] - 1;
-    }
-    else {
-        start_offset = offset;
-        end_offset   = offset + fd->flat_file.size - 1;
-    }
-*/
 // if (myrank==0) printf("%s %d: fd->flat_file size=%lld count=%lld offset=%lld start_offset=%lld end_offset=%lld\n",__func__,__LINE__, fd->flat_file.size, fd->flat_file.count,offset,start_offset,end_offset);
 
     buf_view.idx  = 0;
     buf_view.rem = buf_view.size;
-    if (buf_view.count > 1)
+    if (buf_view.size > 0 && buf_view.count > 1)
         buf_view.rem = buf_view.len[0];
 
     if (fd->hints->romio_cb_write == PNCIO_HINT_DISABLE) {
@@ -733,11 +733,19 @@ double curT = MPI_Wtime();
     /* If collective I/O is determined not necessary, use independent I/O */
     if (!do_collect) {
 
+        /* restore flattend file view before leaving this sibroutine */
+        fd->flat_file = saved_flat_file;
+
         if (buf_view.size == 0) /* zero-sized request */
             return 0;
 
         if (fd->flat_file.is_contig && buf_view.is_contig) {
-            /* both buffer and fileview are contiguous */
+            /* Both buffer and fileview are contiguous. Note when
+             * fd->flat_file.is_contig, it is still possible
+             * fd->flat_file.count > 0 and when this happens
+             * fd->flat_file.count should be 1, which comes from PnetCDF wait
+             * call and the number of nonblocking requests is 1.
+             */
             if (fd->flat_file.count > 0) offset += fd->flat_file.off[0];
 #ifdef WKL_DEBUG
             printf("%s %d: SWITCH to PNCIO_WriteContig !!!\n",__func__,__LINE__);
@@ -927,6 +935,9 @@ double curT = MPI_Wtime();
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     if (fd->is_agg) fd->write_timing[0] += MPI_Wtime() - curT;
 #endif
+
+    /* restore flattend file view before leaving this sibroutine */
+    fd->flat_file = saved_flat_file;
 
     /* w_len may not be the same as buf_view.size, because data sieving may
      * write more than requested.
@@ -2235,6 +2246,11 @@ int num_memcpy=0;
                  + buf_view->len[buf_view->idx]
                  - buf_view->rem;
                  /* in case data left to be copied from previous round */
+
+    /* fd->flat_file.count has been checked and adjusted to a possitive number
+     * at the beginning of PNCIO_LUSTRE_WriteStridedColl().
+     */
+    assert(fd->flat_file.count > 0);
 
     /* fd->flat_file.count: the number of noncontiguous file segments this
      *     rank writes to. Each segment i is described by fd->flat_file.offs[i]
