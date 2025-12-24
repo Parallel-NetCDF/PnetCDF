@@ -19,7 +19,7 @@ on:
       - 'test/test_installed/*'
 
 env:
-   OPENMPI_VERSION: 5.0.2
+   OPENMPI_VERSION: 5.0.8
    AUTOCONF_VERSION: 2.71
    AUTOMAKE_VERSION: 1.17
    LIBTOOL_VERSION: 2.5.4
