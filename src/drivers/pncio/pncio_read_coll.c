@@ -175,7 +175,7 @@ if (fd->flat_file.count > 0) assert(offset == 0); /* not whole file visible */
      * buf_idx[] - array of locations into which data can be directly moved;
      *     this is only valid for contiguous buffer case
      */
-    PNCIO_Calc_my_req(fd, min_st_offset, fd_start, fd_end, fd_size, nprocs,
+    PNCIO_Calc_my_req(fd, min_st_offset, fd_end, fd_size, nprocs,
                       &count_my_req_procs, &count_my_req_per_proc, &my_req,
                       &buf_idx);
 
