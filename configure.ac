@@ -1614,15 +1614,16 @@ if test "x$has_lustre" = xyes ; then
 fi
 AM_CONDITIONAL(HAVE_LUSTRE, [test x$has_lustre = xyes])
 
+minicking_lustre=no
 if test "x$has_lustre" = xno ; then
    AC_MSG_CHECKING([for whether mimicking Lustre])
-   minicking_lustre=no
    if test "x$MIMIC_LUSTRE" = xyes ; then
       AC_DEFINE(MIMIC_LUSTRE, 1, [Define for mimicking LUSTRE file system])
       minicking_lustre=yes
    fi
    AC_MSG_RESULT($minicking_lustre)
 fi
+AM_CONDITIONAL(MIMIC_LUSTRE, [test x$minicking_lustre = xyes])
 
 AC_C_CHAR_UNSIGNED
 AC_C_BIGENDIAN

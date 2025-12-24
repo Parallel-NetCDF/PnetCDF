@@ -67,6 +67,9 @@ for i in ${check_PROGRAMS} ; do
         if test "x$INA_HINTS" != x ; then
            PNETCDF_HINTS="$INA_HINTS;$PNETCDF_HINTS"
         fi
+        if test "x$MIMIC_LUSTRE" != x1 ; then
+           PNETCDF_HINTS="cb_nodes=2;$PNETCDF_HINTS"
+        fi
 
         export PNETCDF_HINTS="$PNETCDF_HINTS"
         export PNETCDF_SAFE_MODE=$j
