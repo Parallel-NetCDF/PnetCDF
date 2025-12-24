@@ -28,11 +28,14 @@ unset PNETCDF_HINTS
 
 for i in ${check_PROGRAMS} ; do
     for j in ${safe_modes} ; do
+        PNETCDF_HINTS=
         if test "$j" = 1 ; then # test only in safe mode
-           export PNETCDF_HINTS="romio_no_indep_rw=true"
-        else
-           export PNETCDF_HINTS=
+           PNETCDF_HINTS="romio_no_indep_rw=true"
         fi
+        if test "x$MIMIC_LUSTRE" != x1 ; then
+           PNETCDF_HINTS="cb_nodes=2;$PNETCDF_HINTS"
+        fi
+        export PNETCDF_HINTS=$PNETCDF_HINTS
         export PNETCDF_SAFE_MODE=$j
         # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
         if test "$i" = read_metadata ; then
