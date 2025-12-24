@@ -345,10 +345,11 @@ void LUSTRE_Calc_others_req(PNCIO_File          *fd,
                             const PNCIO_Access  *my_req,
                             PNCIO_Access       **others_req_ptr)
 {
-    int i, myrank, nprocs, do_alltoallv;
+    int i, myrank, nprocs, do_alltoallv, nreqs;
     MPI_Count *count_my_req_per_proc, *count_others_req_per_proc;
     PNCIO_Access *others_req;
     size_t npairs, alloc_sz, pair_sz;
+    MPI_Request *requests;
 
     /* first find out how much to send/recv and from/to whom */
 
@@ -362,14 +363,41 @@ void LUSTRE_Calc_others_req(PNCIO_File          *fd,
      * aggregator i's file domain) to set count_others_req_per_proc[j] (the
      * number of noncontiguous requests from process j fall into this
      * aggregator's file domain).
+     *
+     * The below MPI_Alltoall() is actually an all-to-many, i,e, all ranks
+     * send to aggregators only.
      */
     count_my_req_per_proc = (MPI_Count *) NCI_Calloc(nprocs * 2, sizeof(MPI_Count));
     count_others_req_per_proc = count_my_req_per_proc + nprocs;
     for (i=0; i<fd->hints->cb_nodes; i++)
         count_my_req_per_proc[fd->hints->ranklist[i]] = my_req[i].count;
 
+#if 1
+    requests = NCI_Malloc(sizeof(MPI_Request) * (nprocs + fd->hints->cb_nodes));
+    nreqs = 0;
+    if (fd->is_agg) {
+        for (i=0; i<nprocs; i++)
+            MPI_Irecv(count_others_req_per_proc+i, 1, MPI_COUNT, i, 0, fd->comm, &requests[nreqs++]);
+    }
+    for (i=0; i<fd->hints->cb_nodes; i++) {
+        int dest = fd->hints->ranklist[i];
+        MPI_Issend(&my_req[i].count, 1, MPI_COUNT, dest, 0, fd->comm, &requests[nreqs++]);
+    }
+    if (nreqs) {
+#ifdef HAVE_MPI_STATUSES_IGNORE
+        MPI_Waitall(nreqs, requests, MPI_STATUSES_IGNORE);
+#else
+        MPI_Status *statuses = (MPI_Status *)
+                               NCI_Malloc(nreqs * sizeof(MPI_Status));
+        MPI_Waitall(nreqs, requests, statuses);
+        NCI_Free(statuses);
+#endif
+    }
+    NCI_Free(requests);
+#else
     MPI_Alltoall(count_my_req_per_proc, 1, MPI_COUNT,
                  count_others_req_per_proc, 1, MPI_COUNT, fd->comm);
+#endif
 
     /* calculate total number of offset-length pairs to be handled by this
      * aggregator, only aggregators will have non-zero number of pairs.
@@ -482,9 +510,8 @@ void LUSTRE_Calc_others_req(PNCIO_File          *fd,
         NCI_Free(sendCounts);
     }
     else { /* instead of using alltoall, use MPI_Issend and MPI_Irecv */
-        int nreqs;
-        MPI_Request *requests = (MPI_Request *)
-            NCI_Malloc((nprocs + fd->hints->cb_nodes) * sizeof(MPI_Request));
+        requests = (MPI_Request *)
+            NCI_Malloc(sizeof(MPI_Request) * (nprocs + fd->hints->cb_nodes));
 
         nreqs = 0;
         for (i = 0; i < nprocs; i++) {
