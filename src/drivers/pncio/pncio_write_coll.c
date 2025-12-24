@@ -69,6 +69,13 @@ MPI_Offset PNCIO_GEN_WriteStridedColl(PNCIO_File *fd,
     MPI_Offset *st_offsets=NULL, *fd_start=NULL;
     MPI_Offset *fd_end=NULL, *end_offsets=NULL, w_len=0;
 
+    MPI_Offset tmp_off;
+#ifdef HAVE_MPI_LARGE_COUNT
+    MPI_Offset tmp_len;
+#else
+    int tmp_len;
+#endif
+
 // printf("%s at %d: offset=%lld buf_view.size=%lld\n",__func__,__LINE__, offset,buf_view.size);
 
     MPI_Comm_size(fd->comm, &nprocs);
@@ -90,18 +97,15 @@ double curT = MPI_Wtime();
          * be accessed, e.g., if start_offset=0 and 100 bytes to be read,
          * end_offset=99.
          */
-        if (fd->flat_file.size == 0) {
-            start_offset = 0;
-            end_offset = -1;
+        if (fd->flat_file.count == 0) { /* TODO: is fd->flat_file.count == 0? */
+            /* whole file is visible */
+            start_offset = offset;
+            end_offset = offset + buf_view.size - 1;
         }
-        else if (fd->flat_file.count > 0) {
+        else {
             start_offset = offset + fd->flat_file.off[0];
             end_offset   = fd->flat_file.off[fd->flat_file.count-1]
                          + fd->flat_file.len[fd->flat_file.count-1] - 1;
-        }
-        else {
-            start_offset = offset;
-            end_offset   = offset + fd->flat_file.size - 1;
         }
 
         /* Each process communicates its start and end offsets to other
@@ -148,19 +152,28 @@ if (fd->flat_file.count > 0) assert(offset == 0); /* not whole file visible */
         return w_len;
     }
 
-// printf("%s at %d:\n",__func__,__LINE__);
-/* Divide the I/O workload among "nprocs_for_coll" processes. This is
-   done by (logically) dividing the file into file domains (FDs); each
-   process may directly access only its own file domain. */
-
+    /* Divide the I/O workload among "nprocs_for_coll" processes. This is done
+     * by (logically) dividing the file into file domains (FDs); each process
+     * may directly access only its own file domain.
+     */
     PNCIO_Calc_file_domains(st_offsets, end_offsets, nprocs, nprocs_for_coll,
                             &min_st_offset, &fd_start, &fd_end, &fd_size,
                             fd->hints->striping_unit);
 
-/* calculate what portions of the access requests of this process are
-   located in what file domains */
-
-    PNCIO_Calc_my_req(fd, min_st_offset, fd_start, fd_end, fd_size, nprocs,
+    /* calculate what portions of the access requests of this process are
+     * located in what file domains
+     */
+    if (fd->flat_file.count == 0) { /* the entire file is visible */
+        /* set flat_file with values of offset and buf_view */
+        tmp_off = offset;
+        tmp_len =  buf_view.size;
+        fd->flat_file.count = 1;
+        fd->flat_file.size = buf_view.size;
+        fd->flat_file.off = &tmp_off;
+        fd->flat_file.len = &tmp_len;
+        fd->flat_file.is_contig = 1;
+    }
+    PNCIO_Calc_my_req(fd, min_st_offset, fd_end, fd_size, nprocs,
                       &count_my_req_procs, &count_my_req_per_proc, &my_req,
                       &buf_idx);
 
