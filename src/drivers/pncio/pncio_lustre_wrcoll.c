@@ -674,16 +674,24 @@ double curT = MPI_Wtime();
          * write requests are interleaved among all ranks.
          */
         int is_interleaved, large_indv_req = 1;
-        MPI_Offset striping_range, st_end[2], *st_end_all = NULL;
+        MPI_Offset striping_range, *st_end_all = NULL;
 
         /* Gather starting and ending file offsets of write requests from all
          * ranks into st_end_all[]. Even indices of st_end_all[] are starting
          * offsets, and odd indices are ending offsets.
          */
+#if 0
+        st_end_all = (MPI_Offset *) NCI_Calloc(nprocs * 2, sizeof(MPI_Offset));
+        st_end_all[myrank*2]  = start_offset;
+        st_end_all[myrank*2+1] = end_offset;
+        MPI_Allreduce(MPI_IN_PLACE, st_end_all, nprocs*2, MPI_OFFSET, MPI_MAX, fd->comm);
+#else
+        MPI_Offset st_end[2];
         st_end[0] = start_offset;
         st_end[1] = end_offset;
         st_end_all = (MPI_Offset *) NCI_Malloc(nprocs * 2 * sizeof(MPI_Offset));
         MPI_Allgather(st_end, 2, MPI_OFFSET, st_end_all, 2, MPI_OFFSET, fd->comm);
+#endif
 
         /* The loop below does the followings.
          * 1. Calculate this rank's aggregate access region.
