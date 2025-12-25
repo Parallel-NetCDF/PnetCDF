@@ -30,7 +30,7 @@ rm -f ${OUTDIR}/tooth-fairy.nc
 ${TESTSEQRUN} ./nf_test -2 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
-if test "${ENABLE_NETCDF4}" = 1 ; then
+if test "x${ENABLE_NETCDF4}" = x1 ; then
     rm -f ${OUTDIR}/test.nc
     rm -f ${OUTDIR}/scratch.nc
     rm -f ${OUTDIR}/tooth-fairy.nc

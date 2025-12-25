@@ -18,7 +18,7 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "check_PROGRAMS=${check_PROGRAMS}"
 
 # echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
-if test ${PNETCDF_DEBUG} = 1 ; then
+if test "x${PNETCDF_DEBUG}" = x1 ; then
    safe_modes="0 1"
 else
    safe_modes="0"

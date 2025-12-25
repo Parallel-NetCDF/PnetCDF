@@ -13,7 +13,7 @@ NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 # remove file system type prefix if there is any
 OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 
-if test ${PNETCDF_DEBUG} = 1 ; then
+if test "x${PNETCDF_DEBUG}" = x1 ; then
    safe_modes="0 1"
 else
    safe_modes="0"
@@ -69,7 +69,7 @@ for mpiio_mode in 0 1 ; do
     fi
     # echo ""
 
-    if test "${ENABLE_NETCDF4}" = 1 ; then
+    if test "x${ENABLE_NETCDF4}" = x1 ; then
         ${TESTSEQRUN} ./pres_temp_4D_wr ${TESTOUTDIR}/pres_temp_4D.nc4 4
         ${TESTSEQRUN} ./pres_temp_4D_rd ${TESTOUTDIR}/pres_temp_4D.nc4
         # Validator does not support nc4
