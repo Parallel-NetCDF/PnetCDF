@@ -34,7 +34,7 @@ rm -f ${OUTDIR}/tooth-fairy.nc ${OUTDIR}/scratch.nc ${OUTDIR}/test.nc
 ${TESTSEQRUN} ./nc_test -2 -d ${TESTOUTDIR}
 ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/test.nc
 
-if test "${ENABLE_NETCDF4}" = 1 ; then
+if test "x${ENABLE_NETCDF4}" = x1 ; then
    rm -f ${OUTDIR}/tooth-fairy.nc ${OUTDIR}/scratch.nc ${OUTDIR}/test.nc
    ${TESTSEQRUN} ./nc_test -4 -d ${TESTOUTDIR}
    # Validator does not support nc4

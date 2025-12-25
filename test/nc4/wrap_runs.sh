@@ -13,7 +13,7 @@ outfile=`basename $1`
 OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 
 # echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
-if test ${PNETCDF_DEBUG} = 1 ; then
+if test "x${PNETCDF_DEBUG}" = x1 ; then
    safe_modes="0 1"
 else
    safe_modes="0"

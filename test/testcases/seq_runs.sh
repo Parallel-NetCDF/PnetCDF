@@ -90,7 +90,7 @@ for mpiio_mode in 0 1 ; do
 
     # echo ""
 
-    if test "${ENABLE_THREAD_SAFE}" = 1 ; then
+    if test "x${ENABLE_THREAD_SAFE}" = x1 ; then
        # echo "---- testing thread safety"
        for j in 0 1 ; do
            export PNETCDF_SAFE_MODE=$j
