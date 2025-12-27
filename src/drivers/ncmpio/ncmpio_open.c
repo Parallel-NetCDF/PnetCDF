@@ -81,16 +81,21 @@ ncmpio_open(MPI_Comm     comm,
      *     nc_num_aggrs_per_node: number of processes per node to be INA
      *     aggregators.
      *
-     * ncp->fstype will be set in ncmpio_hint_extract().
+     * ncp->fstype will be initialized in ncmpio_hint_extract() and set in
+     * PNCIO_FileSysType().
      */
     ncmpio_hint_extract(ncp, user_info);
 
-    if (ncp->fstype == PNCIO_FSTYPE_CHECK)
-        /* Check file system type. If the given file does not exist, check its
-         * folder. Currently PnetCDF's PNCIO drivers support Lustre
-         * (PNCIO_LUSTRE) and Unix File System (PNCIO_UFS).
-         */
-        ncp->fstype = PNCIO_FileSysType(path);
+    if (ncp->fstype == PNCIO_FSTYPE_CHECK) {
+        if (rank == 0)
+            /* Check file system type. If the given file does not exist, check
+             * its parent folder. Currently PnetCDF's PNCIO drivers support
+             * Lustre (PNCIO_LUSTRE) and Unix File System (PNCIO_UFS).
+             */
+            ncp->fstype = PNCIO_FileSysType(path);
+
+        MPI_Bcast(&ncp->fstype, 1, MPI_INT, 0, ncp->comm);
+    }
 
 #ifdef WKL_DEBUG
 if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == PNCIO_FSTYPE_MPIIO)? "PNCIO_FSTYPE_MPIIO" : (ncp->fstype == PNCIO_LUSTRE) ? "PNCIO_LUSTRE" : "PNCIO_UFS");
