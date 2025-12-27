@@ -90,11 +90,12 @@ ncmpio_create(MPI_Comm     comm,
      *     nc_num_aggrs_per_node: number of processes per node to be the INA
      *     aggregators.
      *
-     * ncp->fstype will be set in ncmpio_hint_extract().
+     * ncp->fstype will be initialized in ncmpio_hint_extract(), and set in
+     * PNCIO_FileSysType().
      */
     ncmpio_hint_extract(ncp, user_info);
 
-    if (ncp->fstype == PNCIO_FSTYPE_CHECK)
+    if (ncp->fstype == PNCIO_FSTYPE_CHECK && rank == 0)
         /* Check file system type. If the given file does not exist, check its
          * folder. Currently PnetCDF's PNCIO drivers support Lustre
          * (PNCIO_LUSTRE) and Unix File System (PNCIO_UFS).
@@ -159,13 +160,20 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
          * NC_NOCLOBBER mode is set in ncmpi_create.
          */
 #ifdef HAVE_ACCESS
-        if (nprocs > 1)
-            TRACE_COMM(MPI_Bcast)(&file_exist, 1, MPI_INT, 0, comm);
+        if (nprocs > 1) {
+            int msg[2] = {file_exist, ncp->fstype};
+            TRACE_COMM(MPI_Bcast)(msg, 2, MPI_INT, 0, comm);
+            file_exist  = msg[0];
+            ncp->fstype = msg[1];
+        }
         if (file_exist) {
             NCI_Free(ncp);
             DEBUG_RETURN_ERROR(NC_EEXIST)
         }
 #else
+        if (nprocs > 1)
+            TRACE_COMM(MPI_Bcast)(&ncp->fstype, 1, MPI_INT, 0, comm);
+
         /* Add MPI_MODE_EXCL mode for MPI_File_open, so it can error out, if
          * the file exists.
          */
@@ -183,8 +191,10 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
         if (rank == 0 && file_exist) {
             if (!use_trunc) { /* delete the file */
 #ifdef HAVE_UNLINK
-                /* unlink() is likely faster then truncate(), but may be still
-                 * expensive
+                /* unlink() is likely faster then truncate(). However, unlink()
+                 * can be expensive when the file size is large. For example,
+                 * it taook 1.1061 seconds to delete a file of size 27.72 GiB
+                 * on Perlmutter at NERSC.
                  */
                 err = unlink(filename);
                 if (err < 0 && errno != ENOENT)
@@ -283,12 +293,11 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
          * when the file to be clobbered is a symbolic link.
          */
         if (nprocs > 1) {
-            int msg[2];
-            msg[0] = err;
-            msg[1] = mpiomode;
-            TRACE_COMM(MPI_Bcast)(&msg, 2, MPI_INT, 0, comm);
-            err = msg[0];
-            mpiomode = msg[1];
+            int msg[3] = {err, mpiomode, ncp->fstype};
+            TRACE_COMM(MPI_Bcast)(&msg, 3, MPI_INT, 0, comm);
+            err         = msg[0];
+            mpiomode    = msg[1];
+            ncp->fstype = msg[2];
         }
         if (err != NC_NOERR) return err;
     }
