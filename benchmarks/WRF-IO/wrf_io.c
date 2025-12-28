@@ -845,7 +845,7 @@ int wrf_w_benchmark(char       *out_file,
         char value[MPI_MAX_INFO_VAL+1];
         int  flag;
 
-        printf("-----------------------------------------------------------\n");
+        printf("\n-----------------------------------------------------------\n");
         printf("---- WRF-IO write benchmark ----\n");
         printf("Output NetCDF file name:        %s\n", out_file);
         printf("Number of MPI processes:        %d\n", nprocs);
@@ -913,8 +913,6 @@ err_out:
                 free(vars[i].buf);
         free(vars);
     }
-    if (err != NC_NOERR) return err;
-
     if (err != NC_NOERR) return err;
 
     /* check if there is any PnetCDF internal malloc residue */
@@ -1100,7 +1098,7 @@ int wrf_r_benchmark(char       *in_file,
         char value[MPI_MAX_INFO_VAL+1];
         int  flag;
 
-        printf("-----------------------------------------------------------\n");
+        printf("\n-----------------------------------------------------------\n");
         printf("---- WRF-IO read benchmark ----\n");
         printf("Input NetCDF file name:         %s\n", in_file);
         printf("Number of MPI processes:        %d\n", nprocs);
@@ -1164,6 +1162,218 @@ err_out:
     }
     if (err != NC_NOERR) return err;
 
+    /* check if there is any PnetCDF internal malloc residue */
+    MPI_Offset malloc_size, sum_size;
+    err = ncmpi_inq_malloc_size(&malloc_size);
+    if (err == NC_ENOTENABLED) /* --enable-profiling is not set at configure */
+        return NC_NOERR;
+    else if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
+                   sum_size);
+        if (malloc_size > 0) ncmpi_inq_malloc_list();
+    }
+    /* report the PnetCDF internal heap memory allocation high water mark */
+    err = ncmpi_inq_malloc_max_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_MAX, 0, MPI_COMM_WORLD);
+        if (verbose && rank == 0)
+            printf("Max heap memory allocated by PnetCDF internally is %.2f MiB\n\n",
+                   (float)sum_size/1048576);
+    }
+    fflush(stdout);
+
+    return err;
+}
+
+static
+int grow_header_benchmark(char *in_file)
+{
+    char *attr;
+    int i, err=NC_NOERR, nprocs, rank, ncid, ndims, dimid[3];
+    int varid, unlimdimid, nvars, fix_nvars, rec_nvars;
+    double timing, max_t;
+    MPI_Offset hdr_size, hdr_extent, attr_len, num_rec, longitude, latitude;
+    MPI_Offset r_amnt[2], w_amnt[2], amnt[2], sum_amnt[2], fix_off, rec_off;
+    MPI_Offset rec_size;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+    /* open input file */
+    err = ncmpi_open(MPI_COMM_WORLD, in_file, NC_WRITE, MPI_INFO_NULL, &ncid);
+    if (err != NC_NOERR) {
+        printf("Error at line=%d: opening file %s (%s)\n",
+               __LINE__, in_file, ncmpi_strerror(err));
+        goto err_out;
+    }
+
+    err = ncmpi_inq_dimid(ncid, "Time", &dimid[0]);
+    CHECK_ERR("ncmpi_inq_dimid")
+    err = ncmpi_inq_dimid(ncid, "south_north", &dimid[1]);
+    CHECK_ERR("ncmpi_inq_dimid")
+    err = ncmpi_inq_dimlen(ncid, dimid[1], &longitude);
+    CHECK_ERR("ncmpi_inq_dimlen")
+    err = ncmpi_inq_dimid(ncid, "west_east", &dimid[2]);
+    CHECK_ERR("ncmpi_inq_dimid")
+    err = ncmpi_inq_dimlen(ncid, dimid[2], &latitude);
+    CHECK_ERR("ncmpi_inq_dimlen")
+
+    err = ncmpi_inq_header_size(ncid, &hdr_size);
+    CHECK_ERR("ncmpi_inq_header_size")
+    err = ncmpi_inq_header_extent(ncid, &hdr_extent);
+    CHECK_ERR("ncmpi_inq_header_extent")
+    if (verbose && debug && rank == 0)
+        printf("Line %d: header size %lld extent %lld free space %lld\n",
+               __LINE__,hdr_size,hdr_extent,hdr_extent-hdr_size);
+
+    /* check number of records in input file */
+    err = ncmpi_inq_unlimdim(ncid, &unlimdimid);
+    CHECK_ERR("ncmpi_inq_unlimdim")
+    err = ncmpi_inq_dimlen(ncid, unlimdimid, &num_rec);
+    CHECK_ERR("ncmpi_inq_dimlen")
+
+    err = ncmpi_inq_nvars(ncid, &nvars);
+    CHECK_ERR("ncmpi_inq_nvars")
+
+    fix_nvars = 0;
+    rec_nvars = 0;
+    fix_off = -1;
+    rec_off = -1;
+    for (i=0; i<nvars; i++) {
+        err = ncmpi_inq_varndims(ncid, i, &ndims);
+        CHECK_ERR("ncmpi_inq_varndims");
+        if (ndims == 0) {
+            if (fix_off < 0) ncmpi_inq_varoffset(ncid, i, &fix_off);
+            fix_nvars++;
+            continue;
+        }
+        err = ncmpi_inq_vardimid(ncid, i, dimid);
+        CHECK_ERR("ncmpi_inq_vardimid");
+        if (dimid[0] == unlimdimid) {
+            rec_nvars++;
+            if (rec_off < 0) ncmpi_inq_varoffset(ncid, i, &rec_off);
+        }
+        else {
+            fix_nvars++;
+            if (fix_off < 0) ncmpi_inq_varoffset(ncid, i, &fix_off);
+        }
+    }
+
+    err = ncmpi_inq_recsize(ncid, &rec_size);
+    CHECK_ERR("ncmpi_inq_recsize")
+
+    if (verbose && debug && rank == 0) {
+        printf("Line %d: nvars %d fix_nvars %d rec_nvars %d num_rec %lld\n",
+               __LINE__,nvars,fix_nvars,rec_nvars, num_rec);
+        printf("Line %d: fix var offset %lld first record var offset %lld\n",
+               __LINE__,fix_off,rec_off);
+    }
+
+    /* re-enter define mode */
+    err = ncmpi_redef(ncid);
+    CHECK_ERR("ncmpi_redef")
+
+    err = ncmpi_def_var(ncid, "dummy_rec", NC_FLOAT, 3, dimid, &varid);
+    CHECK_ERR("ncmpi_def_var")
+
+    err = ncmpi_def_var_fill(ncid, varid, 0, NULL);
+    CHECK_ERR("ncmpi_def_var_fill")
+
+    /* add a global attribute to ensure header section grows */
+    attr_len = hdr_extent - hdr_size;
+    attr = (char*) malloc(attr_len);
+    for (i=0; i<attr_len; i++) attr[i] = 'a' + i % 26;
+    err = ncmpi_put_att_text(ncid, NC_GLOBAL, "dummy_attr", attr_len, attr);
+    CHECK_ERR("ncmpi_put_att_text")
+    free(attr);
+
+    err = ncmpi_inq_get_size(ncid, &r_amnt[0]);
+    CHECK_ERR("ncmpi_inq_get_size")
+    err = ncmpi_inq_put_size(ncid, &w_amnt[0]);
+    CHECK_ERR("ncmpi_inq_put_size")
+
+    err = 0;
+    if (verbose && debug && rank == 0)
+        printf("Line %d: rank %d r_amnt %lld w_amnt %lld\n",
+               __LINE__,rank,r_amnt[0],w_amnt[0]);
+    if (rank > 0 && r_amnt[0] > 0) {
+        printf("Line %d: rank %d r_amnt expect 0 but got %lld\n",
+               __LINE__,rank,r_amnt[0]);
+        err = 1;
+    }
+    if (rank > 0 && w_amnt[0] > 0) {
+        printf("Line %d: rank %d w_amnt expect 0 but got %lld\n",
+               __LINE__,rank,w_amnt[0]);
+        err = 1;
+    }
+    MPI_Allreduce(MPI_IN_PLACE, &err, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+    if (err > 0) goto err_out;
+
+    /* start the timer */
+    MPI_Barrier(MPI_COMM_WORLD);
+    timing = MPI_Wtime();
+
+    err = ncmpi__enddef(ncid, 0, 0, 0, 0);
+    CHECK_ERR("ncmpi_enddef")
+
+    timing = MPI_Wtime() - timing;
+
+    err = ncmpi_inq_get_size(ncid, &r_amnt[1]);
+    CHECK_ERR("ncmpi_inq_get_size")
+    err = ncmpi_inq_put_size(ncid, &w_amnt[1]);
+    CHECK_ERR("ncmpi_inq_put_size")
+
+    err = ncmpi_inq_header_size(ncid, &hdr_size);
+    CHECK_ERR("ncmpi_inq_header_size")
+    err = ncmpi_inq_header_extent(ncid, &hdr_extent);
+    CHECK_ERR("ncmpi_inq_header_extent")
+    if (verbose && debug && rank == 0)
+        printf("Line %d: header size %lld extent %lld free space %lld\n",
+               __LINE__,hdr_size,hdr_extent,hdr_extent-hdr_size);
+
+    /* fill the new record variable, so ncmpidiff can run and check */
+    for (i=0; i<num_rec; i++) {
+        err = ncmpi_fill_var_rec(ncid, varid, i);
+        CHECK_ERR("ncmpi_fill_var_rec")
+    }
+
+    /* close file */
+    err = ncmpi_close(ncid);
+    CHECK_ERR("ncmpi_close")
+
+    /* process timing measurement */
+    amnt[0] = r_amnt[1] - r_amnt[0];
+    amnt[1] = w_amnt[1] - w_amnt[0];
+    MPI_Reduce(&timing, &max_t, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&amnt, &sum_amnt, 2, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+    if (verbose && rank == 0) {
+        double bw = (double)sum_amnt[1] / 1048576.0;
+        printf("\n-----------------------------------------------------------\n");
+        printf("---- WRF-IO header grow benchmark ----\n");
+        printf("Input NetCDF file name:         %s\n", in_file);
+        printf("Number of MPI processes:        %d\n", nprocs);
+        printf("Grid size longitude x latitude: %lld x %lld\n",longitude,latitude);
+        printf("Number of variables:            %d\n", nvars);
+        printf("Number of fix-sized variables:  %d\n", fix_nvars);
+        printf("Number of record    variables:  %d\n", rec_nvars);
+        printf("Number of time records:         %lld\n",num_rec);
+        printf("Record size:                    %lld\n",rec_size);
+        printf("                                %.2f MiB\n", (float)rec_size/1048576);
+        printf("Total read  amount:             %lld B\n", sum_amnt[0]);
+        printf("                                %.2f MiB\n", (float)sum_amnt[0]/1048576);
+        printf("                                %.2f GiB\n", (float)sum_amnt[0]/1073741824);
+        printf("Total write amount:             %lld B\n", sum_amnt[1]);
+        printf("                                %.2f MiB\n", (float)sum_amnt[1]/1048576);
+        printf("                                %.2f GiB\n", (float)sum_amnt[1]/1073741824);
+        printf("Max time:                       %.4f sec\n", max_t);
+        printf("Write bandwidth:                %.2f MiB/s\n", bw/max_t);
+        printf("                                %.2f GiB/s\n", bw/1024.0/max_t);
+        printf("-----------------------------------------------------------\n");
+    }
+
+err_out:
     if (err != NC_NOERR) return err;
 
     /* check if there is any PnetCDF internal malloc residue */
@@ -1241,6 +1451,7 @@ usage(char *argv0)
     "       [-h] print this help message\n"
     "       [-q] quiet mode (disable performance output)\n"
     "       [-d] debug mode\n"
+    "       [-g] run header extent grow benchmark, requiring option -w\n"
     "       [-b] using PnetCDF blocking APIs (default: nonblocking)\n"
     "       [-r file1,file2,...] input files for read benchmark\n"
     "       [-w file1,file2,...] output files for write benchmark\n"
@@ -1255,9 +1466,9 @@ int main(int argc, char** argv)
 {
     extern int optind;
     extern char *optarg;
-    char *out_files, *in_files, *cdl_file, **fname;
-    int i, err, nerrs=0, nprocs, rank, ntimes, psizes[2], hid;
-    int nfiles, do_read, do_write, blocking;
+    char *out_files, *in_files, *cdl_file, **fname, *hdr_grow_file=NULL;
+    int i, err, nprocs, rank, ntimes, psizes[2], hid;
+    int nfiles, do_read, do_write, blocking, do_hdr_grow;
     MPI_Offset longitude, latitude;
     MPI_Info info=MPI_INFO_NULL;
 
@@ -1277,8 +1488,9 @@ int main(int argc, char** argv)
     out_files = NULL;
     longitude = -1; /* default to use west_east from cdl file */
     latitude  = -1; /* default to use south_north from cdl file */
+    do_hdr_grow = 0;
 
-    while ((i = getopt(argc, argv, "hqdbr:w:y:x:n:c:i:")) != EOF)
+    while ((i = getopt(argc, argv, "hqdbgr:w:y:x:n:c:i:")) != EOF)
         switch(i) {
             case 'q': verbose = 0;
                       break;
@@ -1291,6 +1503,8 @@ int main(int argc, char** argv)
                       break;
             case 'w': do_write = 1;
                       out_files = strdup(optarg);
+                      break;
+            case 'g': do_hdr_grow = 1;
                       break;
             case 'y': longitude = atoll(optarg);
                       break;
@@ -1352,6 +1566,8 @@ int main(int argc, char** argv)
                                   ntimes, blocking, info);
 
             if (err != NC_NOERR) goto err_out;
+            if (do_hdr_grow == 1 && i == 0)
+                hdr_grow_file = strdup(fname[0]);
             free(fname[i]);
         }
 
@@ -1379,10 +1595,16 @@ int main(int argc, char** argv)
         if (in_files  != NULL) free(in_files);
     }
 
+    if (do_write && do_hdr_grow && hdr_grow_file != NULL) {
+        err = grow_header_benchmark(hdr_grow_file);
+        if (err != NC_NOERR) goto err_out;
+    }
+
 err_out:
     if (info != MPI_INFO_NULL) MPI_Info_free(&info);
+    if (hdr_grow_file != NULL) free(hdr_grow_file);
 
     MPI_Finalize();
-    return (nerrs > 0);
+    return (err != NC_NOERR);
 }
 
