@@ -236,6 +236,11 @@ void ncmpio_hint_extract(NC       *ncp,
     MPI_Info_get(info, "nc_pncio", MPI_MAX_INFO_VAL-1, value, &flag);
     if (flag && strcasecmp(value, "disable") == 0)
         ncp->fstype = PNCIO_FSTYPE_MPIIO;
+
+    /* Check if user explicitly want all MPI-IO to be collective. */
+    MPI_Info_get(info, "romio_no_indep_rw", MPI_MAX_INFO_VAL-1, value, &flag);
+    if (flag && strcasecmp(value, "true") == 0)
+        fSet(ncp->flags, NC_HCOLL);
 }
 
 /*----< ncmpio_hint_set() >--------------------------------------------------*/
