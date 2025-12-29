@@ -20,7 +20,7 @@ OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 # let NTHREADS=$1*6-1
 NTHREADS=`expr $1 \* 6 - 1`
 
-# echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
+# echo "${LINENO}: PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
 if test "x${PNETCDF_DEBUG}" = x1 ; then
    safe_modes="0 1"
 else
@@ -42,13 +42,14 @@ for i in ${check_PROGRAMS} ; do
 
     for j in ${safe_modes} ; do
         if test "$j" = 1 ; then # test only in safe mode
-           SAFE_HINTS="romio_no_indep_rw=true"
            safe_hint="  SAFE"
         else
-           SAFE_HINTS="romio_no_indep_rw=false"
            safe_hint="NOSAFE"
         fi
         OUT_PREFIX="${TESTOUTDIR}/$i"
+
+    for no_indep_rw in true false ; do
+        no_indep_rw_hint="romio_no_indep_rw=$no_indep_rw"
 
     for data_mode in ${DATA_MODE} ; do
 
@@ -76,9 +77,9 @@ for i in ${check_PROGRAMS} ; do
         OUT_FILE=$INA_OUT_FILE
         TEST_OPTS="$safe_hint $driver_hint $ina_hint"
 
-        PNETCDF_HINTS=
+        PNETCDF_HINTS=$no_indep_rw_hint
         if test "x$SAFE_HINTS" != x ; then
-           PNETCDF_HINTS="$SAFE_HINTS"
+           PNETCDF_HINTS="$SAFE_HINTS;$PNETCDF_HINTS"
         fi
         if test "x$USEMPIO_HINTS" != x ; then
            PNETCDF_HINTS="$USEMPIO_HINTS;$PNETCDF_HINTS"
@@ -92,7 +93,7 @@ for i in ${check_PROGRAMS} ; do
 
         export PNETCDF_HINTS="$PNETCDF_HINTS"
         export PNETCDF_SAFE_MODE=$j
-        # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
+        # echo "${LINENO}: PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
 
         CMD_OPTS="-q -f ${OUT_FILE}."
         if test "$data_mode" = indep ; then
@@ -116,9 +117,10 @@ for i in ${check_PROGRAMS} ; do
         done
 
         if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-           # echo "---- test burst buffering feature"
+           # echo "${LINENO}: ---- test burst buffering feature"
            saved_PNETCDF_HINTS=${PNETCDF_HINTS}
            export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
+           # echo "${LINENO}: PNETCDF_HINTS=$PNETCDF_HINTS"
            CMD_OPTS="-q -f ${OUT_FILE}.bb."
            if test "$data_mode" = indep ; then
               CMD_OPTS="-i $CMD_OPTS"
@@ -165,6 +167,7 @@ for i in ${check_PROGRAMS} ; do
        fi
     done # ext
 
+    done # no_indep_rw
     done # data_mode
     done # safe_modes
     rm -f ${OUTDIR}/$i*nc*
