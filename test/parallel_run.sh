@@ -20,7 +20,7 @@ OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 # let NTHREADS=$1*6-1
 NTHREADS=`expr $1 \* 6 - 1`
 
-# echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
+# echo "${LINENO}: PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
 if test "x${PNETCDF_DEBUG}" = x1 ; then
    safe_modes="0 1"
 else
@@ -39,29 +39,33 @@ for i in ${check_PROGRAMS} ; do
     fi
     if test "$i" = tst_version ; then
        # this program read only and creates no output file
+       # echo "${LINENO}: ${MPIRUN} ./$i"
        ${MPIRUN} ./$i
        continue
     fi
     if test "$i" = tst_open_cdf5 ; then
        # this program read only and creates no output file
+       # echo "${LINENO}: ${MPIRUN} ./$i ${srcdir}/bad_begin.nc5"
        ${MPIRUN} ./$i ${srcdir}/bad_begin.nc5
        continue
     fi
     if test "$i" = tst_corrupt ; then
        # this program read only and creates no output file
+       # echo "${LINENO}: ${MPIRUN} ./$i ${srcdir}"
        ${MPIRUN} ./$i ${srcdir}
        continue
     fi
 
     for j in ${safe_modes} ; do
         if test "$j" = 1 ; then # test only in safe mode
-           SAFE_HINTS="romio_no_indep_rw=true"
            safe_hint="  SAFE"
         else
-           SAFE_HINTS="romio_no_indep_rw=false"
            safe_hint="NOSAFE"
         fi
         OUT_PREFIX="${TESTOUTDIR}/$i"
+
+    for no_indep_rw in true false ; do
+        no_indep_rw_hint="romio_no_indep_rw=$no_indep_rw"
 
     for mpiio_mode in 0 1 ; do
         if test "$mpiio_mode" = 1 ; then
@@ -94,9 +98,9 @@ for i in ${check_PROGRAMS} ; do
            fi
         fi
 
-        PNETCDF_HINTS=
+        PNETCDF_HINTS=$no_indep_rw_hint
         if test "x$SAFE_HINTS" != x ; then
-           PNETCDF_HINTS="$SAFE_HINTS"
+           PNETCDF_HINTS="$SAFE_HINTS;$PNETCDF_HINTS"
         fi
         if test "x$USEMPIO_HINTS" != x ; then
            PNETCDF_HINTS="$USEMPIO_HINTS;$PNETCDF_HINTS"
@@ -110,28 +114,34 @@ for i in ${check_PROGRAMS} ; do
 
         export PNETCDF_HINTS="$PNETCDF_HINTS"
         export PNETCDF_SAFE_MODE=$j
-        # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
+        # echo "${LINENO}: PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
 
         if test "$i" = tst_pthread ; then
            # each MPI process created 6 threads
+           # echo "${LINENO}: ${MPIRUN} ./$i ${OUT_FILE}.nc"
            ${MPIRUN} ./$i ${OUT_FILE}.nc
            for k in `seq 0 ${NTHREADS}` ; do
+               # echo "${LINENO}: ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.nc.$k"
                ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.nc.$k
                rm -f ${OUTDIR}/tst_pthread.nc.$k
            done
            continue
         elif test "$i" = pres_temp_4D_wr ; then
+           # echo "${LINENO}: ${MPIRUN} ./$i ${OUT_FILE}.nc"
            ${MPIRUN} ./$i ${OUT_FILE}.nc
-           # echo "--- validating file ${OUT_FILE}.nc"
+           # echo "${LINENO}: ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.nc"
            ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.nc
 
+           # echo "${LINENO}: ${MPIRUN} ./pres_temp_4D_rd ${OUT_FILE}.nc"
            ${MPIRUN} ./pres_temp_4D_rd ${OUT_FILE}.nc
         elif test "$i" = pres_temp_4D_rd ; then
            continue
         elif test "$i" = test_inq_format ; then
+           # echo "${LINENO}: ${MPIRUN} ./$i ${srcdir}"
            ${MPIRUN} ./$i ${srcdir}
            continue
         elif test "$i" = "tst_cdl_hdr_parser" ; then
+           # echo "${LINENO}: ${MPIRUN} ./$i -q -o ${OUT_FILE}.nc ${srcdir}/cdl_header.txt"
            ${MPIRUN} ./$i -q -o ${OUT_FILE}.nc ${srcdir}/cdl_header.txt
            continue
         elif test "$i" = mcoll_perf ; then
@@ -145,7 +155,7 @@ for i in ${check_PROGRAMS} ; do
         # put_all_kinds and iput_all_kinds output 3 files
         if test "$i" = put_all_kinds -o "$i" = iput_all_kinds ; then
            for k in 1 2 5 ; do
-               # echo "--- validating file ${OUT_FILE}.nc$k"
+               # echo "${LINENO}: --- validating file ${OUT_FILE}.nc$k"
                ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.nc$k
            done
         elif test "$i" = mcoll_perf ; then
@@ -160,7 +170,7 @@ for i in ${check_PROGRAMS} ; do
         fi
 
         if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-           # echo "---- test burst buffering feature"
+           # echo "${LINENO}: ---- test burst buffering feature"
            saved_PNETCDF_HINTS=${PNETCDF_HINTS}
            export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
            if test "$i" = mcoll_perf ; then
@@ -175,9 +185,9 @@ for i in ${check_PROGRAMS} ; do
            # put_all_kinds and iput_all_kinds output 3 files
            if test "$i" = put_all_kinds -o "$i" = iput_all_kinds ; then
               for k in 1 2 5 ; do
-                  # echo "--- validating file ${OUT_FILE}.bb.nc$k"
+                  # echo "${LINENO}: --- validating file ${OUT_FILE}.bb.nc$k"
                   ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.bb.nc$k
-                  # echo "--- ncmpidiff ${OUT_FILE}.nc$k ${OUT_FILE}.bb.nc$k ---"
+                  # echo "${LINENO}: --- ncmpidiff ${OUT_FILE}.nc$k ${OUT_FILE}.bb.nc$k ---"
                   ${MPIRUN} ${NCMPIDIFF} -q ${OUT_FILE}.nc$k ${OUT_FILE}.bb.nc$k
               done
               continue
@@ -192,7 +202,7 @@ for i in ${check_PROGRAMS} ; do
               done
               continue
            else
-              # echo "--- validating file ${OUT_FILE}.bb.nc"
+              # echo "${LINENO}: --- validating file ${OUT_FILE}.bb.nc"
               ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.bb.nc
            fi
 
@@ -225,8 +235,8 @@ for i in ${check_PROGRAMS} ; do
            if test "$i" = tst_grow_data ; then
               continue
            fi
-           # echo "test netCDF-4 feature"
-           # echo "${MPIRUN} ./$i ${OUT_FILE}.nc4 4"
+           # echo "${LINENO}: test netCDF-4 feature"
+           # echo "${LINENO}: ${MPIRUN} ./$i ${OUT_FILE}.nc4 4"
            ${MPIRUN} ./$i ${OUT_FILE}.nc4 4
            # Validator does not support nc4
         fi
@@ -264,18 +274,18 @@ for i in ${check_PROGRAMS} ; do
        for j in 1 2 5; do
           # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.nc$j $OUT_PREFIX.mpio.ina.nc$j ---"
           $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc$j $OUT_PREFIX.mpio.ina.nc$j
-          # echo "--- ncmpidiff $OUT_PREFIX.mpio.nc$j $OUT_PREFIX.pncio.nc$j ---"
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.nc$j $OUT_PREFIX.pncio.nc$j ---"
           $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc$j $OUT_PREFIX.pncio.nc$j
-          # echo "--- ncmpidiff $OUT_PREFIX.pncio.nc$j $OUT_PREFIX.pncio.ina.nc$j ---"
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.pncio.nc$j $OUT_PREFIX.pncio.ina.nc$j ---"
           $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.nc$j $OUT_PREFIX.pncio.ina.nc$j
        done
     elif test "$i" = tst_pthread ; then
        for j in `seq 0 ${NTHREADS}` ; do
           # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.mpio.ina.nc.$j ---"
           $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.mpio.ina.nc.$j
-          # echo "--- ncmpidiff $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.pncio.nc.$j ---"
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.pncio.nc.$j ---"
           $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.pncio.nc.$j
-          # echo "--- ncmpidiff $OUT_PREFIX.pncio.nc.$j $OUT_PREFIX.pncio.ina.nc.$j ---"
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.pncio.nc.$j $OUT_PREFIX.pncio.ina.nc.$j ---"
           $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.nc.$j $OUT_PREFIX.pncio.ina.nc.$j
        done
     elif test "$i" = mcoll_perf ; then
@@ -283,20 +293,21 @@ for i in ${check_PROGRAMS} ; do
           ext="2.4.$j.nc"
           # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext $OUT_PREFIX.mpio.ina.$ext ---"
           $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.$ext $OUT_PREFIX.mpio.ina.$ext
-          # echo "--- ncmpidiff $OUT_PREFIX.mpio.$ext $OUT_PREFIX.pncio.$ext ---"
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext $OUT_PREFIX.pncio.$ext ---"
           $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.$ext $OUT_PREFIX.pncio.$ext
-          # echo "--- ncmpidiff $OUT_PREFIX.pncio.$ext $OUT_PREFIX.pncio.ina.$ext ---"
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.pncio.$ext $OUT_PREFIX.pncio.ina.$ext ---"
           $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.$ext $OUT_PREFIX.pncio.ina.$ext
        done
     else
        # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc ---"
        $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc
-       # echo "--- ncmpidiff $OUT_PREFIX.mpio.nc $OUT_PREFIX.pncio.nc ---"
+       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.nc $OUT_PREFIX.pncio.nc ---"
        $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.pncio.nc
-       # echo "--- ncmpidiff $OUT_PREFIX.pncio.nc $OUT_PREFIX.pncio.ina.nc ---"
+       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.pncio.nc $OUT_PREFIX.pncio.ina.nc ---"
        $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.nc $OUT_PREFIX.pncio.ina.nc
     fi
 
+    done # no_indep_rw
     done # safe_modes
 
     if test "x$i" = xpres_temp_4D_wr ; then

@@ -20,7 +20,7 @@ OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 # let NTHREADS=$1*6-1
 NTHREADS=`expr $1 \* 6 - 1`
 
-# echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
+# echo "${LINENO}: PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
 if test "x${PNETCDF_DEBUG}" = x1 ; then
    safe_modes="0 1"
 else
@@ -38,13 +38,14 @@ for i in ${check_PROGRAMS} ; do
 
     for j in ${safe_modes} ; do
         if test "$j" = 1 ; then # test only in safe mode
-           SAFE_HINTS="romio_no_indep_rw=true"
            safe_hint="  SAFE"
         else
-           SAFE_HINTS="romio_no_indep_rw=false"
            safe_hint="NOSAFE"
         fi
         OUT_PREFIX="${TESTOUTDIR}/$i"
+
+    for no_indep_rw in true false ; do
+        no_indep_rw_hint="romio_no_indep_rw=$no_indep_rw"
 
     for mpiio_mode in ${TEST_MPIIO_MODES} ; do
         if test "$mpiio_mode" = 1 ; then
@@ -70,9 +71,9 @@ for i in ${check_PROGRAMS} ; do
         OUT_FILE=$INA_OUT_FILE
         TEST_OPTS="$safe_hint $driver_hint $ina_hint"
 
-        PNETCDF_HINTS=
+        PNETCDF_HINTS=$no_indep_rw_hint
         if test "x$SAFE_HINTS" != x ; then
-           PNETCDF_HINTS="$SAFE_HINTS"
+           PNETCDF_HINTS="$SAFE_HINTS;$PNETCDF_HINTS"
         fi
         if test "x$USEMPIO_HINTS" != x ; then
            PNETCDF_HINTS="$USEMPIO_HINTS;$PNETCDF_HINTS"
@@ -86,9 +87,9 @@ for i in ${check_PROGRAMS} ; do
 
         export PNETCDF_HINTS="$PNETCDF_HINTS"
         export PNETCDF_SAFE_MODE=$j
-        # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
+        # echo "${LINENO}: PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
 
-        CMD_OPTS="-q -d -g -n 2 -y 100 -x 100 -i ${srcdir}/wrf_header.txt"
+        CMD_OPTS="-q -d -g -n 2 -y 100 -x 10 -i ${srcdir}/wrf_header.txt"
         # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPTS -w $OUT_FILE.nc -r $OUT_FILE.nc"
         ${MPIRUN} ./$i $CMD_OPTS -w $OUT_FILE.nc -r $OUT_FILE.nc
 
@@ -100,9 +101,10 @@ for i in ${check_PROGRAMS} ; do
         ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.nc
 
         if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-           # echo "---- test burst buffering feature"
+           # echo "${LINENO}: ---- test burst buffering feature"
            saved_PNETCDF_HINTS=${PNETCDF_HINTS}
            export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
+           # echo "${LINENO}: PNETCDF_HINTS=$PNETCDF_HINTS"
            # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPTS -w $OUT_FILE.bb.nc -r $OUT_FILE.bb.nc"
            ${MPIRUN} ./$i $CMD_OPTS -w $OUT_FILE.bb.nc -r $OUT_FILE.bb.nc
 
@@ -122,7 +124,7 @@ for i in ${check_PROGRAMS} ; do
 
         if test "x${ENABLE_NETCDF4}" = x1 ; then
            # echo "${LINENO}: test netCDF-4 feature"
-           # echo "${MPIRUN} ./$i $CMD_OPTS -w $OUT_FILE.nc -r $OUT_FILE.nc"
+           # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPTS -w $OUT_FILE.nc -r $OUT_FILE.nc"
            ${MPIRUN} ./$i $CMD_OPTS -w $OUT_FILE.nc4 -r $OUT_FILE.nc4
            # Validator does not support nc4
         fi
@@ -139,6 +141,7 @@ for i in ${check_PROGRAMS} ; do
     # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.pncio.nc $OUT_PREFIX.pncio.ina.nc ---"
     $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.nc $OUT_PREFIX.pncio.ina.nc
 
+    done # no_indep_rw
     done # safe_modes
     rm -f ${OUTDIR}/$i*nc*
 done # check_PROGRAMS
