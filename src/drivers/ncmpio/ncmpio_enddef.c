@@ -68,10 +68,10 @@ move_file_block(NC         *ncp,
     buf = NCI_Malloc(MOVE_UNIT);
     if (buf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    p_units = MOVE_UNIT * nprocs;
+    p_units = (size_t)MOVE_UNIT * nprocs;
     num_moves = nbytes / p_units;
     if (nbytes % p_units) num_moves++;
-    off_last = (num_moves - 1) * p_units + rank * MOVE_UNIT;
+    off_last = (num_moves - 1) * p_units + (size_t)rank * MOVE_UNIT;
     off_from = from + off_last;
     off_to   = to   + off_last;
     mv_amnt  = nbytes % p_units;
@@ -172,7 +172,7 @@ move_file_block(NC         *ncp,
 {
     int rank, nprocs, status=NC_NOERR, do_coll;
     void *buf;
-    size_t num_moves, mv_amnt, p_units;
+    MPI_Offset num_moves, mv_amnt, p_units;
     MPI_Offset off_last, off_from, off_to, rlen, wlen;
     MPI_Comm comm;
 
@@ -205,10 +205,10 @@ move_file_block(NC         *ncp,
     buf = NCI_Malloc(MOVE_UNIT);
     if (buf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    p_units = MOVE_UNIT * nprocs;
+    p_units = (MPI_Offset)MOVE_UNIT * nprocs;
     num_moves = nbytes / p_units;
     if (nbytes % p_units) num_moves++;
-    off_last = (num_moves - 1) * p_units + rank * MOVE_UNIT;
+    off_last = (num_moves - 1) * p_units + (MPI_Offset)rank * MOVE_UNIT;
     off_from = from + off_last;
     off_to   = to   + off_last;
     mv_amnt  = nbytes % p_units;
@@ -239,7 +239,7 @@ move_file_block(NC         *ncp,
         PNCIO_View buf_view;
         buf_view.type = MPI_BYTE;
         buf_view.size = chunk_size;
-        buf_view.count = 1;
+        buf_view.count = 0;
         buf_view.is_contig = 1;
 
         /* read from file at off_from for amount of chunk_size */
@@ -258,7 +258,7 @@ move_file_block(NC         *ncp,
          */
         buf_view.size = rlen;
         wlen = 0;
-        if (do_coll && rlen > 0)
+        if (do_coll) /* even when rlen == 0, must still participate */
             wlen = ncmpio_file_write_at_all(ncp, off_to, buf, buf_view);
         else if (rlen > 0)
             wlen = ncmpio_file_write_at(ncp, off_to, buf, buf_view);
@@ -705,6 +705,7 @@ write_NC(NC *ncp)
     }
     else if (is_coll) {
         /* other processes participate the collective call */
+        buf_view.type = MPI_BYTE;
         buf_view.size = 0;
         for (i=0; i<ntimes; i++)
             ncmpio_file_write_at_all(ncp, 0, NULL, buf_view);
