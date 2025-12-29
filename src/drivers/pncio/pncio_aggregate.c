@@ -266,6 +266,12 @@ void PNCIO_Calc_my_req(PNCIO_File         *fd,
     for (int i = 0; i < nprocs; i++)
         buf_idx[i] = -1;
 
+    /* fd->flat_file.count has been checked and adjusted to a possitive number
+     * at the beginning of PNCIO_GEN_ReadStridedColl() and
+     * PNCIO_GEN_WriteStridedColl().
+     */
+    assert(fd->flat_file.count > 0);
+
     /* one pass just to calculate how much space to allocate for my_req */
     for (MPI_Count i = 0; i < fd->flat_file.count; i++) {
         /* short circuit offset/len processing if len == 0
