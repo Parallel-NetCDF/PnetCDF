@@ -95,6 +95,8 @@ ncmpio_file_read_at(NC         *ncp,
         fh = fIsSet(ncp->flags, NC_MODE_INDEP)
            ? ncp->independent_fh : ncp->collective_fh;
 
+        if (fh == MPI_FILE_NULL) return 0;
+
 #ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count count = (buf_view.is_contig) ? buf_view.size : 1;
 
@@ -122,7 +124,7 @@ ncmpio_file_read_at(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
-    else
+    else if (ncp->pncio_fh != NULL)
         amnt = PNCIO_File_read_at(ncp->pncio_fh, offset, buf, buf_view);
 
     /* update the number of bytes read since file open */
@@ -161,6 +163,8 @@ ncmpio_file_read_at_all(NC         *ncp,
         fh = fIsSet(ncp->flags, NC_MODE_INDEP)
            ? ncp->independent_fh : ncp->collective_fh;
 
+        if (fh == MPI_FILE_NULL) return 0;
+
 #ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count count = (buf_view.is_contig) ? buf_view.size : 1;
 
@@ -190,7 +194,7 @@ ncmpio_file_read_at_all(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
-    else
+    else if (ncp->pncio_fh != NULL)
         amnt = PNCIO_File_read_at_all(ncp->pncio_fh, offset, buf, buf_view);
 
     /* update the number of bytes read since file open */
@@ -229,6 +233,8 @@ ncmpio_file_write_at(NC         *ncp,
         fh = fIsSet(ncp->flags, NC_MODE_INDEP)
            ? ncp->independent_fh : ncp->collective_fh;
 
+        if (fh == MPI_FILE_NULL) return 0;
+
 #ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count count = (buf_view.is_contig) ? buf_view.size : 1;
 
@@ -255,7 +261,7 @@ ncmpio_file_write_at(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
-    else
+    else if (ncp->pncio_fh != NULL)
         amnt = PNCIO_File_write_at(ncp->pncio_fh, offset, buf, buf_view);
 
     /* update the number of bytes written since file open */
@@ -294,6 +300,8 @@ ncmpio_file_write_at_all(NC         *ncp,
         fh = fIsSet(ncp->flags, NC_MODE_INDEP)
            ? ncp->independent_fh : ncp->collective_fh;
 
+        if (fh == MPI_FILE_NULL) return 0;
+
 #ifdef HAVE_MPI_LARGE_COUNT
         MPI_Count count = (buf_view.is_contig) ? buf_view.size : 1;
 
@@ -322,7 +330,7 @@ ncmpio_file_write_at_all(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
-    else
+    else if (ncp->pncio_fh != NULL)
         amnt = PNCIO_File_write_at_all(ncp->pncio_fh, offset, buf, buf_view);
 
     /* update the number of bytes written since file open */
