@@ -56,20 +56,25 @@ ncmpio_write_numrecs(NC         *ncp,
     if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->my_aggr)
         return NC_NOERR;
 
-    /* If not requiring all MPI-IO calls to be collective, non-root processes
-     * can return now. This is because only root process writes numrecs to the
-     * file header.
-     */
-    if (!fIsSet(ncp->flags, NC_HCOLL) && ncp->rank > 0)
-        return NC_NOERR;
+    if (ncp->rank > 0) {
+        /* Currently in independent data mode */
+        if (NC_indep(ncp))
+            return NC_NOERR;
 
-    /* If collective MPI-IO is required for all MPI-IO calls, then all non-root
-     * processes participate the collective write call with zero-size requests.
-     */
-    if (ncp->rank > 0 && fIsSet(ncp->flags, NC_HCOLL)) {
-        ncmpio_file_write_at_all(ncp, 0, NULL, buf_view);
+        /* If collective MPI-IO is required for all MPI-IO calls, then all
+         * non-root processes participate the collective write call with
+         * zero-size requests.
+         */
+        if (fIsSet(ncp->flags, NC_HCOLL))
+            ncmpio_file_write_at_all(ncp, 0, NULL, buf_view);
+
+        /* If not requiring all MPI-IO calls to be collective, non-root
+         * processes can return now. This is because only root process writes
+         * numrecs to the file header.
+         */
         return NC_NOERR;
     }
+    /* codes below run by root only */
 
     if (new_numrecs > ncp->numrecs || NC_ndirty(ncp)) {
         int len;
@@ -109,7 +114,7 @@ ncmpio_write_numrecs(NC         *ncp,
         buf_view.size = len;
 
         /* root's file view always includes the entire file header */
-        if (fIsSet(ncp->flags, NC_HCOLL) && ncp->nprocs > 1)
+        if (!NC_indep(ncp) && fIsSet(ncp->flags, NC_HCOLL) && ncp->nprocs > 1)
             wlen = ncmpio_file_write_at_all(ncp, NC_NUMRECS_OFFSET, (void*)pos,
                                             buf_view);
         else
