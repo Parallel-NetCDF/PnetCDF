@@ -651,18 +651,11 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
 #endif
     }
 
-    MPI_Offset off=0;
-#ifdef HAVE_MPI_LARGE_COUNT
-    MPI_Offset  len=buf_len;
-#else
-    int         len=buf_len;
-#endif
-
     /* write buffer is contiguous */
-    buf_view.size = buf_len;
-    buf_view.count = 1;
-    buf_view.off = &off;
-    buf_view.len = &len;
+    buf_view.size      = buf_len;
+    buf_view.count     = 0;
+    buf_view.off       = NULL;
+    buf_view.len       = NULL;
     buf_view.is_contig = 1;
 
     /* write to variable collectively */
@@ -672,10 +665,9 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         wlen = ncmpio_file_write_at(ncp, 0, buf, buf_view);
     if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
-// printf("%s at %d\n",__func__,__LINE__);
+    /* free allocated resources */
     NCI_Free(buf);
     if (buf_view.type != MPI_BYTE) MPI_Type_free(&buf_view.type);
-
     if (blocklengths != NULL) NCI_Free(blocklengths);
     if (offset != NULL) NCI_Free(offset);
 
