@@ -115,18 +115,18 @@ int print_hints(int ncid,
     MPI_Info_free(&info_used);
 
     if (v_align == -1)
-        printf("nc_var_align_size         is NOT set\n");
+        printf("info nc_var_align_size         is NOT set\n");
     else
-        printf("nc_var_align_size         set to = %lld\n", v_align);
+        printf("info nc_var_align_size         set to = %lld\n", v_align);
     if (h_chunk == -1)
-        printf("nc_header_read_chunk_size is NOT set\n");
+        printf("info nc_header_read_chunk_size is NOT set\n");
     else
-        printf("nc_header_read_chunk_size set to = %lld\n", h_chunk);
+        printf("info nc_header_read_chunk_size set to = %lld\n", h_chunk);
 
-    printf("header size                      = %lld\n", header_size);
-    printf("header extent                    = %lld\n", header_extent);
-    printf("var_zy start file offset         = %lld\n", var_zy_start);
-    printf("var_yx start file offset         = %lld\n", var_yx_start);
+    printf("header size                           = %lld\n", header_size);
+    printf("header extent                         = %lld\n", header_extent);
+    printf("var_zy start file offset              = %lld\n", var_zy_start);
+    printf("var_yx start file offset              = %lld\n", var_yx_start);
     return nerrs;
 }
 
