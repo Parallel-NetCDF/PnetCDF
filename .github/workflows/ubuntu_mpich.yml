@@ -120,6 +120,7 @@ jobs:
             automake --version
             libtool --version
             autoreconf -i
+            mkdir -p pnetcdf_output
             ./configure --prefix=${GITHUB_WORKSPACE}/PnetCDF \
                         --enable-option-checking=fatal \
                         pnc_ac_debug=yes \
@@ -128,7 +129,7 @@ jobs:
                         --enable-thread-safe \
                         --with-pthread \
                         --with-mpi=${GITHUB_WORKSPACE}/MPICH \
-                        MIMIC_LUSTRE=yes
+                        TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output
             make -j 8 tests
         - name: Print config.log
           if: ${{ always() }}
@@ -151,39 +152,6 @@ jobs:
                fi ; \
             done
         - name: make ptests
-          run: |
-            cd ${GITHUB_WORKSPACE}
-            make ptests
-        - name: Build PnetCDF (default configuration)
-          run: |
-            cd ${GITHUB_WORKSPACE}
-            export PATH="${GITHUB_WORKSPACE}/AUTOTOOLS/bin:${PATH}"
-            export LD_LIBRARY_PATH="${GITHUB_WORKSPACE}/AUTOTOOLS/lib:${LD_LIBRARY_PATH}"
-            make distclean
-            ./configure --prefix=${GITHUB_WORKSPACE}/PnetCDF \
-                        --with-mpi=${GITHUB_WORKSPACE}/MPICH
-            make -j 8 tests
-        - name: Print config.log (default configuration)
-          if: ${{ always() }}
-          run: |
-            cat ${GITHUB_WORKSPACE}/config.log
-        - name: make check (default configuration)
-          run: |
-            cd ${GITHUB_WORKSPACE}
-            make check
-        - name: Print test log files (default configuration)
-          if: ${{ always() }}
-          run: |
-            cd ${GITHUB_WORKSPACE}
-            fname=`find src test examples benchmarks -type f -name "*.log"`
-            for f in $fname ; do \
-               bname=`basename $f` ; \
-               if test "x$bname" != xconfig.log ; then \
-                  echo "-------- dump $f ----------------------------" ; \
-                  cat $f ; \
-               fi ; \
-            done
-        - name: make ptests (default configuration)
           run: |
             cd ${GITHUB_WORKSPACE}
             make ptests
