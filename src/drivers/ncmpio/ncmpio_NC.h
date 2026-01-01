@@ -18,13 +18,21 @@
 #include "ncmpio_driver.h"
 #include "pncio.h"
 
+/* default free space in the file header section. */
 #define NC_DEFAULT_H_MINFREE 0
-#define NC_DEFAULT_V_ALIGN   512
+
+/* default free space in the fix-sized variable section. */
 #define NC_DEFAULT_V_MINFREE 0
+
+/* default alignment for the starting offset of record variable section. */
 #define NC_DEFAULT_R_ALIGN   4
 
-#define FILE_ALIGNMENT_DEFAULT 512
-#define FILE_ALIGNMENT_LB      4
+/* The default file header extent size is aligned with FILE_ALIGNMENT_DEFAULT.
+ * This default will be overwritten by hint nc_header_align_size or
+ * nc_var_align_size. Note when both hints are set by users, hint
+ * nc_var_align_size supersedes nc_header_align_size.
+ */
+#define NC_DEFAULT_V_ALIGN   512
 
 /* MPI_OFFSET datatype was introduced in MPI 2.2 */
 #if MPI_VERSION < 3
@@ -51,13 +59,25 @@
 
 /* ncmpi_create/ncmpi_open set up header to be 'chunksize' big and to grow
  * by 'chunksize' as new items added. This used to be 4k. 256k lets us read
- * in an entire climate header in one go */
-#define PNC_DEFAULT_CHUNKSIZE 262144
+ * in an entire climate header in one go. This default will be overwritten by
+ * hint nc_header_read_chunk_size.
+ */
+#define PNC_HDR_READ_CHUNK_SIZE 262144
+
+/* When file header grows or variables need to be moved to higher file offsets,
+ * data movement is performed in chunks of size PNC_MOVE_CHUNK_SIZE each per
+ * process. If the number of chunks is larger than the number of processes,
+ * carry out the data movement in multiple rounds. This default will be
+ * overwritten by hint nc_data_move_chunk_size.
+ */
+#define PNC_DATA_MOVE_CHUNK_SIZE 1048576
 
 /* default size of temporal buffer to pack noncontiguous user buffers for MPI
  * collective read and write during ncmpi_wait/wait_all(). On some systems,
  * e.g. Cray KNL, using contiguous user buffers in collective I/O is much
- * faster than noncontiguous. */
+ * faster than noncontiguous. This default will be overwritten by hint
+ * nc_ibuf_size.
+ */
 #define PNC_DEFAULT_IBUF_SIZE 16777216
 
 /* when variable's nctype is NC_CHAR, I/O buffer's MPI type must be MPI_CHAR
@@ -387,7 +407,8 @@ struct NC {
     struct NC    *ncp_sf;       /* ncp of subfile */
     MPI_Comm      comm_sf;      /* subfile MPI communicator */
 #endif
-    int           chunk;       /* chunk size for reading header, one chunk at a time */
+    int           hdr_chunk;    /* chunk size for reading header, one chunk at a time */
+    int           data_chunk;   /* chunk size for moving variables to higher offsets */
     MPI_Offset    v_align;     /* alignment of the beginning of fixed-size variables */
     MPI_Offset    r_align;     /* file alignment for record variable section */
     MPI_Offset    info_v_align;/* v_align set in MPI Info object */

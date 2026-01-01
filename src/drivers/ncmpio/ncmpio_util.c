@@ -42,7 +42,10 @@ void ncmpio_hint_extract(NC       *ncp,
     ncp->info_r_align = -1; /* -1 indicates not set */
 
     /* chunk size for reading header (set default before check hints) */
-    ncp->chunk = PNC_DEFAULT_CHUNKSIZE;
+    ncp->hdr_chunk = PNC_HDR_READ_CHUNK_SIZE;
+
+    /* chunk size for moving variables to higher offsets */
+    ncp->data_chunk = PNC_DATA_MOVE_CHUNK_SIZE;
 
     /* buffer to pack noncontiguous user buffers when calling wait() */
     ncp->ibuf_size = PNC_DEFAULT_IBUF_SIZE;
@@ -121,14 +124,15 @@ void ncmpio_hint_extract(NC       *ncp,
         llval = strtoll(value, NULL, 10);
         if (errno == 0) {
             if (llval < 0)
-                ncp->chunk = 0;
+                ncp->hdr_chunk = PNC_HDR_READ_CHUNK_SIZE;
             else if (llval > NC_MAX_INT) /* limit to NC_MAX_INT */
-                ncp->chunk = NC_MAX_INT;
+                ncp->hdr_chunk = NC_MAX_INT;
             else
-                ncp->chunk = (int)llval;
+                ncp->hdr_chunk = (int)llval;
 
             /* CDF-5's minimum header size is 4 bytes more than CDF-1 2's */
-            ncp->chunk = PNETCDF_RNDUP(MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN);
+            ncp->hdr_chunk = PNETCDF_RNDUP(MAX(MIN_NC_XSZ+4, ncp->hdr_chunk),
+                                           X_ALIGN);
         }
     }
 
@@ -241,6 +245,24 @@ void ncmpio_hint_extract(NC       *ncp,
     MPI_Info_get(info, "romio_no_indep_rw", MPI_MAX_INFO_VAL-1, value, &flag);
     if (flag && strcasecmp(value, "true") == 0)
         fSet(ncp->flags, NC_HCOLL);
+
+    /* Data movement chunk size when variables need to be moved to higher file
+     * offsets.
+     */
+    MPI_Info_get(info, "nc_data_move_chunk_size", MPI_MAX_INFO_VAL-1, value,
+                 &flag);
+    if (flag) {
+        errno = 0;  /* errno must set to zero before calling strtoll */
+        llval = strtoll(value, NULL, 10);
+        if (errno == 0) {
+            if (llval < 0)
+                ncp->data_chunk = PNC_DATA_MOVE_CHUNK_SIZE;
+            else if (llval > NC_MAX_INT) /* limit to NC_MAX_INT */
+                ncp->data_chunk = NC_MAX_INT;
+            else
+                ncp->data_chunk = (int)llval;
+        }
+    }
 }
 
 /*----< ncmpio_hint_set() >--------------------------------------------------*/
@@ -272,8 +294,12 @@ void ncmpio_hint_set(NC       *ncp,
     }
 
     /* header reading chunk size */
-    snprintf(int_str, MAX_INT_LEN, "%d", ncp->chunk);
+    snprintf(int_str, MAX_INT_LEN, "%d", ncp->hdr_chunk);
     MPI_Info_set(info, "nc_header_read_chunk_size", int_str);
+
+    /* variable movement chunk size */
+    snprintf(int_str, MAX_INT_LEN, "%d", ncp->data_chunk);
+    MPI_Info_set(info, "nc_data_move_chunk_size", int_str);
 
     /* setting in-place byte swap (matters only for Little Endian) */
     int swap_on  = fIsSet(ncp->flags, NC_MODE_SWAP_ON);

@@ -30,12 +30,6 @@
 #include "ncmpio_subfile.h"
 #endif
 
-/* Divide the amount of data to be moved into chunks of size MOVE_UNIT each,
- * and assign chunks to all processes. If the number of chunks is larger than
- * the number of processes, carry out the data movement in multiple rounds.
- */
-#define MOVE_UNIT 16777216
-
 #ifdef USE_POSIX_IO_TO_MOVE
 /*----< move_file_block() >-------------------------------------------------*/
 /* Call POSIX I/O subroutines to move data */
@@ -65,13 +59,13 @@ move_file_block(NC         *ncp,
     /* buf will be used as a temporal buffer to move data in chunks, i.e.
      * read a chunk and later write to the new location
      */
-    buf = NCI_Malloc(MOVE_UNIT);
+    buf = NCI_Malloc(ncp->data_chunk);
     if (buf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    p_units = (size_t)MOVE_UNIT * nprocs;
+    p_units = (size_t)ncp->data_chunk * nprocs;
     num_moves = nbytes / p_units;
     if (nbytes % p_units) num_moves++;
-    off_last = (num_moves - 1) * p_units + (size_t)rank * MOVE_UNIT;
+    off_last = (num_moves - 1) * p_units + (size_t)rank * ncp->data_chunk;
     off_from = from + off_last;
     off_to   = to   + off_last;
     mv_amnt  = nbytes % p_units;
@@ -82,8 +76,8 @@ move_file_block(NC         *ncp,
     if (nbytes >= p_units)
         do_open = 1;
     else {
-        MPI_Offset n_units = nbytes / MOVE_UNIT;
-        if (nbytes % MOVE_UNIT) n_units++;
+        MPI_Offset n_units = nbytes / ncp->data_chunk;
+        if (nbytes % ncp->data_chunk) n_units++;
         if (rank < n_units) do_open = 1;
     }
 
@@ -100,16 +94,16 @@ move_file_block(NC         *ncp,
 
         if (mv_amnt == p_units) {
             /* each rank moves amount of chunk_size */
-            chunk_size = MOVE_UNIT;
+            chunk_size = ncp->data_chunk;
         }
         else {
             /* when total move amount is less than p_units */
-            size_t num_chunks = mv_amnt / MOVE_UNIT;
-            if (mv_amnt % MOVE_UNIT) num_chunks++;
+            size_t num_chunks = mv_amnt / ncp->data_chunk;
+            if (mv_amnt % ncp->data_chunk) num_chunks++;
             if (rank < num_chunks) {
-                chunk_size = MOVE_UNIT;
-                if (rank == num_chunks - 1 && mv_amnt % MOVE_UNIT > 0)
-                    chunk_size = mv_amnt % MOVE_UNIT;
+                chunk_size = ncp->data_chunk;
+                if (rank == num_chunks - 1 && mv_amnt % ncp->data_chunk > 0)
+                    chunk_size = mv_amnt % ncp->data_chunk;
                 assert(chunk_size > 0);
             }
             else
@@ -172,11 +166,10 @@ move_file_block(NC         *ncp,
 {
     int rank, nprocs, status=NC_NOERR, do_coll;
     void *buf;
-    MPI_Offset num_moves, mv_amnt, p_units;
+    MPI_Offset last_block, mv_amnt, p_units;
     MPI_Offset off_last, off_from, off_to, rlen, wlen;
     MPI_Comm comm;
-
-    if (to == from || nbytes == 0) return NC_NOERR;
+    PNCIO_View buf_view;
 
     /* If intra-node aggregation is enabled, then only the aggregators perform
      * the movement.
@@ -188,10 +181,6 @@ move_file_block(NC         *ncp,
     rank = (ncp->ina_comm == MPI_COMM_NULL) ? ncp->rank : ncp->ina_rank;
     nprocs = (ncp->ina_comm == MPI_COMM_NULL) ? ncp->nprocs : ncp->ina_nprocs;
 
-    /* MPI-IO fileview has been reset in ncmpi_redef() to make the entire file
-     * visible
-     */
-
     /* Use MPI collective I/O subroutines to move data, only if nproc > 1 and
      * MPI-IO hint "romio_no_indep_rw" is set to true. Otherwise, use MPI
      * independent I/O subroutines, as the data partitioned among processes are
@@ -199,54 +188,53 @@ move_file_block(NC         *ncp,
      */
     do_coll = (nprocs > 1 && fIsSet(ncp->flags, NC_HCOLL));
 
+    if (!do_coll && (to == from || nbytes == 0)) return NC_NOERR;
+
+    /* MPI-IO fileview has been reset in ncmpi_redef() to make the entire file
+     * visible
+     */
+
     /* buf will be used as a temporal buffer to move data in chunks, i.e.
      * read a chunk and later write to the new location
      */
-    buf = NCI_Malloc(MOVE_UNIT);
+    buf = NCI_Malloc(ncp->data_chunk);
     if (buf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    p_units = (MPI_Offset)MOVE_UNIT * nprocs;
-    num_moves = nbytes / p_units;
-    if (nbytes % p_units) num_moves++;
-    off_last = (num_moves - 1) * p_units + (MPI_Offset)rank * MOVE_UNIT;
+    /* buffer used to move data is always contiguous */
+    buf_view.type = MPI_BYTE;
+    buf_view.count = 0;
+    buf_view.is_contig = 1;
+
+    /* movement must start from the last p_units toward to the 1st */
+    p_units = (MPI_Offset)ncp->data_chunk * nprocs;
+    off_last = nbytes / p_units;
+    last_block = nbytes % p_units;
+    if (last_block == 0) {
+        off_last--;
+        last_block = p_units;
+    }
+    /* mv_amnt is the amount moved by this rank at the first round */
+    if (rank < last_block / ncp->data_chunk)
+        mv_amnt = ncp->data_chunk;
+    else if (last_block % ncp->data_chunk > 0 &&
+             rank == last_block / ncp->data_chunk)
+        mv_amnt = last_block % ncp->data_chunk;
+    else
+        mv_amnt = 0;
+
+    off_last *= p_units;
+    off_last += (MPI_Offset)rank * ncp->data_chunk;
     off_from = from + off_last;
     off_to   = to   + off_last;
-    mv_amnt  = nbytes % p_units;
-    if (mv_amnt == 0 && nbytes > 0) mv_amnt = p_units;
 
-    /* move the data section starting from its tail toward its beginning */
     while (nbytes > 0) {
-        int chunk_size;
+        buf_view.size = mv_amnt;
 
-        if (mv_amnt == p_units) {
-            /* each rank moves amount of chunk_size */
-            chunk_size = MOVE_UNIT;
-        }
-        else {
-            /* when total move amount is less than p_units */
-            size_t num_chunks = mv_amnt / MOVE_UNIT;
-            if (mv_amnt % MOVE_UNIT) num_chunks++;
-            if (rank < num_chunks) {
-                chunk_size = MOVE_UNIT;
-                if (rank == num_chunks - 1 && mv_amnt % MOVE_UNIT > 0)
-                    chunk_size = mv_amnt % MOVE_UNIT;
-                assert(chunk_size > 0);
-            }
-            else
-                chunk_size = 0;
-        }
-
-        PNCIO_View buf_view;
-        buf_view.type = MPI_BYTE;
-        buf_view.size = chunk_size;
-        buf_view.count = 0;
-        buf_view.is_contig = 1;
-
-        /* read from file at off_from for amount of chunk_size */
+        /* read from file at off_from for amount of mv_amnt */
         rlen = 0;
         if (do_coll)
             rlen = ncmpio_file_read_at_all(ncp, off_from, buf, buf_view);
-        else if (chunk_size > 0)
+        else if (mv_amnt > 0)
             rlen = ncmpio_file_read_at(ncp, off_from, buf, buf_view);
         if (status == NC_NOERR && rlen < 0) status = (int)rlen;
 
@@ -265,10 +253,12 @@ move_file_block(NC         *ncp,
         if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
         /* move on to the next round */
-        mv_amnt   = p_units;
-        off_from -= mv_amnt;
-        off_to   -= mv_amnt;
-        nbytes   -= mv_amnt;
+        nbytes   -= p_units;
+        off_from -= p_units;
+        off_to   -= p_units;
+
+        /* mv_amnt becomes ncp->data_chunk in the 2nd and later rounds */
+        mv_amnt   = ncp->data_chunk;
     }
 
     NCI_Free(buf);
@@ -426,7 +416,7 @@ NC_begins(NC         *ncp,
      * creating a new file and first time call to ncmpi_enddef(), or other
      * case, e.g. opening an existing file, calling ncmpi_redef(), and then
      * ncmpi_enddef(). For the former case, ncp->begin_var == 0. For the latter
-     * case, ncp->begin_var must be > 0, as it is the orignial header extent.
+     * case, ncp->begin_var must be > 0, as it is the original header extent.
      * We increase begin_var only if the new header size grows out of its
      * original extent, or the start of variable section is not aligned as
      * requested by ncp->v_align. Note ncp->xsz is header size and
@@ -612,6 +602,8 @@ write_NC(NC *ncp)
     assert(!NC_readonly(ncp));
 
     buf_view.is_contig = 1;
+    buf_view.off = NULL;
+    buf_view.len = NULL;
 
     /* Depending on whether NC_HCOLL is set, writing file header can be done
      * through either MPI collective or independent write call.
@@ -687,7 +679,7 @@ write_NC(NC *ncp)
         remain = header_wlen;
         buf_ptr = buf;
         buf_view.type = MPI_BYTE;
-        buf_view.count = 1;
+        buf_view.count = 0;
         for (i=0; i<ntimes; i++) {
             MPI_Offset wlen;
             buf_view.size = MIN(remain, NC_MAX_INT);
@@ -706,6 +698,7 @@ write_NC(NC *ncp)
     else if (is_coll) {
         /* other processes participate the collective call */
         buf_view.type = MPI_BYTE;
+        buf_view.count = 0;
         buf_view.size = 0;
         for (i=0; i<ntimes; i++)
             ncmpio_file_write_at_all(ncp, 0, NULL, buf_view);
