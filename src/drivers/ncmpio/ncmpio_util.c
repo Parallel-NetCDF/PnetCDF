@@ -45,7 +45,7 @@ void ncmpio_hint_extract(NC       *ncp,
     ncp->hdr_chunk = PNC_HDR_READ_CHUNK_SIZE;
 
     /* chunk size for moving variables to higher offsets */
-    ncp->data_chunk = PNC_DATA_MOVE_CHUNK_SIZE;
+    ncp->data_chunk = -1;
 
     /* buffer to pack noncontiguous user buffers when calling wait() */
     ncp->ibuf_size = PNC_DEFAULT_IBUF_SIZE;
@@ -256,7 +256,7 @@ void ncmpio_hint_extract(NC       *ncp,
         llval = strtoll(value, NULL, 10);
         if (errno == 0) {
             if (llval < 0)
-                ncp->data_chunk = PNC_DATA_MOVE_CHUNK_SIZE;
+                ncp->data_chunk = -1;
             else if (llval > NC_MAX_INT) /* limit to NC_MAX_INT */
                 ncp->data_chunk = NC_MAX_INT;
             else
