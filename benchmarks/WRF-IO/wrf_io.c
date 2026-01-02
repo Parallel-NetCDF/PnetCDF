@@ -1190,7 +1190,7 @@ err_out:
 static
 int grow_header_benchmark(char *in_file)
 {
-    char value[MPI_MAX_INFO_VAL], *attr;
+    char value[MPI_MAX_INFO_VAL], cb_node_list[MPI_MAX_INFO_VAL], *attr;
     int i, err=NC_NOERR, nprocs, rank, ncid, ndims, dimid[3];
     int varid, unlimdimid, nvars, fix_nvars, rec_nvars, len, flag;
     double timing, max_t;
@@ -1350,6 +1350,12 @@ int grow_header_benchmark(char *in_file)
     } else
         nc_data_move_chunk_size = 0;
 
+    MPI_Info_get_valuelen(info, "cb_node_list", &len, &flag);
+    if (flag)
+        MPI_Info_get(info, "cb_node_list", len+1, cb_node_list, &flag);
+    else
+        *cb_node_list = '\0';
+
     MPI_Info_free(&info);
 
     /* close file */
@@ -1384,6 +1390,8 @@ int grow_header_benchmark(char *in_file)
         printf("Write bandwidth:                %.2f MiB/s\n", bw/max_t);
         printf("                                %.2f GiB/s\n", bw/1024.0/max_t);
         printf("Hint nc_data_move_chunk_size    %lld\n", nc_data_move_chunk_size);
+        if (*cb_node_list != '\0')
+            printf("Hint cb_node_list =             %s\n", cb_node_list);
         printf("-----------------------------------------------------------\n");
     }
 
