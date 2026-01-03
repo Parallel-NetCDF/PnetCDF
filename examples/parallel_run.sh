@@ -7,6 +7,41 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+DRY_RUN=no
+VERBOSE=no
+
+exe_cmd() {
+   local lineno=${BASH_LINENO[$((${#BASH_LINENO[@]} - 2))]}
+
+   cmd=`basename $1`
+   if test "x$MIMIC_LUSTRE" = x1 && test "x$cmd" = xncmpidiff ; then
+      # echo "export MIMIC_STRIPE_SIZE=1048576"
+      export MIMIC_STRIPE_SIZE=1048576
+   fi
+
+   if test "x$VERBOSE" = xyes || test "x$DRY_RUN" = xyes ; then
+      echo "Line $lineno CMD: $MPIRUN $@"
+   fi
+   if test "x$DRY_RUN" = xno ; then
+      $MPIRUN $@
+   fi
+
+   if test "x$MIMIC_LUSTRE" = x1 && test "x$cmd" = xncmpidiff ; then
+      # echo "unset MIMIC_STRIPE_SIZE"
+      unset MIMIC_STRIPE_SIZE
+   fi
+}
+
+seq_cmd() {
+   local lineno=${BASH_LINENO[$((${#BASH_LINENO[@]} - 2))]}
+   if test "x$VERBOSE" = xyes || test "x$DRY_RUN" = xyes ; then
+      echo "Line $lineno CMD: $TESTSEQRUN $@"
+   fi
+   if test "x$DRY_RUN" = xno ; then
+      $TESTSEQRUN $@
+   fi
+}
+
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 
@@ -54,6 +89,7 @@ for i in ${check_PROGRAMS} ; do
            DRIVER_OUT_FILE="${OUT_PREFIX}.pncio"
            driver_hint="PNCIO"
         fi
+
     for intra_aggr in 0 1 ; do
         if test "$intra_aggr" = 1 ; then
            INA_HINTS="nc_num_aggrs_per_node=2"
@@ -90,7 +126,9 @@ for i in ${check_PROGRAMS} ; do
 
         export PNETCDF_HINTS="$PNETCDF_HINTS"
         export PNETCDF_SAFE_MODE=$j
-        # echo "${LINENO}: PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
+        if test "x$VERBOSE" = xyes || test "x$DRY_RUN" = xyes ; then
+           echo "Line ${LINENO}: PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
+        fi
 
         TEST_OPTS="$safe_hint $driver_hint $ina_hint"
 
@@ -102,27 +140,22 @@ for i in ${check_PROGRAMS} ; do
 
         if test "$i" = pthread ; then
            # each MPI process created 6 threads
-           # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPT ${OUT_FILE}.nc"
-           ${MPIRUN} ./$i $CMD_OPT ${OUT_FILE}.nc
+           exe_cmd ./$i $CMD_OPT ${OUT_FILE}.nc
            for k in `seq 0 ${NTHREADS}` ; do
-               # echo "${LINENO}: --- validating file ${OUT_FILE}.nc.$k"
-               ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.nc.$k
+               seq_cmd ${VALIDATOR} -q ${OUT_FILE}.nc.$k
            done
            if test $? = 0 ; then
               printf "PASS: %-3s nprocs=$1 %-${fixed_length}s   -------- $i\n" $2 "$TEST_OPTS"
            fi
            continue
         elif test "$i" = put_vara ; then
-           # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPT ${OUT_FILE}.nc"
-           ${MPIRUN} ./$i $CMD_OPT ${OUT_FILE}.nc
-           # echo "${LINENO}: --- validating file ${OUT_FILE}.nc"
-           ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.nc
+           exe_cmd ./$i $CMD_OPT ${OUT_FILE}.nc
+           seq_cmd ${VALIDATOR} -q ${OUT_FILE}.nc
            if test $? = 0 ; then
               printf "PASS: %-3s nprocs=$1 %-${fixed_length}s   -------- $i\n" $2 "$TEST_OPTS"
            fi
 
-           # echo "${LINENO}: ${MPIRUN} ./get_vara $CMD_OPT ${OUT_FILE}.nc"
-           ${MPIRUN} ./get_vara $CMD_OPT ${OUT_FILE}.nc
+           exe_cmd ./get_vara $CMD_OPT ${OUT_FILE}.nc
            if test $? = 0 ; then
               printf "PASS: %-3s nprocs=$1 %-${fixed_length}s   -------- get_vara\n" $2 "$TEST_OPTS"
            fi
@@ -130,56 +163,45 @@ for i in ${check_PROGRAMS} ; do
            continue
         elif test "$i" = create_from_cdl ; then
            # create_from_cdl reads a CDL header file
-           # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPT -o ${OUT_FILE}.nc $IN_FILE"
-           ${MPIRUN} ./$i $CMD_OPT -o ${OUT_FILE}.nc $IN_FILE
+           exe_cmd ./$i $CMD_OPT -o ${OUT_FILE}.nc $IN_FILE
            if test $? = 0 ; then
               printf "PASS: %-3s nprocs=$1 %-${fixed_length}s   -------- $i\n" $2 "$TEST_OPTS"
            fi
         else
-           # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPT ${OUT_FILE}.nc"
-           ${MPIRUN} ./$i $CMD_OPT ${OUT_FILE}.nc
+           exe_cmd ./$i $CMD_OPT ${OUT_FILE}.nc
            if test $? = 0 ; then
               printf "PASS: %-3s nprocs=$1 %-${fixed_length}s   -------- $i\n" $2 "$TEST_OPTS"
            fi
         fi
 
-        # echo "${LINENO}:--- validating file ${OUT_FILE}.nc"
-        ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.nc
+        seq_cmd ${VALIDATOR} -q ${OUT_FILE}.nc
 
         if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-           # echo "${LINENO}: ---- test burst buffering feature"
            saved_PNETCDF_HINTS=${PNETCDF_HINTS}
            export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
-           # echo "${LINENO}:--- ./$i $CMD_OPT ${OUT_FILE}.bb.nc"
            if test "$i" = create_from_cdl ; then
               # create_from_cdl reads a CDL header file
-              # echo "${LINENO}: ${MPIRUN} ./$i -q -o ${OUT_FILE}.bb.nc $IN_FILE"
-              ${MPIRUN} ./$i -q -o ${OUT_FILE}.bb.nc $IN_FILE
+              exe_cmd ./$i -q -o ${OUT_FILE}.bb.nc $IN_FILE
            else
-              # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPT ${OUT_FILE}.bb.nc"
-              ${MPIRUN} ./$i $CMD_OPT ${OUT_FILE}.bb.nc
+              exe_cmd ./$i $CMD_OPT ${OUT_FILE}.bb.nc
            fi
            if test $? = 0 ; then
               printf "PASS: %-3s nprocs=$1 %-${fixed_length}s   -------- $i\n" $2 "$TEST_OPTS BB"
            fi
            export PNETCDF_HINTS=${saved_PNETCDF_HINTS}
 
-           # echo "${LINENO}: --- validating file ${OUT_FILE}.bb.nc"
-           ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.bb.nc
+           seq_cmd ${VALIDATOR} -q ${OUT_FILE}.bb.nc
 
            # compare file header only for large file tests
            DIFF_OPT="-q"
            if test "$i" = create_from_cdl ; then
               DIFF_OPT+=" -h"
            fi
-           # echo "${LINENO}: --- ncmpidiff $DIFF_OPT $OUT_FILE.nc $OUT_FILE.bb.nc ---"
-           ${MPIRUN} ${NCMPIDIFF} $DIFF_OPT $OUT_FILE.nc $OUT_FILE.bb.nc
+           exe_cmd ${NCMPIDIFF} $DIFF_OPT $OUT_FILE.nc $OUT_FILE.bb.nc
         fi
 
         if test "x${ENABLE_NETCDF4}" = x1 ; then
-           # echo "${LINENO}: test netCDF-4 feature"
-           # echo "${LINENO}: ${MPIRUN} ./$i ${OUT_FILE}.nc4 4"
-           ${MPIRUN} ./$i ${OUT_FILE}.nc4 4
+           exe_cmd ./$i ${OUT_FILE}.nc4 4
            if test $? = 0 ; then
               printf "PASS: %-3s nprocs=$1 %-${fixed_length}s   -------- $i\n" $2 "$TEST_OPTS"
            fi
@@ -202,20 +224,14 @@ for i in ${check_PROGRAMS} ; do
     fi
     if test "$i" = pthread ; then
        for j in `seq 0 ${NTHREADS}` ; do
-          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.mpio.ina.nc.$j ---"
-          $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.mpio.ina.nc.$j
-          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.pncio.nc.$j ---"
-          $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.pncio.nc.$j
-          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.pncio.nc.$j $OUT_PREFIX.pncio.ina.nc.$j ---"
-          $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.nc.$j $OUT_PREFIX.pncio.ina.nc.$j
+          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.mpio.ina.nc.$j
+          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.pncio.nc.$j
+          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.nc.$j $OUT_PREFIX.pncio.ina.nc.$j
        done
     else
-       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc ---"
-       $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc
-       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.nc $OUT_PREFIX.pncio.nc ---"
-       $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.pncio.nc
-       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.pncio.nc $OUT_PREFIX.pncio.ina.nc ---"
-       $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.nc $OUT_PREFIX.pncio.ina.nc
+       exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc
+       exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.pncio.nc
+       exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.nc $OUT_PREFIX.pncio.ina.nc
     fi
 
     done # no_indep_rw
