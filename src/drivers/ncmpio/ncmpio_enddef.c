@@ -164,9 +164,9 @@ move_file_block(NC         *ncp,
                 MPI_Offset  from,   /* source      starting file offset */
                 MPI_Offset  nbytes) /* amount to be moved */
 {
-    int rank, nprocs, status=NC_NOERR, do_coll;
+    int rank, align_rank, nprocs, status=NC_NOERR, do_coll;
     void *buf;
-    MPI_Offset last_block, mv_amnt, p_units;
+    MPI_Offset last_block, mv_amnt, p_units, end_off, end_block;
     MPI_Offset off_last, off_from, off_to, rlen, wlen;
     MPI_Comm comm;
     PNCIO_View buf_view;
@@ -180,6 +180,10 @@ move_file_block(NC         *ncp,
     comm = (ncp->ina_comm == MPI_COMM_NULL) ? ncp->comm : ncp->ina_comm;
     rank = (ncp->ina_comm == MPI_COMM_NULL) ? ncp->rank : ncp->ina_rank;
     nprocs = (ncp->ina_comm == MPI_COMM_NULL) ? ncp->nprocs : ncp->ina_nprocs;
+
+    /* align file access for all ranks */
+    align_rank = rank + (to / ncp->data_chunk);
+    align_rank %= nprocs;
 
     /* Use MPI collective I/O subroutines to move data, only if nproc > 1 and
      * MPI-IO hint "romio_no_indep_rw" is set to true. Otherwise, use MPI
@@ -207,25 +211,34 @@ move_file_block(NC         *ncp,
 
     /* movement must start from the last p_units toward to the 1st */
     p_units = (MPI_Offset)ncp->data_chunk * nprocs;
-    off_last = nbytes / p_units;
-    last_block = nbytes % p_units;
-    if (last_block == 0) {
-        off_last--;
-        last_block = p_units;
-    }
-    /* mv_amnt is the amount moved by this rank at the first round */
-    if (rank < last_block / ncp->data_chunk)
+    end_off = to + nbytes;
+    end_block = end_off % p_units;
+    off_last = end_off - end_block;
+
+    /* align file writes for all ranks (reads will not be aligned) */
+    if (align_rank < end_block / ncp->data_chunk)
         mv_amnt = ncp->data_chunk;
-    else if (last_block % ncp->data_chunk > 0 &&
-             rank == last_block / ncp->data_chunk)
-        mv_amnt = last_block % ncp->data_chunk;
+    else if (end_block % ncp->data_chunk > 0 &&
+             align_rank == end_block / ncp->data_chunk)
+        mv_amnt = end_block % ncp->data_chunk;
     else
         mv_amnt = 0;
 
-    off_last *= p_units;
-    off_last += (MPI_Offset)rank * ncp->data_chunk;
-    off_from = from + off_last;
-    off_to   = to   + off_last;
+    /* set the 1st read-write pair */
+    off_to   = off_last + (MPI_Offset)align_rank * ncp->data_chunk;
+    off_from = off_to - (to - from);
+
+    if (off_from < from)
+        off_from = from;
+
+    if (off_to < to) {
+        mv_amnt -= to - off_to;
+        if (mv_amnt < 0) mv_amnt = 0;
+        off_to = to;
+    }
+
+    /* pad the remaining of last p_units */
+    nbytes += p_units - end_block;
 
     while (nbytes > 0) {
         buf_view.size = mv_amnt;
@@ -259,9 +272,19 @@ move_file_block(NC         *ncp,
 
         /* mv_amnt becomes ncp->data_chunk in the 2nd and later rounds */
         mv_amnt   = ncp->data_chunk;
+
+        /* special treatment for the 1st p_units */
+        if (off_to < to) {
+            mv_amnt  -= to - off_to;
+            if (mv_amnt < 0) mv_amnt = 0;
+            off_to  = to;
+        }
+        if (off_from < from)
+            off_from = from;
     }
 
     NCI_Free(buf);
+
     return status;
 }
 #endif
