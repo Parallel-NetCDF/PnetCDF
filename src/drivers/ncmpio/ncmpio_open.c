@@ -42,6 +42,7 @@ ncmpio_open(MPI_Comm     comm,
 {
     char *filename, value[MPI_MAX_INFO_VAL + 1], *mpi_name;
     int i, rank, nprocs, mpiomode, err, status=NC_NOERR, mpireturn, flag;
+    int striping_unit;
     MPI_File fh=MPI_FILE_NULL;
     NC *ncp=NULL;
 
@@ -231,10 +232,9 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
         if (err != NC_NOERR) DEBUG_FOPEN_ERROR(err);
     }
 
-    /* Copy MPI-IO hints into ncp->mpiinfo */
-    ncmpio_hint_set(ncp, ncp->mpiinfo);
-
 fn_exit:
+    striping_unit = -1;
+
     if (ncp->num_aggrs_per_node > 0) {
         /* When intra-node aggregation is enabled, it is necessary to make sure
          * non-aggregators obtain consistent values of file striping hints.
@@ -270,7 +270,26 @@ fn_exit:
             sprintf(value, "%d", striping_info[1]);
             MPI_Info_set(ncp->mpiinfo, "striping_factor", value);
         }
+
+        striping_unit = striping_info[0];
     }
+    else {
+        MPI_Info_get(ncp->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        if (flag) {
+            errno = 0;  /* errno must set to zero before calling strtoll */
+            striping_unit = (int)strtol(value,NULL,10);
+            if (errno != 0) striping_unit = -1;
+        }
+    }
+
+    if (ncp->data_chunk == -1)
+        /* if not set by user hint, nc_data_move_chunk_size */
+        ncp->data_chunk = (striping_unit > 0) ? striping_unit
+                                              : PNC_DATA_MOVE_CHUNK_SIZE;
+
+    /* Copy MPI-IO hints into ncp->mpiinfo */
+    ncmpio_hint_set(ncp, ncp->mpiinfo);
 
     /* ina_node_list is no longer needed */
     if (ncp->ina_node_list != NULL) {

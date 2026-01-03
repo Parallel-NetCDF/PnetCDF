@@ -45,7 +45,11 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New PnetCDF hints
-  + none
+  + 'nc_data_move_chunk_size' -- When adding new data objects into an existing
+    file, the data section may need to be moved to a higher file offset. The
+    movement is performed in chunks. This hint allows users to customized the
+    chunk size. The default is 1048576 bytes, i.e. 1 MiB.
+    See [PR #203](https://github.com/Parallel-NetCDF/PnetCDF/pull/203).
 
 * New run-time environment variables
   + none

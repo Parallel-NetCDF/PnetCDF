@@ -323,8 +323,8 @@ hdr_len_NC_vararray(const NC_vararray *ncap,
 
 /*----< hdr_fetch() >--------------------------------------------------------*/
 /* Fetch the next header chunk. The chunk buffer, pointed by gbp->base, is of
- * size 'gbp->ncp->chunk' bytes. Be careful not to overwrite leftover (yet to
- * be used) data in the buffer before fetching a new chunk.
+ * size 'gbp->ncp->hdr_chunk' bytes. Be careful not to overwrite leftover (yet
+ * to be used) data in the buffer before fetching a new chunk.
  */
 static int
 hdr_fetch(bufferinfo *gbp) {
@@ -348,17 +348,17 @@ hdr_fetch(bufferinfo *gbp) {
         MPI_Offset rlen;
 
         /* any leftover data in the buffer */
-        slack = gbp->ncp->chunk - (gbp->pos - gbp->base);
-        if (slack == gbp->ncp->chunk) slack = 0;
+        slack = gbp->ncp->hdr_chunk - (gbp->pos - gbp->base);
+        if (slack == gbp->ncp->hdr_chunk) slack = 0;
 
-        /* When gbp->ncp->chunk == (gbp->pos - gbp->base), all data in the
+        /* When gbp->ncp->hdr_chunk == (gbp->pos - gbp->base), all data in the
          * buffer has been consumed. If not, then read additional header of
-         * size (gbp->ncp->chunk - slack) into a contiguous buffer, pointed by
-         * gbp->base + slack.
+         * size (gbp->ncp->hdr_chunk - slack) into a contiguous buffer, pointed
+         * by gbp->base + slack.
          */
 
         readBuf = gbp->base;
-        readLen = gbp->ncp->chunk;
+        readLen = gbp->ncp->hdr_chunk;
         if (slack > 0) { /* move slack to beginning of the buffer, gbp->base */
             memmove(gbp->base, gbp->pos, slack);
             readBuf += slack;
@@ -383,8 +383,8 @@ hdr_fetch(bufferinfo *gbp) {
              * when the remaining file size is smaller than readLen. When
              * actual read amount is smaller than readLen, then we zero-out the
              * remaining buffer. This is because the MPI_Bcast below broadcasts
-             * a buffer of a fixed size, gbp->ncp->chunk. Without zeroing out,
-             * valgrind will complain about the uninitialized values.
+             * a buffer of a fixed size, gbp->ncp->hdr_chunk. Without zeroing
+             * out, valgrind will complain about the uninitialized values.
              */
             if (rlen < readLen)
                 memset(readBuf + rlen, 0, readLen - rlen);
@@ -414,7 +414,7 @@ hdr_fetch(bufferinfo *gbp) {
 
     /* broadcast root's read (full or partial header) to other processes */
     if (nprocs > 1) {
-        TRACE_COMM(MPI_Bcast)(gbp->base, gbp->ncp->chunk, MPI_BYTE, 0,
+        TRACE_COMM(MPI_Bcast)(gbp->base, gbp->ncp->hdr_chunk, MPI_BYTE, 0,
                               gbp->ncp->comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
@@ -570,7 +570,7 @@ hdr_get_NC_name(bufferinfo *gbp, char **namep, size_t *name_len)
     */
     padding = PNETCDF_RNDUP(nchars, X_ALIGN) - nchars;
 
-    bufremain = gbp->ncp->chunk - (gbp->pos - gbp->base);
+    bufremain = gbp->ncp->hdr_chunk - (gbp->pos - gbp->base);
 
     cpos = *namep;
 
@@ -591,7 +591,7 @@ hdr_get_NC_name(bufferinfo *gbp, char **namep, size_t *name_len)
                 *namep = NULL;
                 return err;
             }
-            bufremain = gbp->ncp->chunk;
+            bufremain = gbp->ncp->hdr_chunk;
         }
     }
 
@@ -815,8 +815,8 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
     nbytes = attrp->nelems * xsz;
     padding = attrp->xsz - nbytes;
 
-    bufremain = gbp->ncp->chunk - (gbp->pos - gbp->base);
-    /* gbp->ncp->chunk is the read chunk size, which is of type 4-byte int.
+    bufremain = gbp->ncp->hdr_chunk - (gbp->pos - gbp->base);
+    /* gbp->ncp->hdr_chunk is the read chunk size, which is of type 4-byte int.
      * thus bufremain should be less than INT_MAX */
 
     /* get values */
@@ -831,7 +831,7 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
         } else {
             err = hdr_fetch(gbp);
             if (err != NC_NOERR) return err;
-            bufremain = gbp->ncp->chunk;
+            bufremain = gbp->ncp->hdr_chunk;
         }
     }
 
@@ -1346,11 +1346,13 @@ ncmpio_hdr_get_NC(NC *ncp)
     /* Initialize the get buffer that stores the header read from the file */
     getbuf.ncp    = ncp;
     getbuf.offset = 0;   /* read from start of the file */
-    getbuf.base   = (char*) NCI_Malloc(getbuf.ncp->chunk);
+    getbuf.base   = (char*) NCI_Malloc(getbuf.ncp->hdr_chunk);
     getbuf.pos    = getbuf.base;
-    getbuf.end    = getbuf.base + getbuf.ncp->chunk;
+    getbuf.end    = getbuf.base + getbuf.ncp->hdr_chunk;
 
-    /* Fetch the next header chunk. The chunk is 'gbp->ncp->chunk' bytes big */
+    /* Fetch the next header chunk. The chunk is 'gbp->ncp->hdr_chunk' bytes
+     * big.
+     */
     err = hdr_fetch(&getbuf);
     if (err != NC_NOERR) return err;
 
