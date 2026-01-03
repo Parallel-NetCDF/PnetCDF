@@ -12,11 +12,27 @@ VERBOSE=no
 
 exe_cmd() {
    local lineno=${BASH_LINENO[$((${#BASH_LINENO[@]} - 2))]}
+
+   saved_PNETCDF_HINTS=
+   cmd=`basename $1`
+   if test "x$MIMIC_LUSTRE" = x1 && test "x$cmd" = xncmpidiff ; then
+      # echo "export MIMIC_STRIPE_SIZE=1048576"
+      export MIMIC_STRIPE_SIZE=1048576
+      saved_PNETCDF_HINTS=$PNETCDF_HINTS
+      unset PNETCDF_HINTS
+   fi
+
    if test "x$VERBOSE" = xyes || test "x$DRY_RUN" = xyes ; then
       echo "Line $lineno CMD: $MPIRUN $@"
    fi
    if test "x$DRY_RUN" = xno ; then
       $MPIRUN $@
+   fi
+
+   if test "x$MIMIC_LUSTRE" = x1 && test "x$cmd" = xncmpidiff ; then
+      # echo "unset MIMIC_STRIPE_SIZE"
+      unset MIMIC_STRIPE_SIZE
+      export PNETCDF_HINTS=$saved_PNETCDF_HINTS
    fi
 }
 
