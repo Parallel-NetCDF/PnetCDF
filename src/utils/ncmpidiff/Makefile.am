@@ -11,8 +11,11 @@ AM_CPPFLAGS += -I$(top_builddir)/src/include
 
 bin_PROGRAMS = ncmpidiff cdfdiff
 
+noinst_LTLIBRARIES = libncmpidiff_core.la
+libncmpidiff_core_la_SOURCES = ncmpidiff_core.c
+
 ncmpidiff_SOURCES = ncmpidiff.c
-ncmpidiff_LDADD  = $(top_builddir)/src/libs/libpnetcdf.la
+ncmpidiff_LDADD  = $(top_builddir)/src/libs/libpnetcdf.la $(noinst_LTLIBRARIES)
 ncmpidiff_LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 cdfdiff_SOURCES = cdfdiff.c
@@ -24,6 +27,8 @@ $(top_builddir)/src/libs/libpnetcdf.la:
 	set -e; cd $(top_builddir)/src/libs && $(MAKE) $(MFLAGS)
 
 dist_man_MANS = ncmpidiff.1 cdfdiff.1
+
+EXTRA_DIST = ncmpidiff_core.h
 
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out
 
