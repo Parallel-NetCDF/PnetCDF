@@ -2733,6 +2733,7 @@ else
    fi
 fi
 AC_SUBST([FSTYPE_PREFIX])
+AC_DEFINE_UNQUOTED(TESTOUTDIR, ["$TESTOUTDIR"], [Output directory for tests])
 
 # SEQ_CC is used to compile programs to be run sequentially, such as
 # pnetcdf_version, ncoffsets, and ncvalidator
