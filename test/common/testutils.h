@@ -120,4 +120,28 @@ char* remove_file_system_type_prefix(const char *filename);
 extern
 int is_relax_coord_bound(void);
 
+extern
+void tst_usage(char *argv0);
+
+typedef struct {
+    char *in_path; /* input file path */
+    int  num_fmts; /* number of file formats: CDF 1/2/4/5 */
+    int *formats;  /* [num_fmts] max are {NC_FORMAT_CLASSIC,
+                                          NC_FORMAT_64BIT_OFFSET,
+                                          NC_FORMAT_NETCDF4_CLASSIC,
+                                          NC_FORMAT_64BIT_DATA}; */
+    int  ina;      /* add test of intra-node arrgatation */
+    int  drv;      /* add test of MPI-IO driver */
+    int  ind;      /* add test of hint romio_no_indep_rw */
+    int  chk;      /* add test of hint nc_data_move_chunk_size */
+    int  bb;       /* add test of burst-buffering feature */
+    int  mod;      /* add test of independent data mode */
+    int  hdr_diff; /* run ncmpidiff for file header only */
+    int  var_diff; /* run ncmpidiff for variables */
+} loop_opts;
+
+extern
+int tst_main(int argc, char **argv, char *msg, loop_opts opt,
+             int (*tst_body)(const char*, const char*, int, int, MPI_Info));
+
 #endif

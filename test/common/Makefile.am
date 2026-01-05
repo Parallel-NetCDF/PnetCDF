@@ -11,8 +11,11 @@ SUFFIXES = .a .o .c .F90 .h
 AM_DEFAULT_SOURCE_EXT = .c
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/include
+AM_CPPFLAGS += -I$(top_srcdir)/src/utils/ncmpidiff
 
 check_LTLIBRARIES = libtestutils.la
+
+libtestutils_la_LIBADD = $(top_builddir)/src/utils/ncmpidiff/libncmpidiff_core.la
 
 libtestutils_la_SOURCES = testutils.c testutils.h
 
@@ -23,7 +26,8 @@ CLEANFILES = core.* *.gcda *.gcno *.gcov gmon.out
 if HAS_FORTRAN
 check_LTLIBRARIES += libtestutilsf.la
 libtestutilsf_la_SOURCES = testutilsf.F90
-libtestutils_la_LIBADD = libtestutilsf.la
+libtestutils_la_LIBADD += libtestutilsf.la
+
 CLEANFILES += testutilsf.mod
 endif
 

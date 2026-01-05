@@ -6,12 +6,18 @@
 
 
 #include <stdio.h>
+#include <libgen.h> /* basename() */
 #include <limits.h>
 #include <string.h> /* strchr(), strerror(), strdup(), strcpy(), strlen() */
+#include <unistd.h> /* getopt(), stat() */
+#include <sys/types.h> /* stat() */
+#include <sys/stat.h> /* stat() */
+
 #include <mpi.h>
 
 #include <pnetcdf.h>
 #include "testutils.h"
+#include <ncmpidiff_core.h>
 
 char* nc_err_code_name(int err)
 {
@@ -304,3 +310,258 @@ int is_relax_coord_bound(void)
     return relax_coord_bound;
 }
 
+void
+tst_main_usage(char *argv0)
+{
+    char *base_name = basename(argv0);
+    char *help =
+    "Usage: %s [OPTIONS]...[filename]\n"
+    "       [-h] Print help\n"
+    "       [-q] quiet mode\n"
+    "       [-k] Keep output files (default: no)\n"
+    "       [-i  in_path]: input file path (default: NULL)\n"
+    "       [-o out_path]: output netCDF file name (default: %s.nc)\n";
+    fprintf(stderr, help, base_name, base_name);
+}
+
+int tst_main(int        argc,
+             char      **argv,
+             char       *msg,  /* short description about the test */
+             loop_opts   opt,  /* test options */
+             int       (*tst_body)(const char*,const char*,int,int,MPI_Info))
+{
+    extern int optind;
+    extern char *optarg;
+    char *in_path=NULL, *out_path=NULL;
+
+    /* IDs for the netCDF file, dimensions, and variables. */
+    int nprocs, rank, err, nerrs=0, keep_files, quiet, coll_io;
+    int i, a, d, r, m, b;
+    int num_ina, num_drv, num_ind, num_chk, num_bb, num_mod;
+
+    MPI_Info info=MPI_INFO_NULL;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    keep_files = 0;
+    quiet = 0;
+
+    while ((i = getopt(argc, argv, "hqki:o:")) != EOF)
+        switch(i) {
+            case 'q':
+                quiet = 1;
+                break;
+            case 'k':
+                keep_files = 1;
+                break;
+            case 'i':
+                in_path = strdup(optarg);
+                break;
+            case 'o':
+                out_path = strdup(optarg);
+                break;
+            case 'h':
+            default:  if (rank==0) tst_main_usage(argv[0]);
+                      MPI_Finalize();
+                      return 1;
+        }
+
+    if (out_path == NULL)
+        out_path = strdup("testfile.nc");
+#if 0
+    else {
+        /* check if filename is a directory */
+        struct stat sb;
+
+        snprintf(filename, 256, "%s", argv[optind]);
+        if (stat(filename, &sb) == 0 && S_ISDIR(sb.st_mode))
+            append_suffix = 0;
+    }
+#endif
+
+    if (rank == 0) {
+        char *cmd_str = (char *)malloc(strlen(argv[0]) + 256);
+        sprintf(cmd_str, "*** TESTING C   %s for %s", basename(argv[0]), msg);
+        printf("%-66s ------ ", cmd_str);
+        free(cmd_str);
+    }
+
+    char cmd_opts[64];
+    sprintf(cmd_opts, "Rank %d: ncmpidiff", rank);
+
+    char *ptr = strrchr(out_path, '.');
+    if (ptr != NULL) *ptr = '\0';
+
+    MPI_Info_create(&info);
+
+    num_ina = (opt.ina) ? 2 : 1;
+    num_drv = (opt.drv) ? 2 : 1;
+    num_ind = (opt.ind) ? 2 : 1;
+    num_chk = (opt.chk) ? 2 : 1;
+    num_bb  = (opt.bb)  ? 2 : 1;
+    num_mod = (opt.mod) ? 2 : 1;
+
+    for (i=0; i<opt.num_fmts; i++) {
+        char out_filename[512], ext[16], *base_file;
+
+        base_file = NULL;
+        if (opt.formats[i] > 0)
+            sprintf(ext, "nc%d", opt.formats[i]);
+        else /* for tests not testing CDF versions */
+            strcpy(ext, "nc");
+
+        for (a=0; a<num_ina; a++) {
+        for (d=0; d<num_drv; d++) {
+        for (r=0; r<num_ind; r++) {
+        for (m=0; m<num_chk; m++) {
+        for (b=0; b<num_bb;  b++) {
+
+            sprintf(out_filename, "%s.%s", out_path, ext);
+
+            if (a == 0) { /* PnetCDF's default */
+                MPI_Info_set(info, "nc_num_aggrs_per_node", "0");
+                strcat(out_filename, ".noina");
+            } else {
+                MPI_Info_set(info, "nc_num_aggrs_per_node", "2");
+                strcat(out_filename, ".ina");
+            }
+
+            if (d == 0) { /* PnetCDF's default */
+                MPI_Info_set(info, "nc_pncio", "enable");
+                strcat(out_filename, ".pncio");
+            } else {
+                MPI_Info_set(info, "nc_pncio", "disable");
+                strcat(out_filename, ".mpio");
+            }
+
+            if (r == 0) { /* PnetCDF's default */
+                MPI_Info_set(info, "romio_no_indep_rw", "false");
+                strcat(out_filename, ".noindep");
+            } else {
+                MPI_Info_set(info, "romio_no_indep_rw", "true");
+                strcat(out_filename, ".indep");
+            }
+
+            if (m == 0) { /* PnetCDF's default */
+                MPI_Info_set(info, "nc_data_move_chunk_size", "1048576");
+                strcat(out_filename, ".chunk1M");
+            } else {
+                MPI_Info_set(info, "nc_data_move_chunk_size", "100");
+                strcat(out_filename, ".chunk100");
+            }
+
+            if (b == 0) { /* PnetCDF's default */
+                MPI_Info_set(info, "nc_burst_buf", "disable");
+                strcat(out_filename, ".nobb");
+            }
+            else {
+#ifdef ENABLE_BURST_BUFFER
+                MPI_Info_set(info, "nc_burst_buf", "enable");
+                MPI_Info_set(info, "nc_burst_buf_dirname", TESTOUTDIR);
+                MPI_Info_set(info, "nc_burst_buf_overwrite", "enable");
+                strcat(out_filename, ".bb");
+#else
+                continue;
+#endif
+            }
+
+            for (coll_io=0; coll_io<num_mod; coll_io++) {
+
+                /* NetCDF4 does not allow to extend number of record numbers in
+                 * independent data mode. NC_ECANTEXTEND will be returned.
+                 */
+                if (coll_io == 0 &&
+                    (opt.formats[i] == NC_FORMAT_NETCDF4_CLASSIC ||
+                     opt.formats[i] == NC_FORMAT_NETCDF4))
+                    continue;
+
+                nerrs = tst_body(out_filename, in_path, opt.formats[i],
+                                 coll_io, info);
+                if (nerrs != NC_NOERR) goto err_out;
+            }
+
+            if (!opt.hdr_diff) goto skip_diff;
+
+            /* run ncmpidiff to compare output files */
+            if (base_file == NULL) /* skip first file */
+                base_file = strdup(out_filename);
+            else if (strcmp(base_file, out_filename)) {
+                int check_header=1, check_entire_file, first_diff=1;
+
+                check_entire_file = (opt.var_diff == 1);
+
+                /* ncmpidiff does nott support netCDF4 files */
+                if (opt.formats[i] == NC_FORMAT_NETCDF4_CLASSIC ||
+                    opt.formats[i] == NC_FORMAT_NETCDF4) {
+                    if (!keep_files) ncmpi_delete(out_filename, MPI_INFO_NULL);
+                    goto skip_diff;
+                }
+
+                if (!quiet && rank == 0)
+                    printf("ncmpidiff %-60s %s a=%d d=%d r=%d m=%d b=%d\n",
+                           out_filename, base_file,a,d,r,m,b);
+
+#ifdef MIMIC_LUSTRE
+                /* use a larger stripe size when running ncmpidiff */
+                setenv("MIMIC_STRIPE_SIZE", "1048576", 1);
+#else
+                unsetenv("MIMIC_STRIPE_SIZE");
+#endif
+                /* wait for all processes to complete */
+                MPI_Barrier(MPI_COMM_WORLD);
+
+                /* running ncmpidiff also validates the file header */
+                MPI_Offset numDIFF;
+                numDIFF = ncmpidiff_core(out_filename, base_file,
+                                         MPI_COMM_WORLD, MPI_INFO_NULL, 0,
+                                         quiet, check_header, 0,
+                                         check_entire_file, 0, NULL, 0,
+                                         first_diff, cmd_opts, 0, 0);
+                if (numDIFF != 0) {
+                    nerrs = 1;
+                    goto err_out;
+                }
+skip_diff:
+                if (!keep_files) ncmpi_delete(out_filename, MPI_INFO_NULL);
+            }
+        } /* loop b */
+        } /* loop m */
+        } /* loop r */
+        } /* loop d */
+        } /* loop a */
+
+        if (base_file != NULL) {
+            if (!keep_files) ncmpi_delete(base_file, MPI_INFO_NULL);
+            free(base_file);
+        }
+    }
+    MPI_Info_free(&info);
+
+    /* check if there is any malloc residue */
+    MPI_Offset malloc_size, sum_size;
+    err = ncmpi_inq_malloc_size(&malloc_size);
+    if (err == NC_NOERR) {
+        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0 && sum_size > 0)
+            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
+                   sum_size);
+        if (malloc_size > 0) ncmpi_inq_malloc_list();
+    }
+
+err_out:
+    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    if (rank == 0) {
+        if (nerrs)
+            printf(FAIL_STR, nerrs);
+        else
+            printf(PASS_STR);
+    }
+    if (in_path  != NULL) free(in_path);
+    if (out_path != NULL) free(out_path);
+
+    MPI_Finalize();
+
+    return (nerrs > 0);
+}
