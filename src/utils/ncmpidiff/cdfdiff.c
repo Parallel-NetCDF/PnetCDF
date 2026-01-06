@@ -396,9 +396,9 @@ int main(int argc, char **argv)
 
     /* compare file header */
     if (check_header) {
-        NC_attr *attr[2];
-        NC_dim  *dim[2];
-        NC_var  *var[2];
+        NC_attr *attr[2]={NULL, NULL};
+        NC_dim  *dim[2]={NULL, NULL};
+        NC_var  *var[2]={NULL, NULL};
 
         /* compare number of dimensions defined */
         if (ndims[0] != ndims[1]) {

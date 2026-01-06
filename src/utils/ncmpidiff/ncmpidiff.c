@@ -180,7 +180,7 @@ int main(int argc, char **argv)
                 check_tolerance = 1;
                 free(str);
                 break;
-            case '?':
+            default:
                 usage(rank, argv[0]);
                 break;
         }
@@ -235,6 +235,12 @@ int main(int argc, char **argv)
                              tolerance_ratio);
 
     MPI_Info_free(&info);
+
+    if (num_vars > 0) {
+        for (i=0; i<num_vars; i++)
+            free(var_names[i]);
+        free(var_names);
+    }
 
     MPI_Finalize();
 
