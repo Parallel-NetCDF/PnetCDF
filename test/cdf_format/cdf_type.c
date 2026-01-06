@@ -101,8 +101,8 @@ int test_attr_types(const char *filename,
 
 /*----< test_var_types() >----------------------------------------------------*/
 static
-int test_var_types(char *filename,
-                   int   format)
+int test_var_types(const char *filename,
+                   int         format)
 {
     int i, err, rank, ncid, cmode, nerrs=0;
     int dimid, varid[5];
@@ -137,6 +137,52 @@ int test_var_types(char *filename,
     return nerrs;
 }
 
+/*----< test_io() >----------------------------------------------------------*/
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,  /* ignored */
+            int         coll_io, /* ignored */
+            MPI_Info    info)
+{
+    int nerrs;
+
+    nerrs = test_attr_types(out_path, 0); /* CDF-1 */
+    if (nerrs > 0) return nerrs;
+
+    nerrs = test_attr_types(out_path, NC_64BIT_OFFSET); /* CDF-2 */
+    if (nerrs > 0) return nerrs;
+
+    nerrs = test_var_types(out_path, 0); /* CDF-1 */
+    if (nerrs > 0) return nerrs;
+
+    nerrs = test_var_types(out_path, NC_64BIT_OFFSET); /* CDF-2 */
+    if (nerrs > 0) return nerrs;
+
+    return 0;
+}
+
+#ifndef TEST_NETCDF
+/*----< main() >--------------------------------------------------------------*/
+int main(int argc, char **argv) {
+
+    int formats[] = {0};
+    loop_opts opt;
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 0;
+    opt.drv      = 1;
+    opt.ind      = 1;
+    opt.chk      = 0;
+    opt.bb       = 0;
+    opt.mod      = 1;
+    opt.hdr_diff = 1;
+    opt.var_diff = 1;
+
+    return tst_main(argc, argv, "CDF-5 dtype in CDF-1 and 2", opt, test_io);
+}
+#else
 /*----< main() >--------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
@@ -167,27 +213,10 @@ int main(int argc, char **argv)
     nerrs += test_var_types(filename, 0);
     nerrs += test_var_types(filename, NC_64BIT_OFFSET);
 
-#ifdef TEST_NETCDF
     if (nerrs) printf("fail with %d mismatches\n",nerrs);
     else       printf("pass\n");
-#else
-    MPI_Offset malloc_size, sum_size;
-    int err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-#endif
 
     MPI_Finalize();
     return (nerrs > 0);
 }
-
+#endif
