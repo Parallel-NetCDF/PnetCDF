@@ -1,24 +1,31 @@
-#!/bin/sh
+#!/bin/bash
 #
-# Copyright (C) 2025, Northwestern University and Argonne National Laboratory
+# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
 # See COPYRIGHT notice in top-level directory.
 #
 
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-VALIDATOR=../../src/utils/ncvalidator/ncvalidator
-NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
+DRY_RUN=no
+VERBOSE=no
+
+seq_cmd() {
+   local lineno=${BASH_LINENO[$((${#BASH_LINENO[@]} - 2))]}
+   if test "x$VERBOSE" = xyes || test "x$DRY_RUN" = xyes ; then
+      echo "Line $lineno CMD: $TESTSEQRUN $@"
+   fi
+   if test "x$DRY_RUN" = xno ; then
+      $TESTSEQRUN $@
+   fi
+}
 
 outfile=`basename $1`
 
 CMD_OPTS=
-if test $outfile = "tst_cdl_hdr_parser" ; then
-   CMD_OPTS="-q -o ${TESTOUTDIR}/$outfile.nc ${srcdir}/cdl_header.txt"
+if test "x$1" = "x./tst_cdl_hdr_parser" ; then
+   CMD_OPTS="-q -o ${TESTOUTDIR}/$outfile.nc -i ${srcdir}/cdl_header.txt"
 fi
-
-# remove file system type prefix if there is any
-OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 
 # echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
 if test "x${PNETCDF_DEBUG}" = x1 ; then
@@ -31,11 +38,10 @@ fi
 unset PNETCDF_HINTS
 
 for j in ${safe_modes} ; do
-    export PNETCDF_SAFE_MODE=$j
-    # echo "---- set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
-    ${TESTSEQRUN} $1 $CMD_OPTS
-    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
+
+   # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE"
+   PNETCDF_HINTS="$SAFE_HINTS"
+
+   seq_cmd $1 $CMD_OPTS
 
 done
-rm -f ${OUTDIR}/$outfile.nc
-
