@@ -155,7 +155,7 @@ int test_mode(const char *filename,
                     k < ghost || k >= gsize[1]-ghost)
                     exp = -1;
                 else
-                    exp = (j-ghost)*count[1]+(k-ghost) + rank*10;
+                    exp = (int)((j-ghost)*count[1]+(k-ghost) + rank*10);
                 if (buf[i][j*gsize[1]+k] != exp) {
                     printf("Error at %d: var %d expect buf[%d][%d] = %d but got %d\n",
                            __LINE__, i, j, k, exp, buf[i][j*gsize[1]+k]);
