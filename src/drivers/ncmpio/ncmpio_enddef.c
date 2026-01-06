@@ -166,7 +166,7 @@ move_file_block(NC         *ncp,
 {
     int rank, align_rank, nprocs, status=NC_NOERR, do_coll;
     void *buf;
-    MPI_Offset last_block, mv_amnt, p_units, end_off, end_block;
+    MPI_Offset mv_amnt, p_units, end_off, end_block;
     MPI_Offset off_last, off_from, off_to, rlen, wlen;
     MPI_Comm comm;
     PNCIO_View buf_view;
@@ -182,8 +182,7 @@ move_file_block(NC         *ncp,
     nprocs = (ncp->ina_comm == MPI_COMM_NULL) ? ncp->nprocs : ncp->ina_nprocs;
 
     /* align file access for all ranks */
-    align_rank = rank + (to / ncp->data_chunk);
-    align_rank %= nprocs;
+    align_rank = (to / ncp->data_chunk + rank) % nprocs;
 
     /* Use MPI collective I/O subroutines to move data, only if nproc > 1 and
      * MPI-IO hint "romio_no_indep_rw" is set to true. Otherwise, use MPI
