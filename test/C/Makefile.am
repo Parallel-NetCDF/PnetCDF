@@ -13,19 +13,19 @@ AM_DEFAULT_SOURCE_EXT = .c
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(srcdir)/../common
 AM_CPPFLAGS += -I$(top_builddir)/src/include
+AM_CPPFLAGS += -I$(top_srcdir)/src/utils/ncmpidiff
 
 LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
+LDADD += $(top_builddir)/src/utils/ncmpidiff/libncmpidiff_core.la
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 if DECL_MPI_OFFSET
    AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
 endif
 
-TESTPROGRAMS = pres_temp_4D_wr \
-               pres_temp_4D_rd
+TESTPROGRAMS = pres_temp_4D_wr_rd
 
-pres_temp_4D_wr_SOURCES = pres_temp_4D_wr.c pres_temp_4D.h
-pres_temp_4D_rd_SOURCES = pres_temp_4D_rd.c pres_temp_4D.h
+pres_temp_4D_wr_rd_SOURCES = pres_temp_4D_wr_rd.c
 
 check_PROGRAMS = $(TESTPROGRAMS)
 
@@ -63,17 +63,13 @@ TEST_EXTENSIONS = .sh
 # LOG_COMPILER = $(srcdir)/wrap_runs.sh
 # SH_LOG_COMPILER =
 
-# Dependency: pres_temp_4D_rd reads the output file from pres_temp_4D_wr.
-# To support parallel "make -jN check", we add dependencies below and automake
-# states it currently works only for tests that end in one of the suffixes
-# listed in TEST_EXTENSIONS. $(EXEEXT) are appended to work around.
-pres_temp_4D_rd$(EXEEXT).log: pres_temp_4D_wr$(EXEEXT).log
-
 EXTRA_DIST = seq_runs.sh parallel_run.sh
 
-CLEANFILES = $(TESTOUTDIR)/pres_temp_4D.nc \
-             $(TESTOUTDIR)/pres_temp_4D.nc4 \
-             $(TESTOUTDIR)/pres_temp_4D.bb.nc \
+CLEANFILES = $(TESTOUTDIR)/pres_temp_4D*.nc1 \
+             $(TESTOUTDIR)/pres_temp_4D*.nc2 \
+             $(TESTOUTDIR)/pres_temp_4D*.nc4 \
+             $(TESTOUTDIR)/pres_temp_4D*.nc5 \
+             $(TESTOUTDIR)/pres_temp_4D*.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 ../common/libtestutils.la:
@@ -84,7 +80,7 @@ ptest ptests ptest4: $(TESTPROGRAMS)
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/../parallel_run.sh 4 || exit 1
+	$(srcdir)/parallel_run.sh 4 || exit 1
 
 ptest2 ptest6 ptest8 ptest10:
 
