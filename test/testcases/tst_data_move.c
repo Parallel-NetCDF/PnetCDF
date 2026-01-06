@@ -60,9 +60,9 @@ int read_back_check(int         ncid,
                     MPI_Offset *count)
 {
     char name[64];
-    int i, j, k, err, nerrs=0, rank, nvars, nelems, ndims, tdim, *int_buf;
+    int i, j, k, err, nerrs=0, rank, nvars, ndims, tdim, *int_buf;
     float *flt_buf;
-    MPI_Offset nrecords;
+    MPI_Offset nelems, nrecords;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -123,7 +123,7 @@ int read_back_check(int         ncid,
             return 1;
         }
     }
-    return 0;
+    return nerrs;
 }
 
 static int
