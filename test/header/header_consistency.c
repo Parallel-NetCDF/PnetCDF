@@ -13,7 +13,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libgen.h> /* basename() */
+#include <assert.h>
+
 #include <mpi.h>
+
 #include <pnetcdf.h>
 #include <testutils.h>
 
@@ -44,11 +47,9 @@
 
 /*----< test_open_mode() >----------------------------------------------------*/
 static
-int test_open_mode(char *filename, int safe_mode)
+int test_open_mode(const char *filename, MPI_Comm comm, int safe_mode, MPI_Info info)
 {
     int err, rank, ncid, cmode, omode, nerrs=0;
-    MPI_Info info=MPI_INFO_NULL;
-    MPI_Comm comm=MPI_COMM_WORLD;
 
     MPI_Comm_rank(comm, &rank);
 
@@ -84,11 +85,9 @@ int test_open_mode(char *filename, int safe_mode)
 
 /*----< test_dim() >----------------------------------------------------------*/
 static
-int test_dim(char *filename, int safe_mode)
+int test_dim(const char *filename, MPI_Comm comm, int safe_mode, MPI_Info info)
 {
     int err, rank, ncid, cmode, dimid1, dimid2, dimid3, nerrs=0;
-    MPI_Info info=MPI_INFO_NULL;
-    MPI_Comm comm=MPI_COMM_WORLD;
 
     MPI_Comm_rank(comm, &rank);
     cmode = NC_CLOBBER|NC_64BIT_OFFSET;
@@ -129,19 +128,18 @@ int test_dim(char *filename, int safe_mode)
         CHECK_ERR
 
     err = ncmpi_close(ncid); CHECK_ERR
+
     return nerrs;
 }
 
 /*----< test_attr() >---------------------------------------------------------*/
 static
-int test_attr(char *filename, int safe_mode)
+int test_attr(const char *filename, MPI_Comm comm, int safe_mode, MPI_Info info)
 {
     int err, rank, ncid, cmode, nerrs=0;
     char  gattr[128];
     int   int_attr;
     float flt_attr;
-    MPI_Info info=MPI_INFO_NULL;
-    MPI_Comm comm=MPI_COMM_WORLD;
 
     MPI_Comm_rank(comm, &rank);
     cmode = NC_CLOBBER|NC_64BIT_OFFSET;
@@ -197,14 +195,12 @@ int test_attr(char *filename, int safe_mode)
 
 /*----< test_var() >----------------------------------------------------------*/
 static
-int test_var(char *filename, int safe_mode)
+int test_var(const char *filename, MPI_Comm comm, int safe_mode, MPI_Info info)
 {
     int err, rank, ncid, cmode, nerrs=0;
     int dimid[3], varid1, int_attr;
     float flt_attr;
     char name[128], var_attr[128];
-    MPI_Info info=MPI_INFO_NULL;
-    MPI_Comm comm=MPI_COMM_WORLD;
 
     MPI_Comm_rank(comm, &rank);
     cmode = NC_CLOBBER|NC_64BIT_OFFSET;
@@ -343,35 +339,41 @@ int test_var(char *filename, int safe_mode)
     return nerrs;
 }
 
-/*----< main() >--------------------------------------------------------------*/
-int main(int argc, char **argv)
+/*----< test_io() >----------------------------------------------------------*/
+static
+int test_io(const char *out_path,
+            const char *in_path,   /* ignored */
+            int         format,    /* ignored */
+            int         coll_io,   /* ignored */
+            MPI_Info    info)
 {
-    char *filename="testfile.nc", *mode[2] = {"0", "1"};
+    char *mode[2] = {"0", "1"};
     int i, rank, nprocs, verbose, nerrs=0;
+    MPI_Comm comm=MPI_COMM_NULL;
 
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (nprocs < 2) {
-        if (!rank) printf("This program is for running 2 or more processes. Exiting ...\n");
-        MPI_Finalize();
-        return 1;
-    }
+    if (nprocs == 1) return 0;
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) filename = argv[1];
+    assert(in_path == NULL);
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for header consistency", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str);
-        free(cmd_str);
+    /* This program is designed to run on 2 MPI processes */
+    if (nprocs > 2) {
+        /* Make MPI calls to create a new communicator. */
+        int new_ranks[2]={0,1};
+        MPI_Group origin_group, group;
+
+        MPI_Comm_group(MPI_COMM_WORLD, &origin_group);
+        MPI_Group_incl(origin_group, 2, new_ranks, &group);
+        MPI_Comm_create(MPI_COMM_WORLD, group, &comm);
+        MPI_Group_free(&group);
+        MPI_Group_free(&origin_group);
     }
+    else
+        comm = MPI_COMM_WORLD;
+
+    if (rank >= 2) goto err_out;
 
     verbose = 1;
     for (i=verbose; i>=0; i--) {
@@ -381,32 +383,52 @@ int main(int argc, char **argv)
          * PNETCDF_SAFE_MODE to 0.
          */
         setenv("PNETCDF_SAFE_MODE", mode[i], 1);
-        nerrs += test_open_mode(filename, i);
 
-        nerrs += test_dim(filename, i);
+        nerrs = test_open_mode(out_path, comm, i, info);
+        if (nerrs > 0) goto err_out;
 
-        nerrs += test_attr(filename, i);
+        nerrs = test_dim(out_path, comm, i, info);
+        if (nerrs > 0) goto err_out;
 
-        nerrs += test_var(filename, i);
+        nerrs = test_attr(out_path, comm, i, info);
+        if (nerrs > 0) goto err_out;
+
+        nerrs = test_var(out_path, comm, i, info);
+        if (nerrs > 0) goto err_out;
     }
 
-    MPI_Offset malloc_size, sum_size;
-    int err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
+err_out:
+    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_NULL)
+        MPI_Comm_free(&comm);
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    return nerrs;
+}
+
+int main(int argc, char **argv) {
+
+    /* This test program does not support NetCDF4 option */
+    int err, nprocs, formats[] = {0};
+
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 0;            /* test intra-node aggregation */
+    opt.drv      = 1;            /* test PNCIO driver */
+    opt.ind      = 1;            /* test hint romio_no_indep_rw */
+    opt.chk      = 0;            /* test hint nc_data_move_chunk_size */
+    opt.bb       = 0;            /* test burst-buffering feature */
+    opt.mod      = 0;            /* test independent data mode */
+    opt.hdr_diff = (nprocs > 1); /* run ncmpidiff for file header only */
+    opt.var_diff = 0;            /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "header consistency", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }
 

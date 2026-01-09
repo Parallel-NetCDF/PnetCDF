@@ -1,67 +1,44 @@
-#!/bin/sh
+#!/bin/bash
 #
-# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# Copyright (C) 2026, Northwestern University and Argonne National Laboratory
 # See COPYRIGHT notice in top-level directory.
 #
 
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-VALIDATOR=../../src/utils/ncvalidator/ncvalidator
-NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
+DRY_RUN=no
+VERBOSE=no
 
-outfile=`basename $1`
+run_cmd() {
+   local lineno=${BASH_LINENO[$((${#BASH_LINENO[@]} - 2))]}
+   if test "x$VERBOSE" = xyes || test "x$DRY_RUN" = xyes ; then
+      echo "Line $lineno CMD: $TESTSEQRUN $@"
+   fi
+   if test "x$DRY_RUN" = xno ; then
+      $TESTSEQRUN $@
+   fi
+}
 
-# echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
 if test "x${PNETCDF_DEBUG}" = x1 ; then
    safe_modes="0 1"
 else
    safe_modes="0"
 fi
 
+exe_name=`basename $1`
+
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
-# header consistency tests are designed to run on more than one MPI process
 for j in ${safe_modes} ; do
-    if test "$j" = 1 ; then # test only in safe mode
-       SAFE_HINTS="romio_no_indep_rw=true"
-    else
-       SAFE_HINTS="romio_no_indep_rw=false"
-    fi
-for mpiio_mode in 0 1 ; do
-    if test "$mpiio_mode" = 1 ; then
-       USEMPIO_HINTS="nc_pncio=disable"
-    else
-       USEMPIO_HINTS="nc_pncio=enable"
-    fi
 
-    PNETCDF_HINTS=
-    if test "x$SAFE_HINTS" != x ; then
-       PNETCDF_HINTS="$SAFE_HINTS"
-    fi
-    if test "x$USEMPIO_HINTS" != x ; then
-       PNETCDF_HINTS="$USEMPIO_HINTS;$PNETCDF_HINTS"
-    fi
+   export PNETCDF_SAFE_MODE=$j
+   if test "x$VERBOSE" = xyes || test "x$DRY_RUN" = xyes ; then
+      echo "Line ${LINENO}: PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE"
+   fi
 
-    export PNETCDF_HINTS="$PNETCDF_HINTS"
-    export PNETCDF_SAFE_MODE=$j
-    # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
+   run_cmd ./$1 -q -o ${TESTOUTDIR}/${exe_name}.nc
 
-    ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.nc
-    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.nc
+done # safe_modes
 
-
-    if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-        echo ""
-        echo "---- testing burst buffering"
-        export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
-        ${TESTSEQRUN} $1              ${TESTOUTDIR}/$outfile.bb.nc
-        unset PNETCDF_HINTS
-        ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$outfile.bb.nc
-
-        # echo "--- ncmpidiff $outfile.nc $outfile.bb.nc ---"
-        ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$outfile.nc ${TESTOUTDIR}/$outfile.bb.nc
-    fi
-done
-done

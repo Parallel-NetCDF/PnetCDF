@@ -23,13 +23,11 @@ if DECL_MPI_OFFSET
    # AM_FCFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
 endif
 
-TESTPROGRAMS = header_consistency
-
-check_PROGRAMS = $(TESTPROGRAMS)
+check_PROGRAMS = header_consistency
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
-# AM_TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
+# AM_TESTS_ENVIRONMENT  = export check_PROGRAMS="$(check_PROGRAMS)";
 # AM_TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
 # AM_TESTS_ENVIRONMENT += export TESTOUTDIR="$(FSTYPE_PREFIX)$(TESTOUTDIR)";
 TESTS_ENVIRONMENT  = export SED="$(SED)";
@@ -37,7 +35,6 @@ TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
 TESTS_ENVIRONMENT += export TESTOUTDIR="$(FSTYPE_PREFIX)$(TESTOUTDIR)";
 TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
 TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
-TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 if PNETCDF_DEBUG
@@ -54,14 +51,15 @@ if MIMIC_LUSTRE
 endif
 
 # consistency check should be run on more than one process
-# TESTS = seq_runs.sh
+TESTS = $(check_PROGRAMS)
+TEST_EXTENSIONS = .sh
+LOG_COMPILER = $(srcdir)/seq_runs.sh
+SH_LOG_COMPILER =
 
 EXTRA_DIST = seq_runs.sh parallel_run.sh
 
-NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc) \
-           $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
-
-CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out
+CLEANFILES = $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
+			 core core.* *.gcda *.gcno *.gcov gmon.out
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
@@ -71,14 +69,14 @@ ptest ptest4: $(check_PROGRAMS)
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/../parallel_run.sh 4 || exit 1
+	$(srcdir)/parallel_run.sh 4 || exit 1
 
 ptest2: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 2 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/../parallel_run.sh 2 || exit 1
+	$(srcdir)/parallel_run.sh 2 || exit 1
 
 ptests: ptest2 ptest4
 ptest6 ptest8 ptest10:
