@@ -120,7 +120,7 @@ jobs:
             automake --version
             libtool --version
             autoreconf -i
-            mkdir -p pnetcdf_output
+            mkdir -p /tmp/pnetcdf_output
             ./configure --prefix=${GITHUB_WORKSPACE}/PnetCDF \
                         --enable-option-checking=fatal \
                         pnc_ac_debug=yes \
@@ -129,7 +129,7 @@ jobs:
                         --enable-thread-safe \
                         --with-pthread \
                         --with-mpi=${GITHUB_WORKSPACE}/MPICH \
-                        TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output
+                        TESTOUTDIR=/tmp/pnetcdf_output
             make -j 8 tests
         - name: Print config.log
           if: ${{ always() }}
