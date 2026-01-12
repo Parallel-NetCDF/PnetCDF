@@ -382,7 +382,7 @@ int
 ncmpio_ina_init(NC *ncp)
 {
     int i, j, mpireturn, do_io, ina_nprocs, naggrs_my_node, first_rank;
-    int my_rank_index, *ranks_my_node, my_node_id, nprocs_my_node;
+    int my_rank_index, *ranks_my_node, my_node_id, nprocs_my_node, rem;
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double timing = MPI_Wtime();
@@ -439,12 +439,28 @@ ncmpio_ina_init(NC *ncp)
      * ncp->num_nonaggrs. Note ncp->num_nonaggrs includes self rank.
      */
     ncp->num_nonaggrs = nprocs_my_node / naggrs_my_node;
-    if (nprocs_my_node % naggrs_my_node) ncp->num_nonaggrs++;
+
+    /* calculate the number of ranks in each INA group, ncp->num_nonaggrs,
+     * and the aggregator's rank, first_rank.
+     */
+    rem = nprocs_my_node % naggrs_my_node;
+    if (rem > 0) { /* non-divisible case */
+        ncp->num_nonaggrs++;
+        if (my_rank_index < rem * ncp->num_nonaggrs)
+            /* first rank of my INA group */
+            first_rank = my_rank_index - my_rank_index % ncp->num_nonaggrs;
+        else {
+            first_rank = rem * ncp->num_nonaggrs;
+            ncp->num_nonaggrs--;
+            first_rank = my_rank_index - (my_rank_index - first_rank) % ncp->num_nonaggrs;
+        }
+    }
+    else /* divisible case */
+        first_rank = my_rank_index - my_rank_index % ncp->num_nonaggrs;
 
     /* Adjust the number of non-aggregators for the last group of each node,
      * to make sure it does not go beyond nprocs_my_node.
      */
-    first_rank = my_rank_index - my_rank_index % ncp->num_nonaggrs;
     ncp->num_nonaggrs = MIN(ncp->num_nonaggrs, nprocs_my_node - first_rank);
 
     /* Assign the first rank as the intra-node aggregator of this group and
@@ -495,10 +511,6 @@ ncmpio_ina_init(NC *ncp)
     TRACE_COMM(MPI_Allgather)(&do_io, 1, MPI_INT, ncp->ina_node_list, 1,
                               MPI_INT,ncp->comm);
 
-    /* Calculate the total number of intra-node aggregators */
-    for (ina_nprocs=0, i=0; i<ncp->nprocs; i++)
-        if (ncp->ina_node_list[i]) ina_nprocs++;
-
     /* Construct ncp->node_ids[] and ncp->ina_node_list[]. Their contents
      * depend on the layout of MPI process allocation to the compute nodes.
      * The common layouts can be two kinds:
@@ -517,8 +529,11 @@ ncmpio_ina_init(NC *ncp)
     /* ncp->node_ids[]: node IDs of processes in the new MPI communicator.
      * ncp->ina_node_list[]: the rank IDs of the new MPI communicator.
      */
+    ina_nprocs = 0;
     for (j=0,i=0; i<ncp->nprocs; i++) {
         if (ncp->ina_node_list[i]) {
+            ina_nprocs++; /* count the total number of INA aggregators */
+
             ncp->ina_node_list[j] = i;
             /* Modify ncp->node_ids[] to store the node IDs of the processes in
              * the new communicator. Note ncp->node_ids[] from now on is used
