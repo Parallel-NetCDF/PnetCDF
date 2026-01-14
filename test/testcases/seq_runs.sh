@@ -1,107 +1,53 @@
-#!/bin/sh
+#!/bin/bash
 #
-# Copyright (C) 2003, Northwestern University and Argonne National Laboratory
+# Copyright (C) 2026, Northwestern University and Argonne National Laboratory
 # See COPYRIGHT notice in top-level directory.
 #
 
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-VALIDATOR=../../src/utils/ncvalidator/ncvalidator
+DRY_RUN=no
+VERBOSE=no
+
+run_cmd() {
+   local lineno=${BASH_LINENO[$((${#BASH_LINENO[@]} - 2))]}
+   if test "x$VERBOSE" = xyes || test "x$DRY_RUN" = xyes ; then
+      echo "Line $lineno CMD: $TESTSEQRUN $@"
+   fi
+   if test "x$DRY_RUN" = xno ; then
+      $TESTSEQRUN $@
+   fi
+}
+
+if test "x${PNETCDF_DEBUG}" = x1 ; then
+   safe_modes="0 1"
+else
+   safe_modes="0"
+fi
+
+exe_name=`basename $1`
 
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
+# PNCIO driver does not support vard APIs
+if test "x$exe_name" = xtest_vard ||
+   test "x$exe_name" = xtest_vard_multiple ||
+   test "x$exe_name" = xtest_vard_rec ||
+   test "x$exe_name" = xtest_vardf90 ||
+   test "x$exe_name" = xtest_vardf ; then
+   export PNETCDF_HINTS="nc_pncio=disable"
+fi
+
 for j in ${safe_modes} ; do
-    if test "$j" = 1 ; then # test only in safe mode
-       SAFE_HINTS="romio_no_indep_rw=true"
-    else
-       SAFE_HINTS="romio_no_indep_rw=false"
-    fi
-for mpiio_mode in 0 1 ; do
-    if test "$mpiio_mode" = 1 ; then
-       USEMPIO_HINTS="nc_pncio=disable"
-    else
-       USEMPIO_HINTS="nc_pncio=enable"
-    fi
 
-    PNETCDF_HINTS=
-    if test "x$SAFE_HINTS" != x ; then
-       PNETCDF_HINTS="$SAFE_HINTS"
-    fi
-    if test "x$USEMPIO_HINTS" != x ; then
-       PNETCDF_HINTS="$USEMPIO_HINTS;$PNETCDF_HINTS"
-    fi
+   export PNETCDF_SAFE_MODE=$j
+   if test "x$VERBOSE" = xyes || test "x$DRY_RUN" = xyes ; then
+      echo "Line ${LINENO}: PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE"
+   fi
 
-    export PNETCDF_HINTS="$PNETCDF_HINTS"
-    export PNETCDF_SAFE_MODE=$j
-    # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
+   run_cmd ./$1 -q -o ${TESTOUTDIR}/${exe_name}.nc
 
-    ${TESTSEQRUN} ./tst_version
+done # safe_modes
 
-    ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds.nc
-    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/put_all_kinds.nc1
-    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/put_all_kinds.nc2
-    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/put_all_kinds.nc5
-
-    ${TESTSEQRUN} ./iput_all_kinds ${TESTOUTDIR}/iput_all_kinds.nc
-    ${TESTSEQRUN} ${VALIDATOR} -q  ${TESTOUTDIR}/iput_all_kinds.nc1
-    ${TESTSEQRUN} ${VALIDATOR} -q  ${TESTOUTDIR}/iput_all_kinds.nc2
-    ${TESTSEQRUN} ${VALIDATOR} -q  ${TESTOUTDIR}/iput_all_kinds.nc5
-
-    NCMPIGEN=../../src/utils/ncmpigen/ncmpigen
-    NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
-
-    # remove the file system type prefix name if there is any.
-    OUT_PATH=`echo "$TESTOUTDIR" | cut -d: -f2-`
-
-    rm -f ${OUT_PATH}/testfile.nc ${OUT_PATH}/redef1.nc
-    ${TESTSEQRUN} ${NCMPIGEN} -v 5 -o ${TESTOUTDIR}/redef1.nc ${srcdir}/redef-good.ncdump
-    ${TESTSEQRUN} ./redef1 ${TESTOUTDIR}/testfile.nc
-    ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/testfile.nc ${TESTOUTDIR}/redef1.nc
-    # diff -q ${OUT_PATH}/testfile.nc ${OUT_PATH}/redef1.nc
-
-    ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/testfile.nc
-    rm -f ${OUT_PATH}/redef1.nc
-    rm -f ${OUT_PATH}/testfile.nc
-
-    # echo ""
-
-    if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
-       echo ""
-       echo "---- testing burst buffering"
-
-       # Run using burst buffer driver
-       export PNETCDF_HINTS="nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
-       ${TESTSEQRUN} ./put_all_kinds ${TESTOUTDIR}/put_all_kinds.bb.nc
-       ${TESTSEQRUN} ./iput_all_kinds ${TESTOUTDIR}/iput_all_kinds.bb.nc
-       unset PNETCDF_HINTS
-
-       # Compare
-       for i in 1 2 5 ; do
-           ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/put_all_kinds.nc$i ${TESTOUTDIR}/put_all_kinds.bb.nc$i
-           ${TESTSEQRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/iput_all_kinds.nc$i ${TESTOUTDIR}/iput_all_kinds.bb.nc$i
-       done
-    fi
-    rm -f ${OUT_PATH}/put_all_kinds.nc*
-    rm -f ${OUT_PATH}/put_all_kinds.bb.nc*
-    rm -f ${OUT_PATH}/iput_all_kinds.nc*
-    rm -f ${OUT_PATH}/iput_all_kinds.bb.nc*
-
-    # echo ""
-
-    if test "x${ENABLE_THREAD_SAFE}" = x1 ; then
-       # echo "---- testing thread safety"
-       for j in 0 1 ; do
-           export PNETCDF_SAFE_MODE=$j
-           # echo "---- set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
-
-           ${TESTSEQRUN} ./tst_pthread ${TESTOUTDIR}/tst_pthread.nc
-           for i in 0 1 2 3 4 5 ; do
-               ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/tst_pthread.nc.$i
-               rm -f ${OUT_PATH}/tst_pthread.nc.$i
-           done
-       done
-    fi
-done
-done

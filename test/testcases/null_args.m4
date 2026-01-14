@@ -66,186 +66,191 @@ define(`TEST_NULL_ARGS',`
     memset($1_buf, 0, 100*sizeof($1));
 
     /*---- test put_var1 ---- */
-    err = ncmpi_put_var1_$1_all(ncid, vid_$1, start, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "put_var1_$1_all")
+    err = ncmpi_put_var1_$1$2(ncid, vid_$1, start, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "put_var1_$1$2")
 
-    err = ncmpi_put_var1_$1_all(ncid, vid_$1, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "put_var1_$1_all start=NULL")
+    err = ncmpi_put_var1_$1$2(ncid, vid_$1, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "put_var1_$1$2 start=NULL")
 
     /*---- test put_vara ---- */
-    err = ncmpi_put_vara_$1_all(ncid, vid_$1, start, count, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "put_vara_$1_all")
+    err = ncmpi_put_vara_$1$2(ncid, vid_$1, start, count, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "put_vara_$1$2")
 
-    err = ncmpi_put_vara_$1_all(ncid, vid_$1, NULL, count, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "put_vara_$1_all start=NULL")
+    err = ncmpi_put_vara_$1$2(ncid, vid_$1, NULL, count, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "put_vara_$1$2 start=NULL")
 
-    err = ncmpi_put_vara_$1_all(ncid, vid_$1, start, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EEDGE, "put_vara_$1_all count=NULL")
+    err = ncmpi_put_vara_$1$2(ncid, vid_$1, start, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EEDGE, "put_vara_$1$2 count=NULL")
 
-    err = ncmpi_put_vara_$1_all(ncid, vid_$1, NULL, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "put_vara_$1_all start=count=NULL")
+    err = ncmpi_put_vara_$1$2(ncid, vid_$1, NULL, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "put_vara_$1$2 start=count=NULL")
 
     /*---- test put_vars ---- */
-    err = ncmpi_put_vars_$1_all(ncid, vid_$1, start, count, stride, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "put_vars_$1_all")
+    err = ncmpi_put_vars_$1$2(ncid, vid_$1, start, count, stride, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "put_vars_$1$2")
 
-    err = ncmpi_put_vars_$1_all(ncid, vid_$1, NULL, count, stride, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "put_vars_$1_all start=NULL")
+    err = ncmpi_put_vars_$1$2(ncid, vid_$1, NULL, count, stride, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "put_vars_$1$2 start=NULL")
 
-    err = ncmpi_put_vars_$1_all(ncid, vid_$1, start, NULL, stride, $1_buf);
-    EXP_ERR_MSG(NC_EEDGE, "put_vars_$1_all count=NULL")
+    err = ncmpi_put_vars_$1$2(ncid, vid_$1, start, NULL, stride, $1_buf);
+    EXP_ERR_MSG(NC_EEDGE, "put_vars_$1$2 count=NULL")
 
-    err = ncmpi_put_vars_$1_all(ncid, vid_$1, start, count, NULL, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "put_vars_$1_all stride=NULL")
+    err = ncmpi_put_vars_$1$2(ncid, vid_$1, start, count, NULL, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "put_vars_$1$2 stride=NULL")
 
-    err = ncmpi_put_vars_$1_all(ncid, vid_$1, NULL, NULL, stride, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "put_vars_$1_all start=count=NULL")
+    err = ncmpi_put_vars_$1$2(ncid, vid_$1, NULL, NULL, stride, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "put_vars_$1$2 start=count=NULL")
 
-    err = ncmpi_put_vars_$1_all(ncid, vid_$1, NULL, count, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "put_vars_$1_all start=stride=NULL")
+    err = ncmpi_put_vars_$1$2(ncid, vid_$1, NULL, count, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "put_vars_$1$2 start=stride=NULL")
 
-    err = ncmpi_put_vars_$1_all(ncid, vid_$1, start, NULL, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EEDGE, "put_vars_$1_all count=stride=NULL")
+    err = ncmpi_put_vars_$1$2(ncid, vid_$1, start, NULL, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EEDGE, "put_vars_$1$2 count=stride=NULL")
 
-    err = ncmpi_put_vars_$1_all(ncid, vid_$1, NULL, NULL, NULL, $1_buf);
+    err = ncmpi_put_vars_$1$2(ncid, vid_$1, NULL, NULL, NULL, $1_buf);
     EXP_ERR_MSG(NC_EINVALCOORDS, "put_vars start=count=stride=NULL")
 
     /*---- test put_varm ---- */
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, start, count, stride, imap, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "put_varm_$1_all")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, start, count, stride, imap, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "put_varm_$1$2")
 
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, NULL, count, stride, imap, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "put_varm_$1_all start=NULL")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, NULL, count, stride, imap, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "put_varm_$1$2 start=NULL")
 
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, start, NULL, stride, imap, $1_buf);
-    EXP_ERR_MSG(NC_EEDGE, "put_varm_$1_all count=NULL")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, start, NULL, stride, imap, $1_buf);
+    EXP_ERR_MSG(NC_EEDGE, "put_varm_$1$2 count=NULL")
 
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, start, count, NULL, imap, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "put_varm_$1_all stride=NULL")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, start, count, NULL, imap, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "put_varm_$1$2 stride=NULL")
 
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, start, count, stride, NULL, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "put_varm_$1_all imap=NULL")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, start, count, stride, NULL, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "put_varm_$1$2 imap=NULL")
 
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, NULL, NULL, stride, imap, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "put_varm_$1_all start=count=NULL")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, NULL, NULL, stride, imap, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "put_varm_$1$2 start=count=NULL")
 
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, NULL, count, NULL, imap, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "put_varm_$1_all start=stride=NULL")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, NULL, count, NULL, imap, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "put_varm_$1$2 start=stride=NULL")
 
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, NULL, count, stride, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "put_varm_$1_all start=imap=NULL")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, NULL, count, stride, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "put_varm_$1$2 start=imap=NULL")
 
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, start, NULL, NULL, imap, $1_buf);
-    EXP_ERR_MSG(NC_EEDGE, "put_varm_$1_all count=stride=NULL")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, start, NULL, NULL, imap, $1_buf);
+    EXP_ERR_MSG(NC_EEDGE, "put_varm_$1$2 count=stride=NULL")
 
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, start, NULL, stride, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EEDGE, "put_varm_$1_all count=imap=NULL")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, start, NULL, stride, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EEDGE, "put_varm_$1$2 count=imap=NULL")
 
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, start, count, NULL, NULL, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "put_varm_$1_all stride=imap=NULL")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, start, count, NULL, NULL, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "put_varm_$1$2 stride=imap=NULL")
 
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, NULL, NULL, NULL, imap, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "put_varm_$1_all start=count=stride=NULL")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, NULL, NULL, NULL, imap, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "put_varm_$1$2 start=count=stride=NULL")
 
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, NULL, NULL, stride, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "put_varm_$1_all start=count=imap=NULL")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, NULL, NULL, stride, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "put_varm_$1$2 start=count=imap=NULL")
 
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, start, NULL, NULL, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EEDGE, "put_varm_$1_all count=stride=imap=NULL")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, start, NULL, NULL, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EEDGE, "put_varm_$1$2 count=stride=imap=NULL")
 
-    err = ncmpi_put_varm_$1_all(ncid, vid_$1, NULL, NULL, NULL, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "put_varm_$1_all start=count=stride=imap=NULL")
+    err = ncmpi_put_varm_$1$2(ncid, vid_$1, NULL, NULL, NULL, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "put_varm_$1$2 start=count=stride=imap=NULL")
+
+    /* file sync before reading */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /*---- test get_var1 ---- */
-    err = ncmpi_get_var1_$1_all(ncid, vid_$1, start, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "get_var1_$1_all")
+    err = ncmpi_get_var1_$1$2(ncid, vid_$1, start, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "get_var1_$1$2")
 
-    err = ncmpi_get_var1_$1_all(ncid, vid_$1, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "get_var1_$1_all start=NULL")
+    err = ncmpi_get_var1_$1$2(ncid, vid_$1, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "get_var1_$1$2 start=NULL")
 
     /*---- test get_vara ---- */
-    err = ncmpi_get_vara_$1_all(ncid, vid_$1, start, count, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "get_vara_$1_all")
+    err = ncmpi_get_vara_$1$2(ncid, vid_$1, start, count, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "get_vara_$1$2")
 
-    err = ncmpi_get_vara_$1_all(ncid, vid_$1, NULL, count, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "get_vara_$1_all start=NULL")
+    err = ncmpi_get_vara_$1$2(ncid, vid_$1, NULL, count, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "get_vara_$1$2 start=NULL")
 
-    err = ncmpi_get_vara_$1_all(ncid, vid_$1, start, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EEDGE, "get_vara_$1_all count=NULL")
+    err = ncmpi_get_vara_$1$2(ncid, vid_$1, start, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EEDGE, "get_vara_$1$2 count=NULL")
 
-    err = ncmpi_get_vara_$1_all(ncid, vid_$1, NULL, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "get_vara_$1_all start=count=NULL")
+    err = ncmpi_get_vara_$1$2(ncid, vid_$1, NULL, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "get_vara_$1$2 start=count=NULL")
 
     /*---- test get_vars ---- */
-    err = ncmpi_get_vars_$1_all(ncid, vid_$1, start, count, stride, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "get_vars_$1_all")
+    err = ncmpi_get_vars_$1$2(ncid, vid_$1, start, count, stride, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "get_vars_$1$2")
 
-    err = ncmpi_get_vars_$1_all(ncid, vid_$1, NULL, count, stride, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "get_vars_$1_all start=NULL")
+    err = ncmpi_get_vars_$1$2(ncid, vid_$1, NULL, count, stride, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "get_vars_$1$2 start=NULL")
 
-    err = ncmpi_get_vars_$1_all(ncid, vid_$1, start, NULL, stride, $1_buf);
-    EXP_ERR_MSG(NC_EEDGE, "get_vars_$1_all count=NULL")
+    err = ncmpi_get_vars_$1$2(ncid, vid_$1, start, NULL, stride, $1_buf);
+    EXP_ERR_MSG(NC_EEDGE, "get_vars_$1$2 count=NULL")
 
-    err = ncmpi_get_vars_$1_all(ncid, vid_$1, start, count, NULL, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "get_vars_$1_all stride=NULL")
+    err = ncmpi_get_vars_$1$2(ncid, vid_$1, start, count, NULL, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "get_vars_$1$2 stride=NULL")
 
-    err = ncmpi_get_vars_$1_all(ncid, vid_$1, NULL, NULL, stride, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "get_vars_$1_all start=count=NULL")
+    err = ncmpi_get_vars_$1$2(ncid, vid_$1, NULL, NULL, stride, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "get_vars_$1$2 start=count=NULL")
 
-    err = ncmpi_get_vars_$1_all(ncid, vid_$1, NULL, count, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "get_vars_$1_all start=stride=NULL")
+    err = ncmpi_get_vars_$1$2(ncid, vid_$1, NULL, count, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "get_vars_$1$2 start=stride=NULL")
 
-    err = ncmpi_get_vars_$1_all(ncid, vid_$1, start, NULL, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EEDGE, "get_vars_$1_all count=stride=NULL")
+    err = ncmpi_get_vars_$1$2(ncid, vid_$1, start, NULL, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EEDGE, "get_vars_$1$2 count=stride=NULL")
 
-    err = ncmpi_get_vars_$1_all(ncid, vid_$1, NULL, NULL, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "get_vars_$1_all start=count=stride=NULL")
+    err = ncmpi_get_vars_$1$2(ncid, vid_$1, NULL, NULL, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "get_vars_$1$2 start=count=stride=NULL")
 
     /*---- test get_varm ---- */
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, start, count, stride, imap, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "get_varm_$1_all")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, start, count, stride, imap, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "get_varm_$1$2")
 
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, NULL, count, stride, imap, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "get_varm_$1_all start=NULL")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, NULL, count, stride, imap, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "get_varm_$1$2 start=NULL")
 
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, start, NULL, stride, imap, $1_buf);
-    EXP_ERR_MSG(NC_EEDGE, "get_varm_$1_all count=NULL")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, start, NULL, stride, imap, $1_buf);
+    EXP_ERR_MSG(NC_EEDGE, "get_varm_$1$2 count=NULL")
 
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, start, count, NULL, imap, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "get_varm_$1_all stride=NULL")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, start, count, NULL, imap, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "get_varm_$1$2 stride=NULL")
 
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, start, count, stride, NULL, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "get_varm_$1_all imap=NULL")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, start, count, stride, NULL, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "get_varm_$1$2 imap=NULL")
 
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, NULL, NULL, stride, imap, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "get_varm_$1_all start=count=NULL")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, NULL, NULL, stride, imap, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "get_varm_$1$2 start=count=NULL")
 
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, NULL, count, NULL, imap, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "get_varm_$1_all start=stride=NULL")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, NULL, count, NULL, imap, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "get_varm_$1$2 start=stride=NULL")
 
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, NULL, count, stride, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "get_varm_$1_all start=imap=NULL")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, NULL, count, stride, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "get_varm_$1$2 start=imap=NULL")
 
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, start, NULL, NULL, imap, $1_buf);
-    EXP_ERR_MSG(NC_EEDGE, "get_varm_$1_all count=stride=NULL")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, start, NULL, NULL, imap, $1_buf);
+    EXP_ERR_MSG(NC_EEDGE, "get_varm_$1$2 count=stride=NULL")
 
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, start, NULL, stride, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EEDGE, "get_varm_$1_all count=imap=NULL")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, start, NULL, stride, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EEDGE, "get_varm_$1$2 count=imap=NULL")
 
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, start, count, NULL, NULL, $1_buf);
-    EXP_ERR_MSG(NC_NOERR, "get_varm_$1_all stride=imap=NULL")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, start, count, NULL, NULL, $1_buf);
+    EXP_ERR_MSG(NC_NOERR, "get_varm_$1$2 stride=imap=NULL")
 
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, NULL, NULL, NULL, imap, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "get_varm_$1_all start=count=stride=NULL")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, NULL, NULL, NULL, imap, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "get_varm_$1$2 start=count=stride=NULL")
 
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, NULL, NULL, stride, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "get_varm_$1_all start=count=imap=NULL")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, NULL, NULL, stride, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "get_varm_$1$2 start=count=imap=NULL")
 
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, start, NULL, NULL, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EEDGE, "get_varm_$1_all count=stride=imap=NULL")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, start, NULL, NULL, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EEDGE, "get_varm_$1$2 count=stride=imap=NULL")
 
-    err = ncmpi_get_varm_$1_all(ncid, vid_$1, NULL, NULL, NULL, NULL, $1_buf);
-    EXP_ERR_MSG(NC_EINVALCOORDS, "get_varm_$1_all start=count=stride=imap=NULL")
+    err = ncmpi_get_varm_$1$2(ncid, vid_$1, NULL, NULL, NULL, NULL, $1_buf);
+    EXP_ERR_MSG(NC_EINVALCOORDS, "get_varm_$1$2 start=count=stride=imap=NULL")
 ')dnl
 
 define(`CDF5_ITYPES',`schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong')dnl
@@ -255,7 +260,7 @@ define(`EXTRA_ITYPES',`uchar,ushort,uint,longlong,ulonglong')dnl
 define(`TEST_FORMAT',dnl
 `dnl
 static int
-test_format_nc$1(char *filename)
+test_format_nc$1(const char *filename, int format, int coll_io, MPI_Info info)
 {
     int err, nerrs=0, ncid, cmode, dimid[2];
     MPI_Offset start[2], count[2], stride[2], imap[2];
@@ -284,7 +289,7 @@ test_format_nc$1(char *filename)
            `$1',`4',`cmode = NC_CLOBBER | NC_NETCDF4 | NC_CLASSIC_MODEL;',
                     `cmode = NC_CLOBBER;')dnl
 
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     EXP_ERR_MSG(NC_NOERR, "create")
 
     err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]);
@@ -302,7 +307,12 @@ test_format_nc$1(char *filename)
     err = ncmpi_enddef(ncid);
     EXP_ERR_MSG(NC_NOERR,"enddef")
 
-    if (!(cmode & NC_NETCDF4)) {
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
+    if (format != NC_FORMAT_NETCDF4 && format != NC_FORMAT_NETCDF4_CLASSIC) {
         /* fill the 1st record of all variables */dnl
         foreach(`itype',(text, TYPE_LIST),`_CAT(`
         err = ncmpi_fill_var_rec(ncid, vid_'itype`, 0);
@@ -314,7 +324,12 @@ test_format_nc$1(char *filename)
     stride[0] = stride[1] = 1;
       imap[0] =   imap[1] = 1;
 
-    foreach(`itype',(text, TYPE_LIST),`TEST_NULL_ARGS(itype)')
+    if (coll_io) {
+        foreach(`itype',(text, TYPE_LIST),`TEST_NULL_ARGS(itype, _all)')
+    }
+    else {
+        foreach(`itype',(text, TYPE_LIST),`TEST_NULL_ARGS(itype)')
+    }
 
 err_out:
     err = ncmpi_close(ncid);
@@ -327,67 +342,65 @@ err_out:
 TEST_FORMAT(1)
 TEST_FORMAT(2)
 TEST_FORMAT(5)
-#ifdef ENABLE_NETCDF4
 TEST_FORMAT(3)
 TEST_FORMAT(4)
-#endif
 
-int main(int argc, char **argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
-    char filename[256], *hint_value;;
-    int err, nerrs=0, rank, bb_enabled=0;
-
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for NULL arguments ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
+    char val[MPI_MAX_INFO_VAL];
+    int err, nerrs=0, flag;
 
     /* check whether burst buffering is enabled */
-    if (inq_env_hint("nc_burst_buf", &hint_value)) {
-        if (strcasecmp(hint_value, "enable") == 0) bb_enabled = 1;
-        free(hint_value);
-    }
+    MPI_Info_get(info, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, val, &flag);
+    if (flag && strcasecmp(val, "enable") == 0 &&
+        (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC))
+        /* does not work for NetCDF4 files when burst-buffering is enabled */
+            return 0;
 
-    nerrs += test_format_nc1(filename);
-    nerrs += test_format_nc2(filename);
-    if (!bb_enabled) {
-#ifdef ENABLE_NETCDF4
-        nerrs += test_format_nc3(filename);
-        nerrs += test_format_nc4(filename);
-#endif
-    }
-    nerrs += test_format_nc5(filename);
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
+    if (format == NC_FORMAT_CLASSIC)
+        nerrs += test_format_nc1(out_path, format, coll_io, info);
+    else if (format == NC_FORMAT_64BIT_OFFSET)
+        nerrs += test_format_nc2(out_path, format, coll_io, info);
+    else if (format == NC_FORMAT_NETCDF4)
+        nerrs += test_format_nc3(out_path, format, coll_io, info);
+    else if (format == NC_FORMAT_NETCDF4_CLASSIC)
+        nerrs += test_format_nc4(out_path, format, coll_io, info);
+    else if (format == NC_FORMAT_64BIT_OFFSET)
+        nerrs += test_format_nc5(out_path, format, coll_io, info);
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    return nerrs;
+}
+
+int main(int argc, char **argv) {
+
+    int err;
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(nc_formats) / sizeof(int);
+    opt.formats  = nc_formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 0; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 0; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "NULL arguments", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

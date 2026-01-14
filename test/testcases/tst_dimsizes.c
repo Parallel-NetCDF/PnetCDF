@@ -48,109 +48,94 @@
  * MPI_Offset is a signed long long.
 */
 
-int
-main(int argc, char **argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
-    char filename[256];
-    int rank, nprocs, err, nerrs=0;
-    int ncid, dimid;
+    int err, nerrs=0, fmt, ncid, dimid;
     MPI_Offset dimsize;
 
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
+    /* Writing Max Dimension Size */
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR
+    dimsize = -1;
+    err = ncmpi_def_dim(ncid, "testdim1", dimsize, &dimid); EXP_ERR(NC_EDIMSIZE)
+
+    if (format == NC_FORMAT_CLASSIC) {
+        dimsize = DIMMAXCLASSIC;
+        err = ncmpi_def_dim(ncid, "testdim", dimsize, &dimid); CHECK_ERR
+        dimsize = (MPI_Offset)DIMMAXCLASSIC+1;
+        err = ncmpi_def_dim(ncid, "testdim1", dimsize, &dimid); EXP_ERR(NC_EDIMSIZE)
+    }
+    else if (format == NC_FORMAT_64BIT_OFFSET) {
+        dimsize = DIMMAX64OFFSET;
+        err = ncmpi_def_dim(ncid, "testdim", dimsize, &dimid); CHECK_ERR
+        dimsize = (MPI_Offset)DIMMAX64OFFSET+1;
+        err = ncmpi_def_dim(ncid, "testdim1", dimsize, &dimid); EXP_ERR(NC_EDIMSIZE)
+    }
+    else {
+        dimsize = DIMMAX64DATA;
+        err = ncmpi_def_dim(ncid, "testdim", dimsize, &dimid); CHECK_ERR
+        dimsize = -1;
+        err = ncmpi_def_dim(ncid, "testdim1", dimsize, &dimid); EXP_ERR(NC_EDIMSIZE)
+    }
+
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    /* Reading Max Dimension Size */
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOCLOBBER, info, &ncid); CHECK_ERR
+    err = ncmpi_inq_format(ncid, &fmt); CHECK_ERR
+    err = ncmpi_inq_dimid(ncid, "testdim", &dimid); CHECK_ERR
+    err = ncmpi_inq_dimlen(ncid, dimid, &dimsize); CHECK_ERR
+    if (format == NC_FORMAT_CLASSIC && dimsize != DIMMAXCLASSIC) {
+        printf("Error at line %d in %s: expecting dimsize %d but got "OFFFMT"\n",
+                __LINE__,__FILE__,DIMMAXCLASSIC,dimsize);
+        nerrs++;
+    }
+    else if (format == NC_FORMAT_64BIT_OFFSET && dimsize != DIMMAX64OFFSET) {
+        printf("Error at line %d in %s: expecting dimsize %d but got "OFFFMT"\n",
+                __LINE__,__FILE__,DIMMAX64OFFSET,dimsize);
+        nerrs++;
+    }
+    else if (format == NC_FORMAT_64BIT_DATA && dimsize != DIMMAX64DATA) {
+        printf("Error at line %d in %s: expecting dimsize %lld but got "OFFFMT"\n",
+                __LINE__,__FILE__,(long long)DIMMAX64DATA,dimsize);
+        nerrs++;
+    }
+
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    return nerrs;
+}
+
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 0; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for defining max dimension sizes ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    /* Writing Max Dimension Size For NC_CLASSIC */
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
-    dimsize = DIMMAXCLASSIC;
-    err = ncmpi_def_dim(ncid, "testdim", dimsize, &dimid); CHECK_ERR
-    dimsize = -1;
-    err = ncmpi_def_dim(ncid, "testdim1", dimsize, &dimid); EXP_ERR(NC_EDIMSIZE)
-    dimsize = (MPI_Offset)DIMMAXCLASSIC+1;
-    err = ncmpi_def_dim(ncid, "testdim1", dimsize, &dimid); EXP_ERR(NC_EDIMSIZE)
-    err = ncmpi_close(ncid); CHECK_ERR
-
-    /* Reading Max Dimension Size For NC_CLASSIC */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOCLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
-    err = ncmpi_inq_dimid(ncid, "testdim", &dimid); CHECK_ERR
-    err = ncmpi_inq_dimlen(ncid, dimid, &dimsize); CHECK_ERR
-    if (dimsize != DIMMAXCLASSIC) {
-        printf("Error at line %d in %s: expecting dimsize %d but got "OFFFMT"\n", __LINE__,__FILE__,DIMMAXCLASSIC,dimsize);
-        nerrs++;
-    }
-    err = ncmpi_close(ncid); CHECK_ERR
-
-    /* Writing Max Dimension Size For NC_64BIT_OFFSET */
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_OFFSET, MPI_INFO_NULL, &ncid); CHECK_ERR
-    dimsize = DIMMAX64OFFSET;
-    err = ncmpi_def_dim(ncid, "testdim", dimsize, &dimid); CHECK_ERR
-    dimsize = -1;
-    err = ncmpi_def_dim(ncid, "testdim1", dimsize, &dimid); EXP_ERR(NC_EDIMSIZE)
-    dimsize = (MPI_Offset)DIMMAX64OFFSET+1;
-    err = ncmpi_def_dim(ncid, "testdim1", dimsize, &dimid); EXP_ERR(NC_EDIMSIZE)
-    err = ncmpi_close(ncid); CHECK_ERR
-
-    /* Reading Max Dimension Size For NC_64BIT_OFFSET */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOCLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
-    err = ncmpi_inq_dimid(ncid, "testdim", &dimid); CHECK_ERR
-    err = ncmpi_inq_dimlen(ncid, dimid, &dimsize); CHECK_ERR
-    if (dimsize != DIMMAX64OFFSET) {
-        printf("Error at line %d in %s: expecting dimsize %d but got "OFFFMT"\n", __LINE__,__FILE__,DIMMAX64OFFSET,dimsize);
-        nerrs++;
-    }
-    err = ncmpi_close(ncid); CHECK_ERR
-
-    /* Writing Max Dimension Size For NC_64BIT_DATA */
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER | NC_64BIT_DATA, MPI_INFO_NULL, &ncid); CHECK_ERR
-    dimsize = DIMMAX64DATA;
-    err = ncmpi_def_dim(ncid, "testdim", dimsize, &dimid); CHECK_ERR
-    dimsize = -1;
-    err = ncmpi_def_dim(ncid, "testdim1", dimsize, &dimid); EXP_ERR(NC_EDIMSIZE)
-    err = ncmpi_close(ncid); CHECK_ERR
-
-    /* Reading Max Dimension Size For NC_64BIT_DATA */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOCLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
-    err = ncmpi_inq_dimid(ncid, "testdim", &dimid); CHECK_ERR
-    err = ncmpi_inq_dimlen(ncid, dimid, &dimsize); CHECK_ERR
-    if (dimsize != DIMMAX64DATA) {
-        printf("Error at line %d in %s: expecting dimsize %lld but got "OFFFMT"\n", __LINE__,__FILE__,(long long)DIMMAX64DATA,dimsize);
-        nerrs++;
-    }
-    err = ncmpi_close(ncid); CHECK_ERR
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    err = tst_main(argc, argv, "defining max dimension sizes", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

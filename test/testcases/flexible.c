@@ -50,8 +50,12 @@
 static int debug;
 
 /*----< tst_io() >-----------------------------------------------------------*/
-int tst_mode(const char *filename,
-             int         mode)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
     int          i, j, err, ncid, varid1, varid2, varid3, dimids[2];
     int          rank, nprocs, blocklengths[2], buf[NY][NX], *bufptr;
@@ -64,8 +68,12 @@ int tst_mode(const char *filename,
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL,
-                       &ncid); CHECK_ERR
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
 
     /* define a 2D array */
     err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimids[0]); CHECK_ERR
@@ -96,7 +104,7 @@ int tst_mode(const char *filename,
     ncmpi_sync(ncid);
 #endif
 
-    if (mode == INDEP_MODE) {
+    if (!coll_io) {
         err = ncmpi_begin_indep_data(ncid);
         CHECK_ERR
     }
@@ -120,10 +128,10 @@ int tst_mode(const char *filename,
     if (debug) printf("put start="OFFFMT" "OFFFMT" count="OFFFMT" "OFFFMT"\n",start[0],start[1],count[0],count[1]);
 
     /* call flexible API */
-    if (mode == INDEP_MODE)
-        err = ncmpi_put_vara(ncid, varid1, start, count, bufptr, 1, buftype);
-    else
+    if (coll_io)
         err = ncmpi_put_vara_all(ncid, varid1, start, count, bufptr, 1, buftype);
+    else
+        err = ncmpi_put_vara(ncid, varid1, start, count, bufptr, 1, buftype);
     CHECK_ERR
 
     /* check if the contents of buf are altered */
@@ -136,10 +144,10 @@ int tst_mode(const char *filename,
         }
 
     /* call flexible API that do type conversion */
-    if (mode == INDEP_MODE)
-        err = ncmpi_put_vara(ncid, varid2, start, count, bufptr, 1, buftype);
-    else
+    if (coll_io)
         err = ncmpi_put_vara_all(ncid, varid2, start, count, bufptr, 1, buftype);
+    else
+        err = ncmpi_put_vara(ncid, varid2, start, count, bufptr, 1, buftype);
     CHECK_ERR
 
     /* check if the contents of buf are altered */
@@ -162,10 +170,10 @@ int tst_mode(const char *filename,
     if (err != MPI_SUCCESS) printf("MPI error MPI_Type_create_hindexed\n");
     MPI_Type_commit(&buftype);
 
-    if (mode == INDEP_MODE)
-        err = ncmpi_put_vara(ncid, varid3, start, count, schar_buf+NX, 1, buftype);
-    else
+    if (coll_io)
         err = ncmpi_put_vara_all(ncid, varid3, start, count, schar_buf+NX, 1, buftype);
+    else
+        err = ncmpi_put_vara(ncid, varid3, start, count, schar_buf+NX, 1, buftype);
     CHECK_ERR
 
     /* check if the contents of buf are altered */
@@ -179,10 +187,10 @@ int tst_mode(const char *filename,
 
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) schar_buf[j*NX+i] = -1;
 
-    if (mode == INDEP_MODE)
-        err = ncmpi_get_vara(ncid, varid3, start, count, schar_buf+NX, 1, buftype);
-    else
+    if (coll_io)
         err = ncmpi_get_vara_all(ncid, varid3, start, count, schar_buf+NX, 1, buftype);
+    else
+        err = ncmpi_get_vara(ncid, varid3, start, count, schar_buf+NX, 1, buftype);
     CHECK_ERR
 
     /* check read contents */
@@ -200,22 +208,20 @@ int tst_mode(const char *filename,
     /* check if root process can write to file header in data mode */
     err = ncmpi_rename_var(ncid, varid1, "VAR"); CHECK_ERR
 
+    /* Ensure all write data committed to file system before any rank open
+     * the file for read.
+     */
+    ncmpi_sync(ncid);
+    MPI_Barrier(MPI_COMM_WORLD);
+    ncmpi_sync(ncid);
+
     err = ncmpi_close(ncid); CHECK_ERR
 
-    if (mode == INDEP_MODE) {
-        /* Ensure all write data committed to file system before any rank open
-         * the file for read.
-         */
-        ncmpi_sync(ncid);
-        MPI_Barrier(MPI_COMM_WORLD);
-        ncmpi_sync(ncid);
-    }
-
     /* open the same file and read back for validate */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL,
-                     &ncid); CHECK_ERR
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOWRITE, info, &ncid);
+    CHECK_ERR
 
-    if (mode == INDEP_MODE) {
+    if (!coll_io) {
         err = ncmpi_begin_indep_data(ncid);
         CHECK_ERR
     }
@@ -230,10 +236,10 @@ int tst_mode(const char *filename,
     count[0] = 2; count[1] = NX;
     if (debug) printf("get start="OFFFMT" "OFFFMT" count="OFFFMT" "OFFFMT"\n",start[0],start[1],count[0],count[1]);
 
-    if (mode == INDEP_MODE)
-        err = ncmpi_get_vara_int(ncid, varid1, start, count, buf[0]);
-    else
+    if (coll_io)
         err = ncmpi_get_vara_int_all(ncid, varid1, start, count, buf[0]);
+    else
+        err = ncmpi_get_vara_int(ncid, varid1, start, count, buf[0]);
     CHECK_ERR
 
     /* check if the contents of buf are expected */
@@ -251,10 +257,10 @@ int tst_mode(const char *filename,
     /* initialize the contents of the array to a different value */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = -1;
 
-    if (mode == INDEP_MODE)
-        err = ncmpi_get_vara_int(ncid, varid2, start, count, buf[0]);
-    else
+    if (coll_io)
         err = ncmpi_get_vara_int_all(ncid, varid2, start, count, buf[0]);
+    else
+        err = ncmpi_get_vara_int(ncid, varid2, start, count, buf[0]);
     CHECK_ERR
 
     /* check if the contents of buf are expected */
@@ -281,10 +287,10 @@ int tst_mode(const char *filename,
                              array_of_starts, MPI_ORDER_C,
                              MPI_INT, &buftype);
     MPI_Type_commit(&buftype);
-    if (mode == INDEP_MODE)
-        err = ncmpi_get_vara(ncid, varid1, start, count, ncbuf, 1, buftype);
-    else
+    if (coll_io)
         err = ncmpi_get_vara_all(ncid, varid1, start, count, ncbuf, 1, buftype);
+    else
+        err = ncmpi_get_vara(ncid, varid1, start, count, ncbuf, 1, buftype);
     CHECK_ERR
 
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) {
@@ -298,10 +304,10 @@ int tst_mode(const char *filename,
     }
 
     for (i=0; i<(count[0]+4)*(count[1]+4); i++) ncbuf[i] = -1;
-    if (mode == INDEP_MODE)
-        err = ncmpi_get_vara(ncid, varid2, start, count, ncbuf, 1, buftype);
-    else
+    if (coll_io)
         err = ncmpi_get_vara_all(ncid, varid2, start, count, ncbuf, 1, buftype);
+    else
+        err = ncmpi_get_vara(ncid, varid2, start, count, ncbuf, 1, buftype);
     CHECK_ERR
 
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) {
@@ -317,10 +323,10 @@ int tst_mode(const char *filename,
     for (i=0; i<(count[0]+4)*(count[1]+4); i++) ncbuf[i] = -1;
 
     err = ncmpi_iget_vara(ncid, varid1, start, count, ncbuf, 1, buftype, &req); CHECK_ERR
-    if (mode == INDEP_MODE)
-        err = ncmpi_wait(ncid, 1, &req, &st);
-    else
+    if (coll_io)
         err = ncmpi_wait_all(ncid, 1, &req, &st);
+    else
+        err = ncmpi_wait(ncid, 1, &req, &st);
     CHECK_ERR
     err = st; CHECK_ERR
 
@@ -337,10 +343,10 @@ int tst_mode(const char *filename,
     for (i=0; i<(count[0]+4)*(count[1]+4); i++) ncbuf[i] = -1;
 
     err = ncmpi_iget_vara(ncid, varid2, start, count, ncbuf, 1, buftype, &req); CHECK_ERR
-    if (mode == INDEP_MODE)
-        err = ncmpi_wait(ncid, 1, &req, &st);
-    else
+    if (coll_io)
         err = ncmpi_wait_all(ncid, 1, &req, &st);
+    else
+        err = ncmpi_wait(ncid, 1, &req, &st);
     CHECK_ERR
     err = st; CHECK_ERR
 
@@ -360,61 +366,32 @@ int tst_mode(const char *filename,
     err = ncmpi_close(ncid); CHECK_ERR
 
 err_out:
-    return (nerrs > 0);
+    return nerrs;
 }
 
-/*----< main() >------------------------------------------------------------*/
-int main(int argc, char **argv)
-{
-    char filename[256];
-    int err, nerrs=0, rank, nprocs;
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+
+    loop_opts opt;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for flexible put and get ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    /* test independent data mode */
-    nerrs = tst_mode(filename, INDEP_MODE);
-    if (nerrs > 0) goto err_out;
-
-    /* test collective data mode */
-    nerrs = tst_mode(filename, COLL_MODE);
-    if (nerrs > 0) goto err_out;
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-err_out:
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    err = tst_main(argc, argv, "flexible APIs", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

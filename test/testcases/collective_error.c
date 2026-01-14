@@ -32,9 +32,15 @@
 #include <testutils.h>
 
 static
-int test_collective_error(char *filename, int safe_mode, int cmode)
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
 {
+    char *val;
     int rank, nproc, ncid, err, nerrs=0, varid, dimids[1], req, status, exp;
+    int safe_mode=0;
     double buf[2];
     MPI_Offset start[1], count[1];
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -42,9 +48,15 @@ int test_collective_error(char *filename, int safe_mode, int cmode)
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
+    val = getenv("PNETCDF_SAFE_MODE");
+    if (val != NULL && *val == 1) safe_mode = 1;
+
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
     /* Create a 2 element vector of doubles */
-    cmode |= NC_CLOBBER;
-    err = ncmpi_create(comm, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR_ALL
+    err = ncmpi_create(comm, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR_ALL
     err = ncmpi_def_dim(ncid, "dim", 2, &dimids[0]); CHECK_ERR_ALL
     err = ncmpi_def_var(ncid, "var", NC_DOUBLE, 1, dimids, &varid); CHECK_ERR_ALL
     err = ncmpi_enddef(ncid); CHECK_ERR_ALL
@@ -102,7 +114,7 @@ int test_collective_error(char *filename, int safe_mode, int cmode)
         nerrs++;
     }
 
-    if (!(cmode & NC_NETCDF4)) {
+    if (format != NC_FORMAT_NETCDF4 && format != NC_FORMAT_NETCDF4_CLASSIC) {
         err = ncmpi_iput_vara_double(ncid, varid, start, count, buf, &req);
         exp = (rank == 1) ? NC_EINVALCOORDS : NC_NOERR;
         EXP_ERR(exp)
@@ -122,6 +134,11 @@ int test_collective_error(char *filename, int safe_mode, int cmode)
         }
     }
 
+    /* file sync before reading */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+
     err = ncmpi_get_vara_all(ncid, varid, start, count,
 			     buf, count[0], MPI_DOUBLE);
     if ((safe_mode && nproc > 1) || rank == 1) exp = NC_EINVALCOORDS;
@@ -133,7 +150,7 @@ int test_collective_error(char *filename, int safe_mode, int cmode)
     else                                       exp = NC_NOERR;
     CHECK_EXP_ERR_ALL(exp)
 
-    if (!(cmode & NC_NETCDF4)) {
+    if (format != NC_FORMAT_NETCDF4 && format != NC_FORMAT_NETCDF4_CLASSIC) {
         err = ncmpi_iget_vara_double(ncid, varid, start, count, buf, &req);
         exp = (rank == 1) ? NC_EINVALCOORDS : NC_NOERR;
         EXP_ERR(exp)
@@ -143,38 +160,13 @@ int test_collective_error(char *filename, int safe_mode, int cmode)
 
     err = ncmpi_close(ncid); CHECK_ERR_ALL
 
-fn_exit:
+err_out:
     return nerrs;
 }
 
-int main(int argc, char *argv[])
+#if 0
 {
-    char filename[256], *hint_value;
-    int rank, err, nerrs=0, bb_enabled=0;
-
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for collective abort ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    /* check whether burst buffering is enabled */
-    if (inq_env_hint("nc_burst_buf", &hint_value)) {
-        if (strcasecmp(hint_value, "enable") == 0) bb_enabled = 1;
-        free(hint_value);
-    }
+    int err, nerrs=0;
 
     /* test in non-safe mode */
     setenv("PNETCDF_SAFE_MODE", "0", 1);
@@ -210,24 +202,31 @@ int main(int argc, char *argv[])
     nerrs += test_collective_error(filename, 1, NC_64BIT_DATA);
     if (nerrs) goto err_out;
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
+    return (nerrs > 0);
+}
+#endif
 
-err_out:
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+int main(int argc, char **argv) {
+
+    int err;
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(nc_formats) / sizeof(int);
+    opt.formats  = nc_formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "collective abort", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

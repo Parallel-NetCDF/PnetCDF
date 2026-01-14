@@ -82,6 +82,7 @@
 
 static
 int get_var_and_verify(int ncid,
+                       int coll_io,
                        int varid,
                        MPI_Offset *start,
                        MPI_Offset *count,
@@ -99,7 +100,11 @@ int get_var_and_verify(int ncid,
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) buf[j][i] = -1;
 
     /* read back using regular vara API */
-    err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf[0]); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf[0]);
+    else
+        err = ncmpi_get_vara_int(ncid, varid, start, count, buf[0]);
+    CHECK_ERR
 
     /* check if the contents of buf are expected */
     CHECK_VALUE_PERMUTED
@@ -108,7 +113,11 @@ int get_var_and_verify(int ncid,
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) buf[j][i] = -1;
 
     /* read back using flexible vara API */
-    err = ncmpi_get_vara_all(ncid, varid, start, count, buf[1], 1, buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_vara_all(ncid, varid, start, count, buf[1], 1, buftype);
+    else
+        err = ncmpi_get_vara(ncid, varid, start, count, buf[1], 1, buftype);
+    CHECK_ERR
 
     /* check if the contents of buf are expected */
     CHECK_VALUE(buf)
@@ -117,7 +126,11 @@ int get_var_and_verify(int ncid,
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) buf[j][i] = -1;
 
     /* read back using vard API and permuted buftype */
-    err = ncmpi_get_vard_all(ncid, varid, filetype, buf[1], 1, buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_vard_all(ncid, varid, filetype, buf[1], 1, buftype);
+    else
+        err = ncmpi_get_vard(ncid, varid, filetype, buf[1], 1, buftype);
+    CHECK_ERR
 
     /* check if the contents of buf are expected */
     CHECK_VALUE(buf)
@@ -126,7 +139,11 @@ int get_var_and_verify(int ncid,
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) buf[j][i] = -1;
 
     /* read back using vard API and no buftype */
-    err = ncmpi_get_vard_all(ncid, varid, filetype, buf[0], 0, MPI_DATATYPE_NULL); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_vard_all(ncid, varid, filetype, buf[0], 0, MPI_DATATYPE_NULL);
+    else
+        err = ncmpi_get_vard(ncid, varid, filetype, buf[0], 0, MPI_DATATYPE_NULL);
+    CHECK_ERR
 
     /* check if the contents of buf are expected */
     CHECK_VALUE_PERMUTED
@@ -135,7 +152,11 @@ int get_var_and_verify(int ncid,
     for (i=0; i<(count[0]+4)*(count[1]+4); i++) ncbuf[i] = -1;
 
     /* read back using ghost buftype */
-    err = ncmpi_get_vard_all(ncid, varid, filetype, ncbuf, 1, ghost_buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_vard_all(ncid, varid, filetype, ncbuf, 1, ghost_buftype);
+    else
+        err = ncmpi_get_vard(ncid, varid, filetype, ncbuf, 1, ghost_buftype);
+    CHECK_ERR
 
     for (j=0; j<count[0]; j++) {
         for (i=0; i<count[1]; i++)
@@ -152,14 +173,17 @@ fn_exit:
     return nerrs;
 }
 
-/*----< main() >------------------------------------------------------------*/
-int main(int argc, char **argv) {
-
-    char         filename[256], *hint_value;
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
+{
     int          i, j, err, ncid, varid0, varid1, varid2, dimids[2], nerrs=0;
     int          rank, nprocs, blocklengths[2], **buf, *bufptr;
     int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
-    int          buftype_size, expected_put_size, format;
+    int          buftype_size, expected_put_size, fmt;
     float        **flt_buf=NULL, *flt_bufptr;
     double       **dbl_buf=NULL, *dbl_bufptr;
     MPI_Offset   start[2], count[2], header_size, put_size, new_put_size;
@@ -167,38 +191,8 @@ int main(int argc, char **argv) {
     MPI_Datatype buftype, ghost_buftype, rec_filetype, fix_filetype;
     MPI_Datatype flt_buftype, dbl_buftype;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for vard put and get ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    /* Skip test when intra-node aggregation is enabled, as vard APIs are not
-     * supported.
-     */
-    if (inq_env_hint("nc_num_aggrs_per_node", &hint_value)) {
-        if (atoi(hint_value) > 0) {
-            free(hint_value);
-            if (rank == 0) printf(SKIP_STR);
-            MPI_Finalize();
-            return 0;
-        }
-        free(hint_value);
-    }
 
     /* construct various MPI derived data types */
 
@@ -244,9 +238,13 @@ int main(int argc, char **argv) {
                              MPI_INT, &ghost_buftype);
     MPI_Type_commit(&ghost_buftype);
 
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
     /* create a new file for write */
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL,
-                       &ncid); CHECK_ERR
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
 
     /* define a 2D array */
     err = ncmpi_def_dim(ncid, "REC_DIM", NC_UNLIMITED, &dimids[0]); CHECK_ERR
@@ -263,6 +261,11 @@ int main(int argc, char **argv) {
     err = ncmpi_fill_var_rec(ncid, varid0, 1); CHECK_ERR
     err = ncmpi_fill_var_rec(ncid, varid2, 0); CHECK_ERR
     err = ncmpi_fill_var_rec(ncid, varid2, 1); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     /* create a file type for the record variable */
     int *array_of_blocklengths=(int*) malloc(sizeof(int) * count[0]);
@@ -289,18 +292,22 @@ int main(int argc, char **argv) {
     err = ncmpi_inq_put_size(ncid, &put_size); CHECK_ERR
 
     /* write the record variable */
-    err = ncmpi_put_vard_all(ncid, varid0, rec_filetype, bufptr, 1, buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid0, rec_filetype, bufptr, 1, buftype);
+    else
+        err = ncmpi_put_vard(ncid, varid0, rec_filetype, bufptr, 1, buftype);
+    CHECK_ERR
 
     /* check if put_size is correctly reported */
     err = ncmpi_inq_put_size(ncid, &new_put_size); CHECK_ERR
     MPI_Type_size(buftype, &buftype_size);
-    err = ncmpi_inq_format(ncid, &format); CHECK_ERR
+    err = ncmpi_inq_format(ncid, &fmt); CHECK_ERR
     expected_put_size = buftype_size;
 
     /* for writing a record variable, root process will update numrec to the
      * file header, However, because the first 2 records have been filled
      * above, root process need not write to file header.
-    if (rank == 0) expected_put_size += (format == NC_FORMAT_CDF5) ? 8 : 4;
+    if (rank == 0) expected_put_size += (fmt == NC_FORMAT_CDF5) ? 8 : 4;
      */
     if (expected_put_size != new_put_size - put_size) {
         printf("Error at line %d in %s: unexpected put size ("OFFFMT") reported, expecting %d\n",
@@ -317,7 +324,11 @@ int main(int argc, char **argv) {
     err = ncmpi_inq_put_size(ncid, &put_size); CHECK_ERR
 
     /* write the fixed-size variable */
-    err = ncmpi_put_vard_all(ncid, varid1, fix_filetype, bufptr, 1, buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid1, fix_filetype, bufptr, 1, buftype);
+    else
+        err = ncmpi_put_vard(ncid, varid1, fix_filetype, bufptr, 1, buftype);
+    CHECK_ERR
 
     /* check if put_size is correctly reported */
     err = ncmpi_inq_put_size(ncid, &new_put_size); CHECK_ERR
@@ -344,17 +355,27 @@ int main(int argc, char **argv) {
     err = ncmpi_rename_var(ncid, varid0, "rec_var"); CHECK_ERR
     err = ncmpi_end_indep_data(ncid); CHECK_ERR
 
+    /* file sync before reading */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* open the same file and read back for validate */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL,
-                     &ncid); CHECK_ERR
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_WRITE, info, &ncid);
+    CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     err = ncmpi_inq_varid(ncid, "rec_var", &varid0); CHECK_ERR
     err = ncmpi_inq_varid(ncid, "fix_var", &varid1); CHECK_ERR
 
-    nerrs += get_var_and_verify(ncid, varid0, start, count, buf, buftype, ghost_buftype, rec_filetype);
-    nerrs += get_var_and_verify(ncid, varid1, start, count, buf, buftype, ghost_buftype, fix_filetype);
+    nerrs += get_var_and_verify(ncid, coll_io, varid0, start, count, buf, buftype, ghost_buftype, rec_filetype);
+    nerrs += get_var_and_verify(ncid, coll_io, varid1, start, count, buf, buftype, ghost_buftype, fix_filetype);
 
     /* test type conversion from float to int */
     flt_buf = (float**)malloc(sizeof(float*) * NY);
@@ -375,13 +396,21 @@ int main(int argc, char **argv) {
     MPI_Type_commit(&flt_buftype);
 
     /* write the record variable with type conversion from float to int */
-    err = ncmpi_put_vard_all(ncid, varid0, rec_filetype, flt_bufptr, 1, flt_buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid0, rec_filetype, flt_bufptr, 1, flt_buftype);
+    else
+        err = ncmpi_put_vard(ncid, varid0, rec_filetype, flt_bufptr, 1, flt_buftype);
+    CHECK_ERR
     CHECK_VALUE(flt_buf)
-    nerrs += get_var_and_verify(ncid, varid0, start, count, buf, buftype, ghost_buftype, rec_filetype);
+    nerrs += get_var_and_verify(ncid, coll_io, varid0, start, count, buf, buftype, ghost_buftype, rec_filetype);
 
     /* read the record variable with type conversion from int to float */
     for (j=0; j<NY*NX; j++) flt_buf[0][j] = -1;
-    err = ncmpi_get_vard_all(ncid, varid0, rec_filetype, flt_bufptr, 1, flt_buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_vard_all(ncid, varid0, rec_filetype, flt_bufptr, 1, flt_buftype);
+    else
+        err = ncmpi_get_vard(ncid, varid0, rec_filetype, flt_bufptr, 1, flt_buftype);
+    CHECK_ERR
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) {
         float expected = rank*100.0 + j*10.0 + i;
         if (flt_buf[j][i] != expected) {
@@ -392,13 +421,21 @@ int main(int argc, char **argv) {
     }
 
     /* write the fixed-size variable with type conversion from float to int */
-    err = ncmpi_put_vard_all(ncid, varid1, fix_filetype, flt_bufptr, 1, flt_buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid1, fix_filetype, flt_bufptr, 1, flt_buftype);
+    else
+        err = ncmpi_put_vard(ncid, varid1, fix_filetype, flt_bufptr, 1, flt_buftype);
+    CHECK_ERR
     CHECK_VALUE(flt_buf)
-    nerrs += get_var_and_verify(ncid, varid1, start, count, buf, buftype, ghost_buftype, fix_filetype);
+    nerrs += get_var_and_verify(ncid, coll_io, varid1, start, count, buf, buftype, ghost_buftype, fix_filetype);
 
     /* read the fixed-size variable with type conversion from int to float */
     for (j=0; j<NY*NX; j++) flt_buf[0][j] = -1;
-    err = ncmpi_get_vard_all(ncid, varid1, fix_filetype, flt_bufptr, 1, flt_buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_vard_all(ncid, varid1, fix_filetype, flt_bufptr, 1, flt_buftype);
+    else
+        err = ncmpi_get_vard(ncid, varid1, fix_filetype, flt_bufptr, 1, flt_buftype);
+    CHECK_ERR
 
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) {
         float expected = rank*100.0 + j*10.0 + i;
@@ -428,13 +465,21 @@ int main(int argc, char **argv) {
     MPI_Type_commit(&dbl_buftype);
 
     /* write the record variable with type conversion from double to int */
-    err = ncmpi_put_vard_all(ncid, varid0, rec_filetype, dbl_bufptr, 1, dbl_buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid0, rec_filetype, dbl_bufptr, 1, dbl_buftype);
+    else
+        err = ncmpi_put_vard(ncid, varid0, rec_filetype, dbl_bufptr, 1, dbl_buftype);
+    CHECK_ERR
     CHECK_VALUE(dbl_buf)
-    nerrs += get_var_and_verify(ncid, varid0, start, count, buf, buftype, ghost_buftype, rec_filetype);
+    nerrs += get_var_and_verify(ncid, coll_io, varid0, start, count, buf, buftype, ghost_buftype, rec_filetype);
 
     /* read the record variable with type conversion from int to double */
     for (j=0; j<NY*NX; j++) dbl_buf[0][j] = -1;
-    err = ncmpi_get_vard_all(ncid, varid0, rec_filetype, dbl_bufptr, 1, dbl_buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_vard_all(ncid, varid0, rec_filetype, dbl_bufptr, 1, dbl_buftype);
+    else
+        err = ncmpi_get_vard(ncid, varid0, rec_filetype, dbl_bufptr, 1, dbl_buftype);
+    CHECK_ERR
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) {
         double expected = rank*100.0 + j*10.0 + i;
         if (dbl_buf[j][i] != expected) {
@@ -445,13 +490,21 @@ int main(int argc, char **argv) {
     }
 
     /* write the fixed-size variable with type conversion from double to int */
-    err = ncmpi_put_vard_all(ncid, varid1, fix_filetype, dbl_bufptr, 1, dbl_buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid1, fix_filetype, dbl_bufptr, 1, dbl_buftype);
+    else
+        err = ncmpi_put_vard(ncid, varid1, fix_filetype, dbl_bufptr, 1, dbl_buftype);
+    CHECK_ERR
     CHECK_VALUE(dbl_buf)
-    nerrs += get_var_and_verify(ncid, varid1, start, count, buf, buftype, ghost_buftype, fix_filetype);
+    nerrs += get_var_and_verify(ncid, coll_io, varid1, start, count, buf, buftype, ghost_buftype, fix_filetype);
 
     /* read the fixed-size variable with type conversion from int to double */
     for (j=0; j<NY*NX; j++) dbl_buf[0][j] = -1;
-    err = ncmpi_get_vard_all(ncid, varid1, fix_filetype, dbl_bufptr, 1, dbl_buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_vard_all(ncid, varid1, fix_filetype, dbl_bufptr, 1, dbl_buftype);
+    else
+        err = ncmpi_get_vard(ncid, varid1, fix_filetype, dbl_bufptr, 1, dbl_buftype);
+    CHECK_ERR
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) {
         double expected = rank*100.0 + j*10.0 + i;
         if (dbl_buf[j][i] != expected) {
@@ -484,13 +537,19 @@ int main(int argc, char **argv) {
     for (i=0; i<array_of_sizes[0]*array_of_sizes[1]; i++) schar_buf[i] = i + rank*10;
 
     /* write to dummy_rec */
-    err = ncmpi_put_vard_all(ncid, varid2, rec_filetype, schar_buf, 1,
-                             ghost_buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid2, rec_filetype, schar_buf, 1, ghost_buftype);
+    else
+        err = ncmpi_put_vard(ncid, varid2, rec_filetype, schar_buf, 1, ghost_buftype);
+    CHECK_ERR
 
     /* read from dummy_rec */
     for (i=0; i<array_of_sizes[0]*array_of_sizes[1]; i++) schar_buf[i] = -1;
-    err = ncmpi_get_vard_all(ncid, varid2, rec_filetype, schar_buf, 1,
-                             ghost_buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_vard_all(ncid, varid2, rec_filetype, schar_buf, 1, ghost_buftype);
+    else
+        err = ncmpi_get_vard(ncid, varid2, rec_filetype, schar_buf, 1, ghost_buftype);
+    CHECK_ERR
     for (i=0; i<array_of_sizes[0]; i++)
     for (j=0; j<array_of_sizes[1]; j++) {
         signed char expected = i*array_of_sizes[1] + j + rank*10;
@@ -525,23 +584,33 @@ fn_exit:
 
     err = ncmpi_close(ncid); CHECK_ERR
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
+    return nerrs;
+}
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 0; /* test intra-node aggregation */
+    opt.drv      = 0; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "vard APIs", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

@@ -51,7 +51,7 @@ include(`utils.m4')dnl
 define(`TEST_VARS_FILL',dnl
 `dnl
 static int
-test_vars_$1(char *filename)
+test_vars_$1(const char *out_path, int coll_io, MPI_Info info)
 {
     char var_name[32];
     int i, j, k, nprocs, rank, err, nerrs=0, ncid, dimid[2], varid[NVARS];
@@ -62,7 +62,7 @@ test_vars_$1(char *filename)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
@@ -75,6 +75,11 @@ test_vars_$1(char *filename)
     }
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     for (k=0; k<NVARS; k++) {
         /* write strided subarray */
         stride[0] = 2+k;  stride[1] = 2+k;
@@ -83,14 +88,26 @@ test_vars_$1(char *filename)
         if (NY % stride[0]) count[0]++;
         if (NX % stride[1]) count[1]++;
         for (i=0; i<NY; i++) for (j=0; j<NX; j++) buf[i][j] = ($1)rank;
-        err = PUT_VARS($1)(ncid, varid[k], start, count, stride, &buf[0][0]);
+        if (coll_io)
+            err = PUT_VARS($1,_all)(ncid, varid[k], start, count, stride, &buf[0][0]);
+        else
+            err = PUT_VARS($1)(ncid, varid[k], start, count, stride, &buf[0][0]);
         CHECK_ERR
+
+        /* file sync before reading */
+        err = ncmpi_sync(ncid);
+        CHECK_ERR
+        MPI_Barrier(MPI_COMM_WORLD);
 
         /* read the subarray back and check contents */
         for (i=0; i<NY; i++) for (j=0; j<NX; j++) buf[i][j] = 0;
         start[0] = 0;  start[1] = rank*NX;
         count[0] = NY; count[1] = NX;
-        err = GET_VARA($1)(ncid, varid[k], start, count, &buf[0][0]); CHECK_ERR
+        if (coll_io)
+            err = GET_VARA($1,_all)(ncid, varid[k], start, count, &buf[0][0]);
+        else
+            err = GET_VARA($1)(ncid, varid[k], start, count, &buf[0][0]);
+        CHECK_ERR
 
         for (i=0; i<NY; i++) {
             if (i % stride[0] == 0) {
@@ -136,76 +153,59 @@ fn_exit:
 
 foreach(`itype', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulonglong), `TEST_VARS_FILL(itype)')
 
-int main(int argc, char **argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
-    char filename[256], *hint_value;
-    int err, nerrs=0, rank, bb_enabled=0;
-
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for strided put with fill mode on", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
+    char val[MPI_MAX_INFO_VAL];
+    int err, nerrs=0, flag;
 
     /* check whether burst buffering is enabled */
-    if (inq_env_hint("nc_burst_buf", &hint_value)) {
-        if (strcasecmp(hint_value, "enable") == 0) bb_enabled = 1;
-        free(hint_value);
-    }
+    MPI_Info_get(info, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, val, &flag);
+    if (flag && strcasecmp(val, "enable") == 0 &&
+        (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC))
+        /* does not work for NetCDF4 files when burst-buffering is enabled */
+        return 0;
 
-    ncmpi_set_default_format(NC_FORMAT_CLASSIC, NULL);
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
     foreach(`itype', (schar,short,int,float,double), `
-    _CAT(`nerrs += test_vars_',itype)'`(filename);')
+    _CAT(`nerrs += test_vars_',itype)'`(out_path, coll_io, info);')
 
-    ncmpi_set_default_format(NC_FORMAT_CDF2, NULL);
-    foreach(`itype', (schar,short,int,float,double), `
-    _CAT(`nerrs += test_vars_',itype)'`(filename);')
-
-    if (!bb_enabled) {
-#ifdef ENABLE_NETCDF4
-        ncmpi_set_default_format(NC_FORMAT_NETCDF4_CLASSIC, NULL);
-        foreach(`itype', (schar,short,int,float,double), `
-        _CAT(`nerrs += test_vars_',itype)'`(filename);')
-
-        ncmpi_set_default_format(NC_FORMAT_NETCDF4, NULL);
-        foreach(`itype', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulonglong), `
-        _CAT(`nerrs += test_vars_',itype)'`(filename);')
-#endif
+    if (format == NC_FORMAT_CDF5 || format == NC_FORMAT_NETCDF4) {
+        foreach(`itype', (uchar,ushort,uint,longlong,ulonglong), `
+        _CAT(`nerrs += test_vars_',itype)'`(out_path, coll_io, info);')
     }
 
-    ncmpi_set_default_format(NC_FORMAT_CDF5, NULL);
-    foreach(`itype', (schar,uchar,short,ushort,int,uint,float,double,longlong,ulonglong), `
-    _CAT(`nerrs += test_vars_',itype)'`(filename);')
+    return nerrs;
+}
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
+int main(int argc, char **argv) {
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    int err;
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(nc_formats) / sizeof(int);
+    opt.formats  = nc_formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "put vars with fill mode on", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

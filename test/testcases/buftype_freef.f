@@ -35,8 +35,8 @@
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF_NOERR) then
               write(6,*) message(1:XTRIM(message)), nfmpi_strerror(err)
-              msg = '*** TESTING F77 buftype_freef.f for flexible API '
-              call pass_fail(1, msg)
+              msg = '*** TESTING F77 buftype_freef.f - flexible API '
+              call pass_fail(1, msg, 0)
               STOP 2
           end if
       end ! subroutine check
@@ -50,28 +50,36 @@
           integer*8 NX, NY
           PARAMETER(NREQS=4, NX=4, NY=4)
 
-          character(LEN=256) filename, cmd, msg, varname, str
+          character(LEN=256) out_path, in_path, cmd, msg, varname, str
           integer i, j, err, ierr, nprocs, rank, nerrs, get_args
           integer ncid, ghost
           integer buf(64,4), varid(4), dimid(2), req(4), st(4)
           integer buftype(4), gsize(2), subsize(2), a_start(2)
           integer*8 start(2), count(2)
           integer*8 one, malloc_size, sum_size
+          logical keep_files
+          double precision timing
 
           call MPI_Init(ierr)
+
+          timing = MPI_Wtime()
+
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr)
 
-          ! take filename from command-line argument if there is any
+          ! take out_path from command-line argument if there is any
           if (rank .EQ. 0) then
-              filename = "testfile.nc"
-              err = get_args(cmd, filename)
+              out_path = "testfile.nc"
+              err = get_args(cmd, out_path, in_path, keep_files)
           endif
           call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
           if (err .EQ. 0) goto 999
 
-          call MPI_Bcast(filename, 256, MPI_CHARACTER, 0,
+          call MPI_Bcast(out_path, 256, MPI_CHARACTER, 0,
      +                   MPI_COMM_WORLD, ierr)
+
+          call MPI_Bcast(keep_files, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD,
+     +                   ierr)
 
           nerrs = 0
 
@@ -83,7 +91,7 @@
           enddo
 
           ! create file, truncate it if exists
-          err = nfmpi_create(MPI_COMM_WORLD, filename, NF_CLOBBER,
+          err = nfmpi_create(MPI_COMM_WORLD, out_path, NF_CLOBBER,
      +                        MPI_INFO_NULL, ncid)
           call check(err, 'In nfmpi_create:')
 
@@ -167,10 +175,18 @@
      +            sum_size, ' bytes yet to be freed'
           endif
 
+          timing = MPI_Wtime() - timing
+          call MPI_Allreduce(MPI_IN_PLACE, timing, 1,
+     +                       MPI_DOUBLE_PRECISION, MPI_MAX,
+     +                       MPI_COMM_WORLD, ierr)
           if (rank .eq. 0) then
+              if (.NOT. keep_files) then
+                  err = nfmpi_delete(out_path, MPI_INFO_NULL)
+              end if
+
               msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//
-     +              ' for flexible API '
-              call pass_fail(nerrs, msg)
+     +              ' - flexible API '
+              call pass_fail(nerrs, msg, timing)
           endif
 
  999      call MPI_Finalize(ierr)
