@@ -27,81 +27,40 @@
 
 #include <testutils.h>
 
-/*----< usage() >------------------------------------------------------------*/
-static void usage (char *argv0) {
-    char *help = "Usage: %s [OPTION] FILE\n\
-       [-h] Print this help message\n\
-       [-v] Verbose mode\n\
-       [-o path] Output netCDF file path\n\
-       FILE: Input CDL file path\n";
-    fprintf (stderr, help, argv0);
-}
-
-int main(int argc, char **argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
-    extern int optind;
-    char *outfile, *infile;
-    int i, j, rank, err=0, nerrs=0, hid, verbose;
+    char *name;
+    int i, j, rank, err=0, nerrs=0, hid, ncid, verbose;
+    int ndims, *dimids, nvars, nattrs;
+    void *value;
+    nc_type xtype;
+    MPI_Offset size, nelems;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    verbose = 1;
-    infile = NULL;
-    outfile = NULL;
+    verbose = 0;
 
-    /* get command-line arguments */
-    while ((i = getopt(argc, argv, "hqo:")) != EOF)
-        switch(i) {
-            case 'q': verbose = 0;
-                      break;
-            case 'o': outfile = strdup(optarg);
-                      break;
-            case 'h':
-            default:  if (rank==0) usage(argv[0]);
-                      MPI_Finalize();
-                      return 1;
-        }
-    if (outfile == NULL) outfile = strdup("testfile.nc");
-
-    if (argv[optind] == NULL) {
-        if (rank == 0) usage(argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-
-    infile = strdup(argv[optind]);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for CDL header parser ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    err = cdl_hdr_open(infile, &hid);
+    err = cdl_hdr_open(in_path, &hid);
     if (err != NC_NOERR) exit(1);
 
     if (verbose) printf("==================================================\n");
 
     /* create a new netcdf file */
-    int ncid, cmode, format;
-
     err = cdl_hdr_inq_format(hid, &format); CHECK_ERR
 
     if (verbose) printf("CDF file format: CDF-%d\n", format);
 
-    cmode = NC_CLOBBER;
-    if (format == 2) cmode |= NC_64BIT_OFFSET;
-    else if (format == 5) cmode |= NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, outfile, cmode, MPI_INFO_NULL, &ncid);
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
     CHECK_ERR
 
-    char *name;
-    int ndims, *dimids, nvars, nattrs;
-    void *value;
-    nc_type xtype;
-    MPI_Offset size, nelems;
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
 
     /* define dimensions */
     err = cdl_hdr_inq_ndims(hid, &ndims); CHECK_ERR
@@ -173,27 +132,31 @@ int main(int argc, char **argv)
 
     err = cdl_hdr_close(hid); CHECK_ERR
 
-    if (infile != NULL) free(infile);
-    if (outfile != NULL) free(outfile);
+    return nerrs;
+}
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
+int main(int argc, char **argv) {
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    int err;
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(nc_formats) / sizeof(int);
+    opt.formats  = nc_formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 1; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "CDL header parser", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }
 
