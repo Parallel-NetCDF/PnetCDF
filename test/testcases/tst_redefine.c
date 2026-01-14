@@ -71,7 +71,7 @@ static int verbose;
 /*----< check_vars() >-------------------------------------------------------*/
 /* read back variables from file and check their contents */
 static int
-check_vars(MPI_Comm comm, int ncid, int *varid)
+check_vars(MPI_Comm comm, int ncid, int *varid, int coll_io)
 {
     int i, nerrs=0, err, rank, *buf=NULL, nvars;
     MPI_Offset start[2], count[2];
@@ -91,13 +91,19 @@ check_vars(MPI_Comm comm, int ncid, int *varid)
     count[0] = 2;
 
     for (i=0; i<count[0]*count[1]; i++) buf[i] = -1;
-    err = ncmpi_get_vara_int_all(ncid, varid[0], start,   count,   buf);
+    if (coll_io)
+        err = ncmpi_get_vara_int_all(ncid, varid[0], start,   count,   buf);
+    else
+        err = ncmpi_get_vara_int(ncid, varid[0], start,   count,   buf);
     CHECK_ERROUT
     for (i=0; i<2*LEN; i++)
         CHECK_VAL(ncid, varid[0], i, buf[i], rank+i+1000)
 
     for (i=0; i<count[0]*count[1]; i++) buf[i] = -1;
-    err = ncmpi_get_vara_int_all(ncid, varid[1], start,   count,   buf);
+    if (coll_io)
+        err = ncmpi_get_vara_int_all(ncid, varid[1], start,   count,   buf);
+    else
+        err = ncmpi_get_vara_int(ncid, varid[1], start,   count,   buf);
     CHECK_ERROUT
     for (i=0; i<2*LEN; i++)
         CHECK_VAL(ncid, varid[1], i, buf[i], rank+i+10000)
@@ -108,13 +114,19 @@ check_vars(MPI_Comm comm, int ncid, int *varid)
     count[0] = 1;
 
     for (i=0; i<count[0]*count[1]; i++) buf[i] = -1;
-    err = ncmpi_get_vara_int_all(ncid, varid[2], start+1, count+1, buf);
+    if (coll_io)
+        err = ncmpi_get_vara_int_all(ncid, varid[2], start+1, count+1, buf);
+    else
+        err = ncmpi_get_vara_int(ncid, varid[2], start+1, count+1, buf);
     CHECK_ERROUT
     for (i=0; i<LEN; i++)
         CHECK_VAL(ncid, varid[2], i, buf[i], rank+i)
 
     for (i=0; i<count[0]*count[1]; i++) buf[i] = -1;
-    err = ncmpi_get_vara_int_all(ncid, varid[3], start+1, count+1, buf);
+    if (coll_io)
+        err = ncmpi_get_vara_int_all(ncid, varid[3], start+1, count+1, buf);
+    else
+        err = ncmpi_get_vara_int(ncid, varid[3], start+1, count+1, buf);
     CHECK_ERROUT
     for (i=0; i<LEN; i++)
         CHECK_VAL(ncid, varid[3], i, buf[i], rank+i+100)
@@ -176,7 +188,7 @@ err_out:
                __LINE__,__FILE__, exp_r_begin, r_begin); \
     } \
     /* read variables back and check contents */ \
-    nerrs += check_vars(comm, ncid, varid); \
+    nerrs += check_vars(comm, ncid, varid, coll_io); \
     if (nerrs > 0) { \
         printf("Error at line %d in %s: check_vars failed\n", \
                __LINE__,__FILE__); \
@@ -242,8 +254,9 @@ err_out:
  * Note precedence of hints: PNETCDF_HINTS > ncmpi__enddef() > MPI info.
  */
 static int
-tst_fmt(char       *filename,
-        int         cmode,
+tst_fmt(const char *out_path,
+        int         coll_io,
+        MPI_Info    global_info,
         int         has_fix_vars,
         MPI_Offset *env_align,  /* [3] 0 means unset in PNETCDF_HINTS */
         MPI_Offset *info_align) /* [3] 0 means unset in MPI info */
@@ -267,9 +280,11 @@ tst_fmt(char       *filename,
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
 
+    MPI_Info_dup(global_info, &info);
+
     if (verbose && rank == 0)
-        printf("---- cmode=%d has_fix_vars=%d env_align=%s info_align=%s\n",
-               cmode,has_fix_vars,(env_align==NULL)?"NULL":"SET",
+        printf("---- has_fix_vars=%d env_align=%s info_align=%s\n",
+               has_fix_vars,(env_align==NULL)?"NULL":"SET",
                (info_align==NULL)?"NULL":"SET");
 
     if (env_align != NULL) {
@@ -283,7 +298,6 @@ tst_fmt(char       *filename,
         info_h_align = info_align[0]; /* 0 means unset in MPI info */
         info_v_align = info_align[1]; /* 0 means unset in MPI info */
         info_r_align = info_align[2]; /* 0 means unset in MPI info */
-        MPI_Info_create(&info);
         if (info_h_align) {
             sprintf(str, OFFFMT, info_h_align);
             MPI_Info_set(info, "nc_header_align_size", str);
@@ -299,13 +313,12 @@ tst_fmt(char       *filename,
         if (info_v_align == 0) info_v_align = info_h_align;
     }
     if (verbose && rank == 0)
-        printf("---- cmode=%d has_fix_vars=%d env_align="OFFFMT" "OFFFMT" "OFFFMT" info_align="OFFFMT" "OFFFMT" "OFFFMT"\n",
-               cmode,has_fix_vars,env_h_align,env_v_align,env_r_align,
+        printf("---- has_fix_vars=%d env_align="OFFFMT" "OFFFMT" "OFFFMT" info_align="OFFFMT" "OFFFMT" "OFFFMT"\n",
+               has_fix_vars,env_h_align,env_v_align,env_r_align,
                info_h_align,info_v_align,info_r_align);
 
     /* create a new file */
-    cmode |= NC_CLOBBER;
-    err = ncmpi_create(comm, filename, cmode, info, &ncid); CHECK_ERR
+    err = ncmpi_create(comm, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimid[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "dim", LEN*nprocs, &dimid[1]); CHECK_ERR
@@ -323,6 +336,11 @@ tst_fmt(char       *filename,
     PRINT_HINTS
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     /* write to all variables, 2 records */
     start[0] = 0; start[1] = rank * LEN;
     count[0] = 2; count[1] = LEN;
@@ -330,18 +348,30 @@ tst_fmt(char       *filename,
     buf = (int*) malloc(sizeof(int) * count[0] * count[1]);
 
     for (i=0; i<count[0] * count[1]; i++) buf[i] = rank + i + 1000;
-    err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf);
+    if (coll_io)
+        err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf);
+    else
+        err = ncmpi_put_vara_int(ncid, varid[0], start, count, buf);
     CHECK_ERR
     for (i=0; i<count[0] * count[1]; i++) buf[i] = rank + i + 10000;
-    err = ncmpi_put_vara_int_all(ncid, varid[1], start, count, buf);
+    if (coll_io)
+        err = ncmpi_put_vara_int_all(ncid, varid[1], start, count, buf);
+    else
+        err = ncmpi_put_vara_int(ncid, varid[1], start, count, buf);
     CHECK_ERR
 
     if (has_fix_vars) {
         for (i=0; i<count[1]; i++) buf[i] = rank + i;
-        err = ncmpi_put_vara_int_all(ncid, varid[2], start+1, count+1, buf);
+        if (coll_io)
+            err = ncmpi_put_vara_int_all(ncid, varid[2], start+1, count+1, buf);
+        else
+            err = ncmpi_put_vara_int(ncid, varid[2], start+1, count+1, buf);
         CHECK_ERR
         for (i=0; i<count[1]; i++) buf[i] = rank + i + 100;
-        err = ncmpi_put_vara_int_all(ncid, varid[3], start+1, count+1, buf);
+        if (coll_io)
+            err = ncmpi_put_vara_int_all(ncid, varid[3], start+1, count+1, buf);
+        else
+            err = ncmpi_put_vara_int(ncid, varid[3], start+1, count+1, buf);
         CHECK_ERR
         fix_v_size = sizeof(int) * LEN * nprocs * 2;
     }
@@ -370,6 +400,11 @@ tst_fmt(char       *filename,
     err = ncmpi__enddef(ncid, h_minfree, v_align, v_minfree, r_align);
     CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     GET_HEADER_SIZE
 
     /* expect nothing changed */
@@ -380,10 +415,22 @@ tst_fmt(char       *filename,
     exp_r_begin = old_r_begin;
     CHECK_HEADER_SIZE
 
+    /* file sync before reading */
+    if (!coll_io) {
+        err = ncmpi_sync(ncid);
+        CHECK_ERR
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* reopen the file and check file header size and extent */
-    err = ncmpi_open(comm, filename, NC_WRITE, info, &ncid); CHECK_ERR
+    err = ncmpi_open(comm, out_path, NC_WRITE, info, &ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     err = ncmpi_inq_varid(ncid, "ta", &varid[0]); CHECK_ERR
     err = ncmpi_inq_varid(ncid, "tb", &varid[1]); CHECK_ERR
@@ -414,6 +461,11 @@ tst_fmt(char       *filename,
     PRINT_HINTS
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     GET_HEADER_SIZE
     CHECK_ALIGNMENTS
 
@@ -429,6 +481,11 @@ tst_fmt(char       *filename,
     PRINT_HINTS
     err = ncmpi__enddef(ncid, h_minfree, v_align, v_minfree, r_align);
     CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     GET_HEADER_SIZE
     CHECK_ALIGNMENTS
@@ -449,6 +506,11 @@ tst_fmt(char       *filename,
     err = ncmpi__enddef(ncid, h_minfree, v_align, v_minfree, r_align);
     CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     GET_HEADER_SIZE
     CHECK_ALIGNMENTS
 
@@ -463,6 +525,11 @@ tst_fmt(char       *filename,
     h_minfree = v_minfree = v_align = r_align = -1;
     PRINT_HINTS
     err = ncmpi_enddef(ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     GET_HEADER_SIZE
     CHECK_ALIGNMENTS
@@ -480,6 +547,11 @@ tst_fmt(char       *filename,
     PRINT_HINTS
     err = ncmpi__enddef(ncid, h_minfree, v_align, v_minfree, r_align);
     CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     GET_HEADER_SIZE
 
@@ -499,6 +571,11 @@ tst_fmt(char       *filename,
     err = ncmpi__enddef(ncid, h_minfree, v_align, v_minfree, r_align);
     CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     GET_HEADER_SIZE
 
     CHECK_ALIGNMENTS
@@ -510,6 +587,11 @@ tst_fmt(char       *filename,
     increment = 0; h_minfree = v_minfree = v_align = r_align = -1;
     PRINT_HINTS
     err = ncmpi_enddef(ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     GET_HEADER_SIZE
 
@@ -523,60 +605,56 @@ err_out:
     return nerrs;
 }
 
-int main(int argc, char** argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
-    char filename[256], str[256];
-    int i, rank, err, nerrs=0, cmode[3], has_fix_vars;
+    char str[256], *saved_env;
+    int rank, err, nerrs=0, has_fix_vars;
     MPI_Comm comm = MPI_COMM_WORLD;
     MPI_Offset env_align[3], info_align[3];
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(comm, &rank);
 
     verbose = 0;
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "tst_redefine.nc");
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for header alignment ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-        if (verbose) printf("\n");
-    }
-    cmode[0] = 0;
-    cmode[1] = NC_64BIT_OFFSET;
-    cmode[2] = NC_64BIT_DATA;
+    /* retrieve value of environment variable PNETCDF_HINTS */
+    saved_env = getenv("PNETCDF_HINTS");
+    if (verbose && rank == 0 && saved_env != NULL)
+        printf("PNETCDF_HINTS=%s\n",saved_env);
 
+    /* No alignment hints should be set in the environment variable
+     * PNETCDF_HINTS (there can be other kinds) and the info object passed into
+     * this subroutine (there can be other hints) before running this test
+     * program. Check seq_runs.sh and parallel_run.sh first before running this
+     * test program.
+     */
     for (has_fix_vars=1; has_fix_vars>=0; has_fix_vars--) {
-        /* No hints set in environment variable PNETCDF_HINTS.
-         * No hints set in MPI Info object.
-         */
-        unsetenv("PNETCDF_HINTS");
-        for (i=0; i<3; i++) {
-            nerrs += tst_fmt(filename, cmode[i], has_fix_vars, NULL, NULL);
-            if (nerrs > 0) goto main_exit;
-        }
 
+        /* Test when there is no alignment hints set at all */
+        nerrs += tst_fmt(out_path, coll_io, info, has_fix_vars, NULL, NULL);
+        if (nerrs > 0) goto err_out;
+
+        /* Test when there is no alignment hints set in environment variable
+         * PNETCDF_HINTS and set alignment hints in MPI Info object.
+         */
         info_align[0] = 28;  /*  7 x 4 */
         info_align[1] = 44;  /* 11 x 4 */
         info_align[2] = 52;  /* 13 x 4 */
 
-        /* No hints set in environment variable PNETCDF_HINTS.
-         * Hints set in MPI Info object.
-         */
-        for (i=0; i<3; i++) {
-            nerrs += tst_fmt(filename, cmode[i], has_fix_vars, NULL,
-                             info_align);
-            if (nerrs > 0) goto main_exit;
-        }
+        nerrs += tst_fmt(out_path, coll_io, info, has_fix_vars, NULL, info_align);
+        if (nerrs > 0) goto err_out;
 
+        /* Set hints in environment variable PNETCDF_HINTS, but no hints set in
+         * MPI Info object.
+         */
         env_align[0] = 68;  /* 17 x 4 */
         env_align[1] = 76;  /* 19 x 4 */
         env_align[2] = 92;  /* 23 x 4 */
@@ -584,23 +662,20 @@ int main(int argc, char** argv)
                 env_align[0], env_align[1], env_align[2]);
         setenv("PNETCDF_HINTS", str, 1);
 
-        /* Set hints in environment variable PNETCDF_HINTS.
-         * No hints set in MPI Info object.
-         */
-        for (i=0; i<3; i++) {
-            nerrs += tst_fmt(filename, cmode[i], has_fix_vars, env_align, NULL);
-            if (nerrs > 0) goto main_exit;
-        }
+        nerrs += tst_fmt(out_path, coll_io, info, has_fix_vars, env_align, NULL);
+        if (nerrs > 0) goto err_out;
 
-        /* Set hints in environment variable PNETCDF_HINTS.
-         * Set hints in MPI Info object.
+        /* Test if the alignment hints set in environment variable
+         * PNETCDF_HINTS take precedence over hints set in MPI Info object, when
+         * Hints are both set in environment variable PNETCDF_HINTS and in MPI
+         * Info object.
          */
-        for (i=0; i<3; i++) {
-            nerrs += tst_fmt(filename, cmode[i], has_fix_vars, env_align,
-                             info_align);
-            if (nerrs > 0) goto main_exit;
-        }
+        nerrs += tst_fmt(out_path, coll_io, info, has_fix_vars, env_align, info_align);
+        if (nerrs > 0) goto err_out;
 
+        /* Test a different set of alignment hints set in environment variable
+         * PNETCDF_HINTS.
+         */
         env_align[0] = 68;  /* 17 x 4 */
         env_align[1] = 0;
         env_align[2] = 92;  /* 23 x 4 */
@@ -608,15 +683,12 @@ int main(int argc, char** argv)
                 env_align[0], env_align[2]);
         setenv("PNETCDF_HINTS", str, 1);
 
-        /* Set hints in environment variable PNETCDF_HINTS.
-         * No hints set in MPI Info object.
-         */
-        for (i=0; i<3; i++) {
-            nerrs += tst_fmt(filename, cmode[i], has_fix_vars, env_align,
-                             info_align);
-            if (nerrs > 0) goto main_exit;
-        }
+        nerrs += tst_fmt(out_path, coll_io, info, has_fix_vars, env_align, info_align);
+        if (nerrs > 0) goto err_out;
 
+        /* Test a different set of alignment hints set in environment variable
+         * PNETCDF_HINTS.
+         */
         env_align[0] = 0;
         env_align[1] = 76;  /* 19 x 4 */
         env_align[2] = 92;  /* 23 x 4 */
@@ -624,65 +696,64 @@ int main(int argc, char** argv)
                 env_align[1], env_align[2]);
         setenv("PNETCDF_HINTS", str, 1);
 
-        /* Set hints in environment variable PNETCDF_HINTS.
-         * No hints set in MPI Info object.
-         */
-        for (i=0; i<3; i++) {
-            nerrs += tst_fmt(filename, cmode[i], has_fix_vars, env_align,
-                             info_align);
-            if (nerrs > 0) goto main_exit;
-        }
+        nerrs += tst_fmt(out_path, coll_io, info, has_fix_vars, env_align, info_align);
+        if (nerrs > 0) goto err_out;
 
+        /* Test a different set of alignment hints set in environment variable
+         * PNETCDF_HINTS.
+         */
         env_align[0] = 0;
         env_align[1] = 76;  /* 19 x 4 */
         env_align[2] = 0;
         sprintf(str, "nc_var_align_size="OFFFMT"\n", env_align[1]);
         setenv("PNETCDF_HINTS", str, 1);
 
-        /* Set hints in environment variable PNETCDF_HINTS.
-         * No hints set in MPI Info object.
-         */
-        for (i=0; i<3; i++) {
-            nerrs += tst_fmt(filename, cmode[i], has_fix_vars, env_align,
-                             info_align);
-            if (nerrs > 0) goto main_exit;
-        }
+        nerrs += tst_fmt(out_path, coll_io, info, has_fix_vars, env_align, info_align);
+        if (nerrs > 0) goto err_out;
 
+        /* Test a different set of alignment hints set in environment variable
+         * PNETCDF_HINTS.
+         */
         env_align[0] = 0;  /* 17 x 4 */
         env_align[1] = 0;
         env_align[2] = 92;  /* 23 x 4 */
         sprintf(str, "nc_record_align_size="OFFFMT"\n", env_align[2]);
         setenv("PNETCDF_HINTS", str, 1);
 
-        /* Set hints in environment variable PNETCDF_HINTS.
-         * No hints set in MPI Info object.
-         */
-        for (i=0; i<3; i++) {
-            nerrs += tst_fmt(filename, cmode[i], has_fix_vars, env_align,
-                             info_align);
-            if (nerrs > 0) goto main_exit;
-        }
+        nerrs += tst_fmt(out_path, coll_io, info, has_fix_vars, env_align, info_align);
+        if (nerrs > 0) goto err_out;
+
+        /* restore the original value set in environment variable PNETCDF_HINTS */
+        if (saved_env != NULL) setenv("PNETCDF_HINTS", saved_env, 1);
+        else                   unsetenv("PNETCDF_HINTS");
     }
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-main_exit:
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-
-    MPI_Finalize();
-    return (nerrs > 0);
+err_out:
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1;   /* test intra-node aggregation */
+    opt.drv      = 1;   /* test PNCIO driver */
+    opt.ind      = 1;   /* test hint romio_no_indep_rw */
+    opt.chk      = 300; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1;   /* test burst-buffering feature */
+    opt.mod      = 1;   /* test independent data mode */
+    opt.hdr_diff = 1;   /* run ncmpidiff for file header only */
+    opt.var_diff = 1;   /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "header alignment", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}

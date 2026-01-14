@@ -39,6 +39,8 @@ dnl
  */
 #define LEN 12
 
+static int bb_enabled;
+
 include(`foreach.m4')dnl
 include(`utils.m4')dnl
 
@@ -77,121 +79,137 @@ define(`ITYPE_SIZE',`ifelse(
 `$1', `longlong',  `8',dnl
 `$1', `ulonglong', `8')')dnl
 
+define(`CHECK_DEFAULT_FILL_VALUE',`
+    err = ncmpi_inq_varid(ncid, "var_$1", &varid); CHECK_ERR
+    if (coll_io)
+        err = GET_VAR($1,_all)(ncid, varid, buf_$1);
+    else
+        err = GET_VAR($1)(ncid, varid, buf_$1);
+    CHECK_ERR
+    for (i=0; i<LEN; i++) {
+        if (buf_$1[i] != NC_FILL_VALUE($1)) {
+            printf("Error at %s line %d: expect buf_$1[%d]=IFMT($1) but got IFMT($1)\n",
+                   __func__,__LINE__,i,($1)NC_FILL_VALUE($1),buf_$1[i]);
+            nerrs++;
+        }
+    }
+')dnl
+
 static
-int test_default_fill_mode(char* filename) {
-    int err, nerrs=0, ncid, old_mode;
-    MPI_Info info=MPI_INFO_NULL;
+int test_default_fill_mode(const char *out_path, int format, int coll_io, MPI_Info info) {
+    int i, err, nerrs=0, ncid, old_mode, dimid, varid;
     MPI_Comm comm=MPI_COMM_WORLD;
+    foreach(`itype', (ITYPE_LIST), `
+    itype _CAT(`buf_',itype)'`[LEN];')
 
     /* create a new file */
-    err = ncmpi_create(comm, filename, NC_CLOBBER, info, &ncid); CHECK_ERR
+    err = ncmpi_create(comm, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR
     err = ncmpi_set_fill(ncid, NC_FILL, &old_mode); CHECK_ERR
     if (old_mode == NC_FILL) {
         printf("Error at %s line %d: expected NC_NOFILL but got NC_FILL\n",__func__,__LINE__);
         nerrs++;
     }
+
+    err = ncmpi_def_dim(ncid, "X", LEN, &dimid); CHECK_ERR
+
+    foreach(`itype', (CDF2_ITYPE_LIST), `
+    _CAT(`err = ncmpi_def_var(ncid, "var_',itype)'`", NC_TYPE(itype), 1, &dimid, &varid); CHECK_ERR')
+
+    if (format == NC_FORMAT_CDF5) {
+        foreach(`itype', (CDF5_EXTRA_ITYPE_LIST), `
+        _CAT(`err = ncmpi_def_var(ncid, "var_',itype)'`", NC_TYPE(itype), 1, &dimid, &varid); CHECK_ERR')
+    }
+
+    err = ncmpi_enddef(ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
+    foreach(`itype', (CDF2_ITYPE_LIST), `CHECK_DEFAULT_FILL_VALUE(itype)')
+    if (format == NC_FORMAT_CDF5) {
+        foreach(`itype', (CDF5_EXTRA_ITYPE_LIST), `CHECK_DEFAULT_FILL_VALUE(itype)')
+    }
+
     err = ncmpi_close(ncid); CHECK_ERR
     return nerrs;
 }
 
-define(`TEST_DEFAULT_FILL',dnl
-`dnl
-static
-int test_default_fill_$1(char* filename) {
-    int i, err, nerrs=0, ncid, dimid, varid;
-    $1 buf[LEN];
-    MPI_Info info=MPI_INFO_NULL;
-    MPI_Comm comm=MPI_COMM_WORLD;
-
-    /* create a new file */
-    err = ncmpi_create(comm, filename, NC_CLOBBER, info, &ncid); CHECK_ERR
-    err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
-    err = ncmpi_def_dim(ncid, "X", LEN, &dimid); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var", NC_TYPE($1), 1, &dimid, &varid); CHECK_ERR
-    err = ncmpi_close(ncid); CHECK_ERR
-
-    /* reopen the file and check the contents of variable */
-    err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid); CHECK_ERR
-    err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
-    err = GET_VAR($1)(ncid, varid, buf); CHECK_ERR
+define(`CHECK_USER_FILL_VALUE',`
+    err = ncmpi_inq_varid(ncid, "var_$1", &varid); CHECK_ERR
+    if (coll_io)
+        err = GET_VAR($1,_all)(ncid, varid, buf_$1);
+    else
+        err = GET_VAR($1)(ncid, varid, buf_$1);
+    CHECK_ERR
     for (i=0; i<LEN; i++) {
-        if (buf[i] != NC_FILL_VALUE($1)) {
-            printf("Error at %s line %d: expect buf[%d]=IFMT($1) but got IFMT($1)\n",
-                   __func__,__LINE__,i,($1)NC_FILL_VALUE($1),buf[i]);
+        if (buf_$1[i] != fillv_$1) {
+            printf("Error at %s line %d: expect buf_$1[%d]=IFMT($1) but got IFMT($1)\n",
+                   __func__,__LINE__,i,fillv_$1,buf_$1[i]);
             nerrs++;
         }
     }
-    err = ncmpi_close(ncid); CHECK_ERR
-    return nerrs;
-}
 ')dnl
 
-foreach(`itype', (ITYPE_LIST), `TEST_DEFAULT_FILL(itype)')
-
-define(`TEST_USER_FILL',dnl
-`dnl
 static
-int test_user_fill_$1(char* filename, $1 fillv) {
+int test_user_fill_mode(const char *out_path, int format, int coll_io, MPI_Info info) {
     int i, err, nerrs=0, ncid, dimid, varid;
-    $1 buf[LEN];
-    MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
+    foreach(`itype', (ITYPE_LIST), `
+    itype _CAT(`buf_',itype)[LEN], _CAT(`fillv_',itype);')
 
     /* create a new file */
-    err = ncmpi_create(comm, filename, NC_CLOBBER, info, &ncid); CHECK_ERR
-    err = ncmpi_def_dim(ncid, "X", LEN, &dimid); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var", NC_TYPE($1), 1, &dimid, &varid); CHECK_ERR
-    /* put attribute _FillValue does not automatically enable file mode */
-    ifelse(`$1',`long',`int fill_v = (int)fillv;
-    err = ncmpi_put_att(ncid, varid, "_FillValue", NC_TYPE($1), 1, &fill_v); CHECK_ERR
-    /* err = ncmpi_def_var_fill(ncid, varid, 0, &fill_v); CHECK_ERR */',
-   `err = ncmpi_put_att(ncid, varid, "_FillValue", NC_TYPE($1), 1, &fillv); CHECK_ERR
-    /* err = ncmpi_def_var_fill(ncid, varid, 0, &fillv); CHECK_ERR */')
+    err = ncmpi_create(comm, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR
 
+    err = ncmpi_def_dim(ncid, "X", LEN, &dimid); CHECK_ERR
+
+    foreach(`itype', (CDF2_ITYPE_LIST), `
+    _CAT(`fillv_',itype)' = 99;`
+    err = ncmpi_def_var(ncid, _CAT(`"var_',itype)", NC_TYPE(itype), 1, &dimid, &varid); CHECK_ERR
+    err = ncmpi_put_att(ncid, varid, "_FillValue", NC_TYPE(itype), 1, _CAT(`&fillv_',itype)); CHECK_ERR
+    /* enable variable fill mode with fill value from attribute just set */
     err = ncmpi_def_var_fill(ncid, varid, 0, NULL); CHECK_ERR
-    err = ncmpi_close(ncid); CHECK_ERR
+    ')
 
-    /* reopen the file and check the contents of variable */
-    err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid); CHECK_ERR
-    err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
-    err = GET_VAR($1)(ncid, varid, buf); CHECK_ERR
-    for (i=0; i<LEN; i++) {
-        if (buf[i] != ($1)fillv) {
-            printf("Error at %s line %d: expect buf[%d]=IFMT($1) but got IFMT($1)\n",
-                   __func__,__LINE__,i,($1)fillv,buf[i]);
-            nerrs++;
-        }
+    if (format == NC_FORMAT_CDF5) {
+        foreach(`itype', (CDF5_EXTRA_ITYPE_LIST), `
+        _CAT(`fillv_',itype)' = 99;`
+        err = ncmpi_def_var(ncid, _CAT(`"var_',itype)", NC_TYPE(itype), 1, &dimid, &varid); CHECK_ERR
+        err = ncmpi_put_att(ncid, varid, "_FillValue", NC_TYPE(itype), 1, _CAT(`&fillv_',itype)); CHECK_ERR
+        /* enable variable fill mode with fill value from attribute just set */
+        err = ncmpi_def_var_fill(ncid, varid, 0, NULL); CHECK_ERR
+        ')
     }
+    /* put attribute _FillValue does not automatically enable file mode */
+
+
+    err = ncmpi_enddef(ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
+    foreach(`itype', (CDF2_ITYPE_LIST), `CHECK_USER_FILL_VALUE(itype)')
+    if (format == NC_FORMAT_CDF5) {
+        foreach(`itype', (CDF5_EXTRA_ITYPE_LIST), `CHECK_USER_FILL_VALUE(itype)')
+    }
+
     err = ncmpi_close(ncid); CHECK_ERR
     return nerrs;
 }
-')dnl
-
-foreach(`itype', (ITYPE_LIST), `TEST_USER_FILL(itype)')
 
 define(`TEST_ERANGE_PUT',dnl
 `dnl
 static
-int test_erange_put_$1_$2(char* filename) {
+int test_erange_put_$1_$2(const char *out_path, int coll_io, MPI_Info info) {
     int i, err, nerrs=0, ncid, dimid, varid1, varid2, cdf;
     $1 buf[LEN], fillv=99;
-    MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
-    int bb_enabled=0;
 
     /* create a new file */
-    err = ncmpi_create(comm, filename, NC_CLOBBER, info, &ncid); CHECK_ERR
-    {
-        int flag;
-        char hint[MPI_MAX_INFO_VAL];
-        MPI_Info infoused;
-
-        ncmpi_inq_file_info(ncid, &infoused);
-        MPI_Info_get(infoused, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, hint, &flag);
-        if (flag && strcasecmp(hint, "enable") == 0)
-            bb_enabled = 1;
-        MPI_Info_free(&infoused);
-    }
+    err = ncmpi_create(comm, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR
 
     err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", LEN, &dimid); CHECK_ERR
@@ -201,19 +219,30 @@ int test_erange_put_$1_$2(char* filename) {
     err = ncmpi_put_att(ncid, varid2, "_FillValue", NC_TYPE($1), 1, &fillv); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     err = ncmpi_inq_format(ncid, &cdf); CHECK_ERR
 
     /* put data with ERANGE values */
     $2 wbuf[LEN];
     for (i=0; i<LEN; i++) wbuf[i] = ($2) ifelse(index(`$1',`u'), 0, `-1', `XTYPE_MAX($2)');
-    err = PUT_VAR($2)(ncid, varid1, wbuf);
+    if (coll_io)
+        err = PUT_VAR($2,_all)(ncid, varid1, wbuf);
+    else
+        err = PUT_VAR($2)(ncid, varid1, wbuf);
     if (bb_enabled) {
         CHECK_ERR
         err = ncmpi_flush(ncid);
     }
 
     ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf == NC_FORMAT_CDF2) CHECK_ERR',`EXP_ERR(NC_ERANGE)')',`EXP_ERR(NC_ERANGE)')
-    err = PUT_VAR($2)(ncid, varid2, wbuf);
+    if (coll_io)
+        err = PUT_VAR($2,_all)(ncid, varid2, wbuf);
+    else
+        err = PUT_VAR($2)(ncid, varid2, wbuf);
     if (bb_enabled) {
         CHECK_ERR
         err = ncmpi_flush(ncid);
@@ -221,12 +250,19 @@ int test_erange_put_$1_$2(char* filename) {
 
     ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf == NC_FORMAT_CDF2) CHECK_ERR',`EXP_ERR(NC_ERANGE)')',`EXP_ERR(NC_ERANGE)')
 
-    err = ncmpi_close(ncid); CHECK_ERR
+    /* file sync before reading */
+    if (!coll_io) {
+        err = ncmpi_sync(ncid);
+        CHECK_ERR
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
 
-    /* reopen the file and check the contents of variable */
-    err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid); CHECK_ERR
     err = ncmpi_inq_varid(ncid, "var1", &varid1); CHECK_ERR
-    err = GET_VAR($1)(ncid, varid1, buf); CHECK_ERR
+    if (coll_io)
+        err = GET_VAR($1,_all)(ncid, varid1, buf);
+    else
+        err = GET_VAR($1)(ncid, varid1, buf);
+    CHECK_ERR
     for (i=0; i<LEN; i++) {
         $1 expect = ($1)NC_FILL_VALUE($1);
         ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf != NC_FORMAT_CDF5) expect = ($1)wbuf[i];')')
@@ -238,7 +274,11 @@ int test_erange_put_$1_$2(char* filename) {
     }
     /* test non-default fill value */
     err = ncmpi_inq_varid(ncid, "var2", &varid2); CHECK_ERR
-    err = GET_VAR($1)(ncid, varid2, buf); CHECK_ERR
+    if (coll_io)
+        err = GET_VAR($1,_all)(ncid, varid2, buf);
+    else
+        err = GET_VAR($1)(ncid, varid2, buf);
+    CHECK_ERR
     for (i=0; i<LEN; i++) {
         $1 expect = fillv;
         ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf != NC_FORMAT_CDF5) expect = ($1)wbuf[i];')')
@@ -264,33 +304,48 @@ TEST_ERANGE_PUT(float, double)
 define(`TEST_ERANGE_GET',dnl
 `dnl
 static
-int test_erange_get_$1_$2(char* filename) {
+int test_erange_get_$1_$2(const char *out_path, int coll_io, MPI_Info info) {
     int i, err, nerrs=0, ncid, dimid, varid, cdf;
     $1 wbuf[LEN];
-    MPI_Info info=MPI_INFO_NULL;
     MPI_Comm comm=MPI_COMM_WORLD;
 
     /* create a new file */
-    err = ncmpi_create(comm, filename, NC_CLOBBER, info, &ncid); CHECK_ERR
+    err = ncmpi_create(comm, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", LEN, &dimid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var", NC_TYPE($1), 1, &dimid, &varid); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     err = ncmpi_inq_format(ncid, &cdf); CHECK_ERR
 
     /* write MAX values */
     for (i=0; i<LEN; i++)
         wbuf[i] = ($1) ifelse(index(`$1',`u'), 0,`XTYPE_MAX($1)',`ifelse(index(`$2',`u'), 0,`-1', `XTYPE_MAX($1)')');
-    err = PUT_VAR($1)(ncid, varid, wbuf); CHECK_ERR
-    err = ncmpi_close(ncid); CHECK_ERR
+    if (coll_io)
+        err = PUT_VAR($1,_all)(ncid, varid, wbuf);
+    else
+        err = PUT_VAR($1)(ncid, varid, wbuf);
+    CHECK_ERR
 
-    /* reopen the file and check the contents of variable */
-    err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid); CHECK_ERR
+    /* file sync before reading */
+    if (!coll_io) {
+        err = ncmpi_sync(ncid);
+        CHECK_ERR
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
 
     /* get data with ERANGE values */
     $2 rbuf[LEN];
-    err = GET_VAR($2)(ncid, varid, rbuf);
+    if (coll_io)
+        err = GET_VAR($2,_all)(ncid, varid, rbuf);
+    else
+        err = GET_VAR($2)(ncid, varid, rbuf);
     ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf == NC_FORMAT_CDF2) CHECK_ERR',`EXP_ERR(NC_ERANGE)')',`EXP_ERR(NC_ERANGE)')
 
     for (i=0; i<LEN; i++) {
@@ -315,141 +370,126 @@ foreach(`itype',(uint,float,double,longlong,ulonglong),`TEST_ERANGE_GET(itype,in
 foreach(`itype',(int,float,double,longlong,ulonglong),`TEST_ERANGE_GET(itype,uint)')
 TEST_ERANGE_GET(double, float)
 
-int main(int argc, char** argv) {
-    char filename[256];
-    int err, nerrs=0, rank, fillv;
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
+{
+    char hint[MPI_MAX_INFO_VAL];
+    int err, nerrs=0, flag;
 
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Info_get(info, "nc_burst_buf", MPI_MAX_INFO_VAL-1, hint, &flag);
+    if (flag && strcasecmp(hint, "enable") == 0)
+        bb_enabled = 1;
+    else
+        bb_enabled = 0;
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for erange elements are filled ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
+    nerrs += test_default_fill_mode(out_path, format, coll_io, info);
 
-    /*---- CDF-2 format -----------------------------------------------------*/
-    /* ncmpi_set_default_format(NC_FORMAT_CLASSIC, NULL); */
-    ncmpi_set_default_format(NC_FORMAT_CDF2, NULL);
-
-    nerrs += test_default_fill_mode(filename);
-
-    foreach(`itype', (CDF2_ITYPE_LIST), `
-    _CAT(`nerrs += test_default_fill_',itype)'`(filename);')
-
-    fillv=99;
-    foreach(`itype', (CDF2_ITYPE_LIST), `
-    _CAT(`nerrs += test_user_fill_',itype)'`(filename, (itype)fillv);')
+    nerrs += test_user_fill_mode(out_path, format, coll_io, info);
 
     /* test put ERANGE values */
     foreach(`itype', (uchar,short,int,float,double), `
-    _CAT(`nerrs += test_erange_put_schar_',itype)'`(filename);')
+    _CAT(`nerrs += test_erange_put_schar_',itype)'`(out_path, coll_io, info);')
 
     foreach(`itype', (ushort,int,uint,float,double), `
-    _CAT(`nerrs += test_erange_put_short_',itype)'`(filename);')
+    _CAT(`nerrs += test_erange_put_short_',itype)'`(out_path, coll_io, info);')
 
     foreach(`itype', (float,double), `
-    _CAT(`nerrs += test_erange_put_int_',itype)'`(filename);')
+    _CAT(`nerrs += test_erange_put_int_',itype)'`(out_path, coll_io, info);')
 
-    nerrs += test_erange_put_float_double(filename);
+    nerrs += test_erange_put_float_double(out_path, coll_io, info);
 
     /* test get ERANGE values */
     foreach(`itype', (short,int,float,double), `
-    _CAT(`nerrs += test_erange_get_',itype)'`_schar(filename);')
+    _CAT(`nerrs += test_erange_get_',itype)'`_schar(out_path, coll_io, info);')
 
     foreach(`itype', (schar,short,int,float,double), `
-    _CAT(`nerrs += test_erange_get_',itype)'`_uchar(filename);')
+    _CAT(`nerrs += test_erange_get_',itype)'`_uchar(out_path, coll_io, info);')
 
     foreach(`itype', (int,float,double), `
-    _CAT(`nerrs += test_erange_get_',itype)'`_short(filename);')
+    _CAT(`nerrs += test_erange_get_',itype)'`_short(out_path, coll_io, info);')
 
     foreach(`itype', (float,double), `
-    _CAT(`nerrs += test_erange_get_',itype)'`_int(filename);')
+    _CAT(`nerrs += test_erange_get_',itype)'`_int(out_path, coll_io, info);')
 
-    nerrs += test_erange_get_double_float(filename);
+    nerrs += test_erange_get_double_float(out_path, coll_io, info);
 
     /*---- CDF-5 format -----------------------------------------------------*/
-    ncmpi_set_default_format(NC_FORMAT_CDF5, NULL);
+    if (format == NC_FORMAT_CDF5) {
 
-    nerrs += test_default_fill_mode(filename);
+        /* test put ERANGE values */
+        foreach(`itype', (ushort,uint,longlong,ulonglong), `
+        _CAT(`nerrs += test_erange_put_schar_',itype)'`(out_path, coll_io, info);')
 
-    foreach(`itype', (ITYPE_LIST), `
-    _CAT(`nerrs += test_default_fill_',itype)'`(filename);')
+        foreach(`itype', (schar,short,ushort,int,uint,float,double,longlong,ulonglong), `
+        _CAT(`nerrs += test_erange_put_uchar_',itype)'`(out_path, coll_io, info);')
 
-    fillv=99;
-    foreach(`itype', (ITYPE_LIST), `
-    _CAT(`nerrs += test_user_fill_',itype)'`(filename, (itype)fillv);')
+        foreach(`itype', (longlong,ulonglong), `
+        _CAT(`nerrs += test_erange_put_short_',itype)'`(out_path, coll_io, info);')
 
-    /* test put ERANGE values */
-    foreach(`itype', (uchar,short,ushort,int,uint,float,double,longlong,ulonglong), `
-    _CAT(`nerrs += test_erange_put_schar_',itype)'`(filename);')
+        foreach(`itype', (short,int,uint,float,double,longlong,ulonglong), `
+        _CAT(`nerrs += test_erange_put_ushort_',itype)'`(out_path, coll_io, info);')
 
-    foreach(`itype', (schar,short,ushort,int,uint,float,double,longlong,ulonglong), `
-    _CAT(`nerrs += test_erange_put_uchar_',itype)'`(filename);')
+        foreach(`itype', (uint,longlong,ulonglong), `
+        _CAT(`nerrs += test_erange_put_int_',itype)'`(out_path, coll_io, info);')
 
-    foreach(`itype', (ushort,int,uint,float,double,longlong,ulonglong), `
-    _CAT(`nerrs += test_erange_put_short_',itype)'`(filename);')
+        foreach(`itype', (int,float,double,longlong,ulonglong), `
+        _CAT(`nerrs += test_erange_put_uint_',itype)'`(out_path, coll_io, info);')
 
-    foreach(`itype', (short,int,uint,float,double,longlong,ulonglong), `
-    _CAT(`nerrs += test_erange_put_ushort_',itype)'`(filename);')
+        nerrs += test_erange_put_float_double(out_path, coll_io, info);
 
-    foreach(`itype', (uint,float,double,longlong,ulonglong), `
-    _CAT(`nerrs += test_erange_put_int_',itype)'`(filename);')
+        /* test get ERANGE values */
+        foreach(`itype', (uchar,ushort,uint,longlong,ulonglong), `
+        _CAT(`nerrs += test_erange_get_',itype)'`_schar(out_path, coll_io, info);')
 
-    foreach(`itype', (int,float,double,longlong,ulonglong), `
-    _CAT(`nerrs += test_erange_put_uint_',itype)'`(filename);')
+        foreach(`itype', (ushort,uint,longlong,ulonglong), `
+        _CAT(`nerrs += test_erange_get_',itype)'`_uchar(out_path, coll_io, info);')
 
-    nerrs += test_erange_put_float_double(filename);
+        foreach(`itype', (ushort,uint,longlong,ulonglong), `
+        _CAT(`nerrs += test_erange_get_',itype)'`_short(out_path, coll_io, info);')
 
-    /* test get ERANGE values */
-    foreach(`itype', (uchar,short,ushort,int,uint,float,double,longlong,ulonglong), `
-    _CAT(`nerrs += test_erange_get_',itype)'`_schar(filename);')
+        foreach(`itype', (short,int,uint,float,double,longlong,ulonglong), `
+        _CAT(`nerrs += test_erange_get_',itype)'`_ushort(out_path, coll_io, info);')
 
-    foreach(`itype', (schar,short,ushort,int,uint,float,double,longlong,ulonglong), `
-    _CAT(`nerrs += test_erange_get_',itype)'`_uchar(filename);')
+        foreach(`itype', (uint,longlong,ulonglong), `
+        _CAT(`nerrs += test_erange_get_',itype)'`_int(out_path, coll_io, info);')
 
-    foreach(`itype', (ushort,int,uint,float,double,longlong,ulonglong), `
-    _CAT(`nerrs += test_erange_get_',itype)'`_short(filename);')
-
-    foreach(`itype', (short,int,uint,float,double,longlong,ulonglong), `
-    _CAT(`nerrs += test_erange_get_',itype)'`_ushort(filename);')
-
-    foreach(`itype', (uint,float,double,longlong,ulonglong), `
-    _CAT(`nerrs += test_erange_get_',itype)'`_int(filename);')
-
-    foreach(`itype', (int,float,double,longlong,ulonglong), `
-    _CAT(`nerrs += test_erange_get_',itype)'`_uint(filename);')
-
-    nerrs += test_erange_get_double_float(filename);
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
+        foreach(`itype', (int,float,double,longlong,ulonglong), `
+        _CAT(`nerrs += test_erange_get_',itype)'`_uint(out_path, coll_io, info);')
     }
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-
-    MPI_Finalize();
-    return (nerrs == 0) ? 0 : 1;
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "erange elements are filled", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}

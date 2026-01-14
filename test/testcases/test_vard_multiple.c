@@ -69,55 +69,28 @@
             if ((buf)[j*NX+i] != (base)+rank*100+j*10+i) { \
                 printf("line %d: expecting buf[%d*NX+%d]=%d but got %d\n",\
                        __LINE__,j,i,(base)+rank*100+j*10+i,(buf)[j*NX+i]); \
-                nerrs++; \
+                assert(0); \
             } \
     } \
 }
 
-/*----< main() >------------------------------------------------------------*/
-int main(int argc, char **argv) {
-
-    char         filename[256], *hint_value;
-    int          i, j, err, ncid, varid[4], dimids[3], nerrs=0, unlimit_dimid;
-    int          rank, nprocs, *buf[2];
-    int          array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
-    int          array_of_blocklengths[NY];
-    MPI_Offset   len, recsize, start[2], count[2], offset[2];
-    MPI_Aint     a0, a1, array_of_displacements[NY];
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
+{
+    int i, j, err, ncid, varid[4], dimids[3], nerrs=0, unlimit_dimid;
+    int rank, nprocs, *buf[2];
+    int array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
+    int array_of_blocklengths[NY];
+    MPI_Offset len, recsize, start[2], count[2], offset[2];
+    MPI_Aint a0, a1, array_of_displacements[NY];
     MPI_Datatype buftype, vtype[2], filetype;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for vard to 2 variables ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    /* Skip test when intra-node aggregation is enabled, as vard APIs are not
-     * supported.
-     */
-    if (inq_env_hint("nc_num_aggrs_per_node", &hint_value)) {
-        if (atoi(hint_value) > 0) {
-            free(hint_value);
-            if (rank == 0) printf(SKIP_STR);
-            MPI_Finalize();
-            return 0;
-        }
-        free(hint_value);
-    }
 
     buf[0] = (int*)malloc(sizeof(int) * NY * NX);
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
@@ -127,9 +100,13 @@ int main(int argc, char **argv) {
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
         buf[1][j*NX+i] = 1000 + rank*100 + j*10 + i;
 
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
     /* create a new NetCDF file */
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL,
-                       &ncid); CHECK_ERR
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
 
     /* define dimensions */
     err = ncmpi_def_dim(ncid, "REC_DIM", NC_UNLIMITED, &dimids[0]); CHECK_ERR
@@ -144,21 +121,38 @@ int main(int argc, char **argv) {
     err = ncmpi_def_var(ncid, "rec_var3", NC_INT, 3, dimids, &varid[3]); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     /* MPI_DATATYPE_NULL means this is a zero-length request */
-    err = ncmpi_put_vard_all(ncid, varid[0], MPI_DATATYPE_NULL, NULL, 0,
-                             MPI_INT); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid[0], MPI_DATATYPE_NULL, NULL, 0, MPI_INT);
+    else
+        err = ncmpi_put_vard(ncid, varid[0], MPI_DATATYPE_NULL, NULL, 0, MPI_INT);
+    CHECK_ERR
 
     /* when filetype is MPI_DATATYPE_NULL, buftype is ignored */
-    err = ncmpi_put_vard_all(ncid, varid[0], MPI_DATATYPE_NULL, NULL, 0,
-                             MPI_DATATYPE_NULL); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid[0], MPI_DATATYPE_NULL, NULL, 0, MPI_DATATYPE_NULL);
+    else
+        err = ncmpi_put_vard(ncid, varid[0], MPI_DATATYPE_NULL, NULL, 0, MPI_DATATYPE_NULL);
+    CHECK_ERR
 
     /* bufcount is ignored when buftype is MPI_DATATYPE_NULL */
-    err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], -1,
-                             MPI_DATATYPE_NULL); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], -1, MPI_DATATYPE_NULL);
+    else
+        err = ncmpi_put_vard(ncid, varid[0], MPI_INT, buf[0], -1, MPI_DATATYPE_NULL);
+    CHECK_ERR
 
     /* filetype and buftype are matched */
-    err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], 1,
-                             MPI_INT); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], 1, MPI_INT);
+    else
+        err = ncmpi_put_vard(ncid, varid[0], MPI_INT, buf[0], 1, MPI_INT);
+    CHECK_ERR
 
     /* create a datatype contains 2 different etypes */
     array_of_blocklengths[0]  = 1;
@@ -175,13 +169,31 @@ int main(int argc, char **argv) {
     MPI_Type_commit(&buftype);
 
     /* test NC_EMULTITYPES */
-    err = ncmpi_put_vard_all(ncid, varid[0], filetype, buf[0], 2, MPI_INT); EXP_ERR(NC_EMULTITYPES)
-    err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT,  buf[0], 2, buftype); EXP_ERR(NC_EMULTITYPES)
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid[0], filetype, buf[0], 2, MPI_INT);
+    else
+        err = ncmpi_put_vard(ncid, varid[0], filetype, buf[0], 2, MPI_INT);
+    EXP_ERR(NC_EMULTITYPES)
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT,  buf[0], 2, buftype);
+    else
+        err = ncmpi_put_vard(ncid, varid[0], MPI_INT,  buf[0], 2, buftype);
+    EXP_ERR(NC_EMULTITYPES)
     /* test NC_ETYPESIZE_MISMATCH */
-    err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], 2, MPI_INT);   EXP_ERR(NC_EIOMISMATCH)
-    err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], 2, MPI_SHORT); EXP_ERR(NC_EIOMISMATCH)
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], 2, MPI_INT);
+    else
+        err = ncmpi_put_vard(ncid, varid[0], MPI_INT, buf[0], 2, MPI_INT);
+    EXP_ERR(NC_EIOMISMATCH)
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid[0], MPI_INT, buf[0], 2, MPI_SHORT);
+    else
+        err = ncmpi_put_vard(ncid, varid[0], MPI_INT, buf[0], 2, MPI_SHORT);
+    EXP_ERR(NC_EIOMISMATCH)
     MPI_Type_free(&filetype);
     MPI_Type_free(&buftype);
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* construct buftype: concatenate two separated buffers */
     array_of_blocklengths[0] = NY*NX;
@@ -238,17 +250,30 @@ int main(int argc, char **argv) {
     MPI_Type_commit(&filetype);
 
     /* write 2 consecutive fixed-size variables */
-    err = ncmpi_put_vard_all(ncid, varid[0], filetype, buf[0], 1, buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid[0], filetype, buf[0], 1, buftype);
+    else
+        err = ncmpi_put_vard(ncid, varid[0], filetype, buf[0], 1, buftype);
+    CHECK_ERR
 
     /* check if the contents of write buf are altered */
     CHECK_VALUE(buf[0], 0)
     CHECK_VALUE(buf[1], 1000)
 
+    /* file sync before reading */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[0][j*NX+i] = -1;
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[1][j*NX+i] = -1;
 
     /* read back fixed-size variables */
-    err = ncmpi_get_vard_all(ncid, varid[0], filetype, buf[0], 1, buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_vard_all(ncid, varid[0], filetype, buf[0], 1, buftype);
+    else
+        err = ncmpi_get_vard(ncid, varid[0], filetype, buf[0], 1, buftype);
+    CHECK_ERR
 
     /* check the contents of read buf */
     CHECK_VALUE(buf[0], 0)
@@ -279,7 +304,11 @@ int main(int argc, char **argv) {
         buf[1][j*NX+i] = 3000 + rank*100 + j*10 + i;
 
     /* write 2 consecutive record variables */
-    err = ncmpi_put_vard_all(ncid, varid[2], filetype, buf[0], 1, buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid[2], filetype, buf[0], 1, buftype);
+    else
+        err = ncmpi_put_vard(ncid, varid[2], filetype, buf[0], 1, buftype);
+    CHECK_ERR
 
     /* check if the contents of write buf are altered */
     CHECK_VALUE(buf[0], 2000)
@@ -289,11 +318,17 @@ int main(int argc, char **argv) {
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[1][j*NX+i] = -1;
 
     /* read back record variables */
-    err = ncmpi_get_vard_all(ncid, varid[2], filetype, buf[0], 1, buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_vard_all(ncid, varid[2], filetype, buf[0], 1, buftype);
+    else
+        err = ncmpi_get_vard(ncid, varid[2], filetype, buf[0], 1, buftype);
+    CHECK_ERR
 
     /* check the contents of read buf */
     CHECK_VALUE(buf[0], 2000)
     CHECK_VALUE(buf[1], 3000)
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* write to 1st record of two consecutive variables */
     MPI_Type_free(&filetype);
@@ -307,7 +342,11 @@ int main(int argc, char **argv) {
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[1][j*NX+i] = 0;
 
     /* write 2 consecutive record variables */
-    err = ncmpi_put_vard_all(ncid, varid[2], filetype, buf[0], 1, buftype); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vard_all(ncid, varid[2], filetype, buf[0], 1, buftype);
+    else
+        err = ncmpi_put_vard(ncid, varid[2], filetype, buf[0], 1, buftype);
+    CHECK_ERR
 
     /* check if the number of records is still 2 */
     err = ncmpi_inq_unlimdim(ncid, &unlimit_dimid); CHECK_ERR
@@ -324,23 +363,32 @@ int main(int argc, char **argv) {
 
     err = ncmpi_close(ncid); CHECK_ERR
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
+    return nerrs;
+}
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 0; /* test intra-node aggregation */
+    opt.drv      = 0; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "2 var in one call", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

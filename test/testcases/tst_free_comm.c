@@ -23,110 +23,67 @@
 
 #include <testutils.h>
 
-static int
-tst_fmt(char *fname, int cmode)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
 {
-    int nerrs=0, err, exp_err=NC_NOERR, ncid;
+    int nerrs=0, err, ncid;
     MPI_Comm comm=MPI_COMM_NULL;
-    MPI_Info info=MPI_INFO_NULL;
-
-#ifndef ENABLE_NETCDF4
-    if (cmode & NC_NETCDF4)
-        exp_err = NC_ENOTBUILT;
-#endif
 
     /* duplicate MPI_COMM_WORLD */
     MPI_Comm_dup(MPI_COMM_WORLD, &comm);
 
-    /* create MPI I/O hints */
-    MPI_Info_create(&info);
-
-    if (! (cmode & NC_NETCDF4))
-        /* this hint may cause H5Fflush() to hang */
-        MPI_Info_set(info, "romio_no_indep_rw", "true");
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
     /* create a file */
-    cmode |= NC_CLOBBER;
-    err = ncmpi_create(comm, fname, cmode, info, &ncid); EXP_ERR(exp_err)
-    if (err == NC_ENOTBUILT) goto fn_exit;
+    err = ncmpi_create(comm, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
 
     MPI_Comm_free(&comm); comm = MPI_COMM_NULL;
-    MPI_Info_free(&info); info = MPI_INFO_NULL;
 
     err = ncmpi_close(ncid); CHECK_ERR
-
-    /* open the file */
 
     /* duplicate MPI_COMM_WORLD */
     MPI_Comm_dup(MPI_COMM_WORLD, &comm);
 
-    /* create MPI I/O hints */
-    MPI_Info_create(&info);
-    MPI_Info_set(info, "romio_no_indep_rw", "true");
-
-    err = ncmpi_open(comm, fname, NC_NOWRITE, info, &ncid); CHECK_ERR
+    /* open the file */
+    err = ncmpi_open(comm, out_path, NC_NOWRITE, info, &ncid); CHECK_ERR
 
     MPI_Comm_free(&comm); comm = MPI_COMM_NULL;
-    MPI_Info_free(&info); info = MPI_INFO_NULL;
 
     err = ncmpi_close(ncid); CHECK_ERR
 
-fn_exit:
     if (comm != MPI_COMM_NULL) MPI_Comm_free(&comm);
-    if (info != MPI_INFO_NULL) MPI_Info_free(&info);
+
     return nerrs;
 }
 
-/*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {
 
-    char filename[256];
-    int  err, nerrs=0, rank, nprocs;
+    int err;
+    loop_opts opt;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    opt.num_fmts = sizeof(nc_formats) / sizeof(int);
+    opt.formats  = nc_formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 0; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for freeing MPI communicator ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    nerrs += tst_fmt(filename, 0);
-    nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
-    nerrs += tst_fmt(filename, NC_NETCDF4);
-    nerrs += tst_fmt(filename, NC_NETCDF4|NC_CLASSIC_MODEL);
-    nerrs += tst_fmt(filename, NC_64BIT_DATA);
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    err = tst_main(argc, argv, "freeing MPI communicator", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
-}
 
+    return err;
+}

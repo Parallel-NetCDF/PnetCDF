@@ -139,51 +139,40 @@
         } \
     }
 
-int main(int argc, char** argv)
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
-    char filename[256];
     int i, j, rank, nprocs, err, nerrs=0, req, status;
-    int ncid, cmode, varid, dimid[2];
+    int ncid, varid, dimid[2];
     MPI_Count array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     int buf_ghost[NY+2*GHOST][NX+2*GHOST];
     int buf[NY][NX];
     MPI_Offset bufcount, start[2], count[2];
     MPI_Datatype subarray;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for flexible var APIs ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    CHECK_ERROUT
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
 
     /* define 2 dimensions */
-    err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERROUT
-    err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]); CHECK_ERROUT
+    err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", NX, &dimid[1]); CHECK_ERR
 
-    /* define a variable of size NY * (NX * nprocs) */
-    err = ncmpi_def_var(ncid, "var", NC_DOUBLE, 2, dimid, &varid); CHECK_ERROUT
-    err = ncmpi_enddef(ncid); CHECK_ERROUT
+    /* define a variable of size NY * NX */
+    err = ncmpi_def_var(ncid, "var", NC_DOUBLE, 2, dimid, &varid); CHECK_ERR
+    err = ncmpi_enddef(ncid); CHECK_ERR
 
-    /* var is partitioned along X dimension in a matrix transported way */
+    /* var is written in a matrix transported way */
     array_of_sizes[0]    = NY + 2*GHOST;
     array_of_sizes[1]    = NX + 2*GHOST;
     array_of_subsizes[0] = NY;
@@ -211,7 +200,7 @@ int main(int argc, char** argv)
     else /* other ranks write 0-sized data */
         err = ncmpi_put_vara_all(ncid, varid, start, count, buf_ghost, 0, MPI_INT);
     MPI_Allreduce(MPI_IN_PLACE, &err, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
-    CHECK_ERROUT
+    CHECK_ERR
 
     /* check the contents of put buffer. They should not be altered. */
     CHECK_PUT_BUF_GHOST(NY, NX, GHOST, buf_ghost)
@@ -219,7 +208,7 @@ int main(int argc, char** argv)
     /* read back and check the contents written in the file  ----------------*/
     INIT_GET_BUF(NY, NX, buf_ghost)
     err = ncmpi_get_var_all(ncid, varid, buf_ghost, bufcount, subarray);
-    CHECK_ERROUT
+    CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF_GHOST(NY, NX, GHOST, buf_ghost)
@@ -227,9 +216,9 @@ int main(int argc, char** argv)
     /* read back using a non-blocking flexible API --------------------------*/
     INIT_GET_BUF(NY, NX, buf_ghost)
     err = ncmpi_iget_var(ncid, varid, buf_ghost, bufcount, subarray, &req);
-    CHECK_ERROUT
-    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERROUT
-    err = status; CHECK_ERROUT
+    CHECK_ERR
+    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF_GHOST(NY, NX, GHOST, buf_ghost)
@@ -240,17 +229,17 @@ int main(int argc, char** argv)
     /* calling a nonblocking put_var flexible API --------------------------*/
     if (rank == 0) { /* only rank 0 writes to the variable */
         err = ncmpi_iput_var(ncid, varid, buf_ghost, bufcount, subarray, &req);
-        CHECK_ERROUT
+        CHECK_ERR
         /* check the contents of put buffer. They should not be altered. */
         CHECK_PUT_BUF_GHOST(NY, NX, GHOST, buf_ghost)
     }
-    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERROUT
-    err = status; CHECK_ERROUT
+    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* read back and check the contents written in the file  ----------------*/
     INIT_GET_BUF(NY, NX, buf_ghost)
     err = ncmpi_get_var_all(ncid, varid, buf_ghost, bufcount, subarray);
-    CHECK_ERROUT
+    CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF_GHOST(NY, NX, GHOST, buf_ghost)
@@ -258,9 +247,9 @@ int main(int argc, char** argv)
     /* read back using a non-blocking flexible API --------------------------*/
     INIT_GET_BUF(NY, NX, buf_ghost)
     err = ncmpi_iget_var(ncid, varid, buf_ghost, bufcount, subarray, &req);
-    CHECK_ERROUT
-    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERROUT
-    err = status; CHECK_ERROUT
+    CHECK_ERR
+    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF_GHOST(NY, NX, GHOST, buf_ghost)
@@ -279,7 +268,7 @@ int main(int argc, char** argv)
     else /* other ranks write 0-sized data */
         err = ncmpi_put_vara_all(ncid, varid, start, count, buf, 0, MPI_INT);
     MPI_Allreduce(MPI_IN_PLACE, &err, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
-    CHECK_ERROUT
+    CHECK_ERR
 
     /* check the contents of put buffer. They should not be altered. */
     CHECK_PUT_BUF(NY, NX, buf)
@@ -287,7 +276,7 @@ int main(int argc, char** argv)
     /* read back and check the contents written in the file  ----------------*/
     INIT_GET_BUF(NY, NX, buf)
     err = ncmpi_get_var_all(ncid, varid, buf, bufcount, MPI_INT);
-    CHECK_ERROUT
+    CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF(NY, NX, buf)
@@ -295,9 +284,9 @@ int main(int argc, char** argv)
     /* read back using a non-blocking flexible API --------------------------*/
     INIT_GET_BUF(NY, NX, buf)
     err = ncmpi_iget_var(ncid, varid, buf, bufcount, MPI_INT, &req);
-    CHECK_ERROUT
-    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERROUT
-    err = status; CHECK_ERROUT
+    CHECK_ERR
+    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF(NY, NX, buf)
@@ -308,17 +297,17 @@ int main(int argc, char** argv)
     /* calling a nonblocking put_var flexible API --------------------------*/
     if (rank == 0) { /* only rank 0 writes to the variable */
         err = ncmpi_iput_var(ncid, varid, buf, bufcount, MPI_INT, &req);
-        CHECK_ERROUT
+        CHECK_ERR
         /* check the contents of put buffer. They should not be altered. */
         CHECK_PUT_BUF(NY, NX, buf)
     }
-    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERROUT
-    err = status; CHECK_ERROUT
+    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* read back and check the contents written in the file  ----------------*/
     INIT_GET_BUF(NY, NX, buf)
     err = ncmpi_get_var_all(ncid, varid, buf, bufcount, MPI_INT);
-    CHECK_ERROUT
+    CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF(NY, NX, buf)
@@ -326,18 +315,23 @@ int main(int argc, char** argv)
     /* read back using a non-blocking flexible API --------------------------*/
     INIT_GET_BUF(NY, NX, buf)
     err = ncmpi_iget_var(ncid, varid, buf, bufcount, MPI_INT, &req);
-    CHECK_ERROUT
-    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERROUT
-    err = status; CHECK_ERROUT
+    CHECK_ERR
+    err = ncmpi_wait_all(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF(NY, NX, buf)
+
+    /* file sync before reading */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /*----------------------------------------------------------------------*/
     /*---- test independent I/O mode ---------------------------------------*/
     /*----------------------------------------------------------------------*/
     err = ncmpi_begin_indep_data(ncid);
-    CHECK_ERROUT
+    CHECK_ERR
 
     /*----------------------------------------------------------------------*/
     /*---- test using bufcount == 1 with ghost cells -----------------------*/
@@ -350,19 +344,19 @@ int main(int argc, char** argv)
     /* calling a blocking put_var flexible API -----------------------------*/
     if (rank == 0) { /* only rank 0 writes to the variable */
         err = ncmpi_put_var(ncid, varid, buf_ghost, bufcount, subarray);
-        CHECK_ERROUT
+        CHECK_ERR
         /* check the contents of put buffer. They should not be altered. */
         CHECK_PUT_BUF_GHOST(NY, NX, GHOST, buf_ghost)
     }
 
     /* file sync is required for non-zero ranks to see the data in file */
     err = ncmpi_sync(ncid);
-    CHECK_ERROUT
+    CHECK_ERR
 
     /* read back and check the contents written in the file  ----------------*/
     INIT_GET_BUF(NY, NX, buf_ghost)
     err = ncmpi_get_var(ncid, varid, buf_ghost, bufcount, subarray);
-    CHECK_ERROUT
+    CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF_GHOST(NY, NX, GHOST, buf_ghost)
@@ -370,9 +364,9 @@ int main(int argc, char** argv)
     /* read back using a non-blocking flexible API --------------------------*/
     INIT_GET_BUF(NY, NX, buf_ghost)
     err = ncmpi_iget_var(ncid, varid, buf_ghost, bufcount, subarray, &req);
-    CHECK_ERROUT
-    err = ncmpi_wait(ncid, 1, &req, &status); CHECK_ERROUT
-    err = status; CHECK_ERROUT
+    CHECK_ERR
+    err = ncmpi_wait(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF_GHOST(NY, NX, GHOST, buf_ghost)
@@ -383,17 +377,17 @@ int main(int argc, char** argv)
     /* calling a nonblocking put_var flexible API --------------------------*/
     if (rank == 0) { /* only rank 0 writes to the variable */
         err = ncmpi_iput_var(ncid, varid, buf_ghost, bufcount, subarray, &req);
-        CHECK_ERROUT
+        CHECK_ERR
         /* check the contents of put buffer. They should not be altered. */
         CHECK_PUT_BUF_GHOST(NY, NX, GHOST, buf_ghost)
     }
-    err = ncmpi_wait(ncid, 1, &req, &status); CHECK_ERROUT
-    err = status; CHECK_ERROUT
+    err = ncmpi_wait(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* read back and check the contents written in the file  ----------------*/
     INIT_GET_BUF(NY, NX, buf_ghost)
     err = ncmpi_get_var(ncid, varid, buf_ghost, bufcount, subarray);
-    CHECK_ERROUT
+    CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF_GHOST(NY, NX, GHOST, buf_ghost)
@@ -401,9 +395,9 @@ int main(int argc, char** argv)
     /* read back using a non-blocking flexible API --------------------------*/
     INIT_GET_BUF(NY, NX, buf_ghost)
     err = ncmpi_iget_var(ncid, varid, buf_ghost, bufcount, subarray, &req);
-    CHECK_ERROUT
-    err = ncmpi_wait(ncid, 1, &req, &status); CHECK_ERROUT
-    err = status; CHECK_ERROUT
+    CHECK_ERR
+    err = ncmpi_wait(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF_GHOST(NY, NX, GHOST, buf_ghost)
@@ -419,19 +413,19 @@ int main(int argc, char** argv)
     /* calling a blocking put_var flexible API -----------------------------*/
     if (rank == 0) { /* only rank 0 writes to the variable */
         err = ncmpi_put_var(ncid, varid, buf, bufcount, MPI_INT);
-        CHECK_ERROUT
+        CHECK_ERR
         /* check the contents of put buffer. They should not be altered. */
         CHECK_PUT_BUF(NY, NX, buf)
     }
 
     /* file sync is required for non-zero ranks to see the data in file */
     err = ncmpi_sync(ncid);
-    CHECK_ERROUT
+    CHECK_ERR
 
     /* read back and check the contents written in the file  ----------------*/
     INIT_GET_BUF(NY, NX, buf)
     err = ncmpi_get_var(ncid, varid, buf, bufcount, MPI_INT);
-    CHECK_ERROUT
+    CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF(NY, NX, buf)
@@ -439,9 +433,9 @@ int main(int argc, char** argv)
     /* read back using a non-blocking flexible API --------------------------*/
     INIT_GET_BUF(NY, NX, buf)
     err = ncmpi_iget_var(ncid, varid, buf, bufcount, MPI_INT, &req);
-    CHECK_ERROUT
-    err = ncmpi_wait(ncid, 1, &req, &status); CHECK_ERROUT
-    err = status; CHECK_ERROUT
+    CHECK_ERR
+    err = ncmpi_wait(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF(NY, NX, buf)
@@ -452,17 +446,17 @@ int main(int argc, char** argv)
     /* calling a nonblocking put_var flexible API --------------------------*/
     if (rank == 0) { /* only rank 0 writes to the variable */
         err = ncmpi_iput_var(ncid, varid, buf, bufcount, MPI_INT, &req);
-        CHECK_ERROUT
+        CHECK_ERR
         /* check the contents of put buffer. They should not be altered. */
         CHECK_PUT_BUF(NY, NX, buf)
     }
-    err = ncmpi_wait(ncid, 1, &req, &status); CHECK_ERROUT
-    err = status; CHECK_ERROUT
+    err = ncmpi_wait(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* read back and check the contents written in the file  ----------------*/
     INIT_GET_BUF(NY, NX, buf)
     err = ncmpi_get_var(ncid, varid, buf, bufcount, MPI_INT);
-    CHECK_ERROUT
+    CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF(NY, NX, buf)
@@ -470,36 +464,42 @@ int main(int argc, char** argv)
     /* read back using a non-blocking flexible API --------------------------*/
     INIT_GET_BUF(NY, NX, buf)
     err = ncmpi_iget_var(ncid, varid, buf, bufcount, MPI_INT, &req);
-    CHECK_ERROUT
-    err = ncmpi_wait(ncid, 1, &req, &status); CHECK_ERROUT
-    err = status; CHECK_ERROUT
+    CHECK_ERR
+    err = ncmpi_wait(ncid, 1, &req, &status); CHECK_ERR
+    err = status; CHECK_ERR
 
     /* check the contents of get buffer */
     CHECK_GET_BUF(NY, NX, buf)
 
     MPI_Type_free(&subarray);
 
-    err = ncmpi_close(ncid); CHECK_ERROUT
+    err = ncmpi_close(ncid); CHECK_ERR
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-err_out:
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "flexible var APIs", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}

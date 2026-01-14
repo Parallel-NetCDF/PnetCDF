@@ -33,7 +33,11 @@
     }
 
 static
-int check_modes(char *filename)
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,  /* ignored */
+            int         coll_io, /* ignored */
+            MPI_Info    info)
 {
     int rank, err, nerrs=0, ncid, cmode;
     char *path;
@@ -43,11 +47,11 @@ int check_modes(char *filename)
     /* delete the file and ignore error */
 
     /* remove the file system type prefix name if there is any.  For example,
-     * when filename = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
+     * when out_path = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
      * path pointing to "/home/foo/testfile.nc", so it can be used in POSIX
      * unlink() and access() below
      */
-    path = remove_file_system_type_prefix(filename);
+    path = remove_file_system_type_prefix(out_path);
 
     if (rank == 0) unlink(path);
     MPI_Barrier(MPI_COMM_WORLD);
@@ -56,14 +60,14 @@ int check_modes(char *filename)
 
     /* It is illegal to use both NC_64BIT_OFFSET and NC_64BIT_DATA together */
     cmode = NC_CLOBBER | NC_64BIT_OFFSET | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, cmode, info, &ncid);
     EXP_ERR(NC_EINVAL_CMODE)
 
     /* The file should not be created */
     if (rank == 0) {
         if (access(path, F_OK) == 0) {
             printf("Error at %s:%d : file (%s) should not be created\n",
-                   __FILE__,__LINE__, filename);
+                   __FILE__,__LINE__, out_path);
             nerrs++;
             /* delete the file and ignore error */
             unlink(path);
@@ -72,47 +76,55 @@ int check_modes(char *filename)
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-#ifdef ENABLE_NETCDF4
-    /* It is illegal to use both NC_64BIT_OFFSET and NC_NETCDF4 together */
-    cmode = NC_CLOBBER | NC_64BIT_OFFSET | NC_NETCDF4;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    EXP_ERR(NC_EINVAL_CMODE)
+    if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) {
+        /* It is illegal to use both NC_64BIT_OFFSET and NC_NETCDF4 together */
+        if (format == NC_FORMAT_NETCDF4_CLASSIC)
+            cmode = NC_CLOBBER | NC_64BIT_OFFSET | NC_NETCDF4 | NC_CLASSIC_MODEL;
+        else
+            cmode = NC_CLOBBER | NC_64BIT_OFFSET | NC_NETCDF4;
 
-    /* The file should not be created */
-    if (rank == 0) {
-        if (access(path, F_OK) == 0) {
-            printf("Error at %s:%d : file (%s) should not be created\n",
-                   __FILE__,__LINE__, filename);
-            nerrs++;
-            /* delete the file and ignore error */
-            unlink(path);
+        err = ncmpi_create(MPI_COMM_WORLD, out_path, cmode, info, &ncid);
+        EXP_ERR(NC_EINVAL_CMODE)
+
+        /* The file should not be created */
+        if (rank == 0) {
+            if (access(path, F_OK) == 0) {
+                printf("Error at %s:%d : file (%s) should not be created\n",
+                       __FILE__,__LINE__, out_path);
+                nerrs++;
+                /* delete the file and ignore error */
+                unlink(path);
+            }
+            /* else : file does not exist */
         }
-        /* else : file does not exist */
-    }
-    MPI_Barrier(MPI_COMM_WORLD);
+        MPI_Barrier(MPI_COMM_WORLD);
 
-    /* It is illegal to use both NC_64BIT_DATA and NC_NETCDF4 together */
-    cmode = NC_CLOBBER | NC_64BIT_DATA | NC_NETCDF4;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
-    EXP_ERR(NC_EINVAL_CMODE)
+        /* It is illegal to use both NC_64BIT_DATA and NC_NETCDF4 together */
+        if (format == NC_FORMAT_NETCDF4_CLASSIC)
+            cmode = NC_CLOBBER | NC_64BIT_DATA | NC_NETCDF4 | NC_CLASSIC_MODEL;
+        else
+            cmode = NC_CLOBBER | NC_64BIT_DATA | NC_NETCDF4;
 
-    /* The file should not be created */
-    if (rank == 0) {
-        if (access(path, F_OK) == 0) {
-            printf("Error at %s:%d : file (%s) should not be created\n",
-                   __FILE__,__LINE__, filename);
-            nerrs++;
-            /* delete the file and ignore error */
-            unlink(path);
+        err = ncmpi_create(MPI_COMM_WORLD, out_path, cmode, info, &ncid);
+        EXP_ERR(NC_EINVAL_CMODE)
+
+        /* The file should not be created */
+        if (rank == 0) {
+            if (access(path, F_OK) == 0) {
+                printf("Error at %s:%d : file (%s) should not be created\n",
+                       __FILE__,__LINE__, out_path);
+                nerrs++;
+                /* delete the file and ignore error */
+                unlink(path);
+            }
+            /* else : file does not exist */
         }
-        /* else : file does not exist */
+        MPI_Barrier(MPI_COMM_WORLD);
     }
-    MPI_Barrier(MPI_COMM_WORLD);
-#endif
 
     /* Collectively opening a non-existing file for read, expect error code
      * NC_ENOENT on all processes */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOWRITE, info, &ncid);
 
     /* When using MVAPICH2 2.2, its Lustre driver adds O_CREAT to all open
      * calls. This is considered a bug in an MPI-IO implementation. Due to this
@@ -131,7 +143,7 @@ int check_modes(char *filename)
         if (rank == 0) {
             if (access(path, F_OK) == 0) {
                 printf("Error at line %d in %s: file (%s) should not be created\n",
-                       __LINE__,__FILE__, filename);
+                       __LINE__,__FILE__, out_path);
                 nerrs++;
                 /* delete the file and ignore error */
                 unlink(path);
@@ -143,7 +155,7 @@ int check_modes(char *filename)
 
     /* Collectively opening a non-existing file for write, expect error code
      * NC_ENOENT on all processes */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_WRITE, info, &ncid);
 
     /* When using MVAPICH2 2.2, its Lustre driver adds O_CREAT to all open
      * calls. This is considered a bug in an MPI-IO implementation. Due to this
@@ -162,7 +174,7 @@ int check_modes(char *filename)
         if (rank == 0) {
             if (access(path, F_OK) == 0) {
                 printf("Error at line %d in %s: file (%s) should not be created\n",
-                       __LINE__,__FILE__, filename);
+                       __LINE__,__FILE__, out_path);
                 nerrs++;
                 /* delete the file and ignore error */
                 unlink(path);
@@ -172,66 +184,34 @@ int check_modes(char *filename)
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
     return nerrs;
 }
 
-int main(int argc, char** argv)
-{
-    char *filename=NULL;
-    int len, rank, err, nerrs=0;
+int main(int argc, char **argv) {
+
+    int err;
+    loop_opts opt;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) filename = strdup(argv[1]);
-    else           filename = strdup("testfile.nc");
-    len = (int)strlen(filename) + 1;
-    MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(filename, len, MPI_CHAR, 0, MPI_COMM_WORLD);
+    opt.num_fmts = sizeof(nc_formats) / sizeof(int);
+    opt.formats  = nc_formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 0; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 0; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for file create/open modes ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    /* test under safe mode enabled */
-    setenv("PNETCDF_SAFE_MODE", "1", 1);
-    nerrs += check_modes(filename);
-
-    /* test under safe mode disabled */
-    setenv("PNETCDF_SAFE_MODE", "0", 1);
-    nerrs += check_modes(filename);
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-    free(filename);
+    err = tst_main(argc, argv, "file create/open modes", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
-}
 
+    return err;
+}

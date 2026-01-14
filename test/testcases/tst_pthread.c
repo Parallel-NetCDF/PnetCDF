@@ -138,6 +138,7 @@ static pthread_barrier_t barr;
 typedef struct {
     int  id;         /* globally unique thread ID */
     char fname[256]; /* output file name base */
+    int  coll_io;    /* collective or indepndent data mode */
 } thread_arg;
 
 /*----< thread_func() >------------------------------------------------------*/
@@ -146,13 +147,14 @@ void* thread_func(void *arg)
 {
     char filename[512];
     int i, id, nprocs, cmode, err=0, nerrs=0, ncid, *ret, dimid[2], varid[2];
-    int *ibuf;
+    int *ibuf, coll_io;
     double *dbuf;
     MPI_Offset start[2], count[2];
     MPI_Info info;
 
     /* make a unique file name for each thread */
     id = ((thread_arg*)arg)->id;
+    coll_io = ((thread_arg*)arg)->coll_io;
     sprintf(filename, "%s.%d", ((thread_arg*)arg)->fname, id);
 
     /* allocate I/O buffers and initialize their contents */
@@ -184,22 +186,43 @@ void* thread_func(void *arg)
     err = ncmpi_enddef(ncid); CHECK_ERR
     /* now we are in data mode */
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     /* write a record to the record variable */
     start[0] = 0; /* first record */
     start[1] = 0;
     count[0] = 1;
     count[1] = NX;
-    err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, ibuf); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, ibuf);
+    else
+        err = ncmpi_put_vara_int(ncid, varid[0], start, count, ibuf);
+    CHECK_ERR
 
     /* write another record to the record variable */
     start[0] = 2; /* third record */
     start[1] = 0;
     count[0] = 1;
     count[1] = NX;
-    err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, ibuf); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, ibuf);
+    else
+        err = ncmpi_put_vara_int(ncid, varid[0], start, count, ibuf);
+    CHECK_ERR
 
     /* write to the fixed-size variable */
-    err = ncmpi_put_var_double_all(ncid, varid[1], dbuf); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_var_double_all(ncid, varid[1], dbuf);
+    else
+        err = ncmpi_put_var_double(ncid, varid[1], dbuf);
+    CHECK_ERR
+
+    /* file sync before closing file */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
 
     err = ncmpi_close(ncid); CHECK_ERR
 
@@ -219,6 +242,12 @@ void* thread_func(void *arg)
     sprintf(filename, "%s.%d", ((thread_arg*)arg)->fname, id);
 
     err = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     err = ncmpi_inq_varid(ncid, "ivar", &varid[0]); CHECK_ERR
     err = ncmpi_inq_varid(ncid, "dvar", &varid[1]); CHECK_ERR
 
@@ -228,7 +257,11 @@ void* thread_func(void *arg)
     start[1] = 0;
     count[0] = 1;
     count[1] = NX;
-    err = ncmpi_get_vara_int_all(ncid, varid[0], start, count, ibuf); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_vara_int_all(ncid, varid[0], start, count, ibuf);
+    else
+        err = ncmpi_get_vara_int(ncid, varid[0], start, count, ibuf);
+    CHECK_ERR
     for (i=0; i<NX; i++) {
         if (ibuf[i] != id) {
             printf("Error at %s line %d: expect ibuf[%d]=%d but got %d\n",
@@ -244,7 +277,11 @@ void* thread_func(void *arg)
     start[1] = 0;
     count[0] = 1;
     count[1] = NX;
-    err = ncmpi_get_vara_int_all(ncid, varid[0], start, count, ibuf); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_vara_int_all(ncid, varid[0], start, count, ibuf);
+    else
+        err = ncmpi_get_vara_int(ncid, varid[0], start, count, ibuf);
+    CHECK_ERR
     for (i=0; i<NX; i++) {
         if (ibuf[i] != id) {
             printf("Error at %s line %d: expect ibuf[%d]=%d but got %d\n",
@@ -255,7 +292,12 @@ void* thread_func(void *arg)
     }
 
     /* read the fixed-size variable */
-    err = ncmpi_get_var_double_all(ncid, varid[1], dbuf); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_var_double_all(ncid, varid[1], dbuf);
+    else
+        err = ncmpi_get_var_double(ncid, varid[1], dbuf);
+    CHECK_ERR
+
     for (i=0; i<NY*NX; i++) {
         if (dbuf[i] != (double)id) {
             printf("Error at %s line %d: expect ibuf[%d]=%d but got %f\n",
@@ -282,67 +324,22 @@ err_out:
 }
 #endif
 
-/*----< main() >-------------------------------------------------------------*/
-int main(int argc, char **argv) {
-    char filename[256];
-    int  i, err, nerrs=0, rank, providedT;
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
+{
+    int i, err, nerrs=0, rank, ncid;
     thread_arg t_arg[NTHREADS]; /* must be unique to each thread */
-
-#ifdef ENABLE_THREAD_SAFE
     pthread_t threads[NTHREADS];
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &providedT);
-#else
-    MPI_Init(&argc, &argv);
-#endif
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for thread safety ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-#ifdef ENABLE_THREAD_SAFE
-#ifdef DEBUG
-    if (rank == 0) {
-        switch (providedT) {
-            case MPI_THREAD_SINGLE:      printf("Support MPI_THREAD_SINGLE\n");
-                                         break;
-            case MPI_THREAD_FUNNELED:    printf("Support MPI_THREAD_FUNNELED\n");
-                                         break;
-            case MPI_THREAD_SERIALIZED:  printf("Support MPI_THREAD_SERIALIZED\n");
-                                         break;
-            case MPI_THREAD_MULTIPLE:    printf("Support MPI_THREAD_MULTIPLE\n");
-                                         break;
-            default: printf("Error MPI_Init_thread()\n"); break;
-        }
-    }
-#endif
-    if (providedT != MPI_THREAD_MULTIPLE) {
-        if (!rank) {
-            char fname[512];
-            printf("\nWarning: MPI provided thread support level is less than MPI_THREAD_MULTIPLE ---- skip this test\n");
-            for (i=0; i<NTHREADS; i++) { /* create dummy files for ncvalidator to check */
-                int ncid;
-                sprintf(fname, "%s.%d", filename, i);
-                err = ncmpi_create(MPI_COMM_SELF, fname, NC_CLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
-                err = ncmpi_close(ncid); CHECK_ERR
-            }
-        }
-        MPI_Finalize();
-        return 0;
-    }
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
     /* initialize thread barrier */
     err = pthread_barrier_init(&barr, NULL, NTHREADS);
@@ -351,7 +348,8 @@ int main(int argc, char **argv) {
     /* create threads, each calls thread_func() */
     for (i=0; i<NTHREADS; i++) {
         t_arg[i].id = i + rank * NTHREADS;
-        sprintf(t_arg[i].fname, "%s",filename);
+        t_arg[i].coll_io = coll_io;
+        sprintf(t_arg[i].fname, "%s",out_path);
         err = pthread_create(&threads[i], NULL, thread_func, &t_arg[i]);
         ERRNO_HANDLE(err)
     }
@@ -368,27 +366,81 @@ int main(int argc, char **argv) {
     err = pthread_barrier_destroy(&barr);
     ERRNO_HANDLE(err)
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    /* open the newly created files to validate and then delete them */
+    for (i=0; i<NTHREADS; i++) {
+        char filename[512];
+        sprintf(filename, "%s.%d", out_path, i+rank*NTHREADS);
+        err = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+        CHECK_ERR
+        err = ncmpi_close(ncid);
+        CHECK_ERR
+
+        unlink(filename);
     }
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-#else
-    if (rank == 0) printf(SKIP_STR);
-#endif
+    MPI_Barrier(MPI_COMM_WORLD);
 
 err_out:
+    return nerrs;
+}
+
+
+int main(int argc, char **argv) {
+
+    int err=0;
+
+#ifdef ENABLE_THREAD_SAFE
+    int rank, providedT;
+
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &providedT);
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+#ifdef DEBUG
+    if (rank == 0) {
+        switch (providedT) {
+            case MPI_THREAD_SINGLE:      printf("Support MPI_THREAD_SINGLE\n");
+                                         break;
+            case MPI_THREAD_FUNNELED:    printf("Support MPI_THREAD_FUNNELED\n");
+                                         break;
+            case MPI_THREAD_SERIALIZED:  printf("Support MPI_THREAD_SERIALIZED\n");
+                                         break;
+            case MPI_THREAD_MULTIPLE:    printf("Support MPI_THREAD_MULTIPLE\n");
+                                         break;
+            default: printf("Error MPI_Init_thread()\n"); break;
+        }
+    }
+#endif
+    if (providedT != MPI_THREAD_MULTIPLE) {
+        if (!rank)
+            printf("\nWarning: MPI provided thread support level is less than MPI_THREAD_MULTIPLE ---- skip this test\n");
+        MPI_Finalize();
+        return 0;
+    }
+
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 0; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "thread safety", opt, test_io);
+
+#else
+    MPI_Init(&argc, &argv);
+#endif
+
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

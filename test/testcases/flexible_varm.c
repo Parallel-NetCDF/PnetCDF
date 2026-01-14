@@ -122,12 +122,14 @@
 #define COLL_MODE 1
 
 static
-int tst_io(const char *filename,
-           int         mode,
-           MPI_Info    info)
+int tst_varm(const char *out_path,
+             const char *in_path, /* ignored */
+             int         format,
+             int         coll_io,
+             MPI_Info    info)
 {
     int i, j, rank, nprocs, err, nerrs=0, req, status;
-    int ncid, cmode, varid, dimid[2];
+    int ncid, varid, dimid[2];
     int array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     int buf[NX+2*GHOST][NY+2*GHOST];
     MPI_Offset start[2], count[2], stride[2], imap[2];
@@ -136,9 +138,12 @@ int tst_io(const char *filename,
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     /* define 2 dimensions */
@@ -149,7 +154,7 @@ int tst_io(const char *filename,
     err = ncmpi_def_var(ncid, "var", NC_DOUBLE, 2, dimid, &varid); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
-    if (mode == INDEP_MODE) {
+    if (!coll_io) {
         err = ncmpi_begin_indep_data(ncid);
         CHECK_ERR
     }
@@ -173,12 +178,12 @@ int tst_io(const char *filename,
     /* calling a blocking put_varm flexible API -----------------------------*/
     /* initiate put buffer contents */
     INIT_PUT_BUF
-    if (mode == INDEP_MODE)
-        err = ncmpi_put_varm(ncid, varid, start, count, stride, imap, buf,
-                             1, subarray);
-    else
+    if (coll_io)
         err = ncmpi_put_varm_all(ncid, varid, start, count, stride, imap, buf,
                                  1, subarray);
+    else
+        err = ncmpi_put_varm(ncid, varid, start, count, stride, imap, buf,
+                             1, subarray);
     CHECK_ERR
 
     /* check the contents of put buffer */
@@ -191,37 +196,35 @@ int tst_io(const char *filename,
                           1, subarray, &req);
     CHECK_ERR
 
-    if (mode == INDEP_MODE)
-        err = ncmpi_wait(ncid, 1, &req, &status);
-    else
+    if (coll_io)
         err = ncmpi_wait_all(ncid, 1, &req, &status);
+    else
+        err = ncmpi_wait(ncid, 1, &req, &status);
     CHECK_ERR
     err = status; CHECK_ERR
 
     /* check the contents of put buffer */
     CHECK_PUT_BUF
 
-    if (mode == INDEP_MODE) {
-        /* When running in independent data mode, flushing writes is necessary
-         * before reading the data back.
-         */
-        MPI_Barrier(MPI_COMM_WORLD);
-        err = ncmpi_sync(ncid);
-        CHECK_ERR
-        MPI_Barrier(MPI_COMM_WORLD);
-    }
+   /* When running in independent data mode, flushing writes is necessary
+    * before reading the data back.
+    */
+    MPI_Barrier(MPI_COMM_WORLD);
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* read back using a blocking get_varm flexible API ---------------------*/
     /* initiate get buffer contents */
     INIT_GET_BUF
 
     /* calling a blocking flexible API */
-    if (mode == INDEP_MODE)
-        err = ncmpi_get_varm(ncid, varid, start, count, stride, imap, buf,
-                             1, subarray);
-    else
+    if (coll_io)
         err = ncmpi_get_varm_all(ncid, varid, start, count, stride, imap, buf,
                                  1, subarray);
+    else
+        err = ncmpi_get_varm(ncid, varid, start, count, stride, imap, buf,
+                             1, subarray);
     CHECK_ERR
 
     /* check the contents of get buffer */
@@ -235,10 +238,10 @@ int tst_io(const char *filename,
     err = ncmpi_iget_varm(ncid, varid, start, count, stride, imap, buf,
                           1, subarray, &req);
     CHECK_ERR
-    if (mode == INDEP_MODE)
-        err = ncmpi_wait(ncid, 1, &req, &status);
-    else
+    if (coll_io)
         err = ncmpi_wait_all(ncid, 1, &req, &status);
+    else
+        err = ncmpi_wait(ncid, 1, &req, &status);
     CHECK_ERR
     err = status; CHECK_ERR
 
@@ -250,72 +253,54 @@ int tst_io(const char *filename,
     err = ncmpi_close(ncid); CHECK_ERR
 
 err_out:
-    return (nerrs > 0);
+    return nerrs;
 }
 
-int main(int argc, char** argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
-    char filename[256];
-    int rank, nprocs, err, nerrs=0;
-    MPI_Info info=MPI_INFO_NULL;
+    int nerrs=0;
 
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for flexible varm APIs ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    nerrs = tst_io(filename, INDEP_MODE, MPI_INFO_NULL);
-    if (nerrs > 0) goto err_out;
-
-    nerrs = tst_io(filename, COLL_MODE, MPI_INFO_NULL);
+    nerrs = tst_varm(out_path, in_path, format, coll_io, info);
     if (nerrs > 0) goto err_out;
 
     /* disable PnetCDF internal buffering */
-    MPI_Info_create(&info);
     MPI_Info_set(info, "nc_ibuf_size", "0");
 
-    nerrs = tst_io(filename, INDEP_MODE, info);
+    nerrs = tst_varm(out_path, in_path, format, coll_io, info);
     if (nerrs > 0) goto err_out;
-
-    nerrs = tst_io(filename, COLL_MODE, info);
-    if (nerrs > 0) goto err_out;
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
 
 err_out:
-    if (info != MPI_INFO_NULL) MPI_Info_create(&info);
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "flexible varm APIs", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}

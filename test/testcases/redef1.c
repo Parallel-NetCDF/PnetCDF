@@ -26,10 +26,14 @@
 
 #include <testutils.h>
 
-static int
-tst_fmt(char *filename, int cmode)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
-    int i, j, k, rank, ncid, err, nerrs=0;
+    int i, j, k, nprocs, rank, ncid, err, nerrs=0;
     int dim0id, dim1id, dim5id, dim9id, dim2id, dimsid[2], dims2id[2];
     int varid, var3id, var4id, var2id;
     int *data;
@@ -38,11 +42,21 @@ tst_fmt(char *filename, int cmode)
     MPI_Offset start[2], count[2];
     MPI_Comm comm = MPI_COMM_WORLD;
 
-    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+#ifdef DEBUG
+    if (nprocs > 1 && rank == 0)
+        printf("Warning: %s is designed to run on 1 process\n",
+               basename(__FILE__));
+#endif
+
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
     /* Test NetCDF 4 first as ncvalidator checks only classic formats */
-    cmode |= NC_CLOBBER;
-    err = ncmpi_create(comm, filename, cmode, MPI_INFO_NULL, &ncid); CHECK_ERR
+    err = ncmpi_create(comm, out_path, NC_CLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "dim0", len0, &dim0id); CHECK_ERR
     err = ncmpi_def_dim(ncid, "dim1", len1, &dim1id); CHECK_ERR
@@ -63,6 +77,11 @@ tst_fmt(char *filename, int cmode)
 
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     /* put data */
     start[0] = 0;
     start[1] = 0;
@@ -75,7 +94,10 @@ tst_fmt(char *filename, int cmode)
         for (j=0; j<len1; j++)
             data[i*len1+j] = k++;
     if (rank > 0) count[0] = count[1] = 0;
-    err = ncmpi_put_vara_int_all(ncid, varid, start, count, &data[0]);
+    if (coll_io)
+        err = ncmpi_put_vara_int_all(ncid, varid, start, count, &data[0]);
+    else
+        err = ncmpi_put_vara_int(ncid, varid, start, count, &data[0]);
     CHECK_ERR
     free(data);
 
@@ -87,7 +109,10 @@ tst_fmt(char *filename, int cmode)
         for (j=0; j<len5; j++)
             data[i*len5+j] = k++;
     if (rank > 0) count[0] = count[1] = 0;
-    err = ncmpi_put_vara_int_all(ncid, var3id, start, count, &data[0]);
+    if (coll_io)
+        err = ncmpi_put_vara_int_all(ncid, var3id, start, count, &data[0]);
+    else
+        err = ncmpi_put_vara_int(ncid, var3id, start, count, &data[0]);
     CHECK_ERR
     free(data);
 
@@ -99,13 +124,21 @@ tst_fmt(char *filename, int cmode)
         for (j=0; j<len9; j++)
             data[i*len9+j] = k++;
     if (rank > 0) count[0] = count[1] = 0;
-    err = ncmpi_put_vara_int_all(ncid, var4id, start, count, &data[0]);
+    if (coll_io)
+        err = ncmpi_put_vara_int_all(ncid, var4id, start, count, &data[0]);
+    else
+        err = ncmpi_put_vara_int(ncid, var4id, start, count, &data[0]);
     CHECK_ERR
     free(data);
 
+    /* file sync before file close and re-open it */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+
     err = ncmpi_close(ncid); CHECK_ERR
 
-    err = ncmpi_open(comm, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, out_path, NC_WRITE, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
     err = ncmpi_redef(ncid); CHECK_ERR
@@ -119,6 +152,11 @@ tst_fmt(char *filename, int cmode)
 
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     start[0] = 0;
     start[1] = 0;
     count[0] = len0;
@@ -131,7 +169,10 @@ tst_fmt(char *filename, int cmode)
             k++;
         }
     if (rank > 0) count[0] = count[1] = 0;
-    err = ncmpi_put_vara_double_all(ncid, var2id, start, count, &dbl_data[0]);
+    if (coll_io)
+        err = ncmpi_put_vara_double_all(ncid, var2id, start, count, &dbl_data[0]);
+    else
+        err = ncmpi_put_vara_double(ncid, var2id, start, count, &dbl_data[0]);
     CHECK_ERR
     free(dbl_data);
 
@@ -140,69 +181,27 @@ tst_fmt(char *filename, int cmode)
     return nerrs;
 }
 
-int main(int argc, char** argv)
-{
-    char filename[256], *hint_value;
-    int commsize, rank, err, nerrs=0, bb_enabled=0;
-    MPI_Comm comm = MPI_COMM_WORLD;
+int main(int argc, char **argv) {
+
+    int err;
+    loop_opts opt;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_size(comm, &commsize);
-    MPI_Comm_rank(comm, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "redef2.nc");
+    opt.num_fmts = sizeof(nc_formats) / sizeof(int);
+    opt.formats  = nc_formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 1; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for entering re-define mode ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-#ifdef DEBUG
-    if (commsize > 1 && rank == 0)
-        printf("Warning: %s is designed to run on 1 process\n",argv[0]);
-#endif
-
-    /* check whether burst buffering is enabled */
-    if (inq_env_hint("nc_burst_buf", &hint_value)) {
-        if (strcasecmp(hint_value, "enable") == 0) bb_enabled = 1;
-        free(hint_value);
-    }
-
-    nerrs += tst_fmt(filename, 0);
-    nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
-    if (!bb_enabled) {
-#ifdef ENABLE_NETCDF4
-        nerrs += tst_fmt(filename, NC_NETCDF4);
-        nerrs += tst_fmt(filename, NC_NETCDF4 | NC_CLASSIC_MODEL);
-#endif
-    }
-    nerrs += tst_fmt(filename, NC_64BIT_DATA);
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    err = tst_main(argc, argv, "entering re-define mode", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

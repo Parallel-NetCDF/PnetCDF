@@ -77,8 +77,8 @@ dnl
 #define EndDef_                 ncmpi__enddef
 #define FileClose               ncmpi_close
 #define StrError                ncmpi_strerror
-#define FileCreate(a,b,c)       ncmpi_create(MPI_COMM_WORLD,a,b,MPI_INFO_NULL,c)
-#define FileOpen(a,b,c)         ncmpi_open(MPI_COMM_WORLD,a,b,MPI_INFO_NULL,c)
+#define FileCreate(a,b,c)       ncmpi_create(MPI_COMM_WORLD,a,b,info,c)
+#define FileOpen(a,b,c)         ncmpi_open(MPI_COMM_WORLD,a,b,info,c)
 #define API(kind)               ncmpi_##kind
 #define API_ALL(kind)           ncmpi_##kind##_all
 #endif
@@ -131,9 +131,9 @@ define(`EXTRA_ITYPES',`uchar,ushort,uint,longlong,ulonglong')dnl
 define(`TEST_FORMAT',dnl
 `dnl
 static int
-test_format_nc$1(char *filename)
+test_format_nc$1(const char *out_path, int coll_io, MPI_Info info)
 {
-    int err, nerrs=0, ncid, cmode, dimids[2];
+    int err, nerrs=0, ncid, dimids[2];
     MPI_Offset start[2], count[2];
 #ifdef TEST_NETCDF
     ptrdiff_t stride[2];
@@ -160,16 +160,10 @@ test_format_nc$1(char *filename)
     dnl #define NC_FORMAT_64BIT_DATA      (5)
 
     /* create a new file */
-    ifelse(`$1',`2',`cmode = NC_CLOBBER | NC_64BIT_OFFSET;',
-           `$1',`5',`cmode = NC_CLOBBER | NC_64BIT_DATA;',
-           `$1',`3',`cmode = NC_CLOBBER | NC_NETCDF4;',
-           `$1',`4',`cmode = NC_CLOBBER | NC_NETCDF4 | NC_CLASSIC_MODEL;',
-                    `cmode = NC_CLOBBER;')dnl
-
-    err=FileCreate(filename, cmode, &ncid);
+    err=FileCreate(out_path, NC_CLOBBER, &ncid);
     if (err != NC_NOERR) {
         printf("Error at line %d in %s: FileCreate() file %s (%s)\n",
-        __LINE__,__FILE__,filename,StrError(err));
+        __LINE__,__FILE__,out_path,StrError(err));
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(1);
     }
@@ -270,22 +264,44 @@ test_format_nc$1(char *filename)
     err=API(del_att)(ncid,vid_'itype`,`"att_'itype`"'); CHECK_ERR')')
 
     /* test put_var APIs in define mode */
-    ifelse(`$1',`3',`',`/* test NC_EINDEFINE */dnl
-    foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API_ALL(put_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_EINDEFINE)
-    err=API_ALL(put_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EINDEFINE)
-    err=API_ALL(put_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EINDEFINE)
-    err=API_ALL(put_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EINDEFINE)
-    err=API_ALL(put_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINDEFINE)')')')
+    if (coll_io) {
+        ifelse(`$1',`3',`',`/* test NC_EINDEFINE */dnl
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API_ALL(put_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_EINDEFINE)
+        err=API_ALL(put_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EINDEFINE)
+        err=API_ALL(put_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EINDEFINE)
+        err=API_ALL(put_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EINDEFINE)
+        err=API_ALL(put_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINDEFINE)')')')
+    }
+    else {
+        ifelse(`$1',`3',`',`/* test NC_EINDEFINE */dnl
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API(put_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_EINDEFINE)
+        err=API(put_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EINDEFINE)
+        err=API(put_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EINDEFINE)
+        err=API(put_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EINDEFINE)
+        err=API(put_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINDEFINE)')')')
+    }
 
     /* test put_var APIs in define mode */
-    ifelse(`$1',`3',`',`/* test NC_EINDEFINE */dnl
-    foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API_ALL(get_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_EINDEFINE)
-    err=API_ALL(get_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EINDEFINE)
-    err=API_ALL(get_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EINDEFINE)
-    err=API_ALL(get_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EINDEFINE)
-    err=API_ALL(get_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINDEFINE)')')')
+    if (coll_io) {
+        ifelse(`$1',`3',`',`/* test NC_EINDEFINE */dnl
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API_ALL(get_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_EINDEFINE)
+        err=API_ALL(get_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EINDEFINE)
+        err=API_ALL(get_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EINDEFINE)
+        err=API_ALL(get_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EINDEFINE)
+        err=API_ALL(get_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINDEFINE)')')')
+    }
+    else {
+        ifelse(`$1',`3',`',`/* test NC_EINDEFINE */dnl
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API(get_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_EINDEFINE)
+        err=API(get_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EINDEFINE)
+        err=API(get_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EINDEFINE)
+        err=API(get_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EINDEFINE)
+        err=API(get_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINDEFINE)')')')
+    }
 
     /* test NC_EBADID */
     err=EndDef(-999); EXP_ERR(NC_EBADID)
@@ -293,6 +309,11 @@ test_format_nc$1(char *filename)
 
     /* leave define mode and enter data mode */
     err=EndDef(ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     /* attribute att_text has been deleted */
     foreach(`itype',(text, TYPE_LIST),`_CAT(`
@@ -323,74 +344,146 @@ test_format_nc$1(char *filename)
      */
 
     /* test NC_EBADID */dnl
-    foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API_ALL(put_var_'itype`) (-999,-999,NULL);                     EXP_ERR(NC_EBADID)
-    err=API_ALL(put_var1_'itype`)(-999,-999,NULL,NULL);                EXP_ERR(NC_EBADID)
-    err=API_ALL(put_vara_'itype`)(-999,-999,NULL,NULL,NULL);           EXP_ERR(NC_EBADID)
-    err=API_ALL(put_vars_'itype`)(-999,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EBADID)
-    err=API_ALL(put_varm_'itype`)(-999,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EBADID)
-    err=API_ALL(get_var_'itype`) (-999,-999,NULL);                     EXP_ERR(NC_EBADID)
-    err=API_ALL(get_var1_'itype`)(-999,-999,NULL,NULL);                EXP_ERR(NC_EBADID)
-    err=API_ALL(get_vara_'itype`)(-999,-999,NULL,NULL,NULL);           EXP_ERR(NC_EBADID)
-    err=API_ALL(get_vars_'itype`)(-999,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EBADID)
-    err=API_ALL(get_varm_'itype`)(-999,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EBADID)
-')')
+    if (coll_io) {
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API_ALL(put_var_'itype`) (-999,-999,NULL);                     EXP_ERR(NC_EBADID)
+        err=API_ALL(put_var1_'itype`)(-999,-999,NULL,NULL);                EXP_ERR(NC_EBADID)
+        err=API_ALL(put_vara_'itype`)(-999,-999,NULL,NULL,NULL);           EXP_ERR(NC_EBADID)
+        err=API_ALL(put_vars_'itype`)(-999,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EBADID)
+        err=API_ALL(put_varm_'itype`)(-999,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EBADID)
+        err=API_ALL(get_var_'itype`) (-999,-999,NULL);                     EXP_ERR(NC_EBADID)
+        err=API_ALL(get_var1_'itype`)(-999,-999,NULL,NULL);                EXP_ERR(NC_EBADID)
+        err=API_ALL(get_vara_'itype`)(-999,-999,NULL,NULL,NULL);           EXP_ERR(NC_EBADID)
+        err=API_ALL(get_vars_'itype`)(-999,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EBADID)
+        err=API_ALL(get_varm_'itype`)(-999,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EBADID)
+        ')')
+    }
+    else {
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API(put_var_'itype`) (-999,-999,NULL);                     EXP_ERR(NC_EBADID)
+        err=API(put_var1_'itype`)(-999,-999,NULL,NULL);                EXP_ERR(NC_EBADID)
+        err=API(put_vara_'itype`)(-999,-999,NULL,NULL,NULL);           EXP_ERR(NC_EBADID)
+        err=API(put_vars_'itype`)(-999,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EBADID)
+        err=API(put_varm_'itype`)(-999,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EBADID)
+        err=API(get_var_'itype`) (-999,-999,NULL);                     EXP_ERR(NC_EBADID)
+        err=API(get_var1_'itype`)(-999,-999,NULL,NULL);                EXP_ERR(NC_EBADID)
+        err=API(get_vara_'itype`)(-999,-999,NULL,NULL,NULL);           EXP_ERR(NC_EBADID)
+        err=API(get_vars_'itype`)(-999,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EBADID)
+        err=API(get_varm_'itype`)(-999,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EBADID)
+        ')')
+    }
 
     /* test NC_ENOTVAR */dnl
-    foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API_ALL(put_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_ENOTVAR)
-    err=API_ALL(put_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_ENOTVAR)
-    err=API_ALL(put_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_ENOTVAR)
-    err=API_ALL(put_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_ENOTVAR)
-    err=API_ALL(put_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_ENOTVAR)
-    err=API_ALL(get_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_ENOTVAR)
-    err=API_ALL(get_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_ENOTVAR)
-    err=API_ALL(get_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_ENOTVAR)
-    err=API_ALL(get_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_ENOTVAR)
-    err=API_ALL(get_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_ENOTVAR)
-')')
+    if (coll_io) {
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API_ALL(put_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_ENOTVAR)
+        err=API_ALL(put_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_ENOTVAR)
+        err=API_ALL(put_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_ENOTVAR)
+        err=API_ALL(put_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_ENOTVAR)
+        err=API_ALL(put_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_ENOTVAR)
+        err=API_ALL(get_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_ENOTVAR)
+        err=API_ALL(get_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_ENOTVAR)
+        err=API_ALL(get_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_ENOTVAR)
+        err=API_ALL(get_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_ENOTVAR)
+        err=API_ALL(get_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_ENOTVAR)
+        ')')
+    }
+    else {
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API(put_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_ENOTVAR)
+        err=API(put_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_ENOTVAR)
+        err=API(put_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_ENOTVAR)
+        err=API(put_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_ENOTVAR)
+        err=API(put_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_ENOTVAR)
+        err=API(get_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_ENOTVAR)
+        err=API(get_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_ENOTVAR)
+        err=API(get_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_ENOTVAR)
+        err=API(get_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_ENOTVAR)
+        err=API(get_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_ENOTVAR)
+        ')')
+    }
 
     /* test NC_EINVALCOORDS */
     start[0] = Y_LEN;
     start[1] = X_LEN;
-    foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API_ALL(put_var1_'itype`)(ncid,vid_'itype`,NULL,NULL);                 EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(put_vara_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL);            EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL);       EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL,NULL);  EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(put_var1_'itype`)(ncid,vid_'itype`,start,NULL);                EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(put_vara_'itype`)(ncid,vid_'itype`,start,NULL,NULL);           EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL);      EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(get_var1_'itype`)(ncid,vid_'itype`,NULL,NULL);                 EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(get_vara_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL);            EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL);       EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL,NULL);  EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(get_var1_'itype`)(ncid,vid_'itype`,start,NULL);                EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(get_vara_'itype`)(ncid,vid_'itype`,start,NULL,NULL);           EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL);      EXP_ERR(NC_EINVALCOORDS)
-    err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINVALCOORDS)
-')')
+    if (coll_io) {
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API_ALL(put_var1_'itype`)(ncid,vid_'itype`,NULL,NULL);                 EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(put_vara_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL);            EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL);       EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL,NULL);  EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(put_var1_'itype`)(ncid,vid_'itype`,start,NULL);                EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(put_vara_'itype`)(ncid,vid_'itype`,start,NULL,NULL);           EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL);      EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(get_var1_'itype`)(ncid,vid_'itype`,NULL,NULL);                 EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(get_vara_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL);            EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL);       EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL,NULL);  EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(get_var1_'itype`)(ncid,vid_'itype`,start,NULL);                EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(get_vara_'itype`)(ncid,vid_'itype`,start,NULL,NULL);           EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL);      EXP_ERR(NC_EINVALCOORDS)
+        err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINVALCOORDS)
+        ')')
+    }
+    else {
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API(put_var1_'itype`)(ncid,vid_'itype`,NULL,NULL);                 EXP_ERR(NC_EINVALCOORDS)
+        err=API(put_vara_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL);            EXP_ERR(NC_EINVALCOORDS)
+        err=API(put_vars_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL);       EXP_ERR(NC_EINVALCOORDS)
+        err=API(put_varm_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL,NULL);  EXP_ERR(NC_EINVALCOORDS)
+        err=API(put_var1_'itype`)(ncid,vid_'itype`,start,NULL);                EXP_ERR(NC_EINVALCOORDS)
+        err=API(put_vara_'itype`)(ncid,vid_'itype`,start,NULL,NULL);           EXP_ERR(NC_EINVALCOORDS)
+        err=API(put_vars_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL);      EXP_ERR(NC_EINVALCOORDS)
+        err=API(put_varm_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINVALCOORDS)
+        err=API(get_var1_'itype`)(ncid,vid_'itype`,NULL,NULL);                 EXP_ERR(NC_EINVALCOORDS)
+        err=API(get_vara_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL);            EXP_ERR(NC_EINVALCOORDS)
+        err=API(get_vars_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL);       EXP_ERR(NC_EINVALCOORDS)
+        err=API(get_varm_'itype`)(ncid,vid_'itype`,NULL,NULL,NULL,NULL,NULL);  EXP_ERR(NC_EINVALCOORDS)
+        err=API(get_var1_'itype`)(ncid,vid_'itype`,start,NULL);                EXP_ERR(NC_EINVALCOORDS)
+        err=API(get_vara_'itype`)(ncid,vid_'itype`,start,NULL,NULL);           EXP_ERR(NC_EINVALCOORDS)
+        err=API(get_vars_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL);      EXP_ERR(NC_EINVALCOORDS)
+        err=API(get_varm_'itype`)(ncid,vid_'itype`,start,NULL,NULL,NULL,NULL); EXP_ERR(NC_EINVALCOORDS)
+        ')')
+    }
 
     /* test NC_EEDGE */
     start[0] = 0;
     start[1] = 0;
     count[0] = Y_LEN;
     count[1] = X_LEN + 1;
-    foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API_ALL(put_vara_'itype`)(ncid,vid_'itype`,start,NULL, NULL);           EXP_ERR(NC_EEDGE)
-    err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL);      EXP_ERR(NC_EEDGE)
-    err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
-    err=API_ALL(put_vara_'itype`)(ncid,vid_'itype`,start,count,NULL);           EXP_ERR(NC_EEDGE)
-    err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL);      EXP_ERR(NC_EEDGE)
-    err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
-    err=API_ALL(get_vara_'itype`)(ncid,vid_'itype`,start,NULL, NULL);           EXP_ERR(NC_EEDGE)
-    err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL);      EXP_ERR(NC_EEDGE)
-    err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
-    err=API_ALL(get_vara_'itype`)(ncid,vid_'itype`,start,count,NULL);           EXP_ERR(NC_EEDGE)
-    err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL);      EXP_ERR(NC_EEDGE)
-    err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
-')')
+    if (coll_io) {
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API_ALL(put_vara_'itype`)(ncid,vid_'itype`,start,NULL, NULL);           EXP_ERR(NC_EEDGE)
+        err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL);      EXP_ERR(NC_EEDGE)
+        err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
+        err=API_ALL(put_vara_'itype`)(ncid,vid_'itype`,start,count,NULL);           EXP_ERR(NC_EEDGE)
+        err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL);      EXP_ERR(NC_EEDGE)
+        err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
+        err=API_ALL(get_vara_'itype`)(ncid,vid_'itype`,start,NULL, NULL);           EXP_ERR(NC_EEDGE)
+        err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL);      EXP_ERR(NC_EEDGE)
+        err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
+        err=API_ALL(get_vara_'itype`)(ncid,vid_'itype`,start,count,NULL);           EXP_ERR(NC_EEDGE)
+        err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL);      EXP_ERR(NC_EEDGE)
+        err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
+        ')')
+    }
+    else {
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API(put_vara_'itype`)(ncid,vid_'itype`,start,NULL, NULL);           EXP_ERR(NC_EEDGE)
+        err=API(put_vars_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL);      EXP_ERR(NC_EEDGE)
+        err=API(put_varm_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
+        err=API(put_vara_'itype`)(ncid,vid_'itype`,start,count,NULL);           EXP_ERR(NC_EEDGE)
+        err=API(put_vars_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL);      EXP_ERR(NC_EEDGE)
+        err=API(put_varm_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
+        err=API(get_vara_'itype`)(ncid,vid_'itype`,start,NULL, NULL);           EXP_ERR(NC_EEDGE)
+        err=API(get_vars_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL);      EXP_ERR(NC_EEDGE)
+        err=API(get_varm_'itype`)(ncid,vid_'itype`,start,NULL, NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
+        err=API(get_vara_'itype`)(ncid,vid_'itype`,start,count,NULL);           EXP_ERR(NC_EEDGE)
+        err=API(get_vars_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL);      EXP_ERR(NC_EEDGE)
+        err=API(get_varm_'itype`)(ncid,vid_'itype`,start,count,NULL,NULL,NULL); EXP_ERR(NC_EEDGE)
+        ')')
+    }
 
     /* test NC_ESTRIDE */
     start[0] = start[1] = 0;
@@ -398,28 +491,49 @@ test_format_nc$1(char *filename)
     count[1] = X_LEN;
     stride[0] = -1;
     stride[1] = -1;
-    foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,start,count,stride,NULL);      EXP_ERR(NC_ESTRIDE)
-    err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,start,count,stride,NULL,NULL); EXP_ERR(NC_ESTRIDE)
-    err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,start,count,stride,NULL);      EXP_ERR(NC_ESTRIDE)
-    err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,start,count,stride,NULL,NULL); EXP_ERR(NC_ESTRIDE)
-')')
+    if (coll_io) {
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API_ALL(put_vars_'itype`)(ncid,vid_'itype`,start,count,stride,NULL);      EXP_ERR(NC_ESTRIDE)
+        err=API_ALL(put_varm_'itype`)(ncid,vid_'itype`,start,count,stride,NULL,NULL); EXP_ERR(NC_ESTRIDE)
+        err=API_ALL(get_vars_'itype`)(ncid,vid_'itype`,start,count,stride,NULL);      EXP_ERR(NC_ESTRIDE)
+        err=API_ALL(get_varm_'itype`)(ncid,vid_'itype`,start,count,stride,NULL,NULL); EXP_ERR(NC_ESTRIDE)
+        ')')
+    }
+    else {
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API(put_vars_'itype`)(ncid,vid_'itype`,start,count,stride,NULL);      EXP_ERR(NC_ESTRIDE)
+        err=API(put_varm_'itype`)(ncid,vid_'itype`,start,count,stride,NULL,NULL); EXP_ERR(NC_ESTRIDE)
+        err=API(get_vars_'itype`)(ncid,vid_'itype`,start,count,stride,NULL);      EXP_ERR(NC_ESTRIDE)
+        err=API(get_varm_'itype`)(ncid,vid_'itype`,start,count,stride,NULL,NULL); EXP_ERR(NC_ESTRIDE)
+        ')')
+    }
 
     /* close the file */
     err=FileClose(-999); EXP_ERR(NC_EBADID)
+
+    /* file sync before reading */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+
     err=FileClose(ncid); CHECK_ERR
 
     /* open the file with read-only permission */
-    err=FileOpen(filename, NC_NOWRITE, &ncid);
+    err=FileOpen(out_path, NC_NOWRITE, &ncid);
     if (err != NC_NOERR) {
         printf("Error at line %d in %s: FileOpen() file %s (%s)\n",
-        __LINE__,__FILE__,filename,StrError(err));
+        __LINE__,__FILE__,out_path,StrError(err));
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(1);
     }
 
     /* test NC_EPERM */
     err=ReDef(ncid); EXP_ERR(NC_EPERM)
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     /* test NC_EPERM for attribute APIs */dnl
     err=API(put_att_text) (-999,-999,NULL,-999,NULL);           EXP_ERR(NC_EBADID)
@@ -442,12 +556,22 @@ test_format_nc$1(char *filename)
     err=API(put_att_'itype`)(ncid,vid_'itype`,`"att_'itype`"',NC_TYPE(itype),1,NULL); EXP_ERR(NC_EPERM)')')
 
     /* test NC_EPERM */dnl
-    foreach(`itype',(text, TYPE_LIST),`_CAT(`
-    err=API_ALL(put_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_EPERM)
-    err=API_ALL(put_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EPERM)
-    err=API_ALL(put_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EPERM)
-    err=API_ALL(put_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EPERM)
-    err=API_ALL(put_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EPERM)')')
+    if (coll_io) {
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API_ALL(put_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_EPERM)
+        err=API_ALL(put_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EPERM)
+        err=API_ALL(put_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EPERM)
+        err=API_ALL(put_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EPERM)
+        err=API_ALL(put_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EPERM)')')
+    }
+    else {
+        foreach(`itype',(text, TYPE_LIST),`_CAT(`
+        err=API(put_var_'itype`) (ncid,-999,NULL);                     EXP_ERR(NC_EPERM)
+        err=API(put_var1_'itype`)(ncid,-999,NULL,NULL);                EXP_ERR(NC_EPERM)
+        err=API(put_vara_'itype`)(ncid,-999,NULL,NULL,NULL);           EXP_ERR(NC_EPERM)
+        err=API(put_vars_'itype`)(ncid,-999,NULL,NULL,NULL,NULL);      EXP_ERR(NC_EPERM)
+        err=API(put_varm_'itype`)(ncid,-999,NULL,NULL,NULL,NULL,NULL); EXP_ERR(NC_EPERM)')')
+    }
 
     /* close the file */
     err=FileClose(-999); EXP_ERR(NC_EBADID)
@@ -471,65 +595,67 @@ test_format_nc$1(char *filename)
 TEST_FORMAT(1)
 TEST_FORMAT(2)
 TEST_FORMAT(5)
-#if defined(ENABLE_NETCDF4) || defined(TEST_NETCDF)
 TEST_FORMAT(3)
 TEST_FORMAT(4)
-#endif
 
-/*----< main() >------------------------------------------------------------*/
-int main(int argc, char **argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
-    char filename[256];
-    int rank=0, nerrs=0;
+    char val[MPI_MAX_INFO_VAL];
+    int err, nerrs=0, flag;
 
-    MPI_Init(&argc,&argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    /* check whether burst buffering is enabled */
+    MPI_Info_get(info, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, val, &flag);
+    if (flag && strcasecmp(val, "enable") == 0 &&
+        (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC))
+        /* does not work for NetCDF4 files when burst-buffering is enabled */
+        return 0;
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for error precedence ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
     verbose = 0;
 
-    /* test all file formats separately */
-    nerrs += test_format_nc1(filename);
-    nerrs += test_format_nc2(filename);
-#if defined(ENABLE_NETCDF4) || defined(TEST_NETCDF)
-    nerrs += test_format_nc3(filename); /* NC_FORMAT_NETCDF4 */
-    nerrs += test_format_nc4(filename); /* NC_FORMAT_NETCDF4_CLASSIC */
-#endif
-    nerrs += test_format_nc5(filename);
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
-#ifndef TEST_NETCDF
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    int err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
+    if (format == NC_FORMAT_CLASSIC)
+        nerrs = test_format_nc1(out_path, coll_io, info);
+    else if (format == NC_FORMAT_64BIT_OFFSET)
+        nerrs = test_format_nc2(out_path, coll_io, info);
+    else if (format == NC_FORMAT_NETCDF4)
+        nerrs = test_format_nc3(out_path, coll_io, info);
+    else if (format == NC_FORMAT_NETCDF4_CLASSIC)
+        nerrs = test_format_nc4(out_path, coll_io, info);
+    else if (format == NC_FORMAT_64BIT_DATA)
+        nerrs = test_format_nc5(out_path, coll_io, info);
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-#endif
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(nc_formats) / sizeof(int);
+    opt.formats  = nc_formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 1; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "error precedence", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}

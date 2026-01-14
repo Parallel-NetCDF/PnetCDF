@@ -33,9 +33,9 @@
 
 static
 int check_num_vars(int  ncid,
-                    int  expected_nvars,
-                    int  expected_num_rec_vars,
-                    int  expected_num_fix_vars)
+                   int  expected_nvars,
+                   int  expected_num_rec_vars,
+                   int  expected_num_fix_vars)
 {
     int err, nerrs=0, nvars, num_rec_vars, num_fix_vars;
 
@@ -66,15 +66,29 @@ int check_num_vars(int  ncid,
     return nerrs;
 }
 
-static int
-tst_fmt(char *filename, int cmode)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
 {
-    int nerrs=0, err, ncid, varid[7], dimid[3];
-    MPI_Info info=MPI_INFO_NULL;
+    char val[MPI_MAX_INFO_VAL];
+    int nerrs=0, err, flag, ncid, varid[7], dimid[3];
+
+    /* check whether burst buffering is enabled */
+    MPI_Info_get(info, "nc_burst_buf", MPI_MAX_INFO_VAL - 1, val, &flag);
+    if (flag && strcasecmp(val, "enable") == 0 &&
+        (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC))
+        /* does not work for NetCDF4 files when burst-buffering is enabled */
+        return 0;
+
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
     /* create a new file for writing ----------------------------------------*/
-    cmode |= NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid); CHECK_ERR
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR
 
     /* define dimension and variable */
     err = ncmpi_def_dim(ncid, "REC_DIM", NC_UNLIMITED, &dimid[0]); CHECK_ERR
@@ -109,10 +123,15 @@ tst_fmt(char *filename, int cmode)
 
     nerrs += check_num_vars(ncid, 7, 4, 3);
 
+    /* file sync before reading */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* open the file for reading --------------------------------------------*/
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOWRITE, info, &ncid);
     CHECK_ERR
 
     nerrs += check_num_vars(ncid, 7, 4, 3);
@@ -122,64 +141,27 @@ tst_fmt(char *filename, int cmode)
     return nerrs;
 }
 
-int main(int argc, char** argv) {
-    char filename[256], *hint_value;
-    int nerrs=0, rank, err, bb_enabled=0;
+int main(int argc, char **argv) {
+
+    int err;
+    loop_opts opt;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        goto fn_exit;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
+    opt.num_fmts = sizeof(nc_formats) / sizeof(int);
+    opt.formats  = nc_formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for no. record/fixed variables", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
+    err = tst_main(argc, argv, "number of variables", opt, test_io);
 
-    /* printf("PnetCDF version string: \"%s\"\n", ncmpi_inq_libvers()); */
-
-    /* check whether burst buffering is enabled */
-    if (inq_env_hint("nc_burst_buf", &hint_value)) {
-        if (strcasecmp(hint_value, "enable") == 0) bb_enabled = 1;
-        free(hint_value);
-    }
-
-    nerrs += tst_fmt(filename, 0);
-    nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
-    if (!bb_enabled) {
-#ifdef ENABLE_NETCDF4
-        nerrs += tst_fmt(filename, NC_NETCDF4);
-        nerrs += tst_fmt(filename, NC_NETCDF4 | NC_CLASSIC_MODEL);
-#endif
-    }
-    nerrs += tst_fmt(filename, NC_64BIT_DATA);
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-
-fn_exit:
     MPI_Finalize();
-    return (nerrs > 0);
-}
 
+    return err;
+}

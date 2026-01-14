@@ -50,6 +50,7 @@ static int verbose;
 static int
 check_vars(MPI_Comm    comm,
            int         ncid,
+           int         coll_io,
            MPI_Offset *start,
            MPI_Offset *count)
 {
@@ -68,7 +69,10 @@ check_vars(MPI_Comm    comm,
         err = ncmpi_inq_vardimid(ncid, id, dimids); CHECK_ERROUT
         if (dimids[0] == rec_dim) continue;
 
-        err = ncmpi_get_vara_int_all(ncid, id, start+1, count+1, buf);
+        if (coll_io)
+            err = ncmpi_get_vara_int_all(ncid, id, start+1, count+1, buf);
+        else
+            err = ncmpi_get_vara_int(ncid, id, start+1, count+1, buf);
         CHECK_ERR
 
         for (j=0; j<count[1] * count[2]; j++) {
@@ -92,7 +96,10 @@ check_vars(MPI_Comm    comm,
 
         for (r=0; r<nrecs; r++) {
             start[0] = r;
-            err = ncmpi_get_vara_int_all(ncid, id, start, count, buf);
+            if (coll_io)
+                err = ncmpi_get_vara_int_all(ncid, id, start, count, buf);
+            else
+                err = ncmpi_get_vara_int(ncid, id, start, count, buf);
             CHECK_ERR
             for (j=0; j<count[1] * count[2]; j++) {
                 int expect = rank + j + id * 10 + r;
@@ -140,7 +147,7 @@ err_out:
                __LINE__,__FILE__, exp_extent, extent); \
     } \
     /* read variables back and check contents */ \
-    nerrs += check_vars(comm, ncid, start, count); \
+    nerrs += check_vars(comm, ncid, coll_io, start, count); \
     if (nerrs > 0) { \
         printf("Error at line %d in %s: variable contents unexpected\n", \
                __LINE__,__FILE__ ); \
@@ -181,19 +188,22 @@ err_out:
 }
 #define WRITE_FIX_VAR(id) { \
     for (i=0; i<count[1] * count[2]; i++) buf[i] = rank + i + id * 10; \
-    err = ncmpi_put_vara_int_all(ncid, varid[id], start+1, count+1, buf); \
+    err = ncmpi_iput_vara_int(ncid, varid[id], start+1, count+1, buf, NULL); \
     CHECK_ERR \
 }
 #define WRITE_REC_VAR(id) { \
     for (i=0; i<count[1] * count[2]; i++) \
         buf[i] = rank + i + id * 10 + (int)start[0]; \
-    err = ncmpi_put_vara_int_all(ncid, varid[id], start, count, buf); \
+    err = ncmpi_iput_vara_int(ncid, varid[id], start, count, buf, NULL); \
     CHECK_ERR \
 }
 
-static int
-tst_fmt(char *filename,
-        int   cmode)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    global_info)
 {
     int i, rank, nprocs, ncid, err, nerrs=0;
     int *buf=NULL, dimid[3], varid[16];
@@ -208,15 +218,15 @@ tst_fmt(char *filename,
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
 
-    MPI_Info_create(&info);
+    MPI_Info_dup(global_info, &info);
     MPI_Info_set(info, "nc_var_align_size", "1024");
 
-    if (verbose && rank == 0)
-        printf("------------------------------------- cmode=%d\n", cmode);
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
     /* create a new file */
-    cmode |= NC_CLOBBER;
-    err = ncmpi_create(comm, filename, cmode, info, &ncid); CHECK_ERR
+    err = ncmpi_create(comm, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimid[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "Y", 10*nprocs, &dimid[1]); CHECK_ERR
@@ -230,6 +240,11 @@ tst_fmt(char *filename,
     ADD_FIX_VAR(3)
 
     err = ncmpi_enddef(ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     /* write to all variables, 1 record */
     start[0] = 0; start[1] = rank * 10; start[2] = 0;
@@ -245,10 +260,26 @@ tst_fmt(char *filename,
     WRITE_FIX_VAR(2)
     WRITE_FIX_VAR(3)
 
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+    else
+        err = ncmpi_wait(ncid, NC_REQ_ALL, NULL, NULL);
+    CHECK_ERR
+
+    /* file sync before reading */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* reopen the file */
-    err = ncmpi_open(comm, filename, NC_WRITE, info, &ncid); CHECK_ERR
+    err = ncmpi_open(comm, out_path, NC_WRITE, info, &ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     err = ncmpi_inq_varid(ncid, "v0", &varid[0]); CHECK_ERR
     err = ncmpi_inq_varid(ncid, "v1", &varid[1]); CHECK_ERR
@@ -265,6 +296,11 @@ tst_fmt(char *filename,
     GROW_METADATA(increment)
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     GET_HEADER_SIZE
 
     exp_hsize  = old_hsize + increment;
@@ -278,7 +314,18 @@ tst_fmt(char *filename,
     ADD_FIX_VAR(4)
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     WRITE_FIX_VAR(4)
+
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+    else
+        err = ncmpi_wait(ncid, NC_REQ_ALL, NULL, NULL);
+    CHECK_ERR
 
     GET_HEADER_SIZE
 
@@ -293,10 +340,21 @@ tst_fmt(char *filename,
     ADD_REC_VAR(5)
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     start[0] = 0; WRITE_REC_VAR(5) /* write 1st record */
     start[0] = 1; WRITE_REC_VAR(5) /* write 2nd record */
     start[0] = 1; WRITE_REC_VAR(0) /* write 2nd record */
     start[0] = 1; WRITE_REC_VAR(1) /* write 2nd record */
+
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+    else
+        err = ncmpi_wait(ncid, NC_REQ_ALL, NULL, NULL);
+    CHECK_ERR
 
     GET_HEADER_SIZE
 
@@ -313,7 +371,18 @@ tst_fmt(char *filename,
     ADD_FIX_VAR(6)
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     WRITE_FIX_VAR(6)
+
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+    else
+        err = ncmpi_wait(ncid, NC_REQ_ALL, NULL, NULL);
+    CHECK_ERR
 
     GET_HEADER_SIZE
 
@@ -330,12 +399,23 @@ tst_fmt(char *filename,
     ADD_REC_VAR(7)
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     start[0] = 0; WRITE_REC_VAR(7) /* write 1st record */
     start[0] = 1; WRITE_REC_VAR(7) /* write 2nd record */
     start[0] = 2; WRITE_REC_VAR(7) /* write 3rd record */
     start[0] = 2; WRITE_REC_VAR(0) /* write 3rd record */
     start[0] = 2; WRITE_REC_VAR(1) /* write 3rd record */
     start[0] = 2; WRITE_REC_VAR(5) /* write 3rd record */
+
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+    else
+        err = ncmpi_wait(ncid, NC_REQ_ALL, NULL, NULL);
+    CHECK_ERR
 
     GET_HEADER_SIZE
 
@@ -353,11 +433,22 @@ tst_fmt(char *filename,
     ADD_FIX_VAR(9)
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     WRITE_FIX_VAR(9)
 
     start[0] = 0; WRITE_REC_VAR(8) /* write 1st record */
     start[0] = 1; WRITE_REC_VAR(8) /* write 2nd record */
     start[0] = 2; WRITE_REC_VAR(8) /* write 3rd record */
+
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+    else
+        err = ncmpi_wait(ncid, NC_REQ_ALL, NULL, NULL);
+    CHECK_ERR
 
     GET_HEADER_SIZE
 
@@ -372,6 +463,11 @@ tst_fmt(char *filename,
     increment = extent - hsize + 8;
     GROW_METADATA(increment)
     err = ncmpi_enddef(ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     GET_HEADER_SIZE
 
@@ -388,60 +484,28 @@ err_out:
     return nerrs;
 }
 
-int main(int argc, char** argv)
-{
-    char filename[256];
-    int i, rank, err, nerrs=0, cmode[3];
-    MPI_Comm comm = MPI_COMM_WORLD;
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(comm, &rank);
 
-    verbose = 0;
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1;    /* test intra-node aggregation */
+    opt.drv      = 1;    /* test PNCIO driver */
+    opt.ind      = 1;    /* test hint romio_no_indep_rw */
+    opt.chk      = 4096; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1;    /* test burst-buffering feature */
+    opt.mod      = 1;    /* test independent data mode */
+    opt.hdr_diff = 1;    /* run ncmpidiff for file header only */
+    opt.var_diff = 1;    /* run ncmpidiff for variables */
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "tst_grow_header.nc");
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for header grow ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-        if (verbose) printf("\n");
-    }
-    cmode[0] = 0;
-    cmode[1] = NC_64BIT_OFFSET;
-    cmode[2] = NC_64BIT_DATA;
-
-    for (i=0; i<3; i++) {
-        nerrs += tst_fmt(filename, cmode[i]);
-        if (nerrs > 0) goto main_exit;
-    }
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-main_exit:
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    err = tst_main(argc, argv, "header grow", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
-}
 
+    return err;
+}

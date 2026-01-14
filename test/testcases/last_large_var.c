@@ -94,13 +94,13 @@
 #endif
 
 static
-int check_last_var(char *filename)
+int check_last_var(const char *filename, MPI_Info info)
 {
     int err, nerrs=0, ncid, cmode, fill_mode, varid, dimid[4];
 
     /* create a new file ---------------------------------------------------*/
     cmode = NC_CLOBBER;
-    err = FileCreate(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = FileCreate(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERR
 
     err = DefDim(ncid, "Y", NC_UNLIMITED, &dimid[0]); CHECK_ERR
@@ -120,13 +120,13 @@ int check_last_var(char *filename)
 }
 
 static
-int check_fix_var(char *filename)
+int check_fix_var(const char *filename, MPI_Info info)
 {
     int err, nerrs=0, ncid, cmode, fill_mode, varid, dimid[4];
 
     /* create a new CDF-1 file ----------------------------------------------*/
     cmode = NC_CLOBBER;
-    err = FileCreate(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = FileCreate(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERR
 
     err = DefDim(ncid, "X", 536870911, &dimid[0]); CHECK_ERR
@@ -144,7 +144,7 @@ int check_fix_var(char *filename)
 
     /* create a new CDF-2 file ----------------------------------------------*/
     cmode = NC_CLOBBER | NC_64BIT_OFFSET;
-    err = FileCreate(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = FileCreate(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERR
 
     err = DefDim(ncid, "X", 536870911, &dimid[0]); CHECK_ERR
@@ -165,13 +165,13 @@ int check_fix_var(char *filename)
 }
 
 static
-int check_fix_rec_var(char *filename)
+int check_fix_rec_var(const char *filename, MPI_Info info)
 {
     int err, nerrs=0, ncid, cmode, fill_mode, varid, dimid[4];
 
     /* create a new file ---------------------------------------------------*/
     cmode = NC_CLOBBER;
-    err = FileCreate(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = FileCreate(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERR
 
     err = DefDim(ncid, "Y", NC_UNLIMITED, &dimid[0]); CHECK_ERR
@@ -196,13 +196,13 @@ int check_fix_rec_var(char *filename)
  * record is less than 2 GiB - 4.
  */
 static
-int check_rec_var(char *filename, int cmode)
+int check_rec_var(const char *filename, int cmode, MPI_Info info)
 {
     int err, nerrs=0, ncid, fill_mode, varid, dimid[3];
 
     /* create a new file ---------------------------------------------------*/
     cmode |= NC_CLOBBER;
-    err = FileCreate(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = FileCreate(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERR
 
     err = DefDim(ncid, "Z", NC_UNLIMITED, &dimid[0]); CHECK_ERR
@@ -218,7 +218,7 @@ int check_rec_var(char *filename, int cmode)
 
     /* create a new file ---------------------------------------------------*/
     cmode |= NC_CLOBBER;
-    err = FileCreate(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = FileCreate(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERR
 
     err = DefDim(ncid, "Z", NC_UNLIMITED, &dimid[0]); CHECK_ERR
@@ -234,7 +234,7 @@ int check_rec_var(char *filename, int cmode)
 
     /* create a new file ---------------------------------------------------*/
     cmode |= NC_CLOBBER;
-    err = FileCreate(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = FileCreate(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERR
 
     err = DefDim(ncid, "Z", NC_UNLIMITED, &dimid[0]); CHECK_ERR
@@ -262,13 +262,13 @@ int check_rec_var(char *filename, int cmode)
  * this variable must be less than about 2 GiB.
  */
 static
-int check_not_last_var(char *filename)
+int check_not_last_var(const char *filename, MPI_Info info)
 {
     int err, nerrs=0, ncid, cmode, fill_mode, varid, dimid[4];
 
     /* create a new file ---------------------------------------------------*/
     cmode = NC_CLOBBER;
-    err = FileCreate(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = FileCreate(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERR
 
     err = DefDim(ncid, "Y", NC_UNLIMITED, &dimid[0]); CHECK_ERR
@@ -288,13 +288,13 @@ int check_not_last_var(char *filename)
 }
 
 static
-int check_add_var(char *filename)
+int check_add_var(const char *filename, MPI_Info info)
 {
     int err, nerrs=0, ncid, cmode, fill_mode, varid, dimid[4];
 
     /* create a new file ---------------------------------------------------*/
     cmode = NC_CLOBBER;
-    err = FileCreate(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = FileCreate(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERR
 
     err = DefDim(ncid, "Y", NC_UNLIMITED, &dimid[0]); CHECK_ERR
@@ -320,13 +320,13 @@ int check_add_var(char *filename)
 }
 
 static
-int check_var_offset(char *filename)
+int check_var_offset(const char *filename, MPI_Info info)
 {
     int err, nerrs=0, ncid, cmode, fill_mode, varid, dimid[4];
 
     /* create a new file ---------------------------------------------------*/
     cmode = NC_CLOBBER;
-    err = FileCreate(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = FileCreate(MPI_COMM_WORLD, filename, cmode, info, &ncid);
     CHECK_ERR
 
     err = DefDim(ncid, "Y", NC_UNLIMITED, &dimid[0]); CHECK_ERR
@@ -359,64 +359,58 @@ int check_var_offset(char *filename)
     return nerrs;
 }
 
-int main(int argc, char** argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,  /* ignored */
+            int         coll_io, /* ignored */
+            MPI_Info    info)
 {
-    char filename[256];
-    int  rank=0, nprocs=1, err, nerrs=0;
+    int nerrs=0;
 
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    nerrs += check_fix_var(out_path, info);
+    nerrs += check_last_var(out_path, info);
+    nerrs += check_fix_rec_var(out_path, info);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    nerrs += check_rec_var(out_path, 0, info);
+    nerrs += check_rec_var(out_path, NC_64BIT_OFFSET, info);
+    nerrs += check_rec_var(out_path, NC_64BIT_DATA, info);
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for last large var in CDF-1/2", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    nerrs += check_fix_var(filename);
-    nerrs += check_last_var(filename);
-    nerrs += check_fix_rec_var(filename);
-    nerrs += check_rec_var(filename, 0);
-    nerrs += check_rec_var(filename, NC_64BIT_OFFSET);
-    nerrs += check_rec_var(filename, NC_64BIT_DATA);
-    nerrs += check_not_last_var(filename);
-    nerrs += check_add_var(filename);
-    nerrs += check_var_offset(filename);
+    nerrs += check_not_last_var(out_path, info);
+    nerrs += check_add_var(out_path, info);
+    nerrs += check_var_offset(out_path, info);
 
 #ifdef TEST_NETCDF
     if (nerrs) printf("fail with %d mismatches\n",nerrs);
     else       printf("pass\n");
-#else
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
 #endif
 
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {0};
+
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 1; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "last large var in CDF-1/2", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}
