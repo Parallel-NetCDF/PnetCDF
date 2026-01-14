@@ -54,14 +54,18 @@
 int main(int argc, char** argv) {
     char filename[256];
     int nerrs=0, rank, nprocs, err, ncid;
+    double timing;
 
     MPI_Init(&argc, &argv);
+
+    timing = MPI_Wtime();
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        goto fn_exit;
+        goto err_out;
     }
     if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
     else           strcpy(filename, FILE_NAME);
@@ -69,9 +73,9 @@ int main(int argc, char** argv) {
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str,
-        "*** TESTING C   %s for checking begins in corrupted header",
+        "*** TESTING C   %s - begins in corrupted header",
         basename(argv[0]));
-        printf("%-66s --- ", cmd_str); fflush(stdout);
+        printf("%-63s -- ", cmd_str); fflush(stdout);
         free(cmd_str);
     }
 
@@ -93,11 +97,13 @@ int main(int argc, char** argv) {
         if (malloc_size > 0) ncmpi_inq_malloc_list();
     }
 
-fn_exit:
+err_out:
+    timing = MPI_Wtime() - timing;
+    MPI_Allreduce(MPI_IN_PLACE, &timing, 1, MPI_DOUBLE, MPI_MAX,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
+        else       printf(PASS_STR, timing);
     }
 
     MPI_Finalize();

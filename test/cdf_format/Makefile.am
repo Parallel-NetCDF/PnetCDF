@@ -2,8 +2,6 @@
 # Copyright (C) 2003, Northwestern University and Argonne National Laboratory
 # See COPYRIGHT notice in top-level directory.
 #
-# $Id$
-#
 # @configure_input@
 
 SUFFIXES = .o .c
@@ -11,8 +9,10 @@ SUFFIXES = .o .c
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(srcdir)/../common
 AM_CPPFLAGS += -I$(top_builddir)/src/include
+AM_CPPFLAGS += -I$(top_srcdir)/src/utils/ncmpidiff
 
 LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
+LDADD += $(top_builddir)/src/utils/ncmpidiff/libncmpidiff_core.la
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 if DECL_MPI_OFFSET
@@ -22,15 +22,15 @@ if DECL_MPI_OFFSET
    # AM_FFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
 endif
 
-TESTPROGRAMS = test_inq_format \
-               cdf_type \
-               dim_cdf12
-
-check_PROGRAMS = $(TESTPROGRAMS) tst_open_cdf5 tst_corrupt
+check_PROGRAMS = test_inq_format \
+                 cdf_type \
+                 dim_cdf12 \
+                 tst_open_cdf5 \
+                 tst_corrupt
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
-# AM_TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
+# AM_TESTS_ENVIRONMENT  = export check_PROGRAMS="$(check_PROGRAMS)";
 # AM_TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
 # AM_TESTS_ENVIRONMENT += export TESTOUTDIR="$(FSTYPE_PREFIX)$(TESTOUTDIR)";
 TESTS_ENVIRONMENT  = export SED="$(SED)";
@@ -38,7 +38,6 @@ TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
 TESTS_ENVIRONMENT += export TESTOUTDIR="$(FSTYPE_PREFIX)$(TESTOUTDIR)";
 TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
 TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
-TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 TESTS_ENVIRONMENT += export BAD_FILES="$(BAD_FILES)";
 
@@ -55,9 +54,11 @@ if MIMIC_LUSTRE
    TESTS_ENVIRONMENT += export MIMIC_LUSTRE=1;
 endif
 
-TESTS = cdf_type dim_cdf12 seq_runs.sh xfail_runs.sh
+# During "make check", programs set in TESTS will be run by
+# seq_runs.sh individually. Each produces its own log file.
+TESTS = $(check_PROGRAMS) xfail_runs.sh
 TEST_EXTENSIONS = .sh
-LOG_COMPILER = $(srcdir)/wrap_runs.sh
+LOG_COMPILER = $(srcdir)/seq_runs.sh
 SH_LOG_COMPILER =
 
 BAD_FILES = bad_begin.nc5 \
@@ -68,25 +69,22 @@ BAD_FILES = bad_begin.nc5 \
 
 XFAIL_TESTS = xfail_runs.sh
 
-CLEANFILES = $(TESTOUTDIR)/cdf_type.nc \
-             $(TESTOUTDIR)/cdf_type.bb.nc \
-             $(TESTOUTDIR)/dim_cdf12.nc \
-             $(TESTOUTDIR)/dim_cdf12.bb.nc \
+CLEANFILES = $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
-EXTRA_DIST = wrap_runs.sh seq_runs.sh xfail_runs.sh parallel_run.sh \
-             test_cdf1.nc test_cdf2.nc test_cdf5.nc \
-             test_netcdf4.nc $(BAD_FILES)
+EXTRA_DIST = seq_runs.sh xfail_runs.sh parallel_run.sh \
+             test_cdf.nc1 test_cdf.nc2 test_cdf.nc3 test_cdf.nc4 test_cdf.nc5 \
+             $(BAD_FILES)
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-ptest ptests ptest4: $(TESTPROGRAMS)
+ptest ptests ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/../parallel_run.sh 4 || exit 1
+	$(srcdir)/parallel_run.sh 4 || exit 1
 
 ptest2 ptest6 ptest8 ptest10:
 
