@@ -42,8 +42,8 @@
           ! It is a good idea to check returned value for possible error
           if (err .NE. NF90_NOERR) then
               write(6,*) message, trim(nf90mpi_strerror(err))
-              msg = '*** TESTING F90 varn_real.f90 for varn API '
-              call pass_fail(1, msg)
+              msg = '*** TESTING F90 varn_real.f90 - varn API '
+              call pass_fail(1, msg, 0)
               ! call MPI_Abort(MPI_COMM_WORLD, -1, err)
               STOP 2
           end if
@@ -57,7 +57,7 @@
           integer NDIMS
           PARAMETER(NDIMS=2)
 
-          character(LEN=256) filename, cmd, msg
+          character(LEN=256) out_path, in_path, cmd, msg
           integer rank, nprocs, err, ierr, num_reqs, get_args
           integer ncid, cmode, varid, dimid(2), y, x, i, j, nerrs
           integer old_fillmode
@@ -69,23 +69,30 @@
           integer(kind=MPI_OFFSET_KIND), allocatable :: starts(:,:)
           integer(kind=MPI_OFFSET_KIND), allocatable :: counts(:,:)
           integer(kind=MPI_OFFSET_KIND) malloc_size, sum_size
+          logical keep_files
+          double precision timing
+
+          call MPI_Init(ierr)
+
+          timing = MPI_Wtime()
 
           NY = 4
           NX = 10
 
-          call MPI_Init(ierr)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr)
 
-          ! take filename from command-line argument if there is any
+          ! take out_path from command-line argument if there is any
           if (rank .EQ. 0) then
-              filename = "testfile.nc"
-              err = get_args(cmd, filename)
+              out_path = "testfile.nc"
+              err = get_args(cmd, out_path, in_path, keep_files)
           endif
           call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
           if (err .EQ. 0) goto 999
 
-          call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
+          call MPI_Bcast(out_path, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
+
+          call MPI_Bcast(keep_files, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
 
           nerrs = 0
 
@@ -95,7 +102,7 @@
 
           ! create file, truncate it if exists
           cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
-          err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode, &
+          err = nf90mpi_create(MPI_COMM_WORLD, out_path, cmode, &
                              MPI_INFO_NULL, ncid)
           call check(err, 'In nf90mpi_create: ')
 
@@ -306,9 +313,17 @@
                   sum_size, ' bytes yet to be freed'
           endif
 
+          timing = MPI_Wtime() - timing
+          call MPI_Allreduce(MPI_IN_PLACE, timing, 1, &
+                             MPI_DOUBLE_PRECISION, MPI_MAX, &
+                             MPI_COMM_WORLD, ierr)
           if (rank .eq. 0) then
-              msg = '*** TESTING F90 '//trim(cmd)//' for varn API '
-              call pass_fail(nerrs, msg)
+              if (.NOT. keep_files) then
+                  err = nfmpi_delete(out_path, MPI_INFO_NULL)
+              end if
+
+              msg = '*** TESTING F90 '//trim(cmd)//' - varn API '
+              call pass_fail(nerrs, msg, timing)
           endif
 
  999      call MPI_Finalize(ierr)

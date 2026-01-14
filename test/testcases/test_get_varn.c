@@ -22,38 +22,26 @@
 
 #define NDIMS 3
 
-int main(int argc, char** argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
-    int i, j, rank, nprocs, err, nerrs = 0;
+    int i, j, rank, err, nerrs = 0;
     int ncid, varid, num_reqs;
     double *buffer;
     float *fbuffer;
     MPI_Offset r_len, **starts = NULL, **counts = NULL;
     MPI_Offset st[3], ct[3];
-    char filename[256];
     int dimids[3];
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for get_varn ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
 
 #ifdef DEBUG
+    int nprocs;
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     if (nprocs != 4 && rank == 0)
         printf("Warning: %s is designed to run on 4 process\n",argv[0]);
 #endif
@@ -69,12 +57,21 @@ int main(int argc, char** argv)
  *          float lnfm(time, lat, lon) ;
  *        }
  */
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA, MPI_INFO_NULL, &ncid); CHECK_ERR
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR
     err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimids[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "lat", 94, &dimids[1]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "lon", 192, &dimids[2]); CHECK_ERR
     err = ncmpi_def_var(ncid, "lnfm", NC_FLOAT, 3, dimids, &varid); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     st[0] = rank*2;
     st[1] = 0;
@@ -85,14 +82,29 @@ int main(int argc, char** argv)
     ct[2] = 192;
     float *scramble = (float*) calloc(ct[0]*ct[1]*ct[2], sizeof(float));
 
-    err = ncmpi_put_vara_float_all(ncid, varid, st, ct, scramble); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_vara_float_all(ncid, varid, st, ct, scramble);
+    else
+        err = ncmpi_put_vara_float(ncid, varid, st, ct, scramble);
+    CHECK_ERR
+
+    /* file sync before reading */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+
     err = ncmpi_close(ncid); CHECK_ERR
     free(scramble);
 
     /* now we can finally exercise the read path of this record varable */
 
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOWRITE, info, &ncid);
     CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     /* pick 2 requests for 4 processes */
     /* num_reqs = 1; => works fine*/
@@ -136,8 +148,11 @@ int main(int argc, char** argv)
 
     /* set the buffer pointers to different offsets to the I/O buffer */
     varid = 0; /* only one variable in lnfm.nc */
-    err = ncmpi_get_varn_double_all(ncid, varid, num_reqs, starts, counts, buffer);
-    /* err = ncmpi_get_varn_float_all(ncid, varid, num_reqs, starts, counts, fbuffer); */
+    if (coll_io)
+        err = ncmpi_get_varn_double_all(ncid, varid, num_reqs, starts, counts, buffer);
+        /* err = ncmpi_get_varn_float_all(ncid, varid, num_reqs, starts, counts, fbuffer); */
+    else
+        err = ncmpi_get_varn_double(ncid, varid, num_reqs, starts, counts, buffer);
     CHECK_ERR
 
     err = ncmpi_close(ncid);
@@ -160,24 +175,31 @@ int main(int argc, char** argv)
     free(starts);
     free(counts);
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "get_varn", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}

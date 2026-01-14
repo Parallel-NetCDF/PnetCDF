@@ -8,6 +8,8 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
+ * Similar to flexible.c, this program tests APIs with a need of type conversion.
+ *
  * This program tests PnetCDF flexible APIs, ncmpi_put_vara_all(),
  * ncmpi_iput_vara() to write two 2D array variables (one is of 4-byte
  * integer byte and the other float type) in parallel. It then uses flexible
@@ -86,26 +88,30 @@
 #define NY 5
 #define NX 70
 
-#define INDEP_MODE 0
-#define COLL_MODE 1
-
 /*----< tst_io() >-----------------------------------------------------------*/
-int tst_mode(const char *filename,
-             int         mode)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
     int i, j, rank, nprocs, err, nerrs=0, req, status, ghost_len=3;
-    int ncid, cmode, varid0, varid1, dimid[3], *buf_zy, verbose=0;
+    int ncid, varid0, varid1, dimid[3], *buf_zy, verbose=0;
     int array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     double *buf_yx;
     MPI_Offset start[2], count[2];
-    MPI_Datatype  subarray;
+    MPI_Datatype subarray;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     /* define 3 dimensions */
@@ -119,7 +125,7 @@ int tst_mode(const char *filename,
     err = ncmpi_def_var(ncid, "var_yx", NC_FLOAT, 2, &dimid[1], &varid1); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
-    if (mode == INDEP_MODE) {
+    if (!coll_io) {
         err = ncmpi_begin_indep_data(ncid);
         CHECK_ERR
     }
@@ -150,10 +156,10 @@ int tst_mode(const char *filename,
     start[0] = NZ * rank; start[1] = 0;
     count[0] = NZ;        count[1] = NY;
     /* calling a blocking flexible API */
-    if (mode == INDEP_MODE)
-        err = ncmpi_put_vara(ncid, varid0, start, count, buf_zy, 1, subarray);
-    else
+    if (coll_io)
         err = ncmpi_put_vara_all(ncid, varid0, start, count, buf_zy, 1, subarray);
+    else
+        err = ncmpi_put_vara(ncid, varid0, start, count, buf_zy, 1, subarray);
     CHECK_ERR
 
     /* check the contents of put buffer */
@@ -165,12 +171,17 @@ int tst_mode(const char *filename,
         }
     }
 
+    /* file sync before reading */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+
     for (i=0; i<buffer_len; i++) buf_zy[i] = -1;
     /* calling a blocking flexible API */
-    if (mode == INDEP_MODE)
-        err = ncmpi_get_vara(ncid, varid0, start, count, buf_zy, 1, subarray);
-    else
+    if (coll_io)
         err = ncmpi_get_vara_all(ncid, varid0, start, count, buf_zy, 1, subarray);
+    else
+        err = ncmpi_get_vara(ncid, varid0, start, count, buf_zy, 1, subarray);
     CHECK_ERR
 
     /* check the contents of get buffer */
@@ -221,10 +232,10 @@ int tst_mode(const char *filename,
     /* calling a non-blocking flexible API */
     err = ncmpi_iput_vara(ncid, varid1, start, count, buf_yx, 1, subarray,&req);
     CHECK_ERR
-    if (mode == INDEP_MODE)
-        err = ncmpi_wait(ncid, 1, &req, &status);
-    else
+    if (coll_io)
         err = ncmpi_wait_all(ncid, 1, &req, &status);
+    else
+        err = ncmpi_wait(ncid, 1, &req, &status);
     CHECK_ERR
     err = status; CHECK_ERR
 
@@ -242,10 +253,10 @@ int tst_mode(const char *filename,
     /* calling a non-blocking flexible API */
     err = ncmpi_iget_vara(ncid, varid1, start, count, buf_yx, 1, subarray,&req);
     CHECK_ERR
-    if (mode == INDEP_MODE)
-        err = ncmpi_wait(ncid, 1, &req, &status);
-    else
+    if (coll_io)
         err = ncmpi_wait_all(ncid, 1, &req, &status);
+    else
+        err = ncmpi_wait(ncid, 1, &req, &status);
     CHECK_ERR
     err = status; CHECK_ERR
 
@@ -273,60 +284,32 @@ int tst_mode(const char *filename,
     err = ncmpi_close(ncid); CHECK_ERR
 
 err_out:
-    return (nerrs > 0);
+    return nerrs;
 }
 
-int main(int argc, char** argv)
-{
-    char filename[256];
-    int rank, err, nerrs=0;
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+
+    loop_opts opt;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for flexible APIs ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    /* test independent data mode */
-    nerrs = tst_mode(filename, INDEP_MODE);
-    if (nerrs > 0) goto err_out;
-
-    /* test collective data mode */
-    nerrs = tst_mode(filename, COLL_MODE);
-    if (nerrs > 0) goto err_out;
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-err_out:
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    err = tst_main(argc, argv, "flexible API + type conversion", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
-}
 
+    return err;
+}

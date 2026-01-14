@@ -36,11 +36,15 @@
 #define TEST_FIXED_VAR
 #define TEST_RECORD_VAR
 
-static int tst_mode(char *filename,
-                    int   mode)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    global_info)
 {
     int i, j, rank, nprocs, err, verbose=0, nerrs=0;
-    int ncid, cmode, varid[NVARS], dimid[2], *buf;
+    int ncid, varid[NVARS], dimid[2], *buf;
     char str[32];
     MPI_Offset start[2], count[2];
     MPI_Offset new_var_off[NVARS*2], old_var_off[NVARS*2];
@@ -50,9 +54,14 @@ static int tst_mode(char *filename,
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
+    MPI_Info_dup(global_info, &info);
+
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERROUT
 
     /* define dimension */
@@ -76,7 +85,7 @@ static int tst_mode(char *filename,
     }
     err = ncmpi_enddef(ncid); CHECK_ERR
 
-    if (mode != MODE_COLL) {
+    if (!coll_io) {
         err = ncmpi_begin_indep_data(ncid);
         CHECK_ERR
     }
@@ -89,7 +98,7 @@ static int tst_mode(char *filename,
         if (i%2) {
             start[0] = NX*rank;
             count[0] = NX;
-            if (mode == MODE_COLL)
+            if (coll_io)
                 err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf);
             else
                 err = ncmpi_put_vara_int(ncid, varid[i], start, count, buf);
@@ -109,14 +118,14 @@ static int tst_mode(char *filename,
         if (i%2 == 0) {
             start[0] = 0; start[1] = NX*rank;
             count[0] = 1; count[1] = NX;
-            if (mode == MODE_COLL)
+            if (coll_io)
                 err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf);
             else
                 err = ncmpi_put_vara_int(ncid, varid[i], start, count, buf);
             CHECK_ERR
             for (j=0; j<NX; j++) buf[j] = rank*1000 + 100 + i*10 + j;
             start[0] = 1; /* write 2nd record */
-            if (mode == MODE_COLL)
+            if (coll_io)
                 err = ncmpi_put_vara_int_all(ncid, varid[i], start, count, buf);
             else
                 err = ncmpi_put_vara_int(ncid, varid[i], start, count, buf);
@@ -132,21 +141,27 @@ static int tst_mode(char *filename,
         }
 #endif
     }
+
+    /* file sync before reading */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* Now, reopen the file and grow the header and read data back */
 
     /* mimic netCDF that does not do alignments */
-    MPI_Info_create(&info);
     MPI_Info_set(info, "nc_var_align_size", "197"); /* size in bytes */
 
     /* open the file for adding more metadata */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, info, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_WRITE, info, &ncid);
     CHECK_ERROUT
 
-    /* get header size and extent, and offsets of all variables */
+    /* get header size and extent */
     err = ncmpi_inq_header_size(ncid, &header_size[0]); CHECK_ERR
     err = ncmpi_inq_header_extent(ncid, &header_extent[0]); CHECK_ERR
+    /* get offsets of all variables */
     for (i=0; i<NVARS; i++) {
 #ifdef TEST_FIXED_VAR
         if (i%2)
@@ -159,7 +174,7 @@ static int tst_mode(char *filename,
         CHECK_ERR
     }
 
-    /* enter redef mode */
+    /* re-enter define mode */
     err = ncmpi_redef(ncid); CHECK_ERR
 
     /* add attributes to make header grow */
@@ -200,7 +215,7 @@ static int tst_mode(char *filename,
     }
     err = ncmpi_enddef(ncid); CHECK_ERR
 
-    if (mode != MODE_COLL) {
+    if (!coll_io) {
         err = ncmpi_begin_indep_data(ncid);
         CHECK_ERR
     }
@@ -247,7 +262,7 @@ static int tst_mode(char *filename,
         if (i%2 == 0) {
             start[0] = NX*rank;
             count[0] = NX;
-            if (mode == MODE_COLL)
+            if (coll_io)
                 err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf);
             else
                 err = ncmpi_put_vara_int(ncid, new_varid[i], start, count, buf);
@@ -267,14 +282,14 @@ static int tst_mode(char *filename,
         if (i%2 == 1) {
             start[0] = 0; start[1] = NX*rank;
             count[0] = 1; count[1] = NX;
-            if (mode == MODE_COLL)
+            if (coll_io)
                 err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf);
             else
                 err = ncmpi_put_vara_int(ncid, new_varid[i], start, count, buf);
             CHECK_ERR
             for (j=0; j<NX; j++) buf[j] = -1 * (100 + i*10 + j);
             start[0] = 1; /* write 2nd record */
-            if (mode == MODE_COLL)
+            if (coll_io)
                 err = ncmpi_put_vara_int_all(ncid, new_varid[i], start, count, buf);
             else
                 err = ncmpi_put_vara_int(ncid, new_varid[i], start, count, buf);
@@ -292,6 +307,11 @@ static int tst_mode(char *filename,
 #endif
     }
 
+    /* file sync before reading */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+
     /* read old variables and check their contents */
     for (i=0; i<NVARS; i++) {
 #ifdef TEST_FIXED_VAR
@@ -299,7 +319,7 @@ static int tst_mode(char *filename,
             start[0] = NX*rank;
             count[0] = NX;
             for (j=0; j<NX; j++) buf[j] = -1;
-            if (mode == MODE_COLL)
+            if (coll_io)
                 err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf);
             else
                 err = ncmpi_get_vara_int(ncid, varid[i], start, count, buf);
@@ -318,7 +338,7 @@ static int tst_mode(char *filename,
         if (i%2 == 0) {
             start[0] = 0; start[1] = NX*rank;
             count[0] = 1; count[1] = NX;
-            if (mode == MODE_COLL)
+            if (coll_io)
                 err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf);
             else
                 err = ncmpi_get_vara_int(ncid, varid[i], start, count, buf);
@@ -330,7 +350,7 @@ static int tst_mode(char *filename,
                     break;
                 }
             start[0] = 1;
-            if (mode == MODE_COLL)
+            if (coll_io)
                 err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf);
             else
                 err = ncmpi_get_vara_int(ncid, varid[i], start, count, buf);
@@ -347,61 +367,37 @@ static int tst_mode(char *filename,
 #endif
     }
     err = ncmpi_close(ncid); CHECK_ERR
-    MPI_Info_free(&info);
     free(buf);
+
+    if (info != MPI_INFO_NULL) MPI_Info_free(&info);
 
 err_out:
     return nerrs;
 }
 
-int main(int argc, char** argv) {
-    char filename[256];
-    int rank, nprocs, err, nerrs=0;
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+
+    loop_opts opt;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 1; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for alignment ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    nerrs += tst_mode(filename, MODE_INDEP);
-    if (nerrs > 0) goto err_out;
-
-    nerrs += tst_mode(filename, MODE_COLL);
-    if (nerrs > 0) goto err_out;
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-err_out:
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    err = tst_main(argc, argv, "alignment hints", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
-}
 
+    return err;
+}

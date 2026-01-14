@@ -23,8 +23,12 @@
 
 static int debug;
 
-static int
-tst_fmt(char *filename, int cmode)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
 {
     char *str;
     int  err, nerrs=0, rank, ncid, dimids[2], varid, int_buf;
@@ -32,11 +36,16 @@ tst_fmt(char *filename, int cmode)
     double *dbl_buf;
     MPI_Offset old_h_size, old_h_extent, new_h_size, new_h_extent;
 
+    debug = 0;
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
     /* create a file */
-    cmode |= NC_CLOBBER;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     flt_buf = 1.234;
@@ -103,13 +112,18 @@ tst_fmt(char *filename, int cmode)
         goto err_out;
     }
 
+    /* file sync before reading */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+
     err = ncmpi_close(ncid); CHECK_ERR
 
     old_h_size = new_h_size;
     old_h_extent = new_h_extent;
 
     /* open the file */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_WRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_WRITE, info, &ncid);
     CHECK_ERR
 
     err = ncmpi_inq_header_size(ncid, &new_h_size); CHECK_ERR
@@ -219,57 +233,27 @@ err_out:
 }
 
 int main(int argc, char **argv) {
-    char filename[256];
-    int  err, nerrs=0, rank;
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    debug = 0;
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 1; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for get header size in define mode", basename(argv[0]));
-        printf("%-66s -- ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    nerrs += tst_fmt(filename, 0);
-    if (nerrs > 0) goto err_out;
-
-    nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
-    if (nerrs > 0) goto err_out;
-
-    nerrs += tst_fmt(filename, NC_64BIT_DATA);
-    if (nerrs > 0) goto err_out;
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-err_out:
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    err = tst_main(argc, argv, "in define mode", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

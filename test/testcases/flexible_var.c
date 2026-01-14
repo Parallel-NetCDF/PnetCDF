@@ -148,11 +148,11 @@
     }
 
 static
-int tst_io(const char *filename,
+int tst_io(const char *out_path,
            MPI_Info    info)
 {
     int i, j, rank, nprocs, err, nerrs=0, req, status;
-    int ncid, cmode, varid, dimid[2];
+    int ncid, varid, dimid[2];
     int array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     int buf_ghost[NY+2*GHOST][NX+2*GHOST];
     int buf[NY][NX];
@@ -163,8 +163,7 @@ int tst_io(const char *filename,
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERROUT
 
     /* define 2 dimensions */
@@ -477,63 +476,58 @@ err_out:
     return (nerrs > 0);
 }
 
-int main(int argc, char** argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
 {
-    char filename[256];
-    int rank, nprocs, err, nerrs=0;
-    MPI_Info info=MPI_INFO_NULL;
+    int err, nerrs=0;
+    MPI_Info info_dup;
 
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Info_dup(info, &info_dup);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for flexible var APIs ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    nerrs = tst_io(filename, MPI_INFO_NULL);
-    if (nerrs > 0) goto err_out;
+    nerrs = tst_io(out_path, info_dup);
+    if (nerrs > 0) return nerrs;
 
     /* disable PnetCDF internal buffering */
-    MPI_Info_create(&info);
-    MPI_Info_set(info, "nc_ibuf_size", "0");
+    MPI_Info_set(info_dup, "nc_ibuf_size", "0");
 
-    nerrs = tst_io(filename, info);
-    if (nerrs > 0) goto err_out;
+    nerrs = tst_io(out_path, info_dup);
+    if (nerrs > 0) return nerrs;
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
+    MPI_Info_free(&info_dup);
 
-err_out:
-    if (info != MPI_INFO_NULL) MPI_Info_create(&info);
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "flexible var APIs", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}

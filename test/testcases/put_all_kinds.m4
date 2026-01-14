@@ -51,6 +51,7 @@ define(`TEST_BLOCKING_PUT',dnl
 `dnl
 static int
 blocking_put_$1(int         rank,
+                int         coll_io,
                 int         ncid,
                 int        *dimids,
                 MPI_Offset *start,
@@ -68,6 +69,11 @@ blocking_put_$1(int         rank,
     int dimid, dimidsT[NDIMS];
     MPI_Offset start1[1];
 
+    /* file sync before re-entering define mode */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+
     /* re-enter define mode, so we can add more variables */
     err = ncmpi_redef(ncid); CHECK_ERR
     err = ncmpi_inq_dimid(ncid, "nprocs", &dimid); CHECK_ERR
@@ -82,15 +88,36 @@ blocking_put_$1(int         rank,
     /* exit the define mode */
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     /* write the whole variable in parallel */
     start1[0] = rank;
-    err = `ncmpi_put_var1_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, var1_id, start1, buf); CHECK_ERR
+    if (coll_io)
+        err = `ncmpi_put_var1_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, var1_id, start1, buf);
+    else
+        err = `ncmpi_put_var1_'ifelse(`$1',`text',`$1',`double')(ncid, var1_id, start1, buf);
+    CHECK_ERR
 
-    err = `ncmpi_put_vara_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, vara_id, start, count, buf); CHECK_ERR
+    if (coll_io)
+        err = `ncmpi_put_vara_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, vara_id, start, count, buf);
+    else
+        err = `ncmpi_put_vara_'ifelse(`$1',`text',`$1',`double')(ncid, vara_id, start, count, buf);
+    CHECK_ERR
 
-    err = `ncmpi_put_vars_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, vars_id, startS, countS, stride, buf); CHECK_ERR
+    if (coll_io)
+        err = `ncmpi_put_vars_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, vars_id, startS, countS, stride, buf);
+    else
+        err = `ncmpi_put_vars_'ifelse(`$1',`text',`$1',`double')(ncid, vars_id, startS, countS, stride, buf);
+    CHECK_ERR
 
-    err = `ncmpi_put_varm_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, varm_id, startM, countM, NULL, imap, buf); CHECK_ERR
+    if (coll_io)
+        err = `ncmpi_put_varm_'ifelse(`$1',`text',`$1',`double')`_all'(ncid, varm_id, startM, countM, NULL, imap, buf);
+    else
+        err = `ncmpi_put_varm_'ifelse(`$1',`text',`$1',`double')(ncid, varm_id, startM, countM, NULL, imap, buf);
+    CHECK_ERR
 
     return nerrs;
 }
@@ -100,20 +127,12 @@ foreach(`itype',(`text,schar,uchar,short,ushort,int,uint,long,float,double,longl
 
 define(`TEST_CDF_FORMAT',dnl
 `dnl
-/* create a new $1 file */
-    cmode = NC_CLOBBER;
-    ifelse(`$1',`NC_FORMAT_64BIT_OFFSET',   `cmode |= NC_64BIT_OFFSET;',
-           `$1',`NC_FORMAT_64BIT_DATA',     `cmode |= NC_64BIT_DATA;',
-           `$1',`NC_FORMAT_NETCDF4_CLASSIC',`cmode |= NC_NETCDF4 | NC_CLASSIC_MODEL;',
-           `$1',`NC_FORMAT_NETCDF4',        `cmode |= NC_NETCDF4;')
-
-    sprintf(fname, "%s%d",filename, $1);
-    err = ncmpi_create(MPI_COMM_WORLD, fname, cmode, info, &ncid);
+    /* create a new file */
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     if (err != NC_NOERR) {
         printf("Error at line %d in %s: ncmpi_create() file %s (%s)\n",
         __LINE__,__FILE__,fname,ncmpi_strerror(err));
-        MPI_Abort(MPI_COMM_WORLD, -1);
-        exit(1);
+        CHECK_ERR
     }
 
     /* define dimensions */
@@ -123,63 +142,47 @@ define(`TEST_CDF_FORMAT',dnl
     err = ncmpi_def_dim(ncid, "X",      gsize[2], &dimids[2]); CHECK_ERR
     err = ncmpi_enddef(ncid);
 
-    nerrs += blocking_put_text(rank, ncid, dimids, start, count,
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
+    nerrs += blocking_put_text(rank, coll_io, ncid, dimids, start, count,
              startS, countS, stride, startM, countM, imap, cbuf);
     foreach(`itype',(`schar,short,int,long,float,double'),`
-    _CAT(`nerrs += blocking_put_',itype)'`(rank, ncid, dimids, start, count,
-             startS, countS, stride, startM, countM, imap, buf);')
+    _CAT(`nerrs += blocking_put_',itype)'`(rank, coll_io, ncid, dimids, start,
+        count, startS, countS, stride, startM, countM, imap, buf);')
 
-ifelse(`$1', `NC_FORMAT_CLASSIC',`',
-       `$1', `NC_FORMAT_64BIT_OFFSET',`',
-       `$1', `NC_FORMAT_NETCDF4_CLASSIC',`',`
-    foreach(`itype',
-    (`uchar,ushort,uint,longlong,ulonglong'),`
-    _CAT(`nerrs += blocking_put_',itype)'`(rank, ncid, dimids, start, count,
-             startS, countS, stride, startM, countM, imap, buf);')')
+    if (format == NC_FORMAT_64BIT_DATA) {
+        foreach(`itype',
+        (`uchar,ushort,uint,longlong,ulonglong'),`
+        _CAT(`nerrs += blocking_put_',itype)'`(rank, coll_io, ncid, dimids,
+            start, count, startS, countS, stride, startM, countM, imap, buf);')
+    }
 
     /* close the file */
     err = ncmpi_close(ncid);
     CHECK_ERR
 ')dnl
 
-/*----< main() >------------------------------------------------------------*/
-int main(int argc, char **argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
-    char filename[256], fname[512], *hint_value, *cbuf;
-    int i, j, k, rank, nprocs, ncid, bufsize, err, nerrs=0, cmode;
-    int bb_enabled=0, psize[NDIMS], dimids[NDIMS], dim_rank[NDIMS];
+    char fname[512], *cbuf;
+    int i, j, k, rank, nprocs, ncid, bufsize, err, nerrs=0;
+    int psize[NDIMS], dimids[NDIMS], dim_rank[NDIMS];
     double *buf;
     MPI_Offset gsize[NDIMS], stride[NDIMS], imap[NDIMS];
     MPI_Offset start[NDIMS], count[NDIMS];
     MPI_Offset startS[NDIMS], countS[NDIMS];
     MPI_Offset startM[NDIMS], countM[NDIMS];
-    MPI_Info info;
 
-    MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for all kinds put APIs ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    /* check whether burst buffering is enabled */
-    if (inq_env_hint("nc_burst_buf", &hint_value)) {
-        if (strcasecmp(hint_value, "enable") == 0) bb_enabled = 1;
-        free(hint_value);
-    }
 
     /* calculate number of processes along each dimension */
     for (i=0; i<NDIMS; i++) psize[i] = 0;
@@ -217,7 +220,6 @@ int main(int argc, char **argv)
 
     /* set an MPI-IO hint to disable file offset alignment for fixed-size
      * variables */
-    MPI_Info_create(&info);
     MPI_Info_set(info, "nc_var_align_size", "1");
 
     /* set arguments start, count, stride for vars APIs */
@@ -232,39 +234,39 @@ int main(int argc, char **argv)
     startM[0] = start[1]; startM[1] = start[2]; startM[2] = start[0];
     countM[0] = count[1]; countM[1] = count[2]; countM[2] = count[0];
 
-    /* test CDF-1, 2, and 5 formats separately */
-    TEST_CDF_FORMAT(NC_FORMAT_CLASSIC)
-    TEST_CDF_FORMAT(NC_FORMAT_64BIT_OFFSET)
-    TEST_CDF_FORMAT(NC_FORMAT_64BIT_DATA)
-    if (!bb_enabled) {
-#ifdef ENABLE_NETCDF4
-        TEST_CDF_FORMAT(NC_FORMAT_NETCDF4_CLASSIC)
-        TEST_CDF_FORMAT(NC_FORMAT_NETCDF4)
-#endif
-    }
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
+    TEST_CDF_FORMAT
 
     free(cbuf);
     free(buf);
-    MPI_Info_free(&info);
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(nc_formats) / sizeof(int);
+    opt.formats  = nc_formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 1; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "all kinds put APIs", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}

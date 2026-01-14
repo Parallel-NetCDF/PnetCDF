@@ -32,36 +32,23 @@
     }                                                                \
 }
 
-int main(int argc, char **argv) {
-    char *filename, *symlink_fname, *fname;
-    int  err, nerrs=0, len, rank, ncid, verbose=0;
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
+{
+    char *symlink_fname, *fname;
+    int  err, nerrs=0, rank, ncid, verbose=0;
     struct stat statbuf;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) filename = strdup(argv[1]);
-    else           filename = strdup("testfile.nc");
-    len = (int)strlen(filename) + 1;
-    MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(filename, len, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for NC_CLOBBER on symlink file ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
     /* remove file system type prefix substring */
-    fname = remove_file_system_type_prefix(filename);
+    fname = remove_file_system_type_prefix(out_path);
 
-    symlink_fname = (char*) malloc(strlen(filename) + 10);
+    symlink_fname = (char*) malloc(strlen(out_path) + 10);
 
     /* create a regular file and a symbolic link to it */
     err = 0;
@@ -91,17 +78,18 @@ int main(int argc, char **argv) {
         sync();
     }
     MPI_Bcast(&err, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    if (err != 0) {
-        nerrs++;
-        goto fn_exit;
-    }
+    if (err != 0) return 1;
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* symlink_fname may have file system type prefix */
-    sprintf(symlink_fname, "%s.symlink", filename);
+    sprintf(symlink_fname, "%s.symlink", out_path);
+
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
     /* create a file in NC_CLOBBER mode */
-    err = ncmpi_create(MPI_COMM_WORLD, symlink_fname, NC_CLOBBER, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, symlink_fname, NC_CLOBBER, info, &ncid);
     CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
@@ -130,27 +118,33 @@ int main(int argc, char **argv) {
         sync();
     }
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-    free(filename);
     free(symlink_fname);
 
-fn_exit:
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 0; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 0; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 0; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "NC_CLOBBER on symlink file", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}
