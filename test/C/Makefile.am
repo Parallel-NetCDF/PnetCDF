@@ -13,21 +13,17 @@ AM_DEFAULT_SOURCE_EXT = .c
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(srcdir)/../common
 AM_CPPFLAGS += -I$(top_builddir)/src/include
+AM_CPPFLAGS += -I$(top_srcdir)/src/utils/ncmpidiff
 
 LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
+LDADD += $(top_builddir)/src/utils/ncmpidiff/libncmpidiff_core.la
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 if DECL_MPI_OFFSET
    AM_CPPFLAGS += -DHAVE_DECL_MPI_OFFSET
 endif
 
-TESTPROGRAMS = pres_temp_4D_wr \
-               pres_temp_4D_rd
-
-pres_temp_4D_wr_SOURCES = pres_temp_4D_wr.c pres_temp_4D.h
-pres_temp_4D_rd_SOURCES = pres_temp_4D_rd.c pres_temp_4D.h
-
-check_PROGRAMS = $(TESTPROGRAMS)
+check_PROGRAMS = pres_temp_4D_wr_rd
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
@@ -36,7 +32,6 @@ TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
 TESTS_ENVIRONMENT += export TESTOUTDIR="$(FSTYPE_PREFIX)$(TESTOUTDIR)";
 TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
 TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
-TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 if PNETCDF_DEBUG
@@ -55,36 +50,25 @@ if MIMIC_LUSTRE
    TESTS_ENVIRONMENT += export MIMIC_LUSTRE=1;
 endif
 
-wkl:
-	echo "TESTS_ENVIRONMENT=$(TESTS_ENVIRONMENT)"
-
-TESTS = seq_runs.sh
+TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
-# LOG_COMPILER = $(srcdir)/wrap_runs.sh
-# SH_LOG_COMPILER =
-
-# Dependency: pres_temp_4D_rd reads the output file from pres_temp_4D_wr.
-# To support parallel "make -jN check", we add dependencies below and automake
-# states it currently works only for tests that end in one of the suffixes
-# listed in TEST_EXTENSIONS. $(EXEEXT) are appended to work around.
-pres_temp_4D_rd$(EXEEXT).log: pres_temp_4D_wr$(EXEEXT).log
+LOG_COMPILER = $(srcdir)/seq_runs.sh
+SH_LOG_COMPILER =
 
 EXTRA_DIST = seq_runs.sh parallel_run.sh
 
-CLEANFILES = $(TESTOUTDIR)/pres_temp_4D.nc \
-             $(TESTOUTDIR)/pres_temp_4D.nc4 \
-             $(TESTOUTDIR)/pres_temp_4D.bb.nc \
+CLEANFILES = $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-ptest ptests ptest4: $(TESTPROGRAMS)
+ptest ptests ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/../parallel_run.sh 4 || exit 1
+	$(srcdir)/parallel_run.sh 4 || exit 1
 
 ptest2 ptest6 ptest8 ptest10:
 
