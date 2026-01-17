@@ -83,48 +83,40 @@
         nerrs++; \
     } \
 }
-int main(int argc, char** argv)
+
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    global_info)
 {
-    char filename[256];
     int i, j, rank, nprocs, err, nerrs=0, expected;
-    int ncid, cmode, varid[2], dimid[2], req[4], st[4], *buf=NULL;
+    int ncid, varid[2], dimid[2], req[4], st[4], *buf=NULL;
     int *buf0=NULL, *buf1=NULL, *buf2=NULL;
     size_t len;
     MPI_Offset start[2], count[2];
     MPI_Info info;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     /* this program is intended to run on one process */
-    if (rank) goto fn_exit;
+    if (rank) goto err_out;
 
-    /* get command-line arguments */
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for writing interleaved fileviews ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str);
-        free(cmd_str);
-    }
-
-    MPI_Info_create(&info);
+    MPI_Info_dup(global_info, &info);
     MPI_Info_set(info, "romio_cb_write", "disable");
     MPI_Info_set(info, "ind_wr_buffer_size", "8");
     /* these 2 hints are required to cause a core dump if r1758 fix is not
      * presented */
 
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_SELF, filename, cmode, info, &ncid); CHECK_FATAL_ERR
+    err = ncmpi_create(MPI_COMM_SELF, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_FATAL_ERR
 
     MPI_Info_free(&info);
 
@@ -142,12 +134,21 @@ int main(int argc, char** argv)
     /* do not forget to exit define mode */
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
     /* now we are in data mode */
     buf = (int*) malloc(sizeof(int) * NY*NX);
 
     /* fill the entire variable var0 with -1s */
     for (i=0; i<NY*NX; i++) buf[i] = -1;
-    err = ncmpi_put_var_int_all(ncid, varid[0], buf); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_var_int_all(ncid, varid[0], buf);
+    else
+        err = ncmpi_put_var_int(ncid, varid[0], buf);
+    CHECK_ERR
 
     /* When using burst buffering, flush the log to prevent new value being
      * skipped due to overlaping domain
@@ -182,13 +183,22 @@ int main(int argc, char** argv)
     err = ncmpi_iput_vara_int(ncid, varid[0], start, count, buf2, &req[2]);
     CHECK_ERR
 
-    err = ncmpi_wait_all(ncid, 3, req, st); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, 3, req, st);
+    else
+        err = ncmpi_wait(ncid, 3, req, st);
+    CHECK_ERR
+
     free(buf0); free(buf1); free(buf2);
     buf0 = buf1 = buf2 = NULL;
 
     /* fill the entire variable var1 with -1s */
     for (i=0; i<NY*NX; i++) buf[i] = -1;
-    err = ncmpi_put_var_int_all(ncid, varid[1], buf); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_put_var_int_all(ncid, varid[1], buf);
+    else
+        err = ncmpi_put_var_int(ncid, varid[1], buf);
+    CHECK_ERR
 
     /* When using burst buffering, flush the log to prevent new value being
      * skipped due to overlaping domain
@@ -227,7 +237,11 @@ int main(int argc, char** argv)
     err = ncmpi_iput_vara_int(ncid, varid[1], start, count, buf+25, &req[3]);
     CHECK_ERR
 
-    err = ncmpi_wait_all(ncid, 4, req, st); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, 4, req, st);
+    else
+        err = ncmpi_wait(ncid, 4, req, st);
+    CHECK_ERR
 
     /* check if write buffer contents have been altered */
     for (i=0;  i<16; i++) CHECK_CONTENTS(buf0, 50 + i)
@@ -239,19 +253,29 @@ int main(int argc, char** argv)
     for (i=25; i<30; i++) CHECK_CONTENTS(buf, 10 + i)
 
     err = ncmpi_close(ncid); CHECK_ERR
+
     if (buf0 != NULL) free(buf0);
     buf0 = NULL;
 
     /* open the same file and read back for validate */
-    err = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL,
-                     &ncid); CHECK_FATAL_ERR
+    err = ncmpi_open(MPI_COMM_SELF, out_path, NC_NOWRITE, global_info, &ncid);
+    CHECK_FATAL_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     err = ncmpi_inq_varid(ncid, "var0", &varid[0]); CHECK_ERR
     err = ncmpi_inq_varid(ncid, "var1", &varid[1]); CHECK_ERR
 
     /* read the entire array */
     for (i=0; i<NY*NX; i++) buf[i] = -1;
-    err = ncmpi_get_var_int_all(ncid, varid[0], buf); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_var_int_all(ncid, varid[0], buf);
+    else
+        err = ncmpi_get_var_int(ncid, varid[0], buf);
+    CHECK_ERR
 
     /* check if the contents of buf are expected */
     expected = 50;
@@ -260,8 +284,7 @@ int main(int argc, char** argv)
             if (buf[j*NX+i] != expected) {
                 printf("%d at line %d: var0 read buf[%d][%d] expect %d but got %d\n",
                        rank, __LINE__, j, i, expected, buf[j*NX+i]);
-                nerrs++;
-                goto err_out;
+                assert(0);
             }
             expected++;
         }
@@ -272,8 +295,7 @@ int main(int argc, char** argv)
         if (buf[j*NX+i] != expected) {
             printf("%d at line %d: var0 read buf[%d][%d] expect %d but got %d\n",
                    rank, __LINE__, j, i, expected, buf[j*NX+i]);
-            nerrs++;
-            goto err_out;
+            assert(0);
         }
         expected++;
     }
@@ -283,8 +305,7 @@ int main(int argc, char** argv)
         if (buf[j*NX+i] != expected) {
             printf("%d at line %d: var0 read buf[%d][%d] expect %d but got %d\n",
                    rank, __LINE__, j, i, expected, buf[j*NX+i]);
-            nerrs++;
-            goto err_out;
+            assert(0);
         }
         expected++;
     }
@@ -293,7 +314,11 @@ int main(int argc, char** argv)
     for (i=0; i<NY*NX; i++) buf[i] = -1;
 
     /* read the entire array */
-    err = ncmpi_get_var_int_all(ncid, varid[1], buf); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_get_var_int_all(ncid, varid[1], buf);
+    else
+        err = ncmpi_get_var_int(ncid, varid[1], buf);
+    CHECK_ERR
 
     /* check if the contents of buf are expected */
     expected = 10;
@@ -302,8 +327,7 @@ int main(int argc, char** argv)
             if (buf[j*NX+i] != expected) {
                 printf("%d at line %d: var1 read buf[%d][%d] expect %d but got %d\n",
                        rank, __LINE__, j, i, expected, buf[j*NX+i]);
-                nerrs++;
-                goto err_out;
+                assert(0);
             }
             expected++;
         }
@@ -314,34 +338,44 @@ int main(int argc, char** argv)
             if (buf[j*NX+i] != expected) {
                 printf("%d at line %d: var1 read buf[%d][%d] expect %d but got %d\n",
                        rank, __LINE__, j, i, expected, buf[j*NX+i]);
-                nerrs++;
-                goto err_out;
+                assert(0);
             }
             expected++;
         }
     }
 
-err_out:
     err = ncmpi_close(ncid); CHECK_ERR
 
-    if (buf != NULL) free(buf);
+    free(buf);
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR && malloc_size > 0) {
-        printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n", malloc_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
+err_out:
+    MPI_Barrier(MPI_COMM_WORLD);
 
-fn_exit:
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "writing interleaved fileviews", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}
