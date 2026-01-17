@@ -124,10 +124,14 @@
     }
 
 static
-int tst_run(const char *filename, int coll_io, int len)
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
     int i, j, rank, nprocs, err, nerrs=0, req, status;
-    int ncid, cmode, varid, dimid[2];
+    int ncid, varid, dimid[2];
     int array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     int    **buf_int;
     double **buf_dbl;
@@ -137,26 +141,29 @@ int tst_run(const char *filename, int coll_io, int len)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    buf_int = (int**) malloc(sizeof(int*) * (len+2*GHOST));
-    buf_int[0] = (int*) malloc(sizeof(int) * (len+2*GHOST) * (NY+2*GHOST));
-    for (i=1; i<(len+2*GHOST); i++)
+    buf_int = (int**) malloc(sizeof(int*) * (NX+2*GHOST));
+    buf_int[0] = (int*) malloc(sizeof(int) * (NX+2*GHOST) * (NY+2*GHOST));
+    for (i=1; i<(NX+2*GHOST); i++)
         buf_int[i] = buf_int[i-1] + (NY+2*GHOST);
 
-    buf_dbl = (double**) malloc(sizeof(double*) * (len+2*GHOST));
-    buf_dbl[0] = (double*) malloc(sizeof(double) * (len+2*GHOST) * (NY+2*GHOST));
-    for (i=1; i<(len+2*GHOST); i++)
+    buf_dbl = (double**) malloc(sizeof(double*) * (NX+2*GHOST));
+    buf_dbl[0] = (double*) malloc(sizeof(double) * (NX+2*GHOST) * (NY+2*GHOST));
+    for (i=1; i<(NX+2*GHOST); i++)
         buf_dbl[i] = buf_dbl[i-1] + (NY+2*GHOST);
 
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     /* define 2 dimensions */
-    err = ncmpi_def_dim(ncid, "Y", NY,         &dimid[0]); CHECK_ERR
-    err = ncmpi_def_dim(ncid, "X", len*nprocs, &dimid[1]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "Y", NY,        &dimid[0]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", NX*nprocs, &dimid[1]); CHECK_ERR
 
-    /* define a variable of size NY * (len * nprocs) */
+    /* define a variable of size NY * (NX * nprocs) */
     err = ncmpi_def_var(ncid, "var", NC_DOUBLE, 2, dimid, &varid); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
@@ -165,15 +172,15 @@ int tst_run(const char *filename, int coll_io, int len)
         CHECK_ERR
     }
 
-     start[0] = 0;  start[1] = len * rank;
-     count[0] = NY; count[1] = len;
+     start[0] = 0;  start[1] = NX * rank;
+     count[0] = NY; count[1] = NX;
     stride[0] = 1; stride[1] = 1;
-      imap[0] = 1;   imap[1] = NY; /* would be {len, 1} if not transposing */
+      imap[0] = 1;   imap[1] = NY; /* would be {NX, 1} if not transposing */
 
     /* var is partitioned along X dimension in a matrix transported way */
-    array_of_sizes[0]    = len + 2*GHOST;
+    array_of_sizes[0]    = NX + 2*GHOST;
     array_of_sizes[1]    = NY + 2*GHOST;
-    array_of_subsizes[0] = len;
+    array_of_subsizes[0] = NX;
     array_of_subsizes[1] = NY;
     array_of_starts[0]   = GHOST;
     array_of_starts[1]   = GHOST;
@@ -207,6 +214,11 @@ int tst_run(const char *filename, int coll_io, int len)
     CHECK_PUT_BUF(buf_int)
 
     err = ncmpi_buffer_detach(ncid); CHECK_ERR
+
+    /* file sync before reading */
+    err = ncmpi_sync(ncid);
+    CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* read back using a blocking get_varm flexible API ---------------------*/
     /* initiate get buffer contents */
@@ -291,76 +303,28 @@ err_out:
     return nerrs;
 }
 
-#define FILE_NAME "testfile.nc"
+int main(int argc, char **argv) {
 
-static void
-usage(char *argv0)
-{
-    char *help =
-    "Usage: %s [OPTIONS]...[filename]\n"
-    "       [-h] Print help\n"
-    "       [-l num]: X dimension size of local array\n"
-    "       [filename]: output netCDF file name (default: %s)\n";
-    fprintf(stderr, help, argv0, FILE_NAME);
-}
-
-int main(int argc, char** argv)
-{
-    extern int optind;
-    extern char *optarg;
-    char filename[256];
-    int i, len, rank, nprocs, nerrs=0, err=0;
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    len = NX;
-    while ((i = getopt(argc, argv, "hl:")) != EOF)
-        switch(i) {
-            case 'l': len = atoi(optarg);
-                      break;
-            case 'h':
-            default:  if (rank==0) usage(argv[0]);
-                      MPI_Finalize();
-                      return 1;
-        }
-    if (argv[optind] == NULL) strcpy(filename, FILE_NAME);
-    else                      snprintf(filename, 256, "%s", argv[optind]);
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for flexible bput_varm ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str);
-        free(cmd_str);
-    }
-
-    nerrs = tst_run(filename, 0, len);
-    if (nerrs != 0) goto err_out;
-
-    nerrs = tst_run(filename, 1, len);
-    if (nerrs != 0) goto err_out;
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0) {
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        }
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-err_out:
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    err = tst_main(argc, argv, "flexible bput_varm", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
-}
 
+    return err;
+}
