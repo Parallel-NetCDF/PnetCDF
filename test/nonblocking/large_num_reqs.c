@@ -22,34 +22,25 @@
 #define FILE_NAME "testfile.nc"
 #define NUM_REQS 1100   /* a number greater than NC_REQUEST_CHUNK */
 
-/*----< main() >------------------------------------------------------------*/
-int main(int argc, char **argv) {
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
+{
     int i, ncid, dimid[2], varid, err, nerrs=0, rank, nprocs;
     int *buf, *req, *status;
-    char filename[256];
     MPI_Offset start[2], count[2];
-    MPI_Info info=MPI_INFO_NULL;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for large number of iput/iget ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str);
-        free(cmd_str);
-    }
-
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid); CHECK_ERR
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]); CHECK_ERR
 #define STRESS_ROMIO
@@ -65,6 +56,11 @@ int main(int argc, char **argv) {
 #endif
     err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimid, &varid); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
 
     req = (int*) malloc(sizeof(int) * NUM_REQS * 2);
     status = req + NUM_REQS;
@@ -85,12 +81,21 @@ int main(int argc, char **argv) {
         start[0] += 3;
     }
 
-    err = ncmpi_wait_all(ncid, NUM_REQS, req, status); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, NUM_REQS, req, status);
+    else
+        err = ncmpi_wait(ncid, NUM_REQS, req, status);
+    CHECK_ERR
+
     /* check each iput status */
     for (i=0; i<NUM_REQS; i++) {
         err = status[i];
         CHECK_ERR
     }
+
+    /* file sync before reading */
+    err = ncmpi_sync(ncid); CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
 
     start[0] = 0;
     for (i=0; i<NUM_REQS; i++) {
@@ -99,7 +104,12 @@ int main(int argc, char **argv) {
         start[0] += 3;
     }
 
-    err = ncmpi_wait_all(ncid, NUM_REQS, req, status); CHECK_ERR
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, NUM_REQS, req, status);
+    else
+        err = ncmpi_wait(ncid, NUM_REQS, req, status);
+    CHECK_ERR
+
     /* check each iget status */
     for (i=0; i<NUM_REQS; i++) {
         err = status[i];
@@ -110,25 +120,31 @@ int main(int argc, char **argv) {
     free(req);
     err = ncmpi_close(ncid); CHECK_ERR
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0) {
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        }
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "large number of iput/iget", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}

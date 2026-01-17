@@ -44,23 +44,30 @@
       integer*8 imap(2)
       integer*8 dim_size, bufsize, inq_bufsize
       real  var(6,4)
-      character(LEN=256) filename, cmd, msg
+      character(LEN=256) out_path, in_path, cmd, msg
       integer*8 usage, acc_usage
       character(LEN=512) hints
+      logical keep_files
+      double precision timing
 
-      call MPI_INIT(ierr)
+      call MPI_Init(ierr)
+
+      timing = MPI_Wtime()
+
       call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierr)
       call MPI_COMM_SIZE(MPI_COMM_WORLD, nprocs, ierr)
 
       if (rank .EQ. 0) then
-          filename = "testfile.nc"
-          err = get_args(cmd, filename)
+          out_path = "testfile.nc"
+          err = get_args(cmd, out_path, in_path, keep_files)
       endif
       call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
       if (err .EQ. 0) goto 999
 
-      call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD,
+      call MPI_Bcast(out_path, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD,
      +               ierr)
+
+      call MPI_Bcast(keep_files, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD,ierr)
 
       verbose = .FALSE.
       if (nprocs .GT. 1 .AND. rank .EQ. 0 .AND. verbose) then
@@ -78,7 +85,7 @@
       ! call MPI_Info_set(info, "romio_pvfs2_posix_write","enable",ierr)
 
       cmode = IOR(NF_CLOBBER, NF_64BIT_DATA)
-      err = nfmpi_create(MPI_COMM_WORLD, filename, cmode,
+      err = nfmpi_create(MPI_COMM_WORLD, out_path, cmode,
      +                   info, ncid)
       call check(err, 'Error at nfmpi_create ')
 
@@ -251,10 +258,19 @@
       err = nfmpi_close(ncid)
       call check(err, 'Error at nfmpi_close ')
 
+      timing = MPI_Wtime() - timing
+      call MPI_Allreduce(MPI_IN_PLACE, timing, 1,
+     +                   MPI_DOUBLE_PRECISION, MPI_MAX,
+     +                   MPI_COMM_WORLD, ierr)
+
       if (rank .EQ. 0) then
+          if (.NOT. keep_files) then
+              err = nfmpi_delete(out_path, MPI_INFO_NULL)
+          end if
+
          msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//
-     +         ' for bput_varm_real API'
-         call pass_fail(no_err, msg)
+     +         ' - bput_varm_real API'
+         call pass_fail(no_err, msg, timing)
       endif
 
  999  CALL MPI_Finalize(ierr)

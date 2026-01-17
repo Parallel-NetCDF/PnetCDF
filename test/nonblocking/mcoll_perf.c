@@ -300,19 +300,26 @@ err_out:
 }
 
 
-int main(int argc, char **argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
 {
+    /* file sync before reading */
+    extern int optind;
+    extern char *optarg;
     int i, j, array_of_gsizes[3];
     int nprocs, **buf, rank;
     MPI_Offset bufcount;
     int array_of_psizes[3];
     int err, nerrs=0;
     MPI_Offset array_of_starts[3], stride[3];
-    char fbasename[256], filename[512];
+    char filename[512];
     char filename1[512], filename2[512], filename3[512];
     char dimname[20], varname[20];
     int ncid, dimids0[3], dimids1[3], rank_dim[3], *varid;
-    MPI_Info info;
     MPI_Offset **starts, **counts;
     MPI_Offset *bufcounts;
     int ndims = 3;
@@ -324,31 +331,21 @@ int main(int argc, char **argv)
     int *sts;
     int *buf_var;
     int nvars2;
+    int keep_files;
 /*
     int buf_var[32] ={1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2,
                       3, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 4, 4, 4, 4};
 */
 
-    MPI_Init(&argc, &argv);
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     verbose = 0;
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [file base name]\n",argv[0]);
-        MPI_Finalize();
-        nerrs++; goto fn_exit;
-    }
-    if (argc == 2) snprintf(fbasename, 256, "%s", argv[1]);
-    else           strcpy(fbasename, "testfile");
-    MPI_Bcast(fbasename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for mput/iput APIs ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str);
-        free(cmd_str);
-    }
+    keep_files = 0;
 
     length = 2;
     array_of_gsizes[0] = array_of_gsizes[1] = array_of_gsizes[2] = length;
@@ -459,7 +456,6 @@ int main(int argc, char **argv)
         printf("varid malloc error\n");
         nerrs++; goto fn_exit;
     }
-    MPI_Info_create(&info);
 /*
     MPI_Info_set(info, "romio_pvfs2_posix_write", "enable");
     MPI_Info_set(info, "group_cyclic_fd", "enable");
@@ -469,7 +465,7 @@ int main(int argc, char **argv)
     MPI_Info_set(info, "romio_cb_write", "true");
  */
     for (k=0; k<=9; k++) {
-        sprintf(filename, "%s.%d.%d.%d.nc", fbasename, length, nvars, k);
+        sprintf(filename, "%s.%d.%d.%d.nc", out_path, length, nvars, k);
         if (k==0)
             strcpy(filename1, filename);
         else if (k==7)
@@ -674,12 +670,18 @@ printf("filename2=%s filename3=%s\n",filename2, filename3);
                 if (rank == 0 && err == NC_NOERR && verbose)
                     printf("\t OK\n");
 */
-            } else {
-             if (rank == 0 && verbose)
+            } else if (rank == 0 && verbose)
                  printf("\t OK\n");
-            }
         }
     }
+
+    if (rank == 0 && !keep_files) {
+        for (k=0; k<=9; k++) {
+            sprintf(filename, "%s.%d.%d.%d.nc", out_path, length, nvars, k);
+            unlink(filename);
+        }
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
 
 /*
     int nkeys;
@@ -697,8 +699,6 @@ printf("filename2=%s filename3=%s\n",filename2, filename3);
     }
 */
 
-    MPI_Info_free(&info);
-
     for (i=0; i<nvars; i++){
         free(starts[i]);
         free(counts[i]);
@@ -714,25 +714,32 @@ printf("filename2=%s filename3=%s\n",filename2, filename3);
     free(starts);
     free(counts);
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0) {
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        }
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-
 fn_exit:
+    return nerrs;
+}
+
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 0; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 0; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "mput/iput APIs", opt, test_io);
+
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

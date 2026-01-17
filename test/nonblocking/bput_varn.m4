@@ -217,6 +217,10 @@ int check_contents_for_fail_$1(int ncid, int *varid, int coll_io)
 
     $1 *r_buffer = ($1*) malloc(sizeof($1) * NY*NX);
 
+    /* file sync before reading */
+    err = ncmpi_sync(ncid); CHECK_ERR
+    MPI_Barrier(MPI_COMM_WORLD);
+
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     for (i=0; i<NVARS; i++) {
@@ -249,10 +253,10 @@ fn_exit:
 }
 
 static int
-test_bput_varn_$1(char *filename, int cdf, int coll_io)
+test_bput_varn_$1(const char *out_path, int format, int coll_io, MPI_Info info)
 {
-    int i, j, k, rank, err, nerrs=0, bb_enabled;
-    int ncid, cmode, varid[NLOOPS], dimid[2], nreqs, reqs[NLOOPS], sts[NLOOPS];
+    int i, j, k, rank, err, nerrs=0, bb_enabled, fmt;
+    int ncid, varid[NLOOPS], dimid[2], nreqs, reqs[NLOOPS], sts[NLOOPS];
     int req_lens[NLOOPS], my_nsegs[NLOOPS], num_segs[NLOOPS] = {4, 6, 5, 4};
     $1 *buffer[NLOOPS];
 
@@ -292,13 +296,12 @@ test_bput_varn_$1(char *filename, int cdf, int coll_io)
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER;
-    if (cdf == NC_FORMAT_CDF2)
-        cmode |= NC_64BIT_OFFSET;
-    else if (cdf == NC_FORMAT_CDF5)
-        cmode |= NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     {
@@ -697,6 +700,9 @@ err_out:
     err = ncmpi_inq_buffer_usage(ncid, &bufsize);
     EXP_ERR(NC_ENULLABUF)
 
+    err = ncmpi_inq_format(ncid, &fmt);
+    assert(format == fmt);
+
     err = ncmpi_close(ncid); CHECK_ERR
 
     for (i=0; i<nreqs; i++) free(buffer[i]);
@@ -721,88 +727,56 @@ TEST_BPUT_VARN(longlong)
 TEST_BPUT_VARN(ulonglong)
 
 
-define(`TEST_DATA_TYPE',`test_bput_varn_$1(filename, cdf_formats[fmt], coll_io)')
+define(`TEST_DATA_TYPE',`test_bput_varn_$1(out_path, format, coll_io, info)')
 
-#define FILE_NAME "testfile.nc"
-
-static void
-usage(char *argv0)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
-    char *help =
-    "Usage: %s [OPTIONS]...[filename]\n"
-    "       [-h] Print help\n"
-    "       [filename]: output netCDF file name (default: %s)\n";
-    fprintf(stderr, help, argv0, FILE_NAME);
+    int err;
+
+    err = TEST_DATA_TYPE(text);   if (err > 0) return err;
+    err = TEST_DATA_TYPE(schar);  if (err > 0) return err;
+    err = TEST_DATA_TYPE(short);  if (err > 0) return err;
+    err = TEST_DATA_TYPE(int);    if (err > 0) return err;
+    err = TEST_DATA_TYPE(float);  if (err > 0) return err;
+    err = TEST_DATA_TYPE(double); if (err > 0) return err;
+    if (format == NC_FORMAT_64BIT_DATA) {
+        err = TEST_DATA_TYPE(uchar);     if (err > 0) return err;
+        err = TEST_DATA_TYPE(ushort);    if (err > 0) return err;
+        err = TEST_DATA_TYPE(uint);      if (err > 0) return err;
+        err = TEST_DATA_TYPE(longlong);  if (err > 0) return err;
+        err = TEST_DATA_TYPE(ulonglong); if (err > 0) return err;
+    }
+
+    return 0;
 }
 
-int main(int argc, char** argv)
-{
-    extern int optind;
-    extern char *optarg;
-    char filename[256];
-    int i, fmt, coll_io, rank, err, nerrs=0;
-    int cdf_formats[3]={NC_FORMAT_CLASSIC, NC_FORMAT_CDF2, NC_FORMAT_CDF5};
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    while ((i = getopt(argc, argv, "h")) != EOF)
-        switch(i) {
-            case 'h':
-            default:  if (rank==0) usage(argv[0]);
-                      MPI_Finalize();
-                      return 1;
-        }
-    if (argv[optind] == NULL) strcpy(filename, FILE_NAME);
-    else                      snprintf(filename, 256, "%s", argv[optind]);
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 0; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for bput_varn ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str);
-        free(cmd_str);
-    }
-
-    for (coll_io=0; coll_io<2; coll_io++) {
-        /* test both independent and collective I/O modes */
-        for (fmt=0; fmt<3; fmt++) {
-            /* test CDF-1, CDF-2, and CDF-5 file formats */
-            nerrs += TEST_DATA_TYPE(text);   if (nerrs > 0) goto err_out;
-            nerrs += TEST_DATA_TYPE(schar);  if (nerrs > 0) goto err_out;
-            nerrs += TEST_DATA_TYPE(short);  if (nerrs > 0) goto err_out;
-            nerrs += TEST_DATA_TYPE(int);    if (nerrs > 0) goto err_out;
-            nerrs += TEST_DATA_TYPE(float);  if (nerrs > 0) goto err_out;
-            nerrs += TEST_DATA_TYPE(double); if (nerrs > 0) goto err_out;
-            if (nerrs > 0) goto err_out;
-            if (cdf_formats[fmt] == NC_FORMAT_CDF5) {
-                nerrs += TEST_DATA_TYPE(uchar);     if (nerrs > 0) goto err_out;
-                nerrs += TEST_DATA_TYPE(ushort);    if (nerrs > 0) goto err_out;
-                nerrs += TEST_DATA_TYPE(uint);      if (nerrs > 0) goto err_out;
-                nerrs += TEST_DATA_TYPE(longlong);  if (nerrs > 0) goto err_out;
-                nerrs += TEST_DATA_TYPE(ulonglong); if (nerrs > 0) goto err_out;
-            }
-        }
-    }
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
-
-err_out:
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    err = tst_main(argc, argv, "bput_varn", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
-}
 
+    return err;
+}

@@ -69,7 +69,8 @@
                                           !   zero is specified
 
       integer rank, Write_File
-      character(LEN=256) filename, cmd, msg
+      character(LEN=256) out_path, in_path, cmd, msg
+      logical keep_files
 
       real*4  filsiz
 
@@ -87,23 +88,30 @@
 !      data TOTSIZ_3D / 256, 256, 256 /
       data TOTSIZ_3D / 8, 8, 8 /
 
+      double precision timing
+
 !     ----------------
 !     Begin execution.
 !     ----------------
 
-      call MPI_Init (ierr)
+      call MPI_Init(ierr)
+
+      timing = MPI_Wtime()
+
       call MPI_Comm_Size(MPI_COMM_WORLD, totpes, ierr)
       call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
 
       if (rank .EQ. 0) then
-          filename = "testfile.nc"
-          err = get_args(cmd, filename)
+          out_path = "testfile.nc"
+          err = get_args(cmd, out_path, in_path, keep_files)
       endif
       call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
       if (err .EQ. 0) goto 999
 
-      call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD,
+      call MPI_Bcast(out_path, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD,
      +               ierr)
+
+      call MPI_Bcast(keep_files, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD,ierr)
 
       call MPI_Dims_Create (totpes, 3, numpes, ierr)
 
@@ -169,7 +177,7 @@
       locsiz = locsiz_3d(1) * locsiz_3d(2) * locsiz_3d(3)
 
 !     ===============
-      ierr = Write_File(filename, NWRITES, comm_cart,
+      ierr = Write_File(out_path, NWRITES, comm_cart,
      +                istart, jstart, kstart, locsiz, locsiz_3d,
      +                TOTSIZ_3D, wrt_l)
       if (ierr .NE. NF_NOERR) then
@@ -204,9 +212,18 @@
 
       call MPI_Comm_Free (comm_cart, ierr)
 
+      timing = MPI_Wtime() - timing
+      call MPI_Allreduce(MPI_IN_PLACE, timing, 1,
+     +                   MPI_DOUBLE_PRECISION, MPI_MAX,
+     +                   MPI_COMM_WORLD, ierr)
+
       if (rank .EQ. 0) then
-          msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//' for iput API'
-          call pass_fail(0, msg)
+          if (.NOT. keep_files) then
+              err = nfmpi_delete(out_path, MPI_INFO_NULL)
+          end if
+
+          msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//' - iput API'
+          call pass_fail(0, msg, timing)
       endif
 
  999  call MPI_Finalize  (ierr)
@@ -217,7 +234,7 @@
 !     ------------
 
 
-      integer function Write_File(filename, nwrites, comm_cart,
+      integer function Write_File(out_path, nwrites, comm_cart,
      +                      istart, jstart, kstart, locsiz,
      +                      locsiz_3d, totsiz_3d, wrt_l)
 
@@ -229,7 +246,7 @@
 !     Argument declarations.
 !     ----------------------
 
-      character(LEN=*) filename
+      character(LEN=*) out_path
       integer nwrites
       integer comm_cart
       integer*8 istart, jstart, kstart
@@ -291,7 +308,7 @@
        call MPI_Info_create(info, ierr)
        ! call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable",ierr)
 
-        Write_File = nfmpi_create(comm_cart, filename, NF_CLOBBER,
+        Write_File = nfmpi_create(comm_cart, out_path, NF_CLOBBER,
      +                            info, ncid)
         if (Write_File .NE. NF_NOERR) return
 
