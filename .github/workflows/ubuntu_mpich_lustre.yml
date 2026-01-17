@@ -61,32 +61,32 @@ jobs:
             cd m4-${M4_VERSION}
             ./configure --prefix=${GITHUB_WORKSPACE}/AUTOTOOLS \
                         --silent
-            make -s -j 8 install > qout 2>&1
-            make -s -j 8 distclean >> qout 2>&1
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 install > qout 2>&1
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 distclean >> qout 2>&1
             cd ${GITHUB_WORKSPACE}
             wget -q https://ftp.gnu.org/gnu/autoconf/autoconf-${AUTOCONF_VERSION}.tar.gz
             gzip -dc autoconf-${AUTOCONF_VERSION}.tar.gz | tar -xf -
             cd autoconf-${AUTOCONF_VERSION}
             ./configure --prefix=${GITHUB_WORKSPACE}/AUTOTOOLS \
                         --silent
-            make -s -j 8 install > qout 2>&1
-            make -s -j 8 distclean >> qout 2>&1
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 install > qout 2>&1
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 distclean >> qout 2>&1
             cd ${GITHUB_WORKSPACE}
             wget -q https://ftp.gnu.org/gnu/automake/automake-${AUTOMAKE_VERSION}.tar.gz
             gzip -dc automake-${AUTOMAKE_VERSION}.tar.gz | tar -xf -
             cd automake-${AUTOMAKE_VERSION}
             ./configure --prefix=${GITHUB_WORKSPACE}/AUTOTOOLS \
                         --silent
-            make -s -j 8 install > qout 2>&1
-            make -s -j 8 distclean >> qout 2>&1
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 install > qout 2>&1
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 distclean >> qout 2>&1
             cd ${GITHUB_WORKSPACE}
             wget -q https://ftp.gnu.org/gnu/libtool/libtool-${LIBTOOL_VERSION}.tar.gz
             gzip -dc libtool-${LIBTOOL_VERSION}.tar.gz | tar -xf -
             cd libtool-${LIBTOOL_VERSION}
             ./configure --prefix=${GITHUB_WORKSPACE}/AUTOTOOLS \
                         --silent
-            make -s -j 8 install > qout 2>&1
-            make -s -j 8 distclean >> qout 2>&1
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 install > qout 2>&1
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 distclean >> qout 2>&1
         - name: Build MPICH
           run: |
             cd ${GITHUB_WORKSPACE}
@@ -108,8 +108,8 @@ jobs:
                         CC=gcc FC=gfortran \
                         FFLAGS=-fallow-argument-mismatch \
                         FCFLAGS=-fallow-argument-mismatch
-            make -s LIBTOOLFLAGS=--silent V=1 -j 4 install > qout 2>&1
-            make -s -j 4 distclean >> qout 2>&1
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 install > qout 2>&1
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 distclean >> qout 2>&1
         - name: Build PnetCDF (MIMIC_LUSTRE)
           run: |
             cd ${GITHUB_WORKSPACE}
@@ -131,7 +131,7 @@ jobs:
                         --with-mpi=${GITHUB_WORKSPACE}/MPICH \
                         TESTOUTDIR=${RUNNER_TEMP}/pnetcdf_output \
                         MIMIC_LUSTRE=yes
-            make -j 8 tests
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 tests
         - name: Print config.log
           if: ${{ always() }}
           run: |
@@ -139,7 +139,7 @@ jobs:
         - name: make check
           run: |
             cd ${GITHUB_WORKSPACE}
-            make check
+            make -s LIBTOOLFLAGS=--silent V=1 check
         - name: Print test log files
           if: ${{ always() }}
           run: |
@@ -155,7 +155,7 @@ jobs:
         - name: make ptests
           run: |
             cd ${GITHUB_WORKSPACE}
-            make ptests
+            make -s LIBTOOLFLAGS=--silent V=1 ptests
         - name: make distcheck
           run: |
             cd ${GITHUB_WORKSPACE}
@@ -165,18 +165,18 @@ jobs:
             cd ${GITHUB_WORKSPACE}
             prefix_path=${GITHUB_WORKSPACE}/pnetcdf_install
             echo "---- test make install prefix=${prefix_path}"
-            make install prefix=${prefix_path}
+            make -s LIBTOOLFLAGS=--silent V=1 install prefix=${prefix_path}
             test/tst_install.sh ${prefix_path}
             prefix_path="/pnetcdf_install"
             destdir_path=${GITHUB_WORKSPACE}/inst
             echo "---- test make install prefix=${prefix_path} DESTDIR=${destdir_path}"
-            make install prefix=${prefix_path} DESTDIR=${destdir_path}
+            make -s LIBTOOLFLAGS=--silent V=1 install prefix=${prefix_path} DESTDIR=${destdir_path}
             test/tst_install.sh ${prefix_path} ${destdir_path}
         - name: Cleanup
           if: ${{ always() }}
           run: |
             cd ${GITHUB_WORKSPACE}
-            make -s distclean
+            make -s LIBTOOLFLAGS=--silent V=1 distclean
             rm -rf ${GITHUB_WORKSPACE}/pnetcdf_output
             rm -rf ${GITHUB_WORKSPACE}/MPICH
             rm -rf ${GITHUB_WORKSPACE}/pnetcdf_install
