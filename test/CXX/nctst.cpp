@@ -362,7 +362,7 @@ cdl_name(const char* path)
     while (*(cp-1) != '/' && cp != path) // assumes UNIX path separator
 	cp--;
 
-    static char np[NC_MAX_NAME];
+    static char np[NC_MAX_NAME+1];
     strncpy(&np[0], cp, NC_MAX_NAME);
 
     char* ep = np + strlen(np);
@@ -509,8 +509,12 @@ main(int argc, char* argv[])	// test new netCDF interface
 {
    char filename[256];
    int rank, nprocs;
+   double timing;
 
    MPI_Init(&argc, &argv);
+
+   timing = MPI_Wtime();
+
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
@@ -525,8 +529,8 @@ main(int argc, char* argv[])	// test new netCDF interface
    if (rank == 0) {
        std::ostringstream cmd_str;
        cmd_str << "*** TESTING C++ " << basename(argv[0]) <<
-                  " for APIs with different netCDF formats";
-       printf("%-66s ------ ", cmd_str.str().c_str());
+                  " - APIs with different netCDF formats";
+       printf("%-63s -- ", cmd_str.str().c_str());
    }
 
    // Set up the format constants.
@@ -572,9 +576,12 @@ main(int argc, char* argv[])	// test new netCDF interface
                    sum_size);
     }
 
+    timing = MPI_Wtime() - timing;
+    MPI_Allreduce(MPI_IN_PLACE, &timing, 1, MPI_DOUBLE, MPI_MAX,MPI_COMM_WORLD);
+
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
+        else       printf(PASS_STR, timing);
     }
 
     MPI_Finalize();
