@@ -28,29 +28,25 @@ if NAGFORT
   AM_FCFLAGS += -w=uparam
 endif
 
-TESTPROGRAMS = tst_f90 \
-               f90tst_vars \
-               tst_types2 \
-               tst_f90_cdf5 \
-               f90tst_vars2 \
-               f90tst_vars3 \
-               f90tst_vars4 \
-               test_intent \
-               test_attr_int64 \
-               test_fill
-
-PARALLEL_PROGS = f90tst_parallel \
+check_PROGRAMS = tst_f90 \
+                 f90tst_vars \
+                 tst_types2 \
+                 tst_f90_cdf5 \
+                 f90tst_vars2 \
+                 f90tst_vars3 \
+                 f90tst_vars4 \
+                 test_intent \
+                 test_attr_int64 \
+                 test_fill \
+                 f90tst_parallel \
                  f90tst_parallel2 \
                  f90tst_parallel3 \
-                 f90tst_parallel4
-
-check_PROGRAMS = $(TESTPROGRAMS) \
-                 $(PARALLEL_PROGS) \
+                 f90tst_parallel4 \
                  tst_io
 
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
-# AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+# AM_TESTS_ENVIRONMENT  = check_PROGRAMS="$(check_PROGRAMS)" ; export check_PROGRAMS;
 # AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 # AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(FSTYPE_PREFIX)$(TESTOUTDIR)" ; export TESTOUTDIR;
 TESTS_ENVIRONMENT  = export SED="$(SED)";
@@ -58,9 +54,7 @@ TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
 TESTS_ENVIRONMENT += export TESTOUTDIR="$(FSTYPE_PREFIX)$(TESTOUTDIR)";
 TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
 TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
-TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
-TESTS_ENVIRONMENT += export PARALLEL_PROGS="$(PARALLEL_PROGS)";
 
 if PNETCDF_DEBUG
    TESTS_ENVIRONMENT += export PNETCDF_DEBUG=1;
@@ -75,53 +69,55 @@ if MIMIC_LUSTRE
    TESTS_ENVIRONMENT += export MIMIC_LUSTRE=1;
 endif
 
-TESTS = $(TESTPROGRAMS) seq_runs.sh
+TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
-LOG_COMPILER = $(srcdir)/wrap_runs.sh
+LOG_COMPILER = $(srcdir)/seq_runs.sh
 SH_LOG_COMPILER =
 
 EXTRA_DIST = seq_runs.sh wrap_runs.sh parallel_run.sh
 
-NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
-           $(check_PROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
-
 CLEANFILES = *.$(FC_MODEXT) core core.* *.gcda *.gcno *.gcov gmon.out \
-             $(TESTOUTDIR)/tst_io1.nc $(TESTOUTDIR)/tst_io1.nc0 \
-             $(TESTOUTDIR)/testfile.nc $(NC_FILES)
+             $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-ptest ptest4: $(PARALLEL_PROGS)
+ptest ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/../parallel_run.sh 4 || exit 1
+	$(srcdir)/parallel_run.sh 4 || exit 1
 
-ptest2: $(PARALLEL_PROGS)
+ptest2: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 2 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/../parallel_run.sh 2 || exit 1
+	$(srcdir)/parallel_run.sh 2 || exit 1
 
-ptest8: $(PARALLEL_PROGS)
+ptest6: $(check_PROGRAMS)
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 6 MPI processes"
+	@echo "==========================================================="
+	@$(TESTS_ENVIRONMENT) \
+	$(srcdir)/parallel_run.sh 6 || exit 1
+
+ptest8: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 8 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/../parallel_run.sh 8 || exit 1
+	$(srcdir)/parallel_run.sh 8 || exit 1
 
-ptest10: $(PARALLEL_PROGS)
+ptest10: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 10 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/../parallel_run.sh 10 || exit 1
+	$(srcdir)/parallel_run.sh 10 || exit 1
 
-ptests: ptest2 ptest4 ptest8 ptest10
-ptest6:
+ptests: ptest4 ptest8
 
 # build check targets but not invoke
 tests-local: all $(check_PROGRAMS)
