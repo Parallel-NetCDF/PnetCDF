@@ -58,44 +58,21 @@
 
 #define BSIZE 1024 * 1024
 
-int main(int argc, char *argv[])
+static
+int test_bb(const char *out_path,
+            int         coll_io,
+            MPI_Info    info)
 {
-    char *filename=NULL, dimname[64];
-    int i, ret=NC_NOERR, nerr=0;
-    int rank, np, ndims;
-    int ncid, varid;
+    char *folder, *dup_out_path, dimname[64];
+    int i, err=NC_NOERR, nerrs=0, rank, np, ndims, ncid, varid;
     int *dimid=NULL, *buffer=NULL;
     long long j;
     MPI_Offset *start=NULL, *count=NULL, *stride=NULL;
 
-    /* Initialize MPI */
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
-    if (argc > 3) {
-        if (!rank) printf("Usage: %s [filename]\n", argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-
-    /* Determine ndims and test file name */
-    if (argc > 1)
-        filename = strdup(argv[1]);
-    else
-        filename = strdup("testfile.nc");
-
     ndims = DIM;
-    if (argc > 2)
-        ndims = atoi(argv[2]);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for high dimensional variables", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str);
-        fflush(stdout);
-        free(cmd_str);
-    }
 
     /* Allocate buffers */
     dimid = (int*)malloc(sizeof(int) * ndims);
@@ -105,8 +82,8 @@ int main(int argc, char *argv[])
     buffer = (int*)malloc(sizeof(int) * BSIZE);
     if (dimid == NULL || start == NULL || count == NULL || stride == NULL || buffer == NULL) {
         printf("Error at line %d in %s: malloc error\n", __LINE__, __FILE__);
-        nerr++;
-        goto ERROR;
+        nerrs++;
+        goto err_out;
     }
 
     /* Initialize buffers and calculate share among processes
@@ -133,104 +110,131 @@ int main(int argc, char *argv[])
     start[0] = rank;
     stride[0] = np;
 
+    MPI_Info_set(info, "nc_burst_buf", "enable");
+    MPI_Info_set(info, "nc_burst_buf_overwrite", "enable");
+
+    dup_out_path = strdup(out_path);
+    folder = dirname(dup_out_path);
+    if (folder == NULL)
+        MPI_Info_set(info, "nc_burst_buf_dirname", ".");
+    else
+        MPI_Info_set(info, "nc_burst_buf_dirname", folder);
+    free(dup_out_path);
+
     /* Create new netcdf file */
-    ret = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, MPI_INFO_NULL, &ncid);
-    if (ret != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_create: %d\n", __LINE__, __FILE__, ret);
-        nerr++;
-        goto ERROR;
-    }
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
 
     /* Define dimensions */
     for (i = 0; i < ndims; i++) {
         sprintf(dimname, "D%d", i);
         /* Submatrix of each process stack along the first dimension */
-        if (i == 0) {
-            ret = ncmpi_def_dim(ncid, dimname, count[i] * np, dimid + i);
-        }
-        else{
-            ret = ncmpi_def_dim(ncid, dimname, count[i], dimid + i);
-        }
-        if (ret != NC_NOERR) {
-            printf("Error at line %d in %s: ncmpi_enddef: %d\n", __LINE__, __FILE__, ret);
-            nerr++;
-            goto ERROR;
-        }
+        if (i == 0)
+            err = ncmpi_def_dim(ncid, dimname, count[i] * np, dimid + i);
+        else
+            err = ncmpi_def_dim(ncid, dimname, count[i], dimid + i);
+        CHECK_ERR
     }
 
     /* Define variable */
-    ret = ncmpi_def_var(ncid, "M", NC_INT, ndims, dimid, &varid);
-    if (ret != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_def_var: %d\n", __LINE__, __FILE__, ret);
-        nerr++;
-        goto ERROR;
-    }
+    err = ncmpi_def_var(ncid, "M", NC_INT, ndims, dimid, &varid);
+    CHECK_ERR
 
     /* Switch to data mode */
-    ret = ncmpi_enddef(ncid);
-    if (ret != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_enddef: %d\n", __LINE__, __FILE__, ret);
-        nerr++;
-        goto ERROR;
+    err = ncmpi_enddef(ncid);
+    CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
     }
 
     /* Write variable */
-    ret = ncmpi_put_vars_int_all(ncid, varid, start, count, stride, buffer);
-    if (ret != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_put_vars_int: %d\n", __LINE__, __FILE__, ret);
-        nerr++;
-        goto ERROR;
-    }
+    if (coll_io)
+        err = ncmpi_put_vars_int_all(ncid, varid, start, count, stride, buffer);
+    else
+        err = ncmpi_put_vars_int(ncid, varid, start, count, stride, buffer);
+    CHECK_ERR
 
     /* Read it back */
-    ret = ncmpi_get_vars_int_all(ncid, varid, start, count, stride, buffer);
-    if (ret != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_get_vars_int: %d\n", __LINE__, __FILE__, ret);
-        nerr++;
-        goto ERROR;
-    }
+    if (coll_io)
+        err = ncmpi_get_vars_int_all(ncid, varid, start, count, stride, buffer);
+    else
+        err = ncmpi_get_vars_int(ncid, varid, start, count, stride, buffer);
+    CHECK_ERR
 
     /* Verify the result */
     for (i = 0; i < BSIZE; i++) {
         if (buffer[i] != rank + 1) {
-            nerr++;
-            printf("Error at line %d in %s: expecting buffer[%d] = %d but got %d\n", __LINE__, __FILE__, i, rank + 1, buffer[i]);
+            printf("Error at line %d in %s: expecting buffer[%d] = %d but got %d\n",
+                    __LINE__, __FILE__, i, rank + 1, buffer[i]);
+            nerrs++;
+            goto err_out;
         }
     }
 
     /* Close the file */
-    ret = ncmpi_close(ncid);
-    if (ret != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_close: %d\n", __LINE__, __FILE__, ret);
-        nerr++;
-        goto ERROR;
-    }
-
-
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    ret = ncmpi_inq_malloc_size(&malloc_size);
-    if (ret == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n", sum_size);
-    }
-
-ERROR:
-    MPI_Allreduce(MPI_IN_PLACE, &nerr, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerr) printf(FAIL_STR, nerr);
-        else       printf(PASS_STR);
-    }
+    err = ncmpi_close(ncid);
+    CHECK_ERR
 
     if (start != NULL) free(start);
     if (count != NULL) free(count);
     if (stride != NULL) free(stride);
     if (dimid != NULL) free(dimid);
     if (buffer != NULL) free(buffer);
-    if (filename != NULL) free(filename);
+
+err_out:
+    return nerrs;
+}
+
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
+{
+    int err=NC_NOERR;
+    MPI_Info local_info;
+
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
+    MPI_Info_dup(info, &local_info);
+    err = test_bb(out_path, coll_io, local_info);
+    MPI_Info_free(&local_info);
+
+    MPI_Info_dup(info, &local_info);
+    MPI_Info_set(local_info, "nc_burst_buf_shared_logs", "enable");
+    err = test_bb(out_path, coll_io, local_info);
+    MPI_Info_free(&local_info);
+
+    return err;
+}
+
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 0; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "high dimensional variables", opt, test_io);
 
     MPI_Finalize();
 
-    return nerr > 0;
+    return err;
 }

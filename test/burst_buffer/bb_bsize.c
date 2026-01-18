@@ -23,89 +23,64 @@
 #include <pnetcdf.h>
 #include <limits.h>
 #include <testutils.h>
-#include <libgen.h>
+#include <libgen.h> /* dirname() */
 
 #define SIZE 1024
 
 int buffer[SIZE * SIZE];
 char bsize[32];
 
-int main(int argc, char *argv[]) {
-    int i, ret = NC_NOERR, nerr = 0;
-    int rank, np;
-    int ncid, varid;
-    int dimid[2];
-    char *filename;
+static
+int test_bb(const char *out_path,
+            int         coll_io,
+            MPI_Info    info)
+{
+    char *folder, *dup_out_path;
+    int i, err = NC_NOERR, nerrs = 0;
+    int rank, np, ncid, varid, dimid[2];
     MPI_Offset start[2], count[2];
-    MPI_Info info;
 
-    /* Initialize MPI */
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n", argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-
-    /* Determine test file name */
-    if (argc > 1)
-        filename = argv[1];
-    else
-        filename = "testfile.nc";
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for checking request > buffer size", basename(argv[0]));
-                printf("%-66s ------ ", cmd_str); fflush(stdout);
-                free(cmd_str);
-    }
-
-    /* Initialize file info */
-    MPI_Info_create(&info);
+    /* add file info */
     MPI_Info_set(info, "nc_burst_buf", "enable");
+
     /* Set default buffer size to 1/16 of the rows */
     sprintf(bsize, "%u", (unsigned int)(SIZE * SIZE / 16 * sizeof(int)));
     MPI_Info_set(info, "nc_burst_buf_flush_buffer_size", bsize);
 
+    MPI_Info_set(info, "nc_burst_buf_overwrite", "enable");
+
+    dup_out_path = strdup(out_path);
+    folder = dirname(dup_out_path);
+    if (folder == NULL)
+        MPI_Info_set(info, "nc_burst_buf_dirname", ".");
+    else
+        MPI_Info_set(info, "nc_burst_buf_dirname", folder);
+    free(dup_out_path);
+
     /* Create new netcdf file */
-    ret = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
-    if (ret != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_create: %d\n", __LINE__, __FILE__, ret);
-        nerr++;
-        goto ERROR;
-    }
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
 
     /* Define dimensions */
-    ret = ncmpi_def_dim(ncid, "X", SIZE * np, dimid);
-    if (ret != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_def_dim: %d\n", __LINE__, __FILE__, ret);
-        nerr++;
-        goto ERROR;
-    }
-    ret = ncmpi_def_dim(ncid, "Y", SIZE, dimid + 1);
-    if (ret != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_def_dim: %d\n", __LINE__, __FILE__, ret);
-        nerr++;
-        goto ERROR;
-    }
+    err = ncmpi_def_dim(ncid, "X", SIZE * np, dimid);
+    CHECK_ERR
+    err = ncmpi_def_dim(ncid, "Y", SIZE, dimid + 1);
+    CHECK_ERR
 
     /* Define variable */
-    ret = ncmpi_def_var(ncid, "M", NC_INT, 2, dimid, &varid);
-    if (ret != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_def_var: %d\n", __LINE__, __FILE__, ret);
-        nerr++;
-        goto ERROR;
-    }
+    err = ncmpi_def_var(ncid, "M", NC_INT, 2, dimid, &varid);
+    CHECK_ERR
 
     /* Switch to data mode */
-    ret = ncmpi_enddef(ncid);
-    if (ret != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_enddef: %d\n", __LINE__, __FILE__, ret);
-        nerr++;
-        goto ERROR;
+    err = ncmpi_enddef(ncid);
+    CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
     }
 
     /* Initialize buffer */
@@ -118,12 +93,11 @@ int main(int argc, char *argv[]) {
     start[1] = 0;
     count[0] = SIZE / 8;
     count[1] = SIZE;
-    ret = ncmpi_put_vara_int_all(ncid, varid, start, count, buffer);
-    if (ret != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_put_vara_int: %d\n", __LINE__, __FILE__, ret);
-        nerr++;
-        goto ERROR;
-    }
+    if (coll_io)
+        err = ncmpi_put_vara_int_all(ncid, varid, start, count, buffer);
+    else
+        err = ncmpi_put_vara_int(ncid, varid, start, count, buffer);
+    CHECK_ERR
 
     /* Write remaining rows */
     start[0] = SIZE * rank + SIZE / 8;
@@ -131,12 +105,11 @@ int main(int argc, char *argv[]) {
     count[0] = 1;
     count[1] = SIZE;
     for (; start[0] < SIZE * (rank + 1); start[0]++) {
-        ret = ncmpi_put_vara_int_all(ncid, varid, start, count, buffer);
-        if (ret != NC_NOERR) {
-            printf("Error at line %d in %s: ncmpi_put_vara_int: %d\n", __LINE__, __FILE__, ret);
-            nerr++;
-            goto ERROR;
-        }
+        if (coll_io)
+            err = ncmpi_put_vara_int_all(ncid, varid, start, count, buffer);
+        else
+            err = ncmpi_put_vara_int(ncid, varid, start, count, buffer);
+        CHECK_ERR
     }
 
     /*
@@ -148,48 +121,78 @@ int main(int argc, char *argv[]) {
     start[1] = 0;
     count[0] = SIZE;
     count[1] = SIZE;
-    ret = ncmpi_get_vara_int_all(ncid, varid, start, count, buffer);
-    if (ret != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_get_vara_int: %d\n", __LINE__, __FILE__, ret);
-        nerr++;
-        goto ERROR;
-    }
+    if (coll_io)
+        err = ncmpi_get_vara_int_all(ncid, varid, start, count, buffer);
+    else
+        err = ncmpi_get_vara_int(ncid, varid, start, count, buffer);
+    CHECK_ERR
 
     /* Verify the result */
     for (i = 0; i < SIZE * SIZE; i++) {
         if (buffer[i] != rank + 1) {
-            nerr++;
-            printf("Error at line %d in %s: expecting buffer[%d] = %d but got %d\n", __LINE__, __FILE__, i, rank + 1, buffer[i]);
+            printf("Error at line %d in %s: expecting buffer[%d] = %d but got %d\n",
+                    __LINE__, __FILE__, i, rank + 1, buffer[i]);
+            nerrs++;
+            goto err_out;
         }
     }
 
     /* Close the file */
-    ret = ncmpi_close(ncid);
-    if (ret != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_close: %d\n", __LINE__, __FILE__, ret);
-        nerr++;
-        goto ERROR;
-    }
+    err = ncmpi_close(ncid);
+    CHECK_ERR
 
-    MPI_Info_free(&info);
+err_out:
+    return nerrs;
+}
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    ret = ncmpi_inq_malloc_size(&malloc_size);
-    if (ret == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n", sum_size);
-    }
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
+{
+    int err=NC_NOERR;
+    MPI_Info local_info;
 
-ERROR:
-    MPI_Allreduce(MPI_IN_PLACE, &nerr, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerr) printf(FAIL_STR, nerr);
-        else       printf(PASS_STR);
-    }
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
+    MPI_Info_dup(info, &local_info);
+    err = test_bb(out_path, coll_io, local_info);
+    MPI_Info_free(&local_info);
+
+    MPI_Info_dup(info, &local_info);
+    MPI_Info_set(local_info, "nc_burst_buf_shared_logs", "enable");
+    err = test_bb(out_path, coll_io, local_info);
+    MPI_Info_free(&local_info);
+
+    return err;
+}
+
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 0; /* test burst-buffering feature */
+    opt.mod      = 1; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 1; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "request size > buffer size", opt, test_io);
 
     MPI_Finalize();
 
-    return nerr > 0;
+    return err;
 }
