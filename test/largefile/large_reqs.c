@@ -30,10 +30,10 @@
 static int verbose;
 
 static
-int tst_one_var(char *filename, MPI_Comm comm)
+int tst_one_var(MPI_Comm comm, const char *filename, MPI_Info info)
 {
     size_t i, buf_len;
-    int rank, nprocs, err, nerrs=0, ncid, cmode, varid, dimid[3], psize[2];
+    int rank, nprocs, err, nerrs=0, ncid, varid, dimid[3], psize[2];
     int *buf;
     MPI_Offset start[3], count[3];
 
@@ -46,8 +46,7 @@ int tst_one_var(char *filename, MPI_Comm comm)
 
     /* Test classic CDF-5 format */
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(comm, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, filename, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     /* define dimensions Z, Y, and X */
@@ -150,11 +149,11 @@ int tst_one_var(char *filename, MPI_Comm comm)
 #define LEN 1024
 
 static
-int tst_vars(char *filename, MPI_Comm comm)
+int tst_vars(MPI_Comm comm, const char *filename, MPI_Info info)
 {
     size_t i, buf_len;
     int rank, nprocs, err, nerrs=0, *buf, *buf_ptr;
-    int ncid, cmode, *varid, dimid[3], gap, psize[2]={0,0};
+    int ncid, *varid, dimid[3], gap, psize[2]={0,0};
     MPI_Offset start[3], count[3];
 
     MPI_Comm_size(comm, &nprocs);
@@ -166,8 +165,7 @@ int tst_vars(char *filename, MPI_Comm comm)
 
     /* Test classic CDF-5 format */
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(comm, filename, cmode, MPI_INFO_NULL, &ncid);
+    err = ncmpi_create(comm, filename, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     /* define dimensions Z, Y, and X */
@@ -269,36 +267,24 @@ int tst_vars(char *filename, MPI_Comm comm)
     return nerrs;
 }
 
-int main(int argc, char** argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
 {
-    char filename[256];
-    int rank, nprocs, nerrs=0, color;
+    int rank, nprocs, err, nerrs=0, color;
     MPI_Comm comm;
-#ifdef PNC_MALLOC_TRACE
-    int err;
-#endif
+
     verbose = 0;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    /* get command-line arguments */
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for large requests ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
     color = 1;
 
@@ -313,34 +299,39 @@ int main(int argc, char** argv)
 
     if (color) {
         /* test one big variable */
-        nerrs += tst_one_var(filename, comm);
+        nerrs += tst_one_var(comm, out_path, info);
 
         /* test a large number of smaller variables */
-        nerrs += tst_vars(filename, comm);
+        nerrs += tst_vars(comm, out_path, info);
     }
 
     if (comm != MPI_COMM_WORLD) MPI_Comm_free(&comm);
 
-#ifdef PNC_MALLOC_TRACE
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-    }
-    if (malloc_size > 0) ncmpi_inq_malloc_list();
-#endif
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 0; /* test intra-node aggregation */
+    opt.drv      = 0; /* test PNCIO driver */
+    opt.ind      = 0; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 0; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "large requests", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}

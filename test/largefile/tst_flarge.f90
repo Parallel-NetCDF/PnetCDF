@@ -26,22 +26,29 @@ program tst_flarge
   integer :: cmode, err, ierr, get_args
   double precision dbl_buf(1)
   integer(KIND=MPI_OFFSET_KIND) :: start(1), count(1)
-  character(LEN=256) filename, cmd, msg
+  character(LEN=256) out_path, in_path, cmd, msg
   integer my_rank, p
+  logical keep_files
+  double precision timing
 
   call MPI_Init(ierr)
+
+  timing = MPI_Wtime()
+
   call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr)
   call MPI_Comm_size(MPI_COMM_WORLD, p, ierr)
 
-  ! take filename from command-line argument if there is any
+  ! take out_path from command-line argument if there is any
   if (my_rank .EQ. 0) then
-      filename = FILE_NAME
-      err = get_args(cmd, filename)
+      out_path = FILE_NAME
+      err = get_args(cmd, out_path, in_path, keep_files)
   endif
   call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
   if (err .EQ. 0) goto 999
 
-  call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(out_path, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
+
+  call MPI_Bcast(keep_files, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
 
 !  if (p .ne. 1 .AND. my_rank .eq. 0) then
 !     print *, 'Warning: ',trim(cmd),' is design to run on 1 process'
@@ -49,7 +56,7 @@ program tst_flarge
 
   ! Create the file with 2 NF90_DOUBLE vars, each with one really long dimension.
   cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
-  call check(nf90mpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, ncFileID))
+  call check(nf90mpi_create(MPI_COMM_WORLD, out_path, cmode, MPI_INFO_NULL, ncFileID))
   call check(nf90mpi_def_dim(ncFileID, dimName, BIG_DIMENSION, dimID))
   call check(nf90mpi_def_var(ncFileID, var1Name, nf90_double, (/ dimID /), varID1) )
   call check(nf90mpi_def_var(ncFileID, var2Name, nf90_double, (/ dimID /), varID2) )
@@ -70,7 +77,7 @@ program tst_flarge
   call check(nf90mpi_close(ncFileID))
 
   ! Now open the file to read and check a few values
-  call check(nf90mpi_open(MPI_COMM_WORLD, filename, NF90_NOWRITE, MPI_INFO_NULL, ncFileID))
+  call check(nf90mpi_open(MPI_COMM_WORLD, out_path, NF90_NOWRITE, MPI_INFO_NULL, ncFileID))
   call check(nf90mpi_begin_indep_data(ncFileID))
   start(1) = 1
   call check(nf90mpi_get_var(ncFileID, VarID1, val1_in, start))
@@ -83,10 +90,21 @@ program tst_flarge
 
   call check(nf90mpi_close(ncFileID))
 
-  msg = '*** TESTING F90 '//trim(cmd)//' for large files'
-  if (my_rank .eq. 0) call pass_fail(0, msg)
+ 999 timing = MPI_Wtime() - timing
+     call MPI_Allreduce(MPI_IN_PLACE, timing, 1, &
+                        MPI_DOUBLE_PRECISION, MPI_MAX, &
+                        MPI_COMM_WORLD, ierr)
 
- 999  call MPI_Finalize(ierr)
+  if (my_rank .eq. 0) then
+      if (.NOT. keep_files) then
+          err = nf90mpi_delete(out_path, MPI_INFO_NULL)
+      end if
+
+      msg = '*** TESTING F90 '//trim(cmd)//' for large files'
+      call pass_fail(0, msg, timing)
+  endif
+
+  call MPI_Finalize(ierr)
 
 contains
   ! Internal subroutine - checks error status after each netcdf, prints out text message each time

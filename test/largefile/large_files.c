@@ -16,14 +16,7 @@
 #include <mpi.h>
 #include <pnetcdf.h>
 
-#define CHECK_ERR { \
-    if (err != NC_NOERR) { \
-        nerrs++; \
-        printf("Error at line %d in %s: (%s)\n", \
-        __LINE__,__FILE__,ncmpi_strerrno(err)); \
-        goto fn_exit; \
-    } \
-}
+#include <testutils.h>
 
 #define NUMRECS 1
 #define I_LEN 4104
@@ -31,10 +24,14 @@
 #define K_LEN 1023
 #define N_LEN 2
 
-static int
-test_large_file(char *filename, int fmt_flag)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
 {
-    int err, nerrs=0, ncid, varid, x_id;
+    int err, nerrs=0, rank, ncid, varid, x_id;
     int n, rec, i, j, k, dims[4];
     MPI_Offset start[4] = {0, 0, 0, 0};
     MPI_Offset count[4] = {1, 1, J_LEN, K_LEN};
@@ -42,11 +39,17 @@ test_large_file(char *filename, int fmt_flag)
     /* I/O buffers */
     signed char *buf;
 
-    printf("\n*** Testing large files, slowly.\n");
-    printf("*** Creating large file %s...", filename);
+    // printf("\n*** Testing large files, slowly.\n");
+    // printf("*** Creating large file %s...", out_path);
 
-    err = ncmpi_create(MPI_COMM_SELF, filename, NC_CLOBBER|fmt_flag,
-                       MPI_INFO_NULL, &ncid);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if (rank > 0) goto err_out;
+
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
+    err = ncmpi_create(MPI_COMM_SELF, out_path, NC_CLOBBER, info, &ncid);
     if (err != NC_NOERR) {
         printf("Error at line %d in %s: (%s)\n", __LINE__,__FILE__,ncmpi_strerrno(err));
         return 1;
@@ -97,10 +100,10 @@ test_large_file(char *filename, int fmt_flag)
     }
     err = ncmpi_close(ncid); CHECK_ERR
 
-    printf("ok\n");
-    printf("*** Reading large file %s...", filename);
+    // printf("ok\n");
+    // printf("*** Reading large file %s...", out_path);
 
-    err = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(MPI_COMM_SELF, out_path, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     CHECK_ERR
 
     /* read variables and check their contents */
@@ -123,7 +126,7 @@ test_large_file(char *filename, int fmt_flag)
                         printf("Error on read, var[%d, %d, %d, %d] = %d wrong, should be %d !\n",
                                rec, i, j, k, buf[j*K_LEN+k], (signed char)n);
                         nerrs++;
-                        goto fn_exit;
+                        goto err_out;
                     }
                     n = (n == 127) ? 0 : (n+1);
                 }
@@ -141,49 +144,36 @@ test_large_file(char *filename, int fmt_flag)
         }
     }
     err = ncmpi_close(ncid); CHECK_ERR
-
-fn_exit:
     free(buf);
+
+err_out:
+    MPI_Barrier(MPI_COMM_WORLD);
+
     return nerrs;
 }
 
-int
-main(int argc, char **argv)
-{
-    char filename[256];
-    int nerrs=0, rank;
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    memset(filename, 0, 256);
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 0; /* test PNCIO driver */
+    opt.ind      = 0; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 0; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
 
-    if (rank > 0) goto prog_exit;
+    err = tst_main(argc, argv, "> 4 GiB file", opt, test_io);
 
-    /* Test NetCDF 4 first as ncvalidator checks only classic files */
-#ifdef ENABLE_NETCDF4
-    nerrs += test_large_file(filename, NC_NETCDF4);
-#endif
-
-    /* Test CDF-5 format */
-    nerrs += test_large_file(filename, NC_64BIT_DATA);
-
-    if (nerrs == 0) {
-        printf("ok\n");
-        printf("*** Tests successful!\n");
-    }
-    else
-        printf("\n*** Tests failed!\n");
-
-prog_exit:
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

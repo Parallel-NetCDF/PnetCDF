@@ -23,52 +23,36 @@
 
 #define NVARS 400000
 
-int main(int argc, char** argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
 {
-    char filename[256];
-    int i, rank, nprocs, err, nerrs=0, ncid, cmode, dimid, *varid, verbose=1;
+    int i, rank, nprocs, err, nerrs=0, ncid, dimid, *varid, verbose=0;
     double timing[4], max_timing[4];
 #ifdef PNC_MALLOC_TRACE
-    MPI_Offset malloc_size[2], sum_size, max_size[2];
+    MPI_Offset malloc_size[2], max_size[2];
 #endif
-    MPI_Info info;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    /* get command-line arguments */
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for hashing of large nvars ",
-                basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
 
     if (verbose && rank == 0) printf("\nNVARS = %d\n", NVARS);
 
     varid = (int*) malloc(sizeof(int) * NVARS);
 
-    MPI_Info_create(&info);
     MPI_Info_set(info, "nc_hash_size_var", "2048");
     MPI_Info_set(info, "nc_hash_size_vattr", "2");
 
-    /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
     CHECK_ERR
 
-    MPI_Info_free(&info);
+    /* create a new file for writing ----------------------------------------*/
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
 
 #ifdef PNC_MALLOC_TRACE
     err = ncmpi_inq_malloc_size(&malloc_size[0]); CHECK_ERR
@@ -181,15 +165,6 @@ int main(int argc, char** argv)
         printf("After ncmpi_close,   PnetCDF memory footprint                %4lld B\n",
                max_size[0]);
     }
-
-    /* check if PnetCDF freed all internal malloc */
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size[0], &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0) {
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        }
-    }
     if (malloc_size[0] > 0) ncmpi_inq_malloc_list();
 #endif
 
@@ -198,13 +173,31 @@ int main(int argc, char** argv)
         printf("Time ncmpi_def_var = %.4f ncmpi_put_att = %.4f ncmpi_enddef = %.4f ncmpi_close = %.4f\n",
                max_timing[0],max_timing[1],max_timing[2],max_timing[3]);
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 0; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 0; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 0; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "hashing of large number of vars", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}

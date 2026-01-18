@@ -24,39 +24,29 @@
 #define DIMLEN 3
 #define NRECS 4
 
-int main(int argc, char** argv) {
-    char filename[256], name[32];
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
+{
+    char name[32];
     size_t nelms;
     short *buffer;
-    int i, j, cmode, rank, nprocs, err, nerrs=0;
+    int i, j, rank, nprocs, err, nerrs=0;
     int ncid, fvarid[NVARS], rvarid[NVARS], dimids[NDIMS], rdimids[NDIMS];
     MPI_Offset start[NDIMS], count[NDIMS], stride[NDIMS];
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    memset(filename, 0, 256);
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for vars APIs on high-dim variables ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    cmode = NC_CLOBBER;
-    cmode |= NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL,
-                       &ncid); CHECK_ERR
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
 
     /* define dimensions */
     err = ncmpi_def_dim(ncid, "rdim", NC_UNLIMITED, &rdimids[0]); CHECK_ERR
@@ -76,7 +66,6 @@ int main(int argc, char** argv) {
     err = ncmpi_set_fill(ncid, NC_FILL, NULL); CHECK_ERR
 
     err = ncmpi_enddef(ncid); CHECK_ERR
-    if (err != NC_NOERR) goto fn_exit;
 
 #ifdef STRONGER_CONSISTENCY
     ncmpi_sync(ncid);
@@ -89,16 +78,17 @@ int main(int argc, char** argv) {
     buffer = (short*) malloc(sizeof(short) * nelms);
     if (buffer == NULL) {
         printf("Error %s at line %d: fail to allocate buffer of size %zu\n",
-               argv[0], __LINE__, nelms * sizeof(int));
-        goto fn_exit;
+               basename(__FILE__), __LINE__, nelms * sizeof(short));
+        nerrs++;
+        goto err_out;
     }
     for (i=0; i<nelms; i++) buffer[i] = -1;
-
 
     /* initialize the contents of record variables */
     for (i=0; i<NVARS; i++) {
         for (j=0; j<NRECS; j++) {
-            err = ncmpi_fill_var_rec(ncid, rvarid[i], j); CHECK_ERR
+            err = ncmpi_fill_var_rec(ncid, rvarid[i], j);
+            CHECK_ERR
         }
     }
 
@@ -165,31 +155,38 @@ int main(int argc, char** argv) {
     }
     free(buffer);
 
-fn_exit:
     err = ncmpi_close(ncid); CHECK_ERR
 
-    /* check if open to read header fine */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
+    /* check file header by just opening it */
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOWRITE, info, &ncid); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
-#ifdef PNC_MALLOC_TRACE
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-    }
-    if (malloc_size > 0)  ncmpi_inq_malloc_list();
-#endif
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+err_out:
+    return nerrs;
+}
+
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 0; /* test intra-node aggregation */
+    opt.drv      = 0; /* test PNCIO driver */
+    opt.ind      = 0; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 0; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "vars APIs on high-dim variables", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

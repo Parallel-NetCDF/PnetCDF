@@ -28,67 +28,67 @@
 #include <pnetcdf.h>
 #include <testutils.h>
 
-int main(int argc, char** argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
 {
-    char filename[256], *name, *buf;
+    char *name, *buf;
     size_t i;
-    int rank, nprocs, err, nerrs=0;
-    int ncid, cmode, varid, dimid;
+    int err, nerrs=0, ncid, varid, dimid;
     MPI_Offset nelems, inq_nelems;
-    MPI_Info info=MPI_INFO_NULL;
-#ifdef PNC_MALLOC_TRACE
-    int verbose=0;
-#endif
+    int rank, nprocs, color;
+    MPI_Comm comm=MPI_COMM_NULL;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    /* get command-line arguments */
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
+    color = 1;
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for one large ATTR", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
+    if (nprocs > 2) {
+        /* run on 2 ranks only, as this test allocates memory > 4GB per rank */
+        /* split MPI_COMM_WORLD based on 'color' and use the same rank order */
+        color = (rank < 2) ? 1 : 0;
+        MPI_Comm_split(MPI_COMM_WORLD, color, rank, &comm);
     }
+    else
+        comm = MPI_COMM_WORLD;
+
+    if (!color) goto err_out;
 
     nelems = (MPI_Offset)NC_MAX_INT + 17;
     buf = (char*) malloc(nelems);
 
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
     /* create a new file and put a large global attribute -------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    err = ncmpi_create(comm, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     /* put a large (> 2GiB) global attribute */
     for (i=0; i<nelems; i++) buf[i] = 'a' + i % 16;
     err = ncmpi_put_att_text(ncid, NC_GLOBAL, "large_attr", nelems, buf);
-    if (!(cmode & NC_64BIT_DATA)) EXP_ERR(NC_EINVAL)
+    if (format != NC_FORMAT_64BIT_DATA) EXP_ERR(NC_EINVAL)
     else CHECK_ERR
 
     err = ncmpi_enddef(ncid); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
-    if (nerrs > 0) goto err_out;
 
     /* open the file and read back the large global attribute ---------------*/
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
+    err = ncmpi_open(comm, out_path, NC_NOWRITE, info, &ncid);
     CHECK_ERR
-    if (err != NC_NOERR) goto err_out;
 
     err = ncmpi_inq_attlen(ncid, NC_GLOBAL, "large_attr", &inq_nelems);
+    CHECK_ERR
     if (inq_nelems != nelems) {
         printf("Error at %s line %d: expecting attr nelems "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,nelems,inq_nelems);
         nerrs++;
+        goto err_out;
     }
 
     for (i=0; i<nelems; i++) buf[i] = 0;
@@ -97,11 +97,11 @@ int main(int argc, char** argv)
 
     for (i=0; i<nelems; i++) {
         char expect = 'a' + i % 16;
-        if (buf[i] != 'a' + i % 16) {
+        if (buf[i] != expect) {
             printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
                    __FILE__,__LINE__,i,expect,buf[i]);
             nerrs++;
-            break;
+            goto err_out;
         }
     }
 
@@ -109,8 +109,7 @@ int main(int argc, char** argv)
     if (nerrs > 0) goto err_out;
 
     /* create a new file and put a large local attribute -------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    err = ncmpi_create(comm, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimid);
@@ -122,15 +121,14 @@ int main(int argc, char** argv)
     /* put a large (> 2GiB) global attribute */
     for (i=0; i<nelems; i++) buf[i] = 'a' + i % 16;
     err = ncmpi_put_att_text(ncid, varid, "large_attr", nelems, buf);
-    if (!(cmode & NC_64BIT_DATA)) EXP_ERR(NC_EINVAL)
+    if (format != NC_FORMAT_64BIT_DATA) EXP_ERR(NC_EINVAL)
     else CHECK_ERR
 
     err = ncmpi_enddef(ncid); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
-    if (nerrs > 0) goto err_out;
 
     /* open the file and read back the large global attribute ---------------*/
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
+    err = ncmpi_open(comm, out_path, NC_NOWRITE, info, &ncid);
     CHECK_ERR
     if (err != NC_NOERR) goto err_out;
 
@@ -142,6 +140,7 @@ int main(int argc, char** argv)
         printf("Error at %s line %d: expecting attr len "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,nelems,inq_nelems);
         nerrs++;
+        goto err_out;
     }
 
     for (i=0; i<nelems; i++) buf[i] = 0;
@@ -150,40 +149,37 @@ int main(int argc, char** argv)
 
     for (i=0; i<nelems; i++) {
         char expect = 'a' + i % 16;
-        if (buf[i] != 'a' + i % 16) {
+        if (buf[i] != expect) {
             printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
                    __FILE__,__LINE__,i,expect,buf[i]);
             nerrs++;
-            break;
+            goto err_out;
         }
     }
 
     err = ncmpi_close(ncid); CHECK_ERR
-    if (nerrs > 0) goto err_out;
 
     /* create a new file and put 2 global attributes, total size > 2 GiB ----*/
     nelems /= 2;
 
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    err = ncmpi_create(comm, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     /* put two global attributes (total size > 2GiB) */
     for (i=0; i<nelems; i++) buf[i] = 'a' + i % 16;
     err = ncmpi_put_att_text(ncid, NC_GLOBAL, "large_attr_0", nelems, buf);
-    if (!(cmode & NC_64BIT_DATA)) EXP_ERR(NC_EINVAL)
+    if (format != NC_FORMAT_64BIT_DATA) EXP_ERR(NC_EINVAL)
     else CHECK_ERR
 
     err = ncmpi_put_att_text(ncid, NC_GLOBAL, "large_attr_1", nelems, buf);
-    if (!(cmode & NC_64BIT_DATA)) EXP_ERR(NC_EINVAL)
+    if (format != NC_FORMAT_64BIT_DATA) EXP_ERR(NC_EINVAL)
     else CHECK_ERR
 
     err = ncmpi_enddef(ncid); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
-    if (nerrs > 0) goto err_out;
 
     /* open the file and read back the large global attributes --------------*/
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
+    err = ncmpi_open(comm, out_path, NC_NOWRITE, info, &ncid);
     CHECK_ERR
     if (err != NC_NOERR) goto err_out;
 
@@ -193,6 +189,7 @@ int main(int argc, char** argv)
         printf("Error at %s line %d: expecting attr %s nelems "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,name, nelems,inq_nelems);
         nerrs++;
+        goto err_out;
     }
 
     for (i=0; i<nelems; i++) buf[i] = 0;
@@ -201,11 +198,11 @@ int main(int argc, char** argv)
 
     for (i=0; i<nelems; i++) {
         char expect = 'a' + i % 16;
-        if (buf[i] != 'a' + i % 16) {
+        if (buf[i] != expect) {
             printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
                    __FILE__,__LINE__,i,expect,buf[i]);
             nerrs++;
-            break;
+            goto err_out;
         }
     }
 
@@ -215,6 +212,7 @@ int main(int argc, char** argv)
         printf("Error at %s line %d: expecting attr %s nelems "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,name, nelems,inq_nelems);
         nerrs++;
+        goto err_out;
     }
 
     for (i=0; i<nelems; i++) buf[i] = 0;
@@ -223,20 +221,18 @@ int main(int argc, char** argv)
 
     for (i=0; i<nelems; i++) {
         char expect = 'a' + i % 16;
-        if (buf[i] != 'a' + i % 16) {
+        if (buf[i] != expect) {
             printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
                    __FILE__,__LINE__,i,expect,buf[i]);
             nerrs++;
-            break;
+            goto err_out;
         }
     }
 
     err = ncmpi_close(ncid); CHECK_ERR
-    if (nerrs > 0) goto err_out;
 
     /* create a new file and put 2 local attributes, total size > 2 GiB -----*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    err = ncmpi_create(comm, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, &dimid);
@@ -250,20 +246,19 @@ int main(int argc, char** argv)
     /* put two local attributes (total size > 2GiB) */
     name = "large_attr_0";
     err = ncmpi_put_att_text(ncid, varid, name, nelems, buf);
-    if (!(cmode & NC_64BIT_DATA)) EXP_ERR(NC_EINVAL)
+    if (format != NC_FORMAT_64BIT_DATA) EXP_ERR(NC_EINVAL)
     else CHECK_ERR
 
     name = "large_attr_1";
     err = ncmpi_put_att_text(ncid, varid, name, nelems, buf);
-    if (!(cmode & NC_64BIT_DATA)) EXP_ERR(NC_EINVAL)
+    if (format != NC_FORMAT_64BIT_DATA) EXP_ERR(NC_EINVAL)
     else CHECK_ERR
 
     err = ncmpi_enddef(ncid); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
-    if (nerrs > 0) goto err_out;
 
     /* open the file and read back the two local attributes -----------------*/
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
+    err = ncmpi_open(comm, out_path, NC_NOWRITE, info, &ncid);
     CHECK_ERR
     if (err != NC_NOERR) goto err_out;
 
@@ -276,6 +271,7 @@ int main(int argc, char** argv)
         printf("Error at %s line %d: expecting attr %s len "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,name,nelems,inq_nelems);
         nerrs++;
+        goto err_out;
     }
 
     for (i=0; i<nelems; i++) buf[i] = 0;
@@ -284,11 +280,11 @@ int main(int argc, char** argv)
 
     for (i=0; i<nelems; i++) {
         char expect = 'a' + i % 16;
-        if (buf[i] != 'a' + i % 16) {
+        if (buf[i] != expect) {
             printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
                    __FILE__,__LINE__,i,expect,buf[i]);
             nerrs++;
-            break;
+            goto err_out;
         }
     }
 
@@ -298,6 +294,7 @@ int main(int argc, char** argv)
         printf("Error at %s line %d: expecting attr %s len "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,name,nelems,inq_nelems);
         nerrs++;
+        goto err_out;
     }
 
     for (i=0; i<nelems; i++) buf[i] = 0;
@@ -306,47 +303,47 @@ int main(int argc, char** argv)
 
     for (i=0; i<nelems; i++) {
         char expect = 'a' + i % 16;
-        if (buf[i] != 'a' + i % 16) {
+        if (buf[i] != expect) {
             printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
                    __FILE__,__LINE__,i,expect,buf[i]);
             nerrs++;
-            break;
+            goto err_out;
         }
     }
 
     err = ncmpi_close(ncid); CHECK_ERR
-    if (nerrs > 0) goto err_out;
 
     free(buf);
 
-#ifdef PNC_MALLOC_TRACE
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0) {
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-        }
-    }
-    if (malloc_size > 0) ncmpi_inq_malloc_list();
-
-    if (verbose) {
-        err = ncmpi_inq_malloc_max_size(&malloc_size);
-        printf("\n%d: PnetCDF internal memory footprint high water mark %.2f MB\n",
-               rank, (float)malloc_size/1048576);
-    }
-#endif
-
 err_out:
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_NULL)
+        MPI_Comm_free(&comm);
 
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 0; /* test intra-node aggregation */
+    opt.drv      = 0; /* test PNCIO driver */
+    opt.ind      = 0; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 0; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "one large ATTR", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}

@@ -83,33 +83,26 @@ typedef MPI_Offset len_t;
  * contents of the possible overlaps between the two variables.
  */
 
-int main(int argc, char** argv) {
-    char filename[256];
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
+{
     int i, err, rank, nprocs, nerrs=0, ncid, dimid[2], varid[2];
     short buf[10];
     len_t start[1], count[1];
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
 
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for checking CDF-5 writes", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    err = FileCreate(MPI_COMM_WORLD, filename, NC_CLOBBER|NC_64BIT_DATA,
-                     MPI_INFO_NULL, &ncid); CHECK_ERR
+    err = FileCreate(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
     err = DefDim(ncid, "dim0", NC_MAX_UINT, &dimid[0]); CHECK_ERR
     err = DefDim(ncid, "dim1", 10,          &dimid[1]); CHECK_ERR
 
@@ -142,31 +135,44 @@ int main(int argc, char** argv) {
     err = FileClose(ncid); CHECK_ERR
 
     /* check if open to read header fine */
-    err = FileOpen(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); CHECK_ERR
+    err = FileOpen(MPI_COMM_WORLD, out_path, NC_NOWRITE, info, &ncid);
+    CHECK_ERR
     err = FileClose(ncid); CHECK_ERR
 
 #ifdef TEST_NETCDF
     if (nerrs) printf("fail with %d mismatches\n",nerrs);
     else       printf("pass\n");
-#else
-#ifdef PNC_MALLOC_TRACE
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR && malloc_size > 0) /* this test is for running 1 process */
-        printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-               malloc_size);
-    if (malloc_size > 0) ncmpi_inq_malloc_list();
 #endif
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-#endif
-
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+int main(int argc, char **argv) {
+
+    int err;
+#ifdef ENABLE_NETCDF4
+    int formats[] = {NC_FORMAT_NETCDF4, NC_FORMAT_64BIT_DATA};
+#else
+    int formats[] = {NC_FORMAT_64BIT_DATA};
+#endif
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "CDF-5 writes", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}
