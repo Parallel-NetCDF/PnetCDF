@@ -18,7 +18,7 @@
           if (err .NE. NF90_NOERR) then
               write(6,*) trim(message), trim(nf90mpi_strerror(err))
               msg = '*** TESTING F90 test_attr_int64.f90 '
-              call pass_fail(1, msg)
+              call pass_fail(1, msg, 0)
               STOP 2
           end if
       end subroutine check
@@ -28,28 +28,35 @@
           use pnetcdf
           implicit none
 
-          character(LEN=256) filename, cmd, msg
+          character(LEN=256) out_path, in_path, cmd, msg
           integer rank, err, ierr, ncid, cmode, get_args, xtype, varid
           integer(kind=MPI_OFFSET_KIND) :: buf
           integer,parameter :: INT2_KIND = selected_int_kind(4)
           integer fillmode
+          logical keep_files
+          double precision timing
 
-          call MPI_Init(err)
+          call MPI_Init(ierr)
+
+          timing = MPI_Wtime()
+
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, err)
 
-          ! take filename from command-line argument if there is any
+          ! take out_path from command-line argument if there is any
           cmd = ' '
           if (rank .EQ. 0) then
-              filename = 'testfile.nc'
-              err = get_args(cmd, filename)
+              out_path = 'testfile.nc'
+              err = get_args(cmd, out_path, in_path, keep_files)
           endif
           call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
           if (err .EQ. 0) goto 999
 
-          call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
+          call MPI_Bcast(out_path, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
+
+          call MPI_Bcast(keep_files, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
 
           cmode = IOR(NF90_64BIT_DATA, NF90_CLOBBER)
-          err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode, &
+          err = nf90mpi_create(MPI_COMM_WORLD, out_path, cmode, &
                                MPI_INFO_NULL, ncid)
           call check(err, 'In nf90mpi_create: ')
 
@@ -62,7 +69,7 @@
 
           if (xtype .NE. NF90_INT64) then
               msg = '*** TESTING F90 test_attr_int64.f90 '
-              call pass_fail(1, msg)
+              call pass_fail(1, msg, 0)
               STOP 2
           endif
 
@@ -86,7 +93,7 @@
           if (err .NE. NF90_EBADTYPE) then
 10            FORMAT(A,I3)
               write(msg,10) '*** test_attr_int64.f90 expects NF90_EBADTYPE but got ', err
-              call pass_fail(1, msg)
+              call pass_fail(1, msg, 0)
               STOP 2
           endif
 
@@ -96,9 +103,20 @@
           err = nf90mpi_close(ncid)
           call check(err, 'In nf90mpi_close: ')
 
-          msg = '*** TESTING F90 '//trim(cmd)//' for scalar attr of INT64 '
-          if (rank .eq. 0) call pass_fail(0, msg)
+ 999      timing = MPI_Wtime() - timing
+          call MPI_Allreduce(MPI_IN_PLACE, timing, 1, &
+                             MPI_DOUBLE_PRECISION, MPI_MAX, &
+                             MPI_COMM_WORLD, ierr)
 
- 999      call MPI_Finalize(err)
+          if (rank .eq. 0) then
+              if (.NOT. keep_files) then
+                  err = nf90mpi_delete(out_path, MPI_INFO_NULL)
+              end if
+
+              msg = '*** TESTING F90 '//trim(cmd)//' - scalar attr of INT64 '
+              call pass_fail(0, msg, timing)
+          end if
+
+          call MPI_Finalize(err)
 
       end program main

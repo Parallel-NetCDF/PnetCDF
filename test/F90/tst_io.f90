@@ -30,26 +30,35 @@ program tst_io
   ! needed for netcdf
   integer :: ncid, x1id, x2id, x3id, x4id, vrid
   ! integer :: vrids, vridt, vridu, vridv, vridw, vridx, vridy, vridz
-  character(LEN=256) dirpath, cmd, msg
-  integer my_rank, p
+  character(LEN=256) out_path, in_path, cmd, msg
+  integer my_rank, nprocs
   integer i, nformats, old_format
   integer formats(2)
+  logical keep_files
+  double precision timing
 
   call MPI_Init(ierr)
-  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr)
-  call MPI_Comm_size(MPI_COMM_WORLD, p, ierr)
 
-  ! take filename from command-line argument if there is any
+  timing = MPI_Wtime()
+
+  call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr)
+  call MPI_Comm_rank(MPI_COMM_WORLD, my_rank, ierr)
+
+  ! take out_path from command-line argument if there is any
   if (my_rank .EQ. 0) then
-      dirpath = '.'
-      err = get_args(cmd, dirpath)
+      out_path = '.'
+      err = get_args(cmd, out_path, in_path, keep_files)
   endif
   call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
   if (err .EQ. 0) goto 999
 
-  call MPI_Bcast(dirpath, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
+  call MPI_Bcast(out_path, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
 
-!  if (p .ne. 1 .AND. my_rank .eq. 0) then
+  call MPI_Bcast(keep_files, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
+
+  if (my_rank > 0) goto 999;
+
+!  if (nprocs .ne. 1 .AND. my_rank .eq. 0) then
 !     print *, 'Warning: ',trim(cmd),' is design to run on 1 process'
 !  endif
 
@@ -80,13 +89,13 @@ program tst_io
   do i = nformats, 2
     call check(nf90mpi_set_default_format(formats(i), old_format), 10)
 
-    ! call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
-    call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, prsz1, prsz2, prsz3, prsz4, &
+    ! call setupNetCDF (trim(out_path)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
+    call setupNetCDF (trim(out_path)//'/'//nclFilenm1, ncid, vrid, prsz1, prsz2, prsz3, prsz4, &
         x1id, x2id, x3id, x4id, NF90_CLOBBER, 20)
     call system_clock(start)
-    call check(nfmpi_begin_indep_data(ncid), 11)
+    call check(nf90mpi_begin_indep_data(ncid), 11)
     call check (NF90MPI_PUT_VAR(ncid, vrid, x), 18)
-    call check(nfmpi_end_indep_data(ncid), 12)
+    call check(nf90mpi_end_indep_data(ncid), 12)
     call system_clock(now)
     ncint1 = now - start
   !   print 3, size, "MB"," netcdf write = ", ncint1 * clockRate, &
@@ -97,12 +106,12 @@ program tst_io
 
     call system_clock(start)
     do i1 = 1, repct
-      ! call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
-      call setupNetCDF (trim(dirpath)//'/'//nclFilenm1, ncid, vrid, prsz1, prsz2, prsz3, prsz4, &
+      ! call setupNetCDF (trim(out_path)//'/'//nclFilenm1, ncid, vrid, x, prsz1, prsz2, prsz3, prsz4, &
+      call setupNetCDF (trim(out_path)//'/'//nclFilenm1, ncid, vrid, prsz1, prsz2, prsz3, prsz4, &
             x1id, x2id, x3id, x4id, NF90_CLOBBER, 130)
-      call check(nfmpi_begin_indep_data(ncid), 11)
+      call check(nf90mpi_begin_indep_data(ncid), 11)
       call check (NF90MPI_PUT_VAR(ncid, vrid, x), 23 + i1)
-      call check(nfmpi_end_indep_data(ncid), 11)
+      call check(nf90mpi_end_indep_data(ncid), 11)
       call check (NF90MPI_CLOSE(ncid), 15)
     enddo
     call system_clock(now)
@@ -112,23 +121,23 @@ program tst_io
   ! 4 format("Time for", i5, "MB", i3, a22, i7, " msec. Spd ratio = ", f5.2)
 
   !  call system_clock(start)
-  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm3, ncid, vrids, s, prsz1, prsz2, prsz3, prsz4, &
+  !  call setupNetCDF (trim(out_path)//'/'//nclFilenm3, ncid, vrids, s, prsz1, prsz2, prsz3, prsz4, &
   !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 20)
-  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm4, ncid, vridt, t, prsz1, prsz2, prsz3, prsz4, &
+  !  call setupNetCDF (trim(out_path)//'/'//nclFilenm4, ncid, vridt, t, prsz1, prsz2, prsz3, prsz4, &
   !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 30)
-  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm5, ncid, vridu, u, prsz1, prsz2, prsz3, prsz4, &
+  !  call setupNetCDF (trim(out_path)//'/'//nclFilenm5, ncid, vridu, u, prsz1, prsz2, prsz3, prsz4, &
   !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 40)
-  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm6, ncid, vridv, v, prsz1, prsz2, prsz3, prsz4, &
+  !  call setupNetCDF (trim(out_path)//'/'//nclFilenm6, ncid, vridv, v, prsz1, prsz2, prsz3, prsz4, &
   !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 50)
-  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm7, ncid, vridw, w, prsz1, prsz2, prsz3, prsz4, &
+  !  call setupNetCDF (trim(out_path)//'/'//nclFilenm7, ncid, vridw, w, prsz1, prsz2, prsz3, prsz4, &
   !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 60)
-  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm8, ncid, vridx, x, prsz1, prsz2, prsz3, prsz4, &
+  !  call setupNetCDF (trim(out_path)//'/'//nclFilenm8, ncid, vridx, x, prsz1, prsz2, prsz3, prsz4, &
   !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 70)
-  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm9, ncid, vridy, y, prsz1, prsz2, prsz3, prsz4, &
+  !  call setupNetCDF (trim(out_path)//'/'//nclFilenm9, ncid, vridy, y, prsz1, prsz2, prsz3, prsz4, &
   !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 80)
-  !  call setupNetCDF (trim(dirpath)//'/'//nclFilenm10, ncid, vridz, z, prsz1, prsz2, prsz3, prsz4, &
+  !  call setupNetCDF (trim(out_path)//'/'//nclFilenm10, ncid, vridz, z, prsz1, prsz2, prsz3, prsz4, &
   !       x1id, x2id, x3id, x4id, NF90_CLOBBER, 90)
-  !  call check(nfmpi_begin_indep_data(ncid), 11)
+  !  call check(nf90mpi_begin_indep_data(ncid), 11)
   !  call check (NF90MPI_PUT_VAR(ncid, vrids, s), 118)
   !  call check (NF90MPI_PUT_VAR(ncid, vridt, t), 119)
   !  call check (NF90MPI_PUT_VAR(ncid, vridu, u), 120)
@@ -137,17 +146,29 @@ program tst_io
   !  call check (NF90MPI_PUT_VAR(ncid, vridx, x), 123)
   !  call check (NF90MPI_PUT_VAR(ncid, vridy, y), 124)
   !  call check (NF90MPI_PUT_VAR(ncid, vridz, z), 125)
-  !  call check(nfmpi_end_indep_data(ncid), 11)
+  !  call check(nf90mpi_end_indep_data(ncid), 11)
   !  call system_clock(now)
   !  ncint3 = now - start
   !  call check (NF90MPI_CLOSE(ncid), 16)
   !   print 4, size, 8, " netcdf file writes = ", ncint3 * clockRate, &
   !        real(ncint3)/real(wrint3);
   enddo
-   msg = '*** TESTING F90 '//trim(cmd)
-   if (my_rank .eq. 0) call pass_fail(0, msg)
 
- 999 call MPI_Finalize(ierr)
+ 999 timing = MPI_Wtime() - timing
+  call MPI_Allreduce(MPI_IN_PLACE, timing, 1, &
+                     MPI_DOUBLE_PRECISION, MPI_MAX, &
+                     MPI_COMM_WORLD, ierr)
+
+  if (my_rank .eq. 0) then
+    if (.NOT. keep_files) then
+        err = nf90mpi_delete(trim(out_path)//'/'//nclFilenm1, MPI_INFO_NULL)
+    end if
+
+    msg = '*** TESTING F90 '//trim(cmd)
+    call pass_fail(0, msg, timing)
+  end if
+
+  call MPI_Finalize(ierr)
 
 contains
   subroutine check (st, n) ! checks the return error code
@@ -170,7 +191,7 @@ contains
     integer, intent(inout) :: nc
     integer, dimension(4) :: dimids (4)
 
-    call check (NF90MPI_CREATE (MPI_COMM_WORLD, fn, stat, MPI_INFO_NULL, nc), deb + 1)
+    call check (NF90MPI_CREATE (MPI_COMM_SELF, fn, stat, MPI_INFO_NULL, nc), deb + 1)
     call check (NF90MPI_DEF_DIM(nc, "d1", d1, do1), deb + 2)
     call check (NF90MPI_DEF_DIM(nc, "d2", d2, do2), deb + 3)
     call check (NF90MPI_DEF_DIM(nc, "d3", d3, do3), deb + 4)

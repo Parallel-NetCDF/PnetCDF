@@ -21,7 +21,7 @@
           if (err .NE. NF90_NOERR) then
               write(6,*) trim(message), trim(nf90mpi_strerror(err))
               msg = '*** TESTING F90 test_intent.f90 '
-              call pass_fail(1, msg)
+              call pass_fail(1, msg, 0)
               STOP 2
           end if
       end subroutine check
@@ -36,12 +36,13 @@
                                  FourByteInt = selected_int_kind(9), &
                                 EightByteInt = selected_int_kind(18)
 
-          character(LEN=256) filename, cmd, msg
+          character(LEN=256) out_path, in_path, cmd, msg
           integer err, ierr, rank, get_args
           integer cmode, ncid, varid, dimid(1), req(1), status(1)
           integer(kind=MPI_OFFSET_KIND) start(1)
           integer(kind=MPI_OFFSET_KIND) count(1)
           integer(kind=MPI_OFFSET_KIND) bufsize
+          logical keep_files
 
           character(LEN=3)           cbuf
           integer(KIND=OneByteInt)   i1buf(3)
@@ -58,24 +59,30 @@
           PARAMETER( rbuf=(/1.0,2.0,3.0/))
           PARAMETER( dbuf=(/1.0,2.0,3.0/))
           PARAMETER(i8buf=(/1_EightByteInt,2_EightByteInt,3_EightByteInt/))
+          double precision timing
 
           call MPI_Init(ierr)
+
+          timing = MPI_Wtime()
+
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
 
-          ! take filename from command-line argument if there is any
+          ! take out_path from command-line argument if there is any
           cmd = ' '
           if (rank .EQ. 0) then
-              filename = 'testfile.nc'
-              err = get_args(cmd, filename)
+              out_path = 'testfile.nc'
+              err = get_args(cmd, out_path, in_path, keep_files)
           endif
           call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
           if (err .EQ. 0) goto 999
 
-          call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
+          call MPI_Bcast(out_path, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
+
+          call MPI_Bcast(keep_files, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
 
           ! create file, truncate it if exists
           cmode = IOR(NF90_CLOBBER, NF90_64BIT_DATA)
-          err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode, &
+          err = nf90mpi_create(MPI_COMM_WORLD, out_path, cmode, &
                                MPI_INFO_NULL, ncid)
           call check(err, 'In nf90mpi_create: ')
 
@@ -147,9 +154,20 @@
           err = nf90mpi_close(ncid)
           call check(err, 'In nf90mpi_close: ')
 
-          msg = '*** TESTING F90 '//trim(cmd)//' for INTENT modifier '
-          if (rank .eq. 0) call pass_fail(0, msg)
+ 999      timing = MPI_Wtime() - timing
+          call MPI_Allreduce(MPI_IN_PLACE, timing, 1, &
+                             MPI_DOUBLE_PRECISION, MPI_MAX, &
+                             MPI_COMM_WORLD, ierr)
 
- 999      call MPI_Finalize(ierr)
+          if (rank .eq. 0) then
+              if (.NOT. keep_files) then
+                  err = nf90mpi_delete(out_path, MPI_INFO_NULL)
+              end if
+
+              msg = '*** TESTING F90 '//trim(cmd)//' - INTENT modifier '
+              call pass_fail(0, msg, timing)
+          end if
+
+          call MPI_Finalize(ierr)
       end program main
 
