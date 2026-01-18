@@ -47,11 +47,11 @@ if DECL_MPI_OFFSET
    AM_FCFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
 endif
 
-TESTPROGRAMS = pnctest \
-               csnap
+check_PROGRAMS = pnctest \
+                 csnap
 
 if HAS_FORTRAN
-   TESTPROGRAMS += pnf_test pnctestf fixedform
+   check_PROGRAMS += pnf_test pnctestf fixedform
    pnf_test_SOURCES = pnf_test.f
    pnf_test_FFLAGS = $(FFIXEDFORMFLAG) $(AM_FFLAGS)
    pnctestf_SOURCES = pnctestf.f
@@ -59,17 +59,15 @@ if HAS_FORTRAN
    fixedform_SOURCES = fixedform.f90
    fixedform_FCFLAGS = $(FFIXEDFORMFLAG) $(AM_FCFLAGS) $(AM_FFLAGS)
 if HAVE_F77_SUPPORT_FREEFORM
-   TESTPROGRAMS += freeform
+   check_PROGRAMS += freeform
    freeform_SOURCES = freeform.f
    freeform_FFLAGS = $(FFREEFORMFLAG) $(AM_FFLAGS)
 endif
 endif
 
-check_PROGRAMS = $(TESTPROGRAMS)
-
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
-# AM_TESTS_ENVIRONMENT  = TESTPROGRAMS="$(TESTPROGRAMS)" ; export TESTPROGRAMS;
+# AM_TESTS_ENVIRONMENT  = check_PROGRAMS="$(check_PROGRAMS)" ; export check_PROGRAMS;
 # AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
 # AM_TESTS_ENVIRONMENT += TESTOUTDIR="$(FSTYPE_PREFIX)$(TESTOUTDIR)" ; export TESTOUTDIR;
 TESTS_ENVIRONMENT  = export SED="$(SED)";
@@ -77,7 +75,6 @@ TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
 TESTS_ENVIRONMENT += export TESTOUTDIR="$(FSTYPE_PREFIX)$(TESTOUTDIR)";
 TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
 TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
-TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 if PNETCDF_DEBUG
@@ -95,7 +92,7 @@ endif
 
 # programs in this folder are just for testing compile error/warning messages,
 # not for running
-# TESTS = $(TESTPROGRAMS)
+# TESTS = $(check_PROGRAMS)
 
 EXTRA_DIST = README
 

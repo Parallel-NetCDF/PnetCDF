@@ -79,8 +79,12 @@ int main(int argc, char *argv[]) {
   double rates_l[4], rates_g[4];
   int i, rank;
   char filename[256];
+  double timing;
 
-  MPI_Init(&argc,&argv);
+  MPI_Init(&argc, &argv);
+
+  timing = MPI_Wtime();
+
   MPI_Comm_size(MPI_COMM_WORLD,&totpes);
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 
@@ -96,11 +100,12 @@ int main(int argc, char *argv[]) {
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str, "*** TESTING C   %s for 3D array write/read ", argv[0]);
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        printf("%-64s -- ", cmd_str); fflush(stdout);
         free(cmd_str);
     }
+
     if (filename[0] == '\0') {
-        printf(PASS_STR);
+        printf(FAIL_STR, 1);
         fprintf(stderr,"Error: invalid filename, Exiting ...\n");
         MPI_Finalize();
         return 1;
@@ -195,10 +200,12 @@ int main(int argc, char *argv[]) {
                    sum_size);
     }
 
+    timing = MPI_Wtime() - timing;
+    MPI_Allreduce(MPI_IN_PLACE, &timing, 1, MPI_DOUBLE, MPI_MAX,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
+        else       printf(PASS_STR, timing);
     }
 
     MPI_Finalize();
