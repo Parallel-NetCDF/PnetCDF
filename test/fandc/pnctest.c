@@ -21,8 +21,12 @@ int main (int argc, char *argv[])
                                    zero is specified */
   MPI_Offset TOTSIZ_3D[3] = { 10, 20, 30 };
   MPI_Comm comm_cart;
+  double timing;
 
-  MPI_Init (&argc, &argv);
+  MPI_Init(&argc, &argv);
+
+  timing = MPI_Wtime();
+
   MPI_Comm_size (MPI_COMM_WORLD, &totpes);
   MPI_Comm_size (MPI_COMM_WORLD, &rank);
 
@@ -57,10 +61,12 @@ int main (int argc, char *argv[])
                    sum_size);
     }
 
+    timing = MPI_Wtime() - timing;
+    MPI_Allreduce(MPI_IN_PLACE, &timing, 1, MPI_DOUBLE, MPI_MAX,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
+        else       printf(PASS_STR, timing);
     }
 
     MPI_Finalize();
