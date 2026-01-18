@@ -145,7 +145,11 @@ main(int argc, char *argv[])
         (void) signal(SIGFPE, SIG_IGN);
 #endif
 
+    double timing;
+
     MPI_Init(&argc, &argv);
+
+    timing = MPI_Wtime();
 
     cdf_format = 1;         /* 1: CDF-1, 2: CDF-2 5: CDF-5 */
     read_only = 0;               /* assume may write in test dir as default */
@@ -579,8 +583,11 @@ main(int argc, char *argv[])
 fn_exit:
     MPI_Info_free(&info);
 
+    timing = MPI_Wtime() - timing;
+    MPI_Allreduce(MPI_IN_PLACE, &timing, 1, MPI_DOUBLE, MPI_MAX,MPI_COMM_WORLD);
+
     if (nfailsTotal == 0)  {
-        printf(PASS_STR);
+        printf(PASS_STR, timing);
     }
     else {
         print("\n%s: expects 0 failures ... ",argv[0]);
