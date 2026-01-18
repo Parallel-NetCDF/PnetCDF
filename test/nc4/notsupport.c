@@ -36,7 +36,7 @@
 
 int main(int argc, char** argv) {
     char filename[256];
-    int rank, nprocs, err, nerrs=0;
+    int rank, err, nerrs=0;
     int ncid, cmode, varid, dimid, buf;
     int v1, v2;
     MPI_Comm comm=MPI_COMM_WORLD;
@@ -44,9 +44,13 @@ int main(int argc, char** argv) {
     MPI_Offset start[1] = {0};
     MPI_Datatype btype;
 
+    double timing;
+
     MPI_Init(&argc, &argv);
+
+    timing = MPI_Wtime();
+
     MPI_Comm_rank(comm, &rank);
-    MPI_Comm_size(comm, &nprocs);
 
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
@@ -59,8 +63,8 @@ int main(int argc, char** argv) {
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for error NC_ENOTSUPPORT ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        sprintf(cmd_str, "*** TESTING C   %s - error NC_ENOTSUPPORT ", basename(argv[0]));
+        printf("%-63s -- ", cmd_str); fflush(stdout);
         free(cmd_str);
     }
 
@@ -142,10 +146,12 @@ int main(int argc, char** argv) {
                    sum_size);
     }
 
+    timing = MPI_Wtime() - timing;
+    MPI_Allreduce(MPI_IN_PLACE, &timing, 1, MPI_DOUBLE, MPI_MAX,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, comm);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
+        else       printf(PASS_STR, timing);
     }
 
     MPI_Finalize();

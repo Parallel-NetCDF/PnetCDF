@@ -382,7 +382,12 @@ main(int argc, char ** argv)
     char filename[256];
     int nprocs, rank, err, nerrs=0;
 
+    double timing;
+
     MPI_Init(&argc, &argv);
+
+    timing = MPI_Wtime();
+
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -397,8 +402,8 @@ main(int argc, char ** argv)
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for NetCDF4 file", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str);
+        sprintf(cmd_str, "*** TESTING C   %s - NetCDF4 file", basename(argv[0]));
+        printf("%-63s -- ", cmd_str);
         free(cmd_str);
     }
 
@@ -417,10 +422,12 @@ main(int argc, char ** argv)
                    sum_size);
     }
 
+    timing = MPI_Wtime() - timing;
+    MPI_Allreduce(MPI_IN_PLACE, &timing, 1, MPI_DOUBLE, MPI_MAX,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
+        else       printf(PASS_STR, timing);
     }
 
     MPI_Finalize();
