@@ -47,9 +47,10 @@
         '   [-n <max>] max. number of messages per test (Default: 20)')
         end
 
-        subroutine report_test
+        subroutine report_test(timing)
         implicit        none
         character(LEN=1024)  msg
+        double precision timing
 #include "tests.inc"
 
         if (cdf_format .EQ. 4) then
@@ -63,7 +64,9 @@
           write(*,*) trim(PROGNAME)//' expects to see 0 failure ... '//&
                      'Total number of failures: ', nfailsTotal
         endif
-        call pass_fail(nfailsTotal, msg)
+
+        timing = MPI_Wtime() - timing
+        call pass_fail(nfailsTotal, msg, timing)
         end
 
         subroutine test(name, func)
@@ -88,7 +91,7 @@
             print *, ' '
             print *, '  ### ', nfails, ' FAILURES TESTING ', name,  &
                      '! Stop ... ###'
-            call report_test
+            call report_test(0)
             stop 2
         end if
         end
@@ -427,7 +430,12 @@
         external        test_nf90mpi_set_default_format
         external        nc_ignorefpe
 
+        double precision timing
+
         call MPI_INIT(err)
+
+        timing = MPI_Wtime()
+
         comm = MPI_COMM_WORLD
 
         call nc_ignorefpe(1)
@@ -865,7 +873,7 @@
 
         call MPI_Info_free(info, err)
 
-        call report_test
+        call report_test(timing)
 
         ! if (nfailsTotal .eq. 0) call ud_exit(0)
         call ud_exit(0)
