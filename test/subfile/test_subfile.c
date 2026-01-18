@@ -25,92 +25,35 @@
    Array size 128^3. For other array sizes, change array_of_gsizes below.
 */
 
-int main(int argc, char **argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
 {
-    int opt, verbose=0;
     extern char *optarg;
     extern int optind;
-    int i, j, array_of_gsizes[3];
-    int nprocs, len, **buf, rank;
-    MPI_Offset bufcount;
-    int array_of_psizes[3];
-    int err;
-    MPI_Offset array_of_starts[3];
-    char *fbasename=NULL;
     char dimname[20], varname[20];
-    int ncid, dimids0[3], rank_dim[3], *varid=NULL;
-    MPI_Info info=MPI_INFO_NULL, info_used=MPI_INFO_NULL;
-    MPI_Offset **starts_list, **count_list;
+    int i, j, err, nerrs=0, verbose=0, nprocs, rank, ncid, *varid=NULL;
+    int ndims=3, ngatts, unlimdimid, dimids0[3], rank_dim[3];
+    int num_files, **buf, array_of_psizes[3], array_of_gsizes[3];
+    MPI_Offset bufcount, array_of_starts[3], **starts_list, **count_list;
     MPI_Offset *bufcount_list;
-    int ndims=3, nvars=1, ngatts, unlimdimid;
     MPI_Datatype *datatype_list;
-    int length = 8;
-    double stim, write_tim, new_write_tim, write_bw;
-    double read_tim, new_read_tim, read_bw;
-    double open_tim, new_open_tim;
+    MPI_Info info_used=MPI_INFO_NULL;
+    double stim, write_tim, new_write_tim, write_bw, read_bw;
+    double open_tim, new_open_tim, read_tim, new_read_tim;
     double close_tim, new_close_tim;
+
     int num_sf = 2;
     int par_dim_id = 0; /* default is 0 */
     int do_read = 0;
-    int nerrs=0;
+    int nvars = 1;
+    int length = 8;
 
-    MPI_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-
-    /* process 0 takes the file name as a command-line argument and
-       broadcasts it to other processes */
-    if (rank == 0) {
-        while ((opt = getopt(argc, argv, "f:s:p:n:l:r")) != EOF) {
-            switch (opt) {
-            case 'f': fbasename = optarg;
-                break;
-            case 's': num_sf = (int)strtol(optarg,NULL,10);
-                break;
-            case 'r': do_read = 1;
-                break;
-            case 'p': par_dim_id = (int)strtol(optarg,NULL,10);
-                break;
-            case 'n': nvars = (int)strtol(optarg,NULL,10);
-                break;
-            case 'l': length = (int)strtol(optarg,NULL,10);
-                break;
-            default:
-                break;
-            }
-        }
-        if (fbasename == NULL) {
-            fprintf(stderr, "\n*#  Usage: test_subfile -f pathname -s num_sf -p par_dim_id \n\n");
-            nerrs++;
-        }
-    }
-    MPI_Bcast(&nerrs, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    if (nerrs > 0) {
-        MPI_Finalize();
-        return 1;
-    }
-
-    if (rank == 0) {
-        len = (fbasename == NULL) ?  0 : (int)strlen(fbasename);
-        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    }
-    else {
-        MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        fbasename = (char *) malloc(len+1);
-    }
-    MPI_Bcast(fbasename, len+1, MPI_CHAR, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&num_sf, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&par_dim_id, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&nvars, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&do_read, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&length, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for subfiling", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str);
-        free(cmd_str);
-    }
 
     array_of_gsizes[0] = array_of_gsizes[1] = array_of_gsizes[2] = length;
 
@@ -196,7 +139,6 @@ int main(int argc, char **argv)
             buf[i][j]=rank+1;
     }
 
-    MPI_Info_create(&info);
     /* set all non-record variable to be subfiled */
     char tmp[10];
     sprintf(tmp, "%d", num_sf);
@@ -206,8 +148,12 @@ int main(int argc, char **argv)
     if (do_read == 1) goto read;
 
     stim = MPI_Wtime();
-    err = ncmpi_create(MPI_COMM_WORLD, fbasename, NC_CLOBBER|NC_64BIT_DATA,
-                       info, &ncid);
+
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     open_tim = MPI_Wtime() - stim;
@@ -333,7 +279,7 @@ int main(int argc, char **argv)
     goto end;
 
 read:
-    err = ncmpi_open(MPI_COMM_WORLD, fbasename, NC_NOWRITE, info, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOWRITE, info, &ncid);
     CHECK_ERR
 
     stim = MPI_Wtime();
@@ -369,7 +315,6 @@ read:
     CHECK_ERR
 
 end:
-    if (info      != MPI_INFO_NULL) MPI_Info_free(&info);
     if (info_used != MPI_INFO_NULL) MPI_Info_free(&info_used);
 
     for (i=0; i<nvars; i++){
@@ -383,9 +328,7 @@ end:
     if (!do_read) free(varid);
     free(starts_list);
     free(count_list);
-    if (rank > 0) free(fbasename);
 
-    MPI_Offset malloc_size, sum_size;
     int nfiles, ncids[10];
 
     /* NULL argument test */
@@ -397,22 +340,47 @@ end:
     CHECK_ERR
     if (nfiles > 0) printf("nfiles %d still opened\n",nfiles);
 
-    /* check for any PnetCDF internal malloc residues */
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-    }
+    /* open the subfiles to validate the file format */
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (rank > 0) goto fn_exit;
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
+    num_files = (nprocs < num_sf) ? 1 : num_sf;
+    for (i=0; i<num_files; i++) {
+        char filename[512];
+        sprintf(filename, "%s.subfile_%d.nc", out_path, i);
+        err = ncmpi_open(MPI_COMM_SELF, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
+        CHECK_ERR
+        err = ncmpi_close(ncid);
+        CHECK_ERR
+        unlink(filename);
     }
 
 fn_exit:
+    return nerrs;
+}
+
+int main(int argc, char **argv) {
+
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 0; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 0; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 0; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "subfiling", opt, test_io);
+
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

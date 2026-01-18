@@ -25,16 +25,13 @@ if DECL_MPI_OFFSET
    # AM_FCFLAGS += $(FC_DEFINE)HAVE_DECL_MPI_OFFSET
 endif
 
-TESTPROGRAMS = test_subfile
-
-check_PROGRAMS = $(TESTPROGRAMS)
+check_PROGRAMS = test_subfile
 
 TESTS_ENVIRONMENT  = export SED="$(SED)";
 TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
 TESTS_ENVIRONMENT += export TESTOUTDIR="$(FSTYPE_PREFIX)$(TESTOUTDIR)";
 TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
 TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
-TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 if PNETCDF_DEBUG
@@ -50,16 +47,13 @@ if MIMIC_LUSTRE
    TESTS_ENVIRONMENT += export MIMIC_LUSTRE=1;
 endif
 
-TESTS = seq_runs.sh
+TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
+LOG_COMPILER = $(srcdir)/seq_runs.sh
+SH_LOG_COMPILER =
 
-CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
-             $(TESTOUTDIR)/test_subfile.nc \
-             $(TESTOUTDIR)/test_subfile.nc.subfile_0.nc \
-             $(TESTOUTDIR)/test_subfile.nc.subfile_1.nc \
-             $(TESTOUTDIR)/test_subfile.bb.nc \
-             $(TESTOUTDIR)/test_subfile.bb.nc.subfile_0.nc \
-             $(TESTOUTDIR)/test_subfile.bb.nc.subfile_1.nc
+CLEANFILES = $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
+             core core.* *.gcda *.gcno *.gcov gmon.out
 
 EXTRA_DIST = README.md seq_runs.sh parallel_run.sh
 
