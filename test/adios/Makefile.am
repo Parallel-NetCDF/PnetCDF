@@ -80,11 +80,9 @@ TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
 
-NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc)
-
 CLEANFILES = $(M4_SRCS:.m4=.c) \
              $(TESTOUTDIR)/put_get_all_kinds.nc.cdf4 \
-             $(NC_FILES) testfile.nc
+             $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb
 
 EXTRA_DIST = $(M4_SRCS) wrap_runs.sh parallel_run.sh \
              arrays_big.bp  arrays.bp  attributes_big.bp  attributes.bp
