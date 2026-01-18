@@ -15,8 +15,12 @@ int main( int argc, char *argv[] )
 {
    char filename[256];
    int rank, nerrs=0, verbose=0;
+   double timing;
 
    MPI_Init(&argc, &argv);
+
+   timing = MPI_Wtime();
+
    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
    if (argc < 2) {
        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
@@ -32,8 +36,8 @@ int main( int argc, char *argv[] )
 
        std::ostringstream cmd_str;
        cmd_str << "*** TESTING C++ " << basename(argv[0]) <<
-                  " for creation of classic format file";
-       printf("%-66s ------ ", cmd_str.str().c_str());
+                  " - creation of classic format file";
+       printf("%-63s -- ", cmd_str.str().c_str());
    }
 
    try
@@ -92,9 +96,12 @@ int main( int argc, char *argv[] )
                    sum_size);
     }
 
+    timing = MPI_Wtime() - timing;
+    MPI_Allreduce(MPI_IN_PLACE, &timing, 1, MPI_DOUBLE, MPI_MAX,MPI_COMM_WORLD);
+
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
+        else       printf(PASS_STR, timing);
     }
 
     MPI_Finalize();
