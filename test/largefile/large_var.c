@@ -58,47 +58,27 @@ swapn(void       *buf,
 }
 #endif
 
-int main(int argc, char** argv)
+static
+int test_io_nc4(const char *out_path,
+                MPI_Info    global_info)
 {
-    char filename[256];
     size_t bufsize;
-    int i, j, rank, nprocs, err, nerrs=0, expected;
-    int ncid, cmode, varid, dimid[3], req[3], st[3], *buf, *buf_ptr;
-    MPI_Offset offset, var_offset, start[3], count[3];
-    MPI_File fh;
-    MPI_Status status;
+    int i, rank, nprocs, err, nerrs=0, expected;
+    int ncid, varid, dimid[3], *buf;
+    MPI_Offset start[3], count[3];
     MPI_Info info;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    /* get command-line arguments */
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for writing to a large variable ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    MPI_Info_create(&info);
+    MPI_Info_dup(global_info, &info);
     MPI_Info_set(info, "romio_ds_write", "disable");
     MPI_Info_set(info, "romio_ds_read", "disable");
 
-#ifdef ENABLE_NETCDF4
     /* Test NetCDF-4 feature */
+
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER | NC_NETCDF4;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     /* define dimensions Z, Y, and X */
@@ -151,7 +131,7 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* open the same file and read back for validation */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOWRITE, info, &ncid);
     CHECK_ERR
 
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
@@ -248,12 +228,35 @@ int main(int argc, char** argv)
 
     err = ncmpi_close(ncid); CHECK_ERR
     free(buf);
-#endif
+
+    MPI_Info_free(&info);
+
+    return nerrs;
+}
+
+static
+int test_io_nc5(const char *out_path,
+                MPI_Info    global_info)
+{
+    size_t bufsize;
+    int i, j, rank, nprocs, err, nerrs=0, expected;
+    int ncid, varid, dimid[3], req[3], st[3], *buf, *buf_ptr;
+    MPI_Offset offset, var_offset, start[3], count[3];
+    MPI_File fh;
+    MPI_Status status;
+    MPI_Info info;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+
+    MPI_Info_dup(global_info, &info);
+    MPI_Info_set(info, "romio_ds_write", "disable");
+    MPI_Info_set(info, "romio_ds_read", "disable");
 
     /* Test classic format */
+
     /* create a new file for writing ----------------------------------------*/
-    cmode = NC_CLOBBER | NC_64BIT_DATA;
-    err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, info, &ncid);
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
     /* define dimensions Z, Y, and X */
@@ -315,7 +318,7 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* open the same file and read back for validation */
-    err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, info, &ncid);
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOWRITE, info, &ncid);
     CHECK_ERR
 
     err = ncmpi_inq_varid(ncid, "var", &varid); CHECK_ERR
@@ -413,7 +416,7 @@ int main(int argc, char** argv)
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* MPI file open the same file and read back for validation */
-    err = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+    err = MPI_File_open(MPI_COMM_WORLD, out_path, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
     if (err != MPI_SUCCESS) {
         int errorStringLen;
         char errorString[MPI_MAX_ERROR_STRING];
@@ -547,26 +550,54 @@ int main(int argc, char** argv)
     free(buf);
     MPI_Info_free(&info);
 
-#ifdef PNC_MALLOC_TRACE
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has "OFFFMT" bytes yet to be freed\n",
-                   sum_size);
-    }
-    if (malloc_size > 0) ncmpi_inq_malloc_list();
-#endif
-
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
-
-    MPI_Finalize();
-    return (nerrs > 0);
+    return nerrs;
 }
 
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io, /* ignored */
+            MPI_Info    info)
+{
+    int err;
+
+    /* Set file format */
+    err = ncmpi_set_default_format(format, NULL);
+    CHECK_ERR
+
+    if (format == NC_FORMAT_NETCDF4)
+        return test_io_nc4(out_path, info);
+
+    return test_io_nc5(out_path, info);
+}
+
+int main(int argc, char **argv) {
+
+    int err;
+#ifdef ENABLE_NETCDF4
+    int formats[] = {NC_FORMAT_NETCDF4, NC_FORMAT_64BIT_DATA};
+#else
+    int formats[] = {NC_FORMAT_64BIT_DATA};
+#endif
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 1; /* test intra-node aggregation */
+    opt.drv      = 1; /* test PNCIO driver */
+    opt.ind      = 1; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 1; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "writing to a large variable", opt, test_io);
+
+    MPI_Finalize();
+
+    return err;
+}

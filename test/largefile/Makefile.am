@@ -24,46 +24,42 @@ if IS_BIGENDIAN
    # AM_FCFLAGS += $(FC_DEFINE)WORDS_BIGENDIAN
 endif
 
-TESTPROGRAMS = large_files \
-               large_var \
-               large_attr \
-               large_dims_vars_attrs \
-               high_dim_var \
-               tst_cdf5_begin \
-               tst_hash_large_ndims \
-               tst_hash_large_nvars \
-               tst_hash_large_ngattrs \
-               large_coalesce \
-               large_header \
-               large_reqs
+check_PROGRAMS = large_files \
+                 large_var \
+                 large_attr \
+                 large_dims_vars_attrs \
+                 high_dim_var \
+                 tst_cdf5_begin \
+                 tst_hash_large_ndims \
+                 tst_hash_large_nvars \
+                 tst_hash_large_ngattrs \
+                 large_coalesce \
+                 large_header \
+                 large_reqs
 
 if HAS_FORTRAN
-   TESTPROGRAMS += bigrecords
+   check_PROGRAMS += bigrecords
    bigrecords_SOURCES = bigrecords.f
    AM_FFLAGS = -I$(top_builddir)/src/binding/f77 $(FFIXEDFORMFLAG)
 if HAVE_MPI_MOD
-   TESTPROGRAMS += tst_flarge
+   check_PROGRAMS += tst_flarge
    tst_flarge_SOURCES = tst_flarge.f90
    AM_FCFLAGS = $(FC_MODINC)$(top_builddir)/src/binding/f90 \
                 $(FC_MODINC)../common $(FFREEFORMFLAG)
 endif
 endif
 
-EXTRA_DIST = wrap_runs.sh parallel_run.sh
+EXTRA_DIST = seq_runs.sh parallel_run.sh
 
-NC_FILES = $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.nc) \
-           $(TESTPROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
-
-CLEANFILES = $(NC_FILES) core core.* *.gcda *.gcno *.gcov gmon.out
+CLEANFILES = $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
+			 *.nc core core.* *.gcda *.gcno *.gcov gmon.out
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
-check_PROGRAMS = $(TESTPROGRAMS)
-
 # autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
-# AM_TESTS_ENVIRONMENT  = export TESTPROGRAMS="$(TESTPROGRAMS)";
+# AM_TESTS_ENVIRONMENT  = export check_PROGRAMS="$(check_PROGRAMS)";
 # AM_TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
 # AM_TESTS_ENVIRONMENT += export TESTOUTDIR="$(FSTYPE_PREFIX)$(TESTOUTDIR)";
 TESTS_ENVIRONMENT  = export SED="$(SED)";
@@ -71,7 +67,6 @@ TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
 TESTS_ENVIRONMENT += export TESTOUTDIR="$(FSTYPE_PREFIX)$(TESTOUTDIR)";
 TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
 TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
-TESTS_ENVIRONMENT += export TESTPROGRAMS="$(TESTPROGRAMS)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
 if PNETCDF_DEBUG
@@ -92,7 +87,7 @@ endif
 
 TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
-LOG_COMPILER = $(srcdir)/wrap_runs.sh
+LOG_COMPILER = $(srcdir)/seq_runs.sh
 SH_LOG_COMPILER =
 
 # Some of these tests are designed to run on one processes,
@@ -103,13 +98,13 @@ ptest ptest4: $(check_PROGRAMS)
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/../parallel_run.sh 4 || exit 1
+	$(srcdir)/parallel_run.sh 4 || exit 1
 
 ptests: ptest4
 ptest2 ptest6 ptest8 ptest10:
 
 # build check targets but not invoke
-tests-local: all $(TESTPROGRAMS)
+tests-local: all $(check_PROGRAMS)
 
 .PHONY: ptest ptests ptest2 ptest4 ptest6 ptest8 ptest10
 

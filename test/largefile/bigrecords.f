@@ -88,29 +88,36 @@
      + 377.5, 367.59, 360.06, 353.85999, 348.66, 342.5, 336, 328.5, 320,
      + 310, 300, 290, 280, 270, 260, 250, 240, 230, 220, 210, 199.10001/
 
-      character(LEN=256) filename, cmd, msg
-
+      character(LEN=256) out_path, in_path, cmd, msg
+      logical keep_files
+      double precision timing
 ! attribute vectors
 ! enter define mode
 !      iret = nf_create('pressure_19010101_000000.nc', OR(NF_CLOBBER,NF_64BIT_OFFSET), ncid)
 
       call MPI_INIT(ierr)
+
+      timing = MPI_Wtime()
+
       call MPI_COMM_RANK(MPI_COMM_WORLD, myid, ierr)
       call MPI_COMM_SIZE(MPI_COMM_WORLD, numprocs, ierr)
 
       if (myid .EQ. 0) then
-          filename = "testfile.nc"
-          err = get_args(cmd, filename)
+          out_path = "testfile.nc"
+          err = get_args(cmd, out_path, in_path, keep_files)
       endif
       call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
       if (err .EQ. 0) goto 999
 
-      call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD,
+      call MPI_Bcast(out_path, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD,
      +               ierr)
       call MPI_Bcast(cmd,      256, MPI_CHARACTER, 0, MPI_COMM_WORLD,
      +               ierr)
 
-      iret = nfmpi_create( MPI_COMM_WORLD, filename,
+      call MPI_Bcast(keep_files, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD,
+     +               ierr)
+
+      iret = nfmpi_create( MPI_COMM_WORLD, out_path,
      +                       IOR(NF_CLOBBER,NF_64BIT_DATA),
      +                       MPI_INFO_NULL, ncid)
 
@@ -232,7 +239,7 @@
 ! todo: insert code to re-open dataset, read time variable all at once
 !
       iret = nfmpi_open ( MPI_COMM_SELF,
-     +                   filename,
+     +                   out_path,
      +                   IOR(NF_CLOBBER,NF_64BIT_DATA),
      +                   MPI_INFO_NULL,
      +                   ncid)
@@ -259,10 +266,21 @@
 !           write(6,*) "Error: time array was ", time
 !      endif
 
-      msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//' for NF_64BIT_DATA'
-      if (myid .eq. 0) call pass_fail(0, msg)
+ 999  timing = MPI_Wtime() - timing
+      call MPI_Allreduce(MPI_IN_PLACE, timing, 1,
+     +                   MPI_DOUBLE_PRECISION, MPI_MAX,
+     +                   MPI_COMM_WORLD, ierr)
 
- 999  call MPI_FINALIZE(ierr)
+      if (myid .eq. 0) then
+         if (.NOT. keep_files) then
+             err = nfmpi_delete(out_path, MPI_INFO_NULL)
+         end if
+
+         msg='*** TESTING F77 '//cmd(1:XTRIM(cmd))//' for NF_64BIT_DATA'
+         call pass_fail(0, msg, timing)
+      endif
+
+      call MPI_FINALIZE(ierr)
       end ! program main
 
       subroutine writerecs(cmd,ncid,time_id)
@@ -336,7 +354,7 @@
           print *, msg, nfmpi_strerror(iret)
           msg = '*** TESTING F77 '//cmd(1:XTRIM(cmd))//
      +          ' for NF_64BIT_DATA'
-          call pass_fail(1, msg)
+          call pass_fail(1, msg, timing)
           stop 2
       endif
       end ! subroutine check_err
