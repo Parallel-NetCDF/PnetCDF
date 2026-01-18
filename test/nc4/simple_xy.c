@@ -49,7 +49,7 @@
 
 int main(int argc, char** argv) {
     char filename[256];
-    int i, j, nerrs=0, rank, nprocs, err;
+    int i, j, nerrs=0, rank, err;
     int ncid, x_dimid, y_dimid, varid, ndim;
     int dimids[2];
     int data_out[NX][NY];
@@ -58,9 +58,13 @@ int main(int argc, char** argv) {
     char tmp[1024];
     int x, y;
 
+    double timing;
+
     MPI_Init(&argc, &argv);
+
+    timing = MPI_Wtime();
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     if (argc > 2) {
         if (!rank) printf("Usage: %s [filename]\n",argv[0]);
@@ -74,9 +78,9 @@ int main(int argc, char** argv) {
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
         sprintf(cmd_str,
-        "*** TESTING C   %s for opening and reading a netcdf4 file",
+        "*** TESTING C   %s - opening and reading a netcdf4 file",
         basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
+        printf("%-63s -- ", cmd_str); fflush(stdout);
         free(cmd_str);
     }
 
@@ -162,10 +166,12 @@ int main(int argc, char** argv) {
                malloc_size);
 
 fn_exit:
+    timing = MPI_Wtime() - timing;
+    MPI_Allreduce(MPI_IN_PLACE, &timing, 1, MPI_DOUBLE, MPI_MAX,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
+        else       printf(PASS_STR, timing);
     }
 
     MPI_Finalize();
