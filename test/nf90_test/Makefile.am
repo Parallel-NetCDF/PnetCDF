@@ -104,9 +104,7 @@ TESTS = seq_runs.sh
 TEST_EXTENSIONS = .sh
 
 CLEANFILES = $(M4SRCS_F90) \
-             $(TESTOUTDIR)/scratch.nc \
-             $(TESTOUTDIR)/test.nc \
-             $(TESTOUTDIR)/tooth-fairy.nc \
+             $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 EXTRA_DIST = $(M4SRCS) README seq_runs.sh
