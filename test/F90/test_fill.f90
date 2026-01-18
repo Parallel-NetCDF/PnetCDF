@@ -18,17 +18,17 @@
           if (err .NE. NF90_NOERR) then
               write(6,*) trim(message), trim(nf90mpi_strerror(err))
               msg = '*** TESTING F90 test_fill.f90 '
-              call pass_fail(1, msg)
+              call pass_fail(1, msg, 0)
               STOP 2
           end if
       end subroutine check
 
-      integer function tst_fmt(filename, mode)
+      integer function tst_fmt(out_path, mode)
           use mpi
           use pnetcdf
           implicit none
 
-          character(LEN=256) filename
+          character(LEN=256) out_path
           integer i, err, ierr, rank, nprocs
           integer :: ncid, mode, cmode, dimid(1), varid
           integer(kind=MPI_OFFSET_KIND) :: start(1)
@@ -37,6 +37,7 @@
           integer(kind=MPI_OFFSET_KIND), parameter :: len = 3
           integer, parameter :: k = selected_int_kind(18)
           integer(kind=k) :: buf(len)
+          logical keep_files
 
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
@@ -49,7 +50,7 @@
 
           ! create netcdf file
           cmode = IOR(mode, NF90_CLOBBER)
-          err = nf90mpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, ncid)
+          err = nf90mpi_create(MPI_COMM_WORLD, out_path, cmode, MPI_INFO_NULL, ncid)
           call check(err, 'In nf90mpi_create: ')
           tst_fmt = tst_fmt + err
 
@@ -93,36 +94,54 @@
           use mpi
           use pnetcdf
           implicit none
-          character(LEN=256) filename, cmd, msg
+          character(LEN=256) out_path, in_path, cmd, msg
           integer err, ierr, nerrs, rank, get_args, tst_fmt
+          logical keep_files
+          double precision timing
 
-          call MPI_Init(err)
+          call MPI_Init(ierr)
+
+          timing = MPI_Wtime()
+
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
 
-          ! take filename from command-line argument if there is any
+          ! take out_path from command-line argument if there is any
           cmd = ' '
           if (rank .EQ. 0) then
-              filename = 'testfile.nc'
-              err = get_args(cmd, filename)
+              out_path = 'testfile.nc'
+              err = get_args(cmd, out_path, in_path, keep_files)
           endif
           call MPI_Bcast(err, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
           if (err .EQ. 0) goto 999
 
-          call MPI_Bcast(filename, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, err)
+          call MPI_Bcast(out_path, 256, MPI_CHARACTER, 0, MPI_COMM_WORLD, err)
+
+          call MPI_Bcast(keep_files, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierr)
 
           nerrs = 0
 
           if (PNETCDF_DRIVER_NETCDF4 .EQ. 1) then
-              err = tst_fmt(filename, NF90_NETCDF4)
+              err = tst_fmt(out_path, NF90_NETCDF4)
               nerrs = nerrs + err
           endif
 
-          err = tst_fmt(filename, NF90_64BIT_DATA)
+          err = tst_fmt(out_path, NF90_64BIT_DATA)
           nerrs = nerrs + err
 
-          msg = '*** TESTING F90 '//trim(cmd)//' for _FillValue '
-          if (rank .eq. 0) call pass_fail(nerrs, msg)
+ 999      timing = MPI_Wtime() - timing
+          call MPI_Allreduce(MPI_IN_PLACE, timing, 1, &
+                             MPI_DOUBLE_PRECISION, MPI_MAX, &
+                             MPI_COMM_WORLD, ierr)
 
- 999      call MPI_Finalize(err)
+          if (rank .eq. 0) then
+              if (.NOT. keep_files) then
+                  err = nf90mpi_delete(out_path, MPI_INFO_NULL)
+              end if
+
+              msg = '*** TESTING F90 '//trim(cmd)//' - _FillValue '
+              call pass_fail(0, msg, timing)
+          end if
+
+          call MPI_Finalize(err)
 
       end program test
