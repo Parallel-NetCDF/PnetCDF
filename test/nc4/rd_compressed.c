@@ -63,12 +63,16 @@ static int create_nc4(char *filename)
 
 int main(int argc, char **argv) {
     char filename[512];
-    int i, err, nerrs=0, rank, np;
+    int i, err, nerrs=0, rank;
     int ncid, ndims, nvars, varid, dimids[3], *buf;
     MPI_Offset bufLen;
 
+    double timing;
+
     MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &np);
+
+    timing = MPI_Wtime();
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (argc > 2) {
@@ -81,8 +85,8 @@ int main(int argc, char **argv) {
 
     if (rank == 0) {
         char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for reading compressed NetCDF4 file", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str);
+        sprintf(cmd_str, "*** TESTING C   %s - reading compressed NetCDF4 file", basename(argv[0]));
+        printf("%-63s -- ", cmd_str);
         free(cmd_str);
     }
 
@@ -170,10 +174,12 @@ int main(int argc, char **argv) {
                    sum_size);
     }
 
+    timing = MPI_Wtime() - timing;
+    MPI_Allreduce(MPI_IN_PLACE, &timing, 1, MPI_DOUBLE, MPI_MAX,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
+        else       printf(PASS_STR, timing);
     }
 
 fn_exit:
