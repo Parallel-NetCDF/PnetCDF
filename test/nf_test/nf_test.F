@@ -37,9 +37,10 @@ C implementation of the netCDF library.
         end
 
 
-        subroutine report_test
+        subroutine report_test(timing)
         implicit        none
         character(LEN=1024)   msg
+        double precision timing
 #include "tests.inc"
 
         integer MY_LEN_TRIM
@@ -57,7 +58,7 @@ C implementation of the netCDF library.
      +               ' expects to see 0 failure ... '//
      +               'Total number of failures: ', nfailsTotal
         endif
-        call pass_fail(nfailsTotal, msg)
+        call pass_fail(nfailsTotal, msg, timing)
         end
 
         subroutine test(name, func)
@@ -422,7 +423,12 @@ C implementation of the netCDF library.
         external        test_nfmpi_set_default_format
         external        nc_ignorefpe
 
+        double precision timing
+
         call MPI_INIT(err)
+
+        timing = MPI_Wtime()
+
         comm = MPI_COMM_WORLD
 
         call nc_ignorefpe(1)
@@ -865,7 +871,8 @@ C           /* Test write functions */
 
         call MPI_Info_free(info, err)
 
-        call report_test
+        timing = MPI_Wtime() - timing
+        call report_test(timing)
 
         ! if (nfailsTotal .eq. 0) call ud_exit(0)
         call ud_exit(0)
