@@ -89,7 +89,7 @@ ptest16: $(check_PROGRAMS)
 	@$(TESTS_ENVIRONMENT) \
 	$(srcdir)/parallel_run.sh 16 || exit 1
 
-ptests: ptest2 ptest4 ptest10
+ptests: ptest4 ptest6
 
 # build check targets but not invoke
 tests-local: all $(check_PROGRAMS)
