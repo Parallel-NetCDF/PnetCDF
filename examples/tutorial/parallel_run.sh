@@ -5,7 +5,24 @@
 #
 
 # Exit immediately if a command exits with a non-zero status.
-set -e
+# set -e
+
+DRY_RUN=no
+VERBOSE=no
+
+run_cmd() {
+   local lineno=${BASH_LINENO[$((${#BASH_LINENO[@]} - 2))]}
+   if test "x$VERBOSE" = xyes || test "x$DRY_RUN" = xyes ; then
+      echo "Line $lineno CMD: $MPIRUN $@"
+   fi
+   if test "x$DRY_RUN" = xno ; then
+      $MPIRUN $@
+   fi
+   if test $? != 0 ; then
+      echo "FAIL: nprocs=$1 ---- $i $TEST_OPTS"
+      exit 1
+   fi
+}
 
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
@@ -31,6 +48,9 @@ fi
 unset PNETCDF_HINTS
 
 for i in ${check_PROGRAMS} ; do
+    # Capture start time in seconds and nanoseconds
+    start_time=$(date +%s.%1N)
+
     for j in ${safe_modes} ; do
         if test "$j" = 1 ; then # test only in safe mode
            SAFE_HINTS="romio_no_indep_rw=true"
@@ -76,26 +96,17 @@ for i in ${check_PROGRAMS} ; do
 	    # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
 
         if test $i = "pnetcdf-read-from-master" ; then
-           ${MPIRUN} ./$i ${TESTOUTDIR}/pnetcdf-write-from-master.nc
+           run_cmd ./$i ${TESTOUTDIR}/pnetcdf-write-from-master.nc
         elif test $i = "pnetcdf-read-nfiles" ; then
-           ${MPIRUN} ./$i ${TESTOUTDIR}/pnetcdf-write-nfiles.nc
+           run_cmd ./$i ${TESTOUTDIR}/pnetcdf-write-nfiles.nc
         elif test $i = "pnetcdf-read-standard" ; then
-           ${MPIRUN} ./$i ${TESTOUTDIR}/pnetcdf-write-standard.nc
+           run_cmd ./$i ${TESTOUTDIR}/pnetcdf-write-standard.nc
         elif test $i = "pnetcdf-read-flexible" ; then
-           ${MPIRUN} ./$i ${TESTOUTDIR}/pnetcdf-write-flexible.nc
+           run_cmd ./$i ${TESTOUTDIR}/pnetcdf-write-flexible.nc
         elif test $i = "pnetcdf-read-nb" ; then
-           ${MPIRUN} ./$i ${TESTOUTDIR}/pnetcdf-write-nb.nc
+           run_cmd ./$i ${TESTOUTDIR}/pnetcdf-write-nb.nc
         else
-           ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
-        fi
-        if test $? = 0 ; then
-           if test $i = "pnetcdf-write-bufferedf77" ; then
-              echo "PASS: F77 parallel run on $1 processes --------------- $i"
-           elif test $i = "pnetcdf-write-bufferedf" ; then
-              echo "PASS: F90 parallel run on $1 processes --------------- $i"
-           else
-              echo "PASS:  C  parallel run on $1 processes --------------- $i"
-           fi
+           run_cmd ./$i ${TESTOUTDIR}/$i.nc
         fi
 
         if test "$i" = pthread ; then
@@ -126,26 +137,17 @@ for i in ${check_PROGRAMS} ; do
            saved_PNETCDF_HINTS=${PNETCDF_HINTS}
            export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
            if test $i = "pnetcdf-read-from-master" ; then
-              ${MPIRUN} ./$i ${TESTOUTDIR}/pnetcdf-write-from-master.bb.nc
+              run_cmd ./$i ${TESTOUTDIR}/pnetcdf-write-from-master.bb.nc
            elif test $i = "pnetcdf-read-nfiles" ; then
-              ${MPIRUN} ./$i ${TESTOUTDIR}/pnetcdf-write-nfiles.bb.nc
+              run_cmd ./$i ${TESTOUTDIR}/pnetcdf-write-nfiles.bb.nc
            elif test $i = "pnetcdf-read-standard" ; then
-              ${MPIRUN} ./$i ${TESTOUTDIR}/pnetcdf-write-standard.bb.nc
+              run_cmd ./$i ${TESTOUTDIR}/pnetcdf-write-standard.bb.nc
            elif test $i = "pnetcdf-read-flexible" ; then
-              ${MPIRUN} ./$i ${TESTOUTDIR}/pnetcdf-write-flexible.bb.nc
+              run_cmd ./$i ${TESTOUTDIR}/pnetcdf-write-flexible.bb.nc
            elif test $i = "pnetcdf-read-nb" ; then
-              ${MPIRUN} ./$i ${TESTOUTDIR}/pnetcdf-write-nb.bb.nc
+              run_cmd ./$i ${TESTOUTDIR}/pnetcdf-write-nb.bb.nc
            else
-              ${MPIRUN} ./$i ${TESTOUTDIR}/$i.bb.nc
-           fi
-           if test $? = 0 ; then
-              if test $i = "pnetcdf-write-bufferedf77" ; then
-                 echo "PASS: F77 parallel run on $1 processes --------------- $i"
-              elif test $i = "pnetcdf-write-bufferedf" ; then
-                 echo "PASS: F90 parallel run on $1 processes --------------- $i"
-              else
-                 echo "PASS:  C  parallel run on $1 processes --------------- $i"
-              fi
+              run_cmd ./$i ${TESTOUTDIR}/$i.bb.nc
            fi
            export PNETCDF_HINTS=${saved_PNETCDF_HINTS}
 
@@ -162,19 +164,26 @@ for i in ${check_PROGRAMS} ; do
               # echo "--- validating file ${TESTOUTDIR}/$i.bb.nc"
               ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.bb.nc
 
-              # echo "--- ncmpidiff $i.nc $i.bb.nc ---"
-              ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$i.nc ${TESTOUTDIR}/$i.bb.nc
+              run_cmd ${NCMPIDIFF} -q ${TESTOUTDIR}/$i.nc ${TESTOUTDIR}/$i.bb.nc
            fi
         fi
 
         if test "x${ENABLE_NETCDF4}" = x1 ; then
-           # echo "test netCDF-4 feature"
-           ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc4 4
+           run_cmd ./$i ${TESTOUTDIR}/$i.nc4 4
            # Validator does not support nc4
         fi
     done
     done
     done
+
+    end_time=$(date +%s.%1N)
+
+    # Calculate difference (requires bc for floating point math)
+    elapsed_time=$(echo "$end_time - $start_time" | bc)
+
+    fixed_length=48
+    printf "*** TESTING  %-${fixed_length}s   -- pass (%4ss)\n" "$i" "$elapsed_time"
+
 done
 
 rm -f ${OUTDIR}/pnetcdf-*.nc
