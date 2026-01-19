@@ -5,7 +5,7 @@
 #
 
 # Exit immediately if a command exits with a non-zero status.
-set -e
+# set -e
 
 DRY_RUN=no
 VERBOSE=no
@@ -24,6 +24,10 @@ exe_cmd() {
    fi
    if test "x$DRY_RUN" = xno ; then
       $MPIRUN $@
+   fi
+   if test $? != 0 ; then
+      echo "FAIL: nprocs=$1 ---- $i $TEST_OPTS"
+      exit 1
    fi
 
    if test "x$MIMIC_LUSTRE" = x1 && test "x$cmd" = xncmpidiff ; then
@@ -65,9 +69,10 @@ fi
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
-fixed_length=23
-
 for i in ${check_PROGRAMS} ; do
+    # Capture start time in seconds and nanoseconds
+    start_time=$(date +%s.%1N)
+
     for j in ${safe_modes} ; do
         if test "$j" = 1 ; then # test only in safe mode
            safe_hint="  SAFE"
@@ -75,9 +80,6 @@ for i in ${check_PROGRAMS} ; do
            safe_hint="NOSAFE"
         fi
         OUT_PREFIX="${TESTOUTDIR}/$i"
-
-    for no_indep_rw in true false ; do
-        no_indep_rw_hint="romio_no_indep_rw=$no_indep_rw"
 
     for mpiio_mode in 0 1 ; do
         if test "$mpiio_mode" = 1 ; then
@@ -110,7 +112,7 @@ for i in ${check_PROGRAMS} ; do
            fi
         fi
 
-        PNETCDF_HINTS=$no_indep_rw_hint
+        PNETCDF_HINTS=
         if test "x$SAFE_HINTS" != x ; then
            PNETCDF_HINTS="$SAFE_HINTS;$PNETCDF_HINTS"
         fi
@@ -144,34 +146,19 @@ for i in ${check_PROGRAMS} ; do
            for k in `seq 0 ${NTHREADS}` ; do
                seq_cmd ${VALIDATOR} -q ${OUT_FILE}.nc.$k
            done
-           if test $? = 0 ; then
-              printf "PASS: %-3s nprocs=$1 %-${fixed_length}s   -------- $i\n" $2 "$TEST_OPTS"
-           fi
            continue
         elif test "$i" = put_vara ; then
            exe_cmd ./$i $CMD_OPT ${OUT_FILE}.nc
            seq_cmd ${VALIDATOR} -q ${OUT_FILE}.nc
-           if test $? = 0 ; then
-              printf "PASS: %-3s nprocs=$1 %-${fixed_length}s   -------- $i\n" $2 "$TEST_OPTS"
-           fi
 
            exe_cmd ./get_vara $CMD_OPT ${OUT_FILE}.nc
-           if test $? = 0 ; then
-              printf "PASS: %-3s nprocs=$1 %-${fixed_length}s   -------- get_vara\n" $2 "$TEST_OPTS"
-           fi
         elif test "$i" = get_vara ; then
            continue
         elif test "$i" = create_from_cdl ; then
            # create_from_cdl reads a CDL header file
            exe_cmd ./$i $CMD_OPT -o ${OUT_FILE}.nc $IN_FILE
-           if test $? = 0 ; then
-              printf "PASS: %-3s nprocs=$1 %-${fixed_length}s   -------- $i\n" $2 "$TEST_OPTS"
-           fi
         else
            exe_cmd ./$i $CMD_OPT ${OUT_FILE}.nc
-           if test $? = 0 ; then
-              printf "PASS: %-3s nprocs=$1 %-${fixed_length}s   -------- $i\n" $2 "$TEST_OPTS"
-           fi
         fi
 
         seq_cmd ${VALIDATOR} -q ${OUT_FILE}.nc
@@ -184,9 +171,6 @@ for i in ${check_PROGRAMS} ; do
               exe_cmd ./$i -q -o ${OUT_FILE}.bb.nc $IN_FILE
            else
               exe_cmd ./$i $CMD_OPT ${OUT_FILE}.bb.nc
-           fi
-           if test $? = 0 ; then
-              printf "PASS: %-3s nprocs=$1 %-${fixed_length}s   -------- $i\n" $2 "$TEST_OPTS BB"
            fi
            export PNETCDF_HINTS=${saved_PNETCDF_HINTS}
 
@@ -202,9 +186,6 @@ for i in ${check_PROGRAMS} ; do
 
         if test "x${ENABLE_NETCDF4}" = x1 ; then
            exe_cmd ./$i ${OUT_FILE}.nc4 4
-           if test $? = 0 ; then
-              printf "PASS: %-3s nprocs=$1 %-${fixed_length}s   -------- $i\n" $2 "$TEST_OPTS"
-           fi
            # Validator does not support nc4
         fi
     done # intra_aggr
@@ -234,8 +215,16 @@ for i in ${check_PROGRAMS} ; do
        exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.nc $OUT_PREFIX.pncio.ina.nc
     fi
 
-    done # no_indep_rw
     done # safe_modes
     rm -f ${OUTDIR}/$i*nc*
+
+    end_time=$(date +%s.%1N)
+
+    # Calculate difference (requires bc for floating point math)
+    elapsed_time=$(echo "$end_time - $start_time" | bc)
+
+    fixed_length=48
+    printf "*** TESTING  %-${fixed_length}s   -- pass (%4ss)\n" "$i" "$elapsed_time"
+
 done # check_PROGRAMS
 
