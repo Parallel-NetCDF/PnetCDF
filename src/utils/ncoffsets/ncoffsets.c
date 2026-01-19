@@ -14,6 +14,7 @@
 #include <unistd.h>    /* read() */
 #include <assert.h>    /* assert() */
 #include <inttypes.h>  /* check for Endianness, uint32_t*/
+#include <stdint.h>    /* uint32_t, uint64_t */
 
 static int is_little_endian;
 
@@ -225,38 +226,29 @@ static int check_little_endian(void) {
                     (((a) & 0x00FF000000000000ULL) >> 40) | \
                     (((a) & 0xFF00000000000000ULL) >> 56) )
 
-static void
-swap4b(void *val)
-{
-    uint32_t *op = (uint32_t*)val;
-    *op = SWAP4B(*op);
-}
-
-static void
-swap8b(unsigned long long *val)
-{
-    uint64_t *op = (uint64_t*)val;
-    *op = SWAP8B(*op);
-}
 
 static unsigned long long
 get_uint64(bufferinfo *gbp) {
     /* retrieve a 64bit unisgned integer and return it as unsigned long long */
-    unsigned long long tmp;
-    memcpy(&tmp, gbp->pos, 8);
-    if (is_little_endian) swap8b(&tmp);
-    gbp->pos = (char*)gbp->pos + 8;
-    return tmp;
+    uint64_t tmp;
+    memcpy(&tmp, gbp->pos, sizeof(uint64_t));
+
+    if (is_little_endian) tmp = SWAP8B(tmp);
+
+    gbp->pos = (char*)gbp->pos + sizeof(uint64_t);
+    return (unsigned long long)tmp;
 }
 
 static unsigned int
 get_uint32(bufferinfo *gbp) {
     /* retrieve a 32bit unisgned integer and return it as unsigned int */
-    unsigned int tmp;
-    memcpy(&tmp, gbp->pos, 4);
-    if (is_little_endian) swap4b(&tmp);
-    gbp->pos = (char*)gbp->pos + 4;
-    return tmp;
+    uint32_t tmp;
+    memcpy(&tmp, gbp->pos, sizeof(uint32_t));
+
+    if (is_little_endian) tmp = SWAP4B(tmp);
+
+    gbp->pos = (char*)gbp->pos + sizeof(uint32_t);
+    return (unsigned int)tmp;
 }
 
 static int
@@ -471,8 +463,7 @@ ncmpii_NC_computeshapes(NC *ncp)
             ncp->recsize += (*vpp)->len;
         }
         else {
-            if (first_var == NULL)
-            first_var = *vpp;
+            if (first_var == NULL) first_var = *vpp;
             /*
              * Overwritten each time thru.
              * Usually overwritten in first_rec != NULL clause.
