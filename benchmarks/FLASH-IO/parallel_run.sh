@@ -5,7 +5,24 @@
 #
 
 # Exit immediately if a command exits with a non-zero status.
-set -e
+# set -e
+
+DRY_RUN=no
+VERBOSE=no
+
+run_cmd() {
+   local lineno=${BASH_LINENO[$((${#BASH_LINENO[@]} - 2))]}
+   if test "x$VERBOSE" = xyes || test "x$DRY_RUN" = xyes ; then
+      echo "Line $lineno CMD: $MPIRUN $@"
+   fi
+   if test "x$DRY_RUN" = xno ; then
+      $MPIRUN $@
+   fi
+   if test $? != 0 ; then
+      echo "FAIL: nprocs=$1 ---- $i $TEST_OPTS"
+      exit 1
+   fi
+}
 
 VALIDATOR=../../src/utils/ncvalidator/ncvalidator
 NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
@@ -32,13 +49,13 @@ unset PNETCDF_HINTS
 
 FILE_EXTS="ncmpi_chk_0000 ncmpi_plt_cnt_0000 ncmpi_plt_crn_0000"
 
-fixed_length=23
-
 TEST_MPIIO_MODES="0 1"
 
 DATA_MODE="indep coll"
 
 for i in ${check_PROGRAMS} ; do
+    # Capture start time in seconds and nanoseconds
+    start_time=$(date +%s.%1N)
 
     for j in ${safe_modes} ; do
         if test "$j" = 1 ; then # test only in safe mode
@@ -47,9 +64,6 @@ for i in ${check_PROGRAMS} ; do
            safe_hint="NOSAFE"
         fi
         OUT_PREFIX="${TESTOUTDIR}/$i"
-
-    for no_indep_rw in true false ; do
-        no_indep_rw_hint="romio_no_indep_rw=$no_indep_rw"
 
     for data_mode in ${DATA_MODE} ; do
 
@@ -75,9 +89,8 @@ for i in ${check_PROGRAMS} ; do
         fi
 
         OUT_FILE=$INA_OUT_FILE
-        TEST_OPTS="$safe_hint $driver_hint $ina_hint"
 
-        PNETCDF_HINTS=$no_indep_rw_hint
+        PNETCDF_HINTS=
         if test "x$SAFE_HINTS" != x ; then
            PNETCDF_HINTS="$SAFE_HINTS;$PNETCDF_HINTS"
         fi
@@ -98,14 +111,12 @@ for i in ${check_PROGRAMS} ; do
         CMD_OPTS="-q -f ${OUT_FILE}."
         if test "$data_mode" = indep ; then
            CMD_OPTS="-i $CMD_OPTS"
+           TEST_OPTS="$safe_hint $driver_hint $ina_hint INDEP"
+        else
+           TEST_OPTS="$safe_hint $driver_hint $ina_hint  COLL"
         fi
 
-        # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPTS"
-        ${MPIRUN} ./$i $CMD_OPTS
-
-        if test $? = 0 ; then
-           printf "PASS: F90 nprocs=$1 %-${fixed_length}s   -------- $i\n" "$TEST_OPTS"
-        fi
+        run_cmd ./$i $CMD_OPTS
 
         if test "x${BUILD_BENCHMARKS_IN_PNETCDF}" != x1 ; then
            continue
@@ -125,26 +136,19 @@ for i in ${check_PROGRAMS} ; do
            if test "$data_mode" = indep ; then
               CMD_OPTS="-i $CMD_OPTS"
            fi
-           # echo "${LINENO}: ${MPIRUN} ./$i $CMD_OPTS"
-           ${MPIRUN} ./$i $CMD_OPTS
-
-           if test $? = 0 ; then
-              printf "PASS: F90 nprocs=$1 %-${fixed_length}s   -------- $i\n" "$TEST_OPTS BB"
-           fi
+           run_cmd ./$i $CMD_OPTS
 
            export PNETCDF_HINTS=${saved_PNETCDF_HINTS}
 
            for ext in $FILE_EXTS ; do
               # echo "${LINENO}: --- validating file ${OUT_FILE}.bb.nc"
               ${TESTSEQRUN} ${VALIDATOR} -q $OUT_FILE.bb.$ext.nc
-              # echo "${LINENO}: --- ncmpidiff -q $OUT_FILE.$ext.nc $OUT_FILE.bb.$ext.nc ---"
-              ${MPIRUN} ${NCMPIDIFF} -q $OUT_FILE.$ext.nc $OUT_FILE.bb.$ext.nc
+              run_cmd ${NCMPIDIFF} -q $OUT_FILE.$ext.nc $OUT_FILE.bb.$ext.nc
            done
         fi
 
         if test "x${ENABLE_NETCDF4}" = x1 ; then
-           # echo "${LINENO}: test netCDF-4 feature"
-           ${MPIRUN} ./$i $CMD_OPTS ${OUT_FILE}.nc4 4
+           run_cmd ./$i $CMD_OPTS ${OUT_FILE}.nc4 4
            # Validator does not support nc4
         fi
     done # intra_aggr
@@ -167,9 +171,17 @@ for i in ${check_PROGRAMS} ; do
        fi
     done # ext
 
-    done # no_indep_rw
     done # data_mode
     done # safe_modes
     rm -f ${OUTDIR}/$i*nc*
+
+    end_time=$(date +%s.%1N)
+
+    # Calculate difference (requires bc for floating point math)
+    elapsed_time=$(echo "$end_time - $start_time" | bc)
+
+    fixed_length=48
+    printf "*** TESTING  %-${fixed_length}s   -- pass (%4ss)\n" "$i" "$elapsed_time"
+
 done # check_PROGRAMS
 
