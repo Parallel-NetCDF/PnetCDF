@@ -1819,7 +1819,7 @@ TestFunc(rename_var)(VarArgs)
             EXPECT_ERR(NC_ENAMEINUSE, err)
         ELSE_NOK
         strcpy(name, "new_");
-        strncat(name, var_name[i], NC_MAX_NAME - strlen(name) - 1);
+        strcat(name, var_name[i]);
         err = APIFunc(rename_var)(ncid, i, name);
         IF (err != NC_NOERR)
             error("rename_var: %s", APIFunc(strerror)(err));
@@ -1838,7 +1838,7 @@ TestFunc(rename_var)(VarArgs)
         error("enddef: %s", APIFunc(strerror)(err));
     for (i = 0; i < numVars; i++) {
         strcpy(name, "even_longer_");
-        strncat(name, var_name[i], NC_MAX_NAME - strlen(name) - 1);
+        strcat(name, var_name[i]);
         err = APIFunc(rename_var)(ncid, i, name);
         IF (err != NC_ENOTINDEFINE)
             EXPECT_ERR(NC_ENOTINDEFINE, err)
