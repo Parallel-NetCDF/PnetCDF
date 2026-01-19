@@ -67,6 +67,20 @@ ptest2: $(check_PROGRAMS)
 	@$(TESTS_ENVIRONMENT) \
 	$(srcdir)/parallel_run.sh 2 || exit 1
 
+ptest6: $(check_PROGRAMS)
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 6 MPI processes"
+	@echo "==========================================================="
+	@$(TESTS_ENVIRONMENT) \
+	$(srcdir)/parallel_run.sh 6 || exit 1
+
+ptest8: $(check_PROGRAMS)
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 8 MPI processes"
+	@echo "==========================================================="
+	@$(TESTS_ENVIRONMENT) \
+	$(srcdir)/parallel_run.sh 8 || exit 1
+
 ptest10: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 10 MPI processes"
@@ -74,9 +88,7 @@ ptest10: $(check_PROGRAMS)
 	@$(TESTS_ENVIRONMENT) \
 	$(srcdir)/parallel_run.sh 10 || exit 1
 
-ptest6 ptest8:
-
-ptests: ptest2 ptest4 ptest10
+ptests: ptest4 ptest6
 
 # build check targets but not invoke
 tests-local: all $(check_PROGRAMS)
