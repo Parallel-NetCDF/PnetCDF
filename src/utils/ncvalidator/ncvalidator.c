@@ -14,6 +14,7 @@
 #include <inttypes.h>   /* check for Endianness, uint32_t*/
 #include <assert.h>
 #include <errno.h>      /* errno */
+#include <stdint.h>     /* uint32_t, uint64_t */
 
 #define X_ALIGN         4
 #define X_INT_MAX       2147483647
@@ -230,40 +231,30 @@ static int check_little_endian(void)
     return (*((uint8_t*)(&i))) == 0x67;
 }
 
-static void
-swap4b(void *val)
-{
-    uint32_t *op = (uint32_t*)val;
-    *op = SWAP4B(*op);
-}
-
-static void
-swap8b(unsigned long long *val)
-{
-    uint64_t *op = (uint64_t*)val;
-    *op = SWAP8B(*op);
-}
-
 static unsigned long long
 get_uint64(bufferinfo *gbp)
 {
     /* retrieve a 64bit unsigned integer and return it as unsigned long long */
-    unsigned long long tmp;
-    memcpy(&tmp, gbp->pos, 8);
-    if (gbp->is_little_endian) swap8b(&tmp);
-    gbp->pos = (char*)gbp->pos + 8;  /* advance gbp->pos 8 bytes */
-    return tmp;
+    uint64_t tmp;
+    memcpy(&tmp, gbp->pos, sizeof(uint64_t));
+
+    if (gbp->is_little_endian) tmp = SWAP8B(tmp);
+
+    gbp->pos = (char*)gbp->pos + sizeof(uint64_t);  /* advance gbp->pos 8 bytes */
+    return (unsigned long long)tmp;
 }
 
 static unsigned int
 get_uint32(bufferinfo *gbp)
 {
     /* retrieve a 32bit unsigned integer and return it as unsigned int */
-    unsigned int tmp;
-    memcpy(&tmp, gbp->pos, 4);
-    if (gbp->is_little_endian) swap4b(&tmp);
-    gbp->pos = (char*)gbp->pos + 4;  /* advance gbp->pos 4 bytes */
-    return tmp;
+    uint32_t tmp;
+    memcpy(&tmp, gbp->pos, sizeof(uint32_t));
+
+    if (gbp->is_little_endian) tmp = SWAP4B(tmp);
+
+    gbp->pos = (char*)gbp->pos + sizeof(uint32_t);  /* advance gbp->pos 4 bytes */
+    return (unsigned int)tmp;
 }
 
 static void
@@ -1901,8 +1892,8 @@ val_NC_check_vlens(NC *ncp)
        and format 2. */
     long long ii, vlen_max, rec_vars_count;
     long long large_fix_vars_count, large_rec_vars_count;
-    long long first_large_fix_var, first_large_rec_var;
-    long long second_large_fix_var, second_large_rec_var;
+    long long first_large_fix_var=0, first_large_rec_var=0;
+    long long second_large_fix_var=0, second_large_rec_var=0;
     int last = 0;
 
     if (ncp->vars.ndefined == 0)
