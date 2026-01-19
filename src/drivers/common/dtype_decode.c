@@ -299,7 +299,7 @@ int ncmpii_dtype_decode(MPI_Datatype  dtype,
     MPI_Datatype ptype, *array_of_dtypes=NULL;
     MPI_Aint *array_of_adds=NULL;
 #ifdef HAVE_MPI_LARGE_COUNT
-    MPI_Count num_ints, num_adds, num_larges, num_dtypes, *array_of_larges;
+    MPI_Count num_ints, num_adds, num_larges, num_dtypes, *array_of_larges=NULL;
     int *distribs, *dargs, *psizes;
     MPI_Count *gzises;
 #else
