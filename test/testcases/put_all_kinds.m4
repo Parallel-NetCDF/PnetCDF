@@ -47,13 +47,42 @@ include(`utils.m4')dnl
 #define ulonglong unsigned long long
 #endif
 
+define(`DEFINE_VARS',dnl
+`dnl
+static int
+def_vars_$1(int  rank,
+            int  ncid,
+            int *dimids)
+{
+    int err=NC_NOERR;
+    int var1_id, vara_id, vars_id, varm_id;
+    int dimid, dimidsT[NDIMS];
+
+    err = ncmpi_inq_dimid(ncid, "nprocs", &dimid); CHECK_ERR
+
+    err = ncmpi_def_var(ncid, "var1_$1", NC_TYPE($1),     1, &dimid, &var1_id);
+    CHECK_ERR
+    err = ncmpi_def_var(ncid, "vara_$1", NC_TYPE($1), NDIMS, dimids, &vara_id);
+    CHECK_ERR
+    err = ncmpi_def_var(ncid, "vars_$1", NC_TYPE($1), NDIMS, dimids, &vars_id);
+    CHECK_ERR
+
+    /* define variable with transposed file layout: ZYX -> YXZ */
+    dimidsT[0] = dimids[1]; dimidsT[1] = dimids[2]; dimidsT[2] = dimids[0];
+    err = ncmpi_def_var(ncid, "varm_$1", NC_TYPE($1), NDIMS, dimidsT, &varm_id);    CHECK_ERR
+
+    return err;
+}
+')dnl
+
+foreach(`itype',(`text,schar,uchar,short,ushort,int,uint,long,float,double,longlong,ulonglong'),`DEFINE_VARS(itype)')
+
 define(`TEST_BLOCKING_PUT',dnl
 `dnl
 static int
 blocking_put_$1(int         rank,
                 int         coll_io,
                 int         ncid,
-                int        *dimids,
                 MPI_Offset *start,
                 MPI_Offset *count,
                 MPI_Offset *startS,
@@ -64,34 +93,14 @@ blocking_put_$1(int         rank,
                 MPI_Offset *imap,
                 ifelse(`$1',`text',`char',`double') *buf)
 {
-    int err, nerrs=0;
+    int err=NC_NOERR, nerrs=0;
     int var1_id, vara_id, vars_id, varm_id;
-    int dimid, dimidsT[NDIMS];
     MPI_Offset start1[1];
 
-    /* file sync before re-entering define mode */
-    err = ncmpi_sync(ncid);
-    CHECK_ERR
-    MPI_Barrier(MPI_COMM_WORLD);
-
-    /* re-enter define mode, so we can add more variables */
-    err = ncmpi_redef(ncid); CHECK_ERR
-    err = ncmpi_inq_dimid(ncid, "nprocs", &dimid); CHECK_ERR
-    err = ncmpi_def_var(ncid, "var1_$1", NC_TYPE($1),     1, &dimid, &var1_id); CHECK_ERR
-    err = ncmpi_def_var(ncid, "vara_$1", NC_TYPE($1), NDIMS, dimids, &vara_id); CHECK_ERR
-    err = ncmpi_def_var(ncid, "vars_$1", NC_TYPE($1), NDIMS, dimids, &vars_id); CHECK_ERR
-
-    /* define variable with transposed file layout: ZYX -> YXZ */
-    dimidsT[0] = dimids[1]; dimidsT[1] = dimids[2]; dimidsT[2] = dimids[0];
-    err = ncmpi_def_var(ncid, "varm_$1", NC_TYPE($1), NDIMS, dimidsT, &varm_id); CHECK_ERR
-
-    /* exit the define mode */
-    err = ncmpi_enddef(ncid); CHECK_ERR
-
-    if (!coll_io) {
-        err = ncmpi_begin_indep_data(ncid);
-        CHECK_ERR
-    }
+    err = ncmpi_inq_varid(ncid, "var1_$1", &var1_id); CHECK_ERR
+    err = ncmpi_inq_varid(ncid, "vara_$1", &vara_id); CHECK_ERR
+    err = ncmpi_inq_varid(ncid, "vars_$1", &vars_id); CHECK_ERR
+    err = ncmpi_inq_varid(ncid, "varm_$1", &varm_id); CHECK_ERR
 
     /* write the whole variable in parallel */
     start1[0] = rank;
@@ -140,6 +149,18 @@ define(`TEST_CDF_FORMAT',dnl
     err = ncmpi_def_dim(ncid, "Z",      gsize[0], &dimids[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "Y",      gsize[1], &dimids[1]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X",      gsize[2], &dimids[2]); CHECK_ERR
+
+    nerrs += def_vars_text(rank, ncid, dimids); CHECK_ERR
+    foreach(`itype',(`schar,short,int,long,float,double'),`
+    _CAT(`nerrs += def_vars_',itype)'`(rank, ncid, dimids); CHECK_ERR')
+
+    if (format == NC_FORMAT_64BIT_DATA) {
+        foreach(`itype',
+        (`uchar,ushort,uint,longlong,ulonglong'),`
+        _CAT(`nerrs += def_vars_',itype)'`(rank, ncid, dimids); CHECK_ERR')
+    }
+
+    /* define variables */
     err = ncmpi_enddef(ncid);
 
     if (!coll_io) {
@@ -147,17 +168,17 @@ define(`TEST_CDF_FORMAT',dnl
         CHECK_ERR
     }
 
-    nerrs += blocking_put_text(rank, coll_io, ncid, dimids, start, count,
+    nerrs += blocking_put_text(rank, coll_io, ncid, start, count,
              startS, countS, stride, startM, countM, imap, cbuf);
     foreach(`itype',(`schar,short,int,long,float,double'),`
-    _CAT(`nerrs += blocking_put_',itype)'`(rank, coll_io, ncid, dimids, start,
-        count, startS, countS, stride, startM, countM, imap, buf);')
+    _CAT(`nerrs += blocking_put_',itype)'`(rank, coll_io, ncid, start, count,
+        startS, countS, stride, startM, countM, imap, buf);')
 
     if (format == NC_FORMAT_64BIT_DATA) {
         foreach(`itype',
         (`uchar,ushort,uint,longlong,ulonglong'),`
-        _CAT(`nerrs += blocking_put_',itype)'`(rank, coll_io, ncid, dimids,
-            start, count, startS, countS, stride, startM, countM, imap, buf);')
+        _CAT(`nerrs += blocking_put_',itype)'`(rank, coll_io, ncid, start,
+            count, startS, countS, stride, startM, countM, imap, buf);')
     }
 
     /* close the file */
@@ -258,7 +279,7 @@ int main(int argc, char **argv) {
     opt.ina      = 1; /* test intra-node aggregation */
     opt.drv      = 1; /* test PNCIO driver */
     opt.ind      = 1; /* test hint romio_no_indep_rw */
-    opt.chk      = 1; /* test hint nc_data_move_chunk_size */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
     opt.bb       = 1; /* test burst-buffering feature */
     opt.mod      = 1; /* test independent data mode */
     opt.hdr_diff = 1; /* run ncmpidiff for file header only */
