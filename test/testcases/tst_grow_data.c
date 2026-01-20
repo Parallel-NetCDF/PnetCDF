@@ -128,9 +128,10 @@ int test_io(const char *out_path,
 {
     char value[MPI_MAX_INFO_VAL], *kind, *fname;
     int i, err, nerrs=0, nprocs, rank, psize[2], rank_y, rank_x;
-    int ncid, ndims, dimids[3], nvars, varid[NVARS], *int_buf=NULL;
+    int ncid, ndims, dimids[3], nvars, varid[NVARS];
+    int *int_buf[2]={NULL, NULL};
     int flag, nc_data_move_chunk_size=0;
-    float *flt_buf=NULL;
+    float *flt_buf[4]={NULL, NULL, NULL, NULL};
     MPI_Offset start[3], count[3], nelems, h_size, h_extent;
     MPI_Offset old_var_off[NVARS], new_var_off[NVARS];
     MPI_Info info_used;
@@ -158,8 +159,10 @@ int test_io(const char *out_path,
     nelems = count[1] * count[2];
 
     /* allocate buffers */
-    int_buf = (int*) malloc(sizeof(int) * nelems);
-    flt_buf = (float*) malloc(sizeof(float) * nelems);
+    for (i=0; i<2; i++)
+        int_buf[i] = (int*) malloc(sizeof(int) * nelems);
+    for (i=0; i<4; i++)
+        flt_buf[i] = (float*) malloc(sizeof(float) * nelems);
 
     /* Set file format */
     err = ncmpi_set_default_format(format, NULL);
@@ -232,49 +235,37 @@ int test_io(const char *out_path,
     }
 
     /* write to file */
-    for (i=0; i<nelems; i++) int_buf[i] = rank + i;
-    if (coll_io)
-        err = ncmpi_put_vara_int_all(ncid, varid[0], start+1, count+1, int_buf);
-    else
-        err = ncmpi_put_vara_int(ncid, varid[0], start+1, count+1, int_buf);
+    for (i=0; i<nelems; i++) int_buf[0][i] = rank + i;
+    err = ncmpi_iput_vara_int(ncid, varid[0], start+1, count+1, int_buf[0], NULL);
     CHECK_ERR
 
-    for (i=0; i<nelems; i++) int_buf[i] = rank + i + 1;
-    if (coll_io)
-        err = ncmpi_put_vara_int_all(ncid, varid[1], start+1, count+1, int_buf);
-    else
-        err = ncmpi_put_vara_int(ncid, varid[1], start+1, count+1, int_buf);
+    for (i=0; i<nelems; i++) int_buf[1][i] = rank + i + 1;
+    err = ncmpi_iput_vara_int(ncid, varid[1], start+1, count+1, int_buf[1], NULL);
     CHECK_ERR
 
-    for (i=0; i<nelems; i++) flt_buf[i] = rank + i + 2;
-    if (coll_io)
-        err = ncmpi_put_vara_float_all(ncid, varid[2], start, count, flt_buf);
-    else
-        err = ncmpi_put_vara_float(ncid, varid[2], start, count, flt_buf);
+    for (i=0; i<nelems; i++) flt_buf[0][i] = rank + i + 2;
+    err = ncmpi_iput_vara_float(ncid, varid[2], start, count, flt_buf[0], NULL);
     CHECK_ERR
 
-    for (i=0; i<nelems; i++) flt_buf[i] = rank + i + 3;
-    if (coll_io)
-        err = ncmpi_put_vara_float_all(ncid, varid[3], start, count, flt_buf);
-    else
-        err = ncmpi_put_vara_float(ncid, varid[3], start, count, flt_buf);
+    for (i=0; i<nelems; i++) flt_buf[1][i] = rank + i + 3;
+    err = ncmpi_iput_vara_float(ncid, varid[3], start, count, flt_buf[1], NULL);
     CHECK_ERR
 
     /* write 2nd record */
     start[0] = 1;
 
-    for (i=0; i<nelems; i++) flt_buf[i] = rank + i + 2;
-    if (coll_io)
-        err = ncmpi_put_vara_float_all(ncid, varid[2], start, count, flt_buf);
-    else
-        err = ncmpi_put_vara_float(ncid, varid[2], start, count, flt_buf);
+    for (i=0; i<nelems; i++) flt_buf[2][i] = rank + i + 2;
+    err = ncmpi_iput_vara_float(ncid, varid[2], start, count, flt_buf[2], NULL);
     CHECK_ERR
 
-    for (i=0; i<nelems; i++) flt_buf[i] = rank + i + 3;
+    for (i=0; i<nelems; i++) flt_buf[3][i] = rank + i + 3;
+    err = ncmpi_iput_vara_float(ncid, varid[3], start, count, flt_buf[3], NULL);
+    CHECK_ERR
+
     if (coll_io)
-        err = ncmpi_put_vara_float_all(ncid, varid[3], start, count, flt_buf);
+        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
     else
-        err = ncmpi_put_vara_float(ncid, varid[3], start, count, flt_buf);
+        err = ncmpi_wait(ncid, NC_REQ_ALL, NULL, NULL);
     CHECK_ERR
 
     /* file sync before reading */
@@ -347,11 +338,11 @@ int test_io(const char *out_path,
                h_size, h_extent);
     }
 
-    for (i=0; i<nelems; i++) int_buf[i] = rank + i + 4;
+    for (i=0; i<nelems; i++) int_buf[0][i] = rank + i + 4;
     if (coll_io)
-        err = ncmpi_put_vara_int_all(ncid, varid[4], start+1, count+1, int_buf);
+        err = ncmpi_put_vara_int_all(ncid, varid[4], start+1, count+1, int_buf[0]);
     else
-        err = ncmpi_put_vara_int(ncid, varid[4], start+1, count+1, int_buf);
+        err = ncmpi_put_vara_int(ncid, varid[4], start+1, count+1, int_buf[0]);
     CHECK_ERR
 
     PRINT_VAR_OFF
@@ -392,19 +383,19 @@ int test_io(const char *out_path,
                h_size, h_extent);
 
     start[0] = 0;
-    for (i=0; i<nelems; i++) flt_buf[i] = rank + i + 5;
+    for (i=0; i<nelems; i++) flt_buf[0][i] = rank + i + 5;
     if (coll_io)
-        err = ncmpi_put_vara_float_all(ncid, varid[5], start, count, flt_buf);
+        err = ncmpi_put_vara_float_all(ncid, varid[5], start, count, flt_buf[0]);
     else
-        err = ncmpi_put_vara_float(ncid, varid[5], start, count, flt_buf);
+        err = ncmpi_put_vara_float(ncid, varid[5], start, count, flt_buf[0]);
     CHECK_ERR
 
     start[0] = 1;
-    for (i=0; i<nelems; i++) flt_buf[i] = rank + i + 5;
+    for (i=0; i<nelems; i++) flt_buf[1][i] = rank + i + 5;
     if (coll_io)
-        err = ncmpi_put_vara_float_all(ncid, varid[5], start, count, flt_buf);
+        err = ncmpi_put_vara_float_all(ncid, varid[5], start, count, flt_buf[1]);
     else
-        err = ncmpi_put_vara_float(ncid, varid[5], start, count, flt_buf);
+        err = ncmpi_put_vara_float(ncid, varid[5], start, count, flt_buf[1]);
     CHECK_ERR
 
     PRINT_VAR_OFF
@@ -425,8 +416,10 @@ int test_io(const char *out_path,
 
     err = ncmpi_close(ncid); CHECK_ERR
 
-    if (int_buf != NULL) free(int_buf);
-    if (flt_buf != NULL) free(flt_buf);
+    for (i=0; i<2; i++)
+        if (int_buf[i] != NULL) free(int_buf[i]);
+    for (i=0; i<4; i++)
+        if (flt_buf[i] != NULL) free(flt_buf[i]);
 
 err_out:
     return nerrs;
