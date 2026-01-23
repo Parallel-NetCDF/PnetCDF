@@ -183,7 +183,13 @@ ncmpio_begin_indep_data(void *ncdp)
         if (err != NC_NOERR)
             return err;
 
-        /* get the I/O hints used/modified by MPI-IO */
+        /* Get the I/O hints used/modified by MPI-IO. Note ncp->mpiinfo may
+         * have been populated. It can be discarded and replaced by the one
+         * used by MPI-IO.
+         */
+        if (ncp->mpiinfo != MPI_INFO_NULL)
+            MPI_Info_free(&ncp->mpiinfo);
+
         err = PNCIO_File_get_info(ncp->pncio_fh, &ncp->mpiinfo);
         if (err != NC_NOERR) return err;
 
@@ -211,13 +217,16 @@ ncmpio_begin_indep_data(void *ncdp)
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, mpi_name);
 
-        /* get the I/O hints used/modified by MPI-IO */
-        mpireturn = MPI_File_get_info(ncp->independent_fh, &ncp->mpiinfo);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, mpi_name);
+        /* for those ranks whose mpiinfo is NULL, retrieve info */
+        if (ncp->mpiinfo == MPI_INFO_NULL) {
+            /* get the I/O hints used/modified by MPI-IO */
+            mpireturn = MPI_File_get_info(ncp->independent_fh, &ncp->mpiinfo);
+            if (mpireturn != MPI_SUCCESS)
+                return ncmpii_error_mpi2nc(mpireturn, mpi_name);
 
-        /* Copy MPI-IO hints into ncp->mpiinfo */
-        ncmpio_hint_set(ncp, ncp->mpiinfo);
+            /* Copy MPI-IO hints into ncp->mpiinfo */
+            ncmpio_hint_set(ncp, ncp->mpiinfo);
+        }
     }
     return NC_NOERR;
 }
