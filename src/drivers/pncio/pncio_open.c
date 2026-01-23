@@ -256,12 +256,7 @@ int PNCIO_File_open(MPI_Comm    comm,
 
     /* create and initialize info object */
     fd->hints = (PNCIO_Hints*) NCI_Calloc(1, sizeof(PNCIO_Hints));
-    if (info == MPI_INFO_NULL)
-        MPI_Info_create(&fd->info);
-    else
-        MPI_Info_dup(info, &fd->info);
-
-    status = PNCIO_File_SetInfo(fd, fd->info);
+    status = PNCIO_File_SetInfo(fd, info);
     if (status != NC_NOERR && status != NC_EMULTIDEFINE_HINTS) {
         /* Inconsistent I/O hints is not a fatal error.
          * In PNCIO_File_SetInfo(), root's hints overwrite local's.

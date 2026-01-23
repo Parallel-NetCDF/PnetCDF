@@ -129,12 +129,13 @@ PNCIO_File_SetInfo(PNCIO_File *fd,
     char value[MPI_MAX_INFO_VAL + 1];
 
     if (users_info == MPI_INFO_NULL)
-        return NC_NOERR;
+        MPI_Info_create(&fd->info);
+    else
+        MPI_Info_dup(users_info, &fd->info);
 
     MPI_Comm_size(fd->comm, &nprocs);
 
     /* initialize fd->info and hints to default values */
-    MPI_Info_create(&(fd->info));
 
     /* buffer size for collective I/O */
     MPI_Info_set(fd->info, "cb_buffer_size", PNCIO_CB_BUFFER_SIZE_DFLT);
@@ -183,6 +184,8 @@ PNCIO_File_SetInfo(PNCIO_File *fd,
     fd->hints->lustre_overstriping_ratio = 1;
 
     /* add in user's info --------------------------------------------------*/
+
+    if (users_info == MPI_INFO_NULL) goto err_out;
 
     /* size of internal buffer to be used in collective reads and writes */
     GET_INFO_INT(cb_buffer_size);
@@ -239,6 +242,7 @@ PNCIO_File_SetInfo(PNCIO_File *fd,
     GET_INFO_INT(lustre_overstriping_ratio);
 
     /* Check hint consistency among all processes */
+err_out:
     err = hint_consistency_check(fd);
 
     /* PnetCDF ignores the following hints.
