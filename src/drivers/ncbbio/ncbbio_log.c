@@ -16,6 +16,8 @@
 #include <dirent.h>    /* opendir() closedir() */
 #include <unistd.h>
 #include <fcntl.h>
+#include <libgen.h> /* dirname() */
+
 #include <pnc_debug.h>
 #include <common.h>
 #include <ncbbio_driver.h>
@@ -31,8 +33,7 @@ int ncbbio_log_create(NC_bb* ncbbp,
     int rank, np, err, flag, masterrank, procname_len;
     char logbase[NC_LOG_MAX_PATH], basename[NC_LOG_MAX_PATH];
     char procname[MPI_MAX_PROCESSOR_NAME];
-    char *abspath, *fname, *path, *fdir = NULL;
-    char *logbasep = ".";
+    char *abspath, *fname, *path, *fdir = NULL, *logbasep;
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double t1, t2;
 #endif
@@ -68,7 +69,7 @@ int ncbbio_log_create(NC_bb* ncbbp,
     /* Determine log file name
      * Log file name is $(bufferdir)$(basename)_$(ncid)_$(rank).{meta/data}
      * filepath is absolute path to the cdf file
-     * If buffer directory is not set, we use the same directory as the NetCDF file
+     * If buffer directory is not set, we use the same directory as the file
      */
 
     /* Read environment variable for burst buffer path */
@@ -86,21 +87,9 @@ int ncbbio_log_create(NC_bb* ncbbp,
         logbasep = ncmpii_remove_file_system_type_prefix(ncbbp->logbase);
     }
     else {
-        size_t i = strlen(path);
-        fdir = (char*)NCI_Malloc(sizeof(char) * (i + 1));
-        strncpy(fdir, path, i + 1);
-        /* Search for first '\' from the back */
-        for (i--; i > -1; i--) {
-            if (fdir[i] == '/') {
-                fdir[i + 1] = '\0';
-                break;
-            }
-        }
-
-        /* If directory is fund, use it as logbase */
-        if (i >= 0) {
-            logbasep = fdir;
-        }
+        fdir = strdup(path);
+        logbasep = dirname(fdir);
+        if (logbasep == NULL) logbasep = ".";
 
         /* Warn if log base not set by user */
         if (rank == 0) {
