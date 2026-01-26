@@ -31,9 +31,9 @@ int ncbbio_log_create(NC_bb* ncbbp,
                       __attribute__((unused)) MPI_Info info)
 {
     int rank, np, err, flag, masterrank, procname_len;
-    char logbase[NC_LOG_MAX_PATH], basename[NC_LOG_MAX_PATH];
+    char *logbase=NULL, *basename=NULL;
     char procname[MPI_MAX_PROCESSOR_NAME];
-    char *abspath, *fname, *path, *fdir = NULL, *logbasep;
+    char *fname, *path, *fdir = NULL, *logbasep;
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double t1, t2;
 #endif
@@ -110,13 +110,13 @@ int ncbbio_log_create(NC_bb* ncbbp,
     closedir(logdir);
 
     /* Resolve absolute path */
-    abspath = realpath(path, basename);
-    if (abspath == NULL) {
+    basename = realpath(path, NULL);
+    if (basename == NULL) {
         /* Can not resolve absolute path */
         DEBUG_RETURN_ERROR(NC_EBAD_FILE);
     }
-    abspath = realpath(logbasep, logbase);
-    if (abspath == NULL) {
+    logbase = realpath(logbasep, NULL);
+    if (logbase == NULL) {
         /* Can not resolve absolute path */
         DEBUG_RETURN_ERROR(NC_EBAD_FILE);
     }
@@ -293,6 +293,9 @@ int ncbbio_log_create(NC_bb* ncbbp,
     ncbbp->total_meta += headersize;
     ncbbp->total_data += 8;
 #endif
+
+    if (basename != NULL) free(basename);
+    if (logbase != NULL) free(logbase);
 
     return NC_NOERR;
 }
