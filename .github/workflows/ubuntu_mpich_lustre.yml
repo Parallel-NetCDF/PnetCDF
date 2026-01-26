@@ -1,4 +1,7 @@
 name: ubuntu_mpich (MIMIC_LUSTRE)
+permissions:
+  contents: read
+  pull-requests: write
 
 on:
   push:
