@@ -1,0 +1,220 @@
+# Test Combinations of Ubuntu/MacOSX, MPICH/OpenMPI, and UFS/Lustre
+name: CI - OS and MPI
+
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - '**/*.1'
+      - '**/*.jpg'
+      - '**/*.png'
+      - 'docs/*'
+      - 'test/test_installed/*'
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - '**/*.1'
+      - '**/*.jpg'
+      - '**/*.png'
+      - 'docs/*'
+      - 'test/test_installed/*'
+
+env:
+   LIBTOOL_VERSION: 2.5.4
+   MPICH_LATEST: 4.3.2
+   OPENMPI_LATEST: 5.0.9
+
+jobs:
+    build:
+      strategy:
+        fail-fast: false # This disables the default cancel-on-failure behavior
+        matrix:
+          os: [ubuntu-latest, macos-latest]
+          mpi_vendor: [ MPICH, OpenMPI ]
+          fstype: [ ufs, mimic_lustre ]
+
+      runs-on: ${{ matrix.os }}
+      timeout-minutes: 120
+
+      steps:
+        - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v4
+
+        - name: Install autotools
+          run: |
+            set -x
+            if test ${{ matrix.os }} == ubuntu-latest ; then
+                sudo apt-get update
+                sudo apt-get install autoconf
+                sudo apt-get install automake
+                sudo apt-get install m4
+
+                # sudo apt-get install libtool libtool-bin
+                wget -q https://ftp.gnu.org/gnu/libtool/libtool-${LIBTOOL_VERSION}.tar.gz
+                gzip -dc libtool-${LIBTOOL_VERSION}.tar.gz | tar -xf -
+                cd libtool-${LIBTOOL_VERSION}
+                ./configure --prefix=/usr --silent
+                sudo make -s LIBTOOLFLAGS=--silent V=1 -j 8 install > qout 2>&1
+                sudo make -s LIBTOOLFLAGS=--silent V=1 -j 8 distclean >> qout 2>&1
+            else
+                brew update
+                brew install coreutils
+                brew install autoconf
+                brew install automake
+                brew install libtool
+                export PATH="/opt/homebrew/opt/libtool/libexec/gnubin:${PATH}"
+                brew list m4 || brew install m4
+            fi
+            which autoconf
+            autoconf --version
+            which automake
+            automake --version
+            which libtool
+            libtool --version
+            which m4
+            m4 --version
+
+        - name: Install MPI compiler vendor - ${{ matrix.mpi_vendor }}
+          run: |
+            set -x
+            if test "${{ matrix.os }}" = "macos-latest" ; then
+                # Must reinstall gcc to get gfortran installed
+                brew reinstall gcc
+                which gcc
+                gcc --version
+                which gfortran
+                gfortran --version
+            fi
+            if test "${{ matrix.mpi_vendor }}" = "MPICH" ; then
+                # MPICH versions older than 4.2.2 do not support the MPI large
+                # count feature.
+                echo "Install MPICH ${MPICH_LATEST} in ${GITHUB_WORKSPACE}/MPI"
+                wget -q https://www.mpich.org/static/downloads/${MPICH_LATEST}/mpich-${MPICH_LATEST}.tar.gz
+                gzip -dc mpich-${MPICH_LATEST}.tar.gz | tar -xf -
+                cd mpich-${MPICH_LATEST}
+                ./configure --prefix=${GITHUB_WORKSPACE}/MPI \
+                            --silent \
+                            --enable-romio \
+                            --with-file-system=ufs \
+                            --with-device=ch3:sock \
+                            --enable-fortran \
+                            CC=gcc FC=gfortran \
+                             FFLAGS=-fallow-argument-mismatch \
+                            FCFLAGS=-fallow-argument-mismatch
+                make -s LIBTOOLFLAGS=--silent V=1 -j 8 install > qout 2>&1
+                make -s LIBTOOLFLAGS=--silent V=1 -j 8 distclean >> qout 2>&1
+            else # OpenMPI
+                echo "Install OPENMPI ${OPENMPI_LATEST} in ${GITHUB_WORKSPACE}/MPI"
+                VER_MAJOR=${OPENMPI_LATEST%.*}
+                wget -q https://download.open-mpi.org/release/open-mpi/v${VER_MAJOR}/openmpi-${OPENMPI_LATEST}.tar.gz
+                gzip -dc openmpi-${OPENMPI_LATEST}.tar.gz | tar -xf -
+                cd openmpi-${OPENMPI_LATEST}
+                if test "${{ matrix.os }}" = "macos-latest" ; then
+                   # When built on MacOS, additional configure options are required.
+                   EXTRA_OPTS="--with-hwloc=internal --with-pmix=internal --with-libevent=internal"
+                fi
+                ./configure --prefix=${GITHUB_WORKSPACE}/MPI \
+                            --silent \
+                            --with-io-romio-flags="--with-file-system=ufs" \
+                            ${EXTRA_OPTS} \
+                            CC=gcc \
+                            FC=gfortran \
+                            FCFLAGS=-fallow-argument-mismatch
+                make -s LIBTOOLFLAGS=--silent V=1 -j 8 install > qout 2>&1
+                make -s LIBTOOLFLAGS=--silent V=1 -j 8 distclean >> qout 2>&1
+            fi
+
+        - name: Clean up git untracked files
+          run: |
+            git clean -fx
+
+        - name: Build PnetCDF - ${{ matrix.fstype }}
+          run: |
+            set -x
+            cd ${GITHUB_WORKSPACE}
+            if test ${{ matrix.os }} == macos-latest ; then
+                export PATH="/opt/homebrew/opt/libtool/libexec/gnubin:${PATH}"
+            fi
+            which autoconf
+            autoconf --version
+            which automake
+            automake --version
+            which libtool
+            libtool --version
+            which m4
+            m4 --version
+            autoreconf -i
+            mkdir -p ${GITHUB_WORKSPACE}/pnetcdf_output
+            if test ${{ matrix.fstype }} == mimic_lustre ; then
+                export MIMIC_LUSTRE=yes
+            fi
+            ./configure --prefix=${GITHUB_WORKSPACE}/PnetCDF \
+                        --enable-option-checking=fatal \
+                        pnc_ac_debug=yes \
+                        --enable-burst_buffering \
+                        --enable-subfiling \
+                        --enable-thread-safe \
+                        --with-pthread \
+                        --with-mpi=${GITHUB_WORKSPACE}/MPI \
+                        TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 tests
+
+        - name: Print config.log
+          if: ${{ always() }}
+          run: |
+            cat ${GITHUB_WORKSPACE}/config.log
+
+        - name: make check
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            make -s LIBTOOLFLAGS=--silent V=1 check
+
+        - name: Print test log files
+          if: ${{ always() }}
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            fname=`find src test examples benchmarks -type f -name "*.log"`
+            for f in $fname ; do \
+               bname=`basename $f` ; \
+               if test "x$bname" != xconfig.log ; then \
+                  echo "-------- dump $f ----------------------------" ; \
+                  cat $f ; \
+               fi ; \
+            done
+
+        - name: make ptests
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            make -s LIBTOOLFLAGS=--silent V=1 ptests
+
+        - name: make distcheck
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            make -j 8 distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --with-mpi=${GITHUB_WORKSPACE}/MPI"
+
+        - name: make install
+          run: |
+            set -x
+            cd ${GITHUB_WORKSPACE}
+            prefix_path=${GITHUB_WORKSPACE}/pnetcdf_install
+            echo "---- test make install prefix=${prefix_path}"
+            make -s LIBTOOLFLAGS=--silent V=1 install prefix=${prefix_path}
+            test/tst_install.sh ${prefix_path}
+            prefix_path="/pnetcdf_install"
+            destdir_path=${GITHUB_WORKSPACE}/inst
+            echo "---- test make install prefix=${prefix_path} DESTDIR=${destdir_path}"
+            make -s LIBTOOLFLAGS=--silent V=1 install prefix=${prefix_path} DESTDIR=${destdir_path}
+            test/tst_install.sh ${prefix_path} ${destdir_path}
+
+        - name: Cleanup
+          if: ${{ always() }}
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            make -s LIBTOOLFLAGS=--silent V=1 distclean
