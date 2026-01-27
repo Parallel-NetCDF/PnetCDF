@@ -1,0 +1,123 @@
+name: Mac OSX with MPICH and OpenMPI
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - '**/*.1'
+      - '**/*.jpg'
+      - '**/*.png'
+      - 'docs/*'
+      - 'test/test_installed/*'
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - '**/*.1'
+      - '**/*.jpg'
+      - '**/*.png'
+      - 'docs/*'
+      - 'test/test_installed/*'
+
+jobs:
+    build:
+      runs-on: macos-latest
+      timeout-minutes: 120
+
+      strategy:
+        matrix:
+          mpi_vendor: [ mpich open-mpi ]
+
+      steps:
+        - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v4
+        - name: Set up dependencies
+          run: |
+            brew update
+            brew install ${{ matrix.mpi_vendor }}
+            which mpicc
+            if test ${{ matrix.mpi_vendor }} == mpich
+               mpichversion
+            else
+               ompi_info | grep "Ident"
+            fi
+            brew install autoconf automake libtool m4
+            which autoconf
+            autoconf --version
+            which automake
+            automake
+            which libtool
+            libtool --version
+            which m4
+            m4 --version
+        - name: Clean up git untracked files
+          run: |
+            git clean -fx
+        - name: Build PnetCDF
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            autoreconf -i
+            mkdir -p pnetcdf_output
+            ./configure --enable-option-checking=fatal \
+                        pnc_ac_debug=yes \
+                        --enable-burst_buffering \
+                        --enable-subfiling \
+                        --enable-thread-safe \
+                        --with-pthread \
+                        --disable-fortran \
+                        TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 tests
+        - name: Print config.log
+          if: ${{ always() }}
+          run: |
+            cat ${GITHUB_WORKSPACE}/config.log
+        - name: make check
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            make -s LIBTOOLFLAGS=--silent V=1 check
+        - name: Print test log files
+          if: ${{ always() }}
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            fname=`find src test examples benchmarks -type f -name "*.log"`
+            for f in $fname ; do \
+               bname=`basename $f` ; \
+               if test "x$bname" != xconfig.log ; then \
+                  echo "-------- dump $f ----------------------------" ; \
+                  cat $f ; \
+               fi ; \
+            done
+        - name: make ptests
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            make -s LIBTOOLFLAGS=--silent V=1 ptests
+        - name: make distcheck
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            make -j 8 distcheck DISTCHECK_CONFIGURE_FLAGS="--silent"
+        - name: make install
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            prefix_path=${GITHUB_WORKSPACE}/pnetcdf_install
+            echo "---- test make install prefix=${prefix_path}"
+            make -s LIBTOOLFLAGS=--silent V=1 install prefix=${prefix_path}
+            test/tst_install.sh ${prefix_path}
+            prefix_path="/pnetcdf_install"
+            destdir_path=${GITHUB_WORKSPACE}/inst
+            echo "---- test make install prefix=${prefix_path} DESTDIR=${destdir_path}"
+            make -s LIBTOOLFLAGS=--silent V=1 install prefix=${prefix_path} DESTDIR=${destdir_path}
+            test/tst_install.sh ${prefix_path} ${destdir_path}
+        - name: Cleanup
+          if: ${{ always() }}
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            make -s LIBTOOLFLAGS=--silent V=1 distclean
+            rm -rf ${GITHUB_WORKSPACE}/pnetcdf_output
+            rm -rf ${GITHUB_WORKSPACE}/pnetcdf_install
+            rm -rf ${GITHUB_WORKSPACE}/inst
+
