@@ -53,7 +53,10 @@ int test_io(const char *out_path,
      */
     path = remove_file_system_type_prefix(out_path);
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
     if (rank == 0) unlink(path);
+
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* create a new file and test various cmodes ----------------------------*/
@@ -62,6 +65,8 @@ int test_io(const char *out_path,
     cmode = NC_CLOBBER | NC_64BIT_OFFSET | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, out_path, cmode, info, &ncid);
     EXP_ERR(NC_EINVAL_CMODE)
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* The file should not be created */
     if (rank == 0) {
@@ -86,6 +91,8 @@ int test_io(const char *out_path,
         err = ncmpi_create(MPI_COMM_WORLD, out_path, cmode, info, &ncid);
         EXP_ERR(NC_EINVAL_CMODE)
 
+        MPI_Barrier(MPI_COMM_WORLD);
+
         /* The file should not be created */
         if (rank == 0) {
             if (access(path, F_OK) == 0) {
@@ -108,6 +115,8 @@ int test_io(const char *out_path,
         err = ncmpi_create(MPI_COMM_WORLD, out_path, cmode, info, &ncid);
         EXP_ERR(NC_EINVAL_CMODE)
 
+        MPI_Barrier(MPI_COMM_WORLD);
+
         /* The file should not be created */
         if (rank == 0) {
             if (access(path, F_OK) == 0) {
@@ -125,6 +134,8 @@ int test_io(const char *out_path,
     /* Collectively opening a non-existing file for read, expect error code
      * NC_ENOENT on all processes */
     err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOWRITE, info, &ncid);
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* When using MVAPICH2 2.2, its Lustre driver adds O_CREAT to all open
      * calls. This is considered a bug in an MPI-IO implementation. Due to this
@@ -156,6 +167,8 @@ int test_io(const char *out_path,
     /* Collectively opening a non-existing file for write, expect error code
      * NC_ENOENT on all processes */
     err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_WRITE, info, &ncid);
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* When using MVAPICH2 2.2, its Lustre driver adds O_CREAT to all open
      * calls. This is considered a bug in an MPI-IO implementation. Due to this

@@ -130,7 +130,7 @@ fn_exit:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
+        else       printf("pass\n");
     }
 
     MPI_Finalize();
