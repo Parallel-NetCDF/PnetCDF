@@ -1,7 +1,5 @@
 ## PnetCDF source code development repository
-[![MPICH](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_mpich.yml/badge.svg)](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_mpich.yml)
-[![OpenMPI](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_openmpi.yml/badge.svg)](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/ubuntu_openmpi.yml)
-
+[![CI - OS and MPI](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/main.yml/badge.svg)](https://github.com/Parallel-NetCDF/PnetCDF/actions/workflows/main.yml)
 
 PnetCDF is a parallel I/O library for accessing
 [Unidata's NetCDF](http://www.unidata.ucar.edu/software/netcdf) files in
