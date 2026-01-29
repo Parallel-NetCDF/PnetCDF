@@ -192,6 +192,11 @@ jobs:
         - name: make ptests
           run: |
             cd ${GITHUB_WORKSPACE}
+            if test "${{ matrix.mpi_vendor }}" = "OpenMPI" ; then
+                # OpenMPI hacks when running in parallel on MacOS
+                export OMPI_MCA_btl_tcp_if_include=lo0
+                export TMPDIR=${RUNNER_TEMP}
+            fi
             make -s LIBTOOLFLAGS=--silent V=1 ptests
 
         - name: make distcheck
