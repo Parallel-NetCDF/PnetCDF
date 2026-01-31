@@ -3,7 +3,6 @@ name: CI - OS and MPI
 
 permissions:
   contents: read
-  pull-requests: write
 
 on:
   push:
