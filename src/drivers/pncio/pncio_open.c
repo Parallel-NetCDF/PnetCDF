@@ -10,8 +10,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>      /* open(), O_CREAT */
-#include <sys/types.h>  /* open(), umask() */
-#include <sys/stat.h>   /* umask() */
+#include <sys/types.h>  /* open(), umask(), fstat() */
+
+#if defined(HAVE_SYS_STAT_H) && HAVE_SYS_STAT_H == 1
+#include <sys/stat.h>   /* fstat() */
+#endif
+#include <unistd.h>     /* fstat() */
 
 #include <assert.h>
 #include <sys/errno.h>
@@ -141,6 +145,18 @@ if (world_rank == 0) { printf("\nxxxx %s at %d: ---- %s\n",__func__,__LINE__,fd-
         goto err_out;
     }
     fd->is_open = 1;
+    stripin_info[0] = 1048576; /* default to 1 MiB */
+
+    /* Only root obtains the striping information and bcast to all other
+     * processes. For UFS, file striping is the file system block size.
+     */
+#if defined(HAVE_SYS_STAT_H) && HAVE_SYS_STAT_H == 1
+    struct stat statbuf;
+    err = fstat(fd->fd_sys, &statbuf);
+    if (err >= 0)
+        /* file system block size usually < MAX_INT */
+        stripin_info[0] = (int)statbuf.st_blksize;
+#endif
 
 err_out:
     MPI_Bcast(stripin_info, 4, MPI_INT, 0, fd->comm);
@@ -201,10 +217,12 @@ if (world_rank == 0) { printf("\nxxxx %s at %d: ---- %s\n",__func__,__LINE__,fd-
         goto err_out;
     }
     fd->is_open = 1;
+    stripin_info[0] = 1048576; /* default to 1 MiB */
 
     /* Only root obtains the striping information and bcast to all other
-     * processes.
+     * processes. For UFS, file striping is the file system block size.
      */
+#if defined(HAVE_SYS_STAT_H) && HAVE_SYS_STAT_H == 1
     if (rank == 0) {
         /* Get the underlying file system block size as file striping_unit */
         struct stat statbuf;
@@ -213,6 +231,7 @@ if (world_rank == 0) { printf("\nxxxx %s at %d: ---- %s\n",__func__,__LINE__,fd-
             /* file system block size usually < MAX_INT */
             stripin_info[0] = (int)statbuf.st_blksize;
     }
+#endif
 
 err_out:
     MPI_Bcast(stripin_info, 4, MPI_INT, 0, fd->comm);
