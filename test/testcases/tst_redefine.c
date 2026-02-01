@@ -73,7 +73,7 @@ static int verbose;
 static int
 check_vars(MPI_Comm comm, int ncid, int *varid, int coll_io)
 {
-    int i, nerrs=0, err, rank, *buf=NULL, nvars;
+    int i, j, nerrs=0, err, rank, *buf[4], bufLen[4], nvars, off_val;
     MPI_Offset start[2], count[2];
 
     MPI_Comm_rank(comm, &rank);
@@ -85,54 +85,86 @@ check_vars(MPI_Comm comm, int ncid, int *varid, int coll_io)
     start[1] = rank * LEN;
     count[1] = LEN;
 
-    buf = (int*) malloc(sizeof(int) * 2 * LEN);
+    buf[0] = (int*) malloc(sizeof(int) * 2 * LEN * 4);
+    for (i=0; i<2*LEN*4; i++) buf[0][i] = -1;
 
     /* check record variables */
     count[0] = 2;
 
-    for (i=0; i<count[0]*count[1]; i++) buf[i] = -1;
-    if (coll_io)
-        err = ncmpi_get_vara_int_all(ncid, varid[0], start,   count,   buf);
-    else
-        err = ncmpi_get_vara_int(ncid, varid[0], start,   count,   buf);
-    CHECK_ERROUT
-    for (i=0; i<2*LEN; i++)
-        CHECK_VAL(ncid, varid[0], i, buf[i], rank+i+1000)
+    bufLen[0] = count[0]*count[1];
 
-    for (i=0; i<count[0]*count[1]; i++) buf[i] = -1;
+#ifdef USE_BLOCKING_APIS
     if (coll_io)
-        err = ncmpi_get_vara_int_all(ncid, varid[1], start,   count,   buf);
+        err = ncmpi_get_vara_int_all(ncid, varid[0], start, count, buf[0]);
     else
-        err = ncmpi_get_vara_int(ncid, varid[1], start,   count,   buf);
+        err = ncmpi_get_vara_int(ncid, varid[0], start, count, buf[0]);
+#else
+    err = ncmpi_iget_vara_int(ncid, varid[0], start, count, buf[0], NULL);
+#endif
     CHECK_ERROUT
-    for (i=0; i<2*LEN; i++)
-        CHECK_VAL(ncid, varid[1], i, buf[i], rank+i+10000)
 
-    if (nvars == 2) goto err_out;
+    buf[1] = buf[0] + bufLen[0];
+    bufLen[1] = count[0]*count[1];
+
+#ifdef USE_BLOCKING_APIS
+    if (coll_io)
+        err = ncmpi_get_vara_int_all(ncid, varid[1], start, count, buf[1]);
+    else
+        err = ncmpi_get_vara_int(ncid, varid[1], start, count, buf[1]);
+#else
+    err = ncmpi_iget_vara_int(ncid, varid[1], start, count, buf[1], NULL);
+#endif
+    CHECK_ERROUT
+
+    if (nvars == 2) goto cmp_val;
 
     /* check fix-sized variables */
     count[0] = 1;
 
-    for (i=0; i<count[0]*count[1]; i++) buf[i] = -1;
-    if (coll_io)
-        err = ncmpi_get_vara_int_all(ncid, varid[2], start+1, count+1, buf);
-    else
-        err = ncmpi_get_vara_int(ncid, varid[2], start+1, count+1, buf);
-    CHECK_ERROUT
-    for (i=0; i<LEN; i++)
-        CHECK_VAL(ncid, varid[2], i, buf[i], rank+i)
+    buf[2] = buf[1] + bufLen[1];
+    bufLen[2] = count[0]*count[1];
 
-    for (i=0; i<count[0]*count[1]; i++) buf[i] = -1;
+#ifdef USE_BLOCKING_APIS
     if (coll_io)
-        err = ncmpi_get_vara_int_all(ncid, varid[3], start+1, count+1, buf);
+        err = ncmpi_get_vara_int_all(ncid, varid[2], start+1, count+1, buf[2]);
     else
-        err = ncmpi_get_vara_int(ncid, varid[3], start+1, count+1, buf);
+        err = ncmpi_get_vara_int(ncid, varid[2], start+1, count+1, buf[2]);
+#else
+    err = ncmpi_iget_vara_int(ncid, varid[2], start+1, count+1, buf[2], NULL);
+#endif
     CHECK_ERROUT
-    for (i=0; i<LEN; i++)
-        CHECK_VAL(ncid, varid[3], i, buf[i], rank+i+100)
+
+    buf[3] = buf[2] + bufLen[2];
+    bufLen[3] = count[0]*count[1];
+
+#ifdef USE_BLOCKING_APIS
+    if (coll_io)
+        err = ncmpi_get_vara_int_all(ncid, varid[3], start+1, count+1, buf[3]);
+    else
+        err = ncmpi_get_vara_int(ncid, varid[3], start+1, count+1, buf[3]);
+#else
+    err = ncmpi_iget_vara_int(ncid, varid[3], start+1, count+1, buf[3], NULL);
+#endif
+    CHECK_ERROUT
+
+cmp_val:
+#ifndef USE_BLOCKING_APIS
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+    else
+        err = ncmpi_wait(ncid, NC_REQ_ALL, NULL, NULL);
+    CHECK_ERROUT
+#endif
+
+    off_val = 1;
+    for (j=0; j<nvars; j++) {
+        for (i=0; i<bufLen[j]; i++)
+            CHECK_VAL(ncid, varid[j], i, buf[j][i], rank+i+off_val)
+        off_val *= 10;
+    }
+    free(buf[0]);
 
 err_out:
-    if (buf != NULL) free(buf);
     return nerrs;
 }
 
@@ -262,7 +294,7 @@ tst_fmt(const char *out_path,
         MPI_Offset *info_align) /* [3] 0 means unset in MPI info */
 {
     int i, rank, nprocs, ncid, err, nerrs=0;
-    int *buf, dimid[3], varid[4];
+    int *buf[4], bufLen[4], dimid[3], varid[4];
     MPI_Info info=MPI_INFO_NULL;
     MPI_Offset start[2], count[2], increment, fix_v_size;
 
@@ -336,6 +368,8 @@ tst_fmt(const char *out_path,
     PRINT_HINTS
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    buf[0] = (int*) malloc(sizeof(int) * 2 * LEN * 4);
+
     if (!coll_io) {
         err = ncmpi_begin_indep_data(ncid);
         CHECK_ERR
@@ -345,38 +379,73 @@ tst_fmt(const char *out_path,
     start[0] = 0; start[1] = rank * LEN;
     count[0] = 2; count[1] = LEN;
 
-    buf = (int*) malloc(sizeof(int) * count[0] * count[1]);
+    bufLen[0] = count[0]*count[1];
+    for (i=0; i<bufLen[0]; i++) buf[0][i] = rank + i + 1;
 
-    for (i=0; i<count[0] * count[1]; i++) buf[i] = rank + i + 1000;
+#ifdef USE_BLOCKING_APIS
     if (coll_io)
-        err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf);
+        err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf[0]);
     else
-        err = ncmpi_put_vara_int(ncid, varid[0], start, count, buf);
+        err = ncmpi_put_vara_int(ncid, varid[0], start, count, buf[0]);
+#else
+    err = ncmpi_iput_vara_int(ncid, varid[0], start, count, buf[0], NULL);
+#endif
     CHECK_ERR
-    for (i=0; i<count[0] * count[1]; i++) buf[i] = rank + i + 10000;
+
+    buf[1] = buf[0] + bufLen[0];
+    bufLen[1] = count[0]*count[1];
+    for (i=0; i<bufLen[1]; i++) buf[1][i] = rank + i + 10;
+
+#ifdef USE_BLOCKING_APIS
     if (coll_io)
-        err = ncmpi_put_vara_int_all(ncid, varid[1], start, count, buf);
+        err = ncmpi_put_vara_int_all(ncid, varid[1], start, count, buf[1]);
     else
-        err = ncmpi_put_vara_int(ncid, varid[1], start, count, buf);
+        err = ncmpi_put_vara_int(ncid, varid[1], start, count, buf[1]);
+#else
+    err = ncmpi_iput_vara_int(ncid, varid[1], start, count, buf[1], NULL);
+#endif
     CHECK_ERR
 
     if (has_fix_vars) {
-        for (i=0; i<count[1]; i++) buf[i] = rank + i;
+        buf[2] = buf[1] + bufLen[1];
+        bufLen[2] = count[1];
+        for (i=0; i<bufLen[2]; i++) buf[2][i] = rank + i + 100;
+
+#ifdef USE_BLOCKING_APIS
         if (coll_io)
-            err = ncmpi_put_vara_int_all(ncid, varid[2], start+1, count+1, buf);
+            err = ncmpi_put_vara_int_all(ncid, varid[2], start+1, count+1, buf[2]);
         else
-            err = ncmpi_put_vara_int(ncid, varid[2], start+1, count+1, buf);
+            err = ncmpi_put_vara_int(ncid, varid[2], start+1, count+1, buf[2]);
+#else
+        err = ncmpi_iput_vara_int(ncid, varid[2], start+1, count+1, buf[2], NULL);
+#endif
         CHECK_ERR
-        for (i=0; i<count[1]; i++) buf[i] = rank + i + 100;
+
+        buf[3] = buf[2] + bufLen[2];
+        bufLen[3] = count[1];
+        for (i=0; i<bufLen[3]; i++) buf[3][i] = rank + i + 1000;
+
+#ifdef USE_BLOCKING_APIS
         if (coll_io)
-            err = ncmpi_put_vara_int_all(ncid, varid[3], start+1, count+1, buf);
+            err = ncmpi_put_vara_int_all(ncid, varid[3], start+1, count+1, buf[3]);
         else
-            err = ncmpi_put_vara_int(ncid, varid[3], start+1, count+1, buf);
+            err = ncmpi_put_vara_int(ncid, varid[3], start+1, count+1, buf[3]);
+#else
+        err = ncmpi_iput_vara_int(ncid, varid[3], start+1, count+1, buf[3], NULL);
+#endif
         CHECK_ERR
         fix_v_size = sizeof(int) * LEN * nprocs * 2;
     }
     else
         fix_v_size = 0;
+
+#ifndef USE_BLOCKING_APIS
+    if (coll_io)
+        err = ncmpi_wait_all(ncid, NC_REQ_ALL, NULL, NULL);
+    else
+        err = ncmpi_wait(ncid, NC_REQ_ALL, NULL, NULL);
+    CHECK_ERR
+#endif
 
     GET_HEADER_SIZE
 
@@ -599,7 +668,7 @@ tst_fmt(const char *out_path,
 
 err_out:
     err = ncmpi_close(ncid); CHECK_ERR
-    free(buf);
+    free(buf[0]);
     if (info != MPI_INFO_NULL) MPI_Info_free(&info);
 
     return nerrs;
