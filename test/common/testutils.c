@@ -507,11 +507,20 @@ int tst_main(int        argc,
                      opt.formats[i] == NC_FORMAT_NETCDF4))
                     continue;
 
+                double time_body = MPI_Wtime();
                 if (!quiet && rank == 0)
-                    printf("\n%s a=%d d=%d r=%d m=%d b=%d c=%d\n", out_filename, a,d,r,m,b,coll_io);
+                    printf("\n%-44s a=%d d=%d r=%d m=%d b=%d c=%d", out_filename, a,d,r,m,b,coll_io);
+
                 nerrs = tst_body(out_filename, in_path, opt.formats[i],
                                  coll_io, info);
                 if (nerrs != NC_NOERR) goto err_out;
+
+                if (!quiet) {
+                    time_body = MPI_Wtime() - time_body;
+                    MPI_Allreduce(MPI_IN_PLACE, &time_body, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+                    if (rank == 0)
+                        printf(" (%.2fs)\n", time_body);
+                }
 
 #ifdef PROFILING
                 itiming[k] = MPI_Wtime() - itiming[k]; k++;
