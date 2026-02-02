@@ -566,16 +566,17 @@ int tst_main(int        argc,
                     nerrs = 1;
                     goto err_out;
                 }
-skip_diff:
+
                 /* wait for all ranks to complete diff before file delete */
                 MPI_Barrier(MPI_COMM_WORLD);
-                if (!keep_files) {
-                    if (rank == 0)
-                        ncmpi_delete(out_filename, MPI_INFO_NULL);
+            }
+skip_diff:
+            if (!keep_files && base_file != NULL && strcmp(base_file, out_filename)) {
+                if (rank == 0)
+                    ncmpi_delete(out_filename, MPI_INFO_NULL);
 
-                    /* wait for deletion to complete before next iteration */
-                    MPI_Barrier(MPI_COMM_WORLD);
-                }
+                /* wait for deletion to complete before next iteration */
+                MPI_Barrier(MPI_COMM_WORLD);
             }
         } /* loop b */
         } /* loop m */
