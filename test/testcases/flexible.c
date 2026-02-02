@@ -139,8 +139,7 @@ int test_io(const char *out_path,
         if (buf[j][i] != j+rank+10) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,buf[j][i]);
-            nerrs++;
-            goto err_out;
+            return 1;
         }
 
     /* call flexible API that do type conversion */
@@ -155,8 +154,7 @@ int test_io(const char *out_path,
         if (buf[j][i] != j+rank+10) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,buf[j][i]);
-            nerrs++;
-            goto err_out;
+            return 1;
         }
 
     MPI_Type_free(&buftype);
@@ -181,8 +179,7 @@ int test_io(const char *out_path,
         if (schar_buf[j*NX+i] != j+rank+10) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,schar_buf[j*NX+i]);
-            nerrs++;
-            goto err_out;
+            return 1;
         }
 
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) schar_buf[j*NX+i] = -1;
@@ -198,8 +195,7 @@ int test_io(const char *out_path,
         if (schar_buf[j*NX+i] != j+rank+10) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,schar_buf[j*NX+i]);
-            nerrs++;
-            goto err_out;
+            return 1;
         }
 
     free(schar_buf);
@@ -249,8 +245,7 @@ int test_io(const char *out_path,
             if (buf[j][i] != expect+rank+10) {
                 printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                        __FILE__,__LINE__,j,i,expect+rank+10,buf[j][i]);
-                nerrs++;
-                goto err_out;
+                return 1;
             }
     }
 
@@ -270,8 +265,7 @@ int test_io(const char *out_path,
             if (buf[j][i] != expect+rank+10) {
                 printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                        __FILE__,__LINE__,j,i,expect+rank+10,buf[j][i]);
-                nerrs++;
-                goto err_out;
+                return 1;
             }
     }
 
@@ -298,8 +292,7 @@ int test_io(const char *out_path,
         if (buf[j][i] != getValue) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
-            nerrs++;
-            goto err_out;
+            return 1;
         }
     }
 
@@ -315,8 +308,7 @@ int test_io(const char *out_path,
         if (buf[j][i] != getValue) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
-            nerrs++;
-            goto err_out;
+            return 1;
         }
     }
 
@@ -335,8 +327,7 @@ int test_io(const char *out_path,
         if (buf[j][i] != getValue) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
-            nerrs++;
-            goto err_out;
+            return 1;
         }
     }
 
@@ -355,8 +346,7 @@ int test_io(const char *out_path,
         if (buf[j][i] != getValue) {
             printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
-            nerrs++;
-            goto err_out;
+            return 1;
         }
     }
 
@@ -365,7 +355,6 @@ int test_io(const char *out_path,
 
     err = ncmpi_close(ncid); CHECK_ERR
 
-err_out:
     return nerrs;
 }
 
