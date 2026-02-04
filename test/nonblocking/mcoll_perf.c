@@ -347,7 +347,7 @@ int test_io(const char *out_path,
     verbose = 0;
     keep_files = 0;
 
-    length = 2;
+    length = 10;
     array_of_gsizes[0] = array_of_gsizes[1] = array_of_gsizes[2] = length;
 
     nvars = 4;
