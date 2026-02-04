@@ -20,7 +20,7 @@ dnl
 #include <testutils.h>
 
 #define NDIMS 3
-#define LEN   16
+#define LEN   13
 
 static int debug;
 
