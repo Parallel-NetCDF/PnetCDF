@@ -73,8 +73,8 @@ static int verbose;
 static int
 check_vars(MPI_Comm comm, int ncid, int *varid, int coll_io)
 {
-    int i, j, nerrs=0, err, rank, *buf[4], bufLen[4], nvars, off_val;
-    MPI_Offset start[2], count[2];
+    int i, j, nerrs=0, err, rank, *buf[4], nvars, off_val;
+    MPI_Offset start[2], count[2], bufLen[4];
 
     MPI_Comm_rank(comm, &rank);
 
@@ -294,9 +294,9 @@ tst_fmt(const char *out_path,
         MPI_Offset *info_align) /* [3] 0 means unset in MPI info */
 {
     int i, rank, nprocs, ncid, err, nerrs=0;
-    int *buf[4], bufLen[4], dimid[3], varid[4];
+    int *buf[4], dimid[3], varid[4];
     MPI_Info info=MPI_INFO_NULL;
-    MPI_Offset start[2], count[2], increment, fix_v_size;
+    MPI_Offset bufLen[4], start[2], count[2], increment, fix_v_size;
 
     MPI_Offset hsize=0, old_hsize=-1, exp_hsize=-1;
     MPI_Offset extent=0, old_extent=-1, exp_extent=-1;

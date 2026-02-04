@@ -233,9 +233,9 @@ int test_io(const char *out_path,
     for (k=0; k<count[0]; k++)
     for (j=0; j<count[1]; j++)
     for (i=0; i<count[2]; i++) {
-        int val = (start[0]+k)*gsize[1]*gsize[2]
-                + (start[1]+j)*gsize[2]
-                + (start[2]+i); // + 1000*(rank+1);
+        MPI_Offset val = (start[0]+k)*gsize[1]*gsize[2]
+                       + (start[1]+j)*gsize[2]
+                       + (start[2]+i); // + 1000*(rank+1);
         buf[k*count[1]*count[2] + j*count[2] + i] = (double)(val % 128);
     }
     cbuf = (char *) malloc(bufsize);
