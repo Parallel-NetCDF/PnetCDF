@@ -50,6 +50,15 @@ This is essentially a placeholder for the next release note ...
     movement is performed in chunks. This hint allows users to customized the
     chunk size. The default is 1048576 bytes, i.e. 1 MiB.
     See [PR #203](https://github.com/Parallel-NetCDF/PnetCDF/pull/203).
+  + 'nc_striping' -- When creating a new file on the Lustre file system, this
+    hint advises PnetCDF to set the file's striping configuration. The hint
+    value is either "auto" or "inherit". The former sets the striping count to
+    the number of compute nodes found in the MPI communicator passed to
+    `ncmpi_create()`. The latter makes the new file to inherit the folder's
+    striping settings if the folder's striping is set. This hint's default is
+    "auto". Hint 'nc_striping' is ignored when MPI-IO hints `striping_factor`
+    and `striping_unit`, are set.
+    See [PR #222](https://github.com/Parallel-NetCDF/PnetCDF/pull/222).
 
 * New run-time environment variables
   + none

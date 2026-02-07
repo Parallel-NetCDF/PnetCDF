@@ -105,7 +105,11 @@
 #define PNCIO_HINT_DISABLE 0
 #define PNCIO_HINT_ENABLE 1
 
+#define PNCIO_STRIPING_AUTO -1
+#define PNCIO_STRIPING_INHERIT 0
+
 typedef struct {
+    int nc_striping;
     int striping_factor;
     int striping_unit;
     int start_iodevice;

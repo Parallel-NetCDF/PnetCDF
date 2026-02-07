@@ -864,6 +864,8 @@ assert(mpi_io_mode & MPI_MODE_CREATE);
      * in fd->hints->ranklist, no matter its is open or create mode.
      */
 
+// printf("fd->hints->nc_striping %s\n", (fd->hints->nc_striping == PNCIO_STRIPING_AUTO)?"AUTO":"INHERIT");
+
 #ifdef HAVE_LUSTRE
     int overstriping_ratio, str_factor, str_unit, start_iodev;
 
@@ -903,40 +905,37 @@ assert(mpi_io_mode & MPI_MODE_CREATE);
      * fd->hints->lustre_overstriping_ratio = 1;
      */
 
-    /* In many cases, the Lustre striping configuration of the file to be
-     * created is not explicitly set by the users (through I/O hints
-     * striping_factor and striping_unit) or the striping configuration of
-     * parent folder to store the new file is not explicitly set by the users.
+    /* Now select file striping configuration for the new file. In many cases,
+     * the Lustre striping configuration of the file to be created is not
+     * explicitly set by the users (through I/O hints striping_factor and
+     * striping_unit) and the striping configuration of parent folder to store
+     * the new file is not explicitly set by the users.
      *
-     * Here, if application did not set the file striping hints, we set the new
-     * file's striping count to be equal to the number of compute nodes
-     * allocated to fd->comm and the striping size to 1 MiB. Inheriting the
-     * striping from the parent folder is disabled. But if inheritance is
-     * desired, this can be changed by defining macro INHERIT_DIR_STRIPING
-     * which enables the code block below.
-     *
-     * Note if the application explicitly set hints striping_factor and
-     * striping_unit, then they take precedence over the default.
+     * Codes below try to set the striping for the new file. Precedences are:
+     * 1. When hints striping_factor and striping_unit are explicitly set, they
+     *    are used as the top precedence.
+     * 2. When hint nc_striping is set to "inherit", the striping will inherit
+     *    from the parent folder. If the parent folder's striping count is not
+     *    set, then this hint is ignored.
+     * 3. When no hint are set, set the new file's striping count to be equal
+     *    to the number of compute nodes allocated to fd->comm and the striping
+     *    size to 1 MiB.
      */
-#ifdef INHERIT_DIR_STRIPING
-    /* Inherit the file striping settings of the folder. */
-
-    if (str_factor == 0 || str_unit == 0 ||
-        (overstriping_ratio > 1 && start_iodev < 0)) {
-        /* When not all of the striping parameters are set by users, inherit
-         * those missing ones from the folder.
-         */
+    if (fd->hints->striping_factor == 0 &&
+        fd->hints->nc_striping == PNCIO_STRIPING_INHERIT) {
+        /* Inherit the file striping settings from the parent folder. */
         int dd;
         char *dirc, *dname;
+
         dirc = NCI_Strdup(fd->filename);
-        dname = dirname(dirc);
+        dname = dirname(dirc); /* folder name */
 
         dd = open(dname, O_RDONLY, PNCIO_PERM);
 
         numOSTs = get_striping(dd, dname, &pattern,
-                                   &stripe_count,
-                                   &stripe_size,
-                                   &start_iodevice);
+                               &stripe_count,
+                               &stripe_size,
+                               &start_iodevice);
         close(dd);
         NCI_Free(dirc);
 
@@ -948,10 +947,7 @@ assert(mpi_io_mode & MPI_MODE_CREATE);
         PRINT_LAYOUT(start_iodevice);
         PRINT_LAYOUT(pattern);
 #endif
-        /* in case of default striping setting is used */
-        if (numOSTs == 0) numOSTs = 1;
     }
-#endif
 
     /* If hint striping_factor is not set by the user and the new file's folder
      * has not set its striping parameters, then we set the number of unique
