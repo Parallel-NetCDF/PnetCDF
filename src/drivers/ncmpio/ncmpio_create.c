@@ -352,16 +352,14 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
      * perform file I/O in PnetCDF collective put and get operations.
      */
     ncp->node_ids = NULL;
-    if (ncp->fstype != PNCIO_FSTYPE_MPIIO || ncp->num_aggrs_per_node > 0) {
-        err = ncmpii_construct_node_list(comm, &ncp->num_nodes, &ncp->node_ids);
-        if (err != NC_NOERR) return err;
+    err = ncmpii_construct_node_list(comm, &ncp->num_nodes, &ncp->node_ids);
+    if (err != NC_NOERR) return err;
 
-        /* When the total number of aggregators >= number of processes, disable
-         * intra-node aggregation.
-         */
-        if (ncp->num_aggrs_per_node * ncp->num_nodes >= ncp->nprocs)
-            ncp->num_aggrs_per_node = 0;
-    }
+    /* When the total number of aggregators >= number of processes, disable
+     * intra-node aggregation.
+     */
+    if (ncp->num_aggrs_per_node * ncp->num_nodes >= ncp->nprocs)
+        ncp->num_aggrs_per_node = 0;
 
     /* ncp->num_aggrs_per_node = 0, or > 0 is an indicator of whether the INA
      * feature is disabled or enabled globally for all processes.
@@ -407,6 +405,23 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
 
     /* create file collectively -------------------------------------------- */
     if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+        /* If hint nc_striping is set to "auto" and hint striping_factor is not
+         * set by the user, then set hint striping_factor to ncp->num_nodes.
+         */
+        if (ncp->striping == PNCIO_STRIPING_AUTO) {
+            int striping_factor=0;
+            if (user_info != MPI_INFO_NULL) {
+                MPI_Info_get(user_info, "striping_factor", MPI_MAX_INFO_VAL-1,
+                            value, &flag);
+                if (flag)
+                    striping_factor = atoi(value);
+            }
+            if (striping_factor == 0) {
+                sprintf(value, "%d", ncp->num_nodes);
+                MPI_Info_set(user_info, "striping_factor", value);
+            }
+        }
+
         TRACE_IO(MPI_File_open, (comm, path, mpiomode, user_info, &fh));
         if (mpireturn != MPI_SUCCESS) {
 #ifndef HAVE_ACCESS
