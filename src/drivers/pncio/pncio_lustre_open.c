@@ -68,17 +68,17 @@
 static
 int get_total_avail_osts(const char *path)
 {
-    char *dir_name=NULL, *path_dup=NULL;
+    char *dir_path=NULL, *path_copy=NULL;
     int err, ost_count=0, is_mdt=0;
     struct stat sb;
 
-    path_dup = NCI_Strdup(path);
+    path_copy = NCI_Strdup(path);
 
-    err = stat(path_dup, &sb);
+    err = stat(path_copy, &sb);
     if (errno == ENOENT) { /* file does not exist, try folder */
         /* get the parent folder name */
-        dir_name = dirname(path_dup);
-        err = stat(dir_name, &sb);
+        dir_path = dirname(path_copy);
+        err = stat(dir_path, &sb);
     }
     if (err != 0) {
         printf("Warning at %s (%d): path \"%s\" stat() failed (%s)\n",
@@ -88,20 +88,20 @@ int get_total_avail_osts(const char *path)
 
     /* llapi_get_obd_count() only works for directories */
     if (S_ISDIR(sb.st_mode))
-        dir_name = (dir_name == NULL) ? path_dup : dir_name;
+        dir_path = (dir_path == NULL) ? path_copy : dir_path;
     else
         /* get the parent folder name */
-        dir_name = dirname(path_dup);
+        dir_path = dirname(path_copy);
 
-    err = llapi_get_obd_count(dir_name, &ost_count, is_mdt);
+    err = llapi_get_obd_count(dir_path, &ost_count, is_mdt);
     if (err != 0) {
         printf("Warning at %d: path \"%s\" llapi_get_obd_count() failed (%s)\n",
-               __LINE__,dir_name,strerror(errno));
+               __LINE__,dir_path,strerror(errno));
         ost_count = 0;
     }
 
 err_out:
-    if (path_dup != NULL) NCI_Free(path_dup);
+    if (path_copy != NULL) NCI_Free(path_copy);
 
     return ost_count;
 }
@@ -311,7 +311,7 @@ uint64_t get_striping(int         fd,
     if (err != 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
         snprintf(int_str, 32, "%lu", *pattern);
-        printf("Error at %s (%d) llapi_layout_pattern_get() fails to get patter %s\n",
+        printf("Error at %s (%d) llapi_layout_pattern_get() fails to get pattern %s\n",
                 __FILE__, __LINE__, PATTERN_STR(*pattern, int_str));
 #endif
         goto err_out;
@@ -428,7 +428,7 @@ int set_striping(const char *path,
     err = llapi_layout_stripe_size_set(layout, stripe_size);
     if (err != 0) {
 #ifdef PNETCDF_LUSTRE_DEBUG
-        printf("Error at %s (%d) llapi_layout_stripe_size_set() fails to set strpe size %lu (%s)\n",
+        printf("Error at %s (%d) llapi_layout_stripe_size_set() fails to set stripe size %lu (%s)\n",
                __FILE__, __LINE__, stripe_size, strerror(errno));
 #endif
         goto err_out;
@@ -470,7 +470,7 @@ int set_striping(const char *path,
 #ifdef PNETCDF_LUSTRE_DEBUG
         char int_str[32];
         snprintf(int_str, 32, "%lu", pattern);
-        printf("Error at %s (%d) llapi_layout_pattern_set() fails ito set pattern %s (%s)\n",
+        printf("Error at %s (%d) llapi_layout_pattern_set() fails to set pattern %s (%s)\n",
                __FILE__, __LINE__, PATTERN_STR(pattern, int_str), strerror(errno));
 #endif
         goto err_out;
@@ -816,7 +816,7 @@ int Lustre_set_cb_node_list(PNCIO_File *fd)
  *   2. root sets and obtains striping info
  *   3. root broadcasts striping info
  *   4. non-root processes receive striping info from root
- *   5. non-root processes opens the fie
+ *   5. non-root processes opens the file
  */
 int
 PNCIO_Lustre_create(PNCIO_File *fd,
