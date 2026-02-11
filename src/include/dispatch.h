@@ -44,10 +44,18 @@ typedef enum {
     API_VARM
 } NC_api;
 
+typedef struct {
+    int  ref_count ; /* reference count */
+    int  num_nodes;  /* number of unique compute nodes */
+    int *ids;        /* [nprocs] node ID of each MPI process */
+} PNCIO_node_ids;
+
 struct PNC_driver {
     /* APIs manipulate files */
-    int (*create)(MPI_Comm, const char*, int, int, int, MPI_Info, void**);
-    int (*open)(MPI_Comm, const char*, int, int, int, MPI_Info, void**);
+    int (*create)(MPI_Comm, const char*, int, int, int, MPI_Info,
+                  PNCIO_node_ids, void**);
+    int (*open)(MPI_Comm, const char*, int, int, int, MPI_Info,
+                PNCIO_node_ids, void**);
     int (*close)(void*);
     int (*enddef)(void*);
     int (*_enddef)(void*,MPI_Offset,MPI_Offset,MPI_Offset,MPI_Offset);

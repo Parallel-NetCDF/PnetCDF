@@ -184,8 +184,14 @@ ncmpii_construct_node_list(MPI_Comm   comm,
         MPI_Gatherv(my_procname, my_procname_len, MPI_CHAR,
                     NULL, NULL, NULL, MPI_CHAR, root, comm);
 
-    /* compute node IDs of each MPI process */
-    node_ids = (int *) NCI_Malloc(sizeof(int) * (nprocs + 1));
+    /* node_ids is an array storing the compute node IDs of all MPI processes
+     * in the MPI communicator supplied by the application program. Here, we
+     * use malloc() instead of NCI_Malloc, because node_ids will be freed when
+     * the communicator is freed. When communicator is MPI_COMM_WORLD or
+     * MPI_COMM_SELF, it is freed at MPI_Finalize() whose calls to free()
+     * cannot be tracked by PnetCDF.
+     */
+    node_ids = (int *) malloc(sizeof(int) * (nprocs + 1));
 
     if (rank == root) {
         /* all_procnames[] can tell us the number of nodes and number of
