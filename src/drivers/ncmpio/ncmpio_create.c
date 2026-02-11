@@ -408,7 +408,7 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
         /* If hint nc_striping is set to "auto" and hint striping_factor is not
          * set by the user, then set hint striping_factor to ncp->num_nodes.
          */
-        if (ncp->striping == PNCIO_STRIPING_AUTO) {
+        if (ncp->nc_striping == PNCIO_STRIPING_AUTO) {
             int striping_factor=0;
             if (user_info != MPI_INFO_NULL) {
                 MPI_Info_get(user_info, "striping_factor", MPI_MAX_INFO_VAL-1,
