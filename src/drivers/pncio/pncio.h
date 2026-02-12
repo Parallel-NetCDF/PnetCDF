@@ -25,6 +25,7 @@
 #define FDTYPE int
 
 #include <pnc_debug.h>
+#include <dispatch.h>
 #include <common.h>
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
@@ -155,9 +156,7 @@ typedef struct {
     int file_system;        /* type of file system */
 
     int fd_sys;             /* system file descriptor */
-    int num_nodes;          /* number of unique compute nodes from
-                             * MPI_Get_processor_name() */
-    int *node_ids;          /* [nprocs] node IDs of each rank */
+    PNCIO_node_ids node_ids;/* node IDs of each rank */
     int access_mode;        /* Access mode (sequential, append, etc.),
                              * possibly modified to deal with
                              * data sieving or deferred open */
