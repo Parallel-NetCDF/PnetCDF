@@ -261,11 +261,13 @@ void ncbbio_export_hint (NC_bb *ncbbp, MPI_Info *info);
 
 extern
 int ncbbio_create(MPI_Comm comm, const char *path, int cmode, int ncid,
-                  int env_mode, MPI_Info info, void **ncdp);
+                  int env_mode, MPI_Info info, PNCIO_node_ids node_ids,
+                  void **ncdp);
 
 extern
 int ncbbio_open(MPI_Comm comm, const char *path, int omode, int ncid,
-                int env_mode, MPI_Info info, void **ncdp);
+                int env_mode, MPI_Info info, PNCIO_node_ids node_ids,
+                void **ncdp);
 
 extern int ncbbio_close (void *ncdp);
 
