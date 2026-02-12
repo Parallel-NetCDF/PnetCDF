@@ -516,23 +516,23 @@ int Lustre_set_cb_node_list(PNCIO_File *fd)
     MPI_Comm_rank(fd->comm, &rank);
 
     /* number of MPI processes running on each node */
-    nprocs_per_node = (int *) NCI_Calloc(fd->num_nodes, sizeof(int));
+    nprocs_per_node = (int *) NCI_Calloc(fd->node_ids.num_nodes, sizeof(int));
 
-    for (i=0; i<nprocs; i++) nprocs_per_node[fd->node_ids[i]]++;
+    for (i=0; i<nprocs; i++) nprocs_per_node[fd->node_ids.ids[i]]++;
 
     /* construct rank IDs of MPI processes running on each node */
-    ranks_per_node = (int **) NCI_Malloc(sizeof(int*) * fd->num_nodes);
+    ranks_per_node = (int **) NCI_Malloc(sizeof(int*) * fd->node_ids.num_nodes);
     ranks_per_node[0] = (int *) NCI_Malloc(sizeof(int) * nprocs);
-    for (i=1; i<fd->num_nodes; i++)
+    for (i=1; i<fd->node_ids.num_nodes; i++)
         ranks_per_node[i] = ranks_per_node[i - 1] + nprocs_per_node[i - 1];
 
-    for (i=0; i<fd->num_nodes; i++) nprocs_per_node[i] = 0;
+    for (i=0; i<fd->node_ids.num_nodes; i++) nprocs_per_node[i] = 0;
 
     /* Populate ranks_per_node[], list of MPI ranks running on each node.
      * Populate nprocs_per_node[], number of MPI processes on each node.
      */
     for (i=0; i<nprocs; i++) {
-        k = fd->node_ids[i];
+        k = fd->node_ids.ids[i];
         ranks_per_node[k][nprocs_per_node[k]] = i;
         nprocs_per_node[k]++;
     }
@@ -540,9 +540,10 @@ int Lustre_set_cb_node_list(PNCIO_File *fd)
     /* To save a call to MPI_Bcast(), all processes run the same codes below to
      * calculate num_aggr, the number of aggregators (later becomes cb_nodes).
      *
-     * The calculation is based on the number of compute nodes, fd->num_nodes,
-     * and processes per node, nprocs_per_node.  At this moment, all processes
-     * should have obtained the Lustre file striping settings.
+     * The calculation is based on the number of compute nodes,
+     * fd->node_ids.num_nodes, and processes per node, nprocs_per_node. At this
+     * moment, all processes should have obtained the Lustre file striping
+     * settings.
      */
     striping_factor = fd->hints->striping_factor;
 
@@ -581,11 +582,14 @@ int Lustre_set_cb_node_list(PNCIO_File *fd)
          */
         if (fd->hints->cb_nodes == 0) {
             /* User did not set hint "cb_nodes" */
-            if (nprocs >= striping_factor * 8 && nprocs/fd->num_nodes >= 8)
+            if (nprocs >= striping_factor * 8 &&
+                nprocs/fd->node_ids.num_nodes >= 8)
                 num_aggr = striping_factor * 8;
-            else if (nprocs >= striping_factor * 4 && nprocs/fd->num_nodes >= 4)
+            else if (nprocs >= striping_factor * 4 &&
+                     nprocs/fd->node_ids.num_nodes >= 4)
                 num_aggr = striping_factor * 4;
-            else if (nprocs >= striping_factor * 2 && nprocs/fd->num_nodes >= 2)
+            else if (nprocs >= striping_factor * 2 &&
+                     nprocs/fd->node_ids.num_nodes >= 2)
                 num_aggr = striping_factor * 2;
             else
                 num_aggr = striping_factor;
@@ -646,10 +650,10 @@ int Lustre_set_cb_node_list(PNCIO_File *fd)
          *   Aggregator   3,     running on node 0, access OST 7.
          */
         int max_nprocs_node = 0;
-        for (i=0; i<fd->num_nodes; i++)
+        for (i=0; i<fd->node_ids.num_nodes; i++)
             max_nprocs_node = MAX(max_nprocs_node, nprocs_per_node[i]);
-        int max_naggr_node = striping_factor / fd->num_nodes;
-        if (striping_factor % fd->num_nodes) max_naggr_node++;
+        int max_naggr_node = striping_factor / fd->node_ids.num_nodes;
+        if (striping_factor % fd->node_ids.num_nodes) max_naggr_node++;
         /* max_naggr_node is the max number of processes per node to be picked
          * as aggregator in each round.
          */
@@ -684,7 +688,7 @@ int Lustre_set_cb_node_list(PNCIO_File *fd)
     }
 #endif
 
-    if (striping_factor <= fd->num_nodes) {
+    if (striping_factor <= fd->node_ids.num_nodes) {
         /* When number of OSTs is less than number of compute nodes, first
          * select number of nodes equal to the number of OSTs by spread the
          * selection evenly across all compute nodes (i.e. with a stride
@@ -700,9 +704,9 @@ int Lustre_set_cb_node_list(PNCIO_File *fd)
         if (block_assignment) {
             int n=0;
             int remain = num_aggr % striping_factor;
-            int node_stride = fd->num_nodes / striping_factor;
+            int node_stride = fd->node_ids.num_nodes / striping_factor;
             /* walk through each node and pick aggregators */
-            for (j=0; j<fd->num_nodes; j+=node_stride) {
+            for (j=0; j<fd->node_ids.num_nodes; j+=node_stride) {
                 /* Selecting node IDs with a stride. j is the node ID */
                 int nranks_per_node = num_aggr / striping_factor;
                 /* front nodes may have 1 more to pick */
@@ -712,7 +716,7 @@ int Lustre_set_cb_node_list(PNCIO_File *fd)
                     /* Selecting rank IDs within node j with a stride */
                     fd->hints->ranklist[n] = ranks_per_node[j][k*rank_stride];
                     if (++n == num_aggr) {
-                        j = fd->num_nodes; /* break loop j */
+                        j = fd->node_ids.num_nodes; /* break loop j */
                         break; /* loop k */
                     }
                 }
@@ -720,7 +724,7 @@ int Lustre_set_cb_node_list(PNCIO_File *fd)
         }
         else {
             int avg = num_aggr / striping_factor;
-            int stride = fd->num_nodes / striping_factor;
+            int stride = fd->node_ids.num_nodes / striping_factor;
             if (num_aggr % striping_factor) avg++;
             for (i = 0; i < num_aggr; i++) {
                 /* j is the selected node ID. This selection is round-robin
@@ -733,23 +737,23 @@ int Lustre_set_cb_node_list(PNCIO_File *fd)
             }
         }
     }
-    else { /* striping_factor > fd->num_nodes */
+    else { /* striping_factor > fd->node_ids.num_nodes */
         /* When number of OSTs is more than number of compute nodes, I/O
          * aggregators are selected from all nodes. Within each node,
          * aggregators are spread evenly instead of the first few ranks.
          */
         int *naggr_per_node, *idx_per_node, avg;
-        idx_per_node = (int*) NCI_Calloc(fd->num_nodes, sizeof(int));
-        naggr_per_node = (int*) NCI_Malloc(fd->num_nodes * sizeof(int));
-        for (i = 0; i < striping_factor % fd->num_nodes; i++)
-            naggr_per_node[i] = striping_factor / fd->num_nodes + 1;
-        for (; i < fd->num_nodes; i++)
-            naggr_per_node[i] = striping_factor / fd->num_nodes;
+        idx_per_node = (int*) NCI_Calloc(fd->node_ids.num_nodes, sizeof(int));
+        naggr_per_node = (int*) NCI_Malloc(fd->node_ids.num_nodes * sizeof(int));
+        for (i = 0; i < striping_factor % fd->node_ids.num_nodes; i++)
+            naggr_per_node[i] = striping_factor / fd->node_ids.num_nodes + 1;
+        for (; i < fd->node_ids.num_nodes; i++)
+            naggr_per_node[i] = striping_factor / fd->node_ids.num_nodes;
         avg = num_aggr / striping_factor;
         if (avg > 0)
-            for (i = 0; i < fd->num_nodes; i++)
+            for (i = 0; i < fd->node_ids.num_nodes; i++)
                 naggr_per_node[i] *= avg;
-        for (i = 0; i < fd->num_nodes; i++)
+        for (i = 0; i < fd->node_ids.num_nodes; i++)
             naggr_per_node[i] = MIN(naggr_per_node[i], nprocs_per_node[i]);
         /* naggr_per_node[] is the number of aggregators that can be
          * selected as I/O aggregators
@@ -757,14 +761,14 @@ int Lustre_set_cb_node_list(PNCIO_File *fd)
 
         if (block_assignment) {
             int n = 0;
-            for (j=0; j<fd->num_nodes; j++) {
+            for (j=0; j<fd->node_ids.num_nodes; j++) {
                 /* j is the node ID */
                 int rank_stride = nprocs_per_node[j] / naggr_per_node[j];
                 /* try stride==1 seems no effect, rank_stride = 1; */
                 for (k=0; k<naggr_per_node[j]; k++) {
                     fd->hints->ranklist[n] = ranks_per_node[j][k*rank_stride];
                     if (++n == num_aggr) {
-                        j = fd->num_nodes; /* break loop j */
+                        j = fd->node_ids.num_nodes; /* break loop j */
                         break; /* loop k */
                     }
                 }
@@ -773,7 +777,7 @@ int Lustre_set_cb_node_list(PNCIO_File *fd)
         else {
             for (i = 0; i < num_aggr; i++) {
                 int stripe_i = i % striping_factor;
-                j = stripe_i % fd->num_nodes; /* to select from node j */
+                j = stripe_i % fd->node_ids.num_nodes; /* select from node j */
                 k = nprocs_per_node[j] / naggr_per_node[j];
                 k *= idx_per_node[j];
                 /* try stride==1 seems no effect, k = idx_per_node[j]; */
@@ -956,7 +960,7 @@ assert(mpi_io_mode & MPI_MODE_CREATE);
      */
     if (str_factor == 0 && (stripe_count == LLAPI_LAYOUT_DEFAULT ||
                             stripe_count == LLAPI_LAYOUT_WIDE)) {
-        stripe_count = MIN(fd->num_nodes, total_num_OSTs);
+        stripe_count = MIN(fd->node_ids.num_nodes, total_num_OSTs);
         if (overstriping_ratio > 1) stripe_count *= overstriping_ratio;
     }
     else if (str_factor > 0)

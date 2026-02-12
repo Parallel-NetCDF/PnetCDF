@@ -43,7 +43,7 @@ int GEN_set_cb_node_list(PNCIO_File *fd)
         /* If hint cb_nodes is not set by user, select one rank per node to be
          * an I/O aggregator
          */
-        fd->hints->cb_nodes = fd->num_nodes;
+        fd->hints->cb_nodes = fd->node_ids.num_nodes;
     else if (fd->hints->cb_nodes > nprocs)
         /* cb_nodes must be <= nprocs */
         fd->hints->cb_nodes = nprocs;
@@ -53,23 +53,23 @@ int GEN_set_cb_node_list(PNCIO_File *fd)
         return NC_ENOMEM;
 
     /* number of MPI processes running on each node */
-    nprocs_per_node = (int *) NCI_Calloc(fd->num_nodes, sizeof(int));
+    nprocs_per_node = (int *) NCI_Calloc(fd->node_ids.num_nodes, sizeof(int));
 
-    for (i=0; i<nprocs; i++) nprocs_per_node[fd->node_ids[i]]++;
+    for (i=0; i<nprocs; i++) nprocs_per_node[fd->node_ids.ids[i]]++;
 
     /* construct rank IDs of MPI processes running on each node */
-    ranks_per_node = (int **) NCI_Malloc(sizeof(int*) * fd->num_nodes);
+    ranks_per_node = (int **) NCI_Malloc(sizeof(int*) * fd->node_ids.num_nodes);
     ranks_per_node[0] = (int *) NCI_Malloc(sizeof(int) * nprocs);
-    for (i=1; i<fd->num_nodes; i++)
+    for (i=1; i<fd->node_ids.num_nodes; i++)
         ranks_per_node[i] = ranks_per_node[i - 1] + nprocs_per_node[i - 1];
 
-    for (i=0; i<fd->num_nodes; i++) nprocs_per_node[i] = 0;
+    for (i=0; i<fd->node_ids.num_nodes; i++) nprocs_per_node[i] = 0;
 
     /* Populate ranks_per_node[], list of MPI ranks running on each node.
      * Populate nprocs_per_node[], number of MPI processes on each node.
      */
     for (i=0; i<nprocs; i++) {
-        k = fd->node_ids[i];
+        k = fd->node_ids.ids[i];
         ranks_per_node[k][nprocs_per_node[k]] = i;
         nprocs_per_node[k]++;
     }
@@ -81,7 +81,7 @@ int GEN_set_cb_node_list(PNCIO_File *fd)
     for (i=0; i<fd->hints->cb_nodes; i++) {
         if (j >= nprocs_per_node[k]) { /* if run out of ranks in this node k */
             k++;
-            if (k == fd->num_nodes) { /* round-robin to first node */
+            if (k == fd->node_ids.num_nodes) { /* round-robin to first node */
                 k = 0;
                 j++;
             }
@@ -92,7 +92,7 @@ int GEN_set_cb_node_list(PNCIO_File *fd)
             fd->is_agg = 1;
             fd->my_cb_nodes_index = i;
         }
-        if (k == fd->num_nodes) { /* round-robin to first node */
+        if (k == fd->node_ids.num_nodes) { /* round-robin to first node */
             k = 0;
             j++;
         }
