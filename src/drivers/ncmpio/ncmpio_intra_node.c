@@ -357,11 +357,12 @@ void heap_merge(int              nprocs,
  *
  * The subroutine performs the following tasks.
  * 1. Make use of the affinity of each MPI process to its compute node,
- *    represented by ncp->num_nodes and ncp->node_ids[]. These two member of
- *    ncp should have been set from a call to ncmpii_construct_node_list()
- *    earlier during ncmpio_create() and ncmpio_open().
- *    + ncp->num_nodes is the number of unique compute nodes.
- *    + ncp->node_ids[ncp->nprocs] contains node IDs for all processes.
+ *    represented by ncp->node_ids.num_nodes and ncp->node_ids.ids[]. Note
+ *    ncp->node_ids should have already been set from a call to
+ *    ncmpii_construct_node_list() earlier during ncmpi_create() and
+ *    ncmpi_open() at the dispatcher.
+ *    + ncp->node_ids.num_nodes is the number of unique compute nodes.
+ *    + ncp->node_ids.ids[ncp->nprocs] contains node IDs for all processes.
  * 2. Divide processes into groups, select aggregators, and determine whether
  *    self process is an intra-node aggregator.
  *    + ncp->my_aggr is rank ID of my aggregator.
@@ -404,11 +405,11 @@ ncmpio_ina_init(NC *ncp)
      * entering this subroutine. Thus ncp->num_aggrs_per_node must be > 0.
      */
 
-    /* ncp->node_ids[] has been established in ncmpii_construct_node_list()
+    /* ncp->node_ids.ids[] has been established in ncmpii_construct_node_list()
      * called in ncmpio_create() or ncmpio_open() before entering this
      * subroutine. my_node_id is this rank's node ID.
      */
-    my_node_id = ncp->node_ids[ncp->rank];
+    my_node_id = ncp->node_ids.ids[ncp->rank];
 
     /* nprocs_my_node:  the number of processes in my nodes
      * ranks_my_node[]: rank IDs of all processes in my node.
@@ -419,7 +420,7 @@ ncmpio_ina_init(NC *ncp)
     my_rank_index = -1;
     nprocs_my_node = 0;
     for (i=0; i<ncp->nprocs; i++) {
-        if (ncp->node_ids[i] == my_node_id) {
+        if (ncp->node_ids.ids[i] == my_node_id) {
             if (i == ncp->rank)
                 my_rank_index = nprocs_my_node;
             ranks_my_node[nprocs_my_node] = i;
@@ -498,10 +499,10 @@ ncmpio_ina_init(NC *ncp)
      * so that only aggregators call MPI-IO functions to access the file.
      *
      * When using the PnetCDF's internal PNCIO driver, we can pass a list of
-     * node_ids of the new communicator to the PNCIO file handler,
+     * node IDs of the new communicator to the PNCIO file handler,
      * ncp->pncio_fh, so to prevent the driver from the repeated work of
-     * constructing the list of node IDs, node_ids. If using MPI-IO driver,
-     * then ROMIO will do this internally again anyway.
+     * constructing the list of node IDs, node_ids.ids[]. If using MPI-IO
+     * driver, then ROMIO will do this internally again anyway.
      */
 
     do_io = (ncp->my_aggr == ncp->rank) ? 1 : 0;
@@ -511,14 +512,14 @@ ncmpio_ina_init(NC *ncp)
     TRACE_COMM(MPI_Allgather)(&do_io, 1, MPI_INT, ncp->ina_node_list, 1,
                               MPI_INT,ncp->comm);
 
-    /* Construct ncp->node_ids[] and ncp->ina_node_list[]. Their contents
+    /* Construct ncp->node_ids.ids[] and ncp->ina_node_list[]. Their contents
      * depend on the layout of MPI process allocation to the compute nodes.
      * The common layouts can be two kinds:
      *   + cyclic - MPI ranks are assigned to nodes round-robin-ly,
      *   + block - MPI ranks are assigned to a node and then move on to next.
      *
      * Below uses an example of nodes=3, nprocs=10, * num_aggrs_per_node=2.
-     * ncp->node_ids[] should be
+     * ncp->node_ids.ids[] should be
      *     block  process allocation: 0,0,0,0,1,1,1,2,2,2
      *     cyclic process allocation: 0,1,2,0,1,2,0,1,2,0
      * Accordingly, ncp->ina_node_list[] can be two kinds
@@ -526,7 +527,7 @@ ncmpio_ina_init(NC *ncp)
      *     cyclic process allocation: 1,1,1,0,0,0,1,1,1,0
      */
 
-    /* ncp->node_ids[]: node IDs of processes in the new MPI communicator.
+    /* ncp->node_ids.ids[]: node IDs of processes in the new MPI communicator.
      * ncp->ina_node_list[]: the rank IDs of the new MPI communicator.
      */
     ina_nprocs = 0;
@@ -535,11 +536,11 @@ ncmpio_ina_init(NC *ncp)
             ina_nprocs++; /* count the total number of INA aggregators */
 
             ncp->ina_node_list[j] = i;
-            /* Modify ncp->node_ids[] to store the node IDs of the processes in
-             * the new communicator. Note ncp->node_ids[] from now on is used
-             * by PnetCDF's PNCIO driver only.
+            /* Modify ncp->node_ids.ids[] to store the node IDs of the
+             * processes in the new communicator. Note ncp->node_ids.ids[] from
+             * now on is used by PnetCDF's PNCIO driver only.
              */
-            ncp->node_ids[j] = ncp->node_ids[i];
+            ncp->node_ids.ids[j] = ncp->node_ids.ids[i];
             j++;
         }
     }

@@ -406,6 +406,7 @@ struct NC {
     int           num_subfiles; /* no. subfiles */
     struct NC    *ncp_sf;       /* ncp of subfile */
     MPI_Comm      comm_sf;      /* subfile MPI communicator */
+    PNCIO_node_ids node_ids_sf; /* node IDs of subfile MPI communicator */
 #endif
     int           hdr_chunk;    /* chunk size for reading header, one chunk at a time */
     int           data_chunk;   /* chunk size for moving variables to higher offsets */
@@ -432,16 +433,15 @@ struct NC {
     MPI_Offset    put_size;  /* amount of writes committed so far in bytes */
     MPI_Offset    get_size;  /* amount of reads  committed so far in bytes */
 
-    MPI_Comm      comm;           /* MPI communicator */
-    int           rank;           /* MPI rank of this process */
-    int           nprocs;         /* no. MPI processes */
-    int           num_nodes;      /* no. unique compute nodes allocated */
-    int          *node_ids;       /* [nprocs] node IDs of each rank */
-    MPI_Info      mpiinfo;        /* used MPI info object */
-    MPI_File      collective_fh;  /* MPI-IO file handle for collective mode */
-    MPI_File      independent_fh; /* MPI-IO file handle for independent mode */
-    PNCIO_File    *pncio_fh;      /* PNCIO file handler */
-    int           fstype;         /* file system type: PNCIO_LUSTRE, PNCIO_UFS */
+    MPI_Comm       comm;           /* MPI communicator */
+    int            rank;           /* MPI rank of this process */
+    int            nprocs;         /* no. MPI processes */
+    PNCIO_node_ids node_ids;       /* node IDs of each rank */
+    MPI_Info       mpiinfo;        /* used MPI info object */
+    MPI_File       collective_fh;  /* MPI-IO file handle for collective mode */
+    MPI_File       independent_fh; /* MPI-IO file handle for independent mode */
+    PNCIO_File    *pncio_fh;       /* PNCIO file handler */
+    int            fstype;         /* file system type: PNCIO_LUSTRE, PNCIO_UFS */
 
     NC_dimarray   dims;     /* dimensions defined */
     NC_attrarray  attrs;    /* global attributes defined */
