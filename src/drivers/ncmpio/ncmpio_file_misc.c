@@ -172,9 +172,9 @@ ncmpio_begin_indep_data(void *ncdp)
 
         ncp->pncio_fh = (PNCIO_File*) NCI_Calloc(1,sizeof(PNCIO_File));
         ncp->pncio_fh->file_system = ncp->fstype;
-        ncp->pncio_fh->num_nodes = 1;
-        ncp->pncio_fh->node_ids = (int*) NCI_Malloc(sizeof(int));
-        ncp->pncio_fh->node_ids[0] = 0;
+        ncp->pncio_fh->node_ids.num_nodes = 1;
+        ncp->pncio_fh->node_ids.ids = (int*) NCI_Malloc(sizeof(int));
+        ncp->pncio_fh->node_ids.ids[0] = 0;
 
         int omode = fClr(ncp->mpiomode, MPI_MODE_CREATE);
 
@@ -196,8 +196,9 @@ ncmpio_begin_indep_data(void *ncdp)
         /* Add PnetCDF hints into ncp->mpiinfo */
         ncmpio_hint_set(ncp, ncp->mpiinfo);
 
-        NCI_Free(ncp->pncio_fh->node_ids);
-        ncp->pncio_fh->node_ids = NULL;
+        NCI_Free(ncp->pncio_fh->node_ids.ids);
+        ncp->pncio_fh->node_ids.num_nodes = 0;
+        ncp->pncio_fh->node_ids.ids = NULL;
 
         return NC_NOERR;
     }
