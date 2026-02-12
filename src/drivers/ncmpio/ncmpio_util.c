@@ -51,8 +51,10 @@ void ncmpio_hint_extract(NC       *ncp,
     ncp->ibuf_size = PNC_DEFAULT_IBUF_SIZE;
 
 #ifdef ENABLE_SUBFILING
-    ncp->subfile_mode = 0;
-    ncp->num_subfiles = 0;
+    ncp->subfile_mode          = 0;
+    ncp->num_subfiles          = 0;
+    ncp->node_ids_sf.num_nodes = 0;
+    ncp->node_ids_sf.ids       = NULL;
 #endif
 
     ncp->dims.hash_size  = PNC_HSIZE_DIM;

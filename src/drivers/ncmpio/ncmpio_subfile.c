@@ -129,10 +129,12 @@ subfile_create(NC *ncp)
     MPI_Info_set(info, "romio_lustre_start_iodevice", offset);
     MPI_Info_set(info, "striping_factor", "1");
 */
+    ncmpii_construct_node_list(ncp->comm_sf, &ncp->node_ids_sf.num_nodes,
+                                             &ncp->node_ids_sf.ids);
 
     void *ncp_sf;
     status = ncmpio_create(ncp->comm_sf, path_sf, ncp->iomode, ncp->ncid,
-                           ncp->flags, info, &ncp_sf);
+                           ncp->flags, info, ncp->node_ids_sf, &ncp_sf);
     if (status != NC_NOERR && myrank == 0)
         fprintf(stderr, "%s: error in creating file(%s): %s\n",
                 __func__, path_sf, ncmpi_strerror(status));
@@ -186,9 +188,12 @@ ncmpio_subfile_open(NC *ncp)
     /* sprintf(path_sf, "%s%d/%s", path, color, file); */
     sprintf(path_sf, "%s.subfile_%i.%s", ncp->path, color, "nc");
 
+    ncmpii_construct_node_list(ncp->comm_sf, &ncp->node_ids_sf.num_nodes,
+                                             &ncp->node_ids_sf.ids);
+
     void *ncp_sf;
     status = ncmpio_open(ncp->comm_sf, path_sf, ncp->iomode, ncp->ncid,
-                         ncp->flags, MPI_INFO_NULL, &ncp_sf);
+                         ncp->flags, MPI_INFO_NULL, ncp->node_ids_sf, &ncp_sf);
 
     ncp->ncp_sf = (NC*) ncp_sf;
     return status;
@@ -200,6 +205,9 @@ int ncmpio_subfile_close(NC *ncp)
     int status = NC_NOERR;
 
     if (ncp->ncp_sf != NULL) {
+        if (ncp->node_ids_sf.ids != NULL)
+            free(ncp->node_ids_sf.ids);
+
         status = ncmpio_close(ncp->ncp_sf);
         if (status != NC_NOERR) return status;
         ncp->ncp_sf = NULL;
