@@ -47,26 +47,28 @@
 #include <ncadios_internal.h>
 
 int
-ncadios_create(MPI_Comm     comm,
-             const char  *path,
-             int          cmode,
-             int          ncid,
-             int          env_mode,
-             MPI_Info     info,
-             void       **ncpp)  /* OUT */
+ncadios_create(MPI_Comm         comm,
+               const char      *path,
+               int              cmode,
+               int              ncid,
+               int              env_mode,
+               MPI_Info         info,
+               PNCIO_node_ids   node_ids, /* node IDs of all processes */
+               void           **ncpp)     /* OUT */
 {
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
 }
 
 int
-ncadios_open(MPI_Comm     comm,
-           const char  *path,
-           int          omode,
-           int          ncid,
-           int          env_mode,
-           MPI_Info     info,
-           void       **ncpp)
+ncadios_open(MPI_Comm       comm,
+           const char      *path,
+           int              omode,
+           int              ncid,
+           int              env_mode,
+           MPI_Info         info,
+           PNCIO_node_ids   node_ids, /* node IDs of all processes */
+           void           **ncpp)     /* OUT */
 {
     int err, parse_done=0;
     NC_ad *ncadp;

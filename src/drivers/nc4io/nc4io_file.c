@@ -50,13 +50,14 @@
 #include <nc4io_driver.h>
 
 int
-nc4io_create(MPI_Comm     comm,
-             const char  *path,
-             int          cmode,
-             int          ncid,
-             int          env_mode,
-             MPI_Info     info,
-             void       **ncpp)  /* OUT */
+nc4io_create(MPI_Comm         comm,
+             const char      *path,
+             int              cmode,
+             int              ncid,
+             int              env_mode,
+             MPI_Info         info,
+             PNCIO_node_ids   node_ids, /* node IDs of all processes */
+             void           **ncpp)     /* OUT */
 {
     char *filename;
     int err, ncidtmp;
@@ -109,13 +110,14 @@ nc4io_create(MPI_Comm     comm,
 }
 
 int
-nc4io_open(MPI_Comm     comm,
-           const char  *path,
-           int          omode,
-           int          ncid,
-           int          env_mode,
-           MPI_Info     info,
-           void       **ncpp)
+nc4io_open(MPI_Comm         comm,
+           const char      *path,
+           int              omode,
+           int              ncid,
+           int              env_mode,
+           MPI_Info         info,
+           PNCIO_node_ids   node_ids, /* node IDs of all processes */
+           void           **ncpp)     /* OUT */
 {
     char *filename;
     int err, ncidtmp;
