@@ -128,6 +128,9 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode)
     MPI_Info_set(info, "nc_chunking", "enable");
     MPI_Info_set(info, "nc_chunk_default_filter", "zlib");
 
+    /* chunking is supported only when MPI-IO driver is used */
+    MPI_Info_set(info, "nc_pncio", "disable");
+
     /* create a new file for writing ----------------------------------------*/
     cmode |= NC_CLOBBER;
     err = ncmpi_create(comm, filename, cmode, info, &ncid); ERR

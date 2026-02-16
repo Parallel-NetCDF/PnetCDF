@@ -12,13 +12,11 @@ AM_CPPFLAGS  = -I${top_srcdir}/src/include
 AM_CPPFLAGS += -I${top_builddir}/src/include
 AM_CPPFLAGS += -I${top_srcdir}/src/drivers/include
 AM_CPPFLAGS += -I${top_builddir}/src/drivers/include
+AM_CPPFLAGS += -I${top_srcdir}/src/drivers/ncmpio
+AM_CPPFLAGS += -I${top_srcdir}/src/drivers/pncio
 
 if PNETCDF_DEBUG
    AM_CPPFLAGS += -DPNETCDF_DEBUG
-endif
-
-if PNETCDF_PROFILING
-   AM_CPPFLAGS += -DPNETCDF_PROFILING
 endif
 
 noinst_LTLIBRARIES = libncchkio.la

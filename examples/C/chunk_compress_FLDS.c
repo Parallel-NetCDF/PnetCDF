@@ -82,6 +82,9 @@ pnetcdf_io(MPI_Comm    comm,
     MPI_Info_set(info, "nc_chunking", "enable");
     MPI_Info_set(info, "nc_chunk_default_filter", "zlib");
 
+    /* chunking is supported only when MPI-IO driver is used */
+    MPI_Info_set(info, "nc_pncio", "disable");
+
     /* open the input file file */
     err = ncmpi_open(comm, in_path, NC_NOWRITE, info, &ncid); ERR
     err = ncmpi_inq_dimid(ncid, "time", &dimid[0]); ERR

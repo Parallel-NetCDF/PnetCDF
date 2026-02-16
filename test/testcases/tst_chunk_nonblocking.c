@@ -25,39 +25,31 @@
 
 #define DIM_LEN 8
 
-int main(int argc, char **argv)
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
 {
-    char filename[256];
     int err, nerrs=0, ncid, dimid, varid, rank, req, verbose=0;
     int vals[DIM_LEN] = {-1, -2, -3, -4, -5, -6, -7, -8};
     MPI_Offset start, count;
-    MPI_Info info;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (argc > 2) {
-        if (!rank) printf("Usage: %s [filename]\n",argv[0]);
-        MPI_Finalize();
-        return 1;
-    }
-    if (argc == 2) snprintf(filename, 256, "%s", argv[1]);
-    else           strcpy(filename, "testfile.nc");
-    MPI_Bcast(filename, 256, MPI_CHAR, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        char *cmd_str = (char*)malloc(strlen(argv[0]) + 256);
-        sprintf(cmd_str, "*** TESTING C   %s for chunking iput ", basename(argv[0]));
-        printf("%-66s ------ ", cmd_str); fflush(stdout);
-        free(cmd_str);
-    }
-
-    MPI_Info_create(&info);
+    /* enable chunking */
     MPI_Info_set(info, "nc_chunking", "enable");
 
-    err = ncmpi_create(MPI_COMM_WORLD, filename, NC_CLOBBER, info, &ncid);
+    /* chunking is supported only when MPI-IO driver is used */
+    MPI_Info_set(info, "nc_pncio", "disable");
+
+    /* Set format. */
+    err = ncmpi_set_default_format(format, NULL);
     CHECK_ERR
-    MPI_Info_free(&info);
+
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "x", DIM_LEN, &dimid);
     CHECK_ERR
@@ -77,30 +69,39 @@ int main(int argc, char **argv)
     else
         req = NC_REQ_NULL;
 
-    if (verbose) printf("rank = %d, before ncmpi_wait_all\n", rank); fflush(stdout);
+    if (verbose) printf("rank = %d, before ncmpi_wait_all\n", rank);
     err = ncmpi_wait_all(ncid, 1, &req, NULL);
     CHECK_ERR
-    if (verbose) printf("rank = %d, after ncmpi_wait_all\n", rank); fflush(stdout);
+    if (verbose) printf("rank = %d, after ncmpi_wait_all\n", rank);
 
     err = ncmpi_close(ncid);
 
-    /* check if PnetCDF freed all internal malloc */
-    MPI_Offset malloc_size, sum_size;
-    err = ncmpi_inq_malloc_size(&malloc_size);
-    if (err == NC_NOERR) {
-        MPI_Reduce(&malloc_size, &sum_size, 1, MPI_OFFSET, MPI_SUM, 0, MPI_COMM_WORLD);
-        if (rank == 0 && sum_size > 0)
-            printf("heap memory allocated by PnetCDF internally has %lld bytes yet to be freed\n",
-                   sum_size);
-        if (malloc_size > 0) ncmpi_inq_malloc_list();
-    }
+    return nerrs;
+}
 
-    MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
-    }
+int main(int argc, char **argv)
+{
+    int err;
+    int formats[] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_64BIT_DATA};
+
+    loop_opts opt;
+
+    MPI_Init(&argc, &argv);
+
+    opt.num_fmts = sizeof(formats) / sizeof(int);
+    opt.formats  = formats;
+    opt.ina      = 0; /* test intra-node aggregation */
+    opt.drv      = 0; /* test PNCIO driver */
+    opt.ind      = 0; /* test hint romio_no_indep_rw */
+    opt.chk      = 0; /* test hint nc_data_move_chunk_size */
+    opt.bb       = 0; /* test burst-buffering feature */
+    opt.mod      = 0; /* test independent data mode */
+    opt.hdr_diff = 0; /* run ncmpidiff for file header only */
+    opt.var_diff = 0; /* run ncmpidiff for variables */
+
+    err = tst_main(argc, argv, "chunking using nonblocking APIs", opt, test_io);
 
     MPI_Finalize();
-    return (nerrs > 0);
+
+    return err;
 }

@@ -233,6 +233,9 @@ compress(MPI_Comm comm, char *filename, int cmode)
     MPI_Info_set(info, "nc_chunking", "enable");
     MPI_Info_set(info, "nc_chunk_default_filter", "zlib");
 
+    /* chunking is supported only when MPI-IO driver is used */
+    MPI_Info_set(info, "nc_pncio", "disable");
+
     cmode |= NC_CLOBBER;
     err = ncmpi_create(comm, filename, cmode, info, &ncid);
     PNC_ERR("ncmpi_create")
@@ -326,6 +329,9 @@ decompress(MPI_Comm comm, char *filename)
     /* open the file for reading with chunking and compression enabled */
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_chunking", "enable");
+
+    /* chunking is supported only when MPI-IO driver is used */
+    MPI_Info_set(info, "nc_pncio", "disable");
 
     err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid);
     PNC_ERR("ncmpi_open")
@@ -454,6 +460,9 @@ partition_time(MPI_Comm comm, char *filename)
     /* open the file for reading with chunking and compression enabled */
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_chunking", "enable");
+
+    /* chunking is supported only when MPI-IO driver is used */
+    MPI_Info_set(info, "nc_pncio", "disable");
 
     err = ncmpi_open(comm, filename, NC_NOWRITE, info, &ncid);
     PNC_ERR("ncmpi_open")

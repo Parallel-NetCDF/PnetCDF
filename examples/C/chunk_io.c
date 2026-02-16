@@ -147,6 +147,9 @@ compress(MPI_Comm comm, char *filename, int cmode)
     MPI_Info_set(info, "nc_chunking", "enable");
     MPI_Info_set(info, "nc_chunk_default_filter", "zlib");
 
+    /* chunking is supported only when MPI-IO driver is used */
+    MPI_Info_set(info, "nc_pncio", "disable");
+
     /* the global array is (NTIMES * nprocs) x (NY * nprocs) x NX */
 
     /* set chunking (1st dimension should always be 1 for record variable) */
@@ -220,6 +223,9 @@ decompress(MPI_Comm comm, char *filename)
 
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_chunking", "enable");
+
+    /* chunking is supported only when MPI-IO driver is used */
+    MPI_Info_set(info, "nc_pncio", "disable");
 
     /* the global array is (NTIMES * nprocs) x (NY * nprocs) * NX */
 
