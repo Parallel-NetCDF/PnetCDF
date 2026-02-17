@@ -15,7 +15,7 @@ noinst_LTLIBRARIES = libncmpidiff_core.la
 libncmpidiff_core_la_SOURCES = ncmpidiff_core.c
 
 ncmpidiff_SOURCES = ncmpidiff.c
-ncmpidiff_LDADD  = $(top_builddir)/src/libs/libpnetcdf.la $(noinst_LTLIBRARIES)
+ncmpidiff_LDADD  = $(noinst_LTLIBRARIES) $(top_builddir)/src/libs/libpnetcdf.la
 ncmpidiff_LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 cdfdiff_SOURCES = cdfdiff.c

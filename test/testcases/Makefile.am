@@ -19,7 +19,7 @@ AM_FCFLAGS  = $(FC_MODINC)$(top_builddir)/src/binding/f90 \
               $(FC_MODINC)$(srcdir)/../common $(FFREEFORMFLAG)
 AM_FFLAGS   = -I$(top_builddir)/src/binding/f77 $(FFIXEDFORMFLAG)
 
-LDADD       = ${top_builddir}/src/libs/libpnetcdf.la ../common/libtestutils.la
+LDADD       = ../common/libtestutils.la ${top_builddir}/src/libs/libpnetcdf.la
 LDADD      += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@ -lm
 
 if SIZEOF_MPI_AINT_IS_4
