@@ -19,7 +19,7 @@ AM_FCFLAGS  = $(FC_MODINC)$(top_builddir)/src/binding/f90 \
               $(FC_MODINC)../common $(FFREEFORMFLAG)
 AM_CFLAGS   =
 
-LDADD  = $(top_builddir)/src/libs/libpnetcdf.la ../common/libtestutils.la
+LDADD  = ../common/libtestutils.la $(top_builddir)/src/libs/libpnetcdf.la
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
 # suppress warning messages when using NAG Fortran compiler
