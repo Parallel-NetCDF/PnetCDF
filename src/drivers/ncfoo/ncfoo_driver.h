@@ -23,11 +23,11 @@ struct NC_foo {
 
 extern int
 ncfoo_create(MPI_Comm comm, const char *path, int cmode, int ncid,
-             int env_mode, MPI_Info info, void **ncdp);
+             int env_mode, MPI_Info info, PNCIO_node_ids node_ids, void **ncdp);
 
 extern int
 ncfoo_open(MPI_Comm comm, const char *path, int omode, int ncid,
-           int env_mode, MPI_Info info, void **ncdp);
+           int env_mode, MPI_Info info, PNCIO_node_ids node_ids, void **ncdp);
 
 extern int
 ncfoo_close(void *ncdp);

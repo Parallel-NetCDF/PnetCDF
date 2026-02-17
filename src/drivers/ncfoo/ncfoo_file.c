@@ -47,13 +47,14 @@
 #include <ncfoo_driver.h>
 
 int
-ncfoo_create(MPI_Comm     comm,
-             const char  *path,
-             int          cmode,
-             int          ncid,
-             int          env_mode,
-             MPI_Info     info,
-             void       **ncpp)  /* OUT */
+ncfoo_create(MPI_Comm         comm,
+             const char      *path,
+             int              cmode,
+             int              ncid,
+             int              env_mode,
+             MPI_Info         info,
+             PNCIO_node_ids   node_ids, /* node IDs of all processes */
+             void           **ncpp)     /* OUT */
 {
     int err;
     void *ncp=NULL;
@@ -64,7 +65,7 @@ ncfoo_create(MPI_Comm     comm,
     driver = ncmpio_inq_driver();
     if (driver == NULL) return NC_ENOTNC;
 
-    err = driver->create(comm, path, cmode, ncid, env_mode, info, &ncp);
+    err = driver->create(comm, path, cmode, ncid, env_mode, info, node_ids, &ncp);
     if (err != NC_NOERR) return err;
 
     /* Create a NC_foo object and save its driver pointer */
@@ -89,13 +90,14 @@ ncfoo_create(MPI_Comm     comm,
 }
 
 int
-ncfoo_open(MPI_Comm     comm,
-           const char  *path,
-           int          omode,
-           int          ncid,
-           int          env_mode,
-           MPI_Info     info,
-           void       **ncpp)
+ncfoo_open(MPI_Comm         comm,
+           const char      *path,
+           int              omode,
+           int              ncid,
+           int              env_mode,
+           MPI_Info         info,
+           PNCIO_node_ids   node_ids, /* node IDs of all processes */
+           void           **ncpp)     /* OUT */
 {
     int err, format;
     void *ncp=NULL;
@@ -112,7 +114,7 @@ ncfoo_open(MPI_Comm     comm,
     }
     if (driver == NULL) return NC_ENOTNC;
 
-    err = driver->open(comm, path, omode, ncid, env_mode, info, &ncp);
+    err = driver->open(comm, path, omode, ncid, env_mode, info, node_ids, &ncp);
     if (err != NC_NOERR) return err;
 
     /* Create a NC_foo object and save its driver pointer */
