@@ -20,23 +20,15 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # let NTHREADS=$1*6-1
 NTHREADS=`expr $1 \* 6 - 1`
 
-# echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
-if test "x${PNETCDF_DEBUG}" = x1 ; then
-   safe_modes="0 1"
-else
-   safe_modes="0"
-fi
-
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
 for i in ${check_PROGRAMS} ; do
-    for j in ${safe_modes} ; do
-        if test "$j" = 1 ; then # test only in safe mode
-           SAFE_HINTS="romio_no_indep_rw=true"
-        else
-           SAFE_HINTS="romio_no_indep_rw=false"
-        fi
+    if test "${PNETCDF_DEBUG}" = 1 ; then # test only in safe mode
+       SAFE_HINTS="romio_no_indep_rw=true"
+    else
+       SAFE_HINTS="romio_no_indep_rw=false"
+    fi
     for mpiio_mode in 0 1 ; do
         if test "$mpiio_mode" = 1 ; then
            USEMPIO_HINTS="nc_pncio=disable"
@@ -69,8 +61,7 @@ for i in ${check_PROGRAMS} ; do
         fi
 
         export PNETCDF_HINTS="$PNETCDF_HINTS"
-        export PNETCDF_SAFE_MODE=$j
-	    # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
+	    # echo "PNETCDF_HINTS=$PNETCDF_HINTS"
 
         if test $i = get_vara ; then
            ${MPIRUN} ./$i -q ${TESTOUTDIR}/put_vara.nc
@@ -123,7 +114,6 @@ for i in ${check_PROGRAMS} ; do
            ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc4 4
            # Validator does not support nc4
         fi
-    done
     done
     done
     # delete output file
