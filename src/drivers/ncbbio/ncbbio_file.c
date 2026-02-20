@@ -75,12 +75,7 @@ ncbbio_create(MPI_Comm         comm,
     ncbbp = (NC_bb*) NCI_Malloc(sizeof(NC_bb));
     if (ncbbp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    ncbbp->path = (char*) NCI_Malloc(strlen(path)+1);
-    if (ncbbp->path == NULL) {
-        NCI_Free(ncbbp);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
-    strcpy(ncbbp->path, path);
+    ncbbp->path          = path; /* reuse path duplicated in dispatch layer */
     ncbbp->mode          = cmode;
     ncbbp->ncmpio_driver = driver;  /* ncmpio driver */
     ncbbp->ncid          = ncid;
@@ -131,12 +126,7 @@ ncbbio_open(MPI_Comm         comm,
     ncbbp = (NC_bb*) NCI_Malloc(sizeof(NC_bb));
     if (ncbbp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    ncbbp->path = (char*) NCI_Malloc(strlen(path)+1);
-    if (ncbbp->path == NULL) {
-        NCI_Free(ncbbp);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
-    strcpy(ncbbp->path, path);
+    ncbbp->path          = path; /* reuse path duplicated in dispatch layer */
     ncbbp->mode          = omode;
     ncbbp->ncmpio_driver = driver;  /* ncmpio driver */
     ncbbp->ncid          = ncid;
@@ -225,7 +215,6 @@ ncbbio_close(void *ncdp)
     /* Cleanup NC-bb object */
     if (ncbbp->info != MPI_INFO_NULL)
         MPI_Info_free(&ncbbp->info);
-    NCI_Free(ncbbp->path);
     NCI_Free(ncbbp);
 
     return status;
@@ -449,7 +438,6 @@ ncbbio_abort(void *ncdp)
 
     if (ncbbp->info != MPI_INFO_NULL)
         MPI_Info_free(&ncbbp->info);
-    NCI_Free(ncbbp->path);
     NCI_Free(ncbbp);
 
     return status;

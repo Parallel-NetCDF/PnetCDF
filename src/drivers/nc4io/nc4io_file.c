@@ -86,12 +86,7 @@ nc4io_create(MPI_Comm         comm,
     nc4p = (NC_nc4*) NCI_Malloc(sizeof(NC_nc4));
     if (nc4p == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    nc4p->path = (char*) NCI_Malloc(strlen(filename)+1);
-    if (nc4p->path == NULL) {
-        NCI_Free(nc4p);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
-    strcpy(nc4p->path, filename);
+    nc4p->path = path; /* reuse path duplicated in dispatch layer */
     nc4p->mode = cmode | NC_WRITE;
     nc4p->flag = NC_MODE_DEF;
     nc4p->ncid = ncid;
@@ -141,12 +136,7 @@ nc4io_open(MPI_Comm         comm,
     nc4p = (NC_nc4*) NCI_Malloc(sizeof(NC_nc4));
     if (nc4p == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    nc4p->path = (char*) NCI_Malloc(strlen(filename)+1);
-    if (nc4p->path == NULL) {
-        NCI_Free(nc4p);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
-    strcpy(nc4p->path, filename);
+    nc4p->path = path; /* reuse path duplicated in dispatch layer */
     nc4p->mode = omode;
     nc4p->flag = 0;
     nc4p->ncid = ncid;
@@ -181,7 +171,6 @@ nc4io_close(void *ncdp)
     if (nc4p->mpiinfo != MPI_INFO_NULL)
         MPI_Info_free(&nc4p->mpiinfo);
 
-    NCI_Free(nc4p->path);
     NCI_Free(nc4p);
 
     return err;
@@ -310,7 +299,6 @@ nc4io_abort(void *ncdp)
     if (nc4p->mpiinfo != MPI_INFO_NULL)
         MPI_Info_free(&nc4p->mpiinfo);
 
-    NCI_Free(nc4p->path);
     NCI_Free(nc4p);
 
     return err;
