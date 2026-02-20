@@ -22,6 +22,10 @@ AM_FFLAGS   = -I$(top_builddir)/src/binding/f77 $(FFIXEDFORMFLAG)
 LDADD       = ../common/libtestutils.la ${top_builddir}/src/libs/libpnetcdf.la
 LDADD      += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@ -lm
 
+if PNETCDF_DEBUG
+   AM_CPPFLAGS += -DPNETCDF_DEBUG
+endif
+
 if SIZEOF_MPI_AINT_IS_4
    AM_FFLAGS += $(FC_DEFINE)SIZEOF_MPI_AINT_IS_4
 endif
