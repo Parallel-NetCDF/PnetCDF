@@ -93,10 +93,10 @@ TESTS_ENVIRONMENT += ENOTNC_FILES="$(ENOTNC_FILES)" ; export ENOTNC_FILES;
 TESTS_ENVIRONMENT += EVARSIZE_FILES="$(EVARSIZE_FILES)" ; export EVARSIZE_FILES;
 TESTS_ENVIRONMENT += TST_HDF5_FILES="$(TST_HDF5_FILES)" ; export TST_HDF5_FILES;
 
-TESTS = xfail_runs.sh wrap_runs.sh
+TESTS = xfail_runs.sh seq_runs.sh
 XFAIL_TESTS = xfail_runs.sh
 
-EXTRA_DIST = xfail_runs.sh wrap_runs.sh \
+EXTRA_DIST = xfail_runs.sh seq_runs.sh \
              $(ENULLPAD_FILES) $(EMAXVARS_FILES) \
              $(EUNLIMIT_FILES) $(ENOTNC_FILES) $(EVARSIZE_FILES) \
              $(TST_HDF5_FILES)
