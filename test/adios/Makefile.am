@@ -43,7 +43,7 @@ $(M4_SRCS:.m4=.c): Makefile
 .m4.c:
 	$(M4) $(AM_M4FLAGS) $(M4FLAGS) $< >$@
 
-# all programs in TESTPROGRAMS will be run by wrap_runs.sh
+# all programs in TESTPROGRAMS will be run by seq_runs.sh
 # others in check_PROGRAMS but not in TESTPROGRAMS will be run by seq_runs.sh
 # Those are the ones need special treatment
 check_PROGRAMS = $(TESTPROGRAMS)
@@ -77,14 +77,14 @@ endif
 
 TESTS = $(TESTPROGRAMS)
 TEST_EXTENSIONS = .sh
-LOG_COMPILER = $(srcdir)/wrap_runs.sh
+LOG_COMPILER = $(srcdir)/seq_runs.sh
 SH_LOG_COMPILER =
 
 CLEANFILES = $(M4_SRCS:.m4=.c) \
              $(TESTOUTDIR)/put_get_all_kinds.nc.cdf4 \
              $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb
 
-EXTRA_DIST = $(M4_SRCS) wrap_runs.sh parallel_run.sh \
+EXTRA_DIST = $(M4_SRCS) seq_runs.sh parallel_run.sh \
              arrays_big.bp  arrays.bp  attributes_big.bp  attributes.bp
 
 ../common/libtestutils.la:
