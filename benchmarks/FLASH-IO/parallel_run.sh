@@ -37,13 +37,6 @@ OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 # let NTHREADS=$1*6-1
 NTHREADS=`expr $1 \* 6 - 1`
 
-# echo "${LINENO}: PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
-if test "x${PNETCDF_DEBUG}" = x1 ; then
-   safe_modes="0 1"
-else
-   safe_modes="0"
-fi
-
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
@@ -57,13 +50,7 @@ for i in ${check_PROGRAMS} ; do
     # Capture start time in seconds and nanoseconds
     start_time=$(date +%s.%1N)
 
-    for j in ${safe_modes} ; do
-        if test "$j" = 1 ; then # test only in safe mode
-           safe_hint="  SAFE"
-        else
-           safe_hint="NOSAFE"
-        fi
-        OUT_PREFIX="${TESTOUTDIR}/$i"
+    OUT_PREFIX="${TESTOUTDIR}/$i"
 
     for data_mode in ${DATA_MODE} ; do
 
@@ -91,9 +78,6 @@ for i in ${check_PROGRAMS} ; do
         OUT_FILE=$INA_OUT_FILE
 
         PNETCDF_HINTS=
-        if test "x$SAFE_HINTS" != x ; then
-           PNETCDF_HINTS="$SAFE_HINTS;$PNETCDF_HINTS"
-        fi
         if test "x$USEMPIO_HINTS" != x ; then
            PNETCDF_HINTS="$USEMPIO_HINTS;$PNETCDF_HINTS"
         fi
@@ -105,15 +89,14 @@ for i in ${check_PROGRAMS} ; do
         fi
 
         export PNETCDF_HINTS="$PNETCDF_HINTS"
-        export PNETCDF_SAFE_MODE=$j
-        # echo "${LINENO}: PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
+        # echo "${LINENO}: PNETCDF_HINTS=$PNETCDF_HINTS"
 
         CMD_OPTS="-q -f ${OUT_FILE}."
         if test "$data_mode" = indep ; then
            CMD_OPTS="-i $CMD_OPTS"
-           TEST_OPTS="$safe_hint $driver_hint $ina_hint INDEP"
+           TEST_OPTS="$driver_hint $ina_hint INDEP"
         else
-           TEST_OPTS="$safe_hint $driver_hint $ina_hint  COLL"
+           TEST_OPTS="$driver_hint $ina_hint  COLL"
         fi
 
         run_cmd ./$i $CMD_OPTS
@@ -172,7 +155,6 @@ for i in ${check_PROGRAMS} ; do
     done # ext
 
     done # data_mode
-    done # safe_modes
     rm -f ${OUTDIR}/$i*nc*
 
     end_time=$(date +%s.%1N)
