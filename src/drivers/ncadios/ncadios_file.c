@@ -81,15 +81,10 @@ ncadios_open(MPI_Comm       comm,
     ncadp = (NC_ad*) NCI_Malloc(sizeof(NC_ad));
     if (ncadp == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
-    ncadp->path = (char*) NCI_Malloc(strlen(path) + 1);
-    if (ncadp->path == NULL) {
-        NCI_Free(ncadp);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
-    strcpy(ncadp->path, path);
-    ncadp->mode   = omode;
-    ncadp->flag   = 0;
-    ncadp->comm   = comm;
+    ncadp->path    = path; /* reuse path duplicated in dispatch layer */
+    ncadp->mode    = omode;
+    ncadp->flag    = 0;
+    ncadp->comm    = comm;
     ncadp->getsize = 0;
     MPI_Comm_rank(ncadp->comm, &(ncadp->rank));
 
@@ -169,7 +164,6 @@ ncadios_close(void *ncdp)
     }
 
     ncadiosi_get_list_free(&(ncadp->getlist));
-    NCI_Free(ncadp->path);
     NCI_Free(ncadp);
 
     return err;
