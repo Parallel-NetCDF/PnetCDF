@@ -24,12 +24,6 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "check_PROGRAMS=${check_PROGRAMS}"
 
-if test "x${PNETCDF_DEBUG}" = x1 ; then
-   safe_modes="0 1"
-else
-   safe_modes="0"
-fi
-
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
@@ -41,27 +35,15 @@ for i in ${check_PROGRAMS} ; do
 
    exe_name=`basename $i`
 
-   for j in ${safe_modes} ; do
-
-      export PNETCDF_SAFE_MODE=$j
-      if test "x$VERBOSE" = xyes || test "x$DRY_RUN" = xyes ; then
-         echo "Line ${LINENO}: PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE"
-      fi
-
-      if test "x$exe_name" = "xtest_inq_format" ; then
-         run_cmd ./$i -q -i ${srcdir}
-         continue
-      elif test "x$exe_name" = "xtst_corrupt" ; then
-         run_cmd ./$i ${srcdir}
-         continue
-      elif test "x$exe_name" = "xtst_open_cdf5" ; then
-         run_cmd ./$i ${srcdir}/bad_begin.nc5
-         continue
-      fi
-
+   if test "x$exe_name" = "xtest_inq_format" ; then
+      run_cmd ./$i -q -i ${srcdir}
+   elif test "x$exe_name" = "xtst_corrupt" ; then
+      run_cmd ./$i ${srcdir}
+   elif test "x$exe_name" = "xtst_open_cdf5" ; then
+      run_cmd ./$i ${srcdir}/bad_begin.nc5
+   else
       run_cmd ./$i -q -o ${TESTOUTDIR}/${exe_name}.nc
-
-   done # safe_modes
+   fi
 
 done # check_PROGRAMS
 

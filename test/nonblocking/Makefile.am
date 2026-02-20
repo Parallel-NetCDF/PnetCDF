@@ -127,7 +127,7 @@ CLEANFILES = $(M4_SRCS:.m4=.c) \
 			 $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
-EXTRA_DIST = $(M4_SRCS) seq_runs.sh wrap_runs.sh parallel_run.sh
+EXTRA_DIST = $(M4_SRCS) seq_runs.sh parallel_run.sh
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
