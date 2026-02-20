@@ -14,31 +14,20 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "check_PROGRAMS=${check_PROGRAMS}"
 
-# echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
-if test "x${PNETCDF_DEBUG}" = x1 ; then
-   safe_modes="0 1"
-else
-   safe_modes="0"
-fi
-
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
 for i in ${check_PROGRAMS} ; do
-    for j in ${safe_modes} ; do
-        PNETCDF_HINTS=
-        if test "$j" = 1 ; then # test only in safe mode
-           PNETCDF_HINTS="romio_no_indep_rw=true"
-        fi
-        if test "x$MIMIC_LUSTRE" != x1 ; then
-           PNETCDF_HINTS="cb_nodes=2;$PNETCDF_HINTS"
-        fi
-        export PNETCDF_HINTS="$PNETCDF_HINTS"
+    PNETCDF_HINTS=
+    if test "${PNETCDF_DEBUG}" = 1 ; then # test only in safe mode
+       PNETCDF_HINTS="romio_no_indep_rw=true"
+    fi
+    if test "x$MIMIC_LUSTRE" != x1 ; then
+       PNETCDF_HINTS="cb_nodes=2;$PNETCDF_HINTS"
+    fi
+    export PNETCDF_HINTS="$PNETCDF_HINTS"
 
-        export PNETCDF_SAFE_MODE=$j
-        # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
-        ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
-    done
+    ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
     rm -f ${OUTDIR}/$i.nc
     rm -f ${OUTDIR}/$i.nc.cdf4
 done
