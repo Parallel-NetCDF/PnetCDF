@@ -39,6 +39,7 @@ jobs:
           os: [ubuntu-latest, macos-latest]
           mpi_vendor: [ MPICH, OpenMPI ]
           fstype: [ ufs, mimic_lustre ]
+          debug_mode: [ debug, nodebug ]
 
       runs-on: ${{ matrix.os }}
       timeout-minutes: 120
@@ -154,6 +155,11 @@ jobs:
             if test ${{ matrix.fstype }} == mimic_lustre ; then
                 export MIMIC_LUSTRE=yes
             fi
+            if test ${{ matrix.debug_mode }} == debug ; then
+                CONFIG_OPTS="--enable-debug"
+            else
+                CONFIG_OPTS="--disable-debug"
+            fi
             ./configure --prefix=${GITHUB_WORKSPACE}/PnetCDF \
                         --enable-option-checking=fatal \
                         pnc_ac_debug=yes \
@@ -161,6 +167,7 @@ jobs:
                         --enable-subfiling \
                         --enable-thread-safe \
                         --with-pthread \
+                        ${CONFIG_OPTS} \
                         --with-mpi=${GITHUB_WORKSPACE}/MPI \
                         TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output
             make -s LIBTOOLFLAGS=--silent V=1 -j 8 tests

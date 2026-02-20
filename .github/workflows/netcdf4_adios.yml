@@ -37,6 +37,8 @@ jobs:
     build:
       strategy:
         fail-fast: false # This disables the default cancel-on-failure behavior
+        matrix:
+          debug_mode: [ debug, nodebug ]
 
       runs-on: ubuntu-latest
       timeout-minutes: 120
@@ -169,9 +171,15 @@ jobs:
             m4 --version
             autoreconf -i
             mkdir -p ${GITHUB_WORKSPACE}/pnetcdf_output
+            if test ${{ matrix.debug_mode }} == debug ; then
+                CONFIG_OPTS="--enable-debug"
+            else
+                CONFIG_OPTS="--disable-debug"
+            fi
             ./configure --prefix=${GITHUB_WORKSPACE}/PnetCDF \
                         --enable-option-checking=fatal \
                         pnc_ac_debug=yes \
+                        ${CONFIG_OPTS} \
                         --with-netcdf4=${GITHUB_WORKSPACE}/NetCDF \
                         --with-adios=${GITHUB_WORKSPACE}/ADIOS \
                         --with-mpi=${GITHUB_WORKSPACE}/MPICH \
