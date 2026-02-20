@@ -90,13 +90,13 @@ endif
 
 TESTS = $(TESTPROGRAMS)
 TEST_EXTENSIONS = .sh
-LOG_COMPILER = $(srcdir)/wrap_runs.sh
+LOG_COMPILER = $(srcdir)/seq_runs.sh
 SH_LOG_COMPILER =
 
 CLEANFILES = $(M4_SRCS:.m4=.c) \
              $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb
 
-EXTRA_DIST = $(M4_SRCS) wrap_runs.sh parallel_run.sh
+EXTRA_DIST = $(M4_SRCS) seq_runs.sh parallel_run.sh
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
