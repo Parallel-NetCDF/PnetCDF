@@ -74,7 +74,7 @@ TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/seq_runs.sh
 SH_LOG_COMPILER =
 
-EXTRA_DIST = seq_runs.sh wrap_runs.sh parallel_run.sh
+EXTRA_DIST = seq_runs.sh parallel_run.sh
 
 CLEANFILES = *.$(FC_MODEXT) core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb
