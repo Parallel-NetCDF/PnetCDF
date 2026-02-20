@@ -109,7 +109,7 @@ int GEN_set_cb_node_list(PNCIO_File *fd)
  *   2. root sets and obtains striping info
  *   3. root broadcasts striping info
  *   4. non-root processes receive striping info from root
- *   5. non-root processes opens the fie
+ *   5. non-root processes opens the file
  */
 static int
 GEN_create(PNCIO_File *fd,
@@ -267,7 +267,7 @@ int PNCIO_File_open(MPI_Comm    comm,
     fd->access_mode = amode;
     fd->io_buf      = NULL; /* collective buffer used by aggregators only */
 
-    fd->flat_file.count = 0; /* flattend fileview in offset-length pairs */
+    fd->flat_file.count = 0; /* flattened fileview in offset-length pairs */
     fd->flat_file.size = -1;
     fd->flat_file.is_contig = 1;
     fd->flat_file.off = NULL;

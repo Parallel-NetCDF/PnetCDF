@@ -1,7 +1,7 @@
 # Security Policy
 
 Security issues specific to the PnetCDF code base itself have so far been rare.
-The issue label, `security` is used to identify issues which manifest known
+The issue label `security` is used to identify issues which manifest known
 security vulnerabilities.
 
 Security issues, when discovered, follow the same process as any other bug

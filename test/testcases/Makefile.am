@@ -177,7 +177,7 @@ if HAVE_MPI_MOD
 endif
 endif
 
-# autimake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
+# automake 1.11.3 has not yet implemented AM_TESTS_ENVIRONMENT
 # For newer versions, we can use AM_TESTS_ENVIRONMENT instead
 # AM_TESTS_ENVIRONMENT  = check_PROGRAMS="$(check_PROGRAMS)" ; export check_PROGRAMS;
 # AM_TESTS_ENVIRONMENT += TESTSEQRUN="$(TESTSEQRUN)" ; export TESTSEQRUN;
@@ -196,7 +196,7 @@ if ENABLE_BURST_BUFFER
    TESTS_ENVIRONMENT += export ENABLE_BURST_BUFFER=1;
 endif
 if ENABLE_THREAD_SAFE
-    TESTS_ENVIRONMENT += export ENABLE_THREAD_SAFE=1;
+   TESTS_ENVIRONMENT += export ENABLE_THREAD_SAFE=1;
 endif
 if MIMIC_LUSTRE
    TESTS_ENVIRONMENT += export MIMIC_LUSTRE="$(MIMIC_LUSTRE)";
