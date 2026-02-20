@@ -49,7 +49,10 @@ int test_io(const char *out_path,
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
     val = getenv("PNETCDF_SAFE_MODE");
-    if (val != NULL && *val == 1) safe_mode = 1;
+    if (val != NULL && atoi(val) == 1) safe_mode = 1;
+#ifdef PNETCDF_DEBUG
+    if (val == NULL && !safe_mode) safe_mode = 1;
+#endif
 
     /* Set format. */
     err = ncmpi_set_default_format(format, NULL);
