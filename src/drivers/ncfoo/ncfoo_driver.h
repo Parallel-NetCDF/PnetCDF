@@ -15,7 +15,7 @@ typedef struct NC_foo NC_foo; /* forward reference */
 struct NC_foo {
     int                mode;        /* file _open/_create mode */
     int                flag;        /* define/data/collective/indep mode */
-    char              *path;        /* path name */
+    const char        *path;        /* path name */
     MPI_Comm           comm;        /* MPI communicator */
     void              *ncp;         /* pointer to driver's internal object */
     struct PNC_driver *driver;

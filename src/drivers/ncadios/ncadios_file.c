@@ -282,7 +282,7 @@ ncadios_inq_misc(void       *ncdp,
     NC_ad *ncadp = (NC_ad*)ncdp;
 
     if (pathlen != NULL){
-        *pathlen = strlen(ncadp->path);
+        *pathlen = (int)strlen(ncadp->path);
     }
 
     if (path != NULL){
