@@ -204,11 +204,6 @@ int test_io(const char *out_path,
     ncmpi_sync(ncid);
 #endif
 
-    if (!coll_io) {
-        err = ncmpi_begin_indep_data(ncid);
-        CHECK_ERR
-    }
-
     if (nprocs < 4) { /* need 4 processes to fill the variables */
         err = ncmpi_fill_var_rec(ncid, vari0001, 0); CHECK_ERR
         err = ncmpi_fill_var_rec(ncid, varr0001, 0); CHECK_ERR
@@ -216,6 +211,11 @@ int test_io(const char *out_path,
         err = ncmpi_fill_var_rec(ncid, vari0002, 0); CHECK_ERR
         err = ncmpi_fill_var_rec(ncid, varr0002, 0); CHECK_ERR
         err = ncmpi_fill_var_rec(ncid, vard0002, 0); CHECK_ERR
+    }
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
     }
 
 #ifdef STRONGER_CONSISTENCY

@@ -99,13 +99,13 @@ int test_io(const char *out_path,
     err = ncmpi_enddef(ncid);
     CHECK_ERR
 
-    if (!coll_io) {
-        err = ncmpi_begin_indep_data(ncid);
+    for (i=0; i<NY; i++) {
+        err = ncmpi_fill_var_rec(ncid, varid[1], i);
         CHECK_ERR
     }
 
-    for (i=0; i<NY; i++) {
-        err = ncmpi_fill_var_rec(ncid, varid[1], i);
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
         CHECK_ERR
     }
 
