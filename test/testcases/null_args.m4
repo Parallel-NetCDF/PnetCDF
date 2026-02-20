@@ -307,16 +307,16 @@ test_format_nc$1(const char *filename, int format, int coll_io, MPI_Info info)
     err = ncmpi_enddef(ncid);
     EXP_ERR_MSG(NC_NOERR,"enddef")
 
-    if (!coll_io) {
-        err = ncmpi_begin_indep_data(ncid);
-        CHECK_ERR
-    }
-
     if (format != NC_FORMAT_NETCDF4 && format != NC_FORMAT_NETCDF4_CLASSIC) {
         /* fill the 1st record of all variables */dnl
         foreach(`itype',(text, TYPE_LIST),`_CAT(`
         err = ncmpi_fill_var_rec(ncid, vid_'itype`, 0);
         EXP_ERR_MSG(NC_NOERR,"fill_var_rec")')')
+    }
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
     }
 
      start[0] =  start[1] = 0;

@@ -590,6 +590,8 @@ err_check:
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
         if (minE != NC_NOERR) return minE;
     }
+    else if (err != NC_NOERR)
+        return err;
 
     /* calling the subroutine that implements ncmpi_fill_var_rec() */
     return pncp->driver->fill_var_rec(pncp->ncp, varid, recno);
