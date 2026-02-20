@@ -196,7 +196,7 @@ typedef struct NC_bb {
     int mode; /* file _open/_create mode */
     int flag; /* define/data/collective/indep mode */
     int ncid;
-    char *path;       /* path name */
+    const char *path; /* path name */
     MPI_Comm comm;    /* MPI communicator */
     MPI_Comm logcomm; /* MPI communicator */
     MPI_Info info;

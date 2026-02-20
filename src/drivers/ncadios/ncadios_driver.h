@@ -77,7 +77,7 @@ typedef struct NC_ad NC_ad; /* forward reference */
 struct NC_ad {
     int                mode;        /* file _open/_create mode */
     int                flag;        /* define/data/collective/indep mode */
-    char              *path;        /* path name */
+    const char        *path;        /* path name */
     MPI_Comm           comm;        /* MPI communicator */
     ADIOS_FILE          *fp;        /* ADIOS file pointer */
     int              *ndims;        /* Number of dims in each var */
