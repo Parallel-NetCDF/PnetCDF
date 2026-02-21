@@ -129,7 +129,7 @@ nc4io_open(MPI_Comm         comm,
      * NC_MPIIO is ignored in 4.6.2 and after.
      */
     omode |= NC_MPIIO;
-    err = nc_open_par(path, omode, comm, info, &ncidtmp);
+    err = nc_open_par(filename, omode, comm, info, &ncidtmp);
     if (err != NC_NOERR) DEBUG_RETURN_ERROR(err);
 
     /* Create a NC_nc4 object and save its driver pointer */
