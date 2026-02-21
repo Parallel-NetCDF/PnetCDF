@@ -68,7 +68,7 @@
  * data movement is performed in chunks of size PNC_MOVE_CHUNK_SIZE each per
  * process. If the number of chunks is larger than the number of processes,
  * carry out the data movement in multiple rounds. This default will be
- * overwritten by hint nc_data_move_chunk_size.
+ * overwritten by hint pnc_data_move_chunk_size.
  */
 #define PNC_DATA_MOVE_CHUNK_SIZE 1048576
 
