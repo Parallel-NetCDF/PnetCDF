@@ -16,17 +16,40 @@
 #include <testutils.h>
 
 static
+int file_op(const char *out_path,
+            MPI_Info    info)
+{
+    int err, nerrs=0, ncid;
+
+    /* Create a new file */
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
+
+    /* Close the file. */
+    err = ncmpi_close(ncid);
+    CHECK_ERR
+
+    /* Open the file */
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_WRITE, info, &ncid);
+    CHECK_ERR
+
+    /* Close the file. */
+    err = ncmpi_close(ncid);
+    CHECK_ERR
+
+    return (nerrs > 0);
+}
+
+static
 int test_io(const char *out_path,
             const char *in_path, /* ignored */
             int         format,
-            int         coll_io,
+            int         coll_io, /* ignored */
             MPI_Info    info)
 {
-    int err, nprocs, rank, nerrs=0, ncid;
+    int err, nerrs=0;
     MPI_Info info_dup=MPI_INFO_NULL;
 
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Info_dup(info, &info_dup);
 
     MPI_Info_set(info_dup, "nc_header_align_size", "100");
@@ -37,21 +60,19 @@ int test_io(const char *out_path,
     err = ncmpi_set_default_format(format, NULL);
     CHECK_ERR
 
-    /* Create a new file */
-    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info_dup, &ncid);
-    CHECK_ERR
+    err = file_op(out_path, info_dup);
+    if (err != 0) nerrs++;
 
-    /* Close the file. */
-    err = ncmpi_close(ncid);
-    CHECK_ERR
+    if (strncmp("ufs:", out_path, 4)) {
+        char *prefix_fname;
+        prefix_fname = (char*) malloc(strlen(out_path) + 10);
+        sprintf(prefix_fname, "ufs:%s", out_path);
 
-    /* Open the file */
-    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_WRITE, info_dup, &ncid);
-    CHECK_ERR
+        err = file_op(prefix_fname, info_dup);
+        if (err != 0) nerrs++;
 
-    /* Close the file. */
-    err = ncmpi_close(ncid);
-    CHECK_ERR
+        free(prefix_fname);
+    }
 
     if (info != MPI_INFO_NULL) MPI_Info_free(&info_dup);
 
