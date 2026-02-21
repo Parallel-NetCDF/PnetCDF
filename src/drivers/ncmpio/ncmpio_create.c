@@ -511,38 +511,48 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
             }
         }
         else { /* ncp->nc_striping == PNCIO_STRIPING_INHERIT */
-            uint64_t striping_factor=0, striping_unit=0;
             if (user_info != MPI_INFO_NULL) {
+                int stripings[2] = {0, 0};
+
                 /* check if hint striping_factor is set by the user */
                 MPI_Info_get(user_info, "striping_factor", MPI_MAX_INFO_VAL-1,
                             value, &flag);
                 if (flag)
-                    striping_factor = atoi(value);
+                    stripings[0] = atoi(value);
 
                 /* check if hint striping_unit is set by the user */
                 MPI_Info_get(user_info, "striping_unit", MPI_MAX_INFO_VAL-1,
                             value, &flag);
                 if (flag)
-                    striping_unit = atoi(value);
+                    stripings[1] = atoi(value);
 
 #ifdef HAVE_LUSTRE
+                uint64_t striping_factor, striping_unit;
+                striping_factor = stripings[0];
+                striping_unit   = stripings[1];
                 /* When either striping_factor or striping_unit is not set, but
                  * not both, retrieve folder's striping factor or unit in order
                  * to inherit the missing one.
                  */
-                if (striping_factor * striping_unit == 0 &&
-                    striping_factor + striping_unit > 0)
+                if (ncp->rank == 0 &&
+                    striping_factor * striping_unit == 0 &&
+                    striping_factor + striping_unit > 0) {
+                    /* rank 0 retreives folder's striping settings */
                     lustre_get_striping(path, &striping_factor, &striping_unit);
                     /* error is ignored, if there is any */
+                    stripings[0] = striping_factor;
+                    stripings[1] = striping_unit;
+                }
+                MPI_Bcast(stripings, 2, MPI_INT, 0, comm);
 #endif
 
-                if (striping_factor > 0) {
-                    sprintf(value, "%lu", striping_factor);
+                if (stripings[0] > 0) {
+                    sprintf(value, "%d", stripings[0]);
                     MPI_Info_set(user_info, "striping_factor", value);
                 }
 
-                if (striping_unit > 0) {
-                    sprintf(value, "%lu", striping_unit);
+                if (stripings[1] > 0) {
+                    sprintf(value, "%d", stripings[1]);
                     MPI_Info_set(user_info, "striping_unit", value);
                 }
             }

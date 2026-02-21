@@ -52,12 +52,13 @@ This is essentially a placeholder for the next release note ...
     See [PR #203](https://github.com/Parallel-NetCDF/PnetCDF/pull/203).
   + 'nc_striping' -- When creating a new file on the Lustre file system, this
     hint advises PnetCDF to set the file's striping configuration. The hint
-    value is either "auto" or "inherit". The former sets the striping count to
-    the number of compute nodes found in the MPI communicator passed to
-    `ncmpi_create()`. The latter makes the new file to inherit the folder's
-    striping settings if the folder's striping is set. This hint's default is
-    "auto". Hint 'nc_striping' is ignored when MPI-IO hints `striping_factor`
-    and `striping_unit`, are set.
+    value is either "auto" or "inherit". The former sets the new file's
+    striping unit to 1MiB and striping count to the number of compute nodes
+    found in the MPI communicator passed to `ncmpi_create()`. The latter sets
+    the stripings of new file to inherit the folder's striping settings, if the
+    folder's striping is set. However, if users also set hint `striping_factor`
+    or `striping_unit`, then their values will be used instead of parent
+    folder's. This hint's default value is "auto".
     See [PR #222](https://github.com/Parallel-NetCDF/PnetCDF/pull/222).
 
 * New run-time environment variables
