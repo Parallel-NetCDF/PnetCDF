@@ -251,7 +251,7 @@ void ncmpio_hint_extract(NC       *ncp,
     /* Data movement chunk size when variables need to be moved to higher file
      * offsets.
      */
-    MPI_Info_get(info, "nc_data_move_chunk_size", MPI_MAX_INFO_VAL-1, value,
+    MPI_Info_get(info, "pnc_data_move_chunk_size", MPI_MAX_INFO_VAL-1, value,
                  &flag);
     if (flag) {
         errno = 0;  /* errno must set to zero before calling strtoll */
@@ -309,7 +309,7 @@ void ncmpio_hint_set(NC       *ncp,
 
     /* variable movement chunk size */
     snprintf(int_str, MAX_INT_LEN, "%d", ncp->data_chunk);
-    MPI_Info_set(info, "nc_data_move_chunk_size", int_str);
+    MPI_Info_set(info, "pnc_data_move_chunk_size", int_str);
 
     /* setting in-place byte swap (matters only for Little Endian) */
     int swap_on  = fIsSet(ncp->flags, NC_MODE_SWAP_ON);

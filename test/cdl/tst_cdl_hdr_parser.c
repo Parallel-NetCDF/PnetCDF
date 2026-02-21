@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
     opt.ina      = 1; /* test intra-node aggregation */
     opt.drv      = 1; /* test PNCIO driver */
     opt.ind      = 1; /* test hint romio_no_indep_rw */
-    opt.chk      = 1; /* test hint nc_data_move_chunk_size */
+    opt.chk      = 1; /* test hint pnc_data_move_chunk_size */
     opt.bb       = 1; /* test burst-buffering feature */
     opt.mod      = 1; /* test independent data mode */
     opt.hdr_diff = 1; /* run ncmpidiff for file header only */

@@ -1196,7 +1196,7 @@ int grow_header_benchmark(char *in_file)
     double timing, max_t;
     MPI_Offset hdr_size, hdr_extent, attr_len, num_rec, longitude, latitude;
     MPI_Offset r_amnt[2], w_amnt[2], amnt[2], sum_amnt[2], fix_off, rec_off;
-    MPI_Offset rec_size, nc_data_move_chunk_size;
+    MPI_Offset rec_size, pnc_data_move_chunk_size;
     MPI_Info info;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -1343,12 +1343,12 @@ int grow_header_benchmark(char *in_file)
     err = ncmpi_inq_file_info(ncid, &info);
     CHECK_ERR("ncmpi_inq_file_info")
 
-    MPI_Info_get_valuelen(info, "nc_data_move_chunk_size", &len, &flag);
+    MPI_Info_get_valuelen(info, "pnc_data_move_chunk_size", &len, &flag);
     if (flag) {
-        MPI_Info_get(info, "nc_data_move_chunk_size", len+1, value, &flag);
-        nc_data_move_chunk_size = strtoll(value, NULL, 10);
+        MPI_Info_get(info, "pnc_data_move_chunk_size", len+1, value, &flag);
+        pnc_data_move_chunk_size = strtoll(value, NULL, 10);
     } else
-        nc_data_move_chunk_size = 0;
+        pnc_data_move_chunk_size = 0;
 
     MPI_Info_get_valuelen(info, "cb_node_list", &len, &flag);
     if (flag)
@@ -1389,7 +1389,7 @@ int grow_header_benchmark(char *in_file)
         printf("Max time:                       %.4f sec\n", max_t);
         printf("Write bandwidth:                %.2f MiB/s\n", bw/max_t);
         printf("                                %.2f GiB/s\n", bw/1024.0/max_t);
-        printf("Hint nc_data_move_chunk_size    %lld\n", nc_data_move_chunk_size);
+        printf("Hint pnc_data_move_chunk_size    %lld\n", pnc_data_move_chunk_size);
         if (*cb_node_list != '\0')
             printf("Hint cb_node_list =             %s\n", cb_node_list);
         printf("-----------------------------------------------------------\n");

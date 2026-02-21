@@ -470,7 +470,7 @@ ncmpio_inq_misc(void       *ncdp,
         MPI_Info_set(*info_used, "nc_header_read_chunk_size", value);
 
         sprintf(value, "%d", ncp->data_chunk);
-        MPI_Info_set(*info_used, "nc_data_move_chunk_size", value);
+        MPI_Info_set(*info_used, "pnc_data_move_chunk_size", value);
 
         if (fIsSet(ncp->flags, NC_MODE_SWAP_ON))
             MPI_Info_set(*info_used, "nc_in_place_swap", "enable");

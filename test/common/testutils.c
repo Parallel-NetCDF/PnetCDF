@@ -456,7 +456,7 @@ int tst_main(int        argc,
             }
 
             if (m == 0) { /* PnetCDF's default */
-                MPI_Info_set(info, "nc_data_move_chunk_size", "1048576");
+                MPI_Info_set(info, "pnc_data_move_chunk_size", "1048576");
                 strcat(out_filename, ".chunk1M");
             } else {
                 char chunk_str[32];
@@ -464,7 +464,7 @@ int tst_main(int        argc,
                     strcpy(chunk_str, "100");
                 else
                     sprintf(chunk_str, "%d", opt.chk);
-                MPI_Info_set(info, "nc_data_move_chunk_size", chunk_str);
+                MPI_Info_set(info, "pnc_data_move_chunk_size", chunk_str);
                 if (opt.chk == 1)
                     strcpy(chunk_str, ".chunk100");
                 else

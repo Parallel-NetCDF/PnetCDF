@@ -130,7 +130,7 @@ int test_io(const char *out_path,
     int i, err, nerrs=0, nprocs, rank, psize[2], rank_y, rank_x;
     int ncid, ndims, dimids[3], nvars, varid[NVARS];
     int *int_buf[2]={NULL, NULL};
-    int flag, nc_data_move_chunk_size=0;
+    int flag, pnc_data_move_chunk_size=0;
     float *flt_buf[4]={NULL, NULL, NULL, NULL};
     MPI_Offset start[3], count[3], nelems, h_size, h_extent;
     MPI_Offset old_var_off[NVARS], new_var_off[NVARS];
@@ -209,13 +209,13 @@ int test_io(const char *out_path,
     }
 
     err = ncmpi_inq_file_info(ncid, &info_used);
-    MPI_Info_get(info_used, "nc_data_move_chunk_size", MPI_MAX_INFO_VAL-1,
+    MPI_Info_get(info_used, "pnc_data_move_chunk_size", MPI_MAX_INFO_VAL-1,
                  value, &flag);
-    if (flag) nc_data_move_chunk_size = atoi(value);
+    if (flag) pnc_data_move_chunk_size = atoi(value);
     MPI_Info_free(&info_used);
 
     if (debug && rank == 0)
-        printf("Hint nc_data_move_chunk_size = %d\n", nc_data_move_chunk_size);
+        printf("Hint pnc_data_move_chunk_size = %d\n", pnc_data_move_chunk_size);
 
     err = ncmpi_inq_header_size(ncid, &h_size); CHECK_ERR
     err = ncmpi_inq_header_extent(ncid, &h_extent); CHECK_ERR
@@ -438,7 +438,7 @@ int main(int argc, char **argv) {
     opt.ina      = 1;    /* test intra-node aggregation */
     opt.drv      = 1;    /* test PNCIO driver */
     opt.ind      = 1;    /* test hint romio_no_indep_rw */
-    opt.chk      = 4096; /* test hint nc_data_move_chunk_size */
+    opt.chk      = 4096; /* test hint pnc_data_move_chunk_size */
     opt.bb       = 1;    /* test burst-buffering feature */
     opt.mod      = 1;    /* test independent data mode */
     opt.hdr_diff = 1;    /* run ncmpidiff for file header only */

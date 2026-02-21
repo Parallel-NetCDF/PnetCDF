@@ -146,7 +146,7 @@ typedef struct {
     int  ina;      /* add test of intra-node aggregation */
     int  drv;      /* add test of PNCIO driver in addition to MPI-IO */
     int  ind;      /* add test of hint romio_no_indep_rw */
-    int  chk;      /* add test of hint nc_data_move_chunk_size (100 bytes when set to 1) */
+    int  chk;      /* add test of hint pnc_data_move_chunk_size (100 bytes when set to 1) */
     int  bb;       /* add test of burst-buffering feature */
     int  mod;      /* add test of independent data mode */
     int  hdr_diff; /* run ncmpidiff for file header only */

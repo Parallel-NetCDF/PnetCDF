@@ -290,7 +290,7 @@ fn_exit:
     }
 
     if (ncp->data_chunk == -1)
-        /* if not set by user hint, nc_data_move_chunk_size */
+        /* if not set by user hint, pnc_data_move_chunk_size */
         ncp->data_chunk = (striping_unit > 0) ? striping_unit
                                               : PNC_DATA_MOVE_CHUNK_SIZE;
 

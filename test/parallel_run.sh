@@ -139,7 +139,7 @@ for i in ${check_PROGRAMS} ; do
         fi
 
         # More rigorous tests using a small moving chunk size
-        PNETCDF_HINTS="nc_data_move_chunk_size=100"
+        PNETCDF_HINTS="pnc_data_move_chunk_size=100"
 
         PNETCDF_HINTS="$no_indep_rw_hint;$PNETCDF_HINTS"
 
