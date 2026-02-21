@@ -23,14 +23,94 @@
 #include <sys/types.h> /* lstat(), open() */
 #include <sys/stat.h>  /* lstat(), open() */
 #include <unistd.h>    /* lstat(), access(), unlink(), open(), close() */
-#include <fcntl.h>     /* open() */
+#include <fcntl.h>     /* open(), O_CREAT */
 #endif
+#include <libgen.h>    /* dirname() */
+#include <assert.h>
 
 #include <mpi.h>
 
 #include <pnc_debug.h>
 #include <common.h>
 #include "ncmpio_NC.h"
+
+
+#ifdef HAVE_LUSTRE
+/* /usr/include/lustre/lustreapi.h
+ * /usr/include/linux/lustre/lustre_user.h
+ */
+#include <lustre/lustreapi.h>
+
+#define PNETCDF_LUSTRE_DEBUG
+
+#define PATTERN_STR(pattern, int_str) ( \
+    (pattern == LLAPI_LAYOUT_DEFAULT)      ? "LLAPI_LAYOUT_DEFAULT" : \
+    (pattern == LLAPI_LAYOUT_RAID0)        ? "LLAPI_LAYOUT_RAID0" : \
+    (pattern == LLAPI_LAYOUT_WIDE)         ? "LLAPI_LAYOUT_WIDE" : \
+    (pattern == LLAPI_LAYOUT_MDT)          ? "LLAPI_LAYOUT_MDT" : \
+    (pattern == LLAPI_LAYOUT_OVERSTRIPING) ? "LLAPI_LAYOUT_OVERSTRIPING" : \
+    (pattern == LLAPI_LAYOUT_SPECIFIC)     ? "LLAPI_LAYOUT_SPECIFIC" : \
+    int_str)
+
+/*----< lustre_get_striping() >----------------------------------------------*/
+static
+void lustre_get_striping(const char *path,
+                         uint64_t   *stripe_count,
+                         uint64_t   *stripe_size)
+{
+    char *dirc, *dname;
+    int err, fd;
+    struct llapi_layout *layout;
+
+    /* Retrieve the file striping settings from the parent folder. */
+    dirc = NCI_Strdup(path);
+    dname = dirname(dirc); /* folder name */
+
+    fd = open(dname, O_RDONLY, PNCIO_PERM);
+
+    layout = llapi_layout_get_by_fd(fd, LLAPI_LAYOUT_GET_COPY);
+    if (layout == NULL) {
+#ifdef PNETCDF_LUSTRE_DEBUG
+        printf("Error at %s (%d) llapi_layout_get_by_fd() fails\n",
+                __FILE__, __LINE__);
+#endif
+        goto err_out;
+    }
+
+    if (stripe_count != NULL && *stripe_count == 0) {
+        /* obtain file striping count */
+        err = llapi_layout_stripe_count_get(layout, stripe_count);
+        if (err != 0) {
+#ifdef PNETCDF_LUSTRE_DEBUG
+            char int_str[32];
+            snprintf(int_str, 32, "%lu", *stripe_count);
+            printf("Error at %s (%d) llapi_layout_stripe_count_get() fails to get stripe count %s\n",
+                __FILE__, __LINE__, PATTERN_STR(*stripe_count, int_str));
+#endif
+            goto err_out;
+        }
+    }
+
+    if (stripe_size != NULL && *stripe_size == 0) {
+        /* obtain file striping unit size */
+        err = llapi_layout_stripe_size_get(layout, stripe_size);
+        if (err != 0) {
+#ifdef PNETCDF_LUSTRE_DEBUG
+            char int_str[32];
+            snprintf(int_str, 32, "%lu", *stripe_size);
+            printf("Error at %s (%d) llapi_layout_stripe_size_get() fails to get stripe size %s\n",
+                __FILE__,__LINE__, PATTERN_STR(*stripe_size, int_str));
+#endif
+            goto err_out;
+        }
+    }
+
+err_out:
+    if (layout != NULL) llapi_layout_free(layout);
+
+    close(fd);
+}
+#endif
 
 /*----< ncmpio_create() >----------------------------------------------------*/
 int
@@ -428,6 +508,43 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
             if (striping_factor == 0) {
                 sprintf(value, "%d", ncp->node_ids.num_nodes);
                 MPI_Info_set(user_info, "striping_factor", value);
+            }
+        }
+        else { /* ncp->nc_striping == PNCIO_STRIPING_INHERIT */
+            uint64_t striping_factor=0, striping_unit=0;
+            if (user_info != MPI_INFO_NULL) {
+                /* check if hint striping_factor is set by the user */
+                MPI_Info_get(user_info, "striping_factor", MPI_MAX_INFO_VAL-1,
+                            value, &flag);
+                if (flag)
+                    striping_factor = atoi(value);
+
+                /* check if hint striping_unit is set by the user */
+                MPI_Info_get(user_info, "striping_unit", MPI_MAX_INFO_VAL-1,
+                            value, &flag);
+                if (flag)
+                    striping_unit = atoi(value);
+
+#ifdef HAVE_LUSTRE
+                /* When either striping_factor or striping_unit is not set, but
+                 * not both, retrieve folder's striping factor or unit in order
+                 * to inherit the missing one.
+                 */
+                if (striping_factor * striping_unit == 0 &&
+                    striping_factor + striping_unit > 0)
+                    lustre_get_striping(path, &striping_factor, &striping_unit);
+                    /* error is ignored, if there is any */
+#endif
+
+                if (striping_factor > 0) {
+                    sprintf(value, "%lu", striping_factor);
+                    MPI_Info_set(user_info, "striping_factor", value);
+                }
+
+                if (striping_unit > 0) {
+                    sprintf(value, "%lu", striping_unit);
+                    MPI_Info_set(user_info, "striping_unit", value);
+                }
             }
         }
 
