@@ -50,7 +50,38 @@
 #endif
 #endif
 
-/*----< usage() >-------------------------------------------------------------*/
+/* File system types recognized by ROMIO in MPICH 4.0.0, and by PnetCDF */
+static const char* fstypes[] = {"ufs", "nfs", "xfs", "pvfs2", "gpfs", "panfs", "lustre", "daos", "testfs", "ime", "quobyte", NULL};
+
+/* Return a pointer to filename by removing the file system type prefix name if
+ * there is any.  For example, when filename = "lustre:/home/foo/testfile.nc",
+ * remove "lustre:" to return a pointer to "/home/foo/testfile.nc", so the name
+ * can be used in POSIX open() calls.
+ */
+static
+char* ncmpii_remove_file_system_type_prefix(const char *filename)
+{
+    char *ret_filename = (char*)filename;
+
+    if (filename == NULL) return NULL;
+
+    if (strchr(filename, ':') != NULL) { /* there is a prefix end with ':' */
+        /* check if prefix is one of recognized file system types */
+        int i=0;
+        while (fstypes[i] != NULL) {
+            size_t prefix_len = strlen(fstypes[i]);
+            if (!strncmp(filename, fstypes[i], prefix_len)) { /* found */
+                ret_filename += prefix_len + 1;
+                break;
+            }
+            i++;
+        }
+    }
+
+    return ret_filename;
+}
+
+/*----< usage() >------------------------------------------------------------*/
 static void
 usage(int rank, char *progname)
 {
@@ -79,7 +110,7 @@ struct vspec {
     char **names; /* [nvars] */
 };
 
-/*----< get_var_names() >-----------------------------------------------------*/
+/*----< get_var_names() >----------------------------------------------------*/
 static void
 get_var_names(char    *opt_arg,
               int     *nvars,
@@ -108,7 +139,7 @@ get_var_names(char    *opt_arg,
     }
 }
 
-/*----< main() >--------------------------------------------------------------*/
+/*----< main() >-------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
     extern char *optarg;
@@ -194,8 +225,12 @@ int main(int argc, char **argv)
     /* check stat of input files, e.g. exist or not */
     if (rank == 0) {
         struct stat sb;
-        ncid[0] = (stat(argv[optind],   &sb) != 0) ? errno : 0;
-        ncid[1] = (stat(argv[optind+1], &sb) != 0) ? errno : 0;
+        char *fname;
+        fname = ncmpii_remove_file_system_type_prefix(argv[optind]);
+        ncid[0] = (stat(fname, &sb) != 0) ? errno : 0;
+
+        fname = ncmpii_remove_file_system_type_prefix(argv[optind+1]);
+        ncid[1] = (stat(fname, &sb) != 0) ? errno : 0;
     }
     MPI_Bcast(ncid, 2, MPI_INT, 0, comm);
     if (rank == 0) {
