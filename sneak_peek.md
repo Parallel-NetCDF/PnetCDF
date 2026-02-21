@@ -50,7 +50,7 @@ This is essentially a placeholder for the next release note ...
     movement is performed in chunks. This hint allows users to customized the
     chunk size. The default is 1048576 bytes, i.e. 1 MiB.
     See [PR #203](https://github.com/Parallel-NetCDF/PnetCDF/pull/203).
-  + 'nc_striping' -- When creating a new file on the Lustre file system, this
+  + 'pnc_striping' -- When creating a new file on the Lustre file system, this
     hint advises PnetCDF to set the file's striping configuration. The hint
     value is either "auto" or "inherit". The former sets the new file's
     striping unit to 1MiB and striping count to the number of compute nodes

@@ -91,7 +91,7 @@ int hint_consistency_check(PNCIO_File *fd)
         MPI_Bcast(root_hints, sizeof(PNCIO_Hints), MPI_BYTE, 0, fd->comm);
 
         /* check hints individually against root's */
-        CHECK_HINT(nc_striping);
+        CHECK_HINT(pnc_striping);
         CHECK_HINT(striping_factor);
         CHECK_HINT(striping_unit);
         CHECK_HINT(start_iodevice);
@@ -180,7 +180,7 @@ PNCIO_File_SetInfo(PNCIO_File *fd,
      * a user's info. Thus, default values used below are to indicate
      * whether or not they have been customized by the users.
      */
-    fd->hints->nc_striping = PNCIO_STRIPING_AUTO;
+    fd->hints->pnc_striping = PNCIO_STRIPING_AUTO;
     fd->hints->striping_unit = 0;
     fd->hints->striping_factor = 0;
     fd->hints->start_iodevice = -1;
@@ -238,7 +238,7 @@ PNCIO_File_SetInfo(PNCIO_File *fd,
     GET_INFO_INT(ind_rd_buffer_size);
 
     /* file striping configuration */
-    GET_INFO_STR(nc_striping);
+    GET_INFO_STR(pnc_striping);
     GET_INFO_INT(striping_unit);
     GET_INFO_INT(striping_factor);
     GET_INFO_INT(start_iodevice);
