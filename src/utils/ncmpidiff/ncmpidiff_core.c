@@ -21,6 +21,7 @@
 #include <unistd.h>    /* stat() */
 #include <errno.h>     /* errno */
 #include <math.h>      /* INFINITY */
+#include <assert.h>
 
 #include <mpi.h>
 #include <pnetcdf.h>
@@ -344,6 +345,12 @@ MPI_Offset ncmpidiff_core(const char  *file1,
         printf("Second file: %s\n", file2);
     }
 
+    if (strcmp(file1, file2) == 0) {
+        if (rank == 0)
+            printf("Error: two input file names are identical (%s) ... exit\n", file1);
+        return 1;
+    }
+
     /* compare file format */
     err = ncmpi_inq_file_format(file1, &fmt[0]);
     HANDLE_FILE_ERR(file1)
@@ -368,7 +375,7 @@ MPI_Offset ncmpidiff_core(const char  *file1,
     /* open files */
     err = ncmpi_open(comm, file1, NC_NOWRITE, info, &ncid[0]);
     HANDLE_ERROR
-    err = ncmpi_open(comm, file1, NC_NOWRITE, info, &ncid[1]);
+    err = ncmpi_open(comm, file2, NC_NOWRITE, info, &ncid[1]);
     HANDLE_ERROR
 
     /* retrieve metadata */
