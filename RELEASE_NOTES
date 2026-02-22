@@ -18,7 +18,7 @@ Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
     strategies for performance improvement. A significant portion of this
     driver was developed to improve performance when Lustre is used. It
     includes the followings.
-    * When creating a new file, it try to set the Lustre file striping count
+    * When creating a new file, it tries to set the Lustre file striping count
       to the number of compute nodes allocated to the MPI communicator passed
       to "ncmpi_create()", when I/O hint "striping_factor" is not explicitly
       set by the applications.
@@ -34,10 +34,6 @@ Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
 * New error code
   + "NC_EFSTYPE" indicates an error when an invalid file system type is
     detected.
-
-* New PnetCDF hint
-  + "nc_pncio" -- To disable or enable the use of the internal "pncio" driver.
-    Its string value is either "enable" or "disable". The default is "enable".
 
 
 -------------------------------------

@@ -439,11 +439,11 @@ int tst_main(int        argc,
                 strcat(out_filename, ".ina");
             }
 
-            if (d == 0) { /* PnetCDF's default: MPI-IO driver */
-                MPI_Info_set(info, "nc_pncio", "disable");
+            if (d == 0) { /* MPI-IO driver */
+                MPI_Info_set(info, "pnc_driver", "mpiio");
                 strcat(out_filename, ".mpio");
-            } else { /* PnetCDF's PNCIO driver */
-                MPI_Info_set(info, "nc_pncio", "enable");
+            } else { /* PnetCDF's internal PNCIO driver */
+                MPI_Info_set(info, "pnc_driver", "pncio");
                 strcat(out_filename, ".pncio");
             }
 

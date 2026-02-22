@@ -40,7 +40,7 @@ for i in ${check_PROGRAMS} ; do
 
    # PNCIO driver does not support vard APIs
    if test "x$exe_name" = xtest_vardf90 || test "x$exe_name" = xtest_vardf ; then
-      export PNETCDF_HINTS="nc_pncio=disable;$PNETCDF_HINTS"
+      export PNETCDF_HINTS="pnc_driver=mpiio;$PNETCDF_HINTS"
    fi
 
    run_cmd ./$i -q -o ${TESTOUTDIR}/${exe_name}.nc

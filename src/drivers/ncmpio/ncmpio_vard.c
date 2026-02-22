@@ -72,7 +72,7 @@ getput_vard(NC               *ncp,
 
     if (ncp->fstype != PNCIO_FSTYPE_MPIIO) {
         fprintf(stderr, "PnetCDF vard APIs are only supported when using MPI-IO.\n");
-        fprintf(stderr, "Please set environment variable PNETCDF_HINTS to \"nc_pncio=disable\"\n");
+        fprintf(stderr, "Please set environment variable PNETCDF_HINTS to \"pnc_driver=mpiio\"\n");
         return NC_ENOTSUPPORT;
     }
 

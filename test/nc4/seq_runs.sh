@@ -23,9 +23,9 @@ fi
 
 for mpiio_mode in 0 1 ; do
     if test "$mpiio_mode" = 1 ; then
-       USEMPIO_HINTS="nc_pncio=disable"
+       USEMPIO_HINTS="pnc_driver=mpiio"
     else
-       USEMPIO_HINTS="nc_pncio=enable"
+       USEMPIO_HINTS="pnc_driver=pncio"
     fi
 
     PNETCDF_HINTS=
