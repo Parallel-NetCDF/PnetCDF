@@ -204,7 +204,12 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
 
     /* open file collectively ---------------------------------------------- */
     if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+#ifdef MPICH_VERSION
+        /* MPICH recognizes file system type acronym prefixed to the file name */
         TRACE_IO(MPI_File_open, (comm, path, mpiomode, user_info, &fh));
+#else
+        TRACE_IO(MPI_File_open, (comm, filename, mpiomode, user_info, &fh));
+#endif
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
             DEBUG_FOPEN_ERROR(err);
