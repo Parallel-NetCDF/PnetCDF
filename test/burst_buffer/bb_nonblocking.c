@@ -60,7 +60,8 @@ int test_bb(const char *out_path,
 
     buffer = rank + 1;
 
-    start[0] = 0;
+    /* each process writes to a different row */
+    start[0] = rank;
     start[1] = 0;
     err = ncmpi_iput_var1_int(ncid, varid, start, &buffer, &req1); CHECK_ERR
     start[1] = 1;
