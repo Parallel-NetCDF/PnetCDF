@@ -213,8 +213,15 @@ ncmpio_begin_indep_data(void *ncdp)
     if (ncp->independent_fh == MPI_FILE_NULL) {
         char *mpi_name;
         int mpireturn;
+#ifdef MPICH_VERSION
+        /* MPICH recognizes file system type acronym prefixed to the file name */
         TRACE_IO(MPI_File_open, (MPI_COMM_SELF, ncp->path, ncp->mpiomode,
                                  ncp->mpiinfo, &ncp->independent_fh));
+#else
+        char *path = ncmpii_remove_file_system_type_prefix(ncp->path);
+        TRACE_IO(MPI_File_open, (MPI_COMM_SELF, path, ncp->mpiomode,
+                                 ncp->mpiinfo, &ncp->independent_fh));
+#endif
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, mpi_name);
 

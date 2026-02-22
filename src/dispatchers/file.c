@@ -165,7 +165,7 @@ void set_get_comm_attr(MPI_Comm        comm,
          * pncio_init_keyval is necessary for MPI_Finalize() to free key
          * pncio_node_ids_keyval.
          */
-        MPI_Comm_create_keyval(MPI_NULL_COPY_FN, PNCIO_end_call,
+        MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN, PNCIO_end_call,
                                &pncio_init_keyval, (void*)0);
         MPI_Comm_set_attr(MPI_COMM_SELF, pncio_init_keyval, (void*)0);
     }

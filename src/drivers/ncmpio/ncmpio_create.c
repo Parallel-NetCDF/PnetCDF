@@ -167,7 +167,7 @@ ncmpio_create(MPI_Comm         comm,
 
     /* Extract hints from user_info. Two hints must be extracted now in order
      * to continue:
-     *     pnc_driver: whether to user MPI-IO or PnetCDF's PNCIO driver.
+     *     pnc_driver: whether to use MPI-IO or PnetCDF's PNCIO driver.
      *     nc_num_aggrs_per_node: number of processes per node to be the INA
      *     aggregators.
      *
@@ -274,7 +274,7 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
 #ifdef HAVE_UNLINK
                 /* unlink() is likely faster then truncate(). However, unlink()
                  * can be expensive when the file size is large. For example,
-                 * it taook 1.1061 seconds to delete a file of size 27.72 GiB
+                 * it took 1.1061 seconds to delete a file of size 27.72 GiB
                  * on Perlmutter at NERSC.
                  */
                 err = unlink(filename);
@@ -288,7 +288,12 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
                 if (ncp->fstype != PNCIO_FSTYPE_MPIIO)
                     err = PNCIO_File_delete(filename);
                 else {
+#ifdef MPICH_VERSION
+                    /* MPICH recognizes file system type acronym prefixed to the file name */
                     TRACE_IO(MPI_File_delete, (path, MPI_INFO_NULL));
+#else
+                    TRACE_IO(MPI_File_delete, (filename, MPI_INFO_NULL));
+#endif
                     if (mpireturn != MPI_SUCCESS) {
                         int errorclass;
                         MPI_Error_class(mpireturn, &errorclass);
@@ -342,7 +347,12 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
                     NCI_Free(pncio_fh);
                 }
                 else {
+#ifdef MPICH_VERSION
+                    /* MPICH recognizes file system type acronym prefixed to the file name */
                     TRACE_IO(MPI_File_open, (MPI_COMM_SELF, path, MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+#else
+                    TRACE_IO(MPI_File_open, (MPI_COMM_SELF, filename, MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+#endif
                     if (mpireturn != MPI_SUCCESS) {
                         int errorclass;
                         MPI_Error_class(mpireturn, &errorclass);
@@ -537,8 +547,8 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
                 if (ncp->rank == 0 &&
                     striping_factor * striping_unit == 0 &&
                     striping_factor + striping_unit > 0) {
-                    /* rank 0 retreives folder's striping settings */
-                    lustre_get_striping(path, &striping_factor, &striping_unit);
+                    /* rank 0 retrieves folder's striping settings */
+                    lustre_get_striping(filename, &striping_factor, &striping_unit);
                     /* error is ignored, if there is any */
                     stripings[0] = striping_factor;
                     stripings[1] = striping_unit;
@@ -558,7 +568,12 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
             }
         }
 
+#ifdef MPICH_VERSION
+        /* MPICH recognizes file system type acronym prefixed to the file name */
         TRACE_IO(MPI_File_open, (comm, path, mpiomode, user_info, &fh));
+#else
+        TRACE_IO(MPI_File_open, (comm, filename, mpiomode, user_info, &fh));
+#endif
         if (mpireturn != MPI_SUCCESS) {
 #ifndef HAVE_ACCESS
             if (fIsSet(cmode, NC_NOCLOBBER)) {

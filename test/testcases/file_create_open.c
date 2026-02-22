@@ -63,6 +63,8 @@ int test_io(const char *out_path,
     err = file_op(out_path, info_dup);
     if (err != 0) nerrs++;
 
+#ifdef MPICH_VERSION
+    /* MPICH recognizes file system type acronym prefixed to the file name */
     if (strncmp("ufs:", out_path, 4)) {
         char *prefix_fname;
         prefix_fname = (char*) malloc(strlen(out_path) + 10);
@@ -73,6 +75,7 @@ int test_io(const char *out_path,
 
         free(prefix_fname);
     }
+#endif
 
     if (info != MPI_INFO_NULL) MPI_Info_free(&info_dup);
 

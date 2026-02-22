@@ -731,15 +731,21 @@ ncmpio_file_delete(NC *ncp)
     int err=NC_NOERR;
 
     if (ncp->rank == 0) {
+        char *path = ncmpii_remove_file_system_type_prefix(ncp->path);
         if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
             char *mpi_name;
             int mpireturn;
+#ifdef MPICH_VERSION
+            /* MPICH recognizes file system type acronym prefixed to the file name */
             TRACE_IO(MPI_File_delete, ((char *)ncp->path, ncp->mpiinfo));
+#else
+            TRACE_IO(MPI_File_delete, (path, ncp->mpiinfo));
+#endif
             if (mpireturn != MPI_SUCCESS)
                 err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
         }
         else
-            err = PNCIO_File_delete(ncp->path);
+            err = PNCIO_File_delete(path);
     }
 
     if (ncp->nprocs > 1)

@@ -213,7 +213,13 @@ ncmpio_close(void *ncdp)
 #else
             MPI_File fh;
             int mpireturn;
+#ifdef MPICH_VERSION
+            /* MPICH recognizes file system type acronym prefixed to the file name */
             TRACE_IO(MPI_File_open, (MPI_COMM_SELF, ncp->path, MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+#else
+            char *path = ncmpii_remove_file_system_type_prefix(ncp->path);
+            TRACE_IO(MPI_File_open, (MPI_COMM_SELF, path, MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+#endif
             if (mpireturn == MPI_SUCCESS) {
                 /* obtain file size */
                 MPI_Offset *file_size;
