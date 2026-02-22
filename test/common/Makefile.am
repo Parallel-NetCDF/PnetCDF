@@ -63,6 +63,9 @@ endif
 #         $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
 #         $(AM_FCFLAGS) $(FCFLAGS)
 
+../src/utils/ncmpidiff/libncmpidiff_core.la:
+	set -e; cd ../src/utils/ncmpidiff && $(MAKE) $(MFLAGS)
+
 # build check targets but not invoke
 tests-local: all $(check_LTLIBRARIES)
 
