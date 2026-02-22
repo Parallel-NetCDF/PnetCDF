@@ -45,7 +45,13 @@
 
 static int verbose;
 
-#define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR { \
+    if (err != NC_NOERR) { \
+        printf("Error at %s:%d : %s\n", __FILE__,__LINE__, \
+               ncmpi_strerror(err)); \
+        nerrs++; \
+    } \
+}
 
 static void
 usage(char *argv0)
@@ -136,9 +142,13 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
         psizes[i] = 0;
 
     MPI_Dims_create(nprocs, NDIMS, psizes);
-    starts[0] = rank % psizes[0];
-    starts[1] = (rank / psizes[1]) % psizes[1];
-    starts[2] = (rank / (psizes[0] * psizes[1])) % psizes[2];
+
+    if (verbose && rank == 0)
+        printf("psizes=%d %d %d\n",psizes[0],psizes[1],psizes[2]);
+
+    starts[0] = rank / (psizes[2] * psizes[1]);
+    starts[1] = (rank / psizes[2]) % psizes[1];
+    starts[2] = rank % psizes[2];
 
     bufsize = 1;
     for (i=0; i<NDIMS; i++) {
@@ -147,6 +157,9 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
         counts[i]  = len;
         bufsize   *= len;
     }
+
+    if (verbose && rank == 0)
+        printf("gsizes=%lld %lld %lld\n",gsizes[0],gsizes[1],gsizes[2]);
 
     if (verbose)
         printf("%2d: starts=%3lld %3lld %3lld count=%3lld %3lld %3lld\n",

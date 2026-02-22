@@ -83,9 +83,10 @@
 
           ! create a block-block-block data partitioning
           call MPI_Dims_create(nprocs, NDIMS, psizes, err)
+
+          starts(3) = rank / (psizes(1) * psizes(2))
+          starts(2) = mod((rank / psizes(1)), psizes(2))
           starts(1) = mod(rank, psizes(1))
-          starts(2) = mod((rank / psizes(2)), psizes(2))
-          starts(3) = mod((rank / (psizes(1) * psizes(2))), psizes(3))
 
           bbufsize = 1
           do i=1,NDIMS
