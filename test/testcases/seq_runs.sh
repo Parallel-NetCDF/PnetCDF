@@ -31,7 +31,7 @@ if test "x$exe_name" = xtest_vard ||
    test "x$exe_name" = xtest_vard_rec ||
    test "x$exe_name" = xtest_vardf90 ||
    test "x$exe_name" = xtest_vardf ; then
-   export PNETCDF_HINTS="nc_pncio=disable"
+   export PNETCDF_HINTS="pnc_driver=mpiio"
 fi
 
 run_cmd ./$1 -q -o ${TESTOUTDIR}/${exe_name}.nc
