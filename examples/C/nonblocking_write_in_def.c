@@ -158,9 +158,13 @@ int main(int argc, char **argv)
     for (i=0; i<NDIMS; i++) psizes[i] = 0;
 
     MPI_Dims_create(nprocs, NDIMS, psizes);
-    start[0] = rank % psizes[0];
-    start[1] = (rank / psizes[1]) % psizes[1];
-    start[2] = (rank / (psizes[0] * psizes[1])) % psizes[2];
+
+    if (verbose && rank == 0)
+        printf("psizes=%d %d %d\n",psizes[0],psizes[1],psizes[2]);
+
+    start[0] = (rank / (psizes[2] * psizes[1])) % psizes[0];
+    start[1] = (rank / psizes[2]) % psizes[1];
+    start[2] = rank % psizes[2];
 
     bufsize = 1;
     for (i=0; i<NDIMS; i++) {

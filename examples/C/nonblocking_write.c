@@ -173,11 +173,11 @@ int main(int argc, char **argv)
 
     starts[0] = 0;
 #if NDIMS == 3
-    starts[1] = (rank / (psizes[1] * psizes[2])) % psizes[0];
+    starts[1] = rank / (psizes[1] * psizes[2]);
     starts[2] = (rank / psizes[2]) % psizes[1];
     starts[3] = rank % psizes[2];
 #elif NDIMS == 2
-    starts[1] = (rank / psizes[1]) % psizes[0];
+    starts[1] = rank / psizes[1];
     starts[2] = rank % psizes[1];
 #endif
 
@@ -189,6 +189,9 @@ int main(int argc, char **argv)
         starts[i+1] *= len;
         counts[i+1]  = len;
     }
+
+    if (verbose && rank == 0)
+        printf("psizes=%d %d %d\n",psizes[0],psizes[1],psizes[2]);
 
     if (verbose && debug)
         printf("%2d: starts=%2lld %2lld %2lld %2lld counts=%2lld %2lld %2lld %2lld\n",

@@ -56,6 +56,11 @@ ptests:
 		$(MAKE) $(MFLAGS) -C $$d ptests $$* || exit 1 ; \
 	done
 
+ptest6:
+	@for d in $(PTEST_SUBDIRS) ; do \
+		$(MAKE) $(MFLAGS) -C $$d ptest6 $$* || exit 1 ; \
+	done
+
 # For VPATH build (parallel build), try delete all sub-directories
 distclean-local:
 	@for d in $(DIST_SUBDIRS) ; do \
@@ -67,5 +72,5 @@ distclean-local:
 	   done ; \
 	fi
 
-.PHONY: ptest ptests
+.PHONY: ptest ptests ptest6
 
