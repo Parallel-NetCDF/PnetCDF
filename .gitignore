@@ -83,6 +83,7 @@ Makefile
 *.nc1
 *.nc2
 *.nc5
+!/src/utils/ncmpidiff/tst_file.nc
 !/src/utils/ncvalidator/bad_*.nc
 !/src/utils/ncvalidator/bad_*.nc?
 !/test/cdf_format/bad_*.nc?

@@ -11,6 +11,8 @@ AM_CPPFLAGS += -I$(top_builddir)/src/include
 
 bin_PROGRAMS = ncmpidiff cdfdiff
 
+check_PROGRAMS = $(bin_PROGRAMS)
+
 noinst_LTLIBRARIES = libncmpidiff_core.la
 libncmpidiff_core_la_SOURCES = ncmpidiff_core.c
 
@@ -28,7 +30,20 @@ $(top_builddir)/src/libs/libpnetcdf.la:
 
 dist_man_MANS = ncmpidiff.1 cdfdiff.1
 
-EXTRA_DIST = ncmpidiff_core.h
+AM_TESTS_ENVIRONMENT  = export check_PROGRAMS="$(check_PROGRAMS)";
+AM_TESTS_ENVIRONMENT += export SED="$(SED)";
+AM_TESTS_ENVIRONMENT += export srcdir="$(srcdir)";
+AM_TESTS_ENVIRONMENT += export TESTOUTDIR="$(FSTYPE_PREFIX)$(TESTOUTDIR)";
+AM_TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
+AM_TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
+
+TESTS = $(check_PROGRAMS)
+XFAIL_TESTS = $(check_PROGRAMS)
+EST_EXTENSIONS = .sh
+LOG_COMPILER = $(srcdir)/xfail_runs.sh
+SH_LOG_COMPILER =
+
+EXTRA_DIST = ncmpidiff_core.h tst_file.nc
 
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out
 
