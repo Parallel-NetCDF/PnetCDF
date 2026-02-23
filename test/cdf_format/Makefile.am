@@ -11,7 +11,7 @@ AM_CPPFLAGS += -I$(srcdir)/../common
 AM_CPPFLAGS += -I$(top_builddir)/src/include
 AM_CPPFLAGS += -I$(top_srcdir)/src/utils/ncmpidiff
 
-LDADD  = ../common/libtestutils.la $(top_builddir)/src/utils/ncmpidiff/libncmpidiff_core.la
+LDADD  = ../common/libtestutils.la
 LDADD += $(top_builddir)/src/libs/libpnetcdf.la
 LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@
 
