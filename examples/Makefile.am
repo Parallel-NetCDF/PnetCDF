@@ -20,7 +20,7 @@ SUBDIRS += F90
 endif
 endif
 
-# There are FORTRAN programs in tutorial replying on F77/utils.o
+# There are FORTRAN programs in tutorial relying on F77/utils.o
 # Thus, keep folder tutorial after F77, allowing F77 build first.
 SUBDIRS += tutorial
 

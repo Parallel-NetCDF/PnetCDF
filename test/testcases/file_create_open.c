@@ -77,7 +77,7 @@ int test_io(const char *out_path,
     }
 #endif
 
-    if (info != MPI_INFO_NULL) MPI_Info_free(&info_dup);
+    if (info_dup != MPI_INFO_NULL) MPI_Info_free(&info_dup);
 
     return (nerrs > 0);
 }
