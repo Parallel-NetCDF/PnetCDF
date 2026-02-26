@@ -31,7 +31,7 @@
 #endif
 
 #ifdef USE_POSIX_IO_TO_MOVE
-/*----< move_file_block() >-------------------------------------------------*/
+/*----< move_file_block() >--------------------------------------------------*/
 /* Call POSIX I/O subroutines to move data */
 #include <fcntl.h>      /* open() */
 #include <sys/types.h>  /* open() */
@@ -156,7 +156,7 @@ move_file_block(NC         *ncp,
     return status;
 }
 #else
-/*----< move_file_block() >-------------------------------------------------*/
+/*----< move_file_block() >--------------------------------------------------*/
 /* Call MPI I/O subroutines to move data */
 static int
 move_file_block(NC         *ncp,
@@ -174,12 +174,20 @@ move_file_block(NC         *ncp,
     /* If intra-node aggregation is enabled, then only the aggregators perform
      * the movement.
      */
-    if (ncp->num_aggrs_per_node > 0 && ncp->ina_comm == MPI_COMM_NULL)
-        return NC_NOERR;
+    if (ncp->num_aggrs_per_node > 0) {
 
-    comm = (ncp->ina_comm == MPI_COMM_NULL) ? ncp->comm : ncp->ina_comm;
-    rank = (ncp->ina_comm == MPI_COMM_NULL) ? ncp->rank : ncp->ina_rank;
-    nprocs = (ncp->ina_comm == MPI_COMM_NULL) ? ncp->nprocs : ncp->ina_nprocs;
+        if (ncp->comm_attr.ina_comm == MPI_COMM_NULL)
+            return NC_NOERR;
+
+        comm = ncp->comm_attr.ina_comm;
+        rank = ncp->ina_rank;
+        nprocs = ncp->ina_nprocs;
+    }
+    else {
+        comm = ncp->comm;
+        rank = ncp->rank;
+        nprocs = ncp->nprocs;
+    }
 
     /* align file access for all ranks */
     align_rank = (to / ncp->data_chunk + rank) % nprocs;
@@ -487,8 +495,8 @@ NC_begins(NC         *ncp,
             if (j < ncp->old->vars.ndefined) {
                 if (ncp->vars.value[i]->begin < ncp->old->vars.value[j]->begin)
                     /* the first ncp->vars.ndefined non-record variables should
-                       be the same. If the new begin is smaller, reuse the old
-                       begin */
+                     * be the same. If the new begin is smaller, reuse the old
+                     * begin */
                     ncp->vars.value[i]->begin = ncp->old->vars.value[j]->begin;
                 j++;
             }
@@ -629,13 +637,14 @@ write_NC(NC *ncp)
 
     /* Depending on whether NC_HCOLL is set, writing file header can be done
      * through either MPI collective or independent write call.
-     * When * ncp->nprocs == 1, ncp->collective_fh == ncp->independent_fh
+     * When ncp->nprocs == 1, ncp->collective_fh == ncp->independent_fh
      * For those ranks participating the collective MPI write call, their
      * is_coll is set to 1, otherwise 0.
      */
     if (fIsSet(ncp->flags, NC_HCOLL)) {
         if (ncp->num_aggrs_per_node > 0)
-            is_coll = (ncp->ina_nprocs > 1 && ncp->rank == ncp->my_aggr);
+            is_coll = (ncp->ina_nprocs > 1 &&
+                       ncp->rank == ncp->comm_attr.my_aggr);
         else
             is_coll = (ncp->nprocs > 1);
     }

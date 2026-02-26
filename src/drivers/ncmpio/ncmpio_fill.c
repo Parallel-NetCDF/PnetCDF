@@ -164,10 +164,10 @@ fill_var_rec(NC         *ncp,
     int nprocs = ncp->nprocs;
     int rank = ncp->rank;
     if (ncp->num_aggrs_per_node > 0) {
-        if (ncp->my_aggr != ncp->rank)
+        if (ncp->comm_attr.my_aggr != ncp->rank)
             return NC_NOERR;
 
-        comm = ncp->ina_comm;
+        comm = ncp->comm_attr.ina_comm;
         nprocs = ncp->ina_nprocs;
         rank = ncp->ina_rank;
     }
@@ -242,7 +242,7 @@ fill_var_rec(NC         *ncp,
     if (status != NC_NOERR) return status;
 
     if (IS_RECVAR(varp)) { /* update header's number of records in memory */
-        /* recno may be differenet among, if safe mode is disabled. In
+        /* recno may be different among processes, if safe mode is disabled. In
          * addition, recno can be > or < then ncp->numrecs. We need to sync
          * first before update numrecs field in file.
          *
@@ -288,7 +288,7 @@ fillerup(NC *ncp)
         indx = ncmpio_NC_findattr(&ncp->vars.value[i]->attrs, "_FillValue");
 
         /* only if filling this variable is requested. Fill mode can be
-         * enabled by 2 ways: explictly call to ncmpi_def_var_fill() or put
+         * enabled by 2 ways: explicitly call to ncmpi_def_var_fill() or put
          * the attribute named "_FillValue" */
         if (ncp->vars.value[i]->no_fill && indx == -1) continue;
 
@@ -343,7 +343,8 @@ fill_added_recs(NC *ncp, NC *old_ncp)
                 continue;
 
             /* check if attribute _FillValue is defined */
-            indx = ncmpio_NC_findattr(&ncp->vars.value[varid]->attrs, "_FillValue");
+            indx = ncmpio_NC_findattr(&ncp->vars.value[varid]->attrs,
+                                      "_FillValue");
 
             /* only if filling this variable is requested */
             if (ncp->vars.value[varid]->no_fill && indx == -1) continue;
@@ -387,7 +388,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     int nprocs = ncp->nprocs;
     int rank = ncp->rank;
     if (ncp->num_aggrs_per_node > 0) {
-        if (ncp->my_aggr != ncp->rank)
+        if (ncp->comm_attr.my_aggr != ncp->rank)
             return NC_NOERR;
 
         nprocs = ncp->ina_nprocs;
@@ -410,7 +411,8 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
      * variables' fill modes and overwrite local's if an inconsistency is found
      * Note ncp->vars.ndefined is already made consistent by this point.
      */
-    MPI_Comm comm = (ncp->num_aggrs_per_node > 0) ? ncp->ina_comm : ncp->comm;
+    MPI_Comm comm = (ncp->num_aggrs_per_node > 0) ? ncp->comm_attr.ina_comm
+                                                  : ncp->comm;
 
     if (nprocs > 1) {
         int mpireturn;
@@ -777,9 +779,9 @@ err_check:
 }
 
 /*----< ncmpio_set_fill() >--------------------------------------------------*/
-/* this API is collective, must be called in define mode, contrary to netCDF
- * where nc_set_fill() can also be called in data mode. The reason of PnetCDF
- * enforcing this requirement is because PnetCDF only fills fixed-size
+/* This API is collective, and must be called in the define mode, contrary to
+ * netCDF where nc_set_fill() can also be called in data mode. The reason of
+ * PnetCDF enforcing this requirement is because PnetCDF only fills fixed-size
  * variables at ncmpi_enddef() and record variables in ncmpi_fill_var_rec().
  */
 int
@@ -798,7 +800,7 @@ ncmpio_set_fill(void *ncdp,
             return  ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
 
         if (fill_mode != root_fill_mode)
-            /* dataset's fill mode is inconsistent with root's */
+            /* the file's fill mode is inconsistent with root's */
             DEBUG_ASSIGN_ERROR(err, NC_EMULTIDEFINE_FILL_MODE)
         else
             err = NC_NOERR;
@@ -935,7 +937,7 @@ ncmpio_inq_var_fill(NC_var *varp,
     /* retrieve user-defined attribute _FillValue */
     xp = ncap->value[i]->xvalue;
 
-    /* value stored in xvalue is in external representation, may need byte-swap */
+    /* value stored in xvalue is in external representation, need byte-swap */
     switch(varp->xtype) {
         case NC_CHAR:   return ncmpix_getn_text               (&xp, 1,               (char*)fill_value);
         case NC_BYTE:   return ncmpix_getn_NC_BYTE_schar      (&xp, 1,        (signed char*)fill_value);

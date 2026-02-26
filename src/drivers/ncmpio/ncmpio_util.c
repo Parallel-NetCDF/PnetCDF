@@ -236,8 +236,8 @@ void ncmpio_hint_extract(NC       *ncp,
         }
     }
 
-    /* If user explicitly want to use MPI-IO instead of PnetCDF's internal PNCIO
-     * driver, then set PnetCDF I/O hint "pnc_driver" to "mpiio".
+    /* If user explicitly want to use MPI-IO instead of PnetCDF's internal
+     * PNCIO driver, then set PnetCDF I/O hint "pnc_driver" to "mpiio".
      */
     MPI_Info_get(info, "pnc_driver", MPI_MAX_INFO_VAL-1, value, &flag);
     if (flag && strcasecmp(value, "mpiio") == 0)
@@ -364,13 +364,13 @@ void ncmpio_hint_set(NC       *ncp,
         snprintf(int_str, MAX_INT_LEN, "%d", ncp->num_aggrs_per_node);
         MPI_Info_set(info, "nc_num_aggrs_per_node", int_str);
 
-        /* Add hint "ina_node_list", list of INA aggregators' rank IDs */
-        if (ncp->ina_node_list != NULL) {
+        /* Add hint "ina_ranks", list of INA aggregators' rank IDs */
+        if (ncp->comm_attr.ina_ranks != NULL) {
             char value[MPI_MAX_INFO_VAL];
             int i;
-            snprintf(value, MAX_INT_LEN, "%d", ncp->ina_node_list[0]);
+            snprintf(value, MAX_INT_LEN, "%d", ncp->comm_attr.ina_ranks[0]);
             for (i=1; i<ncp->ina_nprocs; i++) {
-                snprintf(int_str, sizeof(int_str), " %d", ncp->ina_node_list[i]);
+                snprintf(int_str, sizeof(int_str), " %d", ncp->comm_attr.ina_ranks[i]);
                 if (strlen(value) + strlen(int_str) >= MPI_MAX_INFO_VAL-5) {
                     strcat(value, " ...");
                     break;
@@ -392,7 +392,7 @@ void ncmpio_hint_set(NC       *ncp,
         MPI_Info_set(info, "pnc_striping", "inherit");
 }
 
-/*----< ncmpio_first_offset() >-----------------------------------------------*/
+/*----< ncmpio_first_offset() >----------------------------------------------*/
 /* Returns the file offset of the first variable element accessed by this
  * request. Note zero-length request should never call this subroutine.
  */
@@ -585,8 +585,8 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
     /* check byte size of buf (internal representation) */
     ibuf_size = nelems * el_size;
 
-    /* Step 1: if buftype is not contiguous, i.e. a noncontiguous MPI
-     * derived datatype, pack buf into a contiguous buffer, lbuf,
+    /* Step 1: if buftype is not contiguous, i.e. a noncontiguous MPI derived
+     * datatype, pack buf into a contiguous buffer, lbuf,
      */
     if (!buftype_is_contig) { /* buftype is not contiguous */
         if (imaptype == MPI_DATATYPE_NULL && !need_convert)
@@ -667,8 +667,8 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
     else /* not a true varm call: reuse lbuf */
         cbuf = lbuf;
 
-    /* Step 3: type-convert and byte-swap cbuf to xbuf, and xbuf will be
-     * used in MPI write function to write to file
+    /* Step 3: type-convert and byte-swap cbuf to xbuf, and xbuf will be used
+     * in MPI write function to write to file
      */
     if (need_convert) {
         /* user buf type does not match nc var type defined in file */
@@ -715,12 +715,12 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                 break;
         }
         /* The only error codes returned from the above switch block are
-	 * NC_EBADTYPE or NC_ERANGE. Bad varp->xtype and itype have been sanity
-	 * checked at the dispatchers, so NC_EBADTYPE is not possible. Thus,
-	 * the only possible error is NC_ERANGE.  NC_ERANGE can be caused by
-	 * one or more elements of buf that is out of range representable by
-	 * the external data type, it is not considered a fatal error. This
-	 * request must continue to finish.
+         * NC_EBADTYPE or NC_ERANGE. Bad varp->xtype and itype have been sanity
+         * checked at the dispatchers, so NC_EBADTYPE is not possible. Thus,
+         * the only possible error is NC_ERANGE.  NC_ERANGE can be caused by
+         * one or more elements of buf that is out of range representable by
+         * the external data type, it is not considered a fatal error. This
+         * request must continue to finish.
          */
         if (free_cbuf) NCI_Free(cbuf);
         if (free_lbuf) NCI_Free(lbuf);

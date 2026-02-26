@@ -360,7 +360,7 @@ ncmpio_getput_zero_req(NC *ncp, int reqMode)
     /* When intra-node aggregation is enabled, non-aggregators do not access
      * the file.
      */
-    if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->my_aggr)
+    if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->comm_attr.my_aggr)
         return NC_NOERR;
 
     /* do nothing if this came from an independent API */
