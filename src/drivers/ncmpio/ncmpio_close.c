@@ -32,7 +32,7 @@
 #include "ncmpio_subfile.h"
 #endif
 
-/*----< ncmpio_free_NC() >----------------------------------------------------*/
+/*----< ncmpio_free_NC() >---------------------------------------------------*/
 void
 ncmpio_free_NC(NC *ncp)
 {
@@ -51,12 +51,11 @@ ncmpio_free_NC(NC *ncp)
     if (ncp->get_list      != NULL) NCI_Free(ncp->get_list);
     if (ncp->put_list      != NULL) NCI_Free(ncp->put_list);
     if (ncp->abuf          != NULL) NCI_Free(ncp->abuf);
-    if (ncp->nonaggr_ranks != NULL) NCI_Free(ncp->nonaggr_ranks);
 
     NCI_Free(ncp);
 }
 
-/*----< ncmpio_close() >------------------------------------------------------*/
+/*----< ncmpio_close() >-----------------------------------------------------*/
 /* This function is collective */
 int
 ncmpio_close(void *ncdp)
@@ -195,7 +194,7 @@ ncmpio_close(void *ncdp)
         if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
 
         if (ncp->rank == 0) {
-            /* ignore all errors, as unexpected file size if not a fatal error */
+            /* ignore all errors, as unexpected file size is not fatal */
 #ifdef HAVE_TRUNCATE
             /* when calling POSIX I/O, remove file type prefix from file name */
             char *path = ncmpii_remove_file_system_type_prefix(ncp->path);
@@ -250,10 +249,6 @@ ncmpio_close(void *ncdp)
         }
         if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
     }
-
-    /* free the intra-node aggregation communicator */
-    if (ncp->ina_comm != MPI_COMM_NULL)
-        MPI_Comm_free(&ncp->ina_comm);
 
     /* collectively return the same error code */
     if (ncp->nprocs > 1)

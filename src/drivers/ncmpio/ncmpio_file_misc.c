@@ -59,11 +59,8 @@ dup_NC(const NC *ref)
         return NULL;
     }
 
-    if (ref->nonaggr_ranks != NULL) {
-        size_t len = sizeof(int) * ncp->num_nonaggrs;
-        ncp->nonaggr_ranks = (int*) NCI_Malloc(len);
-        memcpy(ncp->nonaggr_ranks, ref->nonaggr_ranks, len);
-    }
+    /* copy communicator attribute over */
+    ncp->comm_attr = ref->comm_attr;
 
     /* fields below should not copied from ref */
     ncp->comm       = MPI_COMM_NULL;
@@ -152,7 +149,7 @@ ncmpio_begin_indep_data(void *ncdp)
          * 2. When INA is disabled, all ranks calls PNCIO_File_open() and thus
          *    pncio_fh should not be NULL. In other word, this scenario should
          *    not reach here at all. Because PnetCDF's PNCIO driver relaxes
-         *    File_setview subroutine to be able to called independently, the
+         *    file_setview subroutine to be able to called independently, the
          *    same pncio_fh can be used for both collective and independent I/O
          *    APIs. Note we cannot re-used pncio_fh for the above scenario 1,
          *    because in the collective data mode, all ranks must participate
@@ -172,9 +169,7 @@ ncmpio_begin_indep_data(void *ncdp)
 
         ncp->pncio_fh = (PNCIO_File*) NCI_Calloc(1,sizeof(PNCIO_File));
         ncp->pncio_fh->file_system = ncp->fstype;
-        ncp->pncio_fh->node_ids.num_nodes = 1;
-        ncp->pncio_fh->node_ids.ids = (int*) NCI_Malloc(sizeof(int));
-        ncp->pncio_fh->node_ids.ids[0] = 0;
+        ncp->pncio_fh->comm_attr = ncp->comm_attr;
 
         int omode = fClr(ncp->mpiomode, MPI_MODE_CREATE);
 
@@ -195,10 +190,6 @@ ncmpio_begin_indep_data(void *ncdp)
 
         /* Add PnetCDF hints into ncp->mpiinfo */
         ncmpio_hint_set(ncp, ncp->mpiinfo);
-
-        NCI_Free(ncp->pncio_fh->node_ids.ids);
-        ncp->pncio_fh->node_ids.num_nodes = 0;
-        ncp->pncio_fh->node_ids.ids = NULL;
 
         return NC_NOERR;
     }
@@ -285,7 +276,7 @@ ncmpio_abort(void *ncdp)
 {
    /*
     * In data mode, same as ncmpi_close().
-    * In define mode, descard new definition.
+    * In define mode, discard new definition.
     * If file is just created, remove the file.
     */
     int status=NC_NOERR, err, doUnlink = 0;
@@ -463,7 +454,7 @@ ncmpio_inq_misc(void       *ncdp,
          *
          * Note MPI implementations may choose to ignore unrecognized hints and
          * MPI_File_get_info() may returns no PnetCDF hints. We need to add the
-         * PnbetCDF hints explicitly to the info object brefore returning it to
+         * PnbetCDF hints explicitly to the info object before returning it to
          * user.
          */
 
@@ -553,7 +544,7 @@ ncmpi_delete(const char *filename,
 }
 
 
-/*----< ncmpio_flush() >------------------------------------------------------*/
+/*----< ncmpio_flush() >-----------------------------------------------------*/
 /* This API is a collective subroutine, and must be called in data mode
  */
 int
