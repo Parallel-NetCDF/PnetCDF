@@ -38,7 +38,7 @@ ncmpio_open(MPI_Comm         comm,
             int              ncid,
             int              env_mode,
             MPI_Info         user_info, /* user's and env info combined */
-            PNCIO_node_ids   node_ids,  /* node IDs of all processes */
+            PNC_comm_attr    comm_attr, /* node IDs and INA metadata */
             void           **ncpp)
 {
     char *filename, value[MPI_MAX_INFO_VAL + 1], *mpi_name;
@@ -99,10 +99,6 @@ ncmpio_open(MPI_Comm         comm,
         MPI_Bcast(&ncp->fstype, 1, MPI_INT, 0, ncp->comm);
     }
 
-#ifdef WKL_DEBUG
-if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == PNCIO_FSTYPE_MPIIO)? "PNCIO_FSTYPE_MPIIO" : (ncp->fstype == PNCIO_LUSTRE) ? "PNCIO_LUSTRE" : "PNCIO_UFS");
-#endif
-
     /* Remove the file system type prefix name if there is any. For example,
      * when path = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
      * filename pointing to "/home/foo/testfile.nc", so it can be used in POSIX
@@ -131,11 +127,13 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
 
     fSet(ncp->flags, env_mode);
 
-    /* node_ids stores a list of unique IDs of compute nodes of all MPI ranks
-     * in the MPI communicator passed from the user application. It is a keyval
-     * attribute cached in the communicator. See src/dispatchers/file.c for
-     * details. The node IDs will be used when the intra-node aggregation (INA)
-     * is enabled and when PnetCDF's PNCIO driver is used.
+    /* comm_attr.ids[] stores a list of unique IDs of compute nodes of all MPI
+     * ranks in the MPI communicator passed from the user application. It is a
+     * keyval attribute cached in the communicator. See src/dispatchers/file.c
+     * for details.
+     *
+     * commm_attr also stores the INA metadata. The INA communicator has been
+     * created at the dispatcher.
      *
      * When intra-node aggregation (INA) is enabled, node IDs are used to
      * create a new MPI communicator consisting of the intra-node aggregators
@@ -143,52 +141,52 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
      * PnetCDF's PNCIO driver. This means only intra-node aggregators will
      * perform file I/O in PnetCDF collective put and get operations.
      *
-     * node_ids will be used to calculate cb_nodes, the number of MPI-IO/PNCIO
-     * aggregators (not INA aggregators).
+     * comm_attr.ids[] will be used to calculate cb_nodes, the number of
+     * MPI-IO/PNCIO aggregators (not INA aggregators).
      */
-    ncp->node_ids = node_ids;
+    ncp->comm_attr = comm_attr;
 
     /* When the total number of aggregators >= number of processes, disable
      * intra-node aggregation.
      */
-    if (ncp->num_aggrs_per_node * node_ids.num_nodes >= ncp->nprocs)
+    if (ncp->num_aggrs_per_node * comm_attr.num_nodes >= ncp->nprocs)
         ncp->num_aggrs_per_node = 0;
 
     /* ncp->num_aggrs_per_node = 0, or > 0 indicates whether this feature
      * is disabled or enabled globally for all processes.
      */
-    ncp->my_aggr = -1;
-    ncp->ina_comm = MPI_COMM_NULL;
     ncp->ina_nprocs = 0;
     ncp->ina_rank = -1;
-    ncp->ina_node_list = NULL;
-    if (ncp->num_aggrs_per_node > 0) {
-        /* Must duplicate node_ids, as node_ids.ids[] will be modified by
-         * ncmpio_ina_init().
-         */
-        ncp->node_ids.ids = (int*) NCI_Malloc(sizeof(int) * ncp->nprocs);
-        memcpy(ncp->node_ids.ids, node_ids.ids, sizeof(int) * ncp->nprocs);
 
-        /* Divide all ranks into groups. Each group is assigned with one
-         * intra-node aggregator. The following metadata related to intra-node
-         * aggregation will be set up.
-         * ncp->my_aggr is the aggregator's rank ID of this group. When ==
-         *     ncp->rank, this rank is an aggregator.
-         * ncp->num_nonaggrs is the number of non-aggregators assigned to this
-         *     rank (an aggregator)
-         * ncp->ina_comm will be created consisting of only intra-node
-         *     aggregators, which will be used when calling MPI_File_open().
-         *     For non-aggregator, ncp->ina_comm == MPI_COMM_NULL.
-         * ncp->node_ids.ids[] will be modified to contain the nodes IDs of
-         *     intra-node aggregators only, which will be passed to pncio_fh.
-         */
-        err = ncmpio_ina_init(ncp);
-        if (err != NC_NOERR) DEBUG_FOPEN_ERROR(err);
+    if (ncp->num_aggrs_per_node > 0) {
+        if (ncp->rank == comm_attr.my_aggr) {
+            int *ids;
+
+            MPI_Comm_size(comm_attr.ina_comm, &ncp->ina_nprocs);
+            MPI_Comm_rank(comm_attr.ina_comm, &ncp->ina_rank);
+
+            /* overwrite comm_attr.ids[] to make it to contain the the node IDs
+             * of processes in the INA communicator.
+             */
+            ids = (int*) NCI_Malloc(sizeof(int) * ncp->ina_nprocs);
+
+            for (i=0; i<ncp->ina_nprocs; i++) {
+                int j;
+                /* j is the process rank in comm passed into ncmpi_create() */
+                j = comm_attr.ina_ranks[i];
+                ids[i] = comm_attr.ids[j];
+                /* Now ids[] store the node IDs of the processes in the INA
+                 * communicator. ncp->ids[] will be used by PnetCDF's PNCIO
+                 * driver only.
+                 */
+            }
+            ncp->comm_attr.ids = ids;
+        }
 
         /* As non-aggregators will not perform any file I/O, we now can replace
          * comm with ina_comm. Same for nprocs.
          */
-        comm = ncp->ina_comm;
+        comm = comm_attr.ina_comm;
         nprocs = ncp->ina_nprocs;
 
         /* For non-aggregators, comm is MPI_COMM_NULL. As the remaining task of
@@ -205,7 +203,7 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
     /* open file collectively ---------------------------------------------- */
     if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
 #ifdef MPICH_VERSION
-        /* MPICH recognizes file system type acronym prefixed to the file name */
+        /* MPICH recognizes file system type acronym prefixed to file names */
         TRACE_IO(MPI_File_open, (comm, path, mpiomode, user_info, &fh));
 #else
         TRACE_IO(MPI_File_open, (comm, filename, mpiomode, user_info, &fh));
@@ -230,7 +228,7 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
         /* When ncp->fstype != PNCIO_FSTYPE_MPIIO, use PnetCDF's PNCIO driver */
         ncp->pncio_fh = (PNCIO_File*) NCI_Calloc(1,sizeof(PNCIO_File));
         ncp->pncio_fh->file_system = ncp->fstype;
-        ncp->pncio_fh->node_ids    = ncp->node_ids;
+        ncp->pncio_fh->comm_attr   = ncp->comm_attr;
 
         err = PNCIO_File_open(comm, filename, mpiomode, user_info,
                               ncp->pncio_fh);
@@ -275,7 +273,7 @@ fn_exit:
 
         MPI_Bcast(striping_info, 2, MPI_INT, 0, ncp->comm);
 
-        if (ncp->my_aggr != ncp->rank) {
+        if (ncp->comm_attr.my_aggr != ncp->rank) {
             sprintf(value, "%d", striping_info[0]);
             MPI_Info_set(ncp->mpiinfo, "striping_unit", value);
             sprintf(value, "%d", striping_info[1]);
@@ -302,28 +300,22 @@ fn_exit:
     /* Copy MPI-IO hints into ncp->mpiinfo */
     ncmpio_hint_set(ncp, ncp->mpiinfo);
 
-    /* ina_node_list is no longer needed */
-    if (ncp->ina_node_list != NULL) {
-        NCI_Free(ncp->ina_node_list);
-        ncp->ina_node_list = NULL;
-    }
-    if (ncp->num_aggrs_per_node > 0) {
-        /* node_ids is no longer needed. Note node_ids is duplicated above from
-         * the MPI communicator's cached keyval attribute when
+    if (ncp->num_aggrs_per_node > 0 && ncp->rank == comm_attr.my_aggr) {
+        /* comm_attr.ids[] is no longer needed. Note it has been duplicated
+         * above from the MPI communicator's cached keyval attribute when
          * ncp->num_aggrs_per_node > 0.
          */
-        NCI_Free(ncp->node_ids.ids);
-        ncp->node_ids.ids = NULL;
+        NCI_Free(ncp->comm_attr.ids);
+        ncp->comm_attr.ids = NULL;
     }
     if (ncp->pncio_fh != NULL)
-        ncp->pncio_fh->node_ids.ids = NULL;
+        ncp->pncio_fh->comm_attr.ids = NULL;
 
-    /* read header from file into NC object pointed by ncp -------------------*/
+    /* read header from file into NC object pointed by ncp ------------------*/
     err = ncmpio_hdr_get_NC(ncp);
     if (err == NC_ENULLPAD) status = NC_ENULLPAD; /* non-fatal error */
     else if (err != NC_NOERR) { /* fatal error */
         ncmpio_file_close(ncp);
-        if (ncp->ina_comm != MPI_COMM_NULL) MPI_Comm_free(&ncp->ina_comm);
         ncmpio_free_NC(ncp);
         DEBUG_RETURN_ERROR(err);
     }
@@ -370,6 +362,16 @@ fn_exit:
     ncmpio_hash_table_populate_NC_attr(ncp);
     for (i=0; i<ncp->vars.ndefined; i++)
         ncp->vars.value[i]->attrs.hash_size = ncp->hash_size_attr;
+#endif
+
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+    int nelems = sizeof(ncp->ina_time_put) / sizeof(ncp->ina_time_put[0]);
+    ncp->ina_time_init = ncp->ina_time_flatten = 0.0;
+    for (i=0; i<nelems; i++) {
+        ncp->ina_time_put[i] = ncp->ina_time_get[i] = 0;
+        ncp->maxmem_put[i] = ncp->maxmem_get[i] = 0;
+    }
+    ncp->ina_npairs_put = ncp->ina_npairs_get = 0;
 #endif
 
     return status;
