@@ -13,12 +13,12 @@
 
 extern int
 ncmpio_create(MPI_Comm comm, const char *path, int cmode, int ncid,
-              int env_mode, MPI_Info info, PNCIO_node_ids node_ids,
+              int env_mode, MPI_Info info, PNC_comm_attr node_ids,
               void **ncdp);
 
 extern int
 ncmpio_open(MPI_Comm comm, const char *path, int omode, int ncid,
-            int env_mode, MPI_Info info, PNCIO_node_ids node_ids,
+            int env_mode, MPI_Info info, PNC_comm_attr node_ids,
             void **ncdp);
 
 extern int
