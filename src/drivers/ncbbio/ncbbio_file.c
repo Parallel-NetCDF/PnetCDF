@@ -55,7 +55,7 @@ ncbbio_create(MPI_Comm         comm,
               int              ncid,
               int              env_mode,
               MPI_Info         info,
-              PNCIO_node_ids   node_ids, /* node IDs of all processes */
+              PNC_comm_attr    node_ids, /* node IDs of all processes */
               void           **ncpp)     /* OUT */
 {
     int err;
@@ -108,7 +108,7 @@ ncbbio_open(MPI_Comm         comm,
             int              ncid,
             int              env_mode,
             MPI_Info         info,
-            PNCIO_node_ids   node_ids, /* node IDs of all processes */
+            PNC_comm_attr    node_ids, /* node IDs of all processes */
             void           **ncpp)     /* OUT */
 {
     int err;
