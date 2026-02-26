@@ -406,17 +406,18 @@ struct NC {
     int           num_subfiles; /* no. subfiles */
     struct NC    *ncp_sf;       /* ncp of subfile */
     MPI_Comm      comm_sf;      /* subfile MPI communicator */
-    PNCIO_node_ids node_ids_sf; /* node IDs of subfile MPI communicator */
+    PNC_comm_attr node_ids_sf; /* node IDs of subfile MPI communicator */
 #endif
-    int           hdr_chunk;    /* chunk size for reading header, one chunk at a time */
-    int           data_chunk;   /* chunk size for moving variables to higher offsets */
-    int           pnc_striping;  /* PNCIO_STRIPING_AUTO or PNCIO_STRIPING_INHERIT */
-    MPI_Offset    v_align;      /* alignment of the beginning of fixed-size variables */
+    int hdr_chunk;    /* chunk size for reading header, one chunk at a time */
+    int data_chunk;   /* chunk size for moving variables to higher offsets */
+    int pnc_striping; /* PNCIO_STRIPING_AUTO or PNCIO_STRIPING_INHERIT */
+
+    MPI_Offset    v_align;      /* alignment of beginning of fixed-size variable section */
     MPI_Offset    r_align;      /* file alignment for record variable section */
     MPI_Offset    info_v_align; /* v_align set in MPI Info object */
     MPI_Offset    info_r_align; /* r_align set in MPI Info object */
     MPI_Offset    h_minfree;    /* pad at the end of the header section */
-    MPI_Offset    v_minfree;    /* pad at the end of the data section for fixed-size variables */
+    MPI_Offset    v_minfree;    /* pad at the end of the data section for fixed-size variable section */
     MPI_Offset    ibuf_size;    /* packing buffer size for flushing noncontig
                                    user buffer during wait */
     MPI_Offset    xsz;          /* size of this file header, <= var[0].begin */
@@ -433,21 +434,25 @@ struct NC {
     MPI_Offset    put_size;  /* amount of writes committed so far in bytes */
     MPI_Offset    get_size;  /* amount of reads  committed so far in bytes */
 
-    MPI_Comm       comm;           /* MPI communicator */
-    int            rank;           /* MPI rank of this process */
-    int            nprocs;         /* no. MPI processes */
-    PNCIO_node_ids node_ids;       /* node IDs of each rank */
-    MPI_Info       mpiinfo;        /* used MPI info object */
-    MPI_File       collective_fh;  /* MPI-IO file handle for collective mode */
-    MPI_File       independent_fh; /* MPI-IO file handle for independent mode */
-    PNCIO_File    *pncio_fh;       /* PNCIO file handler */
-    int            fstype;         /* file system type: PNCIO_LUSTRE, PNCIO_UFS */
+    MPI_Comm      comm;          /* MPI communicator */
+    int           rank;          /* MPI rank of this process */
+    int           nprocs;        /* no. MPI processes */
+
+    PNC_comm_attr comm_attr;     /* attributes cached in communicator storing
+                                  * compute node IDs of all processes and INA
+                                  * metadata */
+
+    MPI_Info      mpiinfo;       /* used MPI info object */
+    MPI_File      collective_fh; /* MPI-IO file handle for collective mode */
+    MPI_File      independent_fh;/* MPI-IO file handle for independent mode */
+    PNCIO_File   *pncio_fh;      /* PNCIO file handler */
+    int           fstype;        /* file system type: PNCIO_LUSTRE, PNCIO_UFS */
 
     NC_dimarray   dims;     /* dimensions defined */
     NC_attrarray  attrs;    /* global attributes defined */
     NC_vararray   vars;     /* variables defined */
 
-    int           hash_size_attr;  /* hash table size for non-global attributes */
+    int hash_size_attr;  /* hash table size for non-global attributes */
 
     int           maxGetReqID;    /* max get request ID */
     int           maxPutReqID;    /* max put request ID */
@@ -467,18 +472,13 @@ struct NC {
     struct NC    *old;      /* contains the previous NC during redef. */
 
     /* Below are used for intra-node aggregation (INA) */
-    MPI_Comm      ina_comm;  /* communicator of only intra-node aggregators */
-    int           ina_nprocs;/* no. processes in intra-node communicator */
-    int           ina_rank;  /* rank ID in intra-node communicator */
-    int  num_aggrs_per_node; /* no. aggregators per compute node. Set through a
-                              * user hint. 0 to disable the intra-node
-                              * aggregation, -1 to let PnetCDF to decide.This
-                              * value must be the same among all processes.
-                              */
-    int  my_aggr;            /* rank ID of my aggregator */
-    int  num_nonaggrs;       /* no. non-aggregators assigned */
-    int *nonaggr_ranks;      /* ranks of assigned non-aggregators */
-    int *ina_node_list;      /* rank IDs of INA aggregators */
+    int ina_nprocs;         /* no. processes in intra-node communicator */
+    int ina_rank;           /* rank ID in intra-node communicator */
+    int num_aggrs_per_node; /* no. aggregators per compute node. Set through a
+                             * user hint. 0 to disable the intra-node
+                             * aggregation, -1 to let PnetCDF to decide.This
+                             * value must be the same among all processes.
+                             */
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double ina_time_init;
@@ -721,9 +721,6 @@ ncmpio_file_open(NC *ncp, MPI_Comm comm, const char *path, int omode,
                  MPI_Info info);
 
 /* Begin defined in ncmpio_intranode.c --------------------------------------*/
-extern int
-ncmpio_ina_init(NC *ncp);
-
 extern int
 ncmpio_ina_nreqs(NC *ncp, int mode, int num_reqs, NC_req *put_list,
                  MPI_Offset newnumrecs);
