@@ -66,7 +66,6 @@
     return err;                                                         \
 }
 #define DEBUG_FOPEN_ERROR(err) {                                        \
-    if (ncp->ina_comm != MPI_COMM_NULL) MPI_Comm_free(&ncp->ina_comm);  \
     char *_env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");              \
     if (_env_str != NULL && *_env_str != '0') {                         \
         int _rank;                                                      \
@@ -108,10 +107,7 @@
 #else
 #define DEBUG_RETURN_ERROR(err) return err;
 #define DEBUG_RETURN_ERROR_MSG(err, msg) return err;
-#define DEBUG_FOPEN_ERROR(err) {                                        \
-    if (ncp->ina_comm != MPI_COMM_NULL) MPI_Comm_free(&ncp->ina_comm);  \
-    return err;                                                         \
-}
+#define DEBUG_FOPEN_ERROR(err) return err;
 #define DEBUG_ASSIGN_ERROR(status, err) status = err;
 #define DEBUG_TRACE_ERROR(err)
 #endif
