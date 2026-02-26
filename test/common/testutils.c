@@ -376,7 +376,7 @@ int tst_main(int        argc,
             case 'h':
             default:  if (rank==0) tst_main_usage(argv[0]);
                       MPI_Finalize();
-                      return 1;
+                      exit(1);
         }
 
     if (out_path == NULL)
