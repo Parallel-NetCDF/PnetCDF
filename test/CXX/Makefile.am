@@ -53,6 +53,8 @@ endif
 TESTS = $(check_PROGRAMS)
 LOG_COMPILER = $(srcdir)/seq_runs.sh
 
+check_SCRIPTS = seq_runs.sh parallel_run.sh
+
 EXTRA_DIST = seq_runs.sh parallel_run.sh
 
 CLEANFILES = $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \

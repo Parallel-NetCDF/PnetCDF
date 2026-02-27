@@ -80,6 +80,8 @@ TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/seq_runs.sh
 SH_LOG_COMPILER =
 
+check_SCRIPTS = seq_runs.sh parallel_run.sh
+
 CLEANFILES = $(M4_SRCS:.m4=.c) \
              $(TESTOUTDIR)/put_get_all_kinds.nc.cdf4 \
              $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb

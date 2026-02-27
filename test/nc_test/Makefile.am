@@ -93,6 +93,8 @@ CLEANFILES = tests.h $(M4_SRCS:.m4=.c) \
              $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
+check_SCRIPTS = seq_runs.sh wrap_runs.sh
+
 EXTRA_DIST = error.h $(M4_SRCS) $(M4_HFILES) README seq_runs.sh wrap_runs.sh
 
 ../common/libtestutils.la:

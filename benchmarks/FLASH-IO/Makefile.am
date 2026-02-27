@@ -63,6 +63,8 @@ checkpoint_ncmpi_parallel.o: checkpoint_ncmpi_parallel.F90 $(HEADER_FILES)
 plotfile_ncmpi_parallel.o: plotfile_ncmpi_parallel.F90 $(HEADER_FILES)
 flash_benchmark_io.o: flash_benchmark_io.F90 $(HEADER_FILES)
 
+check_SCRIPTS = parallel_run.sh
+
 EXTRA_DIST = $(HEADER_FILES) \
              README.md \
              configure.ac \

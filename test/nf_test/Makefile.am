@@ -120,6 +120,8 @@ CLEANFILES = $(M4SRCS:.m4=.F) \
              $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
+check_SCRIPTS = seq_runs.sh
+
 EXTRA_DIST = $(M4SRCS) $(HFILES) README seq_runs.sh
 
 ../common/libtestutils.la:
