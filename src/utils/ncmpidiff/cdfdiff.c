@@ -852,7 +852,7 @@ cmp_vars:
         if (j == nvars[0]) {
             if (!check_header) {
                 if (!quiet)
-                    printf("WARN: variable \"%s\" s not found in %s\n",
+                    printf("WARN: variable \"%s\" is not found in %s\n",
                            var_list.names[i],argv[optind]);
                 numVarDIFF++;
             }
@@ -867,7 +867,7 @@ cmp_vars:
         if (j == nvars[1]) {
             if (!check_header) {
                 if (!quiet)
-                    printf("WARN: variable \"%s\" s not found in %s\n",
+                    printf("WARN: variable \"%s\" is not found in %s\n",
                            var_list.names[i],argv[optind+1]);
                 numVarDIFF++;
             }
