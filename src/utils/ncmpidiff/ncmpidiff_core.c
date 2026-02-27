@@ -348,7 +348,7 @@ MPI_Offset ncmpidiff_core(const char  *file1,
     if (strcmp(file1, file2) == 0) {
         if (rank == 0)
             printf("Error: two input file names are identical (%s) ... exit\n", file1);
-        return 1;
+        return NC_EINVAL;
     }
 
     /* compare file format */
