@@ -89,6 +89,8 @@ CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(TESTOUTDIR)/pnetcdf-write-nfiles.*.nc \
              $(NC_FILES)
 
+check_SCRIPTS = parallel_run.sh
+
 EXTRA_DIST = parallel_run.sh
 
 ptest ptest4: $(check_PROGRAMS)

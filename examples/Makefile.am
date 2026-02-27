@@ -32,6 +32,8 @@ if ENABLE_ADIOS
    SUBDIRS += adios
 endif
 
+check_SCRIPTS = parallel_run.sh
+
 EXTRA_DIST = README.md parallel_run.sh
 
 # below is the alternative when AM_EXTRA_RECURSIVE_TARGETS is not defined

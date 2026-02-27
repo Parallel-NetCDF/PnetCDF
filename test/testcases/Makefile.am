@@ -215,6 +215,8 @@ CLEANFILES = $(M4_SRCS:.m4=.c) \
              $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
+check_SCRIPTS = seq_runs.sh parallel_run.sh
+
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh parallel_run.sh
 
 # Some of these tests are designed to run on one process,

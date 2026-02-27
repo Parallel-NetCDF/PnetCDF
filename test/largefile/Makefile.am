@@ -49,6 +49,8 @@ if HAVE_MPI_MOD
 endif
 endif
 
+check_SCRIPTS = seq_runs.sh parallel_run.sh
+
 EXTRA_DIST = seq_runs.sh parallel_run.sh
 
 CLEANFILES = $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \

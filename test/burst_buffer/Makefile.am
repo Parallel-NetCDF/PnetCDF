@@ -32,12 +32,6 @@ check_PROGRAMS = bb_bsize \
                  highdim \
 				 varn
 
-EXTRA_DIST = seq_runs.sh parallel_run.sh
-
-CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
-			 $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
-			 $(TESTOUTDIR)/*.meta $(TESTOUTDIR)/*data
-
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests
 
@@ -70,6 +64,14 @@ TESTS = $(check_PROGRAMS)
 TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/seq_runs.sh
 SH_LOG_COMPILER =
+
+check_SCRIPTS = seq_runs.sh parallel_run.sh
+
+EXTRA_DIST = seq_runs.sh parallel_run.sh
+
+CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
+			 $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
+			 $(TESTOUTDIR)/*.meta $(TESTOUTDIR)/*data
 
 # Some of these tests are designed to run on one processes,
 # Run them on 4 processes to see if they can handle well

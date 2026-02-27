@@ -69,6 +69,8 @@ BAD_FILES = bad_begin.nc5 \
 
 XFAIL_TESTS = xfail_runs.sh
 
+check_SCRIPTS = seq_runs.sh parallel_run.sh xfail_runs.sh
+
 CLEANFILES = $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
              core core.* *.gcda *.gcno *.gcov gmon.out
 

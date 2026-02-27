@@ -48,6 +48,8 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(NC_FILES)
 
+check_SCRIPTS = parallel_run.sh
+
 EXTRA_DIST = parallel_run.sh
 
 ptest ptest4: $(check_PROGRAMS)

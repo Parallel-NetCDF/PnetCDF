@@ -96,6 +96,8 @@ TESTS_ENVIRONMENT += TST_HDF5_FILES="$(TST_HDF5_FILES)" ; export TST_HDF5_FILES;
 TESTS = xfail_runs.sh seq_runs.sh
 XFAIL_TESTS = xfail_runs.sh
 
+check_SCRIPTS = xfail_runs.sh seq_runs.sh
+
 EXTRA_DIST = xfail_runs.sh seq_runs.sh \
              $(ENULLPAD_FILES) $(EMAXVARS_FILES) \
              $(EUNLIMIT_FILES) $(ENOTNC_FILES) $(EVARSIZE_FILES) \

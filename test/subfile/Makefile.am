@@ -55,6 +55,8 @@ SH_LOG_COMPILER =
 CLEANFILES = $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
+check_SCRIPTS = seq_runs.sh parallel_run.sh
+
 EXTRA_DIST = README.md seq_runs.sh parallel_run.sh
 
 ../common/libtestutils.la:

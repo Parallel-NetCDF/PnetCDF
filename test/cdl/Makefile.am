@@ -50,6 +50,8 @@ TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/seq_runs.sh
 SH_LOG_COMPILER =
 
+check_SCRIPTS = seq_runs.sh parallel_run.sh
+
 EXTRA_DIST = seq_runs.sh parallel_run.sh cdl_header.txt
 
 CLEANFILES = $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
