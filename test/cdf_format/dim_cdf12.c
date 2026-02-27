@@ -229,15 +229,16 @@ int test_io(const char *out_path,
     err = ncmpi_close(ncid);
     EXP_ERR(NC_EVARSIZE)
 
-    /* Note for developers: keep the last test that produces no error, so the
-     * output file can be tested by ncvalidator in wrap_runs.sh
-     */
     err = ncmpi_create(MPI_COMM_WORLD, out_path, cmode, info, &ncid); CHECK_ERR
     err = ncmpi_def_dim(ncid, "Y", NC_MAX_INT/2, &dimid[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", 2,            &dimid[1]); CHECK_ERR
     err = ncmpi_def_var(ncid, "var0", NC_INT, 1, &dimid[0], &varid); CHECK_ERR
     err = ncmpi_def_var(ncid, "var1", NC_INT, 1, &dimid[1], &varid); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
+
+    /* Note for developers: add ncmpi_open() at the end is to validate the file
+     * created above.
+     */
     err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOWRITE, info, &ncid); CHECK_ERR
     err = ncmpi_close(ncid); CHECK_ERR
 
