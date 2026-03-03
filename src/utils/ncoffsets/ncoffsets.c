@@ -229,7 +229,7 @@ static int check_little_endian(void) {
 
 static unsigned long long
 get_uint64(bufferinfo *gbp) {
-    /* retrieve a 64bit unisgned integer and return it as unsigned long long */
+    /* retrieve a 64bit unsigned integer and return it as unsigned long long */
     uint64_t tmp;
     memcpy(&tmp, gbp->pos, sizeof(uint64_t));
 
@@ -241,7 +241,7 @@ get_uint64(bufferinfo *gbp) {
 
 static unsigned int
 get_uint32(bufferinfo *gbp) {
-    /* retrieve a 32bit unisgned integer and return it as unsigned int */
+    /* retrieve a 32bit unsigned integer and return it as unsigned int */
     uint32_t tmp;
     memcpy(&tmp, gbp->pos, sizeof(uint32_t));
 
@@ -1739,31 +1739,6 @@ ncmpii_free_NC(NC *ncp)
     ncmpii_free_NC_vararray(&ncp->vars);
     free(ncp->path);
 }
-
-#if 0
-const char *
-ncmpi_strerror(int err)
-{
-   switch(err)
-   {
-      case NC_NOERR:
-	 return "No error";
-      case NC_EINVAL:
-	 return "NetCDF: Invalid argument";
-      case NC_EBADDIM:
-	 return "NetCDF: Invalid dimension ID or name";
-      case NC_EUNLIMPOS:
-	 return "NetCDF: NC_UNLIMITED in the wrong index";
-      case NC_ENOTNC:
-	 return "NetCDF: Unknown file format";
-      case NC_EVARSIZE:
-	 return "NetCDF: One or more variable sizes violate format constraints";
-      default:
-         printf("Unknown error code %d\n",err);
-         return "Unknown error code";
-   }
-}
-#endif
 
 const char *
 ncmpii_err_code_name(int err)

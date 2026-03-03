@@ -678,7 +678,7 @@ int cdl_hdr_close(int hid)
 
 /*----< cdl_hdr_open() >-----------------------------------------------------*/
 /* Reads a CDL header file, parses it, and stores the metadata in an internal
- * buffer. Returns an ID for future inquery APIs to retrive the metadata.
+ * buffer. Returns an ID for future inquiry APIs to retrieve the metadata.
  */
 int cdl_hdr_open(const char *filename,
                  int        *hid)

@@ -2280,7 +2280,7 @@ val_get_NC(int fd, NC *ncp)
     getbuf.pos = (char*)getbuf.pos + 4;
 
     if (memcmp(magic, ncmagic, 3) != 0) {
-        if (verbose) printf("Error: Unknow file signature\n");
+        if (verbose) printf("Error: Unknown file signature\n");
         if (verbose) printf("\tExpecting \"CDF1\", \"CDF2\", or \"CDF5\", but got \"%4s\"\n",magic);
         status = NC_ENOTNC;
         goto fn_exit;
@@ -2297,7 +2297,7 @@ val_get_NC(int fd, NC *ncp)
         getbuf.version = 5;
         ncp->format = 5;
     } else {
-        if (verbose) printf("Error: Unknow file signature\n");
+        if (verbose) printf("Error: Unknown file signature\n");
         if (verbose) printf("\tExpecting \"CDF1\", \"CDF2\", or \"CDF5\", but got \"%4s\"\n",magic);
         status = NC_ENOTNC;
         goto fn_exit;
@@ -2390,7 +2390,9 @@ val_get_NC(int fd, NC *ncp)
         goto fn_exit;
     }
 
-    /* check zero padding in the blank space betwee header size and extent */
+    /* check zero padding in the blank space between end of file header and
+     * beginning of data section
+     */
     if (repair && ncp->begin_var - ncp->xsz > 0) {
         size_t gap = ncp->begin_var - ncp->xsz;
         ssize_t readLen;
@@ -2650,7 +2652,7 @@ int main(int argc, char **argv)
     }
     else { /* either there is no record variable or no record is written */
         /* Assuming variables' begins do not follow their define order, find
-         * max end offset among all fixed-size varaibles.
+         * max end offset among all fixed-size variables.
          */
         long long expect_fsize = MAX(ncp->begin_var, ncp->begin_rec);
         expect_fsize = MAX(expect_fsize, ncp->xsz);

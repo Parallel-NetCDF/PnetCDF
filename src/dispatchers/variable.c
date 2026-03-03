@@ -391,11 +391,11 @@ ncmpi_inq_vartype(int      ncid,    /* IN:  file ID */
     *xtypep = pncp->vars[varid].xtype;
     return NC_NOERR;
 
-#if 0
-    /* calling the subroutine that implements ncmpi_inq_vartype() */
-    return pncp->driver->inq_var(pncp->ncp, varid, NULL, xtypep, NULL,
-                                 NULL, NULL, NULL, NULL, NULL);
-#endif
+    /* This can also be achieved by calling the subroutine that implements
+     * ncmpi_inq_vartype(
+       return pncp->driver->inq_var(pncp->ncp, varid, NULL, xtypep, NULL,
+                                    NULL, NULL, NULL, NULL, NULL);
+     */
 }
 
 /*----< ncmpi_inq_varndims() >-----------------------------------------------*/
@@ -423,11 +423,11 @@ ncmpi_inq_varndims(int  ncid,    /* IN:  file ID */
     *ndimsp = pncp->vars[varid].ndims;
     return NC_NOERR;
 
-#if 0
-    /* calling the subroutine that implements ncmpi_inq_varndims() */
-    return pncp->driver->inq_var(pncp->ncp, varid, NULL, NULL, ndimsp,
-                                 NULL, NULL, NULL, NULL, NULL);
-#endif
+    /* This can also be achieved by calling the subroutine that implements
+     * ncmpi_inq_varndims()
+       return pncp->driver->inq_var(pncp->ncp, varid, NULL, NULL, ndimsp,
+                                    NULL, NULL, NULL, NULL, NULL);
+     */
 }
 
 /*----< ncmpi_inq_vardimid() >-----------------------------------------------*/

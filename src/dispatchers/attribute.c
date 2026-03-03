@@ -119,7 +119,7 @@ ncmpi_inq_attname(int   ncid,
 
 /*----< ncmpi_copy_att() >---------------------------------------------------*/
 /* This is a collective subroutine.
- * ncid_out must be in define mode. If varid_in's attribute name has alreay
+ * ncid_out must be in define mode. If varid_in's attribute name has already
  * existed in varid_out, it means to overwrite the attribute in varid_out.
  * In this case, if the space used by varid_in's attribute is larger than
  * varid_out's, then this API must be called when the file is in define mode.

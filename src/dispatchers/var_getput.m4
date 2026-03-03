@@ -242,7 +242,7 @@ int sanity_check(PNC          *pncp,
                  int           varid,
                  IO_type       io,       /* get/put/iget/iput/bput */
                  MPI_Datatype  itype,    /* internal data type */
-                 int           isColl)   /* collective or indepdnent API */
+                 int           isColl)   /* collective or independent API */
 {
     /* for put APIs */
     if (io == API_PUT || io == API_IPUT || io == API_BPUT)

@@ -2065,12 +2065,6 @@ ncmpi_inq_path(int   ncid,
     err = PNC_check_id(ncid, &pncp);
     if (err != NC_NOERR) return err;
 
-#if 0
-    /* calling the subroutine that implements ncmpi_inq_path() */
-    return pncp->driver->inq_misc(pncp->ncp, pathlen, path, NULL, NULL,
-                                  NULL, NULL, NULL, NULL, NULL, NULL,
-                                  NULL, NULL, NULL, NULL, NULL);
-#endif
     if (pathlen != NULL) {
         if (pncp->path == NULL) *pathlen = 0;
         else                    *pathlen = (int)strlen(pncp->path);
