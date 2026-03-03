@@ -450,8 +450,6 @@ ncmpio_read_write(NC         *ncp,
         }
 #endif
 
-// printf("%s at %d: buf_view count=%lld type=%s size=%lld\n",__func__,__LINE__, buf_view.count, (buf_view.type==MPI_BYTE)?"MPI_BYTE":"NOT MPI_BYTE", buf_view.size);
-
         if (!buf_view.is_contig && buf_view.size <= ncp->ibuf_size) {
             /* The only case of read buffer being noncontiguous is when
              * nonblocking API ncmpi_wait/wait_all() is called and INA is
@@ -528,31 +526,10 @@ ncmpio_read_write(NC         *ncp,
             char *in_ptr, *out_ptr;
             in_ptr = xbuf;
 
-#if 0
- long long *wkl, nelems; int j;
- wkl = (long long*) malloc(buf_view.size);
- nelems=buf_view.size/8;
- memcpy(wkl, xbuf, nelems*8); ncmpii_in_swapn(wkl, nelems, 8);
- printf("%s at %d: nelems=%lld xbuf=(%p) ",__func__,__LINE__, nelems, xbuf);
- for (i=0; i<nelems; i++) printf(" %lld",wkl[i]);
- printf("\n");
- free(wkl);
-#endif
-
-assert(buf != NULL);
             for (i=0; i<buf_view.count; i++) {
                 out_ptr = (char*)buf + buf_view.off[i]; // - buf_view.off[0]);
                 memcpy(out_ptr, in_ptr, buf_view.len[i]);
                 in_ptr += buf_view.len[i];
-#if 0
- wkl = (long long*) malloc(buf_view.len[i]);
- nelems=buf_view.len[i]/8;
- memcpy(wkl, out_ptr, nelems*8); ncmpii_in_swapn(wkl, nelems, 8);
- printf("%s at %d: buf_view.count=%lld i=%d nelems=%lld out_ptr=(%p) ",__func__,__LINE__, buf_view.count,i,nelems, out_ptr);
- for (j=0; j<nelems; j++) printf(" %lld",wkl[j]);
- printf("\n");
- free(wkl);
-#endif
             }
             NCI_Free(xbuf);
         }
@@ -575,33 +552,15 @@ assert(buf != NULL);
             char *in_ptr, *out_ptr;
             xbuf = NCI_Malloc(buf_view.size);
             out_ptr = xbuf;
-assert(buf != NULL);
-// printf("%s at %d: buf_view count=%lld size=%lld\n",__func__,__LINE__, buf_view.count,buf_view.size);
 
-#if 0
-printf("%s at %d: buf = %p\n",__func__,__LINE__, buf);
-printf("%s at %d: buf_view count=%lld off=%lld %lld len=%lld %lld\n",__func__,__LINE__, buf_view.count,buf_view.off[0],buf_view.off[1],buf_view.len[0],buf_view.len[1]);
-int wkl[21];
-#endif
             for (i=0; i<buf_view.count; i++) {
                 in_ptr = (char*)buf + buf_view.off[i];
-#if 0
-memcpy(wkl, in_ptr, buf_view.len[i]);
-ncmpii_in_swapn(wkl, buf_view.len[i]/4, 4);
-printf("%s at %d: [%lld] in_ptr=(%p) %d %d %d %d %d\n",__func__,__LINE__, buf_view.len[i]/4, in_ptr, wkl[0],wkl[1],wkl[2],wkl[3],wkl[4]);
-#endif
                 memcpy(out_ptr, in_ptr, buf_view.len[i]);
                 out_ptr += buf_view.len[i];
             }
             /* mark the xbuf is contiguous */
             buf_view.type = MPI_BYTE;
             buf_view.is_contig = 1;
-#if 0
-memcpy(wkl, xbuf, 84);
-ncmpii_in_swapn(wkl, 21, 4);
-printf("%s at %d: size=%lld xbuf=(%p) %d %d %d %d %d\n",__func__,__LINE__, buf_view.size, xbuf, wkl[0],wkl[1],wkl[2],wkl[3],wkl[4]);
-printf("%s at %d: wkl[15] = %d %d %d %d %d\n",__func__,__LINE__, wkl[15],wkl[16],wkl[17],wkl[18],wkl[19]);
-#endif
         }
 
         if (!buf_view.is_contig && ncp->fstype == PNCIO_FSTYPE_MPIIO) {

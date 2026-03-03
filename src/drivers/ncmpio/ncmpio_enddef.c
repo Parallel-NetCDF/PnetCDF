@@ -1116,90 +1116,6 @@ check_rec_var:
     return NC_NOERR;
 }
 
-#if 0
-/*----< read_hints() >-------------------------------------------------------*/
-/* check only the following hints set in environment variable PNETCDF_HINTS or
- * MPI_Info object passed to ncmpi_create() and ncmpi_open().
- * nc_header_align_size, nc_var_align_size, and nc_record_align_size
- */
-static void
-read_hints(NC *ncp)
-{
-    char *warn_str="Warning: skip ill-formed hint set in PNETCDF_HINTS";
-    char *env_str, *env_str_cpy, *hint, *next_hint, *key, *val, *deli;
-    char *hint_saved=NULL;
-
-    /* reset hints from environment variable PNETCDF_HINTS */
-    ncp->env_v_align = -1;
-    ncp->env_r_align = -1;
-
-    /* get hints from the environment variable PNETCDF_HINTS, a string of
-     * hints separated by ";" and each hint is in the form of hint=value. E.g.
-     * "cb_nodes=16;romio_ds_write=true". If this environment variable is set,
-     * it overrides the same hints that were set by MPI_Info_set() called in
-     * the application program.
-     */
-    env_str = getenv("PNETCDF_HINTS");
-    if (env_str == NULL) return;
-
-    env_str_cpy = strdup(env_str);
-    next_hint = env_str_cpy;
-
-    do {
-        hint = next_hint;
-        deli = strchr(hint, ';');
-        if (deli != NULL) {
-            *deli = '\0'; /* add terminate char */
-            next_hint = deli + 1;
-        }
-        else next_hint = "\0";
-        if (hint_saved != NULL) free(hint_saved);
-
-        /* skip all-blank hint */
-        hint_saved = strdup(hint);
-        if (strtok(hint, " \t") == NULL) continue;
-
-        free(hint_saved);
-        hint_saved = strdup(hint); /* save hint for error message */
-
-        deli = strchr(hint, '=');
-        if (deli == NULL) { /* ill-formed hint */
-            printf("%s: '%s'\n", warn_str, hint_saved);
-            continue;
-        }
-        *deli = '\0';
-
-        /* hint key */
-        key = strtok(hint, "= \t");
-        if (key == NULL || NULL != strtok(NULL, "= \t")) {
-            /* expect one token before = */
-            printf("%s: '%s'\n", warn_str, hint_saved);
-            continue;
-        }
-
-        /* hint value */
-        val = strtok(deli+1, "= \t");
-        if (NULL != strtok(NULL, "= \t")) { /* expect one token before = */
-            printf("%s: '%s'\n", warn_str, hint_saved);
-            continue;
-        }
-
-        if (!strcmp(key, "nc_header_align_size") && ncp->env_v_align == -1)
-            ncp->env_v_align = atoll(val);
-        else if (!strcmp(key, "nc_var_align_size"))
-            ncp->env_v_align = atoll(val);
-        else if (!strcmp(key, "nc_record_align_size"))
-            ncp->env_r_align = atoll(val);
-
-    } while (*next_hint != '\0');
-
-    if (hint_saved != NULL) free(hint_saved);
-    free(env_str_cpy);
-
-    /* return no error as all hints are advisory */
-}
-#endif
-
 /*----< ncmpio__enddef() >---------------------------------------------------*/
 /* This is a collective subroutine.
  * h_minfree  Sets the pad at the end of the "header" section, i.e. at least
@@ -1234,12 +1150,13 @@ ncmpio__enddef(void       *ncdp,
      */
 
     /* Checking hints from environment variable PNETCDF_HINTS and MPI info has
-     * been done at the dispatcher, combine_env_hints(), when create/open the
-     * file. Calling read_hints(ncp); is no longer necessary here.
+     * been done at the dispatcher, which calls combine_env_hints() at the
+     * early stage of  ncmpi_create/ncmpi_open.
      */
 
     /* sanity check for NC_ENOTINDEFINE, NC_EINVAL, NC_EMULTIDEFINE_FNC_ARGS
-     * has been done at dispatchers */
+     * has been done at dispatchers
+     */
     ncp->h_minfree = (h_minfree < 0) ? NC_DEFAULT_H_MINFREE : h_minfree;
     ncp->v_minfree = (v_minfree < 0) ? NC_DEFAULT_V_MINFREE : v_minfree;
 

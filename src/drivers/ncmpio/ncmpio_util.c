@@ -605,7 +605,8 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
 #ifdef HAVE_MPI_LARGE_COUNT
             MPI_Count position = 0;
             mpireturn = MPI_Pack_c(buf, (MPI_Count)bufcount, buftype, lbuf,
-                                   (MPI_Count)ibuf_size, &position, MPI_COMM_SELF);
+                                   (MPI_Count)ibuf_size, &position,
+                                   MPI_COMM_SELF);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_error_mpi2nc(mpireturn, "MPI_Pack_c");
 #else
@@ -614,8 +615,8 @@ ncmpio_pack_xbuf(int           fmt,    /* NC_FORMAT_CDF2 NC_FORMAT_CDF5 etc. */
                 if (free_lbuf) NCI_Free(lbuf);
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
             }
-            mpireturn = MPI_Pack(buf, (int)bufcount, buftype, lbuf, (int)ibuf_size,
-                                 &position, MPI_COMM_SELF);
+            mpireturn = MPI_Pack(buf, (int)bufcount, buftype, lbuf,
+                                 (int)ibuf_size, &position, MPI_COMM_SELF);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_error_mpi2nc(mpireturn, "MPI_Pack");
 #endif

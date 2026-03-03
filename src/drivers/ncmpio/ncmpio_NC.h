@@ -85,9 +85,8 @@
 #define NCMPII_ECHAR(nctype, mpitype) ((((nctype) == NC_CHAR) == ((mpitype) != MPI_CHAR)) ? NC_ECHAR : NC_NOERR)
 
 /*
- * The extern size of an empty
- * netcdf version 1 file.
- * The initial value of ncp->xsz.
+ * The external size of an empty netcdf version 1 file is 32 bytes, which is
+ * also set as the initial value of ncp->xsz.
  */
 #define MIN_NC_XSZ 32
 

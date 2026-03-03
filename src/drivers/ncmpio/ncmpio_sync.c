@@ -110,7 +110,6 @@ ncmpio_write_numrecs(NC         *ncp,
             if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
         }
 
-// printf("%s at %d: new_numrecs=%lld NC_NUMRECS_OFFSET=%d\n",__func__,__LINE__,new_numrecs,NC_NUMRECS_OFFSET);
         buf_view.size = len;
 
         /* root's file view always includes the entire file header */
@@ -175,7 +174,6 @@ ncmpio_sync_numrecs(void *ncdp)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
     }
 
-// printf("%s at %d: max_numrecs=%lld\n",__func__,__LINE__,max_numrecs);
     /* root process writes max_numrecs to file */
     status = ncmpio_write_numrecs(ncp, max_numrecs);
 

@@ -205,7 +205,7 @@ ncmpio_begin_indep_data(void *ncdp)
         char *mpi_name;
         int mpireturn;
 #ifdef MPICH_VERSION
-        /* MPICH recognizes file system type acronym prefixed to the file name */
+        /* MPICH recognizes file system type acronym prefixed to file name */
         TRACE_IO(MPI_File_open, (MPI_COMM_SELF, ncp->path, ncp->mpiomode,
                                  ncp->mpiinfo, &ncp->independent_fh));
 #else
@@ -454,7 +454,7 @@ ncmpio_inq_misc(void       *ncdp,
          *
          * Note MPI implementations may choose to ignore unrecognized hints and
          * MPI_File_get_info() may returns no PnetCDF hints. We need to add the
-         * PnbetCDF hints explicitly to the info object before returning it to
+         * PnetCDF hints explicitly to the info object before returning it to
          * user.
          */
 

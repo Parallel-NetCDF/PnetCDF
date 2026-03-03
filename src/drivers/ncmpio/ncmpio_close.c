@@ -42,9 +42,9 @@ ncmpio_free_NC(NC *ncp)
     ncmpio_free_NC_attrarray(&ncp->attrs);
     ncmpio_free_NC_vararray(&ncp->vars);
 
-    /* The only case that ncp->mpiinfo is MPI_INFO_NULL is when exiting endef
-     * from a redef. All other cases reaching here are from ncmpi_close, in
-     * which case ncp->mpiinfo is never MPI_INFO_NULL.
+    /* The only case that ncp->mpiinfo is MPI_INFO_NULL is when exiting
+     * enddef() from a redef(). All other cases reaching here are from
+     * ncmpi_close, in which case ncp->mpiinfo is never MPI_INFO_NULL.
      */
     if (ncp->mpiinfo != MPI_INFO_NULL) MPI_Info_free(&ncp->mpiinfo);
 
@@ -140,7 +140,8 @@ ncmpio_close(void *ncdp)
         max_npairs_put = max_sizes[12];
         max_npairs_get = max_sizes[13];
 
-        for (i=0; i<12; i++) tt[i] = (float)(max_sizes[i]) / 1048576.0; /* in MiB */
+        for (i=0; i<12; i++)
+            tt[i] = (float)(max_sizes[i]) / 1048576.0; /* in MiB */
         if (ncp->rank == 0 && max_npairs_put > 0)
             printf("%s: INA put npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
                    __func__, max_sizes[12], tt[0],tt[1],tt[2],tt[3],tt[4],tt[5]);

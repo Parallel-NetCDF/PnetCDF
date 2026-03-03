@@ -228,8 +228,6 @@ fill_var_rec(NC         *ncp,
     if (status == NC_NOERR)
         buf_view.size = count;
 
-// if (ncp->rank ==0) printf("%s at %d: buf_view count=%lld size=%lld offset=%lld\n",__func__,__LINE__, buf_view.count,buf_view.size,offset);
-
     /* write to variable collectively */
     if (nprocs > 1)
         wlen = ncmpio_file_write_at_all(ncp, offset, buf, buf_view);
@@ -744,7 +742,8 @@ ncmpio_fill_var_rec(void      *ncdp,
     }
 
 err_check:
-    if (fIsSet(ncp->flags, NC_MODE_SAFE) && ncp->nprocs > 1) { /* consistency check */
+    if (fIsSet(ncp->flags, NC_MODE_SAFE) && ncp->nprocs > 1) {
+        /* consistency check */
         int root_varid, status, mpireturn;
         MPI_Offset root_recno;
 
@@ -831,7 +830,8 @@ ncmpio_set_fill(void *ncdp,
 
     /* once the file's fill mode is set, any new variables defined after this
      * call will check NC_dofill(ncp) and set their no_fill accordingly. See
-     * ncmpi_def_var() */
+     * ncmpi_def_var()
+     */
 
     return NC_NOERR;
 }

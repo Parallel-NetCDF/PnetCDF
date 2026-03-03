@@ -165,8 +165,8 @@ ncmpio_open(MPI_Comm         comm,
             MPI_Comm_size(comm_attr.ina_comm, &ncp->ina_nprocs);
             MPI_Comm_rank(comm_attr.ina_comm, &ncp->ina_rank);
 
-            /* overwrite comm_attr.ids[] to make it to contain the the node IDs
-             * of processes in the INA communicator.
+            /* overwrite comm_attr.ids[] to make it to contain the node IDs of
+             * processes in the INA communicator.
              */
             ids = (int*) NCI_Malloc(sizeof(int) * ncp->ina_nprocs);
 

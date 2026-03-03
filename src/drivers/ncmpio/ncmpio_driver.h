@@ -28,7 +28,8 @@ extern int
 ncmpio_enddef(void *ncdp);
 
 extern int
-ncmpio__enddef(void *ncdp, MPI_Offset h_minfree, MPI_Offset v_align, MPI_Offset v_minfree, MPI_Offset r_align);
+ncmpio__enddef(void *ncdp, MPI_Offset h_minfree, MPI_Offset v_align,
+               MPI_Offset v_minfree, MPI_Offset r_align);
 
 extern int
 ncmpio_redef(void *ncdp);

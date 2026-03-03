@@ -41,7 +41,7 @@
  */
 #include <lustre/lustreapi.h>
 
-#define PNETCDF_LUSTRE_DEBUG
+// #define PNETCDF_LUSTRE_DEBUG
 
 #define PATTERN_STR(pattern, int_str) ( \
     (pattern == LLAPI_LAYOUT_DEFAULT)      ? "LLAPI_LAYOUT_DEFAULT" : \
@@ -285,7 +285,9 @@ ncmpio_create(MPI_Comm         comm,
                     err = PNCIO_File_delete(filename);
                 else {
 #ifdef MPICH_VERSION
-                    /* MPICH recognizes file system type acronym prefixed to the file name */
+                    /* MPICH recognizes file system type acronym prefixed to
+                     * the file name
+                     */
                     TRACE_IO(MPI_File_delete, (path, MPI_INFO_NULL));
 #else
                     TRACE_IO(MPI_File_delete, (filename, MPI_INFO_NULL));
@@ -344,7 +346,9 @@ ncmpio_create(MPI_Comm         comm,
                 }
                 else {
 #ifdef MPICH_VERSION
-                    /* MPICH recognizes file system type acronym prefixed to the file name */
+                    /* MPICH recognizes file system type acronym prefixed to
+                     * the file name
+                     */
                     TRACE_IO(MPI_File_open, (MPI_COMM_SELF, path, MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
 #else
                     TRACE_IO(MPI_File_open, (MPI_COMM_SELF, filename, MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
@@ -355,7 +359,8 @@ ncmpio_create(MPI_Comm         comm,
                         err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
                     }
                     else {
-                        TRACE_IO(MPI_File_set_size, (fh, 0)); /* can be expensive */
+                        /* MPI_File_set_size() can be expensive */
+                        TRACE_IO(MPI_File_set_size, (fh, 0));
                         if (mpireturn != MPI_SUCCESS) {
                             int errorclass;
                             MPI_Error_class(mpireturn, &errorclass);
@@ -466,8 +471,8 @@ ncmpio_create(MPI_Comm         comm,
             MPI_Comm_size(comm_attr.ina_comm, &ncp->ina_nprocs);
             MPI_Comm_rank(comm_attr.ina_comm, &ncp->ina_rank);
 
-            /* overwrite comm_attr.ids[] to make it to contain the the node
-             * IDs of processes in the INA communicator.
+            /* overwrite comm_attr.ids[] to make it to contain the node IDs of
+             * processes in the INA communicator.
              */
             ids = (int*) NCI_Malloc(sizeof(int) * ncp->ina_nprocs);
 
@@ -547,7 +552,8 @@ ncmpio_create(MPI_Comm         comm,
                     striping_factor * striping_unit == 0 &&
                     striping_factor + striping_unit > 0) {
                     /* rank 0 retrieves folder's striping settings */
-                    lustre_get_striping(filename, &striping_factor, &striping_unit);
+                    lustre_get_striping(filename, &striping_factor,
+                                        &striping_unit);
                     /* error is ignored, if there is any */
                     stripings[0] = striping_factor;
                     stripings[1] = striping_unit;
@@ -694,22 +700,6 @@ fn_exit:
 
     /* Copy MPI-IO hints into ncp->mpiinfo */
     ncmpio_hint_set(ncp, ncp->mpiinfo);
-
-/*
-if (ncp->rank == 0) {
-    int  i, nkeys;
-    MPI_Info_get_nkeys(ncp->mpiinfo, &nkeys);
-    printf("%s line %d: MPI File Info: nkeys = %d\n",__func__,__LINE__,nkeys);
-    for (i=0; i<nkeys; i++) {
-        char key[MPI_MAX_INFO_KEY];
-        int  valuelen;
-        MPI_Info_get_nthkey(ncp->mpiinfo, i, key);
-        MPI_Info_get_valuelen(ncp->mpiinfo, key, &valuelen, &flag);
-        MPI_Info_get(ncp->mpiinfo, key, valuelen+1, value, &flag);
-        printf("MPI File Info: [%2d] key = %25s, value = %s\n",i,key,value);
-    }
-}
-*/
 
     if (ncp->num_aggrs_per_node > 0 && ncp->rank == comm_attr.my_aggr) {
         /* comm_attr.ids[] is no longer needed. Note it has been duplicated
