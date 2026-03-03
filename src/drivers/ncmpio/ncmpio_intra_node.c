@@ -5,11 +5,12 @@
  * This file contains the implementation of intra-node aggregation feature,
  * which is designed to improve performance for I/O patterns that contain many
  * noncontiguous requests interleaved among processes, with a wide aggregate
- * access region on each process that involves file stripes responsible by
- * almost all the file servers. By reducing the number of processes per node
- * to participate MPI-IO operations, this feature can effectively reduce the
- * communication contention, particularly often happened to jobs that run a
- * large the number of MPI processes per compute node.
+ * access region on each process which results in an all-to-many personalized
+ * communication with each MPI I/O aggregator receiving data from all MPI
+ * processes. By reducing the number of processes per node participating the
+ * all-to-many communication (i.e. the 'all' part), this feature effectively
+ * reduces the communication contention, which often happens to jobs that run
+ * on a large the number of MPI processes per compute node.
  *
  * Users can enable this feature by setting the PnetCDF I/O hint named
  * 'nc_num_aggrs_per_node' to a positive integral value, indicating the desired
@@ -517,7 +518,7 @@ flatten_req(NC                *ncp,
         if (stride != NULL && stride[varp->ndims-1] > 1)
             num = count[varp->ndims-1];  /* count of last dimension */
         for (i=0; i<varp->ndims-1; i++)
-            num *= count[i];       /* all count[] except the last dimension */
+            num *= count[i];  /* all count[] except the last dimension */
     }
     *num_pairs = num;
 
@@ -764,13 +765,11 @@ flat_buf_type(const NC      *ncp,
               const NC_req  *reqs,     /* IN: [num_reqs] requests */
               PNCIO_View    *buf_view, /* OUT: flattened buftype */
               void         **buf)      /* OUT: pointer to I/O buffer */
-/* TODO: */
-#if 1
 {
     int i, j, err=NC_NOERR;
     NC_lead_req *lead;
     MPI_Aint addr, addr0;
-/* buffer offset should be of type MPI_Aint. length should be size_t. */
+    /* TODO: buffer offset should be of type MPI_Aint. length should be size_t. */
 
     buf_view->type = MPI_BYTE;
     buf_view->size = 0;
@@ -789,16 +788,12 @@ flat_buf_type(const NC      *ncp,
     buf_view->len = (int*)       NCI_Malloc(sizeof(int)        * num_reqs);
 #endif
 
-#if 1
     *buf = reqs[0].xbuf;
 
     lead = (fIsSet(reqMode, NC_REQ_WR)) ? ncp->put_lead_list
                                         : ncp->get_lead_list;
 
     MPI_Get_address(lead[reqs[0].lead_off].xbuf, &addr0);
-// printf("%s at %d: lead xbuf=%ld nelems=%lld\n",__func__,__LINE__, addr0,lead[reqs[0].lead_off].nelems);
-
-// assert(reqs[0].xbuf == lead[reqs[0].lead_off].xbuf);
 
     /* set buf_view->off[0] and buf_view->len[0] */
     MPI_Get_address(reqs[0].xbuf, &addr0); /* displacement uses MPI_BOTTOM */
@@ -806,24 +801,6 @@ flat_buf_type(const NC      *ncp,
 
     /* buf_view->len[] are in bytes */
     buf_view->len[0] = reqs[0].nelems * lead[reqs[0].lead_off].varp->xsz;
-#if 0
-printf("%s at %d: buf_view->len[0]=%lld nelems=%lld\n",__func__,__LINE__, buf_view->len[0],reqs[0].nelems);
-j=0;
-printf("%s at %d: buf_view xbuf=%ld off[%d]=%lld nelems=%lld\n",__func__,__LINE__, addr0,j,buf_view->off[j],reqs[0].nelems);
-#endif
-
-
-/*
-int *wkl, nelems; char *xbuf;
-j = 0;
-wkl = (int*) malloc(buf_view->len[j]);
-nelems=buf_view->len[j]/4; xbuf = (char*)reqs[j].xbuf + buf_view->off[j];
-memcpy(wkl, xbuf, nelems*4); ncmpii_in_swapn(wkl, nelems, 4);
-printf("%s at %d: nelems=%d off=%lld buf=(%p) ",__func__,__LINE__, nelems, buf_view->off[j], xbuf);
-for (i=0; i<nelems; i++) printf(" %d",wkl[i]);
-printf("\n");
-free(wkl);
-*/
 
     buf_view->size = buf_view->len[0];
     for (i=0, j=1; j<num_reqs; j++) {
@@ -831,58 +808,6 @@ free(wkl);
         MPI_Get_address(reqs[j].xbuf, &addr);
         buf_view->off[j] = addr - addr0;
 
-// printf("%s at %d: buf_view xbuf=%ld off[%d]=%lld nelems=%lld\n",__func__,__LINE__, addr,j,buf_view->off[j],reqs[j].nelems);
-
-// assert(reqs[j].xbuf == lead[reqs[j].lead_off].xbuf);
-        /* buf_view->len[] are in bytes */
-        buf_view->len[j] = reqs[j].nelems * lead[reqs[j].lead_off].varp->xsz;
-
-/*
-wkl = (int*) malloc(buf_view->len[j]);
-nelems=buf_view->len[j]/4;
-xbuf = (char*)reqs[j].xbuf; // + buf_view->off[j];
-xbuf = (char*)(*buf) + buf_view->off[j];
-memcpy(wkl, xbuf, nelems*4); ncmpii_in_swapn(wkl, nelems, 4);
-printf("%s at %d: nelems=%d off=%lld buf=(%p) ",__func__,__LINE__, nelems, buf_view->off[j], xbuf);
-for (i=0; i<nelems; i++) printf(" %d",wkl[i]);
-printf("\n");
-free(wkl);
-*/
-
-        /* accumulate buffer type size */
-        buf_view->size += buf_view->len[j];
-
-        /* coalesce the off-len pairs */
-        if (buf_view->off[i] + buf_view->len[i] == buf_view->off[j])
-            buf_view->len[i] += buf_view->len[j];
-        else {
-            i++;
-            if (i < j) {
-                buf_view->off[i] = buf_view->off[j];
-                buf_view->len[i] = buf_view->len[j];
-            }
-        }
-    }
-    /* After coalescing, the true number of requests may be reduced */
-// printf("%s at %d: buf_view->size=%lld\n",__func__,__LINE__, buf_view->size);
-#else
-    /* set buf_view->off[0] and buf_view->len[0] */
-    MPI_Get_address(reqs[0].xbuf, &addr); /* displacement uses MPI_BOTTOM */
-    buf_view->off[0] = addr;
-
-    lead = (fIsSet(reqMode, NC_REQ_WR)) ? ncp->put_lead_list
-                                        : ncp->get_lead_list;
-
-    /* buf_view->len[] are in bytes */
-    buf_view->len[0] = reqs[0].nelems * lead[reqs[0].lead_off].varp->xsz;
- ?  *buf = lead[reqs[0].lead_off].xbuf;
-
-    buf_view->size = buf_view->len[0];
-    for (i=0, j=1; j<num_reqs; j++) {
-        /* displacement uses MPI_BOTTOM */
-        MPI_Get_address(reqs[j].xbuf, &addr);
-        buf_view->off[j] = addr;
-
         /* buf_view->len[] are in bytes */
         buf_view->len[j] = reqs[j].nelems * lead[reqs[j].lead_off].varp->xsz;
 
@@ -901,7 +826,6 @@ free(wkl);
         }
     }
     /* After coalescing, the true number of requests may be reduced */
-#endif
 
     if (i + 1 < num_reqs) {
         num_reqs = i + 1; /* num_reqs is reduced */
@@ -960,118 +884,6 @@ free(wkl);
 
     return err;
 }
-#else
-{
-    int i, j, err, mpireturn, status=NC_NOERR;
-    NC_lead_req *lead;
-    MPI_Aint addr;
-#ifdef HAVE_MPI_LARGE_COUNT
-    MPI_Count *disps, *blens;
-#else
-    MPI_Aint *disps;
-    int *blens;
-#endif
-
-    if (num_reqs == 0) {
-        buf_view->type  = MPI_BYTE;
-        buf_view->count = 0;
-        return NC_NOERR;
-    }
-
-#ifdef HAVE_MPI_LARGE_COUNT
-    disps = (MPI_Count*)NCI_Malloc(sizeof(MPI_Count) * num_reqs);
-    blens = (MPI_Count*)NCI_Malloc(sizeof(MPI_Count) * num_reqs);
-#else
-    disps = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint)  * num_reqs);
-    blens = (int*)      NCI_Malloc(sizeof(int)       * num_reqs);
-#endif
-
-    /* set disps[0] and blens[0] */
-    MPI_Get_address(reqs[0].xbuf, &addr); /* displacement uses MPI_BOTTOM */
-    disps[0] = addr;
-
-    lead = (fIsSet(reqMode, NC_REQ_WR)) ? ncp->put_lead_list
-                                        : ncp->get_lead_list;
-
-    /* blens[] are in bytes */
-    blens[0] = reqs[0].nelems * lead[reqs[0].lead_off].varp->xsz;
-    *buf = lead[reqs[0].lead_off].xbuf;
-
-    for (i=0, j=1; j<num_reqs; j++) {
-        /* displacement uses MPI_BOTTOM */
-        MPI_Get_address(reqs[j].xbuf, &addr);
-        disps[j] = addr;
-
-        /* blens[] are in bytes */
-        blens[j] = reqs[j].nelems * lead[reqs[j].lead_off].varp->xsz;
-
-        /* coalesce the disps-blens pairs */
-        if (disps[i] + blens[i] == disps[j])
-            blens[i] += blens[j];
-        else {
-            i++;
-            if (i < j) {
-                disps[i] = disps[j];
-                blens[i] = blens[j];
-            }
-        }
-    }
-
-    if (i + 1 < num_reqs) {
-        num_reqs = i + 1;
-#ifdef HAVE_MPI_LARGE_COUNT
-        disps = (MPI_Count*)NCI_Realloc(disps, sizeof(MPI_Count) * num_reqs);
-        blens = (MPI_Count*)NCI_Realloc(blens, sizeof(MPI_Count) * num_reqs);
-#else
-        disps = (MPI_Aint*) NCI_Realloc(disps, sizeof(MPI_Aint)  * num_reqs);
-        blens = (int*)      NCI_Realloc(blens, sizeof(int)       * num_reqs);
-#endif
-    }
-
-    buf_view->count = num_reqs;
-    buf_view->off   = disps;
-    buf_view->len   = blens;
-
-/* TODO: below datatype construction moves into ncmpio_read_write() */
-    if (num_reqs == 1) {
-#if 1
-buf_view->count = blens[0];
-#endif
-        buf_view->type = MPI_BYTE;
-    }
-    else {
-#if 1
-        /* construct buffer derived datatype */
-#ifdef HAVE_MPI_LARGE_COUNT
-        mpireturn = MPI_Type_create_hindexed_c(num_reqs, blens, disps,
-                                               MPI_BYTE, &buf_view->type);
-#else
-        mpireturn = MPI_Type_create_hindexed(num_reqs, blens, disps,
-                                             MPI_BYTE, &buf_view->type);
-#endif
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_hindexed");
-            /* return the first encountered error if there is any */
-            if (status == NC_NOERR) status = err;
-
-            buf_view->type = MPI_BYTE;
-            buf_view->count = 0;
-        }
-        else {
-            MPI_Type_commit(&buf_view->type);
-buf_view->count = 1;
-        }
-#endif
-        *buf = NULL; /* buf_view->type is constructed using MPI_BOTTOM */
-    }
-
-#if 1
-    NCI_Free(blens);
-    NCI_Free(disps);
-#endif
-    return status;
-}
-#endif
 
 /*----< ina_collect_md() >---------------------------------------------------*/
 /* Within each intra-node aggregation group, the aggregator collects request
@@ -1466,7 +1278,6 @@ int ina_put(NC         *ncp,
         /* i is the first non-aggregator whose num_pairs > 0, and
          * j is the first non-aggregator whose is_incr is false
          */
-// printf("%s at %d: do_sort=%d indv_sorted=%d\n",__func__,__LINE__, do_sort,indv_sorted);
 
         if (i >= 0 && indv_sorted == 1) {
             /* When all ranks' offsets are individually sorted, we still need
@@ -1509,7 +1320,7 @@ int ina_put(NC         *ncp,
              * sorted offset list. Note count[] is initialized and will be used
              * in heap_merge()
              */
-            count = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint)*ina_meta.num_nonaggrs);
+            count = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * ina_meta.num_nonaggrs);
             for (i=0; i<ina_meta.num_nonaggrs; i++) count[i] = meta[i*3];
         }
 
@@ -1534,8 +1345,8 @@ int ina_put(NC         *ncp,
                  * lists have already been sorted. However, it has a much
                  * bigger memory footprint.
                  */
-                heap_merge(ina_meta.num_nonaggrs, count, npairs, off_ptr, len_ptr,
-                           bufAddr);
+                heap_merge(ina_meta.num_nonaggrs, count, npairs, off_ptr,
+                           len_ptr, bufAddr);
                 NCI_Free(count);
             }
             else
@@ -1544,7 +1355,6 @@ int ina_put(NC         *ncp,
                  */
                 qsort_off_len_buf(npairs, off_ptr, len_ptr, bufAddr);
         }
-// printf("%s at %d: do_sort=%d indv_sorted=%d\n",__func__,__LINE__, do_sort,indv_sorted);
 
         /* Now off_ptr and len_ptr are sorted, but overlaps may exist between
          * adjacent pairs. If this is the case, they must be coalesced.
@@ -1560,13 +1370,11 @@ int ina_put(NC         *ncp,
          * data around in the true write buffer.
          */
         overlap = 0;
-int fake_overlap=0;
         wr_amnt = recv_amnt = len_ptr[0];
         for (i=0, j=1; j<npairs; j++) {
             recv_amnt += len_ptr[j];
             if (off_ptr[i] + len_ptr[i] >= off_ptr[j] + len_ptr[j]) {
                 overlap = 1;
-fake_overlap=1;
                 /* segment i completely covers segment j, skip j */
                 continue;
             }
@@ -1577,7 +1385,6 @@ fake_overlap=1;
                  * when gap == 0, pairs i and j are contiguous
                  */
                 if (gap > 0) overlap = 1;
-if (gap >= 0) fake_overlap=1;
                 wr_amnt += len_ptr[j] - gap;
                 if (bufAddr[i] + len_ptr[i] == bufAddr[j] + gap) {
                     /* buffers i and j are contiguous, merge j into i */
@@ -1600,11 +1407,6 @@ if (gap >= 0) fake_overlap=1;
                 }
             }
         }
-/*
-if (ina_meta.num_nonaggrs == 1 && do_sort == 1) printf("%s at %d: overlap=%d do_sort=%d after coalesce npairs changed from %ld to %d wr_amnt=%lld recv_amnt=%lld\n",__func__,__LINE__, overlap, do_sort,npairs,i+1,wr_amnt,recv_amnt);
-*/
-
-if (fake_overlap == 0) assert(npairs == i+1);
 
         /* Now off_ptr[], len_ptr[], bufAddr[] are coalesced and no overlap */
         npairs = i+1;
@@ -1625,8 +1427,8 @@ if (fake_overlap == 0) assert(npairs == i+1);
          * used to call MPI-IO/PNCIO file write. Note the wr_buf is always
          * contiguous.
          *
-         * When ina_meta.num_nonaggrs == 1, wr_buf is set to buf which is directly
-         * passed to MPI-IO/PNCIO file write.
+         * When ina_meta.num_nonaggrs == 1, wr_buf is set to buf which is
+         * directly passed to MPI-IO/PNCIO file write.
          *
          * If file offset-length pairs have not been re-ordered, i.e. sorted
          * and overlaps removed, and this aggregator will not receive any write
@@ -1682,10 +1484,12 @@ if (fake_overlap == 0) assert(npairs == i+1);
             if (meta[i*3 + 1] == 0) continue;
 #ifdef HAVE_MPI_LARGE_COUNT
             TRACE_COMM(MPI_Irecv_c)(ptr, meta[i*3 + 1], MPI_BYTE,
-                           ina_meta.nonaggr_ranks[i], 0, ncp->comm, &req[nreqs++]);
+                           ina_meta.nonaggr_ranks[i], 0, ncp->comm,
+                           &req[nreqs++]);
 #else
             TRACE_COMM(MPI_Irecv)(ptr, meta[i*3 + 1], MPI_BYTE,
-                           ina_meta.nonaggr_ranks[i], 0, ncp->comm, &req[nreqs++]);
+                           ina_meta.nonaggr_ranks[i], 0, ncp->comm,
+                           &req[nreqs++]);
 #endif
             ptr += meta[i*3 + 1];
         }
@@ -1955,12 +1759,12 @@ int ina_get(NC         *ncp,
             MPI_Status st;
 #ifdef HAVE_MPI_LARGE_COUNT
             MPI_Count num = (buf_view.is_contig) ? buf_view.size : 1;
-            TRACE_COMM(MPI_Recv_c)(buf, num, buf_view.type, ina_meta.my_aggr, 0,
-                                   ncp->comm, &st);
+            TRACE_COMM(MPI_Recv_c)(buf, num, buf_view.type, ina_meta.my_aggr,
+                                   0, ncp->comm, &st);
 #else
             int num = (buf_view.is_contig) ? buf_view.size : 1;
-            TRACE_COMM(MPI_Recv)(buf, num, buf_view.type, ina_meta.my_aggr, 0,
-                                 ncp->comm, &st);
+            TRACE_COMM(MPI_Recv)(buf, num, buf_view.type, ina_meta.my_aggr,
+                                 0, ncp->comm, &st);
 #endif
         }
 
@@ -2088,8 +1892,8 @@ int ina_get(NC         *ncp,
                  * lists have already been sorted. However, it has a much
                  * bigger memory footprint.
                  */
-                heap_merge(ina_meta.num_nonaggrs, count, npairs, off_ptr, len_ptr,
-                           NULL);
+                heap_merge(ina_meta.num_nonaggrs, count, npairs, off_ptr,
+                           len_ptr, NULL);
                 NCI_Free(count);
             }
             else
@@ -2484,8 +2288,6 @@ ncmpio_ina_nreqs(NC         *ncp,
     double timing = MPI_Wtime();
 #endif
 
-// printf("%s at %d: rank=%d num_aggrs_per_nod =%d my_aggr=%d num_nonaggrs=%d\n",__func__,__LINE__, ncp->rank, ncp->num_aggrs_per_node, ncp->comm_attr.my_aggr, ncp->comm_attr.num_nonaggrs);
-
     /* populate reqs[].offset_start, starting offset of each request */
     NC_req *reqs = req_list;
     int i, descreasing=0;
@@ -2506,7 +2308,6 @@ ncmpio_ina_nreqs(NC         *ncp,
 
             if (IS_RECVAR(varp)) off += reqs[i].start[0] * ncp->recsize;
 
-// printf("%s at %d: num_reqs=%d reqs[%d].npairs == 1 offset_start=%lld off=%lld\n", __func__,__LINE__,num_reqs,i,reqs[i].offset_start,off);
             reqs[i].offset_start += off;
         }
         else {
@@ -2520,7 +2321,7 @@ ncmpio_ina_nreqs(NC         *ncp,
             ncmpio_calc_start_end(ncp, varp, reqs[i].start, count, stride,
                                   &reqs[i].offset_start, &offset_end);
         }
-        /* check if offset_start are in a monotonic nondecreasing order */
+        /* check if offset_start are in a monotonic non-decreasing order */
         if (i > 0 && reqs[i].offset_start < reqs[i-1].offset_start)
             descreasing = 1;
     }
@@ -2530,8 +2331,6 @@ ncmpio_ina_nreqs(NC         *ncp,
      */
     if (descreasing)
         qsort(reqs, (size_t)num_reqs, sizeof(NC_req), req_compare);
-
-// printf("%s at %d: descreasing=%d\n",__func__,__LINE__, descreasing);
 
     /* construct file offset-length pairs
      *     num_pairs: total number of off-len pairs
@@ -2545,23 +2344,6 @@ ncmpio_ina_nreqs(NC         *ncp,
     else
         num_pairs = 0;
 
-#if 0
-if (0 && num_pairs==10) printf("%s at %d: num_reqs=%d num_pairs=%ld off=%lld %lld %lld %lld %lld %lld %lld %lld %lld %lld len=%lld %lld %lld %lld %lld %lld %lld %lld %lld %lld\n",__func__,__LINE__, num_reqs, num_pairs,
-offsets[0],offsets[1],offsets[2],offsets[3],offsets[4],offsets[5],
-offsets[6],offsets[7],offsets[8],offsets[9],
-lengths[0],lengths[1],lengths[2],lengths[3],lengths[4],lengths[5],
-lengths[6],lengths[7],lengths[8],lengths[9]);
-
-else if (num_pairs==12) printf("%s at %d: num_reqs=%d num_pairs=%ld off=%lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld len=%lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld\n",__func__,__LINE__, num_reqs, num_pairs,
-offsets[0],offsets[1],offsets[2],offsets[3],offsets[4],
-offsets[5],offsets[6],offsets[7],offsets[8],offsets[9],
-offsets[10],offsets[11],
-lengths[0],lengths[1],lengths[2],lengths[3],lengths[4],
-lengths[5],lengths[6],lengths[7],lengths[8],lengths[9],
-lengths[10],lengths[11]);
-else if (num_pairs) printf("%s at %d: num_reqs=%d num_pairs=%ld off=%lld len=%lld\n",__func__,__LINE__, num_reqs, num_pairs,offsets[0],lengths[0]);
-#endif
-
     /* Populate buf_view, which contains metadata of the user buffers in the
      * nonblocking requests. If buf is non-contiguous, buf to NULL and
      * buf_view.type will be a derived datatype constructed using MPI_BOTTOM.
@@ -2569,28 +2351,6 @@ else if (num_pairs) printf("%s at %d: num_reqs=%d num_pairs=%ld off=%lld len=%ll
     PNCIO_View buf_view;
     err = flat_buf_type(ncp, reqMode, num_reqs, reqs, &buf_view, &buf);
     if (status == NC_NOERR) status = err;
-if (num_reqs > 0) assert(buf != NULL);
-
-#if 0
-if (buf_view.count > 1) printf("%s at %d: buf_view count=%lld off=%lld %lld len=%lld %lld\n",__func__,__LINE__, buf_view.count, buf_view.off[0], buf_view.off[1], buf_view.len[0],buf_view.len[1]);
-else if (buf_view.count) printf("%s at %d: buf_view count=%lld off=%lld len=%lld\n",__func__,__LINE__, buf_view.count, buf_view.off[0], buf_view.len[0]);
-
-{int *wkl;
-int nelems, j,k, xsz=4;
-char *xbuf, msg[1024],str[64];
-printf("%s at %d: buf_view count=%lld size=%lld\n",__func__,__LINE__, buf_view.count,buf_view.size);
-    wkl = (int*) malloc(buf_view.size);
-    nelems=buf_view.size/xsz;
-    xbuf = buf;
-    memcpy(wkl, xbuf, buf_view.size); ncmpii_in_swapn(wkl, nelems, xsz);
-    sprintf(msg,"%s at %d: nelems=%d buf=(%p) ",__func__,__LINE__, nelems, xbuf);
-    for (k=0; k<nelems; k++) { sprintf(str," %d",wkl[k]); strcat(msg, str);}
-    printf("%s\n",msg);
-    free(wkl);
-}
-#endif
-
-// if (reqMode == NC_REQ_RD) printf("%s at %d: buf_view count=%lld size=%lld is_contig=%d type=%s\n",__func__,__LINE__, buf_view.count, buf_view.size, buf_view.is_contig, (buf_view.type == MPI_BYTE)?"MPI_BYTE":"NOT MPI_BYTE");
 
     if (req_list != NULL)
         /* All metadata in req_list have been used to construct bufType and
@@ -2599,21 +2359,22 @@ printf("%s at %d: buf_view count=%lld size=%lld\n",__func__,__LINE__, buf_view.c
         NCI_Free(req_list);
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    if (ncp->rank == ncp->comm_attr.my_aggr) ncp->ina_time_flatten += MPI_Wtime() - timing;
+    if (ncp->rank == ncp->comm_attr.my_aggr)
+        ncp->ina_time_flatten += MPI_Wtime() - timing;
 #endif
 
     int saved_my_aggr, saved_num_nonaggrs;
     saved_my_aggr = ncp->comm_attr.my_aggr;
     saved_num_nonaggrs = ncp->comm_attr.num_nonaggrs;
     if (ncp->num_aggrs_per_node == 0 || fIsSet(ncp->flags, NC_MODE_INDEP)) {
-        /* Temporarily set ncp->comm_attr.my_aggr and ncp->comm_attr.num_nonaggrs to be as if
-         * self rank is an INA aggregator and the INA group size is 1.
+        /* Temporarily set ncp->comm_attr.my_aggr and
+         * ncp->comm_attr.num_nonaggrs to be as if self rank is an INA
+         * aggregator and the INA group size is 1.
          */
         ncp->comm_attr.my_aggr = ncp->rank;
         ncp->comm_attr.num_nonaggrs = 1;
     }
 
-// printf("%s at %d: is_incr=%d buf=%p\n",__func__,__LINE__, is_incr,buf);
     /* perform intra-node aggregation */
     if (fIsSet(reqMode, NC_REQ_WR))
         err = ina_put(ncp, is_incr, num_pairs, offsets, lengths, buf_view, buf);
@@ -2626,23 +2387,6 @@ printf("%s at %d: buf_view count=%lld size=%lld\n",__func__,__LINE__, buf_view.c
         ncp->comm_attr.my_aggr = saved_my_aggr;
         ncp->comm_attr.num_nonaggrs = saved_num_nonaggrs;
     }
-
-#if 0
-if (fIsSet(reqMode, NC_REQ_RD))
-{int *wkl;
-int nelems, j,k, xsz=4;
-char *xbuf, msg[1024],str[64];
-printf("%s at %d: buf_view count=%lld size=%lld\n",__func__,__LINE__, buf_view.count,buf_view.size);
-    wkl = (int*) malloc(buf_view.size);
-    nelems=buf_view.size/xsz;
-    xbuf = buf;
-    memcpy(wkl, xbuf, buf_view.size); ncmpii_in_swapn(wkl, nelems, xsz);
-    sprintf(msg,"%s at %d: nelems=%d buf=(%p) ",__func__,__LINE__, nelems, xbuf);
-    for (k=0; k<nelems; k++) { sprintf(str," %d",wkl[k]); strcat(msg, str);}
-    printf("%s\n",msg);
-    free(wkl);
-}
-#endif
 
     if (buf_view.type != MPI_BYTE) MPI_Type_free(&buf_view.type);
     if (buf_view.off != NULL) NCI_Free(buf_view.off);
@@ -2709,7 +2453,6 @@ ncmpio_ina_req(NC               *ncp,
     buf_view.off = NULL;
     buf_view.len = NULL;
 
-// printf("%s at %d: buf=%s\n",__func__,__LINE__, (buf==NULL)?"NULL":"NOT NULL");
     if (buf_len == 0 || buf == NULL) {
         /* This is a zero-length request. When in collective data mode, this
          * rank must still participate collective calls. When INA is enabled,
@@ -2742,7 +2485,6 @@ ncmpio_ina_req(NC               *ncp,
         }
         status = err;
     }
-// if (num_pairs > 0) printf("%s at %d: num_pairs=%ld off=%lld len=%lld\n",__func__,__LINE__, num_pairs,offsets[0],lengths[0]);
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     if (ncp->rank == ncp->comm_attr.my_aggr)
@@ -2753,16 +2495,14 @@ ncmpio_ina_req(NC               *ncp,
     saved_my_aggr = ncp->comm_attr.my_aggr;
     saved_num_nonaggrs = ncp->comm_attr.num_nonaggrs;
     if (ncp->num_aggrs_per_node == 0 || fIsSet(ncp->flags, NC_MODE_INDEP)) {
-        /* Temporarily set ncp->comm_attr.my_aggr and ncp->comm_attr.num_nonaggrs to be as if
-         * self rank is an INA aggregator and the INA group size is 1.
+        /* Temporarily set ncp->comm_attr.my_aggr and
+         * ncp->comm_attr.num_nonaggrs to be as if self rank is an INA
+         * aggregator and the INA group size is 1.
          */
         ncp->comm_attr.my_aggr = ncp->rank;
         ncp->comm_attr.num_nonaggrs = 1;
     }
-// if (num_pairs) printf("%s at %d: num_pairs=%ld off=%lld len=%lld\n",__func__,__LINE__, num_pairs,offsets[0],lengths[0]);
-// if (buf_view.count) printf("%s at %d: buf_view count=%lld off=%lld len=%lld\n",__func__,__LINE__, buf_view.count, buf_view.off[0], buf_view.len[0]);
 
-// printf("%s at %d: buf_view count=%lld size=%lld is_contig=%d buf=%p\n",__func__,__LINE__, buf_view.count,buf_view.size,buf_view.is_contig,buf);
     /* perform intra-node aggregation */
     if (fIsSet(reqMode, NC_REQ_WR)) {
         err = ina_put(ncp, is_incr, num_pairs, offsets, lengths, buf_view, buf);
@@ -2772,24 +2512,6 @@ ncmpio_ina_req(NC               *ncp,
         err = ina_get(ncp, is_incr, num_pairs, offsets, lengths, buf_view, buf);
         if (status == NC_NOERR) status = err;
     }
-
-#if 0
-if (fIsSet(reqMode, NC_REQ_RD))
-{unsigned long long *wkl; int xsz=8; // int *wkl; int xsz=4;
-int nelems, j,k;
-char *xbuf, msg[1024],str[64];
-printf("%s at %d: buf_view count=%lld size=%lld\n",__func__,__LINE__, buf_view.count,buf_view.size);
-    wkl = (unsigned long long*) malloc(buf_view.size); // wkl = (int*) malloc(buf_view.size);
-    nelems=buf_view.size/xsz;
-    xbuf = buf;
-    memcpy(wkl, xbuf, buf_view.size); ncmpii_in_swapn(wkl, nelems, xsz);
-    sprintf(msg,"%s at %d: %s nelems=%d buf=(%p) ",__func__,__LINE__, ncp->path,nelems, xbuf);
-    // for (k=0; k<nelems; k++) { sprintf(str," %d",wkl[k]); strcat(msg, str);}
-    for (k=0; k<nelems; k++) { sprintf(str," %llu",wkl[k]); strcat(msg, str);}
-    printf("%s\n",msg);
-    free(wkl);
-}
-#endif
 
     if (ncp->num_aggrs_per_node == 0 || fIsSet(ncp->flags, NC_MODE_INDEP)) {
         /* restore ncp->comm_attr.my_aggr ncp->comm_attr.num_nonaggrs */
