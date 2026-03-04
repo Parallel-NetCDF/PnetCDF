@@ -45,6 +45,8 @@ if INSTALL_EXAMPLES
    example_execbin_SCRIPTS = run_f90_examples.sh
 endif
 
+check_SCRIPTS = run_f90_examples.sh
+
 EXTRA_DIST = utils.F90 run_f90_examples.sh
 
 utils.o: utils.F90

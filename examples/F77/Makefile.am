@@ -57,6 +57,8 @@ if INSTALL_EXAMPLES
    example_execbin_SCRIPTS = run_f77_examples.sh
 endif
 
+check_SCRIPTS = run_f77_examples.sh
+
 EXTRA_DIST = utils.F90 run_f77_examples.sh
 
 utils.o: $(srcdir)/utils.F90

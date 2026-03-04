@@ -53,7 +53,7 @@ ncmpio_write_numrecs(NC         *ncp,
     /* When intra-node aggregation is enabled, non-aggregators do not
      * participate any collective calls below.
      */
-    if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->my_aggr)
+    if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->comm_attr.my_aggr)
         return NC_NOERR;
 
     if (ncp->rank > 0) {
@@ -98,7 +98,7 @@ ncmpio_write_numrecs(NC         *ncp,
         }
         /* ncmpix_put_xxx advances the 1st argument with size len */
 
-        if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->my_aggr)
+        if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->comm_attr.my_aggr)
             /* When intra-node aggregation is enabled, non-aggregators do not
              * participate the collective call.
              */
@@ -126,7 +126,7 @@ ncmpio_write_numrecs(NC         *ncp,
     return err;
 }
 
-/*----< ncmpio_sync_numrecs() >-----------------------------------------------*/
+/*----< ncmpio_sync_numrecs() >----------------------------------------------*/
 /* Synchronize the number of records in memory among all processes and write
  * numrecs to file.
  * This function is called by:
@@ -161,7 +161,7 @@ ncmpio_sync_numrecs(void *ncdp)
     else /* if called in independent mode, we force sync in memory */
         set_NC_ndirty(ncp);
 
-    /* return now if there is no record variabled defined */
+    /* return now if there is no record variable defined */
     if (ncp->vars.num_rec_vars == 0) return NC_NOERR;
 
     /* find the max numrecs among all processes
@@ -189,7 +189,7 @@ ncmpio_sync_numrecs(void *ncdp)
         if (root_status == NC_EWRITE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
     }
 
-    /* update numrecs in all processes's memory */
+    /* update numrecs in all processes' memory */
     ncp->numrecs = max_numrecs;
 
     /* clear numrecs dirty bit */

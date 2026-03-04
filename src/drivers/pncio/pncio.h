@@ -152,11 +152,15 @@ typedef struct {
 
 typedef struct {
     MPI_Comm comm;          /* communicator indicating who called open */
+
+    PNC_comm_attr comm_attr;/* attributes cached in communicator storing
+                             * compute node IDs of all processes and INA
+                             * metadata */
+
     const char *filename;
     int file_system;        /* type of file system */
 
     int fd_sys;             /* system file descriptor */
-    PNCIO_node_ids node_ids;/* node IDs of each rank */
     int access_mode;        /* Access mode (sequential, append, etc.),
                              * possibly modified to deal with
                              * data sieving or deferred open */

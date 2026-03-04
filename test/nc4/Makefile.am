@@ -96,6 +96,8 @@ SH_LOG_COMPILER =
 CLEANFILES = $(M4_SRCS:.m4=.c) \
              $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb
 
+check_SCRIPTS = seq_runs.sh parallel_run.sh
+
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh parallel_run.sh
 
 ../common/libtestutils.la:

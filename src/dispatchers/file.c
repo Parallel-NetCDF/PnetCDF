@@ -32,6 +32,10 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 #include <pnc_debug.h>
 #include <common.h>
 
+#ifndef MAX_INT_LEN
+#define MAX_INT_LEN 24
+#endif
+
 #ifdef ENABLE_ADIOS
 #include "adios_read.h"
 #include <arpa/inet.h>
@@ -53,7 +57,7 @@ static int  pnc_numfiles;
 static int ncmpi_default_create_format = NC_FORMAT_CLASSIC;
 
 /* attribute to be cached in all communicators */
-static int pncio_node_ids_keyval = MPI_KEYVAL_INVALID;
+static int pncio_comm_keyval = MPI_KEYVAL_INVALID;
 
 /* attribute to be cached in MPI_COMM_SELF */
 static int pncio_init_keyval = MPI_KEYVAL_INVALID;
@@ -75,22 +79,258 @@ static int pncio_init_keyval = MPI_KEYVAL_INVALID;
     }                                                              \
 }
 
-/* struct PNCIO_node_ids is defined in dispatch.h */
+/* struct PNC_comm_attr is defined in dispatch.h */
 
-/*----< PNCIO_node_ids_copy() >----------------------------------------------*/
+/*----< ina_init() >---------------------------------------------------------*/
+/* When the intra-node write aggregation (INA) hint is enabled, this subroutine
+ * initializes the metadata to be used in intra-node communication and by the
+ * INA aggregators to perform I/O requests.
+ *
+ * Processes on the same node will first be divided into disjoined groups. A
+ * process with the lowest rank ID in a group is selected as the group's INA
+ * aggregator. A new MPI communicator consisting of all INA aggregators across
+ * nodes will also be created. Only the aggregators call the PNCIO/MPI-IO
+ * functions to access the file. Thus, this subroutine must be called before
+ * MPI_File_open() and should be called only once in ncmpi_create() and
+ * ncmpi_open(). The new MPI communicator will be used in the call to
+ * MPI_File_open().
+ *
+ * This subroutine performs the following tasks.
+ * 1. Make use of the affinity of each MPI process to its compute node,
+ *    represented by:
+ *    + comm_attr->num_nodes is the number of unique compute nodes.
+ *    + comm_attr->ids[nprocs] contains node IDs for all processes.
+ *    Note comm_attr should have already been established during a call to
+ *    ncmpii_construct_node_list() at the beginning of ncmpi_create() and
+ *    ncmpi_open().
+ * 2. Divide processes into groups based on hint num_aggrs_per_node, select INA
+ *    aggregators, and determine whether self process is an INA aggregator.
+ *    + comm_attr->my_aggr is rank ID of my INA aggregator.
+ *    + if (comm_attr->my_aggr == rank) then this rank is an INA aggregator.
+ * 3. For an INA aggregator, find the number of non-aggregators assigned to it
+ *    and construct their rank IDs.
+ *    + comm_attr->num_nonaggrs is the number of non-aggregators in its group.
+ *    + comm_attr->nonaggr_ranks[] contains the rank IDs of the assigned
+ *      non-aggregators to an INA aggregator.
+ * 4. For a non-aggregator, find the rank ID of INA aggregator assigned to it.
+ *    + comm_attr->my_aggr is rank ID of my INA aggregator.
+ * 5. Create a new MPI communicator consisting of only the INA aggregators.
+ *    + comm_attr->ina_comm is the INA communicator.
+ */
+static
+int ina_init(MPI_Comm        comm,
+             int             num_aggrs_per_node,
+             PNC_comm_attr  *comm_attr)
+{
+    int i, j, mpireturn, nprocs, rank, do_io, naggrs_my_node, first_rank;
+    int my_rank_index, *ranks_my_node, my_node_id, nprocs_my_node, rem;
+
+    if (num_aggrs_per_node == 0) return NC_NOERR;
+
+    MPI_Comm_size(comm, &nprocs);
+    MPI_Comm_rank(comm, &rank);
+
+    /* Note that ill value of num_aggrs_per_node has been checked before
+     * entering this subroutine. Thus num_aggrs_per_node must be > 0.
+     */
+
+    /* comm_attr->ids[] has been established in ncmpii_construct_node_list()
+     * called in ncmpio_create() or ncmpio_open() before entering this
+     * subroutine. my_node_id is this rank's node ID.
+     */
+    my_node_id = comm_attr->ids[rank];
+
+    /* nprocs_my_node:  the number of processes in my nodes
+     * ranks_my_node[]: rank IDs of all processes in my node.
+     * my_rank_index:   points to ranks_my_node[] where
+     *                  ranks_my_node[my_rank_index] == rank
+     */
+    ranks_my_node = (int*) malloc(sizeof(int) * nprocs);
+    my_rank_index = -1;
+    nprocs_my_node = 0;
+    for (i=0; i<nprocs; i++) {
+        if (comm_attr->ids[i] == my_node_id) {
+            if (i == rank)
+                my_rank_index = nprocs_my_node;
+            ranks_my_node[nprocs_my_node] = i;
+            nprocs_my_node++;
+        }
+    }
+    assert(my_rank_index >= 0);
+    /* Now, ranks_my_node[my_rank_index] == rank */
+
+    /* Make sure number of aggregators in my node <= nprocs_my_node. In some
+     * cases, the number of processes allocated to the last few nodes can be
+     * less than others.
+     */
+    naggrs_my_node = MIN(num_aggrs_per_node, nprocs_my_node);
+
+    /* For each aggregation group, calculate the number of non-aggregators,
+     * num_nonaggrs. Note num_nonaggrs includes self rank.
+     */
+    comm_attr->num_nonaggrs = nprocs_my_node / naggrs_my_node;
+
+    /* calculate the number of ranks in each INA group, num_nonaggrs, and the
+     * aggregator's rank, i.e. first_rank.
+     */
+    rem = nprocs_my_node % naggrs_my_node;
+    if (rem > 0) { /* non-divisible case */
+        comm_attr->num_nonaggrs++;
+        if (my_rank_index < comm_attr->num_nonaggrs * rem)
+            /* first rank of my INA group */
+            first_rank = my_rank_index
+                       - my_rank_index % comm_attr->num_nonaggrs;
+        else {
+            first_rank = comm_attr->num_nonaggrs * rem;
+            comm_attr->num_nonaggrs--;
+            first_rank = my_rank_index
+                       - (my_rank_index - first_rank) % comm_attr->num_nonaggrs;
+        }
+    }
+    else /* divisible case */
+        first_rank = my_rank_index - my_rank_index % comm_attr->num_nonaggrs;
+
+    /* Adjust the number of non-aggregators for the last group of each node,
+     * to make sure it does not go beyond nprocs_my_node.
+     */
+    comm_attr->num_nonaggrs = MIN(comm_attr->num_nonaggrs,
+                                  nprocs_my_node - first_rank);
+
+    /* Assign the first rank as the intra-node aggregator of this group and
+     * set the rank ID of my aggregator for each process.
+     */
+    comm_attr->my_aggr = ranks_my_node[first_rank];
+
+    if (comm_attr->num_nonaggrs == 1) {
+        /* When the number of processes in this group is 1, the aggregation
+         * is not performed. Note num_nonaggrs includes self rank.
+         *
+         * Note this does not mean intra-node aggregation is disabled. The
+         * indicator of whether intra-node aggregation is enabled or disabled
+         * is num_aggrs_per_node, whose value should be consistent across
+         * all processes. It is possible for some groups containing only one
+         * process, in which the aggregation is not necessarily performed
+         * within that group.
+         */
+        assert(comm_attr->my_aggr == rank);
+    }
+    else if (comm_attr->my_aggr == rank) { /* comm_attr->num_nonaggrs > 1 */
+        /* Construct nonaggr_ranks[], the rank IDs of non-aggregators of
+         * this group. Note nonaggr_ranks[], if malloc-ed, will only be
+         * freed when closing the file.
+         */
+        comm_attr->nonaggr_ranks = (int*)malloc(sizeof(int) * comm_attr->num_nonaggrs);
+
+        memcpy(comm_attr->nonaggr_ranks, ranks_my_node + first_rank,
+               sizeof(int) * comm_attr->num_nonaggrs);
+    }
+    free(ranks_my_node);
+
+    /* Next step is to construct a new MPI communicator consisting of all
+     * intra-node aggregators. It will later be used to call MPI_File_open(),
+     * so that only aggregators call MPI-IO functions to access the file.
+     *
+     * When using the PnetCDF's internal PNCIO driver, we can pass a list of
+     * node IDs of the new communicator to the PNCIO file handler,
+     * ncp->pncio_fh, so to prevent the driver from the repeated work of
+     * constructing the list of node IDs, comm_attr->ids[]. If using MPI-IO
+     * driver, then ROMIO will do this internally again anyway.
+     */
+
+    do_io = (comm_attr->my_aggr == rank) ? 1 : 0;
+
+    /* construct an array containing ranks of aggregators */
+    comm_attr->ina_ranks = (int*) malloc(sizeof(int) * nprocs);
+    TRACE_COMM(MPI_Allgather)(&do_io, 1, MPI_INT, comm_attr->ina_ranks, 1,
+                              MPI_INT, comm);
+
+    /* Construct comm_attr->ids[] and comm_attr->ina_ranks[]. Their contents
+     * depend on the layout of MPI process allocation to the compute nodes.
+     * The common layouts can be two kinds:
+     *   + cyclic - MPI ranks are assigned to nodes round-robin-ly,
+     *   + block - MPI ranks are assigned to a node and then move on to next.
+     *
+     * Below uses an example of nodes=3, nprocs=10, * num_aggrs_per_node=2.
+     * comm_attr->ids[] should be
+     *     block  process allocation: 0,0,0,0,1,1,1,2,2,2
+     *     cyclic process allocation: 0,1,2,0,1,2,0,1,2,0
+     * Accordingly, comm_attr->ina_ranks[] can be two kinds
+     *     block  process allocation: 1,0,1,0,1,0,1,1,0,1
+     *     cyclic process allocation: 1,1,1,0,0,0,1,1,1,0
+     */
+
+    /* comm_attr->ina_ranks[]: the rank IDs of the new MPI communicator */
+    for (j=0,i=0; i<nprocs; i++) {
+        if (comm_attr->ina_ranks[i])
+            comm_attr->ina_ranks[j++] = i;
+    }
+    /* j now is the number of INA aggregators */
+
+    if (j < nprocs)
+        comm_attr->ina_ranks[j] = -1; /* mark the end of valid values */
+    comm_attr->num_ina_aggrs = j;
+
+    if (comm_attr->ina_comm != MPI_COMM_NULL) {
+        TRACE_COMM(MPI_Comm_free)(&comm_attr->ina_comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_free");
+    }
+
+    /* Make MPI calls to create a new communicator. */
+    MPI_Group origin_group, ina_group;
+    TRACE_COMM(MPI_Comm_group)(comm, &origin_group);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_group");
+    TRACE_COMM(MPI_Group_incl)(origin_group, comm_attr->num_ina_aggrs,
+                               comm_attr->ina_ranks, &ina_group);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Group_incl");
+    TRACE_COMM(MPI_Comm_create)(comm, ina_group, &comm_attr->ina_comm);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_create");
+    TRACE_COMM(MPI_Group_free)(&ina_group);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Group_free");
+    TRACE_COMM(MPI_Group_free)(&origin_group);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Group_free");
+
+    /* TODO: automatically determine whether or not to enable intra-node
+     * aggregation.
+     *
+     * The ideal case is it can be determined right before each collective
+     * write call, because only at that time, the communication pattern is
+     * known. If the pattern can cause contention, then enable it. Otherwise,
+     * disable it.
+     *
+     * Such mechanism may depends on the followings.
+     *   1. MPI-IO hint cb_noddes, and striping_unit
+     *   2. calculate aggregate access region
+     *   3. If the number of senders to each cb_nodes is very large, then
+     *      intra-node aggregation should be enabled.
+     *   4. Average of nprocs_per_node across all processes may be a factor for
+     *      determining whether to enable intra-node aggregation. It indicates
+     *      whether the high number of processes are allocated on the same
+     *      node.
+     */
+
+    return NC_NOERR;
+}
+
+/*----< PNC_comm_attr_copy() >-----------------------------------------------*/
 /* A function to be invoked when a communicator is duplicated, which adds a
  * reference to the already allocated memory space storing node ID array.
  */
 static
-int PNCIO_node_ids_copy(MPI_Comm  comm,
-                        int       keyval,
-                        void     *extra,
-                        void     *attr_inP,
-                        void     *attr_outP,
-                        int      *flag)
+int PNC_comm_attr_copy(MPI_Comm  comm,
+                         int       keyval,
+                         void     *extra,
+                         void     *attr_inP,
+                         void     *attr_outP,
+                         int      *flag)
 {
-    PNCIO_node_ids *attr_in   = (PNCIO_node_ids*) attr_inP;
-    PNCIO_node_ids **attr_out = (PNCIO_node_ids**)attr_outP;
+    PNC_comm_attr *attr_in   = (PNC_comm_attr*) attr_inP;
+    PNC_comm_attr **attr_out = (PNC_comm_attr**)attr_outP;
 
     if (attr_in == NULL)
         return MPI_ERR_KEYVAL;
@@ -104,28 +344,34 @@ int PNCIO_node_ids_copy(MPI_Comm  comm,
     return MPI_SUCCESS;
 }
 
-/*----< PNCIO_node_ids_delete() >--------------------------------------------*/
+/*----< PNC_comm_attr_delete() >---------------------------------------------*/
 /* Callback function to be called when a communicator is freed, which frees the
  * allocated memory space of node ID array.
  */
 static
-int PNCIO_node_ids_delete(MPI_Comm  comm,
-                          int       keyval,
-                          void     *attr_val,
-                          void     *extra)
+int PNC_comm_attr_delete(MPI_Comm  comm,
+                           int       keyval,
+                           void     *attr_val,
+                           void     *extra)
 {
-    PNCIO_node_ids *node_ids = (PNCIO_node_ids*) attr_val;
+    PNC_comm_attr *attr = (PNC_comm_attr*) attr_val;
 
-    if (node_ids == NULL)
+    if (attr == NULL)
         return MPI_ERR_KEYVAL;
     else
-        node_ids->ref_count--;
+        attr->ref_count--;
 
-    if (node_ids->ref_count <= 0) {
+    if (attr->ref_count <= 0) {
         /* free the allocated array */
-        if (node_ids->ids != NULL)
-            free(node_ids->ids);
-        free(node_ids);
+        if (attr->ids != NULL)
+            free(attr->ids);
+        if (attr->nonaggr_ranks != NULL)
+            free(attr->nonaggr_ranks);
+        if (attr->ina_ranks != NULL)
+            free(attr->ina_ranks);
+        if (attr->ina_comm != MPI_COMM_NULL)
+            MPI_Comm_free(&attr->ina_comm);
+        free(attr);
     }
     return MPI_SUCCESS;
 }
@@ -144,75 +390,156 @@ int PNCIO_end_call(MPI_Comm  comm,
 
     MPI_Comm_free_keyval(&keyval); /* free pncio_init_keyval */
 
-    if (pncio_node_ids_keyval != MPI_KEYVAL_INVALID)
-        MPI_Comm_free_keyval(&pncio_node_ids_keyval);
+    if (pncio_comm_keyval != MPI_KEYVAL_INVALID)
+        MPI_Comm_free_keyval(&pncio_comm_keyval);
 
     return MPI_SUCCESS;
 }
 
 /*----< set_get_comm_attr() >------------------------------------------------*/
-/* Create/set/get attributes into/from the MPI communicators passed in from the
- * user application.
+/* Create/set/get attributes into/from the MPI communicators passed in from
+ * the user application.
  */
 static
-void set_get_comm_attr(MPI_Comm        comm,
-                       PNCIO_node_ids *node_idsP)
+int set_get_comm_attr(MPI_Comm          comm,
+                      int               num_aggrs_per_node,
+                      PNC_comm_attr  *attrP)
 {
-    PNCIO_node_ids *node_ids;
+    int err, nprocs;
+    PNC_comm_attr *attr;
+
+    MPI_Comm_size(comm, &nprocs);
 
     if (pncio_init_keyval == MPI_KEYVAL_INVALID) {
         /* This is the first call ever to PnetCDF API. Creating key
          * pncio_init_keyval is necessary for MPI_Finalize() to free key
-         * pncio_node_ids_keyval.
+         * pncio_comm_keyval.
          */
-        MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN, PNCIO_end_call,
-                               &pncio_init_keyval, (void*)0);
-        MPI_Comm_set_attr(MPI_COMM_SELF, pncio_init_keyval, (void*)0);
+        err = MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN, PNCIO_end_call,
+                                     &pncio_init_keyval, (void*)0);
+        if (err != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(err, "MPI_Comm_create_keyval");
+
+        err = MPI_Comm_set_attr(MPI_COMM_SELF, pncio_init_keyval, (void*)0);
+        if (err != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(err, "MPI_Comm_set_attr");
     }
 
-    if (pncio_node_ids_keyval == MPI_KEYVAL_INVALID) {
-        MPI_Comm_create_keyval(PNCIO_node_ids_copy, PNCIO_node_ids_delete,
-                               &pncio_node_ids_keyval, NULL);
-        /* ignore error, as it is not a critical error */
+    if (pncio_comm_keyval == MPI_KEYVAL_INVALID) {
+        err = MPI_Comm_create_keyval(PNC_comm_attr_copy,
+                                     PNC_comm_attr_delete,
+                                     &pncio_comm_keyval, NULL);
+        if (err != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(err, "MPI_Comm_create_keyval");
     }
 
-    if (pncio_node_ids_keyval != MPI_KEYVAL_INVALID) {
-        int found, nprocs;
+    if (pncio_comm_keyval != MPI_KEYVAL_INVALID) {
+        int found;
 
-        MPI_Comm_get_attr(comm, pncio_node_ids_keyval, &node_ids, &found);
+        err = MPI_Comm_get_attr(comm, pncio_comm_keyval, &attr, &found);
+        if (err != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(err, "MPI_Comm_get_attr");
+
         if (!found) {
             /* Construct an array storing node IDs of all processes. Note the
-             * memory allocated for node_ids will be freed by
-             * PNCIO_node_ids_delete(), a callback function invoked when the
+             * memory allocated for setting the attribute will be freed in
+             * PNC_comm_attr_delete(), a callback function invoked when the
              * MPI communicator is freed.
              */
-            node_ids = (PNCIO_node_ids*) malloc(sizeof(PNCIO_node_ids));
-            node_ids->ref_count = 1;
+            attr = (PNC_comm_attr*) malloc(sizeof(PNC_comm_attr));
+            attr->ref_count = 1;
 
-            MPI_Comm_size(comm, &nprocs);
+            /* initialize INA metadata of intra-node aggregation */
+            attr->num_aggrs_per_node = 0;
+            attr->my_aggr = -1;
+            attr->num_nonaggrs = 0;
+            attr->nonaggr_ranks = NULL;
+            attr->num_ina_aggrs = 0;
+            attr->ina_ranks = NULL;
+            attr->ina_comm = MPI_COMM_NULL;
+
             if (nprocs == 1) {
-                node_ids->num_nodes = 1;
-                node_ids->ids = (int*) malloc(sizeof(int));
-                node_ids->ids[0] = 0;
+                attr->num_nodes = 1;
+                attr->ids = (int*) malloc(sizeof(int));
+                attr->ids[0] = 0;
             }
             else {
                 /* Constructing node IDs requires communication calls to
                  * MPI_Get_processor_name(), MPI_Gather(), and MPI_Bcast().
                  */
-                ncmpii_construct_node_list(comm, &node_ids->num_nodes,
-                                           &node_ids->ids);
+                ncmpii_construct_node_list(comm, &attr->num_nodes, &attr->ids);
+
+                /* If INA is enabled, construct INA metadata */
+                err = ina_init(comm, num_aggrs_per_node, attr);
+                if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+                attr->num_aggrs_per_node = num_aggrs_per_node;
             }
 
-            /* FYI. The same key pncio_node_ids_keyval can be added to
-             * different MPI communicators with same or different values.
+            /* FYI. The same key pncio_comm_keyval can be added to different
+             * MPI communicators with same or different values.
              */
-            MPI_Comm_set_attr(comm, pncio_node_ids_keyval, node_ids);
+            err = MPI_Comm_set_attr(comm, pncio_comm_keyval, attr);
+            if (err != MPI_SUCCESS)
+                return ncmpii_error_mpi2nc(err, "MPI_Comm_set_attr");
         }
-        /* else case: returned node_ids contains the cached value */
+        else {
+            if (num_aggrs_per_node == 0) {
+                /* When INA is disabled, there is no need to retrieved cached
+                 * INA metadata.
+                 */
+                *attrP = *attr; /* retrieve num_nodes and ids */
+                attrP->num_aggrs_per_node = 0;
+                attrP->my_aggr = -1;
+                attrP->num_nonaggrs = 0;
+                attrP->nonaggr_ranks = NULL;
+                attrP->num_ina_aggrs = 0;
+                attrP->ina_ranks = NULL;
+                attrP->ina_comm = MPI_COMM_NULL;
+                return NC_NOERR;
+            }
+
+            /* When num_aggrs_per_node has changed, the cached attribute must
+             * be reset. MPI standard says calling MPI_Comm_set_attr() will
+             * trigger MPI_Comm_delete_attr() first. Thus, we must preserve
+             * attr->num_nodes and attr->ids.
+             */
+            if (num_aggrs_per_node != attr->num_aggrs_per_node) {
+                PNC_comm_attr *new_attr;
+
+                /* updating an attribute must delete it first and set again */
+                new_attr = (PNC_comm_attr*) malloc(sizeof(PNC_comm_attr));
+
+                /* copy out attributes that remains with the communicator */
+                new_attr->ref_count = attr->ref_count;
+                new_attr->num_nodes = attr->num_nodes;
+                new_attr->ids = (int*) malloc(sizeof(int) * nprocs);
+                memcpy(new_attr->ids, attr->ids, sizeof(int) * nprocs);
+
+                /* update with new INA metadata */
+                new_attr->num_aggrs_per_node = num_aggrs_per_node;
+                new_attr->my_aggr = -1;
+                new_attr->num_nonaggrs = 0;
+                new_attr->nonaggr_ranks = NULL;
+                new_attr->num_ina_aggrs = 0;
+                new_attr->ina_ranks = NULL;
+                new_attr->ina_comm = MPI_COMM_NULL;
+
+                /* re-construct INA metadata */
+                err = ina_init(comm, num_aggrs_per_node, new_attr);
+                if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+
+                err = MPI_Comm_set_attr(comm, pncio_comm_keyval, new_attr);
+                if (err != MPI_SUCCESS)
+                    return ncmpii_error_mpi2nc(err, "MPI_Comm_set_attr");
+                attr = new_attr;
+            }
+        }
 
         /* copy contents */
-        *node_idsP = *node_ids;
+        *attrP = *attr;
     }
+
+    return NC_NOERR;
 }
 
 /*----< new_id_PNCList() >---------------------------------------------------*/
@@ -306,6 +633,17 @@ err_out:
 }
 
 /*----< construct_info() >---------------------------------------------------*/
+/* This subroutine reads I/O hints from the environment variable PNETCDF_HINTS,
+ * if set at the run time. The value of PNETCDF_HINTS is a character string
+ * consisting of one or more hints separated by ";" and each hint is in the
+ * form of "hint=value". E.g. "cb_nodes=16;cb_config_list=*:6".
+ *
+ * Hints set in PNETCDF_HINTS environment variable takes the highest precedence
+ * over hints set in the MPI info object passed from the application programs.
+ *
+ * When use_info is MPI_INFO_NULL and PNETCDF_HINTS is empty, MPI_INFO_NULL
+ * will be returned as new_info.
+ */
 static void
 combine_env_hints(MPI_Info  user_info,  /* IN */
                   MPI_Info *new_info)   /* OUT: may be MPI_INFO_NULL */
@@ -314,12 +652,6 @@ combine_env_hints(MPI_Info  user_info,  /* IN */
     char *env_str;
     char *hdr_align_val=NULL, *var_align_val=NULL;
 
-    /* take hints from the environment variable PNETCDF_HINTS, a string of
-     * hints separated by ";" and each hint is in the form of hint=value. E.g.
-     * "cb_nodes=16;cb_config_list=*:6". If this environment variable is set,
-     * it overrides the same hints that were set by MPI_Info_set() called in
-     * the application program.
-     */
     if (user_info != MPI_INFO_NULL)
         MPI_Info_dup(user_info, new_info); /* ignore error */
     else
@@ -438,7 +770,6 @@ combine_env_hints(MPI_Info  user_info,  /* IN */
 
     if (hdr_align_val != NULL) NCI_Free(hdr_align_val);
     if (var_align_val != NULL) NCI_Free(var_align_val);
-
 }
 
 /*----< set_env_mode() >-----------------------------------------------------*/
@@ -488,13 +819,14 @@ ncmpi_create(MPI_Comm    comm,
              MPI_Info    info,
              int        *ncidp)
 {
-    int rank, nprocs, status=NC_NOERR, err;
-    int env_mode=0, mpireturn, format;
-    MPI_Info combined_info;
+    char value[MPI_MAX_INFO_VAL], int_str[MAX_INT_LEN];
+    int rank, nprocs, status=NC_NOERR, err, flag;
+    int env_mode=0, mpireturn, format, num_aggrs_per_node;
+    MPI_Info combined_info=MPI_INFO_NULL;
     void *ncp;
     PNC *pncp;
     PNC_driver *driver;
-    PNCIO_node_ids node_ids;
+    PNC_comm_attr comm_attr;
 #ifdef BUILD_DRIVER_FOO
     int enable_foo_driver=0;
 #endif
@@ -504,24 +836,6 @@ ncmpi_create(MPI_Comm    comm,
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
-
-#ifdef ENABLE_THREAD_SAFE
-    int perr;
-    perr = pthread_mutex_lock(&lock);
-    if (perr != 0)
-        printf("Warning in file %s line %d: pthread_mutex_lock() failed (%s)\n",
-               __FILE__, __LINE__, strerror(perr));
-#endif
-
-    /* creating communicator attributes must be protected by a mutex */
-    set_get_comm_attr(comm, &node_ids);
-
-#ifdef ENABLE_THREAD_SAFE
-    perr = pthread_mutex_unlock(&lock);
-    if (perr != 0)
-        printf("Warning in file %s line %d: pthread_mutex_unlock() failed (%s)\n",
-               __FILE__, __LINE__, strerror(perr));
-#endif
 
     if (rank == 0)
         set_env_mode(&env_mode);
@@ -544,7 +858,8 @@ ncmpi_create(MPI_Comm    comm,
         }
 
         env_mode = modes[1];
-        if (fIsSet(env_mode, NC_MODE_SAFE)) { /* sync status among all processes */
+        if (fIsSet(env_mode, NC_MODE_SAFE)) {
+            /* sync status among all processes */
             err = status;
             TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
             NCMPII_HANDLE_ERROR("MPI_Allreduce")
@@ -553,33 +868,81 @@ ncmpi_create(MPI_Comm    comm,
          * cmode inconsistency error, if there is any */
     }
 
+#ifdef ENABLE_THREAD_SAFE
+    int perr;
+    perr = pthread_mutex_lock(&lock);
+    if (perr != 0)
+        printf("Warning in file %s line %d: pthread_mutex_lock() failed (%s)\n",
+               __FILE__, __LINE__, strerror(perr));
+#endif
+
     /* combine user's MPI info and PNETCDF_HINTS env variable */
     combine_env_hints(info, &combined_info);
 
-#ifdef BUILD_DRIVER_FOO
-    if (combined_info == MPI_INFO_NULL)
-        MPI_Info_create(&combined_info);
-    {
-        char value[MPI_MAX_INFO_VAL];
-        int flag;
+    num_aggrs_per_node = 0;
+    if (nprocs > 1 && combined_info != MPI_INFO_NULL) {
+        /* check if INA hint is enabled */
+        MPI_Info_get(combined_info, "nc_num_aggrs_per_node",
+                     MPI_MAX_INFO_VAL-1, value, &flag);
+        if (flag) {
+            int ival;
+            errno = 0;  /* errno must set to zero before calling atoi */
+            ival = atoi(value);
+            if (errno == 0 && ival >= 0)
+                num_aggrs_per_node = ival;
+        }
+    }
 
+    /* creating communicator attributes must be protected by a mutex */
+    set_get_comm_attr(comm, num_aggrs_per_node, &comm_attr);
+    /* ignore error, as it is not a critical error */
+
+#ifdef ENABLE_THREAD_SAFE
+    perr = pthread_mutex_unlock(&lock);
+    if (perr != 0)
+        printf("Warning in file %s line %d: pthread_mutex_unlock() failed (%s)\n",
+               __FILE__, __LINE__, strerror(perr));
+#endif
+
+    if (num_aggrs_per_node > 0) {
+        int i, ina_nprocs;
+
+        /* count the total number of INA aggregators */
+        for (i=0; i<nprocs; i++)
+            if (comm_attr.ina_ranks[i] < 0) break;
+        ina_nprocs = i;
+
+        /* construct a list of INA aggregators' rank IDs */
+        snprintf(value, MAX_INT_LEN, "%d", comm_attr.ina_ranks[0]);
+        for (i=1; i<ina_nprocs; i++) {
+            snprintf(int_str, sizeof(int_str), " %d", comm_attr.ina_ranks[i]);
+            if (strlen(value) + strlen(int_str) >= MPI_MAX_INFO_VAL-5) {
+                strcat(value, " ...");
+                break;
+            }
+            strcat(value, int_str);
+        }
+
+        /* Add hint "ina_node_list", list of INA aggregators' rank IDs */
+        if (combined_info == MPI_INFO_NULL)
+            MPI_Info_create(&combined_info);
+        MPI_Info_set(combined_info, "nc_ina_node_list", value);
+    }
+
+#ifdef BUILD_DRIVER_FOO
+    if (combined_info != MPI_INFO_NULL) {
         /* check if nc_foo_driver is enabled */
         MPI_Info_get(combined_info, "nc_foo_driver", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
+                    value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
             enable_foo_driver = 1;
     }
 #endif
 #ifdef ENABLE_BURST_BUFFER
-    if (combined_info == MPI_INFO_NULL)
-        MPI_Info_create(&combined_info);
-    {
-        char value[MPI_MAX_INFO_VAL];
-        int flag;
-
+    if (combined_info != MPI_INFO_NULL) {
         /* check if nc_burst_buf is enabled */
         MPI_Info_get(combined_info, "nc_burst_buf", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
+                    value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
             enable_bb_driver = 1;
     }
@@ -648,8 +1011,10 @@ ncmpi_create(MPI_Comm    comm,
         /* Burst buffering does not support NetCDF-4 files yet.
          * If hint nc_burst_buf is enabled in combined_info, disable it.
          */
-        if (enable_bb_driver == 1)
-            MPI_Info_set(combined_info, "nc_burst_buf", "disable");
+        if (enable_bb_driver == 1) {
+            if (combined_info != MPI_INFO_NULL)
+                MPI_Info_set(combined_info, "nc_burst_buf", "disable");
+        }
         enable_bb_driver = 0;
 #endif
     }
@@ -710,7 +1075,7 @@ ncmpi_create(MPI_Comm    comm,
 
     /* calling the driver's create subroutine */
     err = driver->create(pncp->comm, pncp->path, cmode, *ncidp, env_mode,
-                         combined_info, node_ids, &ncp);
+                         combined_info, comm_attr, &ncp);
     if (status == NC_NOERR) status = err;
     if (combined_info != MPI_INFO_NULL) MPI_Info_free(&combined_info);
     if (status != NC_NOERR && status != NC_EMULTIDEFINE_CMODE) {
@@ -753,13 +1118,14 @@ ncmpi_open(MPI_Comm    comm,
            MPI_Info    info,
            int        *ncidp)  /* OUT */
 {
-    int i, j, nalloc, rank, nprocs, format, status=NC_NOERR, err;
-    int env_mode=0, mpireturn, DIMIDS[NDIMS_], *dimids;
-    MPI_Info combined_info;
+    char value[MPI_MAX_INFO_VAL], int_str[MAX_INT_LEN];
+    int i, j, nalloc, rank, nprocs, format, status=NC_NOERR, err, flag;
+    int env_mode=0, mpireturn, DIMIDS[NDIMS_], *dimids, num_aggrs_per_node;
+    MPI_Info combined_info=MPI_INFO_NULL;
     void *ncp;
     PNC *pncp;
     PNC_driver *driver;
-    PNCIO_node_ids node_ids;
+    PNC_comm_attr comm_attr;
 #ifdef BUILD_DRIVER_FOO
     int enable_foo_driver=0;
 #endif
@@ -769,24 +1135,6 @@ ncmpi_open(MPI_Comm    comm,
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
-
-#ifdef ENABLE_THREAD_SAFE
-    int perr;
-    perr = pthread_mutex_lock(&lock);
-    if (perr != 0)
-        printf("Warning in file %s line %d: pthread_mutex_lock() failed (%s)\n",
-               __FILE__, __LINE__, strerror(perr));
-#endif
-
-    /* creating communicator attributes must be protected by a mutex */
-    set_get_comm_attr(comm, &node_ids);
-
-#ifdef ENABLE_THREAD_SAFE
-    perr = pthread_mutex_unlock(&lock);
-    if (perr != 0)
-        printf("Warning in file %s line %d: pthread_mutex_unlock() failed (%s)\n",
-               __FILE__, __LINE__, strerror(perr));
-#endif
 
     if (rank == 0)
         set_env_mode(&env_mode);
@@ -841,43 +1189,92 @@ ncmpi_open(MPI_Comm    comm,
         }
 
         env_mode = modes[2];
-        if (fIsSet(env_mode, NC_MODE_SAFE)) { /* sync status among all processes */
+        if (fIsSet(env_mode, NC_MODE_SAFE)) {
+            /* sync status among all processes */
             err = status;
             TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
             NCMPII_HANDLE_ERROR("MPI_Allreduce")
         }
         /* continue to use root's omode to open the file, but will report omode
-         * inconsistency error, if there is any */
+         * inconsistency error, if there is any
+         */
     }
+
+#ifdef ENABLE_THREAD_SAFE
+    int perr;
+    perr = pthread_mutex_lock(&lock);
+    if (perr != 0)
+        printf("Warning in file %s line %d: pthread_mutex_lock() failed (%s)\n",
+               __FILE__, __LINE__, strerror(perr));
+#endif
 
     /* combine user's MPI info and PNETCDF_HINTS env variable */
     combine_env_hints(info, &combined_info);
 
-#ifdef BUILD_DRIVER_FOO
-    if (combined_info == MPI_INFO_NULL)
-        MPI_Info_create(&combined_info);
-    {
-        char value[MPI_MAX_INFO_VAL];
-        int flag;
+    num_aggrs_per_node = 0;
+    if (nprocs > 1 && combined_info != MPI_INFO_NULL) {
+        /* check if INA hint is enabled */
+        MPI_Info_get(combined_info, "nc_num_aggrs_per_node",
+                     MPI_MAX_INFO_VAL-1, value, &flag);
+        if (flag) {
+            int ival;
+            errno = 0;  /* errno must set to zero before calling atoi */
+            ival = atoi(value);
+            if (errno == 0 && ival >= 0)
+                num_aggrs_per_node = ival;
+        }
+    }
 
+    /* creating communicator attributes must be protected by a mutex */
+    set_get_comm_attr(comm, num_aggrs_per_node, &comm_attr);
+    /* ignore error, as it is not a critical error */
+
+#ifdef ENABLE_THREAD_SAFE
+    perr = pthread_mutex_unlock(&lock);
+    if (perr != 0)
+        printf("Warning in file %s line %d: pthread_mutex_unlock() failed (%s)\n",
+               __FILE__, __LINE__, strerror(perr));
+#endif
+
+    if (num_aggrs_per_node > 0) {
+        int ina_nprocs;
+
+        /* count the total number of INA aggregators */
+        for (i=0; i<nprocs; i++)
+            if (comm_attr.ina_ranks[i] < 0) break;
+        ina_nprocs = i;
+
+        /* construct a list of INA aggregators' rank IDs */
+        snprintf(value, MAX_INT_LEN, "%d", comm_attr.ina_ranks[0]);
+        for (i=1; i<ina_nprocs; i++) {
+            snprintf(int_str, sizeof(int_str), " %d", comm_attr.ina_ranks[i]);
+            if (strlen(value) + strlen(int_str) >= MPI_MAX_INFO_VAL-5) {
+                strcat(value, " ...");
+                break;
+            }
+            strcat(value, int_str);
+        }
+
+        /* Add hint "ina_node_list", list of INA aggregators' rank IDs */
+        if (combined_info == MPI_INFO_NULL)
+            MPI_Info_create(&combined_info);
+        MPI_Info_set(combined_info, "nc_ina_node_list", value);
+    }
+
+#ifdef BUILD_DRIVER_FOO
+    if (combined_info != MPI_INFO_NULL) {
         /* check if nc_foo_driver is enabled */
         MPI_Info_get(combined_info, "nc_foo_driver", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
+                    value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
             enable_foo_driver = 1;
-
     }
 #endif
 #ifdef ENABLE_BURST_BUFFER
-    if (combined_info == MPI_INFO_NULL)
-        MPI_Info_create(&combined_info);
-    {
-        char value[MPI_MAX_INFO_VAL];
-        int flag;
-
+    if (combined_info != MPI_INFO_NULL) {
         /* check if nc_burst_buf is enabled */
         MPI_Info_get(combined_info, "nc_burst_buf", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
+                    value, &flag);
         if (flag && strcasecmp(value, "enable") == 0)
             enable_bb_driver = 1;
     }
@@ -890,8 +1287,10 @@ ncmpi_open(MPI_Comm    comm,
         /* Burst buffering does not support NetCDF-4 files yet.
          * If hint nc_burst_buf is enabled in combined_info, disable it.
          */
-        if (enable_bb_driver == 1)
-            MPI_Info_set(combined_info, "nc_burst_buf", "disable");
+        if (enable_bb_driver == 1) {
+            if (combined_info != MPI_INFO_NULL)
+                MPI_Info_set(combined_info, "nc_burst_buf", "disable");
+        }
         enable_bb_driver = 0;
 #endif
     }
@@ -962,7 +1361,7 @@ ncmpi_open(MPI_Comm    comm,
 
     /* calling the driver's open subroutine */
     err = driver->open(pncp->comm, pncp->path, omode, *ncidp, env_mode,
-                       combined_info, node_ids, &ncp);
+                       combined_info, comm_attr, &ncp);
     if (status == NC_NOERR) status = err;
     if (combined_info != MPI_INFO_NULL) MPI_Info_free(&combined_info);
     if (status != NC_NOERR && status != NC_EMULTIDEFINE_OMODE &&
@@ -1005,8 +1404,8 @@ ncmpi_open(MPI_Comm    comm,
 
     if (pncp->nvars == 0) return status; /* no variable defined in the file */
 
-    /* make a copy of variable metadata at the dispatcher layer, because
-     * sanity check is done at the dispatcher layer
+    /* make a copy of variable metadata at the dispatcher layer, because sanity
+     * check is done at the dispatcher layer
      */
 
     /* allocate chunk size for pncp->vars[] */
@@ -1547,7 +1946,7 @@ ncmpi_inq_file_format(const char *filename,
             0 < h3 && h3 < fsize &&
             h1 < h2 && h2 < h3){
             /* basic footer check is passed, now we try to open the file with
-             * ADIOS library to make sure it is indeed a BP formated file
+             * ADIOS library to make sure it is indeed a BP file
              */
             ADIOS_FILE *fp;
             fp = adios_read_open_file(path, ADIOS_READ_METHOD_BP,

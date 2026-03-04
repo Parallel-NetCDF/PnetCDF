@@ -39,11 +39,13 @@ AM_TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
 
 TESTS = $(check_PROGRAMS)
 XFAIL_TESTS = $(check_PROGRAMS)
-EST_EXTENSIONS = .sh
+TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/xfail_runs.sh
 SH_LOG_COMPILER =
 
-EXTRA_DIST = ncmpidiff_core.h tst_file.nc
+check_SCRIPTS=xfail_runs.sh
+
+EXTRA_DIST = ncmpidiff_core.h xfail_runs.sh tst_file.nc
 
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out
 

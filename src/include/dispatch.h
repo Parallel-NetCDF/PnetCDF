@@ -45,17 +45,24 @@ typedef enum {
 } NC_api;
 
 typedef struct {
-    int  ref_count ; /* reference count */
-    int  num_nodes;  /* number of unique compute nodes */
-    int *ids;        /* [nprocs] node ID of each MPI process */
-} PNCIO_node_ids;
+    int  ref_count;          /* comm's attribute reference count */
+    int  num_nodes;          /* number of unique compute nodes */
+    int *ids;                /* [nprocs] node ID of each MPI process */
+    int  num_aggrs_per_node; /* No. INA aggregators per node */
+    int  my_aggr;            /* rank ID of my INA aggregator */
+    int  num_nonaggrs;       /* No. non-aggregators assigned to self rank */
+    int *nonaggr_ranks;      /* [num_nonaggrs] ranks of non-aggregators */
+    int  num_ina_aggrs;      /* No. INA aggregators, i.e. size of ina_comm */
+    int *ina_ranks;          /* [num_ina_aggrs] rank IDs of aggregators */
+    MPI_Comm  ina_comm;      /* communicator of all INA aggregators */
+} PNC_comm_attr;
 
 struct PNC_driver {
     /* APIs manipulate files */
     int (*create)(MPI_Comm, const char*, int, int, int, MPI_Info,
-                  PNCIO_node_ids, void**);
+                  PNC_comm_attr, void**);
     int (*open)(MPI_Comm, const char*, int, int, int, MPI_Info,
-                PNCIO_node_ids, void**);
+                PNC_comm_attr, void**);
     int (*close)(void*);
     int (*enddef)(void*);
     int (*_enddef)(void*,MPI_Offset,MPI_Offset,MPI_Offset,MPI_Offset);
