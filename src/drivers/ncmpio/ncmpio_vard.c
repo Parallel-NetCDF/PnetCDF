@@ -77,7 +77,7 @@ getput_vard(NC               *ncp,
     }
 
     if (ncp->num_aggrs_per_node > 0) {
-        fprintf(stderr, "PnetCDF vard APIs are not supported when intra-node agggregation is enabled\n");
+        fprintf(stderr, "PnetCDF vard APIs are not supported when intra-node aggregation is enabled\n");
         return NC_ENOTSUPPORT;
     }
 
@@ -269,7 +269,6 @@ getput_vard(NC               *ncp,
             xtype_is_contig = 1;
         }
     }
-assert(xtype_is_contig == 1);
 
     /* set fileview's displacement to the variable's starting file offset */
     offset = varp->begin;
@@ -304,7 +303,7 @@ err_check:
     status = err;
 
     /* set the MPI-IO fileview, this is a collective call */
-#if 1
+
     /* vard API is only supported when using MPI-IO, not PNCIO */
     char *mpi_name;
     MPI_File fh;
@@ -319,15 +318,11 @@ err_check:
         err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
         if (status == NC_NOERR) status = err;
     }
-#else
-    err = ncmpio_file_set_view(ncp, offset, filetype, 0, NULL, NULL);
-#endif
     if (err != NC_NOERR) {
         if (status == NC_NOERR) status = err;
         filetype_size = 0; /* skip this request */
     }
 
-#if 1
     /* vard API is only supported when using MPI-IO, not PNCIO */
     int coll_indep = NC_REQ_INDEP;
     if (ncp->nprocs > 1 && !fIsSet(ncp->flags, NC_MODE_INDEP))
@@ -357,25 +352,14 @@ err_check:
             wlen = ncmpio_file_write_at(ncp, 0, xbuf, buf_view);
         if (status == NC_NOERR && wlen < 0) status = (int)wlen;
     }
-#else
-    int rw_flag = (fIsSet(reqMode, NC_REQ_RD)) ? NC_REQ_RD : NC_REQ_WR;
-
-    err = ncmpio_read_write(ncp, rw_flag, 0, nelems, xtype, xbuf);
-    if (status == NC_NOERR) status = err;
-#endif
 
     /* reset fileview to make entire file visible */
-#if 1
     TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, MPI_BYTE, "native",
                                  MPI_INFO_NULL));
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
         if (status == NC_NOERR) status = err;
     }
-#else
-    err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, 0, NULL, NULL);
-    if (status == NC_NOERR) status = err;
-#endif
 
     if (fIsSet(reqMode, NC_REQ_RD)) {
         if (filetype_size == 0) return status;
