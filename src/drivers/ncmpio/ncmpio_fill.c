@@ -624,7 +624,23 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     NCI_Free(noFill);
     NCI_Free(count);
 
-    err = ncmpio_file_set_view(ncp, MPI_BYTE, k, offset, blocklengths);
+    /* Remove entries whose blocklengths[i] == 0. This happens when the size of
+     * fix-sized variable or record variable section is too small, such that
+     * some processes are not assigned data to fille.
+     */
+    for (j=0, i=0; i<k; i++) {
+        if (j < i) {
+            blocklengths[j] = blocklengths[i];
+            offset[j] = offset[i];
+        }
+        if (blocklengths[i] > 0) j++;
+    }
+    k = j;
+
+    if (k > 0) /* non-zero sized request */
+        err = ncmpio_file_set_view(ncp, MPI_BYTE, k, offset, blocklengths);
+    else
+        err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
     status = (status == NC_NOERR) ? err : status;
 
     buf_view.type = MPI_BYTE;
