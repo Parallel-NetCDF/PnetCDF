@@ -18,9 +18,10 @@
 /* check if user put buffer contents altered */
 #define CHECK_PUT_BUF \
     for (i=0; i<NY*NX; i++) { \
-        if (buf[i] != rank+10) { \
-            printf("Error at line %d in %s: user put buffer[%d] altered from %d to %d\n", \
-                   __LINE__,__FILE__, i, rank+10, buf[i]); \
+        int exp = rank+10; \
+        if (buf[i] != exp) { \
+            printf("Error at line %d : put buf[%d]=%d alter from %d\n", \
+                   __LINE__, i, buf[i], exp); \
             nerrs++; \
             goto err_out; \
         } \
@@ -181,9 +182,10 @@ int test_io(const char *out_path,
     for (i=0; i<NY; i++) {
         for (j=0; j<nprocs; j++) {
             for (k=0; k<NX; k++) {
-                if (buf[i*nprocs*NX+j*NX+k] != j+10) {
-                    printf("Error at line %d in %s: expected buffer[%d]=%d but got %d\n",
-                           __LINE__,__FILE__,i*nprocs*NX+j*NX+k, j+10, buf[i*nprocs*NX+j*NX+k]);
+                int idx = i*nprocs*NX+j*NX+k;
+                if (buf[idx] != j+10) {
+                    printf("Error at line %d: expect v0[%d]=%d but got %d\n",
+                           __LINE__, idx, j+10, buf[idx]);
                     nerrs++;
                     goto err_out;
                 }
@@ -208,9 +210,10 @@ int test_io(const char *out_path,
     for (i=0; i<NY; i++) {
         for (j=0; j<nprocs; j++) {
             for (k=0; k<NX; k++) {
-                if (buf[i*nprocs*NX+j*NX+k] != j+10) {
-                    printf("Error at line %d in %s: expected buffer[%d]=%d but got %d\n",
-                           __LINE__,__FILE__,i*nprocs*NX+j*NX+k, j+10, buf[i*nprocs*NX+j*NX+k]);
+                int idx = i*nprocs*NX+j*NX+k;
+                if (buf[idx] != j+10) {
+                    printf("Error at line %d: expect v1[%d]=%d but got %d\n",
+                           __LINE__,idx, j+10, buf[idx]);
                     nerrs++;
                     goto err_out;
                 }
@@ -235,9 +238,10 @@ int test_io(const char *out_path,
     for (i=0; i<NY; i++) {
         for (k=0; k<NX; k++) {
             for (j=0; j<nprocs; j++) {
-                if (buf[i*nprocs*NX+k*nprocs+j] != j+10) {
-                    printf("Error at line %d in %s: expected buffer[%d]=%d but got %d\n",
-                           __LINE__,__FILE__,i*nprocs*NX+k*nprocs+j, j+10, buf[i*nprocs*NX+k*nprocs+j]);
+                int idx = i*nprocs*NX+k*nprocs+j;
+                if (buf[idx] != j+10) {
+                    printf("Error at line %d: expect v2[%d]=%d but got %d\n",
+                           __LINE__,idx, j+10, buf[idx]);
                     nerrs++;
                     goto err_out;
                 }
@@ -262,9 +266,10 @@ int test_io(const char *out_path,
     for (i=0; i<NY; i++) {
         for (j=0; j<nprocs; j++) {
             for (k=0; k<NX; k++) {
-                if (buf[i*nprocs*NX+j*NX+k] != j+10) {
-                    printf("Error at line %d in %s: expected buffer[%d]=%d but got %d\n",
-                           __LINE__,__FILE__,i*nprocs*NX+j*NX+k, j+10, buf[i*nprocs*NX+j*NX+k]);
+                int idx = i*nprocs*NX+j*NX+k;
+                if (buf[idx] != j+10) {
+                    printf("Error at line %d: expect v3[%d]=%d but got %d\n",
+                           __LINE__,idx, j+10, buf[idx]);
                     nerrs++;
                     goto err_out;
                 }
@@ -289,9 +294,10 @@ int test_io(const char *out_path,
     for (i=0; i<NY; i++) {
         for (k=0; k<NX; k++) {
             for (j=0; j<nprocs; j++) {
-                if (buf[i*nprocs*NX+k*nprocs+j] != j+10) {
-                    printf("Error at line %d in %s: expected buffer[%d]=%d but got %d\n",
-                           __LINE__,__FILE__,i*nprocs*NX+k*nprocs+j, j+10, buf[i*nprocs*NX+k*nprocs+j]);
+                int idx = i*nprocs*NX+k*nprocs+j;
+                if (buf[idx] != j+10) {
+                    printf("Error at line %d: expect v4[%d]=%d but got %d\n",
+                           __LINE__,idx, j+10, buf[idx]);
                     nerrs++;
                     goto err_out;
                 }
@@ -299,10 +305,10 @@ int test_io(const char *out_path,
         }
     }
 
+err_out:
     err = ncmpi_close(ncid); CHECK_ERR
     if (buf != NULL) free(buf);
 
-err_out:
     return (nerrs > 0);
 }
 
