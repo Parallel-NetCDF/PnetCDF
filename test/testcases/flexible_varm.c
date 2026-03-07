@@ -72,17 +72,19 @@
         for (j=0; j<array_of_sizes[1]; j++) { \
             if (i < GHOST || GHOST+array_of_subsizes[0] <= i || \
                 j < GHOST || GHOST+array_of_subsizes[1] <= j) { \
-                if (buf[i][j] != -1) { \
-                    printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%d\n", \
-                           __LINE__,__FILE__,i,j,buf[i][j]); \
+                int exp = -1; \
+                if (buf[i][j] != exp) { \
+                    printf("Error at %d: put buf[%d][%d]=%d alter from %d\n", \
+                           __LINE__,i,j,buf[i][j],exp); \
                     nerrs++; \
                     goto err_out; \
                 } \
             } \
             else { \
-                if (buf[i][j] != (i-GHOST)*array_of_subsizes[1]+(j-GHOST)) { \
-                    printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%d\n", \
-                           __LINE__,__FILE__,i,j,buf[i][j]); \
+                int exp = (i-GHOST)*array_of_subsizes[1]+(j-GHOST); \
+                if (buf[i][j] != exp) { \
+                    printf("Error at %d: put buf[%d][%d]=%d alter from %d\n", \
+                           __LINE__,i,j,buf[i][j],exp); \
                     nerrs++; \
                     goto err_out; \
                 } \
@@ -100,17 +102,19 @@
         for (j=0; j<array_of_sizes[1]; j++) { \
             if (i < GHOST || GHOST+array_of_subsizes[0] <= i || \
                 j < GHOST || GHOST+array_of_subsizes[1] <= j) { \
-                if (buf[i][j] != -2) { \
-                    printf("Unexpected get buffer[%d][%d]=%d\n", \
-                           i,j,buf[i][j]); \
+                int exp = -2; \
+                if (buf[i][j] != exp) { \
+                    printf("Error at %d: expect buf[%d][%d]=%d but got %d\n", \
+                           __LINE__,i,j,exp,buf[i][j]); \
                     nerrs++; \
                     goto err_out; \
                 } \
             } \
             else { \
-                if (buf[i][j] != (i-GHOST)*array_of_subsizes[1]+(j-GHOST)) { \
-                    printf("Unexpected get buffer[%d][%d]=%d\n", \
-                           i,j,buf[i][j]); \
+                int exp = (i-GHOST)*array_of_subsizes[1]+(j-GHOST); \
+                if (buf[i][j] != exp) { \
+                    printf("Error at %d: expect buf[%d][%d]=%d but got %d\n", \
+                           __LINE__,i,j,exp,buf[i][j]); \
                     nerrs++; \
                     goto err_out; \
                 } \
@@ -133,7 +137,7 @@ int tst_varm(const char *out_path,
     int array_of_sizes[2], array_of_subsizes[2], array_of_starts[2];
     int buf[NX+2*GHOST][NY+2*GHOST];
     MPI_Offset start[2], count[2], stride[2], imap[2];
-    MPI_Datatype  subarray;
+    MPI_Datatype subarray=MPI_DATATYPE_NULL;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -248,11 +252,11 @@ int tst_varm(const char *out_path,
     /* check the contents of get buffer */
     CHECK_GET_BUF
 
-    MPI_Type_free(&subarray);
-
+err_out:
     err = ncmpi_close(ncid); CHECK_ERR
 
-err_out:
+    if (subarray != MPI_DATATYPE_NULL) MPI_Type_free(&subarray);
+
     return nerrs;
 }
 
