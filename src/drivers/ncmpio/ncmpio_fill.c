@@ -626,17 +626,42 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     /* Remove entries whose blocklengths[i] == 0. This happens when the size of
      * fix-sized variable or record variable section is too small, such that
      * some processes are not assigned data to fille.
+     *
+     * In the meantimes, coalesce offset-blocklengths pairs.
      */
-    for (j=0, i=0; i<k; i++) {
-        if (j < i) {
-            blocklengths[j] = blocklengths[i];
-            offset[j] = offset[i];
+    for (j=0; j<k; j++) {
+        if (blocklengths[j]) { /* i is the first non-zero */
+            if (j > 0) {
+                blocklengths[0] = blocklengths[j];
+                offset[0] = offset[j];
+            }
+            j++; /* next check starts from j */
+            break;
         }
-        if (blocklengths[i] > 0) j++;
     }
-    k = j;
 
-    if (k > 0) /* non-zero sized request */
+    if (blocklengths[0] == 0)
+        k = 0; /* all zero requests */
+    else {
+        i = 0;
+        for (; j<k; j++) {
+            if (blocklengths[j] == 0) continue;
+            if (offset[i] + blocklengths[i] == offset[j])
+                /* coalesce j into i */
+                blocklengths[i] += blocklengths[j];
+            else {
+                i++;
+                if (i < j) {
+                    offset[i] = offset[j];
+                    blocklengths[i] = blocklengths[j];
+                }
+            }
+        }
+        k = i+1;
+    }
+    /* k now is the number of non-zero sized requests */
+
+    if (k > 0)
         err = ncmpio_file_set_view(ncp, MPI_BYTE, k, offset, blocklengths);
     else
         err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
