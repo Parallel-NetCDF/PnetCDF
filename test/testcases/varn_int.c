@@ -69,7 +69,7 @@ int check_contents_for_fail(char *var_name, int *buffer)
     for (i=0; i<NY*NX; i++) {
         if (expected[i] >= nprocs+10) continue;
         if (buffer[i] != expected[i]) {
-            printf("Error: var %s expect read buf[%d]=%d, but got %d\n",
+            printf("Error: expect %s[%d]=%d, but got %d\n",
                    var_name, i,expected[i],buffer[i]);
             err = 1;
             break;
@@ -321,7 +321,7 @@ int tst_io(const char *filename,
 
     for (i=0; i<w_len; i++) {
         if (buffer[i] != rank+10) {
-            printf("Error at line %d in %s: expecting rec_var buffer[%d]=%d but got %d\n",
+            printf("Error at line %d in %s: expect rec_var[%d]=%d but got %d\n",
                    __LINE__,__FILE__,i,rank+10,buffer[i]);
             nerrs++;
             goto err_out;
@@ -344,13 +344,13 @@ int tst_io(const char *filename,
 
     for (i=0; i<w_len*2; i++) {
         if (i%2 && buffer[i] != -1) {
-            printf("Error at line %d in %s: expecting rec_var buffer[%d]=-1 but got %d\n",
+            printf("Error at line %d in %s: expect rec_var[%d]=-1 but got %d\n",
                    __LINE__,__FILE__,i,buffer[i]);
             nerrs++;
             goto err_out;
         }
         if (i%2 == 0 && buffer[i] != rank+10) {
-            printf("Error at line %d in %s: expecting rec_var buffer[%d]=%d but got %d\n",
+            printf("Error at line %d in %s: expect rec_var[%d]=%d but got %d\n",
                    __LINE__,__FILE__,i,rank+10,buffer[i]);
             nerrs++;
             goto err_out;
