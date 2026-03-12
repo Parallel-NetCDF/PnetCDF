@@ -343,8 +343,8 @@ int tst_main(int        argc,
 
     /* IDs for the netCDF file, dimensions, and variables. */
     int nprocs, rank, err, nerrs=0, keep_files, quiet, coll_io;
-    int i, a, d, r, m, b;
-    int num_ina, num_drv, num_ind, num_chk, num_bb, num_mod;
+    int i, a, d, r, m, b, s;
+    int num_ina, num_drv, num_ind, num_chk, num_bb, num_mod, num_ds;
 
     MPI_Info info=MPI_INFO_NULL;
     double timing = MPI_Wtime();
@@ -413,6 +413,7 @@ int tst_main(int        argc,
     num_chk = (opt.chk) ? 2 : 1;
     num_bb  = (opt.bb)  ? 2 : 1;
     num_mod = (opt.mod) ? 2 : 1;
+    num_ds  = 2; /* date sieving disable and enable */
 
     for (i=0; i<opt.num_fmts; i++) {
         char out_filename[512], ext[16], *base_file;
@@ -428,6 +429,7 @@ int tst_main(int        argc,
         for (r=0; r<num_ind; r++) {
         for (m=0; m<num_chk; m++) {
         for (b=0; b<num_bb;  b++) {
+        for (s=0; s<num_ds;  s++) {
 
             sprintf(out_filename, "%s.%s", out_path, ext);
 
@@ -487,6 +489,17 @@ int tst_main(int        argc,
 #endif
             }
 
+            if (s == 0) { /* diable data sieving */
+                MPI_Info_set(info, "romio_ds_read",  "disable");
+                MPI_Info_set(info, "romio_ds_write", "disable");
+                strcat(out_filename, ".nods");
+            }
+            else { /* PnetCDF's default */
+                MPI_Info_set(info, "romio_ds_read",  "automatic");
+                MPI_Info_set(info, "romio_ds_write", "automatic");
+                strcat(out_filename, ".ds");
+            }
+
             for (coll_io=0; coll_io<2; coll_io++) {
 
 #ifdef PROFILING
@@ -509,7 +522,8 @@ int tst_main(int        argc,
 
                 double time_body = MPI_Wtime();
                 if (!quiet && rank == 0)
-                    printf("\n%-44s a=%d d=%d r=%d m=%d b=%d c=%d", out_filename, a,d,r,m,b,coll_io);
+                    printf("\n%-44s a=%d d=%d r=%d m=%d b=%d s=%d c=%d",
+                           out_filename, a,d,r,m,b,s,coll_io);
 
                 nerrs = tst_body(out_filename, in_path, opt.formats[i],
                                  coll_io, info);
@@ -546,8 +560,8 @@ int tst_main(int        argc,
                 }
 
                 if (!quiet && rank == 0)
-                    printf("ncmpidiff %-60s %s a=%d d=%d r=%d m=%d b=%d\n",
-                           out_filename, base_file,a,d,r,m,b);
+                    printf("ncmpidiff %-60s %s a=%d d=%d r=%d m=%d b=%d s=%d\n",
+                           out_filename, base_file,a,d,r,m,b,s);
 
 #ifdef MIMIC_LUSTRE
                 /* use a larger stripe size when running ncmpidiff */
@@ -578,6 +592,7 @@ skip_diff:
                 /* wait for deletion to complete before next iteration */
                 MPI_Barrier(MPI_COMM_WORLD);
             }
+        } /* loop s */
         } /* loop b */
         } /* loop m */
         } /* loop r */
