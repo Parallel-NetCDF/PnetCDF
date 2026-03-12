@@ -48,10 +48,10 @@ int test_io(const char *out_path,
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     /* Set format. */
-    err = ncmpi_set_default_format(format, NULL);
-    if (err != NC_NOERR) goto err_out;
+    err = ncmpi_set_default_format(format, NULL); CHECK_ERR
 
-    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "Y", NY, &dimid[0]); CHECK_ERR
     err = ncmpi_def_dim(ncid, "X", nprocs*NX, &dimid[1]); CHECK_ERR
