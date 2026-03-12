@@ -1,31 +1,44 @@
 /*
  *  Copyright (C) 2013, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
- *
- *  $Id$
  */
 
 /*
  * This program tests the use of nonblocking API.
  * The write buffer is a 2D array of size NY x NX
- * It writes the 2nd row of the memory buffer to the 1st row of the variable
- * array in file. Then it writes the 1st row of the memory buffer to the
- * 2nd row of the variable array in file.
+ * It writes the NY-th row of the memory buffer to the 1st row of the variable
+ * array in file and (NY-1)-th row of the memory buffer to the 2nd row of the
+ * variable in the file, and so one. Testing for reading is the opposite of
+ * write.
  *
- * The expected reults from the output file contents are:
- * (when running on 1 MPI process)
+  The expected reults from the output file contents are:
  *
+ *  % mpiexec -n 4 ./nonblocking
  *  % ncmpidump testfile.nc
  *    netcdf testfile {
  *    // file format: CDF-1
  *    dimensions:
- *         Y = UNLIMITED ; // (2 currently)
+ *         Y = UNLIMITED ; // (16 currently)
  *         X = 5 ;
  *    variables:
  *         int VAR(Y, X) ;
  *    data:
  *
  *    var =
+ *      3, 3, 3, 3, 3,
+ *      2, 2, 2, 2, 2,
+ *      1, 1, 1, 1, 1,
+ *      0, 0, 0, 0, 0,
+ *      3, 3, 3, 3, 3,
+ *      2, 2, 2, 2, 2,
+ *      1, 1, 1, 1, 1,
+ *      0, 0, 0, 0, 0,
+ *      3, 3, 3, 3, 3,
+ *      2, 2, 2, 2, 2,
+ *      1, 1, 1, 1, 1,
+ *      0, 0, 0, 0, 0,
+ *      3, 3, 3, 3, 3,
+ *      2, 2, 2, 2, 2,
  *      1, 1, 1, 1, 1,
  *      0, 0, 0, 0, 0 ;
  *    }
@@ -44,12 +57,11 @@
 #define NX 5
 
 int tst_iput(const char *out_path,
-             const char *in_path, /* ignored */
              int         format,
              int         coll_io,
              MPI_Info    info)
 {
-    int i, j, err, ncid, varid, dimids[2], req[2], st[2], nerrs=0;
+    int i, j, err, ncid, varid, dimids[2], req[NY], st[NY], nerrs=0;
     int rank, nprocs, buf[NY+1][NX];
     MPI_Offset start[2], count[2];
 
@@ -76,31 +88,32 @@ int tst_iput(const char *out_path,
     /* initialize the contents of the array */
     for (j=0; j<NY+1; j++) for (i=0; i<NX; i++) buf[j][i] = j;
 
-    start[0] = 2*rank; start[1] = 0;
-    count[0] = 1;      count[1] = NX;
+    start[0] = NY*rank; start[1] = 0;
+    count[0] = 1;       count[1] = NX;
 
-    /* call nonblocking API */
-    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[1], &req[0]);
-    CHECK_ERR
+    for (j=0; j<NY; j++) {
+        /* call nonblocking API */
+        err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[NY-j-1], &req[j]);
+        CHECK_ERR
 
-    start[0] += 1;
-    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf[0], &req[1]);
-    CHECK_ERR
-
-    st[0] = st[1] = NC_NOERR;
+        start[0] += 1;
+        st[j] = NC_NOERR;
+    }
 
     if (coll_io) {
-        err = ncmpi_wait_all(ncid, 2, req, st);
+        err = ncmpi_wait_all(ncid, NY, req, st);
         CHECK_ERR
     }
     else {
         err = ncmpi_begin_indep_data(ncid);
         CHECK_ERR
-        err = ncmpi_wait(ncid, 2, req, st);
+        err = ncmpi_wait(ncid, NY, req, st);
         CHECK_ERR
     }
-    err = st[0]; CHECK_ERR
-    err = st[1]; CHECK_ERR
+
+    for (j=0; j<NY; j++) {
+        err = st[j]; CHECK_ERR
+    }
 
     /* check if the contents of buf are altered */
     for (j=0; j<NY; j++)
@@ -137,8 +150,8 @@ int tst_iput(const char *out_path,
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = -1;
 
     /* read back variable */
-    start[0] = 2*rank; start[1] = 0;
-    count[0] = 2;      count[1] = NX;
+    start[0] = NY*rank; start[1] = 0;
+    count[0] = NY;      count[1] = NX;
     if (coll_io)
         err = ncmpi_get_vara_int_all(ncid, varid, start, count, buf[0]);
     else
@@ -148,12 +161,82 @@ int tst_iput(const char *out_path,
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* check if the contents of buf are expected */
-    for (j=0; j<2; j++) {
-        int val = (j == 0) ? 1 : 0;
+    for (j=0; j<NY; j++) {
+        int exp = NY - j - 1;
         for (i=0; i<NX; i++)
-            if (buf[j][i] != val) {
-                printf("Error: unexpected read buf[%d][%d]=%d, should be %d\n",
-                       j,i,buf[j][i],val);
+            if (buf[j][i] != exp) {
+                printf("Error at line %d: expect buf[%d][%d]=%d but got %d\n",
+                       __LINE__, j,i,exp, buf[j][i]);
+                nerrs++;
+                goto fn_exit;
+            }
+    }
+
+fn_exit:
+    return nerrs;
+}
+
+int tst_iget(const char *in_path,
+             int         coll_io,
+             MPI_Info    info)
+{
+    int i, j, err, ncid, varid, req[NY], st[NY], nerrs=0;
+    int rank, nprocs, buf[NY+1][NX];
+    MPI_Offset start[2], count[2];
+
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    /* open the same file and read back for validate */
+    err = ncmpi_open(MPI_COMM_WORLD, in_path, NC_NOWRITE, info, &ncid);
+    CHECK_FATAL_ERR
+
+    err = ncmpi_inq_varid(ncid, "VAR", &varid); CHECK_ERR
+
+    if (!coll_io) {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+    }
+
+    /* initialize the contents of the array to a different value */
+    for (j=0; j<NY; j++) for (i=0; i<NX; i++) buf[j][i] = -1;
+
+    /* read back variable */
+    start[0] = NY*rank; start[1] = 0;
+    count[0] = 1;       count[1] = NX;
+
+    for (j=0; j<NY; j++) {
+        /* call nonblocking API */
+        err = ncmpi_iget_vara_int(ncid, varid, start, count, buf[NY-j-1], &req[j]);
+        CHECK_ERR
+
+        start[0] += 1;
+        st[j] = NC_NOERR;
+    }
+
+    if (coll_io) {
+        err = ncmpi_wait_all(ncid, NY, req, st);
+        CHECK_ERR
+    }
+    else {
+        err = ncmpi_begin_indep_data(ncid);
+        CHECK_ERR
+        err = ncmpi_wait(ncid, NY, req, st);
+        CHECK_ERR
+    }
+    for (j=0; j<NY; j++) {
+        err = st[j]; CHECK_ERR
+    }
+
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    /* check if the contents of buf are expected */
+    for (j=0; j<NY; j++) {
+        int exp = j;
+        for (i=0; i<NX; i++)
+            if (buf[j][i] != exp) {
+                printf("Error at line %d: expect buf[%d][%d]=%d but got %d\n",
+                       __LINE__,j,i,exp,buf[j][i]);
                 nerrs++;
                 goto fn_exit;
             }
@@ -172,13 +255,19 @@ int test_io(const char *out_path,
 {
     int nerrs=0;
 
-    nerrs = tst_iput(out_path, in_path, format, coll_io, info);
+    nerrs = tst_iput(out_path, format, coll_io, info);
+    if (nerrs > 0) goto err_out;
+
+    nerrs = tst_iget(out_path, coll_io, info);
     if (nerrs > 0) goto err_out;
 
     /* disable PnetCDF internal buffering */
     MPI_Info_set(info, "nc_ibuf_size", "0");
 
-    nerrs = tst_iput(out_path, in_path, format, coll_io, info);
+    nerrs = tst_iput(out_path, format, coll_io, info);
+    if (nerrs > 0) goto err_out;
+
+    nerrs = tst_iget(out_path, coll_io, info);
     if (nerrs > 0) goto err_out;
 
 err_out:
