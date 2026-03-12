@@ -527,7 +527,13 @@ int tst_main(int        argc,
 
                 nerrs = tst_body(out_filename, in_path, opt.formats[i],
                                  coll_io, info);
-                if (nerrs != NC_NOERR) goto err_out;
+                if (nerrs != NC_NOERR) {
+                    fflush(stdout);
+                    if (rank == 0)
+                        printf("\nFAILED %-44s INA=%d driver=%d indep_rw=%d chunk=%d BB=%d sieving=%d coll=%d\n",
+                               out_filename, a,d,r,m,b,s,coll_io);
+                    goto err_out;
+                }
 
                 if (!quiet) {
                     time_body = MPI_Wtime() - time_body;
