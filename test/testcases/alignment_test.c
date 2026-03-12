@@ -43,9 +43,9 @@ int test_io(const char *out_path,
             int         coll_io,
             MPI_Info    global_info)
 {
-    int i, j, rank, nprocs, err, verbose=0, nerrs=0;
-    int ncid, varid[NVARS], dimid[2], *buf;
     char str[32];
+    int i, j, rank, nprocs, err, verbose=0, nerrs=0;
+    int ncid, varid[NVARS], dimid[2], *buf=NULL;
     MPI_Offset start[2], count[2];
     MPI_Offset new_var_off[NVARS*2], old_var_off[NVARS*2];
     MPI_Offset header_size[2], header_extent[2];
@@ -62,7 +62,7 @@ int test_io(const char *out_path,
 
     /* create a new file for writing ----------------------------------------*/
     err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
-    CHECK_ERROUT
+    CHECK_ERR
 
     /* define dimension */
     err = ncmpi_def_dim(ncid, "Y", NC_UNLIMITED, &dimid[0]); CHECK_ERR
@@ -73,13 +73,15 @@ int test_io(const char *out_path,
 #ifdef TEST_FIXED_VAR
         if (i%2) {
             sprintf(str,"fixed_var_%d",i);
-            err = ncmpi_def_var(ncid, str, NC_INT, 1, dimid+1, &varid[i]); CHECK_ERR
+            err = ncmpi_def_var(ncid, str, NC_INT, 1, dimid+1, &varid[i]);
+            CHECK_ERR
         }
 #endif
 #ifdef TEST_RECORD_VAR
         if (i%2 == 0) {
             sprintf(str,"record_var_%d",i);
-            err = ncmpi_def_var(ncid, str, NC_INT, 2, dimid, &varid[i]); CHECK_ERR
+            err = ncmpi_def_var(ncid, str, NC_INT, 2, dimid, &varid[i]);
+            CHECK_ERR
         }
 #endif
     }
@@ -105,11 +107,14 @@ int test_io(const char *out_path,
             CHECK_ERR
 
             /* check if user put buffer contents altered */
+            ncmpi_inq_varname(ncid, varid[i], str);
             for (j=0; j<NX; j++) {
-                if (buf[j] != rank*1000 + i*10 + j) {
-                    printf("Error at line %d in %s: user put buffer[%d] altered from %d to %d\n",
-                           __LINE__,__FILE__,j, rank*1000 + i*10 + j, buf[j]);
+                int exp = rank*1000 + i*10 + j;
+                if (buf[j] != exp) {
+                    printf("\nError at line %d: %s[%d] altered from %d to %d\n",
+                           __LINE__,str, j, exp, buf[j]);
                     nerrs++;
+                    goto err_out;
                 }
             }
         }
@@ -130,12 +135,16 @@ int test_io(const char *out_path,
             else
                 err = ncmpi_put_vara_int(ncid, varid[i], start, count, buf);
             CHECK_ERR
+
             /* check if user put buffer contents altered */
+            ncmpi_inq_varname(ncid, varid[i], str);
             for (j=0; j<NX; j++) {
-                if (buf[j] != rank*1000 + 100 + i*10 + j) {
-                    printf("Error at line %d in %s: user put buffer[%d] altered from %d to %d\n",
-                           __LINE__,__FILE__,j, rank*1000 + 100 + i*10 + j, buf[j]);
+                int exp = rank*1000 + 100 + i*10 + j;
+                if (buf[j] != exp) {
+                    printf("\nError at line %d: %s[%d] altered from %d to %d\n",
+                           __LINE__,str, j, exp, buf[j]);
                     nerrs++;
+                    goto err_out;
                 }
             }
         }
@@ -267,13 +276,16 @@ int test_io(const char *out_path,
             else
                 err = ncmpi_put_vara_int(ncid, new_varid[i], start, count, buf);
             CHECK_ERR
-            sprintf(str,"fixed_var_%d",i);
+
             /* check if user put buffer contents altered */
+            ncmpi_inq_varname(ncid, new_varid[i], str);
             for (j=0; j<NX; j++) {
-                if (buf[j] != -1 * (i*10 + j)) {
-                    printf("Error at %d in %s: var %s put buffer[%d] altered from %d to %d\n",
-                           __LINE__,__FILE__, str, j, -1 * (i*10 + j), buf[j]);
+                int exp = -1 * (i*10 + j);
+                if (buf[j] != exp) {
+                    printf("\nError at line %d: %s[%d] altered from %d to %d\n",
+                           __LINE__,str, j, exp, buf[j]);
                     nerrs++;
+                    goto err_out;
                 }
             }
         }
@@ -294,13 +306,16 @@ int test_io(const char *out_path,
             else
                 err = ncmpi_put_vara_int(ncid, new_varid[i], start, count, buf);
             CHECK_ERR
-            sprintf(str,"record_var_%d",i);
+
             /* check if user put buffer contents altered */
+            ncmpi_inq_varname(ncid, new_varid[i], str);
             for (j=0; j<NX; j++) {
-                if (buf[j] != -1 * (100 + i*10 + j)) {
-                    printf("Error at %d in %s: var %s put buffer[%d] altered from %d to %d\n",
-                           __LINE__,__FILE__, str, j, -1 * (100 + i*10 + j), buf[j]);
+                int exp = -1 * (100 + i*10 + j);
+                if (buf[j] != exp) {
+                    printf("\nError at line %d: %s[%d] altered from %d to %d\n",
+                           __LINE__,str, j, exp, buf[j]);
                     nerrs++;
+                    goto err_out;
                 }
             }
         }
@@ -324,14 +339,17 @@ int test_io(const char *out_path,
             else
                 err = ncmpi_get_vara_int(ncid, varid[i], start, count, buf);
             CHECK_ERR
-            sprintf(str,"fixed_var_%d",i);
-            for (j=0; j<NX; j++)
-                if (buf[j] != rank*1000 + i*10 + j) {
-                    printf("Error at %d: var %s i=%d buf[j=%d]=%d != %d\n",
-                           __LINE__,str,i,j,buf[j],rank*1000+i*10+j);
+
+            ncmpi_inq_varname(ncid, varid[i], str);
+            for (j=0; j<NX; j++) {
+                int exp = rank*1000 + i*10 + j;
+                if (buf[j] != exp) {
+                    printf("\nError at %d: expect %s[%d]=%d but got %d\n",
+                           __LINE__,str,j,exp,buf[j]);
                     nerrs++;
-                    break;
+                    goto err_out;
                 }
+            }
         }
 #endif
 #ifdef TEST_RECORD_VAR
@@ -343,35 +361,44 @@ int test_io(const char *out_path,
             else
                 err = ncmpi_get_vara_int(ncid, varid[i], start, count, buf);
             CHECK_ERR
-            for (j=0; j<NX; j++)
-                if (buf[j] != rank*1000+i*10+j) {
-                    printf("read error at %d: i=%d buf[j=%d]=%d != %d\n",__LINE__,i,j,buf[j],rank*1000+i*10+j);
+
+            ncmpi_inq_varname(ncid, varid[i], str);
+            for (j=0; j<NX; j++) {
+                int exp = rank*1000+i*10+j;
+                if (buf[j] != exp) {
+                    printf("\nError at %d: expect %s[%d]=%d but got %d\n",
+                           __LINE__,str,j,exp,buf[j]);
                     nerrs++;
-                    break;
+                    goto err_out;
                 }
+            }
             start[0] = 1;
             if (coll_io)
                 err = ncmpi_get_vara_int_all(ncid, varid[i], start, count, buf);
             else
                 err = ncmpi_get_vara_int(ncid, varid[i], start, count, buf);
             CHECK_ERR
-            sprintf(str,"record_var_%d",i);
-            for (j=0; j<NX; j++)
-                if (buf[j] != rank*1000 + 100 + i*10 + j) {
-                    printf("Error at %d: var %s i=%d buf[j=%d]=%d != %d\n",
-                           __LINE__, str,i,j,buf[j],rank*1000+100+i*10+j);
+
+            ncmpi_inq_varname(ncid, varid[i], str);
+            for (j=0; j<NX; j++) {
+                int exp = rank*1000 + 100 + i*10 + j;
+                if (buf[j] != exp) {
+                    printf("\nError at %d: expect %s[%d]=%d but got %d\n",
+                           __LINE__,str,j,exp,buf[j]);
                     nerrs++;
-                    break;
+                    goto err_out;
                 }
+            }
         }
 #endif
     }
+
+err_out:
     err = ncmpi_close(ncid); CHECK_ERR
-    free(buf);
+    if (buf != NULL) free(buf);
 
     if (info != MPI_INFO_NULL) MPI_Info_free(&info);
 
-err_out:
     return nerrs;
 }
 
