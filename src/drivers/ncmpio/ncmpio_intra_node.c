@@ -439,19 +439,10 @@ flatten_subarray(int                ndim,       /* number of dimensions */
         subarray_len *= count[ndim];
     }
 
-    /* check if the list can be coalesced */
-    for (i=0, j=1; j<*npairs; j++) {
-        if (offsets[i] + lengths[i] == offsets[j])
-            lengths[i] += lengths[j];
-        else {
-            i++;
-            if (i < j) {
-                offsets[i] = offsets[j];
-                lengths[i] = lengths[j];
-            }
-        }
-    }
-    *npairs = i + 1;
+    /* offsets[] and lengths[] may be coalescable, but this will be delayed
+     * until this subroutine callers, flatten_req() and flatten_reqs(), where
+     * both fix-sized and record variables have been flattened.
+     */
 
     return NC_NOERR;
 }
@@ -582,10 +573,21 @@ flatten_req(NC                *ncp,
     if (ones != NULL)
         NCI_Free(ones);
 
-    /* num_pairs may be less than originally calculated, because offset-length
-     * pairs are coalesced in the call to flatten_subarray().
-     */
     *num_pairs = idx;
+
+    /* check if the offsets-lengths can be coalesced */
+    for (i=0, j=1; j<*num_pairs; j++) {
+        if (offsets[i] + lengths[i] == offsets[j])
+            lengths[i] += lengths[j];
+        else {
+            i++;
+            if (i < j) {
+                offsets[i] = offsets[j];
+                lengths[i] = lengths[j];
+            }
+        }
+    }
+    *num_pairs = i + 1;
 
     return err;
 }
@@ -731,10 +733,21 @@ flatten_reqs(NC            *ncp,
     }
     NCI_Free(ones);
 
-    /* num_pairs may be less than originally calculated, because offset-length
-     * pairs are coalesced in the call to flatten_subarray().
-     */
     *num_pairs = idx;
+
+    /* check if the offsets-lengths can be coalesced */
+    for (i=0, j=1; j<*num_pairs; j++) {
+        if (offsets[i] + lengths[i] == offsets[j])
+            lengths[i] += lengths[j];
+        else {
+            i++;
+            if (i < j) {
+                offsets[i] = offsets[j];
+                lengths[i] = lengths[j];
+            }
+        }
+    }
+    *num_pairs = i + 1;
 
     for (i=0; i<num_reqs; i++) {
         NC_lead_req *lead;
@@ -958,7 +971,7 @@ int ina_collect_md(NC          *ncp,
         if (*npairs > num_pairs) {
             /* realloc to store all pairs in a contiguous buffer */
             *offsets = (MPI_Offset*) NCI_Realloc(*offsets, *npairs * sizeof(MPI_Offset));
-            *lengths = (int*)        NCI_Realloc(*lengths, *npairs * sizeof(int));
+            *lengths = (int*) NCI_Realloc(*lengths, *npairs * sizeof(int));
         }
 #endif
 
@@ -1141,16 +1154,18 @@ int ina_put(NC         *ncp,
             PNCIO_View  buf_view,
             void       *buf)       /* user buffer */
 {
-    int i, j, err, mpireturn, status=NC_NOERR, free_buf_view_off=0;
     char *recv_buf=NULL, *wr_buf = NULL;
+    int i, j, err, mpireturn, status=NC_NOERR, free_buf_view_off=0;
+    int coalesceable=0;
     MPI_Aint npairs=0, *meta=NULL, *count=NULL, *bufAddr=NULL;
+    MPI_Aint buf_npairs=0, file_npairs=0;
     MPI_Offset wr_amnt=0;
     PNC_comm_attr ina_meta = ncp->comm_attr;
 #ifdef HAVE_MPI_LARGE_COUNT
-    MPI_Count *off_ptr, *len_ptr;
+    MPI_Count *off_ptr, *len_ptr, *file_len=NULL;
 #else
     MPI_Offset *off_ptr;
-    int *len_ptr;
+    int *len_ptr, *file_len=NULL;
 #endif
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
@@ -1366,7 +1381,13 @@ int ina_put(NC         *ncp,
          * This loop also coalesces offset-length pairs as well as the
          * corresponding buffer addresses, so they can be used to move write
          * data around in the true write buffer.
+         *
+         * Note off_ptr[] has been sorted into a monotonically non-decreasing
+         * order. During the sorting, bufAddr[] are moved around based on their
+         * corresponding off_ptr[], and thus bufAddr[] may not be in a
+         * monotonically non-decreasing order.
          */
+        coalesceable = 0;
         overlap = 0;
         wr_amnt = recv_amnt = len_ptr[0];
         for (i=0, j=1; j<npairs; j++) {
@@ -1383,12 +1404,15 @@ int ina_put(NC         *ncp,
                  * when gap == 0, pairs i and j are contiguous
                  */
                 if (gap > 0) overlap = 1;
-                wr_amnt += len_ptr[j] - gap;
+                wr_amnt += len_ptr[j] - gap; /* subtract overlapped amount */
                 if (bufAddr[i] + len_ptr[i] == bufAddr[j] + gap) {
-                    /* buffers i and j are contiguous, merge j into i */
+                    /* buffers i and j are contiguous, merge j into i and
+                     * subtract overlapped amount.
+                     */
                     len_ptr[i] += len_ptr[j] - gap;
                 }
                 else { /* buffers are not contiguous, reduce j's len */
+                    coalesceable = 1;
                     off_ptr[i+1] = off_ptr[j] + gap;
                     len_ptr[i+1] = len_ptr[j] - gap;
                     bufAddr[i+1] = bufAddr[j] + gap;
@@ -1408,6 +1432,60 @@ int ina_put(NC         *ncp,
 
         /* Now off_ptr[], len_ptr[], bufAddr[] are coalesced and no overlap */
         npairs = i+1;
+
+        /* buf_view to be used in a call to ncmpio_read_write() later should
+         * use bufAddr[] and len_ptr[], as it offset-length pairs.
+         */
+        buf_npairs = npairs;
+
+        /* coalesce file_view's off_ptr[] and len_ptr[] independently from
+         * buf_view's
+         */
+        file_npairs = npairs;
+        if (coalesceable) { /* file_view can be further coalesced */
+            size_t cpy_amnt;
+#ifdef HAVE_MPI_LARGE_COUNT
+            cpy_amnt = sizeof(MPI_Count) * file_npairs;
+            file_len = (MPI_Count*) NCI_Malloc(cpy_amnt);
+#else
+            cpy_amnt = sizeof(int) * file_npairs;
+            file_len = (int*) NCI_Malloc(cpy_amnt);
+#endif
+            memcpy(file_len, len_ptr, cpy_amnt);
+
+            for (i=0, j=1; j<file_npairs; j++) {
+#ifdef PNETCDF_DEBUG
+                /* any overlap should have been removed from the loop above */
+                assert(off_ptr[i] + file_len[i] <= off_ptr[j]);
+#endif
+                if (off_ptr[i] + file_len[i] == off_ptr[j])
+                    /* coalesce j into i */
+                    file_len[i] += file_len[j];
+                else { /* i and j are not coalesceable */
+                    i++;
+                    if (i < j) {
+                        off_ptr[i] = off_ptr[j];
+                        file_len[i] = file_len[j];
+                    }
+                }
+            }
+            /* update number of offset-length pairs */
+            file_npairs = i+1;
+
+        }
+        else {
+            /* file_view can use the same len_ptr[] as buf_view */
+            file_len = len_ptr;
+        }
+
+#ifdef PNETCDF_DEBUG
+        /* check if file_view's offset-lengths have been coalesced */
+        for (i=1; i<file_npairs; i++) {
+            assert(file_len[i-1] > 0);
+            assert(off_ptr[i-1] < off_ptr[i]);
+            assert(off_ptr[i-1] + file_len[i-1] < off_ptr[i]);
+        }
+#endif
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
         // ncmpi_inq_malloc_size(&mem_max);
@@ -1549,12 +1627,12 @@ int ina_put(NC         *ncp,
             buf_view.size      = wr_amnt;
             buf_view.type      = MPI_BYTE;
             buf_view.len       = len_ptr;
-            buf_view.count     = npairs;
+            buf_view.count     = buf_npairs;
 #if SIZEOF_MPI_AINT == SIZEOF_MPI_OFFSET
             buf_view.off = (MPI_Offset*)bufAddr; /* based on recv_buf */
 #else
-            buf_view.off = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * npairs);
-            for (j=0; j<npairs; j++)
+            buf_view.off = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * buf_npairs);
+            for (j=0; j<buf_npairs; j++)
                 buf_view.off[j] = (MPI_Offset)bufAddr[j];
             free_buf_view_off = 1;
 #endif
@@ -1574,7 +1652,7 @@ int ina_put(NC         *ncp,
             wr_buf = NCI_Malloc(wr_amnt);
             ptr = wr_buf;
 
-            for (j=0; j<npairs; j++) {
+            for (j=0; j<buf_npairs; j++) {
                 memcpy(ptr, recv_buf + bufAddr[j], len_ptr[j]);
                 ptr += len_ptr[j];
             }
@@ -1598,7 +1676,7 @@ int ina_put(NC         *ncp,
 #endif
 
     /* set the fileview */
-    err = ncmpio_file_set_view(ncp, MPI_BYTE, npairs, off_ptr, len_ptr);
+    err = ncmpio_file_set_view(ncp, MPI_BYTE, file_npairs, off_ptr, file_len);
     if (err != NC_NOERR) {
         if (status == NC_NOERR) status = err;
         wr_amnt = 0;
@@ -1623,6 +1701,7 @@ int ina_put(NC         *ncp,
      */
     if (offsets != NULL) NCI_Free(offsets);
     if (lengths != NULL) NCI_Free(lengths);
+    if (coalesceable) NCI_Free(file_len);
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     // ncmpi_inq_malloc_size(&mem_max);
@@ -2245,7 +2324,7 @@ fn_exit:
 }
 
 /*----< req_compare() >------------------------------------------------------*/
-/* used to sort the the string file offsets of reqs[] */
+/* This subroutine is used to sort the string file offsets of reqs[] */
 static int
 req_compare(const void *a, const void *b)
 {
@@ -2340,6 +2419,11 @@ ncmpio_ina_nreqs(NC         *ncp,
                      &offsets, &lengths);
     else
         num_pairs = 0;
+
+    /* Note offsets lengths may contain overlaps between consecutive pairs when
+     * the user's requests contain overlaps. They, if exist, will be resolved
+     * later in ina_put() and ina_get().
+     */
 
     /* Populate buf_view, which contains metadata of the user buffers in the
      * nonblocking requests. If buf is non-contiguous, buf to NULL and
