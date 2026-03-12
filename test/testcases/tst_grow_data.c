@@ -82,7 +82,7 @@ int read_back_check(int         ncid,
             for (j=0; j<nelems; j++) {
                 int exp = rank + j + i;
                 if (int_buf[j] != exp) {
-                    printf("Error at rank %d: fix var %s buf[%d] expects %d but got %d\n",
+                    printf("\nError at rank %d: expect %s[%d]=%d but got %d\n",
                            rank, name, j, exp, int_buf[j]);
                     return 1;
                 }
@@ -100,15 +100,15 @@ int read_back_check(int         ncid,
                 for (j=0; j<nelems; j++) {
                     float exp = rank + j + i;
                     if (flt_buf[j] != exp) {
-                        printf("Error at rank %d: rec %d var %s buf[%d] expects %.f but got %.f\n",
-                               rank, k, name, j, exp, flt_buf[j]);
+                        printf("\nError at rank %d: expect %sbuf[%d][%d]=%.f but got %.f\n",
+                               rank, name, k, j, exp, flt_buf[j]);
                         return 1;
                     }
                 }
             }
         }
         else {
-            printf("Error at rank %d: var %s unexpected ndims %d\n",
+            printf("\nError at rank %d: var %s unexpected ndims %d\n",
                    rank, name, ndims);
             return 1;
         }
