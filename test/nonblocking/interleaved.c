@@ -282,7 +282,7 @@ int test_io(const char *out_path,
     for (j=0; j<8; j++) {
         for (i=3; i<5; i++) {
             if (buf[j*NX+i] != expected) {
-                printf("%d at line %d: var0 read buf[%d][%d] expect %d but got %d\n",
+                printf("%d at line %d: expect var0[%d][%d] %d but got %d\n",
                        rank, __LINE__, j, i, expected, buf[j*NX+i]);
                 assert(0);
             }
@@ -293,7 +293,7 @@ int test_io(const char *out_path,
     j = 1;
     for (i=8; i<13; i++) {
         if (buf[j*NX+i] != expected) {
-            printf("%d at line %d: var0 read buf[%d][%d] expect %d but got %d\n",
+            printf("%d at line %d: expect var0[%d][%d] %d but got %d\n",
                    rank, __LINE__, j, i, expected, buf[j*NX+i]);
             assert(0);
         }
@@ -303,7 +303,7 @@ int test_io(const char *out_path,
     j = 3;
     for (i=7; i<12; i++) {
         if (buf[j*NX+i] != expected) {
-            printf("%d at line %d: var0 read buf[%d][%d] expect %d but got %d\n",
+            printf("%d at line %d: expect var0[%d][%d] %d but got %d\n",
                    rank, __LINE__, j, i, expected, buf[j*NX+i]);
             assert(0);
         }
@@ -325,7 +325,7 @@ int test_io(const char *out_path,
     for (j=6; j<9; j++) {
         for (i=7; i<17; i++) {
             if (buf[j*NX+i] != expected) {
-                printf("%d at line %d: var1 read buf[%d][%d] expect %d but got %d\n",
+                printf("%d at line %d: expect var1[%d][%d] %d but got %d\n",
                        rank, __LINE__, j, i, expected, buf[j*NX+i]);
                 assert(0);
             }
@@ -336,7 +336,7 @@ int test_io(const char *out_path,
     for (j=0; j<8; j++) {
         for (i=3; i<5; i++) {
             if (buf[j*NX+i] != expected) {
-                printf("%d at line %d: var1 read buf[%d][%d] expect %d but got %d\n",
+                printf("%d at line %d: expect var1[%d][%d] %d but got %d\n",
                        rank, __LINE__, j, i, expected, buf[j*NX+i]);
                 assert(0);
             }
