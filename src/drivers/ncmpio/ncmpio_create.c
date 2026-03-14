@@ -167,7 +167,7 @@ ncmpio_create(MPI_Comm         comm,
 
     /* Extract hints from user_info. Two hints must be extracted now in order
      * to continue:
-     *     pnc_driver: whether to use MPI-IO or PnetCDF's PNCIO driver.
+     *     nc_driver: whether to use MPI-IO or PnetCDF's PNCIO driver.
      *     nc_num_aggrs_per_node: number of processes per node to be the INA
      *     aggregators.
      *

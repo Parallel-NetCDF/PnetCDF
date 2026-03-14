@@ -442,10 +442,10 @@ int tst_main(int        argc,
             }
 
             if (d == 0) { /* MPI-IO driver */
-                MPI_Info_set(info, "pnc_driver", "mpiio");
+                MPI_Info_set(info, "nc_driver", "mpiio");
                 strcat(out_filename, ".mpio");
             } else { /* PnetCDF's internal PNCIO driver */
-                MPI_Info_set(info, "pnc_driver", "pncio");
+                MPI_Info_set(info, "nc_driver", "pncio");
                 strcat(out_filename, ".pncio");
             }
 

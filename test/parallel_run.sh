@@ -109,11 +109,11 @@ for i in ${check_PROGRAMS} ; do
 
     for mpiio_mode in 0 1 ; do
         if test "$mpiio_mode" = 1 ; then
-           USEMPIO_HINTS="pnc_driver=mpiio"
+           USEMPIO_HINTS="nc_driver=mpiio"
            DRIVER_OUT_FILE="${OUT_PREFIX}.mpio"
            driver_hint=" MPIO"
         else
-           USEMPIO_HINTS="pnc_driver=pncio"
+           USEMPIO_HINTS="nc_driver=pncio"
            DRIVER_OUT_FILE="${OUT_PREFIX}.pncio"
            driver_hint="PNCIO"
         fi
