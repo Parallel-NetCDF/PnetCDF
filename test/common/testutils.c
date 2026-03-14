@@ -549,12 +549,15 @@ int tst_main(int        argc,
                 MPI_Barrier(MPI_COMM_WORLD);
             }
 
+            /* run ncmpidiff to compare output files */
+            if (base_file == NULL) { /* skip first file */
+                base_file = strdup(out_filename);
+                goto skip_diff;
+            }
+
             if (!opt.hdr_diff) goto skip_diff;
 
-            /* run ncmpidiff to compare output files */
-            if (base_file == NULL) /* skip first file */
-                base_file = strdup(out_filename);
-            else if (strcmp(base_file, out_filename)) {
+            if (strcmp(base_file, out_filename)) {
                 int check_header=1, check_entire_file, first_diff=1;
 
                 check_entire_file = (opt.var_diff == 1);
