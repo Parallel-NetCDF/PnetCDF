@@ -104,7 +104,6 @@ TESTS = seq_runs.sh
 TEST_EXTENSIONS = .sh
 
 CLEANFILES = $(M4SRCS_F90) \
-             $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 check_SCRIPTS = seq_runs.sh

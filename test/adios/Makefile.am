@@ -82,9 +82,7 @@ SH_LOG_COMPILER =
 
 check_SCRIPTS = seq_runs.sh parallel_run.sh
 
-CLEANFILES = $(M4_SRCS:.m4=.c) \
-             $(TESTOUTDIR)/put_get_all_kinds.nc.cdf4 \
-             $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb
+CLEANFILES = $(M4_SRCS:.m4=.c)
 
 EXTRA_DIST = $(M4_SRCS) seq_runs.sh parallel_run.sh \
              arrays_big.bp  arrays.bp  attributes_big.bp  attributes.bp

@@ -90,7 +90,7 @@ LOG_COMPILER = $(srcdir)/wrap_runs.sh
 SH_LOG_COMPILER =
 
 CLEANFILES = tests.h $(M4_SRCS:.m4=.c) \
-             $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
+			 $(TESTOUTDIR)/test.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 check_SCRIPTS = seq_runs.sh wrap_runs.sh

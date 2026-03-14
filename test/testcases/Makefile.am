@@ -211,8 +211,7 @@ TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/seq_runs.sh
 SH_LOG_COMPILER =
 
-CLEANFILES = $(M4_SRCS:.m4=.c) \
-             $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
+CLEANFILES = $(M4_SRCS:.m4=.c) $(TESTOUTDIR)/tst_pthread.nc* \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 check_SCRIPTS = seq_runs.sh parallel_run.sh

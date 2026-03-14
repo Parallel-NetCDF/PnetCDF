@@ -117,7 +117,6 @@ nodist_nf_test_SOURCES = $(M4SRCS:.m4=.F)
 $(M4SRCS:.m4=.F): Makefile
 
 CLEANFILES = $(M4SRCS:.m4=.F) \
-             $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 check_SCRIPTS = seq_runs.sh

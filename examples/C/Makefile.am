@@ -82,7 +82,7 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
            $(check_PROGRAMS:%=$(TESTOUTDIR)/%.bb.nc)
 
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
-             $(NC_FILES) $(TESTOUTDIR)/pthread.nc.* $(TESTOUTDIR)/testfile.nc
+             $(TESTOUTDIR)/pthread.nc.* $(TESTOUTDIR)/*.nc
 
 EXTRA_DIST = run_c_examples.sh cdl_header.txt
 

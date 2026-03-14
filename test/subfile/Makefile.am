@@ -52,7 +52,7 @@ TEST_EXTENSIONS = .sh
 LOG_COMPILER = $(srcdir)/seq_runs.sh
 SH_LOG_COMPILER =
 
-CLEANFILES = $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
+CLEANFILES = $(TESTOUTDIR)/*.subfile_0.nc $(TESTOUTDIR)/*.subfile_1.nc \
              core core.* *.gcda *.gcno *.gcov gmon.out
 
 check_SCRIPTS = seq_runs.sh parallel_run.sh

@@ -54,8 +54,7 @@ check_SCRIPTS = seq_runs.sh parallel_run.sh
 
 EXTRA_DIST = seq_runs.sh parallel_run.sh cdl_header.txt
 
-CLEANFILES = $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
-             core core.* *.gcda *.gcno *.gcov gmon.out
+CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out
 
 ../common/libtestutils.la:
 	set -e; cd ../common && $(MAKE) $(MFLAGS) tests

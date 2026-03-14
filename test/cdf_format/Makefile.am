@@ -71,8 +71,7 @@ XFAIL_TESTS = xfail_runs.sh
 
 check_SCRIPTS = seq_runs.sh parallel_run.sh xfail_runs.sh
 
-CLEANFILES = $(TESTOUTDIR)/*.nc $(TESTOUTDIR)/*bb \
-             core core.* *.gcda *.gcno *.gcov gmon.out
+CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out
 
 EXTRA_DIST = seq_runs.sh xfail_runs.sh parallel_run.sh \
              test_cdf.nc1 test_cdf.nc2 test_cdf.nc3 test_cdf.nc4 test_cdf.nc5 \
