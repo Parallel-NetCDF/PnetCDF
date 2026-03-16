@@ -111,7 +111,8 @@ check_PROGRAMS = file_create_open \
                  put_all_kinds \
                  redef1 \
                  iput_all_kinds \
-                 tst_version
+                 tst_version \
+                 tst_chunk_nonblocking
 
 M4_SRCS      = put_all_kinds.m4 \
                erange_fill.m4 \
