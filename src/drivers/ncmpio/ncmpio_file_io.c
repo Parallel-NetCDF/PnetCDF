@@ -384,8 +384,11 @@ ncmpio_getput_zero_req(NC *ncp, int reqMode)
         if (status == NC_NOERR && wlen < 0) status = (int)wlen;
     }
 
-    /* Reset fileview. Note fileview is never reused in PnetCDF */
-    ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
+    if (ncp->fstype == PNCIO_FSTYPE_MPIIO)
+        /* Reset fileview is necessary only when using MPI-IO driver. Note
+         * fileview is never reused in PnetCDF.
+         */
+        ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
 
     /* No longer need to reset the file view, as the root's fileview includes
      * the whole file header.
@@ -639,8 +642,11 @@ ncmpio_read_write(NC         *ncp,
     }
 
 fn_exit:
-    /* Reset fileview. Note fileview is never reused in PnetCDF */
-    ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
+    if (ncp->fstype == PNCIO_FSTYPE_MPIIO)
+        /* Reset fileview is necessary only when using MPI-IO driver. Note
+         * fileview is never reused in PnetCDF.
+         */
+        ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
 
     return status;
 }

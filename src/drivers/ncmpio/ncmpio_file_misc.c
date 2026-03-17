@@ -103,9 +103,11 @@ ncmpio_redef(void *ncdp)
     /* we are now entering define mode */
     fSet(ncp->flags, NC_MODE_DEF);
 
-    /* must reset fileview as header extent may later change in enddef() */
-    err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
-    DEBUG_ASSIGN_ERROR(status, err)
+    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+        /* must reset fileview as header extent may later change in enddef() */
+        err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
+        DEBUG_ASSIGN_ERROR(status, err)
+    }
 
     return status;
 }

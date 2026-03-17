@@ -103,12 +103,6 @@ ncmpio_write_numrecs(NC         *ncp,
              */
             return NC_NOERR;
 
-        if (ncp->fstype != PNCIO_FSTYPE_MPIIO) {
-            /* reset fileview */
-            err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
-            if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
-        }
-
         buf_view.size = len;
 
         /* root's file view always includes the entire file header */

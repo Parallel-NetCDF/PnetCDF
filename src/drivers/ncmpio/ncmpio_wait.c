@@ -2044,13 +2044,15 @@ req_aggregation(NC     *ncp,
     }
     NCI_Free(reqs);
 
-    /* set the MPI-IO fileview, this is a collective call */
-    err = ncmpio_file_set_view(ncp, filetype, 0, NULL, NULL);
-    if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
-    if (err != NC_NOERR) {
-        if (status == NC_NOERR) status = err;
-        if (coll_indep == NC_REQ_INDEP) return status;
-        buf_len = 0;
+    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+        /* set the MPI-IO fileview, this is a collective call */
+        err = ncmpio_file_set_view(ncp, filetype, 0, NULL, NULL);
+        if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
+        if (err != NC_NOERR) {
+            if (status == NC_NOERR) status = err;
+            if (coll_indep == NC_REQ_INDEP) return status;
+            buf_len = 0;
+        }
     }
 
     /* call MPI_File_read_at_all/MPI_File_write_at_all */
@@ -2385,13 +2387,15 @@ mgetput(NC     *ncp,
 mpi_io:
     NCI_Free(reqs);
 
-    /* set the MPI-IO fileview, this is a collective call */
-    err = ncmpio_file_set_view(ncp, filetype, 0, NULL, NULL);
-    if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
-    if (err != NC_NOERR) {
-        if (status == NC_NOERR) status = err;
-        if (coll_indep == NC_REQ_INDEP) return status;
-        buf_count = 0;
+    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+        /* set the MPI-IO fileview, this is a collective call */
+        err = ncmpio_file_set_view(ncp, filetype, 0, NULL, NULL);
+        if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
+        if (err != NC_NOERR) {
+            if (status == NC_NOERR) status = err;
+            if (coll_indep == NC_REQ_INDEP) return status;
+            buf_count = 0;
+        }
     }
 
     /* call MPI_File_read_at_all/MPI_File_write_at_all */
