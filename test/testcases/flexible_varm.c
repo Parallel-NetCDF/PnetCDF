@@ -21,6 +21,9 @@
  *
  *    % mpiexec -l -n 4 ./flexible_varm /pvfs2/wkliao/testfile.nc
  *
+ * When NY and NX are set to 6 and 4 respectively, the contents of output file
+ * are shown below.
+ *
  *    % ncmpidump /pvfs2/wkliao/testfile.nc
  *    netcdf testfile {
  *    // file format: CDF-5 (big variables)
