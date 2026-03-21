@@ -343,8 +343,8 @@ int tst_main(int        argc,
 
     /* IDs for the netCDF file, dimensions, and variables. */
     int nprocs, rank, err, nerrs=0, keep_files, quiet, coll_io;
-    int i, a, d, r, m, b, s;
-    int num_ina, num_drv, num_ind, num_chk, num_bb, num_mod, num_ds;
+    int i, a, d, r, b, s;
+    int num_ina, num_drv, num_ind, num_bb, num_mod, num_ds;
 
     MPI_Info info=MPI_INFO_NULL;
     double timing = MPI_Wtime();
@@ -410,7 +410,6 @@ int tst_main(int        argc,
     num_ina = (opt.ina) ? 2 : 1;
     num_drv = (opt.drv) ? 2 : 1;
     num_ind = (opt.ind) ? 2 : 1;
-    num_chk = (opt.chk) ? 2 : 1;
     num_bb  = (opt.bb)  ? 2 : 1;
     num_mod = (opt.mod) ? 2 : 1;
     num_ds  = 2; /* date sieving disable and enable */
@@ -427,7 +426,6 @@ int tst_main(int        argc,
         for (a=0; a<num_ina; a++) {
         for (d=0; d<num_drv; d++) {
         for (r=0; r<num_ind; r++) {
-        for (m=0; m<num_chk; m++) {
         for (b=0; b<num_bb;  b++) {
         for (s=0; s<num_ds;  s++) {
 
@@ -455,23 +453,6 @@ int tst_main(int        argc,
             } else {
                 MPI_Info_set(info, "romio_no_indep_rw", "true");
                 strcat(out_filename, ".indep");
-            }
-
-            if (m == 0) { /* PnetCDF's default */
-                MPI_Info_set(info, "nc_data_move_chunk_size", "1048576");
-                strcat(out_filename, ".chunk1M");
-            } else {
-                char chunk_str[32];
-                if (opt.chk <= 1)
-                    strcpy(chunk_str, "100");
-                else
-                    sprintf(chunk_str, "%d", opt.chk);
-                MPI_Info_set(info, "nc_data_move_chunk_size", chunk_str);
-                if (opt.chk == 1)
-                    strcpy(chunk_str, ".chunk100");
-                else
-                    sprintf(chunk_str, ".chunk%d", opt.chk);
-                strcat(out_filename, chunk_str);
             }
 
             if (b == 0) { /* PnetCDF's default */
@@ -522,16 +503,16 @@ int tst_main(int        argc,
 
                 double time_body = MPI_Wtime();
                 if (!quiet && rank == 0)
-                    printf("\n%-44s a=%d d=%d r=%d m=%d b=%d s=%d c=%d",
-                           out_filename, a,d,r,m,b,s,coll_io);
+                    printf("\n%-44s a=%d d=%d r=%d b=%d s=%d c=%d",
+                           out_filename, a,d,r,b,s,coll_io);
 
                 nerrs = tst_body(out_filename, in_path, opt.formats[i],
                                  coll_io, info);
                 if (nerrs != NC_NOERR) {
                     fflush(stdout);
                     if (rank == 0)
-                        printf("\nFAILED %-44s INA=%d driver=%d indep_rw=%d chunk=%d BB=%d sieving=%d coll=%d\n",
-                               out_filename, a,d,r,m,b,s,coll_io);
+                        printf("\nFAILED %-44s INA=%d driver=%d indep_rw=%d BB=%d sieving=%d coll=%d\n",
+                               out_filename, a,d,r,b,s,coll_io);
                     goto err_out;
                 }
 
@@ -569,8 +550,8 @@ int tst_main(int        argc,
                 }
 
                 if (!quiet && rank == 0)
-                    printf("ncmpidiff %-60s %s a=%d d=%d r=%d m=%d b=%d s=%d\n",
-                           out_filename, base_file,a,d,r,m,b,s);
+                    printf("ncmpidiff %-60s %s a=%d d=%d r=%d b=%d s=%d\n",
+                           out_filename, base_file,a,d,r,b,s);
 
 #ifdef MIMIC_LUSTRE
                 /* use a larger stripe size when running ncmpidiff */
@@ -603,7 +584,6 @@ skip_diff:
             }
         } /* loop s */
         } /* loop b */
-        } /* loop m */
         } /* loop r */
         } /* loop d */
         } /* loop a */

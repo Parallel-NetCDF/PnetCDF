@@ -27,11 +27,10 @@
 #include <testutils.h>
 
 static
-int test_io(const char *out_path,
-            const char *in_path, /* ignored */
-            int         format,
-            int         coll_io,
-            MPI_Info    info)
+int redef1(const char *out_path,
+           int         format,
+           int         coll_io,
+           MPI_Info    info)
 {
     int i, j, k, nprocs, rank, ncid, err, nerrs=0;
     int dim0id, dim1id, dim5id, dim9id, dim2id, dimsid[2], dims2id[2];
@@ -56,7 +55,7 @@ int test_io(const char *out_path,
     CHECK_ERR
 
     /* Test NetCDF 4 first as ncvalidator checks only classic formats */
-    err = ncmpi_create(comm, out_path, NC_CLOBBER, MPI_INFO_NULL, &ncid); CHECK_ERR
+    err = ncmpi_create(comm, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR
 
     err = ncmpi_def_dim(ncid, "dim0", len0, &dim0id); CHECK_ERR
     err = ncmpi_def_dim(ncid, "dim1", len1, &dim1id); CHECK_ERR
@@ -138,7 +137,7 @@ int test_io(const char *out_path,
 
     err = ncmpi_close(ncid); CHECK_ERR
 
-    err = ncmpi_open(comm, out_path, NC_WRITE, MPI_INFO_NULL, &ncid);
+    err = ncmpi_open(comm, out_path, NC_WRITE, info, &ncid);
     CHECK_ERR
 
     err = ncmpi_redef(ncid); CHECK_ERR
@@ -181,6 +180,27 @@ int test_io(const char *out_path,
     return nerrs;
 }
 
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
+{
+    int nerrs;
+
+    /* test without setting hint nc_data_move_chunk_size */
+    nerrs = redef1(out_path, format, coll_io, info);
+    if (nerrs > 0) return nerrs;
+
+    /* test with setting hint nc_data_move_chunk_size */
+    MPI_Info_set(info, "nc_data_move_chunk_size", "100");
+    nerrs = redef1(out_path, format, coll_io, info);
+    if (nerrs > 0) return nerrs;
+
+    return 0;
+}
+
 int main(int argc, char **argv) {
 
     int err;
@@ -191,9 +211,8 @@ int main(int argc, char **argv) {
     opt.num_fmts = sizeof(nc_formats) / sizeof(int);
     opt.formats  = nc_formats;
     opt.ina      = 1; /* test intra-node aggregation */
-    opt.drv      = 1; /* test PNCIO driver */
+    opt.drv      = 0; /* test PNCIO driver */
     opt.ind      = 1; /* test hint romio_no_indep_rw */
-    opt.chk      = 1; /* test hint nc_data_move_chunk_size */
     opt.bb       = 1; /* test burst-buffering feature */
     opt.mod      = 1; /* test independent data mode */
     opt.hdr_diff = 1; /* run ncmpidiff for file header only */

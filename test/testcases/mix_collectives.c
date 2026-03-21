@@ -14,11 +14,9 @@
 #include <testutils.h>
 
 static
-int test_io(const char *out_path,
-            const char *in_path, /* ignored */
-            int         format,
-            int         coll_io, /* ignored */
-            MPI_Info    info)
+int mix_collectives(const char *out_path,
+                    int         format,
+                    MPI_Info    info)
 {
     int i, j, err, nerrs=0, rank, nprocs;
     int ncid, dimid[2], varid, varids[4];
@@ -274,6 +272,27 @@ err_out:
     return nerrs;
 }
 
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
+{
+    int nerrs;
+
+    /* test without setting hint nc_data_move_chunk_size */
+    nerrs = mix_collectives(out_path, format, info);
+    if (nerrs > 0) return nerrs;
+
+    /* test with setting hint nc_data_move_chunk_size */
+    MPI_Info_set(info, "nc_data_move_chunk_size", "100");
+    nerrs = mix_collectives(out_path, format, info);
+    if (nerrs > 0) return nerrs;
+
+    return 0;
+}
+
 int main(int argc, char **argv) {
 
     int err;
@@ -287,7 +306,6 @@ int main(int argc, char **argv) {
     opt.ina      = 1; /* test intra-node aggregation */
     opt.drv      = 1; /* test PNCIO driver */
     opt.ind      = 1; /* test hint romio_no_indep_rw */
-    opt.chk      = 1; /* test hint nc_data_move_chunk_size */
     opt.bb       = 1; /* test burst-buffering feature */
     opt.mod      = 0; /* test independent data mode */
     opt.hdr_diff = 1; /* run ncmpidiff for file header only */

@@ -675,11 +675,10 @@ err_out:
 }
 
 static
-int test_io(const char *out_path,
-            const char *in_path, /* ignored */
-            int         format,
-            int         coll_io,
-            MPI_Info    info)
+int tst_redefine(const char *out_path,
+                 int         format,
+                 int         coll_io,
+                 MPI_Info    info)
 {
     char str[256], *saved_env;
     int rank, err, nerrs=0, has_fix_vars;
@@ -792,13 +791,34 @@ int test_io(const char *out_path,
         nerrs += tst_fmt(out_path, coll_io, info, has_fix_vars, env_align, info_align);
         if (nerrs > 0) goto err_out;
 
-        /* restore the original value set in environment variable PNETCDF_HINTS */
+        /* restore original values set in environment variable PNETCDF_HINTS */
         if (saved_env != NULL) setenv("PNETCDF_HINTS", saved_env, 1);
         else                   unsetenv("PNETCDF_HINTS");
     }
 
 err_out:
     return nerrs;
+}
+
+static
+int test_io(const char *out_path,
+            const char *in_path, /* ignored */
+            int         format,
+            int         coll_io,
+            MPI_Info    info)
+{
+    int nerrs;
+
+    /* test without setting hint nc_data_move_chunk_size */
+    nerrs = tst_redefine(out_path, format, coll_io, info);
+    if (nerrs > 0) return nerrs;
+
+    /* test with setting hint nc_data_move_chunk_size */
+    MPI_Info_set(info, "nc_data_move_chunk_size", "300");
+    nerrs = tst_redefine(out_path, format, coll_io, info);
+    if (nerrs > 0) return nerrs;
+
+    return 0;
 }
 
 int main(int argc, char **argv) {
@@ -814,7 +834,6 @@ int main(int argc, char **argv) {
     opt.ina      = 1;   /* test intra-node aggregation */
     opt.drv      = 1;   /* test PNCIO driver */
     opt.ind      = 1;   /* test hint romio_no_indep_rw */
-    opt.chk      = 300; /* test hint nc_data_move_chunk_size */
     opt.bb       = 1;   /* test burst-buffering feature */
     opt.mod      = 1;   /* test independent data mode */
     opt.hdr_diff = 1;   /* run ncmpidiff for file header only */

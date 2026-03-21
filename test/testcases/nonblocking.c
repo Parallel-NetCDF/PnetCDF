@@ -136,8 +136,8 @@ int tst_iput(const char *out_path,
     err = ncmpi_close(ncid); CHECK_ERR
 
     /* open the same file and read back for validate */
-    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOWRITE, MPI_INFO_NULL,
-                     &ncid); CHECK_FATAL_ERR
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOWRITE, info, &ncid);
+    CHECK_FATAL_ERR
 
     err = ncmpi_inq_varid(ncid, "VAR", &varid); CHECK_ERR
 
