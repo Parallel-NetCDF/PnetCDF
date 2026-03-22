@@ -294,7 +294,7 @@ tst_fmt(const char *out_path,
         MPI_Offset *info_align) /* [3] 0 means unset in MPI info */
 {
     int i, rank, nprocs, ncid, err, nerrs=0;
-    int *buf[4], dimid[3], varid[4];
+    int *buf[4]={NULL,NULL,NULL,NULL}, dimid[3], varid[4];
     MPI_Info info=MPI_INFO_NULL;
     MPI_Offset bufLen[4], start[2], count[2], increment, fix_v_size;
 
@@ -668,7 +668,7 @@ tst_fmt(const char *out_path,
 
 err_out:
     err = ncmpi_close(ncid); CHECK_ERR
-    free(buf[0]);
+    if (buf[0] != NULL) free(buf[0]);
     if (info != MPI_INFO_NULL) MPI_Info_free(&info);
 
     return nerrs;
