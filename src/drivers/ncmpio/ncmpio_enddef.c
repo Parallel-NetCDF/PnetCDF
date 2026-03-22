@@ -219,6 +219,7 @@ move_file_block(NC         *ncp,
     p_units = (MPI_Offset)ncp->data_chunk * nprocs;
     end_off = to + nbytes;
     end_block = end_off % p_units;
+    if (end_block == 0) end_block = p_units;
     off_last = end_off - end_block;
 
     /* align file writes for all ranks (reads will not be aligned) */

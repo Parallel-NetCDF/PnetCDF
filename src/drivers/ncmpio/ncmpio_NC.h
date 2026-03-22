@@ -453,7 +453,7 @@ struct NC {
     MPI_File      collective_fh; /* MPI-IO file handle for collective mode */
     MPI_File      independent_fh;/* MPI-IO file handle for independent mode */
     PNCIO_File   *pncio_fh;      /* PNCIO file handler */
-    int           driver;        /* PNC_DRIVER_LUSTRE, PNC_DRIVER_MPIIO */
+    int           driver;        /* PNC_DRIVER_PNCIO, PNC_DRIVER_MPIIO */
     int           fstype;        /* PNCIO_FS_LUSTRE, PNCIO_FS_UFS */
 
     NC_dimarray   dims;     /* dimensions defined */
