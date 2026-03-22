@@ -165,26 +165,68 @@ ncmpio_create(MPI_Comm         comm,
     ncp->rank     = rank;
     ncp->nprocs   = nprocs;
 
-    /* Extract hints from user_info. Two hints must be extracted now in order
-     * to continue:
-     *     nc_driver: whether to use MPI-IO or PnetCDF's PNCIO driver.
-     *     nc_num_aggrs_per_node: number of processes per node to be the INA
-     *     aggregators.
+    /* Extract hints from user_info.
      *
-     * ncp->driver is initialized in ncmpio_hint_extract().
-     * ncp->fstype is set in PNCIO_FileSysType().
+     *   Three hints must be extracted before calling PNCIO_File_open() or
+     *   MPI_File_open().
+     *      + nc_driver: whether to use MPI-IO or PnetCDF's PNCIO driver.
+     *      + nc_num_aggrs_per_node: number of processes per node to be the INA
+     *          aggregators, which determines the MPI communicator to be passed
+     *          to PNCIO_File_open() and MPI_File_open().
+     *      + nc_striping: whether to inherit parent folder's striping.
+     *
+     *   Four hints must be extracted before ncmpio_enddef(). They are used
+     *   when creating dimensions, attributes, and variables.
+     *      + nc_hash_size_dim: hash table size for dimensions
+     *      + nc_hash_size_var: hash table size for variables
+     *      + nc_hash_size_gattr: hash table size for global attributes
+     *      + nc_hash_size_vattr: hash table size for non-global attributes
+     *
+     *   The remaining PnetCDF hints are used at ncmpio_enddef() and after.
+     *      + nc_var_align_size             ncp->info_v_align
+     *      + nc_header_align_size          ncp->info_v_align
+     *      + nc_record_align_size          ncp->info_r_align
+     *      + nc_header_read_chunk_size     ncp->hdr_chunk
+     *      + nc_in_place_swap              fSet(ncp->flags, NC_MODE_SWAP_ON)
+     *      + nc_ibuf_size                  ncp->ibuf_size
+     *      + pnetcdf_subfiling             ncp->subfile_mode/num_subfiles
+     *      + nc_data_move_chunk_size       ncp->data_chunk
+     *      + romio_no_indep_rw             fSet(ncp->flags, NC_HCOLL)
+     *
+     *   Note after a call to MPI_File_open() returns, any hints that are not
+     *   used by MPI_File_open() will be discarded, which includes all PnetCDF
+     *   hints. Therefore, we must at first call MPI_File_get_info() to obtain
+     *   an info object containing all the hints used by MPI-IO, and then add
+     *   the PnetCDF hints into the info object (ncp->mpiinfo). So ncp->mpiinfo
+     *   can be used in ncmpi_inq_file_info() to return all hints to users.
+     *
+     *   Note MPI_File_open() may also add new hints, such as those related to
+     *   file striping and I/O aggregators.
+     *      + striping_unit
+     *      + striping_factor
+     *      + start_iodevice
+     *      + cb_nodes
+     *
+     *   PNCIO_File_open() may also add new hints, such as those related to
+     *   file striping and I/O aggregators.
+     *      + lustre_overstriping_ratio
+     *      + lustre_num_osts
+     *      + cb_nodes
+     *      + cb_node_list
      */
     ncmpio_hint_extract(ncp, user_info);
 
     if (rank == 0)
         /* Check file system type. If the given file does not exist, check its
-         * folder. Currently PnetCDF's PNCIO drivers support Lustre
-         * (PNCIO_FS_LUSTRE) and Unix File System (PNCIO_FS_UFS).
+         * parent folder. Currently PnetCDF's PNCIO drivers support Lustre
+         * (PNCIO_FS_LUSTRE) and Unix File System (PNCIO_FS_UFS). This info
+         * will also be used when MPI-IO driver is used to configure file
+         * striping settings.
          */
         ncp->fstype = PNCIO_FileSysType(path);
 
     /* Setting file open mode in mpi_amode which may later be needed in
-     * ncmpi_begin_indep_data() to open file for independent data mode.
+     * ncmpi_begin_indep_data() to open file in the independent data mode.
      */
     mpi_amode = MPI_MODE_RDWR | MPI_MODE_CREATE;
 
@@ -195,10 +237,10 @@ ncmpio_create(MPI_Comm         comm,
      */
     filename = ncmpii_remove_file_system_type_prefix(path);
 
-    /* In case of clobber mode, first check if the file already exists, through
-     * a call to lstat() or access() if they are is available. If not, we
-     * assume the file exists and will add some MPI flag to open mode argument
-     * of MPI_File_open to either delete or truncate the file first.
+    /* In case of file clobber mode, we first check if the file already exists,
+     * through a call to lstat() or access() if they are is available. If not,
+     * we call MPI_File_open() to try opening the file. If the file exists, we
+     * will cal MPI_File_set_size() to truncate the file.
      */
 #ifdef HAVE_LSTAT
     /* Call lstat() to check the file if exists and if is a symbolic link */
@@ -210,10 +252,9 @@ ncmpio_create(MPI_Comm         comm,
         errno = 0; /* reset errno */
 
         /* If the file is a regular file, not a symbolic link, then we delete
-         * the file first and later create it when calling MPI_File_open() with
-         * MPI_MODE_CREATE. If the file is a regular file, not a symbolic link,
-         * it is faster to delete it and then re-create the file, as truncating
-         * it to zero size is more expensive.
+         * the file first and later create it (by calling MPI_File_open() with
+         * MPI_MODE_CREATE). In this case, it is faster to delete and re-create
+         * the file, as truncating a file to zero size is more expensive.
          *
          * If the file is a symbolic link, then we cannot delete the file, as
          * the link will be gone. If the file is deleted and there are other
@@ -233,9 +274,7 @@ ncmpio_create(MPI_Comm         comm,
 #endif
 
     if (fIsSet(cmode, NC_NOCLOBBER)) {
-        /* Error NC_EEXIST will be returned, if the file already exists and
-         * NC_NOCLOBBER mode is set in ncmpi_create.
-         */
+        /* Error NC_EEXIST will be returned, if the file already exists. */
 #ifdef HAVE_ACCESS
         if (nprocs > 1) {
             int msg[2] = {file_exist, ncp->fstype};
@@ -261,8 +300,8 @@ ncmpio_create(MPI_Comm         comm,
     else {
         /* NC_CLOBBER is the default mode in ncmpi_create(). Below, rank 0
          * truncates or deletes the file and ignores error code.  Note in some
-         * implementation of MPI-IO, calling MPI_File_set_size is expensive as
-         * it may call truncate() by all ranks.
+         * implementation of MPI-IO, calling MPI_File_set_size() can be very
+         * expensive as it may call truncate() by all ranks.
          */
         err = NC_NOERR;
         if (rank == 0 && file_exist) {
@@ -286,7 +325,7 @@ ncmpio_create(MPI_Comm         comm,
                 else {
 #ifdef MPICH_VERSION
                     /* MPICH recognizes file system type acronym prefixed to
-                     * the file name
+                     * the file name. Other MPI implementations may not.
                      */
                     TRACE_IO(MPI_File_delete, (path, MPI_INFO_NULL));
 #else
@@ -310,7 +349,7 @@ ncmpio_create(MPI_Comm         comm,
                 mpi_amode = MPI_MODE_RDWR;
 
 #ifdef HAVE_TRUNCATE
-                err = truncate(filename, 0); /* This may be expensive */
+                err = truncate(filename, 0); /* truncate() may be expensive */
                 if (err < 0 && errno != ENOENT)
                     /* ignore ENOENT: file not exist */
                     DEBUG_ASSIGN_ERROR(err, NC_EFILE) /* report other error */
@@ -328,8 +367,8 @@ ncmpio_create(MPI_Comm         comm,
 #else
                 /* When all POSIX system calls are not available, the last
                  * resort is to call MPI_File_set_size() to truncate the file.
-                 * Note for some ROMIO versions that have all processes call
-                 * truncate(), this option can be expensive.
+                 * Note in some ROMIO versions that make all processes to call
+                 * truncate(), this option may be expensive.
                  */
                 err = NC_NOERR;
                 if (ncp->driver == PNC_DRIVER_PNCIO) {
@@ -338,7 +377,7 @@ ncmpio_create(MPI_Comm         comm,
                     err = PNCIO_File_open(MPI_COMM_SELF, filename, O_RDWR,
                                           MPI_INFO_NULL, pncio_fh);
                     if (err == NC_NOERR)
-                        PNCIO_File_set_size(pncio_fh, 0); /* can be expensive */
+                        PNCIO_File_set_size(pncio_fh, 0); /* may be expensive */
                     else
                         PNCIO_File_close(&pncio_fh);
                     NCI_Free(pncio_fh);
@@ -346,11 +385,13 @@ ncmpio_create(MPI_Comm         comm,
                 else {
 #ifdef MPICH_VERSION
                     /* MPICH recognizes file system type acronym prefixed to
-                     * the file name
+                     * the file name. Other MPI implementations may not.
                      */
-                    TRACE_IO(MPI_File_open, (MPI_COMM_SELF, path, MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+                    TRACE_IO(MPI_File_open, (MPI_COMM_SELF, path,
+                             MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
 #else
-                    TRACE_IO(MPI_File_open, (MPI_COMM_SELF, filename, MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
+                    TRACE_IO(MPI_File_open, (MPI_COMM_SELF, filename,
+                             MPI_MODE_RDWR, MPI_INFO_NULL, &fh));
 #endif
                     if (mpireturn != MPI_SUCCESS) {
                         int errorclass;
@@ -431,22 +472,24 @@ ncmpio_create(MPI_Comm         comm,
     /* initialize unlimited_id as no unlimited dimension yet defined */
     ncp->dims.unlimited_id = -1;
 
-    /* comm_attr.ids[] stores a list of unique IDs of compute nodes of all MPI
-     * ranks in the MPI communicator passed from the user application. It is a
+    /* comm_attr has been constructed at the dispatchers.
+     *
+     * comm_attr.ids[] stores a list of unique IDs of compute nodes of all MPI
+     * ranks of the MPI communicator passed from the user application. It is a
      * keyval attribute cached in the communicator. See src/dispatchers/file.c
      * for details.
      *
-     * commm_attr also stores the INA metadata. The INA communicator has been
-     * created at the dispatcher.
+     * commm_attr also stores the intra-node aggregation (INA) metadata,
+     * including the INA communicator.
      *
-     * When intra-node aggregation (INA) is enabled, node IDs are used to
-     * create a new MPI communicator consisting of the intra-node aggregators
-     * only. The communicator will be used to call file open in MPI-IO or
-     * PnetCDF's PNCIO driver. This means only intra-node aggregators will
-     * perform file I/O in PnetCDF collective put and get operations.
+     * When INA is enabled, comm_attr.ids[] is used to create a new MPI
+     * communicator consisting of the intra-node aggregators only. The
+     * communicator will be used to call PNCIO_File_open() or MPI_File_open()
+     * This means only intra-node aggregators will perform file I/O in PnetCDF
+     * collective put and get operations.
      *
-     * comm_attr.ids[] will be used to calculate cb_nodes, the number of
-     * MPI-IO/PNCIO aggregators (not INA aggregators).
+     * In addition, comm_attr.ids[] will be used to calculate cb_nodes, the
+     * number of file I/O aggregators (not INA aggregators).
      */
     ncp->comm_attr = comm_attr;
 
@@ -465,13 +508,14 @@ ncmpio_create(MPI_Comm         comm,
     if (ncp->num_aggrs_per_node > 0) {
 
         if (ncp->rank == comm_attr.my_aggr) {
+            /* this rank is an INA aggregator */
             int i, j, *ids;
 
             MPI_Comm_size(comm_attr.ina_comm, &ncp->ina_nprocs);
             MPI_Comm_rank(comm_attr.ina_comm, &ncp->ina_rank);
 
-            /* overwrite comm_attr.ids[] to make it to contain the node IDs of
-             * processes in the INA communicator.
+            /* overwrite comm_attr.ids[] by condensing it to contain only the
+             * node IDs of processes in the INA communicator.
              */
             ids = (int*) NCI_Malloc(sizeof(int) * ncp->ina_nprocs);
 
@@ -495,7 +539,7 @@ ncmpio_create(MPI_Comm         comm,
 
         /* For non-aggregators, comm is MPI_COMM_NULL. As the remaining task of
          * this subroutine is to open the file and obtain the file handler,
-         * non-aggregators can skip.
+         * which non-aggregators can skip.
          */
         if (comm == MPI_COMM_NULL) {
             if (user_info != MPI_INFO_NULL)

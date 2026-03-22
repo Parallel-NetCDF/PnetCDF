@@ -80,10 +80,10 @@ ncmpio_file_read_at(NC         *ncp,
     MPI_Offset amnt=0;
     MPI_Status mpistatus;
 
-    /* explicitly initialize mpistatus object to 0. For zero-length read/write,
-     * MPI_Get_count may report incorrect result for some MPICH version,
-     * due to the uninitialized MPI_Status object passed to MPI-IO calls.
-     * Thus we initialize it above to work around. See MPICH ticket:
+    /* Explicitly initialize mpistatus object to 0. For zero-length read/write,
+     * MPI_Get_count() may report incorrect result for some earlier MPICH
+     * versions, due to the uninitialized MPI_Status object passed to MPI-IO
+     * calls. Thus we initialize it above to work around. See MPICH ticket:
      * https://trac.mpich.org/projects/mpich/ticket/2332
      */
     memset(&mpistatus, 0, sizeof(MPI_Status));
@@ -149,9 +149,9 @@ ncmpio_file_read_at_all(NC         *ncp,
     MPI_Status mpistatus;
 
     /* Explicitly initialize mpistatus object to 0. For zero-length read/write,
-     * MPI_Get_count may report incorrect result for some MPICH version,
-     * due to the uninitialized MPI_Status object passed to MPI-IO calls.
-     * Thus we initialize it above to work around. See MPICH ticket:
+     * MPI_Get_count() may report incorrect result for some earlier MPICH
+     * versions, due to the uninitialized MPI_Status object passed to MPI-IO
+     * calls. Thus we initialize it above to work around. See MPICH ticket:
      * https://trac.mpich.org/projects/mpich/ticket/2332
      */
     memset(&mpistatus, 0, sizeof(MPI_Status));
@@ -219,9 +219,9 @@ ncmpio_file_write_at(NC         *ncp,
     MPI_Status mpistatus;
 
     /* Explicitly initialize mpistatus object to 0. For zero-length read/write,
-     * MPI_Get_count may report incorrect result for some MPICH version,
-     * due to the uninitialized MPI_Status object passed to MPI-IO calls.
-     * Thus we initialize it above to work around. See MPICH ticket:
+     * MPI_Get_count() may report incorrect result for some earlier MPICH
+     * versions, due to the uninitialized MPI_Status object passed to MPI-IO
+     * calls. Thus we initialize it above to work around. See MPICH ticket:
      * https://trac.mpich.org/projects/mpich/ticket/2332
      */
     memset(&mpistatus, 0, sizeof(MPI_Status));
@@ -285,10 +285,10 @@ ncmpio_file_write_at_all(NC         *ncp,
     MPI_Offset amnt=0;
     MPI_Status mpistatus;
 
-    /* explicitly initialize mpistatus object to 0. For zero-length read/write,
-     * MPI_Get_count may report incorrect result for some MPICH version,
-     * due to the uninitialized MPI_Status object passed to MPI-IO calls.
-     * Thus we initialize it above to work around. See MPICH ticket:
+    /* Explicitly initialize mpistatus object to 0. For zero-length read/write,
+     * MPI_Get_count() may report incorrect result for some earlier MPICH
+     * versions, due to the uninitialized MPI_Status object passed to MPI-IO
+     * calls. Thus we initialize it above to work around. See MPICH ticket:
      * https://trac.mpich.org/projects/mpich/ticket/2332
      */
     memset(&mpistatus, 0, sizeof(MPI_Status));
@@ -343,8 +343,10 @@ ncmpio_file_write_at_all(NC         *ncp,
 /*----< ncmpio_getput_zero_req() >-------------------------------------------*/
 /* This function is called when this process has zero-length I/O request and
  * must participate all the MPI collective calls involved in the collective
- * APIs and wait_all(), which include setting fileview, collective read/write,
- * another setting fileview.
+ * APIs and wait_all(), which include:
+ * 1. setting fileview,
+ * 2. collective read/write,
+ * 3. re-setting fileview to make the entire file visible.
  *
  * This function is collective.
  */
@@ -358,7 +360,8 @@ ncmpio_getput_zero_req(NC *ncp, int reqMode)
     buf_view.size = 0;
 
     /* When intra-node aggregation is enabled, non-aggregators do not access
-     * the file.
+     * the file and participate any communication in the collective read or
+     * write. Thus non-aggregators can return now.
      */
     if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->comm_attr.my_aggr)
         return NC_NOERR;
@@ -389,10 +392,6 @@ ncmpio_getput_zero_req(NC *ncp, int reqMode)
          * fileview is never reused in PnetCDF.
          */
         ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
-
-    /* No longer need to reset the file view, as the root's fileview includes
-     * the whole file header.
-     */
 
     return status;
 }
