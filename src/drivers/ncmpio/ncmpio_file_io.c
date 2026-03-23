@@ -194,7 +194,10 @@ ncmpio_file_read_at_all(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
-    else if (ncp->pncio_fh != NULL)
+    else if (ncp->num_aggrs_per_node == 0 || ncp->ina_rank != -1)
+        /* When INA is disabled, all processes must participate this collective
+         * read. When INA is enabled, only the INA aggregators participate.
+         */
         amnt = PNCIO_File_read_at_all(ncp->pncio_fh, offset, buf, buf_view);
 
     /* update the number of bytes read since file open */
@@ -330,7 +333,10 @@ ncmpio_file_write_at_all(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
-    else if (ncp->pncio_fh != NULL)
+    else if (ncp->num_aggrs_per_node == 0 || ncp->ina_rank != -1)
+        /* When INA is disabled, all processes must participate this collective
+         * write. When INA is enabled, only the INA aggregators participate.
+         */
         amnt = PNCIO_File_write_at_all(ncp->pncio_fh, offset, buf, buf_view);
 
     /* update the number of bytes written since file open */
