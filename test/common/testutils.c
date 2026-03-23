@@ -410,9 +410,14 @@ int tst_main(int        argc,
     num_ina = (opt.ina) ? 2 : 1;
     num_drv = (opt.drv) ? 2 : 1;
     num_ind = (opt.ind) ? 2 : 1;
-    num_bb  = (opt.bb)  ? 2 : 1;
     num_mod = (opt.mod) ? 2 : 1;
     num_ds  = 2; /* date sieving disable and enable */
+
+#ifdef ENABLE_BURST_BUFFER
+    num_bb  = (opt.bb)  ? 2 : 1;
+#else
+    num_bb  = 1;
+#endif
 
     for (i=0; i<opt.num_fmts; i++) {
         char out_filename[512], ext[16], *base_file;
@@ -460,14 +465,10 @@ int tst_main(int        argc,
                 strcat(out_filename, ".nobb");
             }
             else {
-#ifdef ENABLE_BURST_BUFFER
                 MPI_Info_set(info, "nc_burst_buf", "enable");
                 MPI_Info_set(info, "nc_burst_buf_dirname", TESTOUTDIR);
                 MPI_Info_set(info, "nc_burst_buf_overwrite", "enable");
                 strcat(out_filename, ".bb");
-#else
-                continue;
-#endif
             }
 
             if (s == 0) { /* diable data sieving */
