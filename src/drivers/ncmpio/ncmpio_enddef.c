@@ -1244,11 +1244,12 @@ ncmpio__enddef(void       *ncdp,
                 /* No new record variable is added. Move the entire record
                  * variable section as a single data chunk.
                  */
-                nbytes = ncp->old->recsize * ncp->old->numrecs;
-
-                err = move_file_block(ncp, ncp->begin_rec, ncp->old->begin_rec,
-                                      nbytes);
-                if (status == NC_NOERR) status = err;
+                if (ncp->vars.num_rec_vars > 0) {
+                    nbytes = ncp->old->recsize * ncp->old->numrecs;
+                    err = move_file_block(ncp, ncp->begin_rec,
+                                          ncp->old->begin_rec, nbytes);
+                    if (status == NC_NOERR) status = err;
+                }
             }
             else {
                 /* Move one record variable at a time */
