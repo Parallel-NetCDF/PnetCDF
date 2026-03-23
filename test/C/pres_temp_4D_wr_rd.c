@@ -80,8 +80,8 @@ int pres_temp_4D_wr(const char *filename,
 
     /* Program variables to hold the data we will write out. We will only
       need enough space to hold one timestep of data; one record. */
-    float **pres_out; /* [NLVL/nprocs][NLAT][NLON] */
-    float **temp_out; /* [NLVL/nprocs][NLAT][NLON] */
+    float **pres_out=NULL; /* [NLVL/nprocs][NLAT][NLON] */
+    float **temp_out=NULL; /* [NLVL/nprocs][NLAT][NLON] */
 
     /* These program variables hold the latitudes and longitudes. */
     float lats[NLAT], lons[NLON];
@@ -253,9 +253,11 @@ int pres_temp_4D_wr(const char *filename,
     err = ncmpi_close(ncid);
     CHECK_ERR
 
-    if (count[1] > 0)
-        free(pres_out[0]);
-    free(pres_out);
+    if (pres_out != NULL) {
+        if (count[1] > 0)
+            free(pres_out[0]);
+        free(pres_out);
+    }
 
     return (nerrs > 0);
 }
