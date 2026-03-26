@@ -130,71 +130,21 @@ ncmpio_begin_indep_data(void *ncdp)
         */
 
     /* If users want a stronger data consistency, ncmpi_sync() should be called
-     * following this subroutine. */
+     * following this subroutine.
+     */
 
     /* raise independent flag */
     fSet(ncp->flags, NC_MODE_INDEP);
+
+    if (ncp->driver == PNC_DRIVER_PNCIO) {
+        /* PNCIO driver implements open-on-demand mechanism. */
+        return NC_NOERR;
+    }
 
     /* Barrier is necessary to prevent non-aggregators from calling open()
      * before the file is being collectively created by the aggregators.
      */
     MPI_Barrier(ncp->comm);
-
-    if (ncp->driver != PNC_DRIVER_MPIIO) {
-        /* When using PnetCDF's PNCIO driver, there are 2 scenarios:
-         * 1. When intra-node aggregation (INA) is enabled, at the end of
-         *    ncmpi_create/ncmpi_open, non-aggregators' pncio_fh are NULL. Thus
-         *    switching to independent data mode, we can re-use pncio_fh to
-         *    store file handler of file opened with MPI_COMM_SELF. Note
-         *    whether pncio_fh is NULL or not does not tell whether INA is
-         *    enabled or not.
-         * 2. When INA is disabled, all ranks calls PNCIO_File_open() and thus
-         *    pncio_fh should not be NULL. In other word, this scenario should
-         *    not reach here at all. Because PnetCDF's PNCIO driver relaxes
-         *    file_setview subroutine to be able to called independently, the
-         *    same pncio_fh can be used for both collective and independent I/O
-         *    APIs. Note we cannot re-used pncio_fh for the above scenario 1,
-         *    because in the collective data mode, all ranks must participate
-         *    each collective I/O call,
-         */
-        int err;
-        char *filename;
-
-        if (ncp->pncio_fh != NULL)
-            /* Only INA non-aggregators' pncio_fh can be NULL, because
-             * aggregators open the file collectively and their pncio_fh can
-             * never be NULL.
-             */
-            return NC_NOERR;
-
-        filename = ncmpii_remove_file_system_type_prefix(ncp->path);
-
-        ncp->pncio_fh = (PNCIO_File*) NCI_Calloc(1,sizeof(PNCIO_File));
-        ncp->pncio_fh->fstype = ncp->fstype;
-        ncp->pncio_fh->comm_attr = ncp->comm_attr;
-
-        int omode = fIsSet(ncp->nc_amode, NC_WRITE) ? O_RDWR : O_RDONLY;
-
-        err = PNCIO_File_open(MPI_COMM_SELF, filename, omode, ncp->mpiinfo,
-                              ncp->pncio_fh);
-        if (err != NC_NOERR)
-            return err;
-
-        /* Get the I/O hints used/modified by MPI-IO. Note ncp->mpiinfo may
-         * have been populated. It can be discarded and replaced by the one
-         * used by MPI-IO.
-         */
-        if (ncp->mpiinfo != MPI_INFO_NULL)
-            MPI_Info_free(&ncp->mpiinfo);
-
-        err = PNCIO_File_get_info(ncp->pncio_fh, &ncp->mpiinfo);
-        if (err != NC_NOERR) return err;
-
-        /* Add PnetCDF hints into ncp->mpiinfo */
-        ncmpio_hint_set(ncp, ncp->mpiinfo);
-
-        return NC_NOERR;
-    }
 
     /* PnetCDF's default mode is collective. MPI file handle, collective_fh,
      * will never be MPI_FILE_NULL. We must use a separate MPI file handle
@@ -357,7 +307,7 @@ ncmpio_inq_misc(void       *ncdp,
                 MPI_Offset *usage,
                 MPI_Offset *buf_size)
 {
-    int i, flag, mpireturn;
+    int i, mpireturn;
     char value[MPI_MAX_INFO_VAL];
     NC *ncp=(NC*)ncdp;
 
@@ -403,27 +353,11 @@ ncmpio_inq_misc(void       *ncdp,
     /* obtain file (system) striping settings, striping size and count, if they
      * are available from MPI-IO hint. Otherwise, 0s are returned.
      */
-    if (striping_size != NULL) {
-        MPI_Info_get(ncp->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        *striping_size = 0;
-        if (flag) {
-            errno = 0;  /* errno must set to zero before calling strtoll */
-            *striping_size = (int)strtol(value,NULL,10);
-            if (errno != 0) *striping_size = 0;
-        }
-    }
+    if (striping_size != NULL)
+        *striping_size = ncp->striping_unit;
 
-    if (striping_count != NULL) {
-        MPI_Info_get(ncp->mpiinfo, "striping_factor", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        *striping_count = 0;
-        if (flag) {
-            errno = 0;  /* errno must set to zero before calling strtoll */
-            *striping_count = (int)strtol(value,NULL,10);
-            if (errno != 0) *striping_count = 0;
-        }
-    }
+    if (striping_count != NULL)
+        *striping_count = ncp->striping_factor;
 
     /* the amount of writes, in bytes, committed to file system so far */
     if (put_size != NULL) *put_size = ncp->put_size;

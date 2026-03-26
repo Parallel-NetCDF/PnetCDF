@@ -414,6 +414,8 @@ struct NC {
     int           file_striping;/* used to set file striping configuration,
                                  * either PNCIO_STRIPING_AUTO or
                                  * PNCIO_STRIPING_INHERIT */
+    int           striping_unit;  /* file striping size */
+    int           striping_factor;/* file striping count */
 
     MPI_Offset    v_align;      /* file offset alignment for the beginning of
                                  * fixed-size variable section */
