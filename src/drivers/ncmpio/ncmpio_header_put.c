@@ -506,7 +506,10 @@ int ncmpio_write_header(NC *ncp)
     size_t i, ntimes;
     PNCIO_View buf_view;
 
-    buf_view.count = 1;
+    buf_view.count = 0; /* indicating buffer in this request is contiguous */
+    /* Note buf_view.size will be set to the file header size in this
+     * subroutine, a positive value.
+     */
 
     /* Write the entire header to the file. This function may be called from
      * a rename API. In that case, we cannot just change the variable name in
