@@ -125,7 +125,7 @@ ncmpio_create(MPI_Comm         comm,
 {
     char *filename, value[MPI_MAX_INFO_VAL + 1], *mpi_name;
     int rank, nprocs, mpi_amode, err, mpireturn, default_format, file_exist=1;
-    int use_trunc=1, flag, striping_unit;
+    int use_trunc=1, flag, striping_info[2];
     MPI_File fh=MPI_FILE_NULL;
     NC *ncp=NULL;
 
@@ -160,10 +160,10 @@ ncmpio_create(MPI_Comm         comm,
 
     *ncpp = (void*)ncp;
 
-    ncp->ncid     = ncid;
-    ncp->comm     = comm;     /* reuse comm duplicated in dispatch layer */
-    ncp->rank     = rank;
-    ncp->nprocs   = nprocs;
+    ncp->ncid   = ncid;
+    ncp->comm   = comm;     /* reuse comm duplicated in dispatch layer */
+    ncp->rank   = rank;
+    ncp->nprocs = nprocs;
 
     /* Extract hints from user_info.
      *
@@ -438,9 +438,27 @@ ncmpio_create(MPI_Comm         comm,
      */
 
     ncp->path      = path;     /* reuse path duplicated in dispatch layer */
-    ncp->pncio_fh  = NULL;     /* non-aggregators have NULL pncio_fh */
     ncp->mpi_amode = mpi_amode;
     ncp->mpiinfo   = MPI_INFO_NULL;
+
+    if (ncp->driver == PNC_DRIVER_PNCIO) {
+        /* Initialize pncio_fh, PNCIO file handler, with common metadata shared
+         * among all processes, including non-INA aggregators when INA is
+         * enabled. This is necessary for non-INA aggregators to perform
+         * independent I/O.
+         */
+        ncp->pncio_fh = (PNCIO_File*) NCI_Calloc(1, sizeof(PNCIO_File));
+        ncp->pncio_fh->comm           = comm;
+        ncp->pncio_fh->fstype         = ncp->fstype;
+        ncp->pncio_fh->comm_attr      = ncp->comm_attr;
+        ncp->pncio_fh->comm_attr      = ncp->comm_attr;
+        ncp->pncio_fh->file_view.size = -1;
+        ncp->pncio_fh->filename       = filename;
+        ncp->pncio_fh->info           = MPI_INFO_NULL;
+        ncp->pncio_fh->amode          = O_CREAT|O_RDWR;
+    }
+    else
+        ncp->pncio_fh  = NULL; /* used only when using PNCIO driver */
 
     /* For file create, ignore NC_NOWRITE if set in cmode argument. */
     ncp->nc_amode = cmode | NC_WRITE;
@@ -537,9 +555,12 @@ ncmpio_create(MPI_Comm         comm,
         comm = comm_attr.ina_comm;
         nprocs = ncp->ina_nprocs;
 
-        /* For non-aggregators, comm is MPI_COMM_NULL. As the remaining task of
-         * this subroutine is to open the file and obtain the file handler,
-         * which non-aggregators can skip.
+        /* For non-INA aggregators, we keep comm, a local variable in this
+         * subroutine, to be comm_attr.ina_comm, a MPI_COMM_NULL for non-INA
+         * aggregators. Because the remaining lines of codes below till label
+         * 'fn_exit' is for INA aggregators to open the file and obtain a file
+         * handler, in which non-INA aggregators do not participate and thus do
+         * not make use of comm.
          */
         if (comm == MPI_COMM_NULL) {
             if (user_info != MPI_INFO_NULL)
@@ -569,24 +590,24 @@ ncmpio_create(MPI_Comm         comm,
         }
         else { /* ncp->file_striping == PNCIO_STRIPING_INHERIT */
             if (user_info != MPI_INFO_NULL) {
-                int stripings[2] = {0, 0};
+                striping_info[0] = striping_info[1] = 0;
 
                 /* check if hint striping_factor is set by the user */
                 MPI_Info_get(user_info, "striping_factor", MPI_MAX_INFO_VAL-1,
                             value, &flag);
                 if (flag)
-                    stripings[0] = atoi(value);
+                    striping_info[0] = atoi(value);
 
                 /* check if hint striping_unit is set by the user */
                 MPI_Info_get(user_info, "striping_unit", MPI_MAX_INFO_VAL-1,
                             value, &flag);
                 if (flag)
-                    stripings[1] = atoi(value);
+                    striping_info[1] = atoi(value);
 
 #ifdef HAVE_LUSTRE
                 uint64_t striping_factor, striping_unit;
-                striping_factor = stripings[0];
-                striping_unit   = stripings[1];
+                striping_factor = striping_info[0];
+                striping_unit   = striping_info[1];
                 /* When either striping_factor or striping_unit is not set, but
                  * not both, retrieve folder's striping factor or unit in order
                  * to inherit the missing one.
@@ -598,20 +619,20 @@ ncmpio_create(MPI_Comm         comm,
                     lustre_get_striping(filename, &striping_factor,
                                         &striping_unit);
                     /* error is ignored, if there is any */
-                    stripings[0] = striping_factor;
-                    stripings[1] = striping_unit;
+                    striping_info[0] = striping_factor;
+                    striping_info[1] = striping_unit;
                 }
-                MPI_Bcast(stripings, 2, MPI_INT, 0, comm);
+                MPI_Bcast(striping_info, 2, MPI_INT, 0, comm);
 #endif
 
-                if (stripings[0] > 0) {
-                    sprintf(value, "%d", stripings[0]);
+                if (striping_info[0] > 0) {
+                    sprintf(value, "%d", striping_info[0]);
                     MPI_Info_set(user_info, "striping_factor", value);
                 }
 
-                if (stripings[1] > 0) {
-                    sprintf(value, "%d", stripings[1]);
-                    MPI_Info_set(user_info, "striping_unit", value);
+                if (striping_info[1] > 0) {
+                    sprintf(value, "%d", striping_info[1]);
+                    MPI_Info_set(user_info, "striping_info", value);
                 }
             }
         }
@@ -661,7 +682,9 @@ ncmpio_create(MPI_Comm         comm,
         ncp->collective_fh  = fh;
         ncp->independent_fh = (nprocs == 1) ? fh : MPI_FILE_NULL;
 
-        /* get the I/O hints used/modified by MPI-IO */
+        /* Now the file has been successfully created, obtain the I/O hints
+         * used/modified by MPI-IO.
+         */
         TRACE_IO(MPI_File_get_info, (fh, &ncp->mpiinfo));
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
@@ -669,8 +692,11 @@ ncmpio_create(MPI_Comm         comm,
         }
     }
     else {
-        /* When ncp->driver == PNC_DRIVER_PNCIO, use PnetCDF's PNCIO driver */
-        ncp->pncio_fh = (PNCIO_File*) NCI_Calloc(1, sizeof(PNCIO_File));
+        /* When ncp->driver == PNC_DRIVER_PNCIO, use PnetCDF's PNCIO driver.
+         * When INA is enabled, only the INA aggregators can reach here.
+         * Non-INA aggregators have gone to fn_exit from above, with their comm
+         * remain MPI_COMM_NULL (ncp->comm is always assignned to comm).
+         */
         ncp->pncio_fh->fstype = ncp->fstype;
         ncp->pncio_fh->comm_attr = ncp->comm_attr;
 
@@ -686,60 +712,72 @@ ncmpio_create(MPI_Comm         comm,
     }
 
 fn_exit:
-    striping_unit = -1;
+    ncp->striping_unit = 0;
+    ncp->striping_factor = 0;
 
-    if (ncp->num_aggrs_per_node > 0) {
-        /* When intra-node aggregation is enabled, it is necessary to make sure
-         * non-aggregators obtain consistent values of file striping hints.
-         *
-         * non-aggregator do not have hints returned from MPI_File_get_info()
+    /* All processes must obtain striping_unit and striping_factor consistent
+     * across all processes. They are used to fulfill ncmpi_inq_striping() and
+     * striping_unit is also used to set ncp->data_chunk if hint
+     * nc_data_move_chunk_size is not set by the user.
+     */
+    if (ncp->num_aggrs_per_node == 0 ||
+        (ncp->num_aggrs_per_node > 0 && ncp->rank == 0)) {
+        /* When INA is enabled, only INA aggregators have valid striping_unit
+         * and striping_factor in their ncp->mpiinfo. This is because non-INA
+         * aggregators do not participate the call to MPI_File_open() or
+         * PNCIO_File_open(). We need to have root to broadcast these 2 info.
          */
-        int striping_info[2];
-        if (ncp->rank == 0) {
-            MPI_Info_get(ncp->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
-                         value, &flag);
-            striping_info[0] = 0;
-            if (flag) {
-                errno = 0;  /* errno must set to zero before calling strtoll */
-                striping_info[0] = (int)strtol(value,NULL,10);
-                if (errno != 0) striping_info[0] = 0;
-            }
-
-            MPI_Info_get(ncp->mpiinfo, "striping_factor", MPI_MAX_INFO_VAL-1,
-                         value, &flag);
-            striping_info[1] = 0;
-            if (flag) {
-                errno = 0;  /* errno must set to zero before calling strtoll */
-                striping_info[1] = (int)strtol(value,NULL,10);
-                if (errno != 0) striping_info[1] = 0;
-            }
+        MPI_Info_get(ncp->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        striping_info[0] = 0;
+        if (flag) {
+            errno = 0;  /* errno must set to zero before calling strtoll */
+            striping_info[0] = (int)strtol(value,NULL,10);
+            if (errno != 0) striping_info[0] = 0;
         }
 
+        MPI_Info_get(ncp->mpiinfo, "striping_factor", MPI_MAX_INFO_VAL-1,
+                     value, &flag);
+        striping_info[1] = 0;
+        if (flag) {
+            errno = 0;  /* errno must set to zero before calling strtoll */
+            striping_info[1] = (int)strtol(value,NULL,10);
+            if (errno != 0) striping_info[1] = 0;
+        }
+    }
+
+    if (ncp->num_aggrs_per_node > 0) {
         MPI_Bcast(striping_info, 2, MPI_INT, 0, ncp->comm);
 
-        if (ncp->comm_attr.my_aggr != ncp->rank) {
+        if (ncp->ina_rank < 0) {
+            /* Only non-INA aggregators need to add these to ncp->mpiinfo */
             sprintf(value, "%d", striping_info[0]);
             MPI_Info_set(ncp->mpiinfo, "striping_unit", value);
             sprintf(value, "%d", striping_info[1]);
             MPI_Info_set(ncp->mpiinfo, "striping_factor", value);
-        }
 
-        striping_unit = striping_info[0];
-    }
-    else {
-        MPI_Info_get(ncp->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        if (flag) {
-            errno = 0;  /* errno must set to zero before calling strtoll */
-            striping_unit = (int)strtol(value,NULL,10);
-            if (errno != 0) striping_unit = -1;
+            if (ncp->driver == PNC_DRIVER_PNCIO) {
+                /* Must initialize hints for non-INA aggregators, as hints will
+                 * be used when non-INA aggregators perform independent
+                 * reads/writes. Currently, the following hints are used.
+                 *      romio_ds_write, ind_wr_buffer_size
+                 *      romio_ds_read,  ind_rd_buffer_size
+                 */
+                ncp->pncio_fh->comm = MPI_COMM_SELF;
+                ncp->pncio_fh->hints = (PNCIO_Hints*)
+                                       NCI_Calloc(1, sizeof(PNCIO_Hints));
+                PNCIO_File_set_info(ncp->pncio_fh, ncp->mpiinfo);
+            }
         }
     }
+
+    ncp->striping_unit = striping_info[0];
+    ncp->striping_factor = striping_info[1];
 
     if (ncp->data_chunk == -1)
-        /* if not set by user hint, nc_data_move_chunk_size */
-        ncp->data_chunk = (striping_unit > 0) ? striping_unit
-                                              : PNC_DATA_MOVE_CHUNK_SIZE;
+        /* if hint nc_data_move_chunk_size is not set by the user */
+        ncp->data_chunk = (ncp->striping_unit > 0) ? ncp->striping_unit
+                                                   : PNC_DATA_MOVE_CHUNK_SIZE;
 
     /* Copy MPI-IO hints into ncp->mpiinfo */
     ncmpio_hint_set(ncp, ncp->mpiinfo);
