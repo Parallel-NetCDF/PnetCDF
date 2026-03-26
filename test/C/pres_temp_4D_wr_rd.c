@@ -259,7 +259,7 @@ int pres_temp_4D_wr(const char *filename,
         free(pres_out);
     }
 
-    return (nerrs > 0);
+    return nerrs;
 }
 
 /*----< pres_temp_4D_rd() >--------------------------------------------------*/
