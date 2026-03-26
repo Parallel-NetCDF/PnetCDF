@@ -723,10 +723,6 @@ ncmpio_file_set_view(const NC *ncp, MPI_Datatype filetype, MPI_Aint npairs,
 #endif
 );
 
-extern int
-ncmpio_file_open(NC *ncp, MPI_Comm comm, const char *path, int omode,
-                 MPI_Info info);
-
 /* Begin defined in ncmpio_intranode.c --------------------------------------*/
 extern int
 ncmpio_ina_nreqs(NC *ncp, int mode, int num_reqs, NC_req *put_list,
