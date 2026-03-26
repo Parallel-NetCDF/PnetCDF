@@ -425,7 +425,7 @@ int tst_main(int        argc,
         base_file = NULL;
         if (opt.formats[i] > 0)
             sprintf(ext, "nc%d", opt.formats[i]);
-        else /* for tests not testing CDF versions */
+        else /* for tests that are not testing different CDF versions */
             strcpy(ext, "nc");
 
         for (a=0; a<num_ina; a++) {
@@ -454,10 +454,10 @@ int tst_main(int        argc,
 
             if (r == 0) { /* PnetCDF's default */
                 MPI_Info_set(info, "romio_no_indep_rw", "false");
-                strcat(out_filename, ".coll");
+                strcat(out_filename, ".yes_indep_rw");
             } else {
                 MPI_Info_set(info, "romio_no_indep_rw", "true");
-                strcat(out_filename, ".indep");
+                strcat(out_filename, ".no_indep_rw");
             }
 
             if (b == 0) { /* PnetCDF's default */
@@ -471,7 +471,7 @@ int tst_main(int        argc,
                 strcat(out_filename, ".bb");
             }
 
-            if (s == 0) { /* diable data sieving */
+            if (s == 0) { /* disable data sieving */
                 MPI_Info_set(info, "romio_ds_read",  "disable");
                 MPI_Info_set(info, "romio_ds_write", "disable");
                 strcat(out_filename, ".nods");
