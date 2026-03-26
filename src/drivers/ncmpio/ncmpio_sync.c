@@ -44,7 +44,7 @@ ncmpio_write_numrecs(NC         *ncp,
 
     buf_view.type = MPI_BYTE;
     buf_view.size = 0;
-    buf_view.count = 1;
+    buf_view.count = 0;
 
     /* return now if there is no record variable defined */
     if (ncp->vars.num_rec_vars == 0) return NC_NOERR;
