@@ -109,21 +109,24 @@ test_vars_$1(const char *out_path, int coll_io, MPI_Info info)
             err = GET_VARA($1)(ncid, varid[k], start, count, &buf[0][0]);
         CHECK_ERR
 
+        err = ncmpi_inq_varname(ncid, varid[k], var_name);
+        CHECK_ERR
+
         for (i=0; i<NY; i++) {
             if (i % stride[0] == 0) {
                 for (j=0; j<NX; j++) {
                     if (j % stride[1] == 0) {
                         if (buf[i][j] != ($1)rank) {
-                            printf("Error at line %d in %s: expect buf[%d][%d]=IFMT($1) but got IFMT($1)\n",
-                                   __LINE__,__FILE__, i,j, ($1)rank, buf[i][j]);
+                            printf("Error at line %d in %s: expect %s[%d][%d]=IFMT($1) but got IFMT($1)\n",
+                                   __LINE__,__FILE__, var_name, i,j, ($1)rank, buf[i][j]);
                             nerrs++;
                             goto fn_exit;
                         }
                     }
                     else {
                         if (buf[i][j] != NC_FILL_VALUE($1)) {
-                            printf("Error at line %d in %s: expect buf[%d][%d]=IFMT($1) but got IFMT($1)\n",
-                                   __LINE__,__FILE__, i,j, ($1)NC_FILL_VALUE($1), buf[i][j]);
+                            printf("Error at line %d in %s: expect %s[%d][%d]=IFMT($1) but got IFMT($1)\n",
+                                   __LINE__,__FILE__, var_name, i,j, ($1)NC_FILL_VALUE($1), buf[i][j]);
                             nerrs++;
                             goto fn_exit;
                         }
@@ -133,8 +136,8 @@ test_vars_$1(const char *out_path, int coll_io, MPI_Info info)
             else { /* the entire row should be NC_FILL_VALUE($1) */
                 for (j=0; j<NX; j++) {
                     if (buf[i][j] != NC_FILL_VALUE($1)) {
-                        printf("Error at line %d in %s: expect buf[%d][%d]=IFMT($1) but got IFMT($1)\n",
-                               __LINE__,__FILE__, i,j, ($1)NC_FILL_VALUE($1), buf[i][j]);
+                        printf("Error at line %d in %s: expect %s[%d][%d]=IFMT($1) but got IFMT($1)\n",
+                               __LINE__,__FILE__, var_name, i,j, ($1)NC_FILL_VALUE($1), buf[i][j]);
                         nerrs++;
                         goto fn_exit;
                     }
@@ -147,7 +150,7 @@ fn_exit:
     }
 
     err = ncmpi_close(ncid); CHECK_ERR
-    return nerrs;
+    return max_nerrs;
 }
 ')dnl
 
@@ -175,13 +178,16 @@ int test_io(const char *out_path,
     CHECK_ERR
 
     foreach(`itype', (schar,short,int,float,double), `
-    _CAT(`nerrs += test_vars_',itype)'`(out_path, coll_io, info);')
+    _CAT(`nerrs = test_vars_',itype)'`(out_path, coll_io, info);
+    if (nerrs > 0) goto err_out;')
 
     if (format == NC_FORMAT_CDF5 || format == NC_FORMAT_NETCDF4) {
         foreach(`itype', (uchar,ushort,uint,longlong,ulonglong), `
-        _CAT(`nerrs += test_vars_',itype)'`(out_path, coll_io, info);')
+        _CAT(`nerrs = test_vars_',itype)'`(out_path, coll_io, info);'
+        if (nerrs > 0) goto err_out;)
     }
 
+err_out:
     return nerrs;
 }
 
