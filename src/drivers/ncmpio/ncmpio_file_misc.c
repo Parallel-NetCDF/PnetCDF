@@ -136,15 +136,18 @@ ncmpio_begin_indep_data(void *ncdp)
     /* raise independent flag */
     fSet(ncp->flags, NC_MODE_INDEP);
 
+    /* Barrier is necessary to prevent non-aggregators from calling open()
+     * before the file is being collectively created by the aggregators.
+     * It is also necessary when fill mode is enabled. A barrier prevents one
+     * process start to do I/O while some other processes are still filling
+     * the variables.
+     */
+    MPI_Barrier(ncp->comm);
+
     if (ncp->driver == PNC_DRIVER_PNCIO) {
         /* PNCIO driver implements open-on-demand mechanism. */
         return NC_NOERR;
     }
-
-    /* Barrier is necessary to prevent non-aggregators from calling open()
-     * before the file is being collectively created by the aggregators.
-     */
-    MPI_Barrier(ncp->comm);
 
     /* PnetCDF's default mode is collective. MPI file handle, collective_fh,
      * will never be MPI_FILE_NULL. We must use a separate MPI file handle
