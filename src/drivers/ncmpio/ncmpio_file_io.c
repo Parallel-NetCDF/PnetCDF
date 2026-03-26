@@ -66,9 +66,7 @@ MPI_Offset get_count(MPI_Status   *mpistatus,
 }
 
 /*----< ncmpio_file_read_at() >----------------------------------------------*/
-/*
- * This function is independent.
- */
+/* This function is independent. */
 /* TODO: move check count against MAX_INT and call _c API */
 MPI_Offset
 ncmpio_file_read_at(NC         *ncp,
@@ -76,21 +74,25 @@ ncmpio_file_read_at(NC         *ncp,
                     void       *buf,
                     PNCIO_View  buf_view)
 {
-    int err=NC_NOERR, mpireturn;
+    int err=NC_NOERR;
     MPI_Offset amnt=0;
-    MPI_Status mpistatus;
 
-    /* Explicitly initialize mpistatus object to 0. For zero-length read/write,
-     * MPI_Get_count() may report incorrect result for some earlier MPICH
-     * versions, due to the uninitialized MPI_Status object passed to MPI-IO
-     * calls. Thus we initialize it above to work around. See MPICH ticket:
-     * https://trac.mpich.org/projects/mpich/ticket/2332
-     */
-    memset(&mpistatus, 0, sizeof(MPI_Status));
+    /* For zero-sized requests, independent read can return now. */
+    if (buf_view.size == 0) return 0;
 
     if (ncp->driver == PNC_DRIVER_MPIIO) {
         char *mpi_name;
+        int mpireturn;
         MPI_File fh;
+        MPI_Status mpistatus;
+
+        /* Explicitly initialize mpistatus object to 0. For zero-length
+         * read/write, MPI_Get_count() may report incorrect result for some
+         * earlier MPICH versions, due to the uninitialized MPI_Status object
+         * passed to MPI-IO calls. Thus we initialize it above to work around.
+         * See MPICH ticket: https://trac.mpich.org/projects/mpich/ticket/2332
+         */
+        memset(&mpistatus, 0, sizeof(MPI_Status));
 
         fh = fIsSet(ncp->flags, NC_MODE_INDEP)
            ? ncp->independent_fh : ncp->collective_fh;
@@ -124,7 +126,7 @@ ncmpio_file_read_at(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
-    else if (ncp->pncio_fh != NULL)
+    else
         amnt = PNCIO_File_read_at(ncp->pncio_fh, offset, buf, buf_view);
 
     /* update the number of bytes read since file open */
@@ -135,30 +137,29 @@ ncmpio_file_read_at(NC         *ncp,
 }
 
 /*----< ncmpio_file_read_at_all() >------------------------------------------*/
-/*
- * This function is collective.
- */
+/* This function is collective. */
 MPI_Offset
 ncmpio_file_read_at_all(NC         *ncp,
                         MPI_Offset  offset,
                         void       *buf,
                         PNCIO_View  buf_view)
 {
-    int err=NC_NOERR, mpireturn;
+    int err=NC_NOERR;
     MPI_Offset amnt=0;
-    MPI_Status mpistatus;
-
-    /* Explicitly initialize mpistatus object to 0. For zero-length read/write,
-     * MPI_Get_count() may report incorrect result for some earlier MPICH
-     * versions, due to the uninitialized MPI_Status object passed to MPI-IO
-     * calls. Thus we initialize it above to work around. See MPICH ticket:
-     * https://trac.mpich.org/projects/mpich/ticket/2332
-     */
-    memset(&mpistatus, 0, sizeof(MPI_Status));
 
     if (ncp->driver == PNC_DRIVER_MPIIO) {
         char *mpi_name;
+        int mpireturn;
         MPI_File fh;
+        MPI_Status mpistatus;
+
+        /* Explicitly initialize mpistatus object to 0. For zero-length
+         * read/write, MPI_Get_count() may report incorrect result for some
+         * earlier MPICH versions, due to the uninitialized MPI_Status object
+         * passed to MPI-IO calls. Thus we initialize it above to work around.
+         * See MPICH ticket: https://trac.mpich.org/projects/mpich/ticket/2332
+         */
+        memset(&mpistatus, 0, sizeof(MPI_Status));
 
         fh = fIsSet(ncp->flags, NC_MODE_INDEP)
            ? ncp->independent_fh : ncp->collective_fh;
@@ -208,30 +209,32 @@ ncmpio_file_read_at_all(NC         *ncp,
 }
 
 /*----< ncmpio_file_write_at() >---------------------------------------------*/
-/*
- * This function is independent.
- */
+/* This function is independent. */
 MPI_Offset
 ncmpio_file_write_at(NC         *ncp,
                      MPI_Offset  offset,
                      const void *buf,
                      PNCIO_View  buf_view)
 {
-    int err=NC_NOERR, mpireturn;
+    int err=NC_NOERR;
     MPI_Offset amnt=0;
-    MPI_Status mpistatus;
 
-    /* Explicitly initialize mpistatus object to 0. For zero-length read/write,
-     * MPI_Get_count() may report incorrect result for some earlier MPICH
-     * versions, due to the uninitialized MPI_Status object passed to MPI-IO
-     * calls. Thus we initialize it above to work around. See MPICH ticket:
-     * https://trac.mpich.org/projects/mpich/ticket/2332
-     */
-    memset(&mpistatus, 0, sizeof(MPI_Status));
+    /* For zero-sized requests, independent read can return now. */
+    if (buf_view.size == 0) return 0;
 
     if (ncp->driver == PNC_DRIVER_MPIIO) {
         char *mpi_name;
+        int mpireturn;
         MPI_File fh;
+        MPI_Status mpistatus;
+
+        /* Explicitly initialize mpistatus object to 0. For zero-length
+         * read/write, MPI_Get_count() may report incorrect result for some
+         * earlier MPICH versions, due to the uninitialized MPI_Status object
+         * passed to MPI-IO calls. Thus we initialize it above to work around.
+         * See MPICH ticket: https://trac.mpich.org/projects/mpich/ticket/2332
+         */
+        memset(&mpistatus, 0, sizeof(MPI_Status));
 
         fh = fIsSet(ncp->flags, NC_MODE_INDEP)
            ? ncp->independent_fh : ncp->collective_fh;
@@ -264,7 +267,7 @@ ncmpio_file_write_at(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
-    else if (ncp->pncio_fh != NULL)
+    else
         amnt = PNCIO_File_write_at(ncp->pncio_fh, offset, buf, buf_view);
 
     /* update the number of bytes written since file open */
@@ -275,30 +278,29 @@ ncmpio_file_write_at(NC         *ncp,
 }
 
 /*----< ncmpio_file_write_at_all() >-----------------------------------------*/
-/*
- * This function is collective.
- */
+/* This function is collective. */
 MPI_Offset
 ncmpio_file_write_at_all(NC         *ncp,
                          MPI_Offset  offset,
                          const void *buf,
                          PNCIO_View  buf_view)
 {
-    int err=NC_NOERR, mpireturn;
+    int err=NC_NOERR;
     MPI_Offset amnt=0;
-    MPI_Status mpistatus;
-
-    /* Explicitly initialize mpistatus object to 0. For zero-length read/write,
-     * MPI_Get_count() may report incorrect result for some earlier MPICH
-     * versions, due to the uninitialized MPI_Status object passed to MPI-IO
-     * calls. Thus we initialize it above to work around. See MPICH ticket:
-     * https://trac.mpich.org/projects/mpich/ticket/2332
-     */
-    memset(&mpistatus, 0, sizeof(MPI_Status));
 
     if (ncp->driver == PNC_DRIVER_MPIIO) {
         char *mpi_name;
+        int mpireturn;
         MPI_File fh;
+        MPI_Status mpistatus;
+
+        /* Explicitly initialize mpistatus object to 0. For zero-length
+         * read/write, MPI_Get_count() may report incorrect result for some
+         * earlier MPICH versions, due to the uninitialized MPI_Status object
+         * passed to MPI-IO calls. Thus we initialize it above to work around.
+         * See MPICH ticket: https://trac.mpich.org/projects/mpich/ticket/2332
+         */
+        memset(&mpistatus, 0, sizeof(MPI_Status));
 
         fh = fIsSet(ncp->flags, NC_MODE_INDEP)
            ? ncp->independent_fh : ncp->collective_fh;
@@ -683,14 +685,9 @@ ncmpio_file_close(NC *ncp)
         }
     }
     else {
-        /* When intra-node aggregation is enabled, only aggregators have a
-         * non-NULL ncp->pncio_fh and non-aggregators has pncio_fh == NULL.
-         */
-        if (ncp->pncio_fh != NULL) {
-            err = PNCIO_File_close(ncp->pncio_fh);
-            NCI_Free(ncp->pncio_fh);
-            ncp->pncio_fh = NULL;
-        }
+        err = PNCIO_File_close(ncp->pncio_fh);
+        NCI_Free(ncp->pncio_fh);
+        ncp->pncio_fh = NULL;
     }
 
     return err;
@@ -743,9 +740,10 @@ ncmpio_file_sync(NC *ncp) {
     int mpireturn;
 
     if (ncp->driver == PNC_DRIVER_PNCIO) {
-        if (ncp->pncio_fh == NULL)
+        if (ncp->pncio_fh->is_open)
+            return PNCIO_File_sync(ncp->pncio_fh);
+        else
             return NC_NOERR;
-        return PNCIO_File_sync(ncp->pncio_fh);
     }
 
     /* the remaining of this subroutine are for when using MPI-IO */
@@ -797,19 +795,14 @@ ncmpio_file_set_view(const NC     *ncp,
     int err, mpireturn, status=NC_NOERR;
     MPI_File fh;
 
-assert(filetype == MPI_BYTE);
-
     if (ncp->driver == PNC_DRIVER_PNCIO) {
-        /* Skip setting fileview for ranks whose pncio_fh is NULL */
-        if (ncp->pncio_fh == NULL)
-            return NC_NOERR;
-
         /* When PnetCDF's internal PNCIO driver is used, the request has been
-         * flattened into offsets and lengths. Thus passed-in filetype is not
-         * constructed. Note offsets and lengths are not relative to any MPI-IO
-         * fileview. They will be reused in PNCIO driver as a flattened file
-         * type struct, which avoids repeated work of constructing and
-         * flattening the filetype.
+         * flattened into offsets and lengths. Thus the passed-in argument
+         * filetype is not constructed and will not be used. Note arguments
+         * offsets and lengths are not relative to any MPI-IO fileview. They
+         * will be reused in PNCIO driver as a flattened file type struct,
+         * ncp-pncio_fh->file_view. These already flattened offset-length pairs
+         * avoid repeated work of constructing and flattening a filetype.
          */
         return PNCIO_File_set_view(ncp->pncio_fh, npairs, offsets, lengths);
     }
@@ -821,7 +814,22 @@ assert(filetype == MPI_BYTE);
     fh = (ncp->nprocs > 1 && !fIsSet(ncp->flags, NC_MODE_INDEP))
        ? ncp->collective_fh : ncp->independent_fh;
 
-    if (fh == MPI_FILE_NULL) /* not INA aggregator */
+#ifdef PNETCDF_DEBUG
+    /* When using MPI-IO driver and INA disabled, all processes hold valid
+     * ncp->collective_fh (and ncp->independent_fh once entering independent
+     * data mode).
+     *
+     * When using MPI-IO driver and INA enabled, all INA aggregators processes
+     * hold valid ncp->collective_fh (and ncp->independent_fh once entering
+     * independent data mode). Non-INA aggregators have only valid
+     * ncp->independent_fh once entering independent data mode. Its
+     * ncp->collective_fh should always be MPI_FILE_NULL.
+     * */
+    if (ncp->num_aggrs_per_node > 0 && ncp->ina_rank == -1)
+        assert(ncp->collective_fh == MPI_FILE_NULL);
+#endif
+
+    if (fh == MPI_FILE_NULL) /* This process is not an INA aggregator. */
         return NC_NOERR;
 
     if (npairs == 0) /* zero-sized requests */
