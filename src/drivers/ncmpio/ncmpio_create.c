@@ -695,13 +695,16 @@ ncmpio_create(MPI_Comm         comm,
         /* When ncp->driver == PNC_DRIVER_PNCIO, use PnetCDF's PNCIO driver.
          * When INA is enabled, only the INA aggregators can reach here.
          * Non-INA aggregators have gone to fn_exit from above, with their comm
-         * remain MPI_COMM_NULL (ncp->comm is always assignned to comm).
+         * remain MPI_COMM_NULL (ncp->comm is always assigned to comm).
          */
         ncp->pncio_fh->fstype = ncp->fstype;
         ncp->pncio_fh->comm_attr = ncp->comm_attr;
 
-        err = PNCIO_File_open(comm, filename, O_CREAT|O_RDWR, user_info,
-                              ncp->pncio_fh);
+        /* use_trunc also indicates whether the file has already existed as a
+         * symbolic link, For a symbolic link file, we cannot add O_CREAT.
+         */
+        int amode = (mpi_amode & MPI_MODE_CREATE) ? O_CREAT|O_RDWR : O_RDWR;
+        err = PNCIO_File_open(comm, filename, amode, user_info, ncp->pncio_fh);
         if (err != NC_NOERR) DEBUG_FOPEN_ERROR(err)
 
         /* Now the file has been successfully created, obtain the I/O hints
