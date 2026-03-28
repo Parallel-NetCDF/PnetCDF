@@ -19,7 +19,7 @@
 #include "testutils.h"
 #include <ncmpidiff_core.h>
 
-#ifdef ENABLE_NETCDF4
+#if defined(PNETCDF_DRIVER_NETCDF4) && PNETCDF_DRIVER_NETCDF4 == 1
 int nc_formats[5] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_NETCDF4,
                      NC_FORMAT_NETCDF4_CLASSIC, NC_FORMAT_64BIT_DATA};
 #else
@@ -303,7 +303,7 @@ int is_relax_coord_bound(void)
     char *env_str;
     int relax_coord_bound;
 
-#ifdef RELAX_COORD_BOUND
+#if defined(PNETCDF_RELAX_COORD_BOUND) && PNETCDF_RELAX_COORD_BOUND == 1
     relax_coord_bound = 1;
 #else
     relax_coord_bound = 0;
@@ -339,7 +339,7 @@ int tst_main(int        argc,
 {
     extern int optind;
     extern char *optarg;
-    char *in_path=NULL, *out_path=NULL;
+    char *in_path=NULL, *out_path=NULL, *out_dir;
 
     /* IDs for the netCDF file, dimensions, and variables. */
     int nprocs, rank, err, nerrs=0, keep_files, quiet, coll_io;
@@ -349,7 +349,7 @@ int tst_main(int        argc,
     MPI_Info info=MPI_INFO_NULL;
     double timing = MPI_Wtime();
 
-#ifdef PROFILING
+#if defined(PNETCDF_PROFILING) && PNETCDF_PROFILING == 1
     double itiming[256]; int k=0;
 #endif
 
@@ -378,6 +378,13 @@ int tst_main(int        argc,
                       MPI_Finalize();
                       exit(1);
         }
+
+#ifndef TESTOUTDIR
+    out_dir = getenv("TESTOUTDIR");
+    if (out_dir == NULL) out_dir = ".";
+#else
+    out_dir = TESTOUTDIR;
+#endif
 
     if (out_path == NULL)
         out_path = strdup("testfile.nc");
@@ -413,7 +420,7 @@ int tst_main(int        argc,
     num_mod = (opt.mod) ? 2 : 1;
     num_ds  = 2; /* date sieving disable and enable */
 
-#ifdef ENABLE_BURST_BUFFER
+#if defined(PNETCDF_BURST_BUFFERING) && PNETCDF_BURST_BUFFERING == 1
     num_bb  = (opt.bb)  ? 2 : 1;
 #else
     num_bb  = 1;
@@ -466,7 +473,7 @@ int tst_main(int        argc,
             }
             else {
                 MPI_Info_set(info, "nc_burst_buf", "enable");
-                MPI_Info_set(info, "nc_burst_buf_dirname", TESTOUTDIR);
+                MPI_Info_set(info, "nc_burst_buf_dirname", out_dir);
                 MPI_Info_set(info, "nc_burst_buf_overwrite", "enable");
                 strcat(out_filename, ".bb");
             }
@@ -484,7 +491,7 @@ int tst_main(int        argc,
 
             for (coll_io=0; coll_io<2; coll_io++) {
 
-#ifdef PROFILING
+#if defined(PNETCDF_PROFILING) && PNETCDF_PROFILING == 1
                 MPI_Barrier(MPI_COMM_WORLD);
                 itiming[k] = MPI_Wtime();
 #endif
@@ -524,7 +531,7 @@ int tst_main(int        argc,
                         printf(" (%.2fs)\n", time_body);
                 }
 
-#ifdef PROFILING
+#if defined(PNETCDF_PROFILING) && PNETCDF_PROFILING == 1
                 itiming[k] = MPI_Wtime() - itiming[k]; k++;
 #endif
                 /* wait for all processes to complete */
@@ -621,9 +628,9 @@ err_out:
     MPI_Allreduce(MPI_IN_PLACE, &timing, 1, MPI_DOUBLE, MPI_MAX,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
-#ifdef PROFILING
+#if defined(PNETCDF_PROFILING) && PNETCDF_PROFILING == 1
     MPI_Allreduce(MPI_IN_PLACE, itiming, 256, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-    if (rank == 0) {
+    if (rank == 0 && !quiet) {
         for (i=0; i<k; i++) printf("k=%d timing[%3d]=%.4f\n",k,i,itiming[i]);
         printf("\n");
     }
