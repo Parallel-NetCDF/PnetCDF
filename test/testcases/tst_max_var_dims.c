@@ -72,7 +72,6 @@ int main(int argc, char **argv) {
 
     MPI_Init(&argc, &argv);
 
-
     opt.num_fmts = sizeof(nc_formats) / sizeof(int);
     opt.formats  = nc_formats;
     opt.ina      = 1; /* test intra-node aggregation */
@@ -91,6 +90,16 @@ int main(int argc, char **argv) {
 }
 #else
 int main(int argc, char **argv) {
+    int rank;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (rank == 0)
+        printf("*** TESTING C   tst_max_var_dims - checking NC_MAX_VAR_DIMS     -- skip\n");
+
+    MPI_Finalize();
+
     return 0;
 }
 #endif
