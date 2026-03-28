@@ -172,7 +172,7 @@ int test_io(const char *out_path,
     MPI_Info_get_valuelen(info_used, "pnetcdf_subfiling", &len, &flag);
     if (flag) {
         MPI_Info_get(info_used, "pnetcdf_subfiling", len+1, value, &flag);
-#ifdef ENABLE_SUBFILING
+#if defined(PNETCDF_SUBFILING) && PNETCDF_SUBFILING == 1
         if (strcasecmp("enable", value)) {
             printf("Error: pnetcdf_subfiling expect \"enable\" but got \"%s\"\n",
                    value);

@@ -28,7 +28,7 @@
 
 #include <testutils.h>
 
-#ifdef ENABLE_THREAD_SAFE
+#if defined(PNETCDF_THREAD_SAFE) && PNETCDF_THREAD_SAFE == 1
 #include <pthread.h>
 
 #ifndef PTHREAD_BARRIER_SERIAL_THREAD
@@ -391,7 +391,7 @@ int main(int argc, char **argv) {
 
     int err=0;
 
-#ifdef ENABLE_THREAD_SAFE
+#if defined(PNETCDF_THREAD_SAFE) && PNETCDF_THREAD_SAFE == 1
     int rank, providedT;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &providedT);

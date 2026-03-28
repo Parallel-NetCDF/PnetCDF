@@ -25,9 +25,9 @@ C implementation of the netCDF library.
         call error('   [-1] test CDF-1 format' )
         call error('   [-2] test CDF-2 format' )
         call error('   [-5] test CDF-5 format' )
-#ifdef ENABLE_NETCDF4
-        call error('   [-4] test NetCDF-4 classic-model format' )
-#endif
+        if (PNETCDF_DRIVER_NETCDF4 .EQ. 1) then
+          call error('   [-4] test NetCDF-4 classic-model format' )
+        endif
         call error('   [-r] Just do read-only tests' )
         call error(
      +  '   [-d directory] directory for storing input/output files' )

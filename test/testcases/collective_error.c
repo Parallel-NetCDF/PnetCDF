@@ -50,7 +50,7 @@ int test_io(const char *out_path,
 
     val = getenv("PNETCDF_SAFE_MODE");
     if (val != NULL && atoi(val) == 1) safe_mode = 1;
-#ifdef PNETCDF_DEBUG
+#if defined(PNETCDF_DEBUG_MODE) && PNETCDF_DEBUG_MODE == 1
     if (val == NULL && !safe_mode) safe_mode = 1;
 #endif
 
@@ -178,7 +178,7 @@ err_out:
     nerrs += test_collective_error(filename, 0, NC_64BIT_OFFSET);
     if (nerrs) goto err_out;
     if (!bb_enabled) {
-#ifdef ENABLE_NETCDF4
+#if defined(PNETCDF_DRIVER_NETCDF4) && PNETCDF_DRIVER_NETCDF4 == 1
         nerrs += test_collective_error(filename, 0, NC_NETCDF4);
         if (nerrs) goto err_out;
         nerrs += test_collective_error(filename, 0, NC_NETCDF4 | NC_CLASSIC_MODEL);
@@ -195,7 +195,7 @@ err_out:
     nerrs += test_collective_error(filename, 1, NC_64BIT_OFFSET);
     if (nerrs) goto err_out;
     if (!bb_enabled) {
-#ifdef ENABLE_NETCDF4
+#if defined(PNETCDF_DRIVER_NETCDF4) && PNETCDF_DRIVER_NETCDF4 == 1
         nerrs += test_collective_error(filename, 1, NC_NETCDF4);
         if (nerrs) goto err_out;
         nerrs += test_collective_error(filename, 1, NC_NETCDF4 | NC_CLASSIC_MODEL);

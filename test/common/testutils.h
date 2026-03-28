@@ -20,6 +20,10 @@
 #define MODE_COLL  1
 #define MODE_INDEP 0
 
+#ifndef OFFFMT
+#define OFFFMT "%lld"
+#endif
+
 #define CHECK_ERR { \
     if (err != NC_NOERR) { \
         printf("Error at line %d in %s: (%s)\n", \
@@ -84,7 +88,7 @@
 
 int inq_env_hint(char *hint_key, char **hint_value);
 
-#ifdef PNETCDF_DEBUG
+#if defined(PNETCDF_DEBUG_MODE) && PNETCDF_DEBUG_MODE == 1
 #define PASS_STR "\x1b[32mpass\x1b[0m (%4.1fs)\n"
 #define SKIP_STR "\x1b[32mskip\x1b[0m\n"
 #define FAIL_STR "\x1b[31mfail\x1b[0m with %d mismatches\n"
@@ -102,7 +106,7 @@ int inq_env_hint(char *hint_key, char **hint_value);
         printf("MPI Error at file %s line %d (%s)\n",__FILE__,__LINE__,err_string); \
     }
 
-#ifdef ENABLE_NETCDF4
+#if defined(PNETCDF_DRIVER_NETCDF4) && PNETCDF_DRIVER_NETCDF4 == 1
 extern int nc_formats[5];
 #else
 extern int nc_formats[3];

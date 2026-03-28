@@ -339,7 +339,7 @@ int test_io(const char *out_path,
 int main(int argc, char **argv) {
 
     int err;
-#ifdef ENABLE_NETCDF4
+#if defined(PNETCDF_DRIVER_NETCDF4) && PNETCDF_DRIVER_NETCDF4 == 1
     int formats[] = {NC_FORMAT_NETCDF4, NC_FORMAT_64BIT_DATA};
 #else
     int formats[] = {NC_FORMAT_64BIT_DATA};
