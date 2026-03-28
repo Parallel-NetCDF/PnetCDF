@@ -74,8 +74,11 @@ dtype_filter(MPI_Datatype type)
 #if (SIZEOF_LONG == 4)
     MPI_Datatype uint_4byte;
 #endif
+
 #if (SIZEOF_INT == 4)
+#if (defined(ENABLE_FORTRAN) && (ENABLE_FORTRAN == 1)) || (SIZEOF_LONG == 4)
      MPI_Datatype int_4byte = MPI_INT;
+#endif
 #if (SIZEOF_LONG == 4)
     uint_4byte = MPI_UNSIGNED;
 #endif
@@ -97,12 +100,14 @@ dtype_filter(MPI_Datatype type)
     if (type == MPI_INTEGER4) /* a Fortran datatype */
         return int_4byte;
 #endif
+
 #if (SIZEOF_LONG == 4)
     if (type == MPI_LONG)
         return int_4byte;
     if (type == MPI_UNSIGNED_LONG)
         return uint_4byte;
 #endif
+
 #if (SIZEOF_INT == 4)
     if (type == MPI_INT)
         return  MPI_INT;
