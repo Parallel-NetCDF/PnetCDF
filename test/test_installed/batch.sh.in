@@ -14,23 +14,31 @@ cd $PWD
 # exit immediately when any of the runs failed
 set -e
 
+if test "x$SLURM_JOB_QOS" = x ; then
+   DRY_RUN=1
+else
+   DRY_RUN=0
+fi
+
 export LD_LIBRARY_PATH=__PNETCDF_DIR__/lib:$LD_LIBRARY_PATH
 
 OUT_DIR=__OUT_DIR__
+
+export TESTOUTDIR=$OUT_DIR
 
 NP=4
 num_pass=0
 
 for exec in __TEST_PROGS__ ; do
-   OUTFILE="$OUT_DIR/$exec.nc"
-   CMD_OPTS=
-   if test "x$exec" = xpres_temp_4D_rd ; then
-      OUTFILE="$OUT_DIR/pres_temp_4D_wr.nc"
-   elif test "x$exec" = xtst_cdl_hdr_parser ; then
-      CMD_OPTS="-q ../cdl/cdl_header.txt -o"
+   CMD="__RUN_CMD__ -n $NP $exec -q -o $OUT_DIR/$exec.nc"
+   if test "x$exec" = "xtst_cdl_hdr_parser" ; then
+      CMD="$CMD -i ../cdl/cdl_header.txt"
    fi
-   CMD="__RUN_CMD__ -n $NP $exec $CMD_OPTS $OUTFILE"
-   eval "$CMD"
+
+   echo "CMD=$CMD"
+   if test $DRY_RUN = 0 ; then
+      eval "$CMD"
+   fi
    num_pass=$(expr $num_pass + 1)
 done
 
@@ -43,7 +51,10 @@ for exec in __EXAMPLE_PROGS__ ; do
       CMD_OPTS="../../examples/C/cdl_header.txt -o"
    fi
    CMD="__RUN_CMD__ -n $NP $exec -q $CMD_OPTS $OUTFILE"
-   eval "$CMD"
+   echo "CMD=$CMD"
+   if test $DRY_RUN = 0 ; then
+      eval "$CMD"
+   fi
    extension="${exec##*.}"
    if test "x$extension" = xexe90 ; then
       printf '*** TESTING F90 %-50s ------ pass\n' "examples/F90/$exec"

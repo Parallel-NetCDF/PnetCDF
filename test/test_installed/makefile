@@ -1,16 +1,16 @@
 .SUFFIXES: .o .exe77 .exe90 .77o .90o .testcases77o
 .PRECIOUS: %.o %.77o %.90o %.testcases77o
 
-CPPFLAGS = -I$(PNETCDF_DIR)/include -I../common
+PNETCDF_SRC = ../..
+CPPFLAGS = -I$(PNETCDF_DIR)/include -I../common -I$(PNETCDF_SRC)/src/utils/ncmpidiff
 CFLAGS = $(CPPFLAGS)
 FCFLAGS = -w -fallow-argument-mismatch
 LDFLAGS = -L$(PNETCDF_DIR)/lib
-LDLIBS = testutils.o -lpnetcdf
+LDLIBS = ncmpidiff_core.o testutils.o -lpnetcdf
 
 TEST_PROGS =
 
-C_src = ../C/pres_temp_4D_wr.c \
-        ../C/pres_temp_4D_rd.c
+C_src = ../C/pres_temp_4D_wr_rd.c
 TEST_PROGS += $(C_src:../C/%.c=%)
 %.o: ../C/%.c
 	$(CC) $(CFLAGS) -c $<
@@ -159,7 +159,7 @@ examples_F90_src = ../../examples/F90/block_cyclic.f90 \
                    ../../examples/F90/transpose.f90
 EXAMPLE_PROGS += $(examples_F90_src:../../examples/F90/%.f90=%.exe90)
 
-all: env_check testutils.o utils.o $(TEST_PROGS) $(EXAMPLE_PROGS) batch.sh interactive.sh
+all: env_check ncmpidiff_core.o testutils.o utils.o $(TEST_PROGS) $(EXAMPLE_PROGS) batch.sh interactive.sh
 
 f90tst_parallel.exe90: ../F90/f90tst_parallel.f90 testutilsf.o
 	$(FC) $(CPPFLAGS) $(FCFLAGS) -o $@ $< testutilsf.o $(LDFLAGS) -lpnetcdf
@@ -208,6 +208,9 @@ env_check:
 
 testutils.o: ../common/testutils.c
 	$(CC) $(CFLAGS) -I../common -c $< -o $@
+
+ncmpidiff_core.o: ../../src/utils/ncmpidiff/ncmpidiff_core.c
+	$(CC) $(CFLAGS) -I../../src/utils/ncmpidiff -c $< -o $@
 
 testutilsf.o: ../common/testutilsf.F90
 	$(FC) $(CPPFLAGS) $(FCFLAGS) -c $< -o $@
