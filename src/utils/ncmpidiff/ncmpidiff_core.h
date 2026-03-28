@@ -5,6 +5,10 @@
 
 #include <mpi.h>
 
+#ifndef OFFFMT
+#define OFFFMT "%lld"
+#endif
+
 extern
 MPI_Offset ncmpidiff_core(const char  *file1,
                           const char  *file2,
