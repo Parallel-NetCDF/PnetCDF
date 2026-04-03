@@ -160,6 +160,10 @@ jobs:
             else
                 CONFIG_OPTS="--disable-debug"
             fi
+            MPI_RUN="${GITHUB_WORKSPACE}/MPI/bin/mpiexec -n NP"
+            if test "${{ matrix.mpi_vendor }}" = "OpenMPI" ; then
+               MPI_RUN="${GITHUB_WORKSPACE}/MPI/bin/mpirun --host localhost --oversubscribe -np NP"
+            fi
             ./configure --prefix=${GITHUB_WORKSPACE}/PnetCDF \
                         --enable-option-checking=fatal \
                         pnc_ac_debug=yes \
@@ -169,7 +173,8 @@ jobs:
                         --with-pthread \
                         ${CONFIG_OPTS} \
                         --with-mpi=${GITHUB_WORKSPACE}/MPI \
-                        TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output
+                        TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output \
+                        TESTMPIRUN="${MPI_RUN}"
             make -s LIBTOOLFLAGS=--silent V=1 -j 8 tests
 
         - name: Print config.log
@@ -198,11 +203,6 @@ jobs:
         - name: make ptests
           run: |
             cd ${GITHUB_WORKSPACE}
-            if test "${{ matrix.mpi_vendor }}" = "OpenMPI" ; then
-                # OpenMPI hacks when running in parallel on MacOS
-                export OMPI_MCA_btl_tcp_if_include=lo0
-                export TMPDIR=${RUNNER_TEMP}
-            fi
             make -s LIBTOOLFLAGS=--silent V=1 ptests
 
         - name: make distcheck
