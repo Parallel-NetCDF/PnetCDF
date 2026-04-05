@@ -21,9 +21,6 @@ unset PNETCDF_HINTS
 
 for i in ${check_PROGRAMS} ; do
     PNETCDF_HINTS=
-    if test "${PNETCDF_DEBUG}" = 1 ; then # test only in safe mode
-       PNETCDF_HINTS="romio_no_indep_rw=true"
-    fi
     if test "x$MIMIC_LUSTRE" != x1 ; then
        PNETCDF_HINTS="cb_nodes=2;$PNETCDF_HINTS"
     fi

@@ -13,16 +13,8 @@ NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
-if test "${PNETCDF_DEBUG}" = 1 ; then # test only in safe mode
-   SAFE_HINTS="romio_no_indep_rw=true"
-else
-   SAFE_HINTS="romio_no_indep_rw=false"
-fi
-PNETCDF_HINTS=
-if test "x$SAFE_HINTS" != x ; then
-   PNETCDF_HINTS="$SAFE_HINTS"
-fi
-export PNETCDF_HINTS="$PNETCDF_HINTS"
+# PNETCDF_HINTS=
+# export PNETCDF_HINTS="$PNETCDF_HINTS"
 # echo "PNETCDF_HINTS=$PNETCDF_HINTS"
 
 if test "$1" = ./open ; then

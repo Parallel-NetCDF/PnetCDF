@@ -104,9 +104,6 @@ for i in ${check_PROGRAMS} ; do
         fi
         OUT_PREFIX="${TESTOUTDIR}/$i"
 
-    for no_indep_rw in true false ; do
-        no_indep_rw_hint="romio_no_indep_rw=$no_indep_rw"
-
     for mpiio_mode in 0 1 ; do
         if test "$mpiio_mode" = 1 ; then
            USEMPIO_HINTS="nc_driver=mpiio"
@@ -141,11 +138,6 @@ for i in ${check_PROGRAMS} ; do
         # More rigorous tests using a small moving chunk size
         PNETCDF_HINTS="nc_data_move_chunk_size=100"
 
-        PNETCDF_HINTS="$no_indep_rw_hint;$PNETCDF_HINTS"
-
-        if test "x$SAFE_HINTS" != x ; then
-           PNETCDF_HINTS="$SAFE_HINTS;$PNETCDF_HINTS"
-        fi
         if test "x$USEMPIO_HINTS" != x ; then
            PNETCDF_HINTS="$USEMPIO_HINTS;$PNETCDF_HINTS"
         fi
@@ -317,7 +309,6 @@ for i in ${check_PROGRAMS} ; do
        exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.nc $OUT_PREFIX.pncio.ina.nc
     fi
 
-    done # no_indep_rw
     done # safe_modes
 
     if test "x$i" = xpres_temp_4D_wr ; then

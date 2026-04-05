@@ -136,7 +136,6 @@ int main(int argc, char **argv) {
     opt.formats  = formats;
     opt.ina      = 1; /* test intra-node aggregation */
     opt.drv      = 1; /* test PNCIO driver */
-    opt.ind      = 1; /* test hint romio_no_indep_rw */
     opt.bb       = 0; /* test burst-buffering feature */
     opt.mod      = 1; /* test independent data mode */
     opt.hdr_diff = 1; /* run ncmpidiff for file header only */

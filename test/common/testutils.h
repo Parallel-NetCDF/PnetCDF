@@ -149,7 +149,6 @@ typedef struct {
                                           NC_FORMAT_64BIT_DATA}; */
     int  ina;      /* add test of intra-node aggregation */
     int  drv;      /* add test of PNCIO driver in addition to MPI-IO */
-    int  ind;      /* add test of hint romio_no_indep_rw */
     int  bb;       /* add test of burst-buffering feature */
     int  mod;      /* add test of independent data mode */
     int  hdr_diff; /* run ncmpidiff for file header only */

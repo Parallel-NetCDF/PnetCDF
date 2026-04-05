@@ -461,7 +461,6 @@ int test_io(const char *out_path,
     MPI_Info_set(info, "group_cyclic_fd", "enable");
     MPI_Info_set(info, "cb_buffer_size", "1024");
     MPI_Info_set(info, "cb_buffer_size", "16777216");
-    MPI_Info_set(info, "romio_no_indep_rw", "true");
     MPI_Info_set(info, "romio_cb_write", "true");
  */
     for (k=0; k<=9; k++) {
@@ -730,7 +729,6 @@ int main(int argc, char **argv) {
     opt.formats  = formats;
     opt.ina      = 1; /* test intra-node aggregation */
     opt.drv      = 1; /* test PNCIO driver */
-    opt.ind      = 0; /* test hint romio_no_indep_rw */
     opt.bb       = 1; /* test burst-buffering feature */
     opt.mod      = 0; /* test independent data mode */
     opt.hdr_diff = 0; /* run ncmpidiff for file header only */
