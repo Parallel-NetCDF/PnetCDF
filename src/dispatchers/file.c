@@ -1584,9 +1584,11 @@ void print_profiled(MPI_Comm comm)
 
         wr_total = pnc_ina_init + pnc_ina_flatten;
         for (i=0; i<NTIMERS; i++) wr_total += pnc_ina_put[i];
+        wr_total -= pnc_ina_put[5]; /* exclude file write time */
 
         rd_total = pnc_ina_init + pnc_ina_flatten;
         for (i=0; i<NTIMERS; i++) rd_total += pnc_ina_get[i];
+        rd_total -= pnc_ina_get[2]; /* exclude file read time */
 
         MPI_Reduce(&pnc_ina_init, &timing, 1, MPI_DOUBLE, MPI_MAX, 0, comm);
         pnc_ina_init = timing;
@@ -1613,10 +1615,10 @@ void print_profiled(MPI_Comm comm)
             printf("INA put npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
                    pnc_ina_npairs_put,
                    max_MiB[0],max_MiB[1],max_MiB[2],max_MiB[3],max_MiB[4],max_MiB[5]);
-            printf("INA put time: init %.2f flat %.2f MD %.2f sort %.2f post %.2f wait %.2f setview %.2f write %.2f total %.2f\n",
+            printf("INA put time: init %.2f flat %.2f MD %.2f sort %.2f post %.2f wait %.2f setview %.2f total %.2f (write %.2f)\n",
                    pnc_ina_init,pnc_ina_flatten,
-                   pnc_ina_put[0],pnc_ina_put[1],pnc_ina_put[2],pnc_ina_put[3],pnc_ina_put[4],pnc_ina_put[5],
-                   wr_total);
+                   pnc_ina_put[0],pnc_ina_put[1],pnc_ina_put[2],pnc_ina_put[3],pnc_ina_put[4],
+                   wr_total,pnc_ina_put[5]);
         }
 
         MPI_Reduce(&pnc_ina_npairs_get, &count, 1, MPI_COUNT, MPI_MAX, 0, comm);
@@ -1632,10 +1634,10 @@ void print_profiled(MPI_Comm comm)
             printf("INA get npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
                    pnc_ina_npairs_get,
                    max_MiB[0],max_MiB[1],max_MiB[2],max_MiB[3],max_MiB[4],max_MiB[5]);
-            printf("INA get time: init %.2f flat %.2f MD %.2f sort %.2f read %.2f post %.2f wait %.2f total %.2f\n",
+            printf("INA get time: init %.2f flat %.2f MD %.2f sort %.2f post %.2f wait %.2f total %.2f (read %.2f)\n",
                    pnc_ina_init,pnc_ina_flatten,
-                   pnc_ina_get[0],pnc_ina_get[1],pnc_ina_get[2],pnc_ina_get[3],pnc_ina_get[4],
-                   rd_total);
+                   pnc_ina_get[0],pnc_ina_get[1],pnc_ina_get[3],pnc_ina_get[4],
+                   rd_total,pnc_ina_get[2]);
         }
     }
 }
