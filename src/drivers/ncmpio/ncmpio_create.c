@@ -449,8 +449,7 @@ ncmpio_create(MPI_Comm         comm,
         ncp->pncio_fh = (PNCIO_File*) NCI_Calloc(1, sizeof(PNCIO_File));
         ncp->pncio_fh->comm           = comm;
         ncp->pncio_fh->fstype         = ncp->fstype;
-        ncp->pncio_fh->comm_attr      = ncp->comm_attr;
-        ncp->pncio_fh->comm_attr      = ncp->comm_attr;
+        ncp->pncio_fh->comm_attr      = comm_attr;
         ncp->pncio_fh->file_view.size = -1;
         ncp->pncio_fh->filename       = filename;
         ncp->pncio_fh->info           = MPI_INFO_NULL;
