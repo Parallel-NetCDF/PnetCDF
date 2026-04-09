@@ -166,7 +166,7 @@ fill_var_rec(NC         *ncp,
         if (ncp->comm_attr.my_aggr != ncp->rank)
             return NC_NOERR;
 
-        comm = ncp->comm_attr.ina_comm;
+        comm = ncp->comm_attr.ina_inter_comm;
         nprocs = ncp->ina_nprocs;
         rank = ncp->ina_rank;
     }
@@ -410,8 +410,8 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
      * variables' fill modes and overwrite local's if an inconsistency is found
      * Note ncp->vars.ndefined is already made consistent by this point.
      */
-    MPI_Comm comm = (ncp->num_aggrs_per_node > 0) ? ncp->comm_attr.ina_comm
-                                                  : ncp->comm;
+    MPI_Comm comm = (ncp->num_aggrs_per_node > 0)
+                  ? ncp->comm_attr.ina_inter_comm : ncp->comm;
 
     if (nprocs > 1) {
         int mpireturn;

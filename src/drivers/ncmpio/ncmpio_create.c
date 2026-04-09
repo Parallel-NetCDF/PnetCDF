@@ -527,8 +527,8 @@ ncmpio_create(MPI_Comm         comm,
             /* this rank is an INA aggregator */
             int i, j, *ids;
 
-            MPI_Comm_size(comm_attr.ina_comm, &ncp->ina_nprocs);
-            MPI_Comm_rank(comm_attr.ina_comm, &ncp->ina_rank);
+            MPI_Comm_size(comm_attr.ina_inter_comm, &ncp->ina_nprocs);
+            MPI_Comm_rank(comm_attr.ina_inter_comm, &ncp->ina_rank);
 
             /* overwrite comm_attr.ids[] by condensing it to contain only the
              * node IDs of processes in the INA communicator.
@@ -548,17 +548,17 @@ ncmpio_create(MPI_Comm         comm,
         }
 
         /* As non-aggregators will not perform any file I/O, we now can replace
-         * comm with ina_comm. Same for nprocs.
+         * comm with ina_inter_comm. Same for nprocs.
          */
-        comm = comm_attr.ina_comm;
+        comm = comm_attr.ina_inter_comm;
         nprocs = ncp->ina_nprocs;
 
         /* For non-INA aggregators, we keep comm, a local variable in this
-         * subroutine, to be comm_attr.ina_comm, a MPI_COMM_NULL for non-INA
-         * aggregators. Because the remaining lines of codes below till label
-         * 'fn_exit' is for INA aggregators to open the file and obtain a file
-         * handler, in which non-INA aggregators do not participate and thus do
-         * not make use of comm.
+         * subroutine, to be comm_attr.ina_inter_comm, a MPI_COMM_NULL for
+         * non-INA aggregators. Because the remaining lines of codes below till
+         * label 'fn_exit' is for INA aggregators to open the file and obtain a
+         * file handler, in which non-INA aggregators do not participate and
+         * thus do not make use of comm.
          */
         if (comm == MPI_COMM_NULL) {
             if (user_info != MPI_INFO_NULL)

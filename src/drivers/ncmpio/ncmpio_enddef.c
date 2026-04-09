@@ -181,10 +181,10 @@ move_file_block(NC         *ncp,
         /* When intra-node aggregation is enabled, only INA aggregators perform
          * the data movement.
          */
-        if (ncp->comm_attr.ina_comm == MPI_COMM_NULL)
+        if (ncp->comm_attr.ina_inter_comm == MPI_COMM_NULL)
             return NC_NOERR;
 
-        comm = ncp->comm_attr.ina_comm;
+        comm = ncp->comm_attr.ina_inter_comm;
         rank = ncp->ina_rank;
         nprocs = ncp->ina_nprocs;
     }

@@ -918,19 +918,33 @@ int ina_collect_md(NC          *ncp,
 #endif
                    MPI_Aint    *npairs)  /* OUT: total no. off-len pairs */
 {
-    int i, err, mpireturn, status=NC_NOERR, nreqs;
+    int i, err, rank, nprocs, mpireturn, status=NC_NOERR, nreqs;
     MPI_Request *req=NULL;
     MPI_Aint num_pairs=meta[0];
-    PNC_comm_attr ina_meta = ncp->comm_attr;
+    MPI_Comm comm = ncp->comm_attr.ina_intra_comm;
+
+#ifdef PNETCDF_DEBUG
+    assert(comm != MPI_COMM_NULL);
+    assert(ncp->comm_attr.num_nonaggrs > 1);
+#endif
+
+    MPI_Comm_size(comm, &nprocs);
+    MPI_Comm_rank(comm, &rank);
+
+#ifdef PNETCDF_DEBUG
+    if (ncp->comm_attr.my_aggr == ncp->rank)
+        assert(rank == 0);
+    assert(nprocs == ncp->comm_attr.num_nonaggrs);
+#endif
 
     /* Aggregator collects each non-aggregator's num_pairs and bufLen */
-    if (ina_meta.my_aggr == ncp->rank) {
+    if (rank == 0) {
 
-        req = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * ina_meta.num_nonaggrs);
+        req = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * nprocs);
         nreqs = 0;
-        for (i=1; i<ina_meta.num_nonaggrs; i++)
-            TRACE_COMM(MPI_Irecv)(meta + i*3, 3, MPI_AINT,
-                       ina_meta.nonaggr_ranks[i], 0, ncp->comm, &req[nreqs++]);
+        for (i=1; i<nprocs; i++)
+            TRACE_COMM(MPI_Irecv)(meta + i*3, 3, MPI_AINT, i, 0, comm,
+                                  &req[nreqs++]);
 
         if (nreqs > 0) {
 #ifdef HAVE_MPI_STATUSES_IGNORE
@@ -949,16 +963,16 @@ int ina_collect_md(NC          *ncp,
         }
     }
     else /* non-aggregator */
-        TRACE_COMM(MPI_Send)(meta, 3, MPI_AINT, ina_meta.my_aggr, 0, ncp->comm);
+        TRACE_COMM(MPI_Send)(meta, 3, MPI_AINT, 0, 0, comm);
 
     /* Secondly, aggregators collect offset-length pairs from all its
      * non-aggregators
      */
-    if (ina_meta.my_aggr == ncp->rank) {
+    if (rank == 0) {
         MPI_Datatype recvType;
 
         /* calculate the total number of offset-length pairs to receive */
-        for (*npairs=0, i=0; i<ina_meta.num_nonaggrs; i++) *npairs += meta[i*3];
+        for (*npairs=0, i=0; i<nprocs; i++) *npairs += meta[i*3];
 
         /* offsets and lengths have been allocated for storing this rank's
          * offsets and lengths, realloc them to receive offsets and lengths
@@ -991,7 +1005,7 @@ int ina_collect_md(NC          *ncp,
         disps[0] = MPI_Aint_add(aint, sizeof(MPI_Count) * meta[0]);
         MPI_Get_address(*lengths, &aint);
         disps[1] = MPI_Aint_add(aint, sizeof(MPI_Count) * meta[0]);
-        for (i=1; i<ina_meta.num_nonaggrs; i++) {
+        for (i=1; i<nprocs; i++) {
             if (meta[i*3] == 0) continue;
             bklens[0] = meta[i*3] * sizeof(MPI_Count);
             bklens[1] = meta[i*3] * sizeof(MPI_Count);
@@ -1011,8 +1025,8 @@ int ina_collect_md(NC          *ncp,
                 }
             }
             /* post to receive offset-length pairs from non-aggregators */
-            TRACE_COMM(MPI_Irecv_c)(MPI_BOTTOM, 1, recvType,
-                       ina_meta.nonaggr_ranks[i], 0, ncp->comm, &req[nreqs++]);
+            TRACE_COMM(MPI_Irecv_c)(MPI_BOTTOM, 1, recvType, i, 0, comm,
+                                    &req[nreqs++]);
             MPI_Type_free(&recvType);
 
             disps[0] = MPI_Aint_add(disps[0], bklens[0]);
@@ -1026,7 +1040,7 @@ int ina_collect_md(NC          *ncp,
         disps[0] = MPI_Aint_add(aint, sizeof(MPI_Offset) * meta[0]);
         MPI_Get_address(*lengths, &aint);
         disps[1] = MPI_Aint_add(aint, sizeof(int) * meta[0]);
-        for (i=1; i<ina_meta.num_nonaggrs; i++) {
+        for (i=1; i<nprocs; i++) {
             if (meta[i*3] == 0) continue;
             bklens[0] = meta[i*3] * sizeof(MPI_Offset);
             bklens[1] = meta[i*3] * sizeof(int);
@@ -1046,8 +1060,8 @@ int ina_collect_md(NC          *ncp,
                 }
             }
             /* post to receive offset-length pairs from non-aggregators */
-            TRACE_COMM(MPI_Irecv)(MPI_BOTTOM, 1, recvType,
-                       ina_meta.nonaggr_ranks[i], 0, ncp->comm, &req[nreqs++]);
+            TRACE_COMM(MPI_Irecv)(MPI_BOTTOM, 1, recvType, i, 0, comm,
+                                  &req[nreqs++]);
             MPI_Type_free(&recvType);
 
             disps[0] = MPI_Aint_add(disps[0], bklens[0]);
@@ -1104,8 +1118,7 @@ int ina_collect_md(NC          *ncp,
                 if (status == NC_NOERR) status = err;
             }
         }
-        TRACE_COMM(MPI_Send_c)(MPI_BOTTOM, 1, sendType, ina_meta.my_aggr, 0,
-                               ncp->comm);
+        TRACE_COMM(MPI_Send_c)(MPI_BOTTOM, 1, sendType, 0, 0, comm);
         MPI_Type_free(&sendType);
 #else
         int bklens[2];
@@ -1130,8 +1143,7 @@ int ina_collect_md(NC          *ncp,
                 if (status == NC_NOERR) status = err;
             }
         }
-        TRACE_COMM(MPI_Send)(MPI_BOTTOM, 1, sendType, ina_meta.my_aggr, 0,
-                             ncp->comm);
+        TRACE_COMM(MPI_Send)(MPI_BOTTOM, 1, sendType, 0, 0, comm);
         MPI_Type_free(&sendType);
 #endif
     }
@@ -1157,12 +1169,12 @@ int ina_put(NC         *ncp,
             void       *buf)       /* user buffer */
 {
     char *recv_buf=NULL, *wr_buf = NULL;
-    int i, j, err, mpireturn, status=NC_NOERR, free_buf_view_off=0;
-    int coalesceable=0;
+    int i, j, err, mpireturn, status=NC_NOERR, rank, nprocs;
+    int coalesceable=0, free_buf_view_off=0;;
     MPI_Aint npairs=0, *meta=NULL, *bufAddr=NULL;
     MPI_Aint buf_npairs=0, file_npairs=0;
     MPI_Offset wr_amnt=0;
-    PNC_comm_attr ina_meta = ncp->comm_attr;
+    MPI_Comm intra_comm;
 #ifdef HAVE_MPI_LARGE_COUNT
     MPI_Count *off_ptr, *len_ptr, *file_len=NULL;
 #else
@@ -1180,6 +1192,16 @@ int ina_put(NC         *ncp,
 
     /* buf may be noncontiguous ! */
 
+    intra_comm = ncp->comm_attr.ina_intra_comm;
+    if (intra_comm == MPI_COMM_NULL) {
+        nprocs = 1;
+        rank = 0;
+    }
+    else {
+        MPI_Comm_size(intra_comm, &nprocs);
+        MPI_Comm_rank(intra_comm, &rank);
+    }
+
     /* Firstly, aggregators collect metadata from non-aggregators.
      *
      * This rank tells its aggregator how much metadata to receive from this
@@ -1187,8 +1209,8 @@ int ina_put(NC         *ncp,
      * buffer size in bytes (buf_view.size). This message size to be sent by
      * this rank is 3 MPI_Offset.
      */
-    if (ncp->rank == ina_meta.my_aggr)
-        meta = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * ina_meta.num_nonaggrs * 3);
+    if (rank == 0)
+        meta = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * nprocs * 3);
     else
         meta = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * 3);
 
@@ -1207,7 +1229,7 @@ int ina_put(NC         *ncp,
      * Once ina_collect_md() returns, this aggregator's offsets and lengths may
      * grow to include the ones from non-aggregators (appended).
      */
-    if (ina_meta.num_nonaggrs > 1) {
+    if (nprocs > 1) {
         err = ina_collect_md(ncp, meta, &offsets, &lengths, &npairs);
         if (err != NC_NOERR) {
             NCI_Free(meta);
@@ -1220,17 +1242,15 @@ int ina_put(NC         *ncp,
     /* For write operation, the non-aggregators now can start sending their
      * write data to the aggregator.
      */
-    if (ncp->rank != ina_meta.my_aggr) { /* non-aggregator */
+    if (rank > 0) { /* non-aggregator */
         if (meta[0] > 0) {
             /* Non-aggregators send write data to the aggregator */
 #ifdef HAVE_MPI_LARGE_COUNT
             MPI_Count num = (buf_view.count <= 1) ? buf_view.size : 1;
-            TRACE_COMM(MPI_Send_c)(buf, num, buf_view.type, ina_meta.my_aggr,
-                                   0, ncp->comm);
+            TRACE_COMM(MPI_Send_c)(buf, num, buf_view.type, 0, 0, intra_comm);
 #else
             int num = (buf_view.count <= 1) ? buf_view.size : 1;
-            TRACE_COMM(MPI_Send)(buf, num, buf_view.type, ina_meta.my_aggr,
-                                 0, ncp->comm);
+            TRACE_COMM(MPI_Send)(buf, num, buf_view.type, 0, 0, intra_comm);
 #endif
         }
 
@@ -1282,7 +1302,7 @@ int ina_put(NC         *ncp,
         /* check if offsets of all non-aggregators are individual sorted */
         indv_sorted = 1;
         do_sort = 0;
-        for (i=-1,j=0; j<ina_meta.num_nonaggrs; j++) {
+        for (i=-1,j=0; j<nprocs; j++) {
             if (i == -1 && meta[j*3] > 0) /* find 1st whose num_pairs > 0 */
                 i = j;
             if (meta[j*3+2] == 0) { /* j's offsets are not sorted */
@@ -1312,7 +1332,7 @@ int ina_put(NC         *ncp,
             prev_end_off = off_ptr[sum-1]; /* last offset of non-aggregator i */
 
             /* check if the offsets are interleaved */
-            for (++i; i<ina_meta.num_nonaggrs; i++) {
+            for (++i; i<nprocs; i++) {
                 if (meta[i*3] == 0) /* zero-sized request */
                     continue;
                 assert(meta[i*3+2] == 1);
@@ -1353,17 +1373,15 @@ int ina_put(NC         *ncp,
                  * in heap_merge()
                  */
                 MPI_Aint *count;
-                count = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) *
-                                               ina_meta.num_nonaggrs);
-                for (i=0; i<ina_meta.num_nonaggrs; i++)
+                count = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * nprocs);
+                for (i=0; i<nprocs; i++)
                     count[i] = meta[i*3];
 
                 /* heap-merge() runs much faster than qsort() when individual
                  * lists have already been sorted. However, it has a much
                  * bigger memory footprint.
                  */
-                heap_merge(ina_meta.num_nonaggrs, count, off_ptr, len_ptr,
-                           bufAddr);
+                heap_merge(nprocs, count, off_ptr, len_ptr, bufAddr);
                 NCI_Free(count);
             }
             else
@@ -1507,8 +1525,8 @@ int ina_put(NC         *ncp,
          * used to call MPI-IO/PNCIO file write. Note the wr_buf is always
          * contiguous.
          *
-         * When ina_meta.num_nonaggrs == 1, wr_buf is set to buf which is
-         * directly passed to MPI-IO/PNCIO file write.
+         * When nprocs == 1, wr_buf is set to buf which is directly passed to
+         * MPI-IO/PNCIO file write.
          *
          * If file offset-length pairs have not been re-ordered, i.e. sorted
          * and overlaps removed, and this aggregator will not receive any write
@@ -1545,19 +1563,17 @@ int ina_put(NC         *ncp,
          * MPI_Waitall() to after sorting to overlap communication with the
          * sorting, because the sorting determines the receive buffer size.
          */
-        req = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * ina_meta.num_nonaggrs);
+        req = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * nprocs);
         ptr = recv_buf + buf_view.size;
         nreqs = 0;
-        for (i=1; i<ina_meta.num_nonaggrs; i++) {
+        for (i=1; i<nprocs; i++) {
             if (meta[i*3 + 1] == 0) continue;
 #ifdef HAVE_MPI_LARGE_COUNT
-            TRACE_COMM(MPI_Irecv_c)(ptr, meta[i*3 + 1], MPI_BYTE,
-                           ina_meta.nonaggr_ranks[i], 0, ncp->comm,
-                           &req[nreqs++]);
+            TRACE_COMM(MPI_Irecv_c)(ptr, meta[i*3 + 1], MPI_BYTE, i, 0,
+                           intra_comm, &req[nreqs++]);
 #else
-            TRACE_COMM(MPI_Irecv)(ptr, meta[i*3 + 1], MPI_BYTE,
-                           ina_meta.nonaggr_ranks[i], 0, ncp->comm,
-                           &req[nreqs++]);
+            TRACE_COMM(MPI_Irecv)(ptr, meta[i*3 + 1], MPI_BYTE, i, 0,
+                           intra_comm, &req[nreqs++]);
 #endif
             ptr += meta[i*3 + 1];
         }
@@ -1773,14 +1789,14 @@ int ina_get(NC         *ncp,
             PNCIO_View  buf_view,
             void       *buf)      /* user buffer */
 {
-    int i, j, err, mpireturn, status=NC_NOERR, nreqs;
+    int i, j, err, mpireturn, status=NC_NOERR, nprocs, rank, nreqs;
     int do_sort=0, indv_sorted=1, overlap=0;
     char *rd_buf = NULL;
     MPI_Aint npairs=0, max_npairs, *meta=NULL;
     MPI_Offset send_amnt=0, rd_amnt=0, off_start;
     MPI_Request *req=NULL;
+    MPI_Comm intra_comm;
     PNCIO_View rd_buf_view;
-    PNC_comm_attr ina_meta = ncp->comm_attr;
 #ifdef HAVE_MPI_LARGE_COUNT
     MPI_Count *off_ptr, *len_ptr, *orig_off_ptr, *orig_len_ptr;
     MPI_Count bufLen, *orig_offsets=NULL, *orig_lengths=NULL;
@@ -1799,6 +1815,16 @@ int ina_get(NC         *ncp,
     pnc_ina_mem_get[0] = MAX(pnc_ina_mem_get[0], mem_max);
 #endif
 
+    intra_comm = ncp->comm_attr.ina_intra_comm;
+    if (intra_comm == MPI_COMM_NULL) {
+        nprocs = 1;
+        rank = 0;
+    }
+    else {
+        MPI_Comm_size(intra_comm, &nprocs);
+        MPI_Comm_rank(intra_comm, &rank);
+    }
+
     bufLen = buf_view.size;
 
     /* Firstly, aggregators collect metadata from non-aggregators.
@@ -1810,8 +1836,8 @@ int ina_get(NC         *ncp,
      *     3. whether this rank's offsets are sorted in increasing order.
      * This message size to be sent by this rank is 3 MPI_Offset.
      */
-    if (ncp->rank == ina_meta.my_aggr)
-        meta = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * ina_meta.num_nonaggrs * 3);
+    if (rank == 0)
+        meta = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * nprocs * 3);
     else
         meta = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * 3);
 
@@ -1827,7 +1853,7 @@ int ina_get(NC         *ncp,
      * Once ina_collect_md() returns, this aggregator's offsets[] and lengths[]
      * may grow to include the ones from non-aggregators (appended).
      */
-    if (ina_meta.num_nonaggrs > 1) {
+    if (nprocs > 1) {
         err = ina_collect_md(ncp, meta, &offsets, &lengths, &npairs);
         if (err != NC_NOERR) {
             NCI_Free(meta);
@@ -1837,7 +1863,7 @@ int ina_get(NC         *ncp,
     else
         npairs = num_pairs;
 
-    if (ncp->rank != ina_meta.my_aggr) { /* not an INA aggregator */
+    if (rank > 0) { /* not an INA aggregator */
         if (meta[0] > 0) {
             /* For read operation, the non-aggregators now can start receiving
              * their read data from the aggregator.
@@ -1845,12 +1871,12 @@ int ina_get(NC         *ncp,
             MPI_Status st;
 #ifdef HAVE_MPI_LARGE_COUNT
             MPI_Count num = (buf_view.count <= 1) ? buf_view.size : 1;
-            TRACE_COMM(MPI_Recv_c)(buf, num, buf_view.type, ina_meta.my_aggr,
-                                   0, ncp->comm, &st);
+            TRACE_COMM(MPI_Recv_c)(buf, num, buf_view.type, 0, 0, intra_comm,
+                                   &st);
 #else
             int num = (buf_view.count <= 1) ? buf_view.size : 1;
-            TRACE_COMM(MPI_Recv)(buf, num, buf_view.type, ina_meta.my_aggr,
-                                 0, ncp->comm, &st);
+            TRACE_COMM(MPI_Recv)(buf, num, buf_view.type, 0, 0, intra_comm,
+                                 &st);
 #endif
         }
 
@@ -1921,7 +1947,7 @@ int ina_get(NC         *ncp,
 
         /* Check if offsets of all non-aggregators are individually sorted */
         indv_sorted = 1;
-        for (i=-1,j=0; j<ina_meta.num_nonaggrs; j++) {
+        for (i=-1,j=0; j<nprocs; j++) {
             if (i == -1 && meta[j*3] > 0) /* find 1st whose num_pairs > 0 */
                 i = j;
             if (meta[j*3+2] == 0) { /* j's offsets are not sorted */
@@ -1951,7 +1977,7 @@ int ina_get(NC         *ncp,
             prev_end_off = off_ptr[sum-1]; /* last offset of non-aggregator i */
 
             /* check if the offsets are interleaved */
-            for (++i; i<ina_meta.num_nonaggrs; i++) {
+            for (++i; i<nprocs; i++) {
                 if (meta[i*3] == 0) /* zero-sized request */
                     continue;
                 assert(meta[i*3+2] == 1);
@@ -1984,17 +2010,15 @@ int ina_get(NC         *ncp,
                  * in heap_merge()
                  */
                 MPI_Aint *count;
-                count = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) *
-                                               ina_meta.num_nonaggrs);
-                for (i=0; i<ina_meta.num_nonaggrs; i++)
+                count = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * nprocs);
+                for (i=0; i<nprocs; i++)
                     count[i] = meta[i*3];
 
                 /* heap-merge() runs much faster than qsort() when individual
                  * lists have already been sorted. However, it has a much
                  * bigger memory footprint.
                  */
-                heap_merge(ina_meta.num_nonaggrs, count, off_ptr, len_ptr,
-                           NULL);
+                heap_merge(nprocs, count, off_ptr, len_ptr, NULL);
                 NCI_Free(count);
             }
             else
@@ -2186,14 +2210,14 @@ int ina_get(NC         *ncp,
         }
     }
 
-    if (ina_meta.num_nonaggrs == 1)
+    if (nprocs == 1)
         /* In this case, communication will not be necessary. */
         goto fn_exit;
 
     /* Aggregators start sending read data to non-aggregators. At first,
      * allocate array_of_blocklengths[] and array_of_displacements[]
      */
-    for (max_npairs=0, i=1; i<ina_meta.num_nonaggrs; i++)
+    for (max_npairs=0, i=1; i<nprocs; i++)
         max_npairs = MAX(meta[3*i], max_npairs);
 
 #ifdef HAVE_MPI_LARGE_COUNT
@@ -2205,10 +2229,10 @@ int ina_get(NC         *ncp,
 #endif
 
     /* Now, send data to each non-aggregator */
-    req = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * ina_meta.num_nonaggrs);
+    req = (MPI_Request*)NCI_Malloc(sizeof(MPI_Request) * nprocs);
     nreqs = 0;
     off_start = meta[0];
-    for (i=1; i<ina_meta.num_nonaggrs; i++) {
+    for (i=1; i<nprocs; i++) {
         /* populate disps[] and blks[] */
         MPI_Aint remote_num_pairs = meta[3*i];
         MPI_Aint remote_is_incr = meta[3*i+2];
@@ -2278,11 +2302,11 @@ int ina_get(NC         *ncp,
             MPI_Type_commit(&sendType);
 
 #ifdef HAVE_MPI_LARGE_COUNT
-            TRACE_COMM(MPI_Isend_c)(MPI_BOTTOM, 1, sendType,
-                       ina_meta.nonaggr_ranks[i], 0, ncp->comm, &req[nreqs++]);
+            TRACE_COMM(MPI_Isend_c)(MPI_BOTTOM, 1, sendType, i, 0, intra_comm,
+                                    &req[nreqs++]);
 #else
-            TRACE_COMM(MPI_Isend)(MPI_BOTTOM, 1, sendType,
-                       ina_meta.nonaggr_ranks[i], 0, ncp->comm, &req[nreqs++]);
+            TRACE_COMM(MPI_Isend)(MPI_BOTTOM, 1, sendType, i, 0, intra_comm,
+                                  &req[nreqs++]);
 #endif
             MPI_Type_free(&sendType);
         }
@@ -2363,6 +2387,9 @@ req_compare(const void *a, const void *b)
  *                used to construct file offset-length pairs and user buffer
  *                datatype.
  *    newnumrecs: number of new records
+ *
+ * Note even when INA is disabled, this subroutine is still called by all
+ * nonblocking put/get APIs.
  */
 int
 ncmpio_ina_nreqs(NC         *ncp,
@@ -2465,8 +2492,10 @@ ncmpio_ina_nreqs(NC         *ncp,
 #endif
 
     int saved_my_aggr, saved_num_nonaggrs;
+    MPI_Comm saved_ina_intra_comm;
     saved_my_aggr = ncp->comm_attr.my_aggr;
     saved_num_nonaggrs = ncp->comm_attr.num_nonaggrs;
+    saved_ina_intra_comm = ncp->comm_attr.ina_intra_comm;
     if (ncp->num_aggrs_per_node == 0 || fIsSet(ncp->flags, NC_MODE_INDEP)) {
         /* Temporarily set ncp->comm_attr.my_aggr and
          * ncp->comm_attr.num_nonaggrs to be as if self rank is an INA
@@ -2474,6 +2503,7 @@ ncmpio_ina_nreqs(NC         *ncp,
          */
         ncp->comm_attr.my_aggr = ncp->rank;
         ncp->comm_attr.num_nonaggrs = 1;
+        ncp->comm_attr.ina_intra_comm = MPI_COMM_SELF;
     }
 
     /* perform intra-node aggregation */
@@ -2487,6 +2517,7 @@ ncmpio_ina_nreqs(NC         *ncp,
         /* restore ncp->comm_attr.my_aggr and ncp->comm_attr.num_nonaggrs */
         ncp->comm_attr.my_aggr = saved_my_aggr;
         ncp->comm_attr.num_nonaggrs = saved_num_nonaggrs;
+        ncp->comm_attr.ina_intra_comm = saved_ina_intra_comm;
     }
 
     if (buf_view.type != MPI_BYTE) MPI_Type_free(&buf_view.type);
@@ -2522,6 +2553,9 @@ ncmpio_ina_nreqs(NC         *ncp,
  *    stride[]: stride along each dimension
  *    buf_len: size of I/O buffer in bytes
  *    buf: pointer to the user buffer
+ *
+ * Note even when INA is disabled, this subroutine is still called by all
+ * blocking put/get APIs.
  */
 int
 ncmpio_ina_req(NC               *ncp,
@@ -2592,8 +2626,10 @@ ncmpio_ina_req(NC               *ncp,
 #endif
 
     int saved_my_aggr, saved_num_nonaggrs;
+    MPI_Comm saved_ina_intra_comm;
     saved_my_aggr = ncp->comm_attr.my_aggr;
     saved_num_nonaggrs = ncp->comm_attr.num_nonaggrs;
+    saved_ina_intra_comm = ncp->comm_attr.ina_intra_comm;
     if (ncp->num_aggrs_per_node == 0 || fIsSet(ncp->flags, NC_MODE_INDEP)) {
         /* Temporarily set ncp->comm_attr.my_aggr and
          * ncp->comm_attr.num_nonaggrs to be as if self rank is an INA
@@ -2601,6 +2637,7 @@ ncmpio_ina_req(NC               *ncp,
          */
         ncp->comm_attr.my_aggr = ncp->rank;
         ncp->comm_attr.num_nonaggrs = 1;
+        ncp->comm_attr.ina_intra_comm = MPI_COMM_SELF;
     }
 
     /* perform intra-node aggregation */
@@ -2617,6 +2654,7 @@ ncmpio_ina_req(NC               *ncp,
         /* restore ncp->comm_attr.my_aggr ncp->comm_attr.num_nonaggrs */
         ncp->comm_attr.my_aggr = saved_my_aggr;
         ncp->comm_attr.num_nonaggrs = saved_num_nonaggrs;
+        ncp->comm_attr.ina_intra_comm = saved_ina_intra_comm;
     }
 
     return status;

@@ -54,7 +54,8 @@ typedef struct {
     int *nonaggr_ranks;      /* [num_nonaggrs] ranks of non-aggregators */
     int  num_ina_aggrs;      /* No. INA aggregators, i.e. size of ina_comm */
     int *ina_ranks;          /* [num_ina_aggrs] rank IDs of aggregators */
-    MPI_Comm  ina_comm;      /* communicator of all INA aggregators */
+    MPI_Comm ina_inter_comm; /* inter-communicator of all INA aggregators */
+    MPI_Comm ina_intra_comm; /* intra-communicator of an INA group */
 } PNC_comm_attr;
 
 struct PNC_driver {

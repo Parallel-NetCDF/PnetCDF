@@ -185,7 +185,7 @@ type_create_subarray64(int               ndims,
      * as its arguments array_of_sizes[] and array_of_starts[] are of
      * type int. One solution is to use a combination of
      * MPI_Type_create_hvector(), MPI_Type_create_hindexed(),
-     * MPI_Type_create_resized(), and MPI_Type_struct(), as one
+     * MPI_Type_create_resized(), and MPI_Type_create_struct(), as one
      * of their arguments, stride and indices[], are of type MPI_Aint
      * (a possible 8-byte integer) that can be used to store the value
      * of the dimension whose size is > 2^31-1. However, on a machine

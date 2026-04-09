@@ -1330,9 +1330,10 @@ AC_DEFINE_UNQUOTED([OFFFMT], ["$MPI_OFFSET_FMT"], [MPI_Offset printf format])
 AC_CHECK_SIZEOF([MPI_Aint], [], [#include <mpi.h>])
 AM_CONDITIONAL(SIZEOF_MPI_AINT_IS_4, [test x$ac_cv_sizeof_MPI_Aint = x4])
 
-dnl the nonblocking routines build up lists of requests with MPI_Type_struct.
-dnl If MPI_Offset not the same size as MPI_Aint, the arrays passed around will
-dnl get mangled.
+# PnetCDF's nonblocking routines build up lists of requests and combined them
+# into one MPI derived data type using MPI_Type_create_struct(). If MPI_Offset
+# is not of the same size as MPI_Aint, the arrays passed around will get
+# mangled.
 if test "$ac_cv_sizeof_MPI_Offset" -ne "$ac_cv_sizeof_MPI_Aint"; then
    AC_MSG_WARN([
    -----------------------------------------------------------------------
