@@ -224,7 +224,7 @@ void ncmpio_hint_extract(NC       *ncp,
             ncp->hash_size_attr = ival;
     }
 
-    /* Number of intra-node aggregators per compute node. */
+    /* Number of INA aggregators per compute node. */
     if (ncp->nprocs > 1) {
         MPI_Info_get(info, "nc_num_aggrs_per_node", MPI_MAX_INFO_VAL-1, value,
                      &flag);
@@ -272,7 +272,10 @@ void ncmpio_hint_extract(NC       *ncp,
 
 /*----< ncmpio_hint_set() >--------------------------------------------------*/
 /* Insert PnetCDF hints into info. Argument info is the info object returned
- * from an earlier call to MPI_File_get_info().
+ * from an earlier call to MPI_File_get_info(). This subroutine is necessary,
+ * because the underneath MPI-IO may discard hints it does not recognize, which
+ * include all PnetCDF hints. PnetCDF hints need to be added to info, so users
+ * can inquire them.
  */
 void ncmpio_hint_set(NC       *ncp,
                      MPI_Info  info)
@@ -355,16 +358,22 @@ void ncmpio_hint_set(NC       *ncp,
         MPI_Info_set(info, "nc_driver", "pncio");
 
     if (ncp->num_aggrs_per_node > 0) {
-        /* Number of intra-node aggregators per compute node. */
+        /* Number of INA aggregators per compute node. */
         snprintf(int_str, MAX_INT_LEN, "%d", ncp->num_aggrs_per_node);
         MPI_Info_set(info, "nc_num_aggrs_per_node", int_str);
 
-        /* Add hint "ina_ranks", list of INA aggregators' rank IDs */
-        if (ncp->comm_attr.ina_ranks != NULL) {
+        /* Add hint "ina_ranks", list of INA aggregators' rank IDs.
+         * Note this hint is just informative, thus only INA aggregators set
+         * this hint.
+         */
+        if (ncp->comm_attr.ina_ranks != NULL &&
+            ncp->comm_attr.ina_inter_comm != MPI_COMM_NULL) {
             char value[MPI_MAX_INFO_VAL];
-            int i;
+            int i, nprocs;
+
+            MPI_Comm_size(ncp->comm_attr.ina_inter_comm, &nprocs);
             snprintf(value, MAX_INT_LEN, "%d", ncp->comm_attr.ina_ranks[0]);
-            for (i=1; i<ncp->ina_nprocs; i++) {
+            for (i=1; i<nprocs; i++) {
                 snprintf(int_str, sizeof(int_str), " %d", ncp->comm_attr.ina_ranks[i]);
                 if (strlen(value) + strlen(int_str) >= MPI_MAX_INFO_VAL-5) {
                     strcat(value, " ...");

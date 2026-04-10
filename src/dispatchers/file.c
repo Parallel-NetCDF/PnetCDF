@@ -841,7 +841,7 @@ ncmpi_create(MPI_Comm    comm,
              MPI_Info    info,
              int        *ncidp)
 {
-    char value[MPI_MAX_INFO_VAL], int_str[MAX_INT_LEN];
+    char value[MPI_MAX_INFO_VAL];
     int rank, nprocs, status=NC_NOERR, err, flag;
     int env_mode=0, mpireturn, format, num_aggrs_per_node;
     MPI_Info combined_info=MPI_INFO_NULL;
@@ -946,26 +946,6 @@ ncmpi_create(MPI_Comm    comm,
         printf("Warning in file %s line %d: pthread_mutex_unlock() failed (%s)\n",
                __FILE__, __LINE__, strerror(perr));
 #endif
-
-    if (num_aggrs_per_node > 0) {
-        int i;
-
-        /* construct a list of INA aggregators' rank IDs */
-        snprintf(value, MAX_INT_LEN, "%d", comm_attr.ina_ranks[0]);
-        for (i=1; i<comm_attr.num_ina_aggrs; i++) {
-            snprintf(int_str, sizeof(int_str), " %d", comm_attr.ina_ranks[i]);
-            if (strlen(value) + strlen(int_str) >= MPI_MAX_INFO_VAL-5) {
-                strcat(value, " ...");
-                break;
-            }
-            strcat(value, int_str);
-        }
-
-        /* Add hint "ina_node_list", list of INA aggregators' rank IDs */
-        if (combined_info == MPI_INFO_NULL)
-            MPI_Info_create(&combined_info);
-        MPI_Info_set(combined_info, "nc_ina_node_list", value);
-    }
 
 #ifdef BUILD_DRIVER_FOO
     if (combined_info != MPI_INFO_NULL) {
@@ -1156,7 +1136,7 @@ ncmpi_open(MPI_Comm    comm,
            MPI_Info    info,
            int        *ncidp)  /* OUT */
 {
-    char value[MPI_MAX_INFO_VAL], int_str[MAX_INT_LEN];
+    char value[MPI_MAX_INFO_VAL];
     int i, j, nalloc, rank, nprocs, format, status=NC_NOERR, err, flag;
     int env_mode=0, mpireturn, DIMIDS[NDIMS_], *dimids, num_aggrs_per_node;
     MPI_Info combined_info=MPI_INFO_NULL;
@@ -1291,24 +1271,6 @@ ncmpi_open(MPI_Comm    comm,
         printf("Warning in file %s line %d: pthread_mutex_unlock() failed (%s)\n",
                __FILE__, __LINE__, strerror(perr));
 #endif
-
-    if (num_aggrs_per_node > 0) {
-        /* construct a list of INA aggregators' rank IDs */
-        snprintf(value, MAX_INT_LEN, "%d", comm_attr.ina_ranks[0]);
-        for (i=1; i<comm_attr.num_ina_aggrs; i++) {
-            snprintf(int_str, 16, " %d", comm_attr.ina_ranks[i]);
-            if (strlen(value) + strlen(int_str) >= MPI_MAX_INFO_VAL-5) {
-                strcat(value, " ...");
-                break;
-            }
-            strcat(value, int_str);
-        }
-
-        /* Add hint "ina_node_list", list of INA aggregators' rank IDs */
-        if (combined_info == MPI_INFO_NULL)
-            MPI_Info_create(&combined_info);
-        MPI_Info_set(combined_info, "nc_ina_node_list", value);
-    }
 
 #ifdef BUILD_DRIVER_FOO
     if (combined_info != MPI_INFO_NULL) {
