@@ -37,16 +37,51 @@ int test_io(const char *out_path,
             MPI_Info    info)
 {
     int err, nerrs=0, ncid, fmt;
-    int striping_size=0, striping_count=0, root_striping_size, root_striping_count;
+    int striping_size=0, striping_count=0;
+    int root_striping_size, root_striping_count;
 
     /* Set format. */
     err = ncmpi_set_default_format(format, NULL);
     CHECK_ERR
 
-    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR
+    /* check file create case */
+    err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
+    CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
     err = ncmpi_inq_format(ncid, &fmt); CHECK_ERR
+
+    err = ncmpi_inq_striping(ncid, &striping_size, &striping_count);
+    if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC)
+        EXP_ERR(NC_ENOTSUPPORT)
+    else
+        CHECK_ERR
+
+    root_striping_size  = striping_size;
+    root_striping_count = striping_count;
+    err = MPI_Bcast(&root_striping_size,  1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_ERR(err)
+    err = MPI_Bcast(&root_striping_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_ERR(err)
+    if (root_striping_size != striping_size) {
+        printf("Error at line %d in %s: inconsistent striping_size (root=%d local=%d)\n",
+               __LINE__,__FILE__, root_striping_size, striping_size);
+        nerrs++;
+    }
+    if (root_striping_count != striping_count) {
+        printf("Error at line %d in %s: inconsistent striping_count (root=%d local=%d)\n",
+               __LINE__,__FILE__, root_striping_count, striping_count);
+        nerrs++;
+    }
+
+    err = ncmpi_close(ncid); CHECK_ERR
+
+    /* check file open case */
+    err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOWRITE, info, &ncid);
+    CHECK_ERR
+
+    err = ncmpi_inq_format(ncid, &fmt); CHECK_ERR
+
     err = ncmpi_inq_striping(ncid, &striping_size, &striping_count);
     if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC)
         EXP_ERR(NC_ENOTSUPPORT)
