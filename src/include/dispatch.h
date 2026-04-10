@@ -45,17 +45,14 @@ typedef enum {
 } NC_api;
 
 typedef struct {
-    int  ref_count;          /* comm's attribute reference count */
+    int  ref_count;          /* this comm's attribute reference count */
     int  num_nodes;          /* number of unique compute nodes */
     int *ids;                /* [nprocs] node ID of each MPI process */
-    int  num_aggrs_per_node; /* No. INA aggregators per node */
-    int  my_aggr;            /* rank ID of my INA aggregator */
-    int  num_nonaggrs;       /* No. non-aggregators assigned to self rank */
-    int *nonaggr_ranks;      /* [num_nonaggrs] ranks of non-aggregators */
-    int  num_ina_aggrs;      /* No. INA aggregators, i.e. size of ina_comm */
-    int *ina_ranks;          /* [num_ina_aggrs] rank IDs of aggregators */
-    MPI_Comm ina_inter_comm; /* inter-communicator of all INA aggregators */
-    MPI_Comm ina_intra_comm; /* intra-communicator of an INA group */
+    int  num_aggrs_per_node; /* number of INA aggregators per node */
+    int  my_aggr;            /* my INA aggregator's rank ID in this comm */
+    int *ina_ranks;          /* all INA aggregators' rank IDs in this comm */
+    MPI_Comm ina_inter_comm; /* inter-node communicator of INA aggregators */
+    MPI_Comm ina_intra_comm; /* intra-node communicator within an INA group */
 } PNC_comm_attr;
 
 struct PNC_driver {
