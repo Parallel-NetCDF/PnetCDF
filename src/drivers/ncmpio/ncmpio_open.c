@@ -170,52 +170,58 @@ ncmpio_open(MPI_Comm         comm,
     /* ncp->num_aggrs_per_node = 0, or > 0 indicates whether this feature
      * is disabled or enabled globally for all processes.
      */
-    ncp->ina_nprocs = 0;
-    ncp->ina_rank = -1;
-
     if (ncp->num_aggrs_per_node > 0) {
-        if (ncp->rank == comm_attr.my_aggr) {
-            int *ids;
+        int i, j, *ids;
 
-            MPI_Comm_size(comm_attr.ina_inter_comm, &ncp->ina_nprocs);
-            MPI_Comm_rank(comm_attr.ina_inter_comm, &ncp->ina_rank);
-
-            /* overwrite comm_attr.ids[] to make it to contain the node IDs of
-             * processes in the INA communicator.
-             */
-            ids = (int*) NCI_Malloc(sizeof(int) * ncp->ina_nprocs);
-
-            for (i=0; i<ncp->ina_nprocs; i++) {
-                int j;
-                /* j is the process rank in comm passed into ncmpi_create() */
-                j = comm_attr.ina_ranks[i];
-                ids[i] = comm_attr.ids[j];
-                /* Now ids[] store the node IDs of the processes in the INA
-                 * communicator. ncp->ids[] will be used by PnetCDF's PNCIO
-                 * driver only.
-                 */
-            }
-            ncp->comm_attr.ids = ids;
-        }
+#ifdef PNETCDF_DEBUG
+        if (ncp->rank == comm_attr.my_aggr) /* INA aggregator */
+            assert(comm_attr.ina_inter_comm != MPI_COMM_NULL);
+#endif
 
         /* As non-aggregators will not perform any file I/O, we now can replace
-         * comm with ina_inter_comm. Same for nprocs.
+         * comm with ina_inter_comm.
          */
         comm = comm_attr.ina_inter_comm;
-        nprocs = ncp->ina_nprocs;
 
-        /* For non-INA aggregators, we keep comm, a local variable in this
-         * subroutine, to be comm_attr.ina_inter_comm, a MPI_COMM_NULL for
-         * non-INA aggregators. Because the remaining lines of codes below till
-         * label 'fn_exit' is for INA aggregators to open the file and obtain a
-         * file handler, in which non-INA aggregators do not participate and
-         * thus do not make use of comm.
+        /* For non-INA aggregators, comm_attr.ina_inter_comm is MPI_COMM_NULL.
+         * Note 'comm' is a local variable used only in this subroutine.
+         * Because the below lines of this subroutines till label 'fn_exit' is
+         * for INA aggregators to open the file and obtain a file handler,
+         * non-INA aggregators do not participate and thus do not make use of
+         * comm.
          */
         if (comm == MPI_COMM_NULL) {
             if (user_info != MPI_INFO_NULL)
                 MPI_Info_dup(user_info, &ncp->mpiinfo);
             goto fn_exit;
         }
+
+        /* As non-aggregators will not perform any file I/O, we now can replace
+         * nprocs with ina_inter_comm's size.
+         */
+        MPI_Comm_size(comm, &nprocs);
+
+#ifdef PNETCDF_DEBUG
+        assert(ncp->rank == comm_attr.my_aggr); /* INA aggregator */
+#endif
+
+        /* adjust ncp->comm_attr.ids[] by condensing it to contain only the
+         * node IDs of INA aggregators. ncp->comm_attr.ids[] will be used to
+         * select PNCIO or MPI-IO I/O aggregators.
+         */
+        ids = (int*) NCI_Malloc(sizeof(int) * nprocs);
+
+        for (i=0; i<nprocs; i++) {
+            /* j is the process rank in comm passed into ncmpi_create() */
+            j = comm_attr.ina_ranks[i];
+            ids[i] = comm_attr.ids[j];
+            /* Now ids[] store the node IDs of the INA aggregators. */
+        }
+        ncp->comm_attr.ids = ids;
+        /* Note this will only update ncp->comm_attr's ids, not the attribute
+         * cached in ncp->comm. This ids[] will be freed at the end of this
+         * subroutine.
+         */
     }
 
     /* open file collectively ---------------------------------------------- */
@@ -269,13 +275,17 @@ fn_exit:
      * across all processes. They are used to fulfill ncmpi_inq_striping() and
      * striping_unit is also used to set ncp->data_chunk if hint
      * nc_data_move_chunk_size is not set by the user.
+     *
+     * When INA is enabled, only INA aggregators have valid striping_unit and
+     * striping_factor in their ncp->mpiinfo. This is because non-INA
+     * aggregators do not participate the call to MPI_File_open() or
+     * PNCIO_File_open(). We need to have root to broadcast these 2 info.
      */
     if (ncp->num_aggrs_per_node == 0 ||
-        (ncp->num_aggrs_per_node > 0 && ncp->rank == 0)) {
-        /* When INA is enabled, only INA aggregators have valid striping_unit
-         * and striping_factor in their ncp->mpiinfo. This is because non-INA
-         * aggregators do not participate the call to MPI_File_open() or
-         * PNCIO_File_open(). We need to have root to broadcast these 2 info.
+        comm_attr.ina_intra_comm != MPI_COMM_NULL) {
+        /* When INA is disabled, all processes extract hints.
+         * When INA is enabled, each INA aggregator extracts hints and
+         * broadcasts to its non-INA aggregators.
          */
         MPI_Info_get(ncp->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
                      value, &flag);
@@ -296,10 +306,18 @@ fn_exit:
         }
     }
 
-    if (ncp->num_aggrs_per_node > 0) {
-        MPI_Bcast(striping_info, 2, MPI_INT, 0, ncp->comm);
+    if (ncp->num_aggrs_per_node > 0 &&
+        comm_attr.ina_intra_comm != MPI_COMM_NULL) {
+        /* When INA is enabled, each INA aggregator broadcasts hints to its
+         * non-INA aggregators.
+         */
+        int rank;
 
-        if (ncp->ina_rank < 0) {
+        MPI_Comm_rank(comm_attr.ina_intra_comm, &rank);
+
+        MPI_Bcast(striping_info, 2, MPI_INT, 0, comm_attr.ina_intra_comm);
+
+        if (rank > 0) {
             /* Only non-INA aggregators need to add these to ncp->mpiinfo */
             sprintf(value, "%d", striping_info[0]);
             MPI_Info_set(ncp->mpiinfo, "striping_unit", value);
@@ -307,7 +325,7 @@ fn_exit:
             MPI_Info_set(ncp->mpiinfo, "striping_factor", value);
 
             if (ncp->driver == PNC_DRIVER_PNCIO) {
-                /* Must initialize hints for non-INA aggregators, as they will
+                /* Must initialize hints for non-INA aggregators, as hints will
                  * be used when non-INA aggregators perform independent
                  * reads/writes. Currently, the following hints are used.
                  *      romio_ds_write, ind_wr_buffer_size
@@ -315,7 +333,7 @@ fn_exit:
                  */
                 ncp->pncio_fh->comm = MPI_COMM_SELF;
                 ncp->pncio_fh->hints = (PNCIO_Hints*)
-                                        NCI_Calloc(1, sizeof(PNCIO_Hints));
+                                       NCI_Calloc(1, sizeof(PNCIO_Hints));
                 PNCIO_File_set_info(ncp->pncio_fh, ncp->mpiinfo);
             }
         }
@@ -329,7 +347,11 @@ fn_exit:
         ncp->data_chunk = (ncp->striping_unit > 0) ? ncp->striping_unit
                                                    : PNC_DATA_MOVE_CHUNK_SIZE;
 
-    /* Copy MPI-IO hints into ncp->mpiinfo */
+    /* Add PnetCDF hints into ncp->mpiinfo. This step is necessary, because the
+     * underneath MPI-IO may discard hints it does not recognize, which include
+     * all PnetCDF hints. PnetCDF hints need to be added to info, so users can
+     * inquire them.
+     */
     ncmpio_hint_set(ncp, ncp->mpiinfo);
 
     if (ncp->num_aggrs_per_node > 0 && ncp->rank == comm_attr.my_aggr) {
