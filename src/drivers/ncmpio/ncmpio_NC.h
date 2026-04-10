@@ -480,16 +480,12 @@ struct NC {
     const char   *path;     /* file name */
     struct NC    *old;      /* contains the previous NC during redef. */
 
-    /* Below are used for intra-node aggregation (INA) */
-    MPI_Comm ina_inter_comm; /* consist of all INA aggregators */
-    MPI_Comm ina_intra_comm; /* consist of processes in this rank's INA group */
-    int ina_nprocs;         /* no. processes in intra-node communicator */
-    int ina_rank;           /* rank ID in intra-node communicator */
-    int num_aggrs_per_node; /* no. aggregators per compute node. Set through a
-                             * user hint. 0 to disable the intra-node
-                             * aggregation, -1 to let PnetCDF to decide.This
-                             * value must be the same among all processes.
-                             */
+    int num_aggrs_per_node;  /* Number of intra-node aggregators per compute
+                              * node, set through a user hint. 0 to disable the
+                              * intra-node aggregation, -1 to let PnetCDF to
+                              * decide.This value must be the same among all
+                              * processes.
+                              */
 };
 
 typedef struct bufferinfo {

@@ -163,12 +163,12 @@ fill_var_rec(NC         *ncp,
     int nprocs = ncp->nprocs;
     int rank = ncp->rank;
     if (ncp->num_aggrs_per_node > 0) {
-        if (ncp->comm_attr.my_aggr != ncp->rank)
+        comm = ncp->comm_attr.ina_inter_comm;
+        if (comm == MPI_COMM_NULL) /* non-INA aggregator */
             return NC_NOERR;
 
-        comm = ncp->comm_attr.ina_inter_comm;
-        nprocs = ncp->ina_nprocs;
-        rank = ncp->ina_rank;
+        MPI_Comm_size(comm, &nprocs);
+        MPI_Comm_rank(comm, &rank);
     }
 
     if (varp->ndims == 0) /* scalar variable */
@@ -387,11 +387,12 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     int nprocs = ncp->nprocs;
     int rank = ncp->rank;
     if (ncp->num_aggrs_per_node > 0) {
-        if (ncp->comm_attr.my_aggr != ncp->rank)
+        if (ncp->comm_attr.ina_inter_comm == MPI_COMM_NULL)
+            /* non-INA aggregator */
             return NC_NOERR;
 
-        nprocs = ncp->ina_nprocs;
-        rank = ncp->ina_rank;
+        MPI_Comm_size(ncp->comm_attr.ina_inter_comm, &nprocs);
+        MPI_Comm_rank(ncp->comm_attr.ina_inter_comm, &rank);
     }
 
     /* find the starting vid for newly added variables */

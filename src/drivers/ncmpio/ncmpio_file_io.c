@@ -195,7 +195,8 @@ ncmpio_file_read_at_all(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
-    else if (ncp->num_aggrs_per_node == 0 || ncp->ina_rank != -1)
+    else if (ncp->num_aggrs_per_node == 0 ||       /* INA is disabled */
+             ncp->rank == ncp->comm_attr.my_aggr)  /* is an INA aggregator */
         /* When INA is disabled, all processes must participate this collective
          * read. When INA is enabled, only the INA aggregators participate.
          */
@@ -335,7 +336,8 @@ ncmpio_file_write_at_all(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
-    else if (ncp->num_aggrs_per_node == 0 || ncp->ina_rank != -1)
+    else if (ncp->num_aggrs_per_node == 0 ||       /* INA is disabled */
+             ncp->rank == ncp->comm_attr.my_aggr)  /* is an INA aggregator */
         /* When INA is disabled, all processes must participate this collective
          * write. When INA is enabled, only the INA aggregators participate.
          */
@@ -367,9 +369,9 @@ ncmpio_getput_zero_req(NC *ncp, int reqMode)
 
     buf_view.size = 0;
 
-    /* When intra-node aggregation is enabled, non-aggregators do not access
-     * the file and participate any communication in the collective read or
-     * write. Thus non-aggregators can return now.
+    /* When intra-node aggregation is enabled, non-INA aggregators do not
+     * access the file and participate any collective read or write. Thus
+     * non-aggregators can return now.
      */
     if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->comm_attr.my_aggr)
         return NC_NOERR;
@@ -825,7 +827,7 @@ ncmpio_file_set_view(const NC     *ncp,
      * ncp->independent_fh once entering independent data mode. Its
      * ncp->collective_fh should always be MPI_FILE_NULL.
      * */
-    if (ncp->num_aggrs_per_node > 0 && ncp->ina_rank == -1)
+    if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->comm_attr.my_aggr)
         assert(ncp->collective_fh == MPI_FILE_NULL);
 #endif
 

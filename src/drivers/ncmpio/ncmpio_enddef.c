@@ -185,8 +185,8 @@ move_file_block(NC         *ncp,
             return NC_NOERR;
 
         comm = ncp->comm_attr.ina_inter_comm;
-        rank = ncp->ina_rank;
-        nprocs = ncp->ina_nprocs;
+        MPI_Comm_rank(comm, &rank);
+        MPI_Comm_size(comm, &nprocs);
     }
     else {
         /* When intra-node aggregation is disabled, all processes perform the
