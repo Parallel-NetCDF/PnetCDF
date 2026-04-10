@@ -506,6 +506,7 @@ int tst_main(int        argc,
 
                 nerrs = tst_body(out_filename, in_path, opt.formats[i],
                                  coll_io, info);
+                MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
                 if (nerrs != NC_NOERR) {
                     fflush(stdout);
                     if (rank == 0)
