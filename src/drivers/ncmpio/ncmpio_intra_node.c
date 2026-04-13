@@ -930,11 +930,6 @@ int ina_collect_md(NC          *ncp,
     MPI_Comm_size(comm, &nprocs);
     MPI_Comm_rank(comm, &rank);
 
-#ifdef PNETCDF_DEBUG
-    if (ncp->comm_attr.my_aggr == ncp->rank)
-        assert(rank == 0);
-#endif
-
     /* Aggregator collects each non-aggregator's num_pairs and bufLen */
     if (rank == 0) {
 
@@ -2485,20 +2480,15 @@ ncmpio_ina_nreqs(NC         *ncp,
         NCI_Free(req_list);
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    if (ncp->rank == ncp->comm_attr.my_aggr)
-        pnc_ina_flatten += MPI_Wtime() - timing;
+    pnc_ina_flatten += MPI_Wtime() - timing;
 #endif
 
-    int saved_my_aggr;
     MPI_Comm saved_ina_intra_comm;
-    saved_my_aggr = ncp->comm_attr.my_aggr;
     saved_ina_intra_comm = ncp->comm_attr.ina_intra_comm;
     if (ncp->num_aggrs_per_node == 0 || fIsSet(ncp->flags, NC_MODE_INDEP)) {
-        /* Temporarily set ncp->comm_attr.my_aggr and
-         * ncp->comm_attr.ina_intra_comm to be as if self rank is an INA
-         * aggregator and the INA group size is 1.
+        /* Temporarily set ncp->comm_attr.ina_intra_comm to be as if self rank
+         * is an INA aggregator and the INA group size is 1.
          */
-        ncp->comm_attr.my_aggr = ncp->rank;
         ncp->comm_attr.ina_intra_comm = MPI_COMM_SELF;
     }
 
@@ -2510,8 +2500,7 @@ ncmpio_ina_nreqs(NC         *ncp,
     if (status == NC_NOERR) status = err;
 
     if (ncp->num_aggrs_per_node == 0 || fIsSet(ncp->flags, NC_MODE_INDEP)) {
-        /* restore ncp->comm_attr.my_aggr and ncp->comm_attr.ina_intra_comm */
-        ncp->comm_attr.my_aggr = saved_my_aggr;
+        /* restore ncp->comm_attr.ina_intra_comm */
         ncp->comm_attr.ina_intra_comm = saved_ina_intra_comm;
     }
 
@@ -2616,20 +2605,15 @@ ncmpio_ina_req(NC               *ncp,
     }
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    if (ncp->rank == ncp->comm_attr.my_aggr)
-        pnc_ina_flatten += MPI_Wtime() - timing;
+    pnc_ina_flatten += MPI_Wtime() - timing;
 #endif
 
-    int saved_my_aggr;
     MPI_Comm saved_ina_intra_comm;
-    saved_my_aggr = ncp->comm_attr.my_aggr;
     saved_ina_intra_comm = ncp->comm_attr.ina_intra_comm;
     if (ncp->num_aggrs_per_node == 0 || fIsSet(ncp->flags, NC_MODE_INDEP)) {
-        /* Temporarily set ncp->comm_attr.my_aggr and
-         * ncp->comm_attr.ina_intra_comm to be as if self rank is an INA
-         * aggregator and the INA group size is 1.
+        /* Temporarily set ncp->comm_attr.ina_intra_comm to be as if self rank
+         * is an INA aggregator and the INA group size is 1.
          */
-        ncp->comm_attr.my_aggr = ncp->rank;
         ncp->comm_attr.ina_intra_comm = MPI_COMM_SELF;
     }
 
@@ -2644,8 +2628,7 @@ ncmpio_ina_req(NC               *ncp,
     }
 
     if (ncp->num_aggrs_per_node == 0 || fIsSet(ncp->flags, NC_MODE_INDEP)) {
-        /* restore ncp->comm_attr.my_aggr and ncp->comm_attr.ina_intra_comm */
-        ncp->comm_attr.my_aggr = saved_my_aggr;
+        /* restore ncp->comm_attr.ina_intra_comm */
         ncp->comm_attr.ina_intra_comm = saved_ina_intra_comm;
     }
 
