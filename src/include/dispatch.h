@@ -46,10 +46,12 @@ typedef enum {
 
 typedef struct {
     int  ref_count;          /* this comm's attribute reference count */
-    int  num_nodes;          /* number of unique compute nodes */
-    int *ids;                /* [nprocs] node ID of each MPI process */
+    int  num_NUMAs;          /* number of NUMA compute nodes */
+    int *NUMA_IDs;           /* [nprocs] NUMA node ID of each MPI process */
+    MPI_Comm numa_comm;      /* hardware NUMA communicator */
     int  num_aggrs_per_node; /* number of INA aggregators per node */
-    int  my_aggr;            /* my INA aggregator's rank ID in this comm */
+    int  num_ina_aggrs;      /* total number of INA aggregators overall */
+    int  is_ina_aggr;        /* Whether this rank is an INA aggregator */
     int *ina_ranks;          /* all INA aggregators' rank IDs in this comm */
     MPI_Comm ina_inter_comm; /* inter-node communicator of INA aggregators */
     MPI_Comm ina_intra_comm; /* intra-node communicator within an INA group */
