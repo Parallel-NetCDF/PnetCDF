@@ -52,7 +52,7 @@ ncmpio_write_numrecs(NC         *ncp,
     /* When intra-node aggregation is enabled, non-aggregators do not
      * participate any collective calls below.
      */
-    if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->comm_attr.my_aggr)
+    if (ncp->num_aggrs_per_node > 0 && !ncp->comm_attr.is_ina_aggr)
         return NC_NOERR;
 
     if (ncp->rank > 0) {
@@ -90,7 +90,7 @@ ncmpio_write_numrecs(NC         *ncp,
         }
         /* ncmpix_put_xxx advances the 1st argument with size len */
 
-        if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->comm_attr.my_aggr)
+        if (ncp->num_aggrs_per_node > 0 && !ncp->comm_attr.is_ina_aggr)
             /* When intra-node aggregation is enabled, non-aggregators do not
              * participate the collective call.
              */

@@ -195,8 +195,8 @@ ncmpio_file_read_at_all(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
-    else if (ncp->num_aggrs_per_node == 0 ||       /* INA is disabled */
-             ncp->rank == ncp->comm_attr.my_aggr)  /* is an INA aggregator */
+    else if (ncp->num_aggrs_per_node == 0 ||  /* INA is disabled */
+             ncp->comm_attr.is_ina_aggr)      /* is an INA aggregator */
         /* When INA is disabled, all processes must participate this collective
          * read. When INA is enabled, only the INA aggregators participate.
          */
@@ -336,8 +336,8 @@ ncmpio_file_write_at_all(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
-    else if (ncp->num_aggrs_per_node == 0 ||       /* INA is disabled */
-             ncp->rank == ncp->comm_attr.my_aggr)  /* is an INA aggregator */
+    else if (ncp->num_aggrs_per_node == 0 ||  /* INA is disabled */
+             ncp->comm_attr.is_ina_aggr)      /* is an INA aggregator */
         /* When INA is disabled, all processes must participate this collective
          * write. When INA is enabled, only the INA aggregators participate.
          */
@@ -373,7 +373,7 @@ ncmpio_getput_zero_req(NC *ncp, int reqMode)
      * access the file and participate any collective read or write. Thus
      * non-aggregators can return now.
      */
-    if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->comm_attr.my_aggr)
+    if (ncp->num_aggrs_per_node > 0 && !ncp->comm_attr.is_ina_aggr)
         return NC_NOERR;
 
     /* do nothing if this came from an independent API */
@@ -827,7 +827,7 @@ ncmpio_file_set_view(const NC     *ncp,
      * ncp->independent_fh once entering independent data mode. Its
      * ncp->collective_fh should always be MPI_FILE_NULL.
      * */
-    if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->comm_attr.my_aggr)
+    if (ncp->num_aggrs_per_node > 0 && !ncp->comm_attr.is_ina_aggr)
         assert(ncp->collective_fh == MPI_FILE_NULL);
 #endif
 
