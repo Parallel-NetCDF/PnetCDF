@@ -53,8 +53,8 @@ void ncmpio_hint_extract(NC       *ncp,
 #ifdef ENABLE_SUBFILING
     ncp->subfile_mode          = 0;
     ncp->num_subfiles          = 0;
-    ncp->node_ids_sf.num_nodes = 0;
-    ncp->node_ids_sf.ids       = NULL;
+    ncp->node_ids_sf.num_NUMAs = 0;
+    ncp->node_ids_sf.NUMA_IDs  = NULL;
 #endif
 
     ncp->dims.hash_size  = PNC_HSIZE_DIM;
@@ -363,17 +363,14 @@ void ncmpio_hint_set(NC       *ncp,
         MPI_Info_set(info, "nc_num_aggrs_per_node", int_str);
 
         /* Add hint "ina_ranks", list of INA aggregators' rank IDs.
-         * Note this hint is just informative, thus only INA aggregators set
-         * this hint.
+         * Note this hint is just informative, not user changeable.
          */
-        if (ncp->comm_attr.ina_ranks != NULL &&
-            ncp->comm_attr.ina_inter_comm != MPI_COMM_NULL) {
+        if (ncp->comm_attr.ina_ranks != NULL) {
             char value[MPI_MAX_INFO_VAL];
-            int i, nprocs;
+            int i;
 
-            MPI_Comm_size(ncp->comm_attr.ina_inter_comm, &nprocs);
             snprintf(value, MAX_INT_LEN, "%d", ncp->comm_attr.ina_ranks[0]);
-            for (i=1; i<nprocs; i++) {
+            for (i=1; i<ncp->comm_attr.num_ina_aggrs; i++) {
                 snprintf(int_str, sizeof(int_str), " %d", ncp->comm_attr.ina_ranks[i]);
                 if (strlen(value) + strlen(int_str) >= MPI_MAX_INFO_VAL-5) {
                     strcat(value, " ...");
