@@ -153,6 +153,7 @@ AH_TEMPLATE([ENABLE_THREAD_SAFE],       [Define if to enable thread-safe capabil
 AH_TEMPLATE([ENABLE_REQ_AGGREGATION],   [Define if able to support request aggregation in nonblocking routines])
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
 AH_TEMPLATE([HAVE_MPI_LARGE_COUNT],     [Define if required MPI APIs have arguments of type MPI_Count])
+AH_TEMPLATE([ENABLE_GIO],               [Define if GIO library is enabled])
 
 AH_TOP([#ifndef H_CONFIG
 #define H_CONFIG])
@@ -2814,6 +2815,18 @@ else
 fi
 AC_SUBST(ABIVERSIONFLAGS)
 
+AC_ARG_ENABLE([gio],
+   [AS_HELP_STRING([--disable-gio],
+                   [Build without GIO library])],
+   [enable_gio=${enableval}], [enable_gio=yes]
+)
+
+AM_CONDITIONAL(BUILD_GIO, [test "x$enable_gio" != xno])
+AC_CONFIG_SUBDIRS([gio])
+if test "x$enable_gio" = xyes ; then
+   AC_DEFINE(ENABLE_GIO)
+fi
+
 dnl AC_CONFIG_HEADERS([src/binding/f77/nfconfig_inc])
 AC_CONFIG_FILES(Makefile \
                 src/Makefile \
@@ -2912,6 +2925,10 @@ echo \
               Build shared libraries                      - ${enable_shared}
               Build Fortran APIs                          - ${has_fortran}
               Build C++ APIs                              - ${has_mpicxx}"
+if test "x${enable_gio}" = xyes; then
+   echo "\
+              GIO support                                 - enabled"
+fi
 if test "x${enable_netcdf4}" = xyes; then
    echo "\
               NetCDF-4 support                            - enabled"

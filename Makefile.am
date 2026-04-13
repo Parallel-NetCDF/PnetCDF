@@ -12,7 +12,11 @@ SUBDIRS = src man examples benchmarks test
 DIST_SUBDIRS = src man examples benchmarks test doc
 
 if BUILD_DOCS
-SUBDIRS += doc
+   SUBDIRS += doc
+endif
+
+if BUILD_GIO
+   SUBDIRS += gio
 endif
 
 EXTRA_DIST = COPYRIGHT \

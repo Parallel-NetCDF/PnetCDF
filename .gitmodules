@@ -1,0 +1,3 @@
+[submodule "gio"]
+	path = gio
+	url = git@github.com:wkliao/gio.git
