@@ -83,45 +83,50 @@ static int pncio_init_keyval = MPI_KEYVAL_INVALID;
 
 /*----< ina_init() >---------------------------------------------------------*/
 /* When the intra-node write aggregation (INA) hint is enabled, this subroutine
- * initializes the metadata to be used in intra-node communication (between INA
- * aggregators and non-INA aggregators) and an MPI communicator consisting of
- * only the INA aggregators which will be used to in PNCIO/MPI-IO collective
- * and independent I/O calls.
+ * initializes the metadata to be used in intra- and inter-node communication,
+ * including an intra-node communicator for communication between INA
+ * aggregators and non-INA aggregators, and an inter-node communicator
+ * consisting of all the INA aggregators to be used when calling PNCIO/MPI-IO
+ * file open and their collective and independent I/O calls.
  *
- * Processes on the same node will first be divided into disjoined groups. A
- * process with the lowest rank ID in a group is selected as the group's INA
- * aggregator. A new MPI communicator consisting of all INA aggregators across
- * nodes will also be created. Only the aggregators call the PNCIO/MPI-IO
- * functions to access the file. Thus, this subroutine must be called before
- * MPI_File_open() and should be called only once in ncmpi_create() and
- * ncmpi_open(). The new MPI communicator will be used in the call to
- * PNCIO_File_open()/MPI_File_open().
+ * Processes on the same NUMA node will first be divided into disjoined groups.
+ * The passed in communicator will be split into sub-communicators, referred to
+ * as intra-node communicators, one for each INA group. Within a group, the
+ * process with the lowest rank ID is selected as the group's INA aggregator.
+ *
+ * A new MPI communicator consisting of all INA aggregators across all nodes
+ * will be created, which is referred to as the inter-node communicator. The
+ * inter-node communicator will be used to open the file, i.e. in the call to
+ * PNCIO_File_open()/MPI_File_open() later. Only the INA aggregators make calls
+ * to the PNCIO/MPI-IO APIs to access the file. Thus, this subroutine must be
+ * called before opening the file and should be called only once in
+ * ncmpi_create() or ncmpi_open().
  *
  * This subroutine performs the following tasks.
- * 1. Make use of the affinity of each MPI process to its compute node to
- *    calculate the number of INA groups within a node and then which ranks
- *    belong to which group.
- *    + comm_attr->num_nodes is the number of unique compute nodes.
- *    + comm_attr->ids[nprocs] contains compute node IDs for all processes.
+ * 1. Makes use of the affinity of each MPI process to its NUMA node to
+ *    calculate the number of INA groups within a node and identify the
+ *    membership of every process to its INA group.
+ *    + comm_attr->num_NUMAs is the number of NUMA nodes.
+ *    + comm_attr->NUMA_IDs[nprocs] contains NUMA node IDs of all processes.
  *    Note comm_attr should have already been established during a call to
  *    ncmpii_construct_node_list() at the beginning of ncmpi_create() and
  *    ncmpi_open().
- * 2. Divide processes into groups based on hint num_aggrs_per_node, select INA
- *    aggregators, and determine whether this rank is an INA aggregator.
- *    + comm_attr->my_aggr is rank ID of my INA aggregator.
- *    + if (comm_attr->my_aggr == rank) then this rank is an INA aggregator.
- * 3. For an INA aggregator, calculate the number of non-aggregators assigned
- *    to it and construct their rank IDs.
- * 4. If this rank is a non-INA aggregator, find the rank ID of INA aggregator
- *    assigned to it.
- *    + comm_attr->my_aggr is rank ID of my INA aggregator.
- * 5. Create a new MPI communiator by splitting 'comm' into sub-communicators,
- *    each consisting of processes belonging to the same INA group, i.e.
- *    processes sharing the same comm_attr->my_aggr.
+ * 2. Based on hint num_aggrs_per_node and the number of processes per NUMA
+ *    node, calculates the number of INA groups per node and divides processes
+ *    into groups. Select the process with the lowest rank in a group as the
+ *    INA aggregator.
+ *    + comm_attr->is_ina_aggr indicates whether this rank is an INA aggregator
+ * 3. Create a new MPI communicator by splitting 'comm' into sub-communicators,
+ *    each consisting of processes belonging to the same INA group.
  *    + comm_attr->ina_intra_comm is the INA intra-node communicator.
- * 6. Create a new MPI communicator consisting of all the INA aggregators.
+ *    + MPI_Comm_size(comm_attr->ina_intra_comm, &size) is the number of
+ *      processes within an INA group.
+ *    + Rank 0 in comm_attr->ina_intra_comm is the INA aggregator.
+ * 4. Create a new MPI communicator consisting of all the INA aggregators.
  *    + comm_attr->ina_inter_comm is the INA inter-node communicator.
- *    + comm_attr->ina_inter_comm will be used to call PNCIO_File_open()/
+ *    + MPI_Comm_size(comm_attr->ina_inter_comm, &size) is the total number of
+ *      INA aggregators.
+ *    + comm_attr->ina_inter_comm will be used when calling PNCIO_File_open()/
  *      MPI_File_open().
  */
 static
@@ -129,9 +134,9 @@ int ina_init(MPI_Comm        comm,
              int             num_aggrs_per_node,
              PNC_comm_attr  *comm_attr)
 {
-    int i, j, k, mpireturn, nprocs, rank, do_io, naggrs_my_node, first_rank;
-    int my_rank_index, *ranks_my_node, my_node_id, nprocs_my_node, rem;
-    int *ina_flags, num_nonaggrs, num_ina_aggrs;
+    int i, j, k, mpireturn, nprocs, rank, my_node_naggrs, aggr_rank;
+    int my_node_nprocs, my_node_rank;
+    int *ina_flags, grp_nprocs, rem;
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double timing = MPI_Wtime();
@@ -147,165 +152,148 @@ int ina_init(MPI_Comm        comm,
      * entering this subroutine. Thus num_aggrs_per_node must be > 0.
      */
     assert(num_aggrs_per_node > 0);
+    assert(comm_attr->numa_comm != MPI_COMM_NULL);
 #endif
 
-    /* comm_attr->ids[] has been established in ncmpii_construct_node_list()
+    /* comm_attr->NUMA_IDs[] has been set in ncmpii_construct_node_list()
      * called earlier in ncmpio_create() or ncmpio_open() before entering this
-     * subroutine. my_node_id is this rank's compute node ID.
+     * subroutine.
      */
-    my_node_id = comm_attr->ids[rank];
 
-    /* nprocs_my_node:  the number of processes in my compute nodes
-     * ranks_my_node[]: rank IDs of all processes in my compute node.
-     * my_rank_index:   an index pointing to ranks_my_node[] where
-     *                  ranks_my_node[my_rank_index] == rank. This is used
-     *                  to identify the group membership of a rank.
-     */
-    ranks_my_node = (int*) malloc(sizeof(int) * nprocs);
-    my_rank_index = -1;
-    nprocs_my_node = 0;
-    for (i=0; i<nprocs; i++) {
-        if (comm_attr->ids[i] == my_node_id) {
-            if (i == rank)
-                my_rank_index = nprocs_my_node;
-            ranks_my_node[nprocs_my_node] = i;
-            nprocs_my_node++;
-        }
-    }
-    assert(my_rank_index >= 0);
-    /* Now, ranks_my_node[my_rank_index] == rank */
+    /* my_node_nprocs is the number of processes in my NUMA compute node. */
+    MPI_Comm_size(comm_attr->numa_comm, &my_node_nprocs);
 
-    /* Make sure number of aggregators in my node <= nprocs_my_node. In some
-     * cases, the number of processes allocated to the last few nodes can be
-     * less than others.
-     */
-    naggrs_my_node = MIN(num_aggrs_per_node, nprocs_my_node);
+    /* my_node_rank is the rank ID of this process in my NUMA compute node. */
+    MPI_Comm_rank(comm_attr->numa_comm, &my_node_rank);
 
-    /* For each aggregation group, calculate the number of non-aggregators,
-     * num_nonaggrs. Note num_nonaggrs includes self rank.
+    /* Make sure the actual number of INA aggregators per node, initially set
+     * in hint num_aggrs_per_node, is <= my_node_nprocs. In some cases, the
+     * number of processes allocated to the last few compute nodes can be less
+     * than others.
      */
-    num_nonaggrs = nprocs_my_node / naggrs_my_node;
+    my_node_naggrs = MIN(num_aggrs_per_node, my_node_nprocs);
 
-    /* calculate the number of ranks in each INA group, num_nonaggrs, and the
-     * aggregator's rank, i.e. first_rank.
+    /* Divide processes in a NUMA node into INA groups and calculate the number
+     * of processes in each INA group, grp_nprocs. Select the INA aggregator,
+     * as the process with loweset rank in an INA group, whose local rank in
+     * comm_attr->numa_comm is 'aggr_rank'.
      */
-    rem = nprocs_my_node % naggrs_my_node;
+    grp_nprocs = my_node_nprocs / my_node_naggrs; /* no. processes per group */
+    rem        = my_node_nprocs % my_node_naggrs;
     if (rem > 0) { /* non-divisible case */
-        num_nonaggrs++;
-        if (my_rank_index < num_nonaggrs * rem)
-            /* first rank of my INA group */
-            first_rank = my_rank_index - my_rank_index % num_nonaggrs;
-        else {
-            first_rank = num_nonaggrs * rem;
-            num_nonaggrs--;
-            first_rank = my_rank_index
-                       - (my_rank_index - first_rank) % num_nonaggrs;
+        grp_nprocs++;
+        if (my_node_rank < grp_nprocs * rem)
+            /* Select the first rank of my INA group as INA aggregator. */
+            aggr_rank = my_node_rank - my_node_rank % grp_nprocs;
+       else {
+            aggr_rank = grp_nprocs * rem;
+            grp_nprocs--;
+            aggr_rank = my_node_rank
+                       - (my_node_rank - aggr_rank) % grp_nprocs;
         }
     }
     else /* divisible case */
-        first_rank = my_rank_index - my_rank_index % num_nonaggrs;
+        aggr_rank = my_node_rank - my_node_rank % grp_nprocs;
 
-    /* Adjust the number of non-aggregators for the last group of each node,
-     * to make sure it does not go beyond nprocs_my_node.
-     */
-    num_nonaggrs = MIN(num_nonaggrs, nprocs_my_node - first_rank);
+    /* whether this rank is an INA aggregator */
+    comm_attr->is_ina_aggr = (my_node_rank == aggr_rank);
 
-    /* Assign the first rank as the intra-node aggregator of this group and
-     * set the rank ID of my aggregator for each process.
+#ifdef PNETCDF_DEBUG
+    /* Make sure the number of processes in my INA group does not go beyond
+     * my_node_nprocs.
      */
-    comm_attr->my_aggr = ranks_my_node[first_rank];
+    assert(grp_nprocs <= my_node_nprocs - aggr_rank);
+#endif
 
     if (comm_attr->ina_intra_comm != MPI_COMM_NULL) {
+        /* free ina_intra_comm if previous created */
         TRACE_COMM(MPI_Comm_free)(&comm_attr->ina_intra_comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_free");
     }
+    comm_attr->ina_intra_comm = MPI_COMM_NULL;
 
-    if (num_nonaggrs == 1) {
-        /* When the number of processes in this group is 1, the aggregation
-         * is not performed. Note num_nonaggrs includes self rank.
+    if (grp_nprocs == 1) {
+        /* When the number of processes in this INA group is 1, the aggregation
+         * is not performed.
          *
-         * Note this does not mean intra-node aggregation is disabled. The
-         * indicator of whether intra-node aggregation is enabled or disabled
-         * is num_aggrs_per_node, whose value should be consistent across
-         * all processes. It is possible for some groups containing only one
-         * process, in which the aggregation is not necessarily performed
-         * within that group.
+         * Note this does not mean intra-node aggregation is disabled globally.
+         * The indicator of whether intra-node aggregation is enabled or
+         * disabled is num_aggrs_per_node, whose value should be consistent
+         * across all processes. It is possible for some groups containing only
+         * one process, in which case the aggregation is not necessarily to
+         * perform within those groups.
          */
-        assert(comm_attr->my_aggr == rank);
         comm_attr->ina_intra_comm = MPI_COMM_NULL;
     }
-    else { /* num_nonaggrs > 1 */
-
-        /* split comm into INA intra-node comm */
-        TRACE_COMM(MPI_Comm_split)(comm, comm_attr->my_aggr, rank,
+    else { /* grp_nprocs > 1 */
+        /* Split NUMA comm into INA intra-node comm based on the assigned INA
+         * aggregator's rank ID, i.e. processes sharing the same INA aggregator
+         * form an ina_intra_comm. This process's local rank on the NUMA node
+         * is my_node_rank and its INA aggregator's rank is aggr_rank.
+         */
+        TRACE_COMM(MPI_Comm_split)(comm_attr->numa_comm, aggr_rank, my_node_rank,
                                    &comm_attr->ina_intra_comm);
     }
-    free(ranks_my_node);
 
-    /* Next step is to construct a new MPI communicator consisting of all
-     * intra-node aggregators. It will later be used to call MPI_File_open(),
-     * so that only aggregators call MPI-IO functions to access the file.
-     *
-     * When using the PnetCDF's internal PNCIO driver, we can pass a list of
-     * node IDs of the new communicator to the PNCIO file handler,
-     * ncp->pncio_fh, so to prevent the driver from the repeated work of
-     * constructing the list of node IDs, comm_attr->ids[]. If using MPI-IO
-     * driver, then ROMIO will do this internally again anyway.
+    /* Next step is to construct an inter-node MPI communicator consisting of
+     * all INA aggregators. It will later be used to call MPI_File_open(), and
+     * successively only INA aggregators call MPI-IO functions to access the
+     * file.
      */
-
-    do_io = (comm_attr->my_aggr == rank) ? 1 : 0;
 
     /* construct an array containing ranks of aggregators */
     ina_flags = (int*) malloc(sizeof(int) * nprocs);
-    TRACE_COMM(MPI_Allgather)(&do_io, 1, MPI_INT, ina_flags, 1, MPI_INT, comm);
+    TRACE_COMM(MPI_Allgather)(&comm_attr->is_ina_aggr, 1, MPI_INT, ina_flags,
+                              1, MPI_INT, comm);
 
-    /* Construct comm_attr->ids[] and comm_attr->ina_ranks[]. Their contents
-     * depend on the layout of MPI process allocation to the compute nodes.
+    /* Given a comm_attr->NUMA_IDs[], the rank IDs of INA aggregators will
+     * dependent on the layout of MPI process allocation to the compute nodes.
      * The common layouts can be two kinds:
      *   + cyclic - MPI ranks are assigned to nodes round-robin-ly,
      *   + block - MPI ranks are assigned to a node and then move on to next.
      *
      * Below uses an example of nodes=3, nprocs=10, * num_aggrs_per_node=2.
-     * comm_attr->ids[] should be
+     * comm_attr->NUMA_IDs[] should be
      *     block  process allocation: 0,0,0,0,1,1,1,2,2,2
      *     cyclic process allocation: 0,1,2,0,1,2,0,1,2,0
-     * Accordingly, ina_flags[] can be two kinds
+     * Accordingly, rank IDs of INA aggregators can be two kinds
      *     block  process allocation: 1,0,1,0,1,0,1,1,0,1
      *     cyclic process allocation: 1,1,1,0,0,0,1,1,1,0
      */
 
-    num_ina_aggrs = 0;
+    /* calculate actual number of INA aggregators */
+    comm_attr->num_ina_aggrs = 0;
     for (j=0; j<nprocs; j++)
-        num_ina_aggrs += ina_flags[j];
-
-    comm_attr->ina_ranks = (int*)malloc(sizeof(int) * num_ina_aggrs);
+        comm_attr->num_ina_aggrs += ina_flags[j];
 
     /* Collect aggregators' rank IDs and store them in an increasing order of
      * node IDs. Note rank IDs in ina_ranks[] are relative to comm (not
      * inter-node comm or intra-node comm).
      */
-    k = 0;
-    for (i=0; i<comm_attr->num_nodes; i++) {
+    comm_attr->ina_ranks = (int*)malloc(sizeof(int) * comm_attr->num_ina_aggrs);
+    for (k=0, i=0; i<comm_attr->num_NUMAs; i++) {
         for (j=0; j<nprocs; j++) {
-            if (comm_attr->ids[j] == i && ina_flags[j] > 0)
+            if (comm_attr->NUMA_IDs[j] == i && ina_flags[j] > 0)
                 comm_attr->ina_ranks[k++] = j;
         }
     }
     free(ina_flags);
 
     if (comm_attr->ina_inter_comm != MPI_COMM_NULL) {
+        /* free comm_attr->ina_inter_comm if created previously */
         TRACE_COMM(MPI_Comm_free)(&comm_attr->ina_inter_comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_free");
     }
+    comm_attr->ina_inter_comm = MPI_COMM_NULL;
 
-    /* Make MPI calls to create a new communicator. */
+    /* create an inter-node communicator consisting of all INA aggregators */
     MPI_Group origin_group, ina_group;
     TRACE_COMM(MPI_Comm_group)(comm, &origin_group);
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_group");
-    TRACE_COMM(MPI_Group_incl)(origin_group, num_ina_aggrs,
+    TRACE_COMM(MPI_Group_incl)(origin_group, comm_attr->num_ina_aggrs,
                                comm_attr->ina_ranks, &ina_group);
     if (mpireturn != MPI_SUCCESS)
         return ncmpii_error_mpi2nc(mpireturn, "MPI_Group_incl");
@@ -391,10 +379,12 @@ int PNC_comm_attr_delete(MPI_Comm  comm,
 
     if (attr->ref_count <= 0) {
         /* free the allocated array */
-        if (attr->ids != NULL)
-            free(attr->ids);
+        if (attr->NUMA_IDs != NULL)
+            free(attr->NUMA_IDs);
         if (attr->ina_ranks != NULL)
             free(attr->ina_ranks);
+        if (attr->numa_comm != MPI_COMM_NULL)
+            MPI_Comm_free(&attr->numa_comm);
         if (attr->ina_inter_comm != MPI_COMM_NULL)
             MPI_Comm_free(&attr->ina_inter_comm);
         if (attr->ina_intra_comm != MPI_COMM_NULL)
@@ -479,21 +469,28 @@ int set_get_comm_attr(MPI_Comm        comm,
 
             /* initialize INA metadata of intra-node aggregation */
             attr->num_aggrs_per_node = 0;
-            attr->my_aggr = -1;
+            attr->num_ina_aggrs = 0;
+            attr->is_ina_aggr = 0;
             attr->ina_ranks = NULL;
+            attr->numa_comm      = MPI_COMM_NULL;
             attr->ina_inter_comm = MPI_COMM_NULL;
             attr->ina_intra_comm = MPI_COMM_NULL;
 
             if (nprocs == 1) {
-                attr->num_nodes = 1;
-                attr->ids = (int*) malloc(sizeof(int));
-                attr->ids[0] = 0;
+                attr->num_NUMAs = 1;
+                attr->NUMA_IDs = (int*) malloc(sizeof(int));
+                attr->NUMA_IDs[0] = 0;
             }
             else {
-                /* Constructing node IDs requires communication calls to
-                 * MPI_Get_processor_name(), MPI_Gather(), and MPI_Bcast().
+                /* Constructing NUMA compute node IDs requires communication
+                 * calls to MPI_Comm_split_type(), MPI_Bcast(), and
+                 * MPI_Allgather().
                  */
-                ncmpii_construct_node_list(comm, &attr->num_nodes, &attr->ids);
+                err = ncmpii_construct_node_list(comm, &attr->num_NUMAs,
+                                                 &attr->NUMA_IDs,
+                                                 &attr->numa_comm);
+                if (err != NC_NOERR)
+                    return err;
 
                 /* If INA is enabled, construct INA metadata */
                 err = ina_init(comm, num_aggrs_per_node, attr);
@@ -513,9 +510,10 @@ int set_get_comm_attr(MPI_Comm        comm,
                 /* When INA is disabled, there is no need to retrieved cached
                  * INA metadata.
                  */
-                *attrP = *attr; /* retrieve num_nodes and ids */
+                *attrP = *attr; /* retrieve num_NUMAs and ids */
                 attrP->num_aggrs_per_node = 0;
-                attrP->my_aggr = -1;
+                attrP->num_ina_aggrs = 0;
+                attrP->is_ina_aggr = 01;
                 attrP->ina_ranks = NULL;
                 attrP->ina_inter_comm = MPI_COMM_NULL;
                 attrP->ina_intra_comm = MPI_COMM_NULL;
@@ -524,8 +522,9 @@ int set_get_comm_attr(MPI_Comm        comm,
 
             /* When num_aggrs_per_node has changed, the cached attribute must
              * be reset. MPI standard says calling MPI_Comm_set_attr() will
-             * trigger MPI_Comm_delete_attr() first. Thus, we must preserve
-             * attr->num_nodes and attr->ids.
+             * trigger MPI_Comm_delete_attr() first, which will free all
+             * allocated space, e.g. NUMA_IDs[] and numa_comm. Thus, we must
+             * preserve attr->num_NUMAs, attr->NUMA_IDs[], and attr->numa_comm.
              */
             if (num_aggrs_per_node != attr->num_aggrs_per_node) {
                 PNC_comm_attr *new_attr;
@@ -535,13 +534,22 @@ int set_get_comm_attr(MPI_Comm        comm,
 
                 /* copy out attributes that remains with the communicator */
                 new_attr->ref_count = attr->ref_count;
-                new_attr->num_nodes = attr->num_nodes;
-                new_attr->ids = (int*) malloc(sizeof(int) * nprocs);
-                memcpy(new_attr->ids, attr->ids, sizeof(int) * nprocs);
+                new_attr->num_NUMAs = attr->num_NUMAs;
+                new_attr->NUMA_IDs = (int*) malloc(sizeof(int) * nprocs);
+                memcpy(new_attr->NUMA_IDs, attr->NUMA_IDs, sizeof(int)*nprocs);
+
+                /* Must duplicate numa_comm that has been established, because
+                 * it will be freed at the call to MPI_Comm_set_attr() below.
+                 * Once created, numa_comm remains fixed with 'comm'. Unlike
+                 * ina_inter_comm and ina_intra_comm, it does not change when
+                 * num_aggrs_per_node changes.
+                 */
+                MPI_Comm_dup(attr->numa_comm, &new_attr->numa_comm);
 
                 /* update with new INA metadata */
                 new_attr->num_aggrs_per_node = num_aggrs_per_node;
-                new_attr->my_aggr = -1;
+                new_attr->num_ina_aggrs = 0;
+                new_attr->is_ina_aggr = 0;
                 new_attr->ina_ranks = NULL;
                 new_attr->ina_inter_comm = MPI_COMM_NULL;
                 new_attr->ina_intra_comm = MPI_COMM_NULL;
