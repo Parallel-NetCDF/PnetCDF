@@ -86,7 +86,7 @@ static int pncio_init_keyval = MPI_KEYVAL_INVALID;
  * initializes the metadata to be used in intra- and inter-node communication,
  * including an intra-node communicator for communication between INA
  * aggregators and non-INA aggregators, and an inter-node communicator
- * consisting of all the INA aggregators to be used when calling PNCIO/MPI-IO
+ * consisting of all the INA aggregators to be used when calling GIO/MPI-IO
  * file open and their collective and independent I/O calls.
  *
  * Processes on the same NUMA node will first be divided into disjoined groups.
@@ -97,8 +97,8 @@ static int pncio_init_keyval = MPI_KEYVAL_INVALID;
  * A new MPI communicator consisting of all INA aggregators across all nodes
  * will be created, which is referred to as the inter-node communicator. The
  * inter-node communicator will be used to open the file, i.e. in the call to
- * PNCIO_File_open()/MPI_File_open() later. Only the INA aggregators make calls
- * to the PNCIO/MPI-IO APIs to access the file. Thus, this subroutine must be
+ * GIO_File_open()/MPI_File_open() later. Only the INA aggregators make calls
+ * to the GIO/MPI-IO APIs to access the file. Thus, this subroutine must be
  * called before opening the file and should be called only once in
  * ncmpi_create() or ncmpi_open().
  *
@@ -126,7 +126,7 @@ static int pncio_init_keyval = MPI_KEYVAL_INVALID;
  *    + comm_attr->ina_inter_comm is the INA inter-node communicator.
  *    + MPI_Comm_size(comm_attr->ina_inter_comm, &size) is the total number of
  *      INA aggregators.
- *    + comm_attr->ina_inter_comm will be used when calling PNCIO_File_open()/
+ *    + comm_attr->ina_inter_comm will be used when calling GIO_File_open()/
  *      MPI_File_open().
  */
 static
@@ -333,17 +333,17 @@ int ina_init(MPI_Comm        comm,
     return NC_NOERR;
 }
 
-/*----< PNC_comm_attr_copy() >-----------------------------------------------*/
+/*----< comm_attr_copy() >---------------------------------------------------*/
 /* A function to be invoked when a communicator is duplicated, which adds a
  * reference to the already allocated memory space storing node ID array.
  */
 static
-int PNC_comm_attr_copy(MPI_Comm  comm,
-                       int       keyval,
-                       void     *extra,
-                       void     *attr_inP,
-                       void     *attr_outP,
-                       int      *flag)
+int comm_attr_copy(MPI_Comm  comm,
+                   int       keyval,
+                   void     *extra,
+                   void     *attr_inP,
+                   void     *attr_outP,
+                   int      *flag)
 {
     PNC_comm_attr *attr_in   = (PNC_comm_attr*) attr_inP;
     PNC_comm_attr **attr_out = (PNC_comm_attr**)attr_outP;
@@ -360,15 +360,15 @@ int PNC_comm_attr_copy(MPI_Comm  comm,
     return MPI_SUCCESS;
 }
 
-/*----< PNC_comm_attr_delete() >---------------------------------------------*/
+/*----< comm_attr_delete() >-------------------------------------------------*/
 /* Callback function to be called when a communicator is freed, which frees the
  * allocated memory space of node ID array.
  */
 static
-int PNC_comm_attr_delete(MPI_Comm  comm,
-                         int       keyval,
-                         void     *attr_val,
-                         void     *extra)
+int comm_attr_delete(MPI_Comm  comm,
+                     int       keyval,
+                     void     *attr_val,
+                     void     *extra)
 {
     PNC_comm_attr *attr = (PNC_comm_attr*) attr_val;
 
@@ -394,15 +394,15 @@ int PNC_comm_attr_delete(MPI_Comm  comm,
     return MPI_SUCCESS;
 }
 
-/*----< PNCIO_end_call() >---------------------------------------------------*/
+/*----< end_call() >---------------------------------------------------------*/
 /* Callback function to be called at MPI_Finalize(), which frees all cached
  * attributes.
  */
 static
-int PNCIO_end_call(MPI_Comm  comm,
-                   int       keyval,
-                   void     *attribute_val,
-                   void     *extra_state)
+int end_call(MPI_Comm  comm,
+             int       keyval,
+             void     *attribute_val,
+             void     *extra_state)
 {
     /* Free all keyvals used by PnetCDF */
 
@@ -433,7 +433,7 @@ int set_get_comm_attr(MPI_Comm        comm,
          * pncio_init_keyval is necessary for MPI_Finalize() to free key
          * pncio_comm_keyval.
          */
-        err = MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN, PNCIO_end_call,
+        err = MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN, end_call,
                                      &pncio_init_keyval, (void*)0);
         if (err != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(err, "MPI_Comm_create_keyval");
@@ -444,8 +444,8 @@ int set_get_comm_attr(MPI_Comm        comm,
     }
 
     if (pncio_comm_keyval == MPI_KEYVAL_INVALID) {
-        err = MPI_Comm_create_keyval(PNC_comm_attr_copy,
-                                     PNC_comm_attr_delete,
+        err = MPI_Comm_create_keyval(comm_attr_copy,
+                                     comm_attr_delete,
                                      &pncio_comm_keyval, NULL);
         if (err != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(err, "MPI_Comm_create_keyval");
@@ -461,7 +461,7 @@ int set_get_comm_attr(MPI_Comm        comm,
         if (!found) {
             /* Construct an array storing node IDs of all processes. Note the
              * memory allocated for setting the attribute will be freed in
-             * PNC_comm_attr_delete(), a callback function invoked when the
+             * comm_attr_delete(), a callback function invoked when the
              * MPI communicator is freed.
              */
             attr = (PNC_comm_attr*) malloc(sizeof(PNC_comm_attr));
