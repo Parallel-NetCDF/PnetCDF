@@ -506,7 +506,8 @@ int tst_main(int        argc,
 
                 nerrs = tst_body(out_filename, in_path, opt.formats[i],
                                  coll_io, info);
-                MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+                MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MAX,
+                              MPI_COMM_WORLD);
                 if (nerrs != NC_NOERR) {
                     fflush(stdout);
                     if (rank == 0)
@@ -517,7 +518,8 @@ int tst_main(int        argc,
 
                 if (!quiet) {
                     time_body = MPI_Wtime() - time_body;
-                    MPI_Allreduce(MPI_IN_PLACE, &time_body, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+                    MPI_Allreduce(MPI_IN_PLACE, &time_body, 1, MPI_DOUBLE,
+                                  MPI_MAX, MPI_COMM_WORLD);
                     if (rank == 0)
                         printf(" (%.2fs)\n", time_body);
                 }
@@ -565,7 +567,14 @@ int tst_main(int        argc,
                                          quiet, check_header, 0,
                                          check_entire_file, 0, NULL, 0,
                                          first_diff, cmd_opts, 0, 0);
+
+                /* check error so it can error out collectively */
+                MPI_Allreduce(MPI_IN_PLACE, &numDIFF, 1, MPI_OFFSET, MPI_MAX,
+                              MPI_COMM_WORLD);
                 if (numDIFF != 0) {
+                    if (rank == 0)
+                        printf("FAILED: ncmpidiff %s %s a=%d d=%d b=%d s=%d\n",
+                               out_filename, base_file,a,d,b,s);
                     nerrs = 1;
                     goto err_out;
                 }
