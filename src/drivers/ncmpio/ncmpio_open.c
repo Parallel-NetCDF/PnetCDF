@@ -142,7 +142,7 @@ ncmpio_open(MPI_Comm         comm,
 
     fSet(ncp->flags, env_mode);
 
-    /* comm_attr.ids[] stores a list of unique IDs of compute nodes of all MPI
+    /* comm_attr.NUMA_IDs[] stores a list of unique IDs of compute nodes of all MPI
      * ranks in the MPI communicator passed from the user application. It is a
      * keyval attribute cached in the communicator. See src/dispatchers/file.c
      * for details.
@@ -156,7 +156,7 @@ ncmpio_open(MPI_Comm         comm,
      * PnetCDF's PNCIO driver. This means only intra-node aggregators will
      * perform file I/O in PnetCDF collective put and get operations.
      *
-     * comm_attr.ids[] will be used to calculate cb_nodes, the number of
+     * comm_attr.NUMA_IDs[] will be used to calculate cb_nodes, the number of
      * MPI-IO/PNCIO aggregators (not INA aggregators).
      */
     ncp->comm_attr = comm_attr;
@@ -164,17 +164,15 @@ ncmpio_open(MPI_Comm         comm,
     /* When the total number of aggregators >= number of processes, disable
      * intra-node aggregation.
      */
-    if (ncp->num_aggrs_per_node * comm_attr.num_nodes >= ncp->nprocs)
+    if (ncp->num_aggrs_per_node * comm_attr.num_NUMAs >= ncp->nprocs)
         ncp->num_aggrs_per_node = 0;
 
     /* ncp->num_aggrs_per_node = 0, or > 0 indicates whether this feature
      * is disabled or enabled globally for all processes.
      */
     if (ncp->num_aggrs_per_node > 0) {
-        int i, j, *ids;
-
 #ifdef PNETCDF_DEBUG
-        if (ncp->rank == comm_attr.my_aggr) /* INA aggregator */
+        if (comm_attr.is_ina_aggr) /* INA aggregator */
             assert(comm_attr.ina_inter_comm != MPI_COMM_NULL);
 #endif
 
@@ -202,11 +200,18 @@ ncmpio_open(MPI_Comm         comm,
         MPI_Comm_size(comm, &nprocs);
 
 #ifdef PNETCDF_DEBUG
-        assert(ncp->rank == comm_attr.my_aggr); /* INA aggregator */
+        assert(comm_attr.is_ina_aggr); /* INA aggregator */
 #endif
 
-        /* adjust ncp->comm_attr.ids[] by condensing it to contain only the
-         * node IDs of INA aggregators. ncp->comm_attr.ids[] will be used to
+/* TODO: pass hints 'num_NUMA_nodes' and 'my_NUMA_ID' in info to
+ * PNCIO_File_open(), so PNCIO can call MPI_Allgather() to build NUMA_IDs[].
+ * If the two hints are missing, then PNCIO build its its own NUMA_IDs[].
+ */
+#if 1
+        int i, j, *ids;
+
+        /* adjust ncp->comm_attr.NUMA_IDs[] by condensing it to contain only the
+         * node IDs of INA aggregators. ncp->comm_attr.NUMA_IDs[] will be used to
          * select PNCIO or MPI-IO I/O aggregators.
          */
         ids = (int*) NCI_Malloc(sizeof(int) * nprocs);
@@ -214,14 +219,15 @@ ncmpio_open(MPI_Comm         comm,
         for (i=0; i<nprocs; i++) {
             /* j is the process rank in comm passed into ncmpi_create() */
             j = comm_attr.ina_ranks[i];
-            ids[i] = comm_attr.ids[j];
+            ids[i] = comm_attr.NUMA_IDs[j];
             /* Now ids[] store the node IDs of the INA aggregators. */
         }
-        ncp->comm_attr.ids = ids;
+        ncp->comm_attr.NUMA_IDs = ids;
         /* Note this will only update ncp->comm_attr's ids, not the attribute
          * cached in ncp->comm. This ids[] will be freed at the end of this
          * subroutine.
          */
+#endif
     }
 
     /* open file collectively ---------------------------------------------- */
@@ -354,16 +360,16 @@ fn_exit:
      */
     ncmpio_hint_set(ncp, ncp->mpiinfo);
 
-    if (ncp->num_aggrs_per_node > 0 && ncp->rank == comm_attr.my_aggr) {
-        /* comm_attr.ids[] is no longer needed. Note it has been duplicated
+    if (ncp->num_aggrs_per_node > 0 && comm_attr.is_ina_aggr) {
+        /* comm_attr.NUMA_IDs[] is no longer needed. Note it has been duplicated
          * above from the MPI communicator's cached keyval attribute when
          * ncp->num_aggrs_per_node > 0.
          */
-        NCI_Free(ncp->comm_attr.ids);
-        ncp->comm_attr.ids = NULL;
+        NCI_Free(ncp->comm_attr.NUMA_IDs);
+        ncp->comm_attr.NUMA_IDs = NULL;
     }
     if (ncp->pncio_fh != NULL)
-        ncp->pncio_fh->comm_attr.ids = NULL;
+        ncp->pncio_fh->comm_attr.NUMA_IDs = NULL;
 
     /* read header from file into NC object pointed by ncp ------------------*/
     err = ncmpio_hdr_get_NC(ncp);

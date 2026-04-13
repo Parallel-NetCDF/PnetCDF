@@ -125,7 +125,7 @@ ncmpio_create(MPI_Comm         comm,
 {
     char *filename, value[MPI_MAX_INFO_VAL + 1], *mpi_name;
     int rank, nprocs, mpi_amode, err, mpireturn, default_format, file_exist=1;
-    int use_trunc=1, flag, striping_info[2];
+    int use_trunc=1, flag, striping_info[2], *aggr_NUMA_IDs=NULL;
     MPI_File fh=MPI_FILE_NULL;
     NC *ncp=NULL;
 
@@ -490,39 +490,33 @@ ncmpio_create(MPI_Comm         comm,
 
     /* comm_attr has been constructed at the dispatchers.
      *
-     * comm_attr.ids[] stores a list of unique IDs of compute nodes of all MPI
-     * ranks of the MPI communicator passed from the user application. It is a
-     * keyval attribute cached in the communicator. See src/dispatchers/file.c
-     * for details.
+     * comm_attr.NUMA_IDs[] stores the NUMA compute node IDs of all MPI ranks
+     * of this comm, the MPI communicator passed from the user application. It
+     * is a keyval attribute cached in the communicator, comm. See its
+     * construction details in src/dispatchers/file.c.
      *
-     * commm_attr also stores the intra-node aggregation (INA) metadata,
-     * including the INA communicator.
+     * When the intra-node aggregation (INA) is enabled, commm_attr also stores
+     * an intra-node communicator (containing processes in an INA group) and an
+     * inter-node communicator (containing all the INA aggregators).
      *
-     * When INA is enabled, comm_attr.ids[] is used to create a new MPI
-     * communicator consisting of the intra-node aggregators only. The
-     * communicator will be used to call PNCIO_File_open() or MPI_File_open()
-     * This means only intra-node aggregators will perform file I/O in PnetCDF
-     * collective put and get operations.
-     *
-     * In addition, comm_attr.ids[] will be used to calculate cb_nodes, the
-     * number of file I/O aggregators (not INA aggregators).
+     * comm_attr.NUMA_IDs[] is used to create the inter-node communicator,
+     * which will be used to call PNCIO_File_open() or MPI_File_open().
+     * This means only the INA aggregators will perform file I/O.
      */
     ncp->comm_attr = comm_attr;
 
     /* When the total number of aggregators >= number of processes, disable
      * intra-node aggregation.
      */
-    if (ncp->num_aggrs_per_node * comm_attr.num_nodes >= ncp->nprocs)
+    if (ncp->num_aggrs_per_node * comm_attr.num_NUMAs >= ncp->nprocs)
         ncp->num_aggrs_per_node = 0;
 
     /* ncp->num_aggrs_per_node = 0, or > 0 is an indicator of whether the INA
      * feature is disabled or enabled globally for all processes.
      */
     if (ncp->num_aggrs_per_node > 0) {
-        int i, j, *ids;
-
 #ifdef PNETCDF_DEBUG
-        if (ncp->rank == comm_attr.my_aggr) /* INA aggregator */
+        if (comm_attr.is_ina_aggr) /* INA aggregator */
             assert(comm_attr.ina_inter_comm != MPI_COMM_NULL);
 #endif
 
@@ -533,43 +527,52 @@ ncmpio_create(MPI_Comm         comm,
 
         /* For non-INA aggregators, comm_attr.ina_inter_comm is MPI_COMM_NULL.
          * Note 'comm' is a local variable used only in this subroutine.
-         * Because the below lines of this subroutines till label 'fn_exit' is
-         * for INA aggregators to open the file and obtain a file handler,
+         * Because the below lines of this subroutines till label 'after_open'
+         * is for INA aggregators to open the file and obtain a file handler,
          * non-INA aggregators do not participate and thus do not make use of
          * comm.
          */
         if (comm == MPI_COMM_NULL) {
             if (user_info != MPI_INFO_NULL)
                 MPI_Info_dup(user_info, &ncp->mpiinfo);
-            goto fn_exit;
+            goto after_open; /* non-INA aggregators skip to 'after_open' */
         }
+
+#ifdef PNETCDF_DEBUG
+        assert(comm_attr.is_ina_aggr); /* INA aggregator */
+#endif
 
         /* As non-aggregators will not perform any file I/O, we now can replace
          * nprocs with ina_inter_comm's size.
          */
         MPI_Comm_size(comm, &nprocs);
 
-#ifdef PNETCDF_DEBUG
-        assert(ncp->rank == comm_attr.my_aggr); /* INA aggregator */
-#endif
+/* TODO: pass hints 'num_NUMA_nodes' and 'my_NUMA_ID' in info to
+ * PNCIO_File_open(), so PNCIO can call MPI_Allgather() to build NUMA_IDs[].
+ * If the two hints are missing, then PNCIO build its its own NUMA_IDs[].
+ */
+#if 1
+        int i, j;
 
-        /* adjust ncp->comm_attr.ids[] by condensing it to contain only the
-         * node IDs of INA aggregators. ncp->comm_attr.ids[] will be used to
-         * select PNCIO or MPI-IO I/O aggregators.
+        /* Replace ncp->comm_attr.NUMA_IDs[] with one containing only the INA
+         * aggregators' NUMA IDs, so comm_attr can be later passed to the call
+         * of PNCIO_File_open(). This adjustment is necessary because only the
+         * INA aggregators will open the file and comm_attr.ina_inter_comm
+         * contains only the INA aggregators.
+         *
+         * Note this will only replace ncp->comm_attr's NUMA_IDs[], not the
+         * attribute cached in ncp->comm, because ncp->comm_attr is a local
+         * variable, and it will be freed at the end of this subroutine.
          */
-        ids = (int*) NCI_Malloc(sizeof(int) * nprocs);
+        aggr_NUMA_IDs = (int*) NCI_Malloc(sizeof(int) * nprocs);
 
-        for (i=0; i<nprocs; i++) {
+        for (i=0; i<nprocs; i++) { /* number of INA aggregator */
             /* j is the process rank in comm passed into ncmpi_create() */
             j = comm_attr.ina_ranks[i];
-            ids[i] = comm_attr.ids[j];
-            /* Now ids[] store the node IDs of the INA aggregators. */
+            aggr_NUMA_IDs[i] = comm_attr.NUMA_IDs[j];
         }
-        ncp->comm_attr.ids = ids;
-        /* Note this will only update ncp->comm_attr's ids, not the attribute
-         * cached in ncp->comm. This ids[] will be freed at the end of this
-         * subroutine.
-         */
+        ncp->comm_attr.NUMA_IDs = aggr_NUMA_IDs;
+#endif
     }
 
     /* create file collectively -------------------------------------------- */
@@ -587,7 +590,7 @@ ncmpio_create(MPI_Comm         comm,
                     striping_factor = atoi(value);
             }
             if (striping_factor == 0) {
-                sprintf(value, "%d", ncp->comm_attr.num_nodes);
+                sprintf(value, "%d", ncp->comm_attr.num_NUMAs);
                 MPI_Info_set(user_info, "striping_factor", value);
             }
         }
@@ -697,8 +700,9 @@ ncmpio_create(MPI_Comm         comm,
     else {
         /* When ncp->driver == PNC_DRIVER_PNCIO, use PnetCDF's PNCIO driver.
          * When INA is enabled, only the INA aggregators can reach here.
-         * Non-INA aggregators have gone to fn_exit from above, with their comm
-         * remain MPI_COMM_NULL (ncp->comm is always assigned to comm).
+         * Non-INA aggregators have skipped to 'after_open' from above, with
+         * their 'comm', a local variable of this subroutine, remaining
+         * MPI_COMM_NULL (ncp->comm is always assigned to comm).
          */
         ncp->pncio_fh->fstype = ncp->fstype;
         ncp->pncio_fh->comm_attr = ncp->comm_attr;
@@ -717,7 +721,7 @@ ncmpio_create(MPI_Comm         comm,
         if (err != NC_NOERR) DEBUG_FOPEN_ERROR(err)
     }
 
-fn_exit:
+after_open:
     ncp->striping_unit = 0;
     ncp->striping_factor = 0;
 
@@ -804,16 +808,11 @@ fn_exit:
      */
     ncmpio_hint_set(ncp, ncp->mpiinfo);
 
-    if (ncp->num_aggrs_per_node > 0 && ncp->rank == comm_attr.my_aggr) {
-        /* comm_attr.ids[] is no longer needed. Note it has been duplicated
-         * above from the MPI communicator's cached keyval attribute when
-         * ncp->num_aggrs_per_node > 0.
-         */
-        NCI_Free(ncp->comm_attr.ids);
-        ncp->comm_attr.ids = NULL;
-    }
-    if (ncp->pncio_fh != NULL)
-        ncp->pncio_fh->comm_attr.ids = NULL;
+    if (aggr_NUMA_IDs != NULL)
+        /* aggr_NUMA_IDs is allocated above when INA is enabled. */
+        NCI_Free(aggr_NUMA_IDs);
+
+    /* comm_attr.NUMA_IDs[] is no longer needed once the file is opened. */
 
     return NC_NOERR;
 }
