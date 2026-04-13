@@ -250,8 +250,7 @@ extern int strcasecmp(const char *s1, const char *s2);
 char* ncmpii_remove_file_system_type_prefix(const char *filename);
 
 extern int
-ncmpii_construct_node_list(MPI_Comm comm, int *num_nodes_ptr,
-                           int **node_ids_ptr);
+ncmpii_construct_node_list(MPI_Comm comm, int *num_NUMAs, int **node_ids, MPI_Comm *hwcomm);
 
 #endif
 

@@ -129,8 +129,11 @@ subfile_create(NC *ncp)
     MPI_Info_set(info, "romio_lustre_start_iodevice", offset);
     MPI_Info_set(info, "striping_factor", "1");
 */
-    ncmpii_construct_node_list(ncp->comm_sf, &ncp->node_ids_sf.num_nodes,
-                                             &ncp->node_ids_sf.ids);
+    MPI_Comm hwcomm;
+    ncmpii_construct_node_list(ncp->comm_sf, &ncp->node_ids_sf.num_NUMAs,
+                               &ncp->node_ids_sf.NUMA_IDs, &hwcomm);
+    if (hwcomm != MPI_COMM_NULL)
+        MPI_Comm_free(&hwcomm);
 
     void *ncp_sf;
     status = ncmpio_create(ncp->comm_sf, path_sf, ncp->nc_amode, ncp->ncid,
@@ -188,8 +191,11 @@ ncmpio_subfile_open(NC *ncp)
     /* sprintf(path_sf, "%s%d/%s", path, color, file); */
     sprintf(path_sf, "%s.subfile_%i.%s", ncp->path, color, "nc");
 
-    ncmpii_construct_node_list(ncp->comm_sf, &ncp->node_ids_sf.num_nodes,
-                                             &ncp->node_ids_sf.ids);
+    MPI_Comm hwcomm;
+    ncmpii_construct_node_list(ncp->comm_sf, &ncp->node_ids_sf.num_NUMAs,
+                               &ncp->node_ids_sf.NUMA_IDs, &hwcomm);
+    if (hwcomm != MPI_COMM_NULL)
+        MPI_Comm_free(&hwcomm);
 
     void *ncp_sf;
     status = ncmpio_open(ncp->comm_sf, path_sf, ncp->nc_amode, ncp->ncid,
@@ -205,8 +211,8 @@ int ncmpio_subfile_close(NC *ncp)
     int status = NC_NOERR;
 
     if (ncp->ncp_sf != NULL) {
-        if (ncp->node_ids_sf.ids != NULL)
-            free(ncp->node_ids_sf.ids);
+        if (ncp->node_ids_sf.NUMA_IDs != NULL)
+            free(ncp->node_ids_sf.NUMA_IDs);
 
         status = ncmpio_close(ncp->ncp_sf);
         if (status != NC_NOERR) return status;

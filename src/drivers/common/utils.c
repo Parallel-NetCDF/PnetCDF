@@ -92,156 +92,88 @@ char* ncmpii_remove_file_system_type_prefix(const char *filename)
 }
 
 /*----< ncmpii_construct_node_list() >---------------------------------------*/
-/* This subroutine is a collective call. It finds the affinity of each MPI
- * process to the compute node and returns the followings:
- *   num_nodes_ptr  Number of unique nodes (host names)
- *   node_ids_ptr   [nprocs] node IDs of each rank, must be freed by caller.
+/* This subroutine is a collective call. It finds the affinity of MPI processes
+ * to their shared-memory compute nodes (NUMA) and returns the followings:
+ *   num_NUMAs: Number of NUMA nodes
+ *   numa_ids[nprocs]: node IDs of each rank, must be freed by the caller.
+ *   hwcomm: sub-communicator split based on NUMA hardware. It is the caller's
+ *           responsibility to free it.
  */
 int
 ncmpii_construct_node_list(MPI_Comm   comm,
-                           int       *num_nodes_ptr, /* OUT: */
-                           int      **node_ids_ptr)  /* OUT: [nprocs] */
+                           int       *num_NUMAs, /* OUT: */
+                           int      **numa_ids,  /* OUT: [nprocs] */
+                           MPI_Comm  *hwcomm)    /* OUT: NUMA communicator */
 {
-    char my_procname[MPI_MAX_PROCESSOR_NAME], **all_procnames=NULL;
-    int i, j, k, rank, nprocs, num_nodes, my_procname_len, root=0;
-    int *node_ids=NULL, *all_procname_lens=NULL;
+    char *err_msg="No error";
+    int i, err, rank, nprocs, numa_id, *ids;
 
     MPI_Comm_size(comm, &nprocs);
     MPI_Comm_rank(comm, &rank);
 
-    /* Collect host name of alocated compute nodes. Note my_procname is null
-     * character terminated, but my_procname_len does not include the null
-     * character.
+    *num_NUMAs = 0;
+    *numa_ids = NULL;
+
+#if 1
+    /* split comm based on NUMA nodes (processes sharing memory) */
+    err = MPI_Comm_split_type(comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL,
+                              hwcomm);
+#else
+    /* Below code fragment is from MPI standard 4.0's example 7.3:
+     * Splitting MPI_COMM_WORLD into NUMANode subcommunicators.
      */
-    MPI_Get_processor_name(my_procname, &my_procname_len);
-#if 0
-#ifdef MIMIC_LUSTRE
-#define MIMIC_NUM_NODES 1
-    /* mimic number of compute nodes = MIMIC_NUM_NODES */
-    int node_id, np_per_node = nprocs / MIMIC_NUM_NODES;
-    if (nprocs % MIMIC_NUM_NODES > 0) np_per_node++;
-    if (rank < np_per_node * (nprocs % MIMIC_NUM_NODES))
-        node_id = rank / np_per_node;
-    else
-        node_id = (rank - np_per_node * (nprocs % MIMIC_NUM_NODES)) / (nprocs / MIMIC_NUM_NODES) + (nprocs % MIMIC_NUM_NODES);
+    MPI_Info_set(info, "mpi_hw_resource_type" , "NUMANode");
+    err = MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_HW_GUIDED,
+                              rank, info, &hwcomm);
 
-    sprintf(my_procname,"compute.node.%d", node_id);
-    my_procname_len = (int)strlen(my_procname);
-#endif
-#endif
-
-    my_procname_len++; /* to include terminate null character */
-
-    if (rank == root) {
-        /* root collects all procnames */
-        all_procnames = (char **) NCI_Malloc(sizeof(char*) * nprocs);
-        if (all_procnames == NULL)
-            DEBUG_RETURN_ERROR(NC_ENOMEM)
-
-        all_procname_lens = (int *) NCI_Malloc(sizeof(int) * nprocs);
-        if (all_procname_lens == NULL) {
-            NCI_Free(all_procnames);
-            DEBUG_RETURN_ERROR(NC_ENOMEM)
-        }
-    }
-    /* gather process name lengths from all processes first */
-    MPI_Gather(&my_procname_len, 1, MPI_INT, all_procname_lens, 1, MPI_INT,
-               root, comm);
-
-    if (rank == root) {
-        int *disp;
-        size_t alloc_size = 0;
-
-        for (i=0; i<nprocs; i++)
-            alloc_size += all_procname_lens[i];
-
-        all_procnames[0] = (char *) NCI_Malloc(alloc_size);
-        if (all_procnames[0] == NULL) {
-            NCI_Free(all_procname_lens);
-            NCI_Free(all_procnames);
-            DEBUG_RETURN_ERROR(NC_ENOMEM)
-        }
-
-        /* Construct displacement array for the MPI_Gatherv, as each process
-         * may have a different length for its process name.
-         */
-        disp = (int *) NCI_Malloc(sizeof(int) * nprocs);
-        disp[0] = 0;
-        for (i=1; i<nprocs; i++) {
-            all_procnames[i] = all_procnames[i - 1] + all_procname_lens[i - 1];
-            disp[i] = disp[i - 1] + all_procname_lens[i - 1];
-        }
-
-        /* gather all process names */
-        MPI_Gatherv(my_procname, my_procname_len, MPI_CHAR,
-                    all_procnames[0], all_procname_lens, disp, MPI_CHAR,
-                    root, comm);
-
-        NCI_Free(disp);
-        NCI_Free(all_procname_lens);
-    } else
-        /* send process name to root */
-        MPI_Gatherv(my_procname, my_procname_len, MPI_CHAR,
-                    NULL, NULL, NULL, MPI_CHAR, root, comm);
-
-    /* node_ids is an array storing the compute node IDs of all MPI processes
-     * in the MPI communicator supplied by the application program. Here, we
-     * use malloc() instead of NCI_Malloc, because node_ids will be freed when
-     * the communicator is freed. When communicator is MPI_COMM_WORLD or
-     * MPI_COMM_SELF, it is freed at MPI_Finalize() whose calls to free()
-     * cannot be tracked by PnetCDF.
+    /* Below code fragment is from MPI standard 5.0's example 7.3:
+     * Splitting MPI_COMM_WORLD into NUMANode subcommunicators.
      */
-    node_ids = (int *) malloc(sizeof(int) * (nprocs + 1));
+    MPI_Info_set(info, "mpi_hw_resource_type" , "hwloc://NUMANode");
+    err = MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_HW_GUIDED,
+                              rank, info, &hwcomm);
 
-    if (rank == root) {
-        /* all_procnames[] can tell us the number of nodes and number of
-         * processes per node.
-         */
-        char **node_names;
-        int last;
+    /* Below code fragment is from MPI standard 5.0's example 7.4:
+     * Splitting MPI_COMM_WORLD into NUMANode subcommunicators.
+     */
+    MPI_Info_set(info, "mpi_hw_resource_type", "hwloc://NUMANode");
+    err = MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_RESOURCE_GUIDED,
+                              rank, info, &hwcomm);
+#endif
 
-        /* array of pointers pointing to unique host names (compute nodes) */
-        node_names = (char **) NCI_Malloc(sizeof(char*) * nprocs);
-
-        /* calculate node_ids[] */
-        last = 0;
-        num_nodes = 0; /* number of unique compute nodes */
-        for (i=0; i<nprocs; i++) {
-            k = last;
-            for (j=0; j<num_nodes; j++) {
-                /* check if [i] has already appeared in [] */
-                if (!strcmp(all_procnames[i], node_names[k])) { /* found */
-                    node_ids[i] = k;
-                    break;
-                }
-                k = (k == num_nodes - 1) ? 0 : k + 1;
-            }
-            if (j < num_nodes)  /* found, next iteration, start with node n */
-                last = k;
-            else {      /* not found, j == num_nodes, add a new node */
-                node_names[j] = strdup(all_procnames[i]);
-                node_ids[i] = j;
-                last = j;
-                num_nodes++;
-            }
-        }
-        /* num_nodes is now the number of compute nodes (unique node names) */
-
-        for (i=0; i<num_nodes; i++)
-            free(node_names[i]); /* allocated by strdup() */
-        NCI_Free(node_names);
-        NCI_Free(all_procnames[0]);
-        NCI_Free(all_procnames);
-
-        /* piggyback num_nodes to MPI_Bcast */
-        node_ids[nprocs] = num_nodes;
+    if (err != MPI_SUCCESS) {
+        err_msg = "MPI_Comm_split_type()";
+        goto err_out;
     }
 
-    /* broadcast compute node IDs of each MPI process */
-    MPI_Bcast(node_ids, nprocs+1, MPI_INT, root, comm);
+    if (*hwcomm == MPI_COMM_NULL) {
+        err_msg = "MPI_Comm_split_type() hwcomm NULL";
+        goto err_out;
+    }
 
-    *node_ids_ptr = node_ids;
-    *num_nodes_ptr = node_ids[nprocs];
+    /* Use hwcomm's root's rank as this process's NUMA node ID */
+    numa_id = rank;
+    MPI_Bcast(&numa_id, 1, MPI_INT, 0, *hwcomm);
+
+    /* Gather all NUMA node IDs */
+    *numa_ids = (int*) malloc(sizeof(int) * nprocs);
+    MPI_Allgather(&numa_id, 1, MPI_INT, *numa_ids, 1, MPI_INT, comm);
+
+    /* Count number of unique IDs and reassign NUMA ID */
+    ids = (int*) calloc(nprocs, sizeof(int));
+    *num_NUMAs = 0;
+    for (i=0; i<nprocs; i++) {
+        if (ids[(*numa_ids)[i]] == 0) {
+            (*num_NUMAs)++; /* unique count */
+            ids[(*numa_ids)[i]] = (*num_NUMAs); /* New ID, starting from 0 */
+        }
+        (*numa_ids)[i] = ids[(*numa_ids)[i]] - 1;
+    }
+    free(ids);
+
+err_out:
+    if (err != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(err, err_msg);
 
     return NC_NOERR;
 }
