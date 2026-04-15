@@ -23,12 +23,16 @@
 #include <sys/types.h> /* lstat(), open() */
 #include <sys/stat.h>  /* lstat(), open() */
 #include <unistd.h>    /* lstat(), access(), unlink(), open(), close() */
-#include <fcntl.h>     /* open(), O_CREAT */
+#include <fcntl.h>     /* open(), O_CREAT, O_RDWR, O_RDONLY */
 #endif
 #include <libgen.h>    /* dirname() */
 #include <assert.h>
 
 #include <mpi.h>
+
+#ifdef ENABLE_GIO
+#include <gio.h>
+#endif
 
 #include <pnc_debug.h>
 #include <common.h>
@@ -125,7 +129,7 @@ ncmpio_create(MPI_Comm         comm,
 {
     char *filename, value[MPI_MAX_INFO_VAL + 1], *mpi_name;
     int rank, nprocs, mpi_amode, err, mpireturn, default_format, file_exist=1;
-    int use_trunc=1, flag, striping_info[2], *aggr_NUMA_IDs=NULL;
+    int use_trunc=1, flag, striping_info[2];
     MPI_File fh=MPI_FILE_NULL;
     NC *ncp=NULL;
 
@@ -136,7 +140,7 @@ ncmpio_create(MPI_Comm         comm,
 
     /* Note path's validity and cmode consistency have been checked in
      * ncmpi_create() in src/dispatchers/file.c and path consistency will be
-     * done in MPI_File_open.
+     * done in MPI_File_open()/GIO_open().
      */
 
     /* First, check whether cmode is valid or supported ---------------------*/
@@ -149,8 +153,8 @@ ncmpio_create(MPI_Comm         comm,
 
     /* Check cmode for other illegal flags already done in dispatcher layer */
 
-    /* Get default format, in case cmode does not include either
-     * NC_64BIT_OFFSET or NC_64BIT_DATA.
+    /* Get default format, in case cmode does not include either NC_64BIT_DATA
+     * or NC_64BIT_OFFSET.
      */
     ncmpi_inq_default_format(&default_format);
 
@@ -167,16 +171,16 @@ ncmpio_create(MPI_Comm         comm,
 
     /* Extract hints from user_info.
      *
-     *   Three hints must be extracted before calling PNCIO_File_open() or
-     *   MPI_File_open().
-     *      + nc_driver: whether to use MPI-IO or PnetCDF's PNCIO driver.
+     *   Three PnetCDF hints must and have been be extracted before calling
+     *   MPI_File_open() or GIO_open().
+     *      + nc_driver: whether to use MPI-IO or GIO driver.
      *      + nc_num_aggrs_per_node: number of processes per node to be the INA
      *          aggregators, which determines the MPI communicator to be passed
-     *          to PNCIO_File_open() and MPI_File_open().
+     *          to GIO_open() and MPI_File_open().
      *      + nc_striping: whether to inherit parent folder's striping.
      *
-     *   Four hints must be extracted before ncmpio_enddef(). They are used
-     *   when creating dimensions, attributes, and variables.
+     *   Four PnetCDF hints must be extracted before ncmpio_enddef(). They are
+     *   used when creating dimensions, attributes, and variables.
      *      + nc_hash_size_dim: hash table size for dimensions
      *      + nc_hash_size_var: hash table size for variables
      *      + nc_hash_size_gattr: hash table size for global attributes
@@ -199,30 +203,30 @@ ncmpio_create(MPI_Comm         comm,
      *   the PnetCDF hints into the info object (ncp->mpiinfo). So ncp->mpiinfo
      *   can be used in ncmpi_inq_file_info() to return all hints to users.
      *
-     *   Note MPI_File_open() may also add new hints, such as those related to
-     *   file striping and I/O aggregators.
+     *   MPI_File_open() will add new hints, such as those related to file
+     *   striping and I/O aggregators.
+     *      + cb_nodes
      *      + striping_unit
      *      + striping_factor
      *      + start_iodevice
-     *      + cb_nodes
      *
-     *   PNCIO_File_open() may also add new hints, such as those related to
-     *   file striping and I/O aggregators.
-     *      + lustre_overstriping_ratio
-     *      + lustre_num_osts
+     *   GIO_open() will add new hints, such as those related to file striping
+     *   and I/O aggregators.
      *      + cb_nodes
      *      + cb_node_list
+     *      + striping_unit
+     *      + striping_factor
+     *      + start_iodevice
+     *      + lustre_overstriping_ratio
+     *      + lustre_num_osts
      */
     ncmpio_hint_extract(ncp, user_info);
 
     if (rank == 0)
         /* Check file system type. If the given file does not exist, check its
-         * parent folder. Currently PnetCDF's PNCIO drivers support Lustre
-         * (PNCIO_FS_LUSTRE) and Unix File System (PNCIO_FS_UFS). This info
-         * will also be used when MPI-IO driver is used to configure file
-         * striping settings.
+         * parent folder. This info will be used to set file striping hints.
          */
-        ncp->fstype = PNCIO_FileSysType(path);
+        ncp->fstype = ncmpio_FileSysType(path);
 
     /* Setting file open mode in mpi_amode which may later be needed in
      * ncmpi_begin_indep_data() to open file in the independent data mode.
@@ -318,10 +322,8 @@ ncmpio_create(MPI_Comm         comm,
                 else
                     err = NC_NOERR;
 #else
-                err = NC_NOERR;
-                if (ncp->driver == PNC_DRIVER_PNCIO)
-                    err = PNCIO_File_delete(filename);
-                else {
+                if (ncp->driver == PNC_DRIVER_MPIIO) {
+                    err = NC_NOERR;
 #ifdef MPICH_VERSION
                     /* MPICH recognizes file system type acronym prefixed to
                      * the file name. Other MPI implementations may not.
@@ -338,6 +340,12 @@ ncmpio_create(MPI_Comm         comm,
                             err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
                     }
                 }
+#ifdef ENABLE_GIO
+                else if (ncp->driver == PNC_DRIVER_GIO)
+                    err = GIO_delete(filename);
+#endif
+                else
+                    err = NC_EDRIVER;
 #endif
             }
             else {
@@ -369,19 +377,8 @@ ncmpio_create(MPI_Comm         comm,
                  * Note in some ROMIO versions that make all processes to call
                  * truncate(), this option may be expensive.
                  */
-                err = NC_NOERR;
-                if (ncp->driver == PNC_DRIVER_PNCIO) {
-                    PNCIO_File pncio_fh;
-                    pncio_fh = (PNCIO_File*) NCI_Calloc(1,sizeof(PNCIO_File));
-                    err = PNCIO_File_open(MPI_COMM_SELF, filename, O_RDWR,
-                                          MPI_INFO_NULL, pncio_fh);
-                    if (err == NC_NOERR)
-                        PNCIO_File_set_size(pncio_fh, 0); /* may be expensive */
-                    else
-                        PNCIO_File_close(&pncio_fh);
-                    NCI_Free(pncio_fh);
-                }
-                else {
+                if (ncp->driver == PNC_DRIVER_MPIIO) {
+                    err = NC_NOERR;
 #ifdef MPICH_VERSION
                     /* MPICH recognizes file system type acronym prefixed to
                      * the file name. Other MPI implementations may not.
@@ -415,6 +412,19 @@ ncmpio_create(MPI_Comm         comm,
                         }
                     }
                 }
+#ifdef ENABLE_GIO
+                else if (ncp->driver == PNC_DRIVER_GIO) {
+                    GIO_File gio_fh;
+                    err = GIO_open(MPI_COMM_SELF, filename, O_RDWR,
+                                   MPI_INFO_NULL, &gio_fh);
+                    if (err == NC_NOERR)
+                        GIO_set_size(gio_fh, 0); /* may be expensive */
+                    else
+                        GIO_close(&gio_fh);
+                }
+#endif
+                else
+                    err = NC_EDRIVER;
 #endif
             }
             if (errno == ENOENT) errno = 0; /* reset errno */
@@ -440,23 +450,9 @@ ncmpio_create(MPI_Comm         comm,
     ncp->mpi_amode = mpi_amode;
     ncp->mpiinfo   = MPI_INFO_NULL;
 
-    if (ncp->driver == PNC_DRIVER_PNCIO) {
-        /* Initialize pncio_fh, PNCIO file handler, with common metadata shared
-         * among all processes, including non-INA aggregators when INA is
-         * enabled. This is necessary for non-INA aggregators to perform
-         * independent I/O.
-         */
-        ncp->pncio_fh = (PNCIO_File*) NCI_Calloc(1, sizeof(PNCIO_File));
-        ncp->pncio_fh->comm           = comm;
-        ncp->pncio_fh->fstype         = ncp->fstype;
-        ncp->pncio_fh->comm_attr      = comm_attr;
-        ncp->pncio_fh->file_view.size = -1;
-        ncp->pncio_fh->filename       = filename;
-        ncp->pncio_fh->info           = MPI_INFO_NULL;
-        ncp->pncio_fh->amode          = O_CREAT|O_RDWR;
-    }
-    else
-        ncp->pncio_fh  = NULL; /* used only when using PNCIO driver */
+#ifdef ENABLE_GIO
+    ncp->gio_fh = NULL; /* when using GIO driver */
+#endif
 
     /* For file create, ignore NC_NOWRITE if set in cmode argument. */
     ncp->nc_amode = cmode | NC_WRITE;
@@ -491,17 +487,18 @@ ncmpio_create(MPI_Comm         comm,
     /* comm_attr has been constructed at the dispatchers.
      *
      * comm_attr.NUMA_IDs[] stores the NUMA compute node IDs of all MPI ranks
-     * of this comm, the MPI communicator passed from the user application. It
-     * is a keyval attribute cached in the communicator, comm. See its
-     * construction details in src/dispatchers/file.c.
+     * of this comm (the MPI communicator passed from the user application). It
+     * is a keyval attribute cached in the communicator, comm. See how
+     * comm_attr.NUMA_IDs[] was constructed in src/dispatchers/file.c.
      *
      * When the intra-node aggregation (INA) is enabled, commm_attr also stores
-     * an intra-node communicator (containing processes in an INA group) and an
-     * inter-node communicator (containing all the INA aggregators).
+     * an intra-node communicator (containing processes belonging to its INA
+     * group) and an inter-node communicator (containing all the INA
+     * aggregators).
      *
-     * comm_attr.NUMA_IDs[] is used to create the inter-node communicator,
-     * which will be used to call PNCIO_File_open() or MPI_File_open().
-     * This means only the INA aggregators will perform file I/O.
+     * The inter-node communicator will be used to call GIO_open() or
+     * MPI_File_open(), which means only the INA aggregators will perform
+     * collective I/O to the file.
      */
     ncp->comm_attr = comm_attr;
 
@@ -511,26 +508,28 @@ ncmpio_create(MPI_Comm         comm,
     if (ncp->num_aggrs_per_node * comm_attr.num_NUMAs >= ncp->nprocs)
         ncp->num_aggrs_per_node = 0;
 
-    /* ncp->num_aggrs_per_node = 0, or > 0 is an indicator of whether the INA
-     * feature is disabled or enabled globally for all processes.
+    /* The value of ncp->num_aggrs_per_node = 0, or > 0 is an indicator of
+     * whether the INA feature is disabled or enabled globally. Thus,
+     * ncp->num_aggrs_per_node is always consistent among all processes.
      */
     if (ncp->num_aggrs_per_node > 0) {
 #ifdef PNETCDF_DEBUG
         if (comm_attr.is_ina_aggr) /* INA aggregator */
             assert(comm_attr.ina_inter_comm != MPI_COMM_NULL);
+        else
+            assert(comm_attr.ina_inter_comm == MPI_COMM_NULL);
 #endif
 
-        /* As non-aggregators will not perform any file I/O, we now can replace
-         * comm with ina_inter_comm.
+        /* As non-aggregators will call MPI_File_open() or GIO_open(), we now
+         * can replace comm with ina_inter_comm. Note 'comm' is a local
+         * variable of this subroutine.
          */
         comm = comm_attr.ina_inter_comm;
 
         /* For non-INA aggregators, comm_attr.ina_inter_comm is MPI_COMM_NULL.
-         * Note 'comm' is a local variable used only in this subroutine.
-         * Because the below lines of this subroutines till label 'after_open'
-         * is for INA aggregators to open the file and obtain a file handler,
-         * non-INA aggregators do not participate and thus do not make use of
-         * comm.
+         * Because the codes below till label 'after_open' are for INA
+         * aggregators to open the file and obtain a file handler, non-INA
+         * aggregators do not participate and thus do not make use of comm.
          */
         if (comm == MPI_COMM_NULL) {
             if (user_info != MPI_INFO_NULL)
@@ -543,36 +542,10 @@ ncmpio_create(MPI_Comm         comm,
 #endif
 
         /* As non-aggregators will not perform any file I/O, we now can replace
-         * nprocs with ina_inter_comm's size.
+         * nprocs with ina_inter_comm's size. Note 'nprocs' is a local variable
+         * of this subroutine.
          */
         MPI_Comm_size(comm, &nprocs);
-
-/* TODO: pass hints 'num_NUMA_nodes' and 'my_NUMA_ID' in info to
- * PNCIO_File_open(), so PNCIO can call MPI_Allgather() to build NUMA_IDs[].
- * If the two hints are missing, then PNCIO build its its own NUMA_IDs[].
- */
-#if 1
-        int i, j;
-
-        /* Replace ncp->comm_attr.NUMA_IDs[] with one containing only the INA
-         * aggregators' NUMA IDs, so comm_attr can be later passed to the call
-         * of PNCIO_File_open(). This adjustment is necessary because only the
-         * INA aggregators will open the file and comm_attr.ina_inter_comm
-         * contains only the INA aggregators.
-         *
-         * Note this will only replace ncp->comm_attr's NUMA_IDs[], not the
-         * attribute cached in ncp->comm, because ncp->comm_attr is a local
-         * variable, and it will be freed at the end of this subroutine.
-         */
-        aggr_NUMA_IDs = (int*) NCI_Malloc(sizeof(int) * nprocs);
-
-        for (i=0; i<nprocs; i++) { /* number of INA aggregator */
-            /* j is the process rank in comm passed into ncmpi_create() */
-            j = comm_attr.ina_ranks[i];
-            aggr_NUMA_IDs[i] = comm_attr.NUMA_IDs[j];
-        }
-        ncp->comm_attr.NUMA_IDs = aggr_NUMA_IDs;
-#endif
     }
 
     /* create file collectively -------------------------------------------- */
@@ -697,43 +670,47 @@ ncmpio_create(MPI_Comm         comm,
             DEBUG_FOPEN_ERROR(err);
         }
     }
-    else {
-        /* When ncp->driver == PNC_DRIVER_PNCIO, use PnetCDF's PNCIO driver.
-         * When INA is enabled, only the INA aggregators can reach here.
+#ifdef ENABLE_GIO
+    else if (ncp->driver == PNC_DRIVER_GIO) {
+        /* Use GIO driver.
+         *
+         * Note when INA is enabled, only the INA aggregators call GIO_open().
          * Non-INA aggregators have skipped to 'after_open' from above, with
          * their 'comm', a local variable of this subroutine, remaining
          * MPI_COMM_NULL (ncp->comm is always assigned to comm).
          */
-        ncp->pncio_fh->fstype = ncp->fstype;
-        ncp->pncio_fh->comm_attr = ncp->comm_attr;
 
-        /* use_trunc also indicates whether the file has already existed as a
+        /* 'use_trunc' also indicates whether the file has already existed as a
          * symbolic link, For a symbolic link file, we cannot add O_CREAT.
          */
         int amode = (mpi_amode & MPI_MODE_CREATE) ? O_CREAT|O_RDWR : O_RDWR;
-        err = PNCIO_File_open(comm, filename, amode, user_info, ncp->pncio_fh);
+        err = GIO_open(comm, filename, amode, user_info, &ncp->gio_fh);
         if (err != NC_NOERR) DEBUG_FOPEN_ERROR(err)
 
         /* Now the file has been successfully created, obtain the I/O hints
-         * used/modified by PNCIO driver.
+         * used/modified by GIO driver.
          */
-        err = PNCIO_File_get_info(ncp->pncio_fh, &ncp->mpiinfo);
+        err = GIO_get_info(ncp->gio_fh, &ncp->mpiinfo);
         if (err != NC_NOERR) DEBUG_FOPEN_ERROR(err)
     }
+#endif
+    else
+        err = NC_EDRIVER;
 
 after_open:
     ncp->striping_unit = 0;
     ncp->striping_factor = 0;
 
     /* All processes must obtain striping_unit and striping_factor consistent
-     * across all processes. They are used to fulfill ncmpi_inq_striping() and
+     * across all processes in order to fulfill ncmpi_inq_striping() and
      * striping_unit is also used to set ncp->data_chunk if hint
      * nc_data_move_chunk_size is not set by the user.
      *
      * When INA is enabled, only INA aggregators have valid striping_unit and
      * striping_factor in their ncp->mpiinfo. This is because non-INA
      * aggregators do not participate the call to MPI_File_open() or
-     * PNCIO_File_open(). We need to have root to broadcast these 2 info.
+     * GIO_open(). We need to have INA root to broadcast these 2 info to its
+     * INA group members.
      */
     if (ncp->num_aggrs_per_node == 0 ||
         comm_attr.ina_intra_comm != MPI_COMM_NULL) {
@@ -762,33 +739,25 @@ after_open:
 
     if (ncp->num_aggrs_per_node > 0 &&
         comm_attr.ina_intra_comm != MPI_COMM_NULL) {
-        /* When INA is enabled, each INA aggregator broadcasts hints to its
-         * non-INA aggregators.
+        /* When INA is enabled, each INA aggregator broadcasts hints to the
+         * non-INA aggregators assigned to it. At this moment, only the non-INA
+         * aggregators have not yet set the striping hints to ncp->mpiinfo
          */
-        int rank;
+        int nprocs;
+        MPI_Comm_size(comm_attr.ina_intra_comm, &nprocs);
 
-        MPI_Comm_rank(comm_attr.ina_intra_comm, &rank);
+        if (nprocs > 1) {
+            int rank;
+            MPI_Comm_rank(comm_attr.ina_intra_comm, &rank);
 
-        MPI_Bcast(striping_info, 2, MPI_INT, 0, comm_attr.ina_intra_comm);
+            MPI_Bcast(striping_info, 2, MPI_INT, 0, comm_attr.ina_intra_comm);
 
-        if (rank > 0) {
-            /* Only non-INA aggregators need to add these to ncp->mpiinfo */
-            sprintf(value, "%d", striping_info[0]);
-            MPI_Info_set(ncp->mpiinfo, "striping_unit", value);
-            sprintf(value, "%d", striping_info[1]);
-            MPI_Info_set(ncp->mpiinfo, "striping_factor", value);
-
-            if (ncp->driver == PNC_DRIVER_PNCIO) {
-                /* Must initialize hints for non-INA aggregators, as hints will
-                 * be used when non-INA aggregators perform independent
-                 * reads/writes. Currently, the following hints are used.
-                 *      romio_ds_write, ind_wr_buffer_size
-                 *      romio_ds_read,  ind_rd_buffer_size
-                 */
-                ncp->pncio_fh->comm = MPI_COMM_SELF;
-                ncp->pncio_fh->hints = (PNCIO_Hints*)
-                                       NCI_Calloc(1, sizeof(PNCIO_Hints));
-                PNCIO_File_set_info(ncp->pncio_fh, ncp->mpiinfo);
+            if (rank > 0) {
+                /* non-INA aggregators have not set these to ncp->mpiinfo */
+                sprintf(value, "%d", striping_info[0]);
+                MPI_Info_set(ncp->mpiinfo, "striping_unit", value);
+                sprintf(value, "%d", striping_info[1]);
+                MPI_Info_set(ncp->mpiinfo, "striping_factor", value);
             }
         }
     }
@@ -807,10 +776,6 @@ after_open:
      * inquire them.
      */
     ncmpio_hint_set(ncp, ncp->mpiinfo);
-
-    if (aggr_NUMA_IDs != NULL)
-        /* aggr_NUMA_IDs is allocated above when INA is enabled. */
-        NCI_Free(aggr_NUMA_IDs);
 
     /* comm_attr.NUMA_IDs[] is no longer needed once the file is opened. */
 

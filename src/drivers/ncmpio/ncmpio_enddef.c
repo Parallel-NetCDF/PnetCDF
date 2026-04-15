@@ -253,11 +253,10 @@ move_file_block(NC         *ncp,
         rlen = ncmpio_file_read_at_all(ncp, off_from, buf, buf_view);
         if (status == NC_NOERR && rlen < 0) status = (int)rlen;
 
-        /* To prevent from one rank's write run faster than other's read,
-         * a barrier is required. Even with collective read/write, some
-         * processes may exit MPI_File_read_at_all()/PNCIO_File_read_at_all()
-         * than others and start writing to file while others are still reading
-         * it.
+        /* To prevent from one rank's write run faster than other's read, a
+         * barrier is required. Even with collective read/write, some processes
+         * may exit MPI_File_read_at_all()/GIO_read_at_all() than others and
+         * start writing to file while others are still reading it.
          */
         if (nprocs > 1) MPI_Barrier(comm);
 

@@ -66,7 +66,11 @@ void ncmpio_hint_extract(NC       *ncp,
     ncp->num_aggrs_per_node = 0;
 
     /* default I/O driver */
-    ncp->driver = PNC_DRIVER_PNCIO;
+#ifdef ENABLE_GIO
+    ncp->driver = PNC_DRIVER_GIO;
+#else
+    ncp->driver = PNC_DRIVER_MPIIO;
+#endif
 
     if (info == MPI_INFO_NULL) return;
 
@@ -236,8 +240,8 @@ void ncmpio_hint_extract(NC       *ncp,
         }
     }
 
-    /* If user explicitly want to use MPI-IO instead of PnetCDF's internal
-     * PNCIO driver, then set PnetCDF I/O hint "nc_driver" to "mpiio".
+    /* If user explicitly want to use MPI-IO instead of GIO driver, then set
+     * PnetCDF I/O hint "nc_driver" to "mpiio".
      */
     MPI_Info_get(info, "nc_driver", MPI_MAX_INFO_VAL-1, value, &flag);
     if (flag && strcasecmp(value, "mpiio") == 0)
@@ -351,11 +355,13 @@ void ncmpio_hint_set(NC       *ncp,
     snprintf(int_str, MAX_INT_LEN, "%d", ncp->hash_size_attr);
     MPI_Info_set(info, "nc_hash_size_vattr", int_str);
 
-    /* Whether using MPI-IO instead of PnetCDF's internal PNCIO driver. */
+    /* Whether to use MPI-IO or GIO driver. */
     if (ncp->driver == PNC_DRIVER_MPIIO)
         MPI_Info_set(info, "nc_driver", "mpiio");
+#ifdef ENABLE_GIO
     else
-        MPI_Info_set(info, "nc_driver", "pncio");
+        MPI_Info_set(info, "nc_driver", "gio");
+#endif
 
     if (ncp->num_aggrs_per_node > 0) {
         /* Number of INA aggregators per compute node. */

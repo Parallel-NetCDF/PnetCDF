@@ -10,8 +10,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> /* memset() */
+#include <assert.h>
 
 #include <mpi.h>
+
+#ifdef ENABLE_GIO
+#include <gio.h>
+#endif
 
 #include <pnc_debug.h>
 #include <common.h>
@@ -126,8 +131,18 @@ ncmpio_file_read_at(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
+#ifdef ENABLE_GIO
+    else if (ncp->driver == PNC_DRIVER_GIO) {
+        amnt = GIO_read_at(ncp->gio_fh, buf, ncp->file_view.count,
+                                             ncp->file_view.off,
+                                             ncp->file_view.len,
+                                             buf_view.count,
+                                             buf_view.off,
+                                             buf_view.len);
+    }
+#endif
     else
-        amnt = PNCIO_File_read_at(ncp->pncio_fh, offset, buf, buf_view);
+        amnt = NC_EDRIVER;
 
     /* update the number of bytes read since file open */
     if (amnt >= 0) ncp->get_size += amnt;
@@ -195,12 +210,23 @@ ncmpio_file_read_at_all(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
-    else if (ncp->num_aggrs_per_node == 0 ||  /* INA is disabled */
-             ncp->comm_attr.is_ina_aggr)      /* is an INA aggregator */
+#ifdef ENABLE_GIO
+    else if (ncp->driver == PNC_DRIVER_GIO) {
+        if (ncp->num_aggrs_per_node == 0 ||  /* INA is disabled */
+            ncp->comm_attr.is_ina_aggr)      /* is an INA aggregator */
         /* When INA is disabled, all processes must participate this collective
          * read. When INA is enabled, only the INA aggregators participate.
          */
-        amnt = PNCIO_File_read_at_all(ncp->pncio_fh, offset, buf, buf_view);
+        amnt = GIO_read_at(ncp->gio_fh, buf, ncp->file_view.count,
+                                             ncp->file_view.off,
+                                             ncp->file_view.len,
+                                             buf_view.count,
+                                             buf_view.off,
+                                             buf_view.len);
+    }
+#endif
+    else
+        amnt = NC_EDRIVER;
 
     /* update the number of bytes read since file open */
     if (amnt >= 0) ncp->get_size += amnt;
@@ -268,8 +294,18 @@ ncmpio_file_write_at(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
+#ifdef ENABLE_GIO
+    else if (ncp->driver == PNC_DRIVER_GIO) {
+        amnt = GIO_write_at(ncp->gio_fh, buf, ncp->file_view.count,
+                                              ncp->file_view.off,
+                                              ncp->file_view.len,
+                                              buf_view.count,
+                                              buf_view.off,
+                                              buf_view.len);
+    }
+#endif
     else
-        amnt = PNCIO_File_write_at(ncp->pncio_fh, offset, buf, buf_view);
+        amnt = NC_EDRIVER;
 
     /* update the number of bytes written since file open */
     if (amnt >= 0) ncp->put_size += amnt;
@@ -336,12 +372,23 @@ ncmpio_file_write_at_all(NC         *ncp,
         if (err == NC_NOERR)
             amnt = get_count(&mpistatus, buf_view.type);
     }
-    else if (ncp->num_aggrs_per_node == 0 ||  /* INA is disabled */
-             ncp->comm_attr.is_ina_aggr)      /* is an INA aggregator */
+#ifdef ENABLE_GIO
+    else if (ncp->driver == PNC_DRIVER_GIO) {
+        if (ncp->num_aggrs_per_node == 0 ||  /* INA is disabled */
+            ncp->comm_attr.is_ina_aggr)      /* is an INA aggregator */
         /* When INA is disabled, all processes must participate this collective
          * write. When INA is enabled, only the INA aggregators participate.
          */
-        amnt = PNCIO_File_write_at_all(ncp->pncio_fh, offset, buf, buf_view);
+        amnt = GIO_write_at_all(ncp->gio_fh, buf, ncp->file_view.count,
+                                                  ncp->file_view.off,
+                                                  ncp->file_view.len,
+                                                  buf_view.count,
+                                                  buf_view.off,
+                                                  buf_view.len);
+    }
+#endif
+    else
+        amnt = NC_EDRIVER;
 
     /* update the number of bytes written since file open */
     if (amnt >= 0) ncp->put_size += amnt;
@@ -686,11 +733,14 @@ ncmpio_file_close(NC *ncp)
                 err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
         }
     }
-    else {
-        err = PNCIO_File_close(ncp->pncio_fh);
-        NCI_Free(ncp->pncio_fh);
-        ncp->pncio_fh = NULL;
+#ifdef ENABLE_GIO
+    else if (ncp->driver == PNC_DRIVER_GIO) {
+        err = GIO_close(ncp->gio_fh);
+        ncp->gio_fh = NULL;
     }
+#endif
+    else
+        err = NC_EDRIVER;
 
     return err;
 }
@@ -722,8 +772,15 @@ ncmpio_file_delete(NC *ncp)
             if (mpireturn != MPI_SUCCESS)
                 err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
         }
+#ifdef ENABLE_GIO
+        else if (ncp->driver == PNC_DRIVER_GIO) {
+            err = GIO_delete(path);
+            if (err != GIO_NOERR)
+                err = ncmpii_error_gio2nc(err, "GIO_delete");
+        }
+#endif
         else
-            err = PNCIO_File_delete(path);
+            err = NC_EDRIVER;
     }
 
     if (ncp->nprocs > 1)
@@ -741,12 +798,16 @@ ncmpio_file_sync(NC *ncp) {
     char *mpi_name;
     int mpireturn;
 
-    if (ncp->driver == PNC_DRIVER_PNCIO) {
-        if (ncp->pncio_fh->is_open)
-            return PNCIO_File_sync(ncp->pncio_fh);
-        else
-            return NC_NOERR;
+#ifdef ENABLE_GIO
+    if (ncp->driver == PNC_DRIVER_GIO) {
+        int err = GIO_sync(ncp->gio_fh);
+        if (err != GIO_NOERR)
+            err = ncmpii_error_gio2nc(err, "GIO_sync");
+        return err;
     }
+#endif
+    if (ncp->driver == PNC_DRIVER_MPIIO)
+        return NC_EDRIVER;
 
     /* the remaining of this subroutine are for when using MPI-IO */
 
@@ -777,11 +838,11 @@ ncmpio_file_sync(NC *ncp) {
 }
 
 /*----< ncmpio_file_set_view() >---------------------------------------------*/
-/* This subroutine is collective when using MPI-IO. When using internal PNCIO
+/* This subroutine is collective when using MPI-IO driver. When using GIO
  * driver, this subroutine is independent.
  */
 int
-ncmpio_file_set_view(const NC     *ncp,
+ncmpio_file_set_view(NC           *ncp,
                      MPI_Datatype  filetype,
                      MPI_Aint      npairs,
 #ifdef HAVE_MPI_LARGE_COUNT
@@ -797,16 +858,18 @@ ncmpio_file_set_view(const NC     *ncp,
     int err, mpireturn, status=NC_NOERR;
     MPI_File fh;
 
-    if (ncp->driver == PNC_DRIVER_PNCIO) {
-        /* When PnetCDF's internal PNCIO driver is used, the request has been
-         * flattened into offsets and lengths. Thus the passed-in argument
-         * filetype is not constructed and will not be used. Note arguments
-         * offsets and lengths are not relative to any MPI-IO fileview. They
-         * will be reused in PNCIO driver as a flattened file type struct,
-         * ncp-pncio_fh->file_view. These already flattened offset-length pairs
-         * avoid repeated work of constructing and flattening a filetype.
+    if (ncp->driver == PNC_DRIVER_GIO) {
+        /* GIO library does not have an API for setting a fileview. The
+         * flattened fileview's offset-length pairs are directly passed to
+         * GIO_read/write APIs, because GIO does not support reuse of a
+         * fileview. Using flattened offset-length pairs avoids constructing
+         * and flattening a filetype.
          */
-        return PNCIO_File_set_view(ncp->pncio_fh, npairs, offsets, lengths);
+        ncp->file_view.count = npairs;
+        ncp->file_view.off = offsets;
+        ncp->file_view.len = lengths;
+
+        return NC_NOERR;
     }
 
     /* Now, ncp->driver == PNC_DRIVER_MPIIO, i.e. using MPI-IO. */

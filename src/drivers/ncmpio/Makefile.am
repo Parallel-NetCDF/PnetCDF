@@ -12,10 +12,13 @@ AM_CPPFLAGS  = -I${top_srcdir}/src/include
 AM_CPPFLAGS += -I${top_builddir}/src/include
 AM_CPPFLAGS += -I${top_srcdir}/src/drivers/include
 AM_CPPFLAGS += -I${top_builddir}/src/drivers/include
-AM_CPPFLAGS += -I${top_srcdir}/src/drivers/pncio
 
 if PNETCDF_DEBUG
    AM_CPPFLAGS += -DPNETCDF_DEBUG
+endif
+
+if BUILD_GIO
+   AM_CPPFLAGS += -I${top_builddir}/gio/src
 endif
 
 noinst_LTLIBRARIES = libncmpio.la
@@ -54,7 +57,8 @@ C_SRCS = ncmpio_driver.c \
          ncmpio_util.c \
          ncmpio_hash_func.c \
          ncmpio_file_io.c \
-         ncmpio_intra_node.c
+         ncmpio_intra_node.c \
+         ncmpio_fstype.c
 
 $(M4_SRCS:.m4=.c): Makefile
 

@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>  /* strcpy() */
+#include <unistd.h>  /* unlink() */
 #include <assert.h>
 #include <errno.h>
 
@@ -144,10 +145,12 @@ ncmpio_begin_indep_data(void *ncdp)
      */
     MPI_Barrier(ncp->comm);
 
-    if (ncp->driver == PNC_DRIVER_PNCIO) {
+#ifdef ENABLE_GIO
+    if (ncp->driver == PNC_DRIVER_GIO) {
         /* PNCIO driver implements open-on-demand mechanism. */
         return NC_NOERR;
     }
+#endif
 
     /* PnetCDF's default mode is collective. MPI file handle, collective_fh,
      * will never be MPI_FILE_NULL. We must use a separate MPI file handle
@@ -463,14 +466,13 @@ ncmpi_delete(const char *filename,
              MPI_Info    info)
 {
     int err = NC_NOERR;
-#ifdef MIMIC_LUSTRE
+
+#ifdef HAVE_UNLINK
     char *path = ncmpii_remove_file_system_type_prefix(filename);
     err = unlink(path);
     if (err != 0)
         err = ncmpii_error_posix2nc("unlink");
 #else
-    err = PNCIO_File_delete(filename);
-#if 0
     char *mpi_name;
     int mpireturn;
 
@@ -478,7 +480,7 @@ ncmpi_delete(const char *filename,
     if (mpireturn != MPI_SUCCESS)
         err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
 #endif
-#endif
+
     return err;
 }
 
