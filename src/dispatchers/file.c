@@ -948,6 +948,13 @@ ncmpi_create(MPI_Comm    comm,
     set_get_comm_attr(comm, num_aggrs_per_node, &comm_attr);
     /* ignore error, as it is not a critical error */
 
+    if (combined_info == MPI_INFO_NULL)
+        MPI_Info_create(&combined_info);
+
+    /* add this rank's NUMA node ID */
+    snprintf(value, MAX_INT_LEN, "%d", comm_attr.NUMA_IDs[rank]);
+    MPI_Info_set(combined_info, "NUMA_ID", value);
+
 #ifdef ENABLE_THREAD_SAFE
     perr = pthread_mutex_unlock(&lock);
     if (perr != 0)
