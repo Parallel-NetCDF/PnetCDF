@@ -16,11 +16,42 @@
 
 #include <dispatch.h>
 #include "ncmpio_driver.h"
-#include "pncio.h"
+
+#ifdef ENABLE_GIO
+#include "gio.h"
+#endif
+
+#define PNC_FS_UFS        152  /* Unix file system */
+#define PNC_FS_LUSTRE     163  /* Lustre file system */
 
 #define PNC_DRIVER_MPIIO  -1  /* Use MPI-IO driver */
 #define PNC_DRIVER_GIO    0   /* Use GIO driver */
-#define PNC_DRIVER_PNCIO  1   /* Use PNCIO driver */
+
+#define PNCIO_STRIPING_AUTO    -1
+#define PNCIO_STRIPING_INHERIT 0
+
+typedef struct {
+    MPI_Datatype type;      /* MPI derived datatype, it is used only by
+                             * buf_view.
+                             */
+    MPI_Offset   size;      /* total size in bytes, i.e. sum of len[*],
+                             * 0 means zero-sized request. -1 means view has
+                             * been reset (in this case count should be 0).
+                             */
+    MPI_Count    count;     /* number of off-len pairs. 0 means the entire file
+                             * is visible. 0 or 1 means buf_view/file_view is
+                             * contiguous. Only when noncontiguous, off and len
+                             * are malloc-ed. Note 0 does not necessarily means
+                             * zero-sized request.
+                             */
+#ifdef HAVE_MPI_LARGE_COUNT
+    MPI_Offset  *off;       /* [count] byte offsets */
+    MPI_Offset  *len;       /* [count] block lengths in bytes */
+#else
+    MPI_Offset  *off;       /* [count] byte offsets */
+    int         *len;       /* [count] block lengths in bytes */
+#endif
+} PNCIO_View;
 
 /* default free space in the file header section. */
 #define NC_DEFAULT_H_MINFREE 0
@@ -403,6 +434,15 @@ struct NC {
     int           mpi_amode;    /* mode used in MPI_File_open, passed from
                                  * collective open to independent open */
     int           format;       /* 1, 2, or 5 corresponding to CDF-1, 2, or 5 */
+    int           is_open;      /* 0: not open yet 1: is open. When INA is
+                                 * enabled, only INA aggregators' is_open is
+                                 * set to 1 after file create/open. Non-INA
+                                 * aggregators' is_open 0. Once a non-INA
+                                 * aggregators makes an independent I/O call,
+                                 * its is_open will be set to 1. When INA is
+                                 * disabled, all processes' is_open is set to 1
+                                 * after file create/open.
+                                 */
 #ifdef ENABLE_SUBFILING
     int           subfile_mode; /* 0 or 1, for disable/enable subfiling */
     int           num_subfiles; /* no. subfiles */
@@ -457,8 +497,11 @@ struct NC {
     MPI_Info      mpiinfo;       /* used MPI info object */
     MPI_File      collective_fh; /* MPI-IO file handle for collective mode */
     MPI_File      independent_fh;/* MPI-IO file handle for independent mode */
-    PNCIO_File   *pncio_fh;      /* PNCIO file handler */
-    int           driver;        /* PNC_DRIVER_PNCIO, PNC_DRIVER_MPIIO */
+#ifdef ENABLE_GIO
+    GIO_File      gio_fh;        /* GIO file handler */
+#endif
+    PNCIO_View    file_view;
+    int           driver;        /* PNC_DRIVER_GIO, PNC_DRIVER_MPIIO */
     int           fstype;        /* PNCIO_FS_LUSTRE, PNCIO_FS_UFS */
 
     NC_dimarray   dims;     /* dimensions defined */
@@ -707,7 +750,7 @@ extern int
 ncmpio_file_sync(NC *ncp);
 
 extern int
-ncmpio_file_set_view(const NC *ncp, MPI_Datatype filetype, MPI_Aint npairs,
+ncmpio_file_set_view(NC *ncp, MPI_Datatype filetype, MPI_Aint npairs,
 #ifdef HAVE_MPI_LARGE_COUNT
                 MPI_Count *offsets, MPI_Count *lengths
 #else
@@ -723,5 +766,9 @@ extern int
 ncmpio_ina_req(NC *ncp, int mode, NC_var *varp, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                MPI_Offset nbytes, void *buf);
+
+/* Begin defined in ncmpio_fstype.c -----------------------------------------*/
+extern int
+ncmpio_FileSysType(const char *filename);
 
 #endif /* H_NC */
