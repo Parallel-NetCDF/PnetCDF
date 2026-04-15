@@ -17,6 +17,10 @@ if PNETCDF_DEBUG
    AM_CPPFLAGS += -DPNETCDF_DEBUG
 endif
 
+if BUILD_GIO
+   AM_CPPFLAGS += -I${top_builddir}/gio/src
+endif
+
 noinst_LTLIBRARIES = libcommon.la
 
 H_SRCS = utf8proc_data.h \
@@ -34,15 +38,19 @@ C_SRCS    = utf8proc.c \
             mem_alloc.c \
             dtype_decode.c \
             create_imaptype.c \
-            error_mpi2nc.c \
             check_name.c \
             pack_unpack.c \
             utils.c \
             error_posix2nc.c \
+            error_mpi2nc.c \
             hash_map.c
 
+if BUILD_GIO
+   C_SRCS += error_gio2nc.c
+endif
+
 if ENABLE_ADIOS
-   C_SRCS += error_adios2nc.c 
+   C_SRCS += error_adios2nc.c
 endif
 
 libcommon_la_SOURCES = $(C_SRCS) $(H_SRCS)

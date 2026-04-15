@@ -2821,6 +2821,11 @@ AC_ARG_ENABLE([gio],
    [enable_gio=${enableval}], [enable_gio=yes]
 )
 
+# check whether or not submodule GIO has been initialized
+if ! test -f ${srcdir}/gio/configure.ac ; then
+   enable_gio=no
+fi
+
 AM_CONDITIONAL(BUILD_GIO, [test "x$enable_gio" != xno])
 AC_CONFIG_SUBDIRS([gio])
 if test "x$enable_gio" = xyes ; then
@@ -2838,7 +2843,6 @@ AC_CONFIG_FILES(Makefile \
                 src/drivers/common/Makefile \
                 src/drivers/include/Makefile \
                 src/drivers/ncmpio/Makefile \
-                src/drivers/pncio/Makefile \
                 src/drivers/nc4io/Makefile \
                 src/drivers/ncadios/Makefile \
                 src/drivers/ncbbio/Makefile \
@@ -2924,11 +2928,8 @@ echo \
    Features:  Build static libraries                      - ${enable_static}
               Build shared libraries                      - ${enable_shared}
               Build Fortran APIs                          - ${has_fortran}
-              Build C++ APIs                              - ${has_mpicxx}"
-if test "x${enable_gio}" = xyes; then
-   echo "\
-              GIO support                                 - enabled"
-fi
+              Build C++ APIs                              - ${has_mpicxx}
+              GIO support                                 - ${enable_gio}"
 if test "x${enable_netcdf4}" = xyes; then
    echo "\
               NetCDF-4 support                            - enabled"

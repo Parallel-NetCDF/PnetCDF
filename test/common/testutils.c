@@ -452,9 +452,9 @@ int tst_main(int        argc,
             if (d == 0) { /* MPI-IO driver */
                 MPI_Info_set(info, "nc_driver", "mpiio");
                 strcat(out_filename, ".mpio");
-            } else { /* PnetCDF's internal PNCIO driver */
-                MPI_Info_set(info, "nc_driver", "pncio");
-                strcat(out_filename, ".pncio");
+            } else { /* GIO driver */
+                MPI_Info_set(info, "nc_driver", "gio");
+                strcat(out_filename, ".gio");
             }
 
             if (b == 0) { /* PnetCDF's default */

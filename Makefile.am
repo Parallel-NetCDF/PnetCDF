@@ -8,15 +8,15 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = src man examples benchmarks test
-DIST_SUBDIRS = src man examples benchmarks test doc
+if BUILD_GIO
+   GIO_MOD = gio
+endif
+
+SUBDIRS = $(GIO_MOD) src man examples benchmarks test
+DIST_SUBDIRS = $(GIO_MOD) src man examples benchmarks test doc
 
 if BUILD_DOCS
    SUBDIRS += doc
-endif
-
-if BUILD_GIO
-   SUBDIRS += gio
 endif
 
 EXTRA_DIST = COPYRIGHT \
@@ -26,6 +26,10 @@ EXTRA_DIST = COPYRIGHT \
              RELEASE_NOTES \
              m4/foreach.m4 \
              m4/utils.m4
+
+if ! BUILD_GIO
+   EXTRA_DIST += gio
+endif
 
 # Below is a trick to build all test executables, without running them
 # tests:
@@ -131,7 +135,9 @@ install-data-hook:
 distclean-local:
 	@if [ "$(abs_builddir)" != "$(abs_srcdir)" ] ; then \
 	   for d in $(DIST_SUBDIRS) ; do \
-	       rmdir $$d || true ; \
+	       if [ -d $$d ] ; then \
+	          rmdir $$d || true ; \
+	       fi \
 	   done ; \
 	fi
 

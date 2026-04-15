@@ -104,6 +104,10 @@ ncmpii_error_mpi2nc(int mpi_errorcode, const char *msg);
 extern int
 ncmpii_error_posix2nc(char *err_msg);
 
+#ifdef ENABLE_GIO
+int ncmpii_error_gio2nc(int gio_err, const char *err_msg);
+#endif
+
 #ifdef ENABLE_ADIOS
 extern int
 ncmpii_error_adios2nc(int adios_err, char *err_msg);
