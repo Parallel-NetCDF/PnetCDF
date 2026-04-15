@@ -299,6 +299,10 @@ ncmpi_strerror(int err)
             return "unknown ADIOS error.";
         case NC_EFSTYPE:
             return "Invalid file system type.";
+        case NC_EDRIVER:
+            return "Invalid PnetCDF I/O driver.";
+        case NC_EFILEVIEW:
+            return "PnetCDF internal error: MPI fileview's offsets are not in a monotonically non-decreasing order.";
 
         default:
             /* check netCDF-3 and netCDF-4 errors */
@@ -750,6 +754,8 @@ ncmpi_strerrno(int err)
         case (NC_EMULTIDEFINE_VAR_FILL_VALUE):	return "NC_EMULTIDEFINE_VAR_FILL_VALUE";
         case (NC_EMULTIDEFINE_CMODE):		return "NC_EMULTIDEFINE_CMODE";
         case (NC_EMULTIDEFINE_HINTS):		return "NC_EMULTIDEFINE_HINTS";
+        case (NC_EDRIVER):          		return "NC_EDRIVER";
+        case (NC_EFILEVIEW):          		return "NC_EFILEVIEW";
 
         default:
               sprintf(unknown_str,"Unknown code %d",err);

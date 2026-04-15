@@ -42,7 +42,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * New error code
-  + none
+  + "NC_EDRIVER" indicates an invalid PnetCDF I/O driver is set as an I/O hint.
+  + "NC_EFILEVIEW" indicates the MPI fileview's offsets violate the MPI
+    standard requirement of being in a monotonically non-decreasing order.
 
 * New PnetCDF hints
   + 'nc_data_move_chunk_size' -- When adding new data objects into an existing

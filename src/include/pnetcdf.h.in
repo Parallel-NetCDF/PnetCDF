@@ -659,6 +659,8 @@ by the desired type. */
 #define NC_EFLUSHED			(-239) /**< Nonblocking request has already been flushed. It is too late to cancel */
 #define NC_EADIOS			(-240) /**< unknown ADIOS error */
 #define NC_EFSTYPE			(-241) /**< Invalid file system type */
+#define	NC_EDRIVER	        (-242) /**< Invalid PnetCDF I/O driver */
+#define	NC_EFILEVIEW	    (-243) /**< PnetCDF internal error: file view is not monotonically non-decreasing */
 /* add new error here */
 
 /* header inconsistency errors start from -250 */
