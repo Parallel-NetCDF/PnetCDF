@@ -15,6 +15,11 @@
 #include <ctype.h>
 #include <fcntl.h>   /* open() */
 #include <unistd.h>  /* read(), close() */
+
+#if defined(HAVE_GETOPT_H) && HAVE_GETOPT_H == 1
+#include <getopt.h>  /* getopt() */
+#endif
+
 #include <errno.h>   /* errno */
 
 #include <mpi.h>
