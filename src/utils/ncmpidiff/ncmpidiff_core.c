@@ -21,6 +21,8 @@
 #include <unistd.h>    /* stat() */
 #include <errno.h>     /* errno */
 #include <math.h>      /* INFINITY */
+#include <libgen.h>    /* basename() */
+
 #include <assert.h>
 
 #include <mpi.h>
@@ -61,8 +63,8 @@
 
 #define HANDLE_ERROR {                                                       \
     if (err != NC_NOERR) {                                                   \
-        fprintf(stderr, "Error at line %d of file %s (%s)\n", __LINE__,      \
-               __FILE__, ncmpi_strerror(err));                               \
+        fprintf(stderr, "Error at %s line %d: (%s)\n", basename(__FILE__),   \
+               __LINE__, ncmpi_strerror(err));                               \
         MPI_Abort(MPI_COMM_WORLD, -1);                                       \
         exit(-1);                                                            \
     }                                                                        \
@@ -70,8 +72,8 @@
 
 #define HANDLE_FILE_ERR(filename) {                                          \
     if (err != NC_NOERR) {                                                   \
-        fprintf(stderr, "Error at line %d: input file %s (%s)\n", __LINE__,  \
-               filename, ncmpi_strerror(err));                               \
+        fprintf(stderr, "Error at %s line %d: input file %s (%s)\n",         \
+               basename(__FILE__), __LINE__,filename, ncmpi_strerror(err));  \
         MPI_Abort(MPI_COMM_WORLD, -1);                                       \
         exit(-1);                                                            \
     }                                                                        \
@@ -378,9 +380,9 @@ MPI_Offset ncmpidiff_core(const char  *file1,
 
     /* open files */
     err = ncmpi_open(comm, file1, NC_NOWRITE, info, &ncid[0]);
-    HANDLE_ERROR
+    HANDLE_FILE_ERR(file1)
     err = ncmpi_open(comm, file2, NC_NOWRITE, info, &ncid[1]);
-    HANDLE_ERROR
+    HANDLE_FILE_ERR(file2)
 
     /* retrieve metadata */
     err = ncmpi_inq(ncid[0], &ndims[0], &nvars[0], &natts[0], &recdim[0]);
