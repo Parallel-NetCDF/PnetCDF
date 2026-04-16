@@ -39,7 +39,9 @@ jobs:
         fail-fast: false # This disables the default cancel-on-failure behavior
         matrix:
           debug_mode: [ debug, nodebug ]
-          externals: [ netcdf4, adios ]
+          externals: [ netcdf4 ]
+          # disable testing ADIOS as its URL is no longer valid
+          # externals: [ netcdf4, adios ]
 
       runs-on: ubuntu-latest
       timeout-minutes: 120
