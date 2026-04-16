@@ -294,16 +294,16 @@ after_open:
          * non-INA aggregators assigned to it. At this moment, only the non-INA
          * aggregators have not yet set the striping hints to ncp->mpiinfo
          */
-        int nprocs;
-        MPI_Comm_size(comm_attr.ina_intra_comm, &nprocs);
+        int intra_nprocs;
+        MPI_Comm_size(comm_attr.ina_intra_comm, &intra_nprocs);
 
-        if (nprocs > 1) {
-            int rank;
-            MPI_Comm_rank(comm_attr.ina_intra_comm, &rank);
+        if (intra_nprocs > 1) {
+            int intra_rank;
+            MPI_Comm_rank(comm_attr.ina_intra_comm, &intra_rank);
 
             MPI_Bcast(striping_info, 2, MPI_INT, 0, comm_attr.ina_intra_comm);
 
-            if (rank > 0) {
+            if (intra_rank > 0) {
                 /* Only non-INA aggregators need to add these to ncp->mpiinfo */
                 sprintf(value, "%d", striping_info[0]);
                 MPI_Info_set(ncp->mpiinfo, "striping_unit", value);
