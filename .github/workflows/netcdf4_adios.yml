@@ -39,6 +39,7 @@ jobs:
         fail-fast: false # This disables the default cancel-on-failure behavior
         matrix:
           debug_mode: [ debug, nodebug ]
+          externals: [ netcdf4, adios ]
 
       runs-on: ubuntu-latest
       timeout-minutes: 120
@@ -70,6 +71,7 @@ jobs:
             m4 --version
 
         - name: Build and install MPICH
+          id: build_mpich
           run: |
             # MPICH versions older than 4.2.2 do not support the MPI large
             # count feature.
@@ -90,7 +92,9 @@ jobs:
             make -s LIBTOOLFLAGS=--silent V=1 -j 8 distclean >> qout 2>&1
 
         - name: Build and install HDF5
-          if: ${{ success() }}
+          id: build_hdf5
+          # NetCDF4 requires HDF5
+          if: steps.build_mpich.outcome == 'success' && matrix.externals == 'netcdf4'
           run: |
             set -x
             cd ${GITHUB_WORKSPACE}
@@ -115,7 +119,8 @@ jobs:
             make -s distclean >> qout 2>&1
 
         - name: Build and install NetCDF4
-          if: ${{ success() }}
+          id: build_netcdf4
+          if: steps.build_hdf5.outcome == 'success' && matrix.externals == 'netcdf4'
           run: |
             set -x
             cd ${GITHUB_WORKSPACE}
@@ -141,7 +146,7 @@ jobs:
             make -s distclean >> qout 2>&1
 
         - name: Build and install ADIOS
-          if: ${{ success() }}
+          if: steps.build_mpich.outcome == 'success' && matrix.externals == 'adios'
           run: |
             cd ${GITHUB_WORKSPACE}
             export PATH="${GITHUB_WORKSPACE}/MPICH/bin:${PATH}"
@@ -157,7 +162,8 @@ jobs:
             make -j 8 install >> qout 2>&1
 
         - name: Build PnetCDF
-          if: ${{ success() }}
+          id: build_pnetcdf
+          if: steps.build_mpich.outcome == 'success'
           run: |
             set -x
             cd ${GITHUB_WORKSPACE}
@@ -176,12 +182,16 @@ jobs:
             else
                 CONFIG_OPTS="--disable-debug"
             fi
+            if test ${{ matrix.externals }} == netcdf4 ; then
+                CONFIG_OPTS+=" --with-netcdf4=${GITHUB_WORKSPACE}/NetCDF"
+            fi
+            if test ${{ matrix.externals }} == adios ; then
+                CONFIG_OPTS+=" --with-adios=${GITHUB_WORKSPACE}/ADIOS"
+            fi
             ./configure --prefix=${GITHUB_WORKSPACE}/PnetCDF \
                         --enable-option-checking=fatal \
                         pnc_ac_debug=yes \
                         ${CONFIG_OPTS} \
-                        --with-netcdf4=${GITHUB_WORKSPACE}/NetCDF \
-                        --with-adios=${GITHUB_WORKSPACE}/ADIOS \
                         --with-mpi=${GITHUB_WORKSPACE}/MPICH \
                         TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output
             make -s LIBTOOLFLAGS=--silent V=1 -j 8 tests
@@ -192,7 +202,7 @@ jobs:
             cat ${GITHUB_WORKSPACE}/config.log
 
         - name: make check
-          if: ${{ success() }}
+          if: steps.build_pnetcdf.outcome == 'success'
           run: |
             cd ${GITHUB_WORKSPACE}
             make -s LIBTOOLFLAGS=--silent V=1 check
@@ -211,19 +221,19 @@ jobs:
             done
 
         - name: make ptests
-          if: ${{ success() }}
+          if: steps.build_pnetcdf.outcome == 'success'
           run: |
             cd ${GITHUB_WORKSPACE}
             make -s LIBTOOLFLAGS=--silent V=1 ptests
 
         - name: make distcheck
-          if: ${{ success() }}
+          if: steps.build_pnetcdf.outcome == 'success'
           run: |
             cd ${GITHUB_WORKSPACE}
             make -j 8 distcheck DISTCHECK_CONFIGURE_FLAGS="--silent --with-mpi=${GITHUB_WORKSPACE}/MPICH"
 
         - name: make install
-          if: ${{ success() }}
+          if: steps.build_pnetcdf.outcome == 'success'
           run: |
             set -x
             cd ${GITHUB_WORKSPACE}
