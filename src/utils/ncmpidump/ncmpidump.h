@@ -15,9 +15,14 @@
 
 #define  Printf  (void) printf
 
+#if defined(HAVE_STDBOOL_H) && HAVE_STDBOOL_H == 1
+#include <stdbool.h> /* type false and true */
+typedef bool boolean;
+#else
 typedef int boolean;
 #if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 202311L
 enum {false=0, true=1};
+#endif
 #endif
 
 struct ncdim {			/* dimension */
