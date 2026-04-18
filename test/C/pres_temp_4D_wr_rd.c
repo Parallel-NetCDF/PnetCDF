@@ -172,6 +172,8 @@ int pres_temp_4D_wr(const char *filename,
     CHECK_ERR
 
     err = ncmpi_begin_indep_data(ncid);
+    CHECK_ERR
+
     /* Write the coordinate variable data. This will put the latitudes
       and longitudes of our data grid into the netCDF file. */
     if (rank == 0) {
@@ -295,6 +297,7 @@ int pres_temp_4D_rd(const char *filename,
     if (err != NC_NOERR) { /* fatal error */
         if (rank == 0)
             fprintf(stderr,"Error: failed to open file %s (%s)\n",filename,ncmpi_strerror(err));
+        nerrs++;
         goto err_out;
     }
 
