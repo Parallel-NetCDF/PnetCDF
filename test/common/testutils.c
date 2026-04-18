@@ -342,8 +342,8 @@ int tst_main(int        argc,
     char *in_path=NULL, *out_path=NULL, *out_dir;
 
     /* IDs for the netCDF file, dimensions, and variables. */
-    int nprocs, rank, err, nerrs=0, keep_files, quiet, coll_io;
-    int i, a, d, b, s;
+    int nprocs, rank, err, nerrs=0, keep_files, quiet;
+    int i, a, d, b, s, m;
     int num_ina, num_drv, num_bb, num_mod, num_ds;
 
     MPI_Info info=MPI_INFO_NULL;
@@ -438,6 +438,12 @@ int tst_main(int        argc,
         for (d=0; d<num_drv; d++) {
         for (b=0; b<num_bb;  b++) {
         for (s=0; s<num_ds;  s++) {
+        for (m=num_mod-1; m>=0; m--) {
+
+#if defined(PNETCDF_PROFILING) && PNETCDF_PROFILING == 1
+            MPI_Barrier(MPI_COMM_WORLD);
+            itiming[k] = MPI_Wtime();
+#endif
 
             sprintf(out_filename, "%s.%s", out_path, ext);
 
@@ -479,57 +485,52 @@ int tst_main(int        argc,
                 strcat(out_filename, ".ds");
             }
 
-            for (coll_io=0; coll_io<2; coll_io++) {
+            /* When num_mod == 2, test independent data mode first followed by
+             * collective. Otherwise when num_mod == 1, test collective only.
+             */
+            if (m == 0) /* collective data mode */
+                strcat(out_filename, ".coll_mod");
+            else /* independent data mode */
+                strcat(out_filename, ".indep_mod");
 
-#if defined(PNETCDF_PROFILING) && PNETCDF_PROFILING == 1
-                MPI_Barrier(MPI_COMM_WORLD);
-                itiming[k] = MPI_Wtime();
-#endif
-                /* When num_mod == 2, test independent data mode first followed
-                 * by collective. Otherwise when num_mod == 1, test collective
-                 * only.
-                 */
-                if (num_mod == 1 && coll_io == 0) continue; /* skip indep mode */
+            /* NetCDF4 does not allow to extend number of record numbers in
+             * independent data mode. NC_ECANTEXTEND will be returned.
+             */
+            if (m == 1 &&
+                (opt.formats[i] == NC_FORMAT_NETCDF4_CLASSIC ||
+                 opt.formats[i] == NC_FORMAT_NETCDF4))
+                continue;
 
-                /* NetCDF4 does not allow to extend number of record numbers in
-                 * independent data mode. NC_ECANTEXTEND will be returned.
-                 */
-                if (coll_io == 0 &&
-                    (opt.formats[i] == NC_FORMAT_NETCDF4_CLASSIC ||
-                     opt.formats[i] == NC_FORMAT_NETCDF4))
-                    continue;
+            double time_body = MPI_Wtime();
+            if (!quiet && rank == 0)
+                printf("\n%-44s a=%d d=%d b=%d s=%d c=%d",
+                       out_filename, a,d,b,s,m);
 
-                double time_body = MPI_Wtime();
-                if (!quiet && rank == 0)
-                    printf("\n%-44s a=%d d=%d b=%d s=%d c=%d",
-                           out_filename, a,d,b,s,coll_io);
-
-                nerrs = tst_body(out_filename, in_path, opt.formats[i],
-                                 coll_io, info);
-                MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MAX,
-                              MPI_COMM_WORLD);
-                if (nerrs != NC_NOERR) {
-                    fflush(stdout);
-                    if (rank == 0)
-                        printf("\nFAILED %-44s INA=%d driver=%d BB=%d sieving=%d coll=%d\n",
-                               out_filename, a,d,b,s,coll_io);
-                    goto err_out;
-                }
-
-                if (!quiet) {
-                    time_body = MPI_Wtime() - time_body;
-                    MPI_Allreduce(MPI_IN_PLACE, &time_body, 1, MPI_DOUBLE,
-                                  MPI_MAX, MPI_COMM_WORLD);
-                    if (rank == 0)
-                        printf(" (%.2fs)\n", time_body);
-                }
-
-#if defined(PNETCDF_PROFILING) && PNETCDF_PROFILING == 1
-                itiming[k] = MPI_Wtime() - itiming[k]; k++;
-#endif
-                /* wait for all processes to complete */
-                MPI_Barrier(MPI_COMM_WORLD);
+            nerrs = tst_body(out_filename, in_path, opt.formats[i],
+                             m, info);
+            MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MAX,
+                          MPI_COMM_WORLD);
+            if (nerrs > 0) {
+                fflush(stdout);
+                if (rank == 0)
+                    printf("\nFAILED %-44s INA=%d driver=%d BB=%d sieving=%d coll=%d\n",
+                           out_filename, a,d,b,s,m);
+                goto err_out;
             }
+
+            if (!quiet) {
+                time_body = MPI_Wtime() - time_body;
+                MPI_Allreduce(MPI_IN_PLACE, &time_body, 1, MPI_DOUBLE,
+                              MPI_MAX, MPI_COMM_WORLD);
+                if (rank == 0)
+                    printf(" (%.2fs)\n", time_body);
+            }
+
+#if defined(PNETCDF_PROFILING) && PNETCDF_PROFILING == 1
+            itiming[k] = MPI_Wtime() - itiming[k]; k++;
+#endif
+            /* wait for all processes to complete */
+            MPI_Barrier(MPI_COMM_WORLD);
 
             /* run ncmpidiff to compare output files */
             if (base_file == NULL) { /* skip first file */
@@ -571,7 +572,7 @@ int tst_main(int        argc,
                 /* check error so it can error out collectively */
                 MPI_Allreduce(MPI_IN_PLACE, &numDIFF, 1, MPI_OFFSET, MPI_MAX,
                               MPI_COMM_WORLD);
-                if (numDIFF != 0) {
+                if (numDIFF > 0) {
                     if (rank == 0)
                         printf("FAILED: ncmpidiff %s %s a=%d d=%d b=%d s=%d\n",
                                out_filename, base_file,a,d,b,s);
@@ -590,6 +591,7 @@ skip_diff:
                 /* wait for deletion to complete before next iteration */
                 MPI_Barrier(MPI_COMM_WORLD);
             }
+        } /* loop m */
         } /* loop s */
         } /* loop b */
         } /* loop d */
