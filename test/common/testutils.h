@@ -17,6 +17,16 @@
 #include <limits.h>
 #include <assert.h>
 
+#if defined(HAVE_STDBOOL_H) && HAVE_STDBOOL_H == 1
+#include <stdbool.h> /* type false and true */
+typedef bool boolean;
+#else
+typedef int boolean;
+#if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 202311L
+enum {false=0, true=1};
+#endif
+#endif
+
 #define MODE_COLL  1
 #define MODE_INDEP 0
 
@@ -140,19 +150,26 @@ extern
 void tst_usage(char *argv0);
 
 typedef struct {
-    char *in_path; /* input file path for read tests */
-    int  num_fmts; /* number of file formats: CDF 1/2/3/4/5 */
-    int *formats;  /* [num_fmts] max are {NC_FORMAT_CLASSIC,
-                                          NC_FORMAT_64BIT_OFFSET,
-                                          NC_FORMAT_NETCDF4,
-                                          NC_FORMAT_NETCDF4_CLASSIC,
-                                          NC_FORMAT_64BIT_DATA}; */
-    int  ina;      /* add test of intra-node aggregation */
-    int  drv;      /* add test of PNCIO driver in addition to MPI-IO */
-    int  bb;       /* add test of burst-buffering feature */
-    int  mod;      /* add test of independent data mode */
-    int  hdr_diff; /* run ncmpidiff for file header only */
-    int  var_diff; /* run ncmpidiff for variables (disabled automatically when hdr_diff == 0) */
+    char *in_path;  /* input file path for read tests */
+    int   num_fmts; /* number of file formats: CDF 1/2/3/4/5 */
+    int  *formats;  /* [num_fmts] max are {NC_FORMAT_CLASSIC,
+                                           NC_FORMAT_64BIT_OFFSET,
+                                           NC_FORMAT_NETCDF4,
+                                           NC_FORMAT_NETCDF4_CLASSIC,
+                                           NC_FORMAT_64BIT_DATA}; */
+    /* below 4 options:
+     *      2 for testing both non-default and defaulte settings.
+     *      1 for testing non-default setting only.
+     *      0 for testing     defaulte setting only.
+     */
+    int  ina; /* test of intra-node aggregation */
+    int  drv; /* test of GIO and MPI-IO drivers */
+    int  bb;  /* test of burst-buffering feature */
+    int  mod; /* test of independent data mode */
+
+    boolean  hdr_diff; /* run ncmpidiff for file header */
+    boolean  var_diff; /* run ncmpidiff for variables
+                        * (disabled automatically when hdr_diff == false) */
 } loop_opts;
 
 extern

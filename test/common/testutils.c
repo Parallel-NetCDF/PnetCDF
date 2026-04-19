@@ -344,7 +344,7 @@ int tst_main(int        argc,
     /* IDs for the netCDF file, dimensions, and variables. */
     int nprocs, rank, err, nerrs=0, keep_files, quiet;
     int i, a, d, b, s, m;
-    int num_ina, num_drv, num_bb, num_mod, num_ds;
+    int s_ina, e_ina, s_drv, e_drv, s_bb, e_bb, s_mod, e_mod, s_ds, e_ds;
 
     MPI_Info info=MPI_INFO_NULL;
     double timing = MPI_Wtime();
@@ -414,16 +414,28 @@ int tst_main(int        argc,
 
     MPI_Info_create(&info);
 
-    num_ina = (opt.ina) ? 2 : 1;
-    num_drv = (opt.drv) ? 2 : 1;
-    num_mod = (opt.mod) ? 2 : 1;
-    num_ds  = 2; /* date sieving disable and enable */
+#define SET_OPT(key) {             \
+    if (opt.key == 2) {            \
+        s_ ## key = 1; e_##key = 0;  \
+    }                              \
+    else if (opt.key == 1) {            \
+        s_##key = 1; e_##key = 1;  \
+    }                              \
+    else { /* #key == 0 */         \
+        s_##key = 0; e_##key = 0;  \
+    }                              \
+}
 
-#if defined(PNETCDF_BURST_BUFFERING) && PNETCDF_BURST_BUFFERING == 1
-    num_bb  = (opt.bb)  ? 2 : 1;
-#else
-    num_bb  = 1;
+    SET_OPT(ina)    /* test intra-node aggregation */
+    SET_OPT(drv)    /* test MPI-IO, GIO drivers */
+    SET_OPT(mod)    /* test collective/independent data mode */
+    SET_OPT(bb)     /* test of burst-buffering feature */
+
+#if !defined(PNETCDF_BURST_BUFFERING) || PNETCDF_BURST_BUFFERING == 0
+    s_bb = e_bb = 0; /* skip testing burst buffering */
 #endif
+
+    s_ds = 1; e_ds = 0; /* test both date sieving enabled and disabled */
 
     for (i=0; i<opt.num_fmts; i++) {
         char out_filename[512], ext[16], *base_file;
@@ -434,11 +446,12 @@ int tst_main(int        argc,
         else /* for tests that are not testing different CDF versions */
             strcpy(ext, "nc");
 
-        for (a=num_ina-1; a>=0; a--) { /* 0 is PnetCDF's default setting */
-        for (d=num_drv-1; d>=0; d--) { /* 0 is PnetCDF's default setting */
-        for (b=num_bb -1; b>=0; b--) { /* 0 is PnetCDF's default setting */
-        for (s=num_ds -1; s>=0; s--) { /* 0 is PnetCDF's default setting */
-        for (m=num_mod-1; m>=0; m--) { /* 0 is PnetCDF's default setting */
+        /* For indice a,d,b,s,m, 0 is PnetCDF's default setting */
+        for (a=s_ina; a>=e_ina; a--) {
+        for (d=s_drv; d>=e_drv; d--) {
+        for (b=s_bb;  b>=e_bb;  b--) {
+        for (s=s_ds;  s>=e_ds;  s--) {
+        for (m=s_mod; m>=e_mod; m--) {
 
 #if defined(PNETCDF_PROFILING) && PNETCDF_PROFILING == 1
             MPI_Barrier(MPI_COMM_WORLD);
@@ -505,18 +518,21 @@ int tst_main(int        argc,
 
             double time_body = MPI_Wtime();
             if (!quiet && rank == 0)
-                printf("\n%-44s INA=%d drv=%d BB=%d DS=%d coll=%d",
-                       out_filename, a,d,b,s,m);
+                printf("\n%-44s INA=%s drv=%s BB=%s DS=%s mode=%s",
+                       out_filename, (a)?"yes":"no", (d)?"mpio":"gio",
+                       (b)?"yes":"no", (s)?"no":"auto", (m)?"indp":"coll");
 
             /* tst_body() is the core of test program */
-            nerrs = tst_body(out_filename, in_path, opt.formats[i], m, info);
+            int coll_io = (m == 0);
+            nerrs = tst_body(out_filename, in_path, opt.formats[i], coll_io, info);
             MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MAX,
                           MPI_COMM_WORLD);
             if (nerrs > 0) {
                 fflush(stdout);
                 if (rank == 0)
-                    printf("\nFAILED %-44s INA=%d drv=%d BB=%d DS=%d coll=%d\n",
-                           out_filename, a,d,b,s,m);
+                    printf("\nFAILED %-44s INA=%s drv=%s BB=%s DS=%s mode=%s\n",
+                           out_filename, (a)?"yes":"no", (d)?"mpio":"gio",
+                           (b)?"yes":"no", (s)?"no":"auto", (m)?"indp":"coll");
                 goto err_out;
             }
 
@@ -545,7 +561,7 @@ int tst_main(int        argc,
             if (strcmp(base_file, out_filename)) {
                 int check_header=1, check_entire_file, first_diff=1;
 
-                check_entire_file = (opt.var_diff == 1);
+                check_entire_file = (opt.var_diff) ? 1 : 0;
 
                 /* ncmpidiff does not support netCDF4 files */
                 if (opt.formats[i] == NC_FORMAT_NETCDF4_CLASSIC ||
@@ -554,8 +570,9 @@ int tst_main(int        argc,
                 }
 
                 if (!quiet && rank == 0)
-                    printf("ncmpidiff %-44s %s INA=%d drv=%d BB=%d DS=%d coll=%d\n",
-                           out_filename, base_file, a,d,b,s,m);
+                    printf("ncmpidiff %-44s %s INA=%s drv=%s BB=%s DS=%s mode=%s\n",
+                           out_filename, base_file, (a)?"yes":"no", (d)?"mpio":"gio",
+                           (b)?"yes":"no", (s)?"no":"auto", (m)?"indp":"coll");
 
 #ifdef MIMIC_LUSTRE
                 /* use a larger stripe size when running ncmpidiff is faster */
@@ -576,8 +593,9 @@ int tst_main(int        argc,
                               MPI_COMM_WORLD);
                 if (numDIFF > 0) {
                     if (rank == 0)
-                        printf("FAILED: ncmpidiff %s %s a=%d d=%d b=%d s=%d\n",
-                               out_filename, base_file,a,d,b,s);
+                        printf("FAILED: ncmpidiff %s %s INA=%s drv=%s BB=%s DS=%s mode=%s\n",
+                               out_filename, base_file, (a)?"yes":"no", (d)?"mpio":"gio",
+                               (b)?"yes":"no", (s)?"no":"auto", (m)?"indp":"coll");
                     nerrs = 1;
                     goto err_out;
                 }
