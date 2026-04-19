@@ -717,28 +717,45 @@ ncmpio_calc_start_end(const NC *ncp, const NC_var *varp,
                       MPI_Offset *end_off);
 
 /* Begin defined in ncmpio_file_io.c ----------------------------------------*/
+
+/* Below API is only used in ncmpio_vard.c, vard APIs have been deprecated. */
 extern MPI_Offset
 ncmpio_file_read_at(NC *ncp, MPI_Offset offset, void *buf,
                     PNCIO_View buf_view);
 
+/* Below API is only used in ncmpio_vard.c, vard APIs have been deprecated. */
 extern MPI_Offset
 ncmpio_file_read_at_all(NC *ncp, MPI_Offset offset, void *buf,
                     PNCIO_View buf_view);
 
+/* Below API is only used in ncmpio_vard.c, vard APIs have been deprecated. */
 extern MPI_Offset
 ncmpio_file_write_at(NC *ncp, MPI_Offset offset, const void *buf,
                     PNCIO_View buf_view);
 
+/* Below API is only used in ncmpio_vard.c, vard APIs have been deprecated. */
 extern MPI_Offset
 ncmpio_file_write_at_all(NC *ncp, MPI_Offset offset, const void *buf,
                     PNCIO_View buf_view);
 
+/* Below API is only used in ncmpio_vard.c, vard APIs have been deprecated. */
 extern int
 ncmpio_getput_zero_req(NC *ncp, int rw_flag);
 
+/* Below API is no longer used. */
+#if 0
 extern int
 ncmpio_read_write(NC *ncp, int rw_flag, MPI_Offset offset,
                   PNCIO_View flat_btype, void *buf);
+#endif
+
+extern MPI_Offset
+ncmpio_file_read(NC *ncp, int coll_indep, void *buf,
+                    PNCIO_View file_view, PNCIO_View buf_view);
+
+extern MPI_Offset
+ncmpio_file_write(NC *ncp, int coll_indep, const void *buf,
+                    PNCIO_View file_view, PNCIO_View buf_view);
 
 extern int
 ncmpio_file_close(NC *ncp);
