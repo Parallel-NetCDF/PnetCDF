@@ -504,12 +504,14 @@ int ncmpio_write_header(NC *ncp)
 {
     int status=NC_NOERR, mpireturn;
     size_t i, ntimes;
-    PNCIO_View buf_view;
 
+#if 0
+    PNCIO_View buf_view;
     buf_view.count = 0; /* indicating buffer in this request is contiguous */
     /* Note buf_view.size will be set to the file header size in this
      * subroutine, a positive value.
      */
+#endif
 
     /* Write the entire header to the file. This function may be called from
      * a rename API. In that case, we cannot just change the variable name in
@@ -527,10 +529,23 @@ int ncmpio_write_header(NC *ncp)
     if (ncp->xsz % NC_MAX_INT) ntimes++;
 
     if (ncp->rank == 0) { /* only root writes to file header */
-        MPI_Offset offset;
-        size_t remain;
-        size_t bufLen = PNETCDF_RNDUP(ncp->xsz, X_ALIGN);
         char *buf, *buf_ptr;
+        size_t bufLen = PNETCDF_RNDUP(ncp->xsz, X_ALIGN);
+        MPI_Offset offset;
+
+        MPI_Count file_off, buf_off=0, writeLen, remain;
+        PNCIO_View file_view, buf_view;
+
+        /* For writing to file header, both file view and buffer view are
+         * contiguous.
+         */
+        file_view.count = 1;
+        file_view.off   = &file_off;
+        file_view.len   = &writeLen;
+
+        buf_view.count  = 1;
+        buf_view.off    = &buf_off;
+        buf_view.len    = &writeLen;
 
         buf = NCI_Malloc(bufLen); /* header's write buffer */
 
@@ -541,13 +556,19 @@ int ncmpio_write_header(NC *ncp)
         remain = ncp->xsz;
         buf_ptr = buf;
         for (i=0; i<ntimes; i++) {
-            int writeLen = (int)(MIN(remain, NC_MAX_INT));
             MPI_Offset wlen;
 
+            writeLen = MIN(remain, NC_MAX_INT);
+#if 1
+            file_off = offset;
+
+            wlen = ncmpio_file_write(ncp, NC_REQ_INDEP, buf_ptr, file_view, buf_view);
+#else
             buf_view.type = MPI_BYTE;
             buf_view.size = writeLen;
 
             wlen = ncmpio_file_write_at(ncp, offset, buf_ptr, buf_view);
+#endif
             if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
             offset  += writeLen;
