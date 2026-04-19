@@ -927,6 +927,7 @@ int ina_collect_md(NC          *ncp,
     assert(comm != MPI_COMM_NULL);
 #endif
 
+assert(comm != MPI_COMM_NULL);
     MPI_Comm_size(comm, &nprocs);
     MPI_Comm_rank(comm, &rank);
 
@@ -1175,6 +1176,8 @@ int ina_put(NC         *ncp,
     int *len_ptr, *file_len=NULL;
 #endif
 
+MPI_Count buf_off=0, buf_len;
+
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double endT, startT = MPI_Wtime();
     MPI_Offset mem_max;
@@ -1185,6 +1188,15 @@ int ina_put(NC         *ncp,
 
     /* buf may be noncontiguous ! */
 
+/*
+int ina_rank, ina_nprocs;
+MPI_Comm_size(ncp->comm_attr.ina_intra_comm, &ina_nprocs);
+MPI_Comm_rank(ncp->comm_attr.ina_intra_comm, &ina_rank);
+printf("%s at %d: rank %d ina_intra_comm nprocs %d ina_rank %d\n",__func__,__LINE__,ncp->rank,ina_nprocs,ina_rank);
+
+if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm != MPI_COMM_NULL);
+*/
+
     intra_comm = ncp->comm_attr.ina_intra_comm;
     if (intra_comm == MPI_COMM_NULL) {
         nprocs = 1;
@@ -1194,6 +1206,8 @@ int ina_put(NC         *ncp,
         MPI_Comm_size(intra_comm, &nprocs);
         MPI_Comm_rank(intra_comm, &rank);
     }
+// printf("%s at %d: intra_comm %s\n",__func__,__LINE__, (intra_comm==MPI_COMM_NULL)?"MPI_COMM_NULL":"NOT MPI_COMM_NULL");
+// if (ncp->comm_attr.num_aggrs_per_node > 0) assert(nprocs == 2);
 
     /* Firstly, aggregators collect metadata from non-aggregators.
      *
@@ -1622,9 +1636,16 @@ int ina_put(NC         *ncp,
                  * update buf_view before passing it to the MPI-IO/PNCIO file
                  * write.
                  */
+#if 1
+                buf_len = wr_amnt;
+                buf_view.len = &buf_len;
+                buf_view.off = &buf_off;
+                buf_view.count = 1;
+#else
                 buf_view.size = wr_amnt;
                 buf_view.type = MPI_BYTE;
                 buf_view.count = 0;
+#endif
             }
             /* else case is when user's buffer, buf, can be used to write */
         }
@@ -1671,9 +1692,16 @@ int ina_put(NC         *ncp,
              * update buf_view before passing it to the MPI-IO/PNCIO file
              * write.
              */
+#if 1
+            buf_len = wr_amnt;
+            buf_view.len = &buf_len;
+            buf_view.off = &buf_off;
+            buf_view.count = 1;
+#else
             buf_view.size = wr_amnt;
             buf_view.type = MPI_BYTE;
             buf_view.count = 0;
+#endif
 
             if (recv_buf != buf) NCI_Free(recv_buf);
         }
@@ -1681,12 +1709,21 @@ int ina_put(NC         *ncp,
 
     NCI_Free(meta);
 
+#if 1
+PNCIO_View file_view;
+file_view.count = file_npairs;
+file_view.off = off_ptr;
+file_view.len = file_len;
+// printf("\n%s at %d: file_view count %lld off %lld len %lld\n",__func__,__LINE__,file_npairs,off_ptr[0],file_len[0]);
+
+#else
     /* set the fileview */
     err = ncmpio_file_set_view(ncp, MPI_BYTE, file_npairs, off_ptr, file_len);
     if (err != NC_NOERR) {
         if (status == NC_NOERR) status = err;
         wr_amnt = 0;
     }
+#endif
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     ncmpi_inq_malloc_size(&mem_max);
@@ -1699,8 +1736,26 @@ int ina_put(NC         *ncp,
 #endif
 
     /* carry out write request to file */
+#if 1
+    int coll_indep = (fIsSet(ncp->flags, NC_MODE_INDEP)) ? NC_REQ_INDEP : NC_REQ_COLL;
+
+if (buf_view.count == 0 && buf_view.size > 0) {
+    buf_view.count = 1;
+    buf_view.off = &buf_off;
+    buf_view.len = &buf_len;
+}
+
+// printf("%s at %d: file_view count %lld off %lld len %lld buf_view count %lld off %lld len %lld\n",__func__,__LINE__,file_view.count,file_view.off[0],file_view.len[0],buf_view.count,buf_view.off[0],buf_view.len[0]);
+
+    MPI_Offset wlen = ncmpio_file_write(ncp, coll_indep, wr_buf, file_view, buf_view);
+    if (wlen < 0) {
+        if (status == NC_NOERR) status = (int)wlen;
+        wr_amnt = 0;
+    }
+#else
     err = ncmpio_read_write(ncp, NC_REQ_WR, 0, buf_view, wr_buf);
     if (status == NC_NOERR) status = err;
+#endif
 
     if (free_buf_view_off) NCI_Free(buf_view.off);
     if (wr_buf != buf)  NCI_Free(wr_buf);
@@ -2075,12 +2130,19 @@ int ina_get(NC         *ncp,
      * aggregator must participate the collective I/O calls.
      */
 
+#if 1
+PNCIO_View file_view;
+file_view.count = npairs;
+file_view.off = off_ptr;
+file_view.len = len_ptr;
+#else
     /* set the fileview */
     err = ncmpio_file_set_view(ncp, MPI_BYTE, npairs, off_ptr, len_ptr);
     if (err != NC_NOERR) {
         if (status == NC_NOERR) status = err;
         rd_amnt = 0;
     }
+#endif
 
     /* Allocate read buffer and send buffer. Once data are read from file into
      * rd_buf, it is unpacked into send_buf for each non-aggregator. send_buf
@@ -2108,8 +2170,24 @@ int ina_get(NC         *ncp,
             rd_buf = (char*) NCI_Malloc(rd_amnt);
     }
 
+#if 1
+    int coll_indep = (fIsSet(ncp->flags, NC_MODE_INDEP)) ? NC_REQ_INDEP : NC_REQ_COLL;
+
+MPI_Count buf_off=0, buf_len=rd_buf_view.size;
+if (rd_buf_view.count == 0 && rd_buf_view.size > 0) {
+    rd_buf_view.count = 1;
+    rd_buf_view.off = &buf_off;
+    rd_buf_view.len = &buf_len;
+}
+    MPI_Offset rlen = ncmpio_file_read(ncp, coll_indep, rd_buf, file_view, rd_buf_view);
+    if (rlen < 0) {
+        if (status == NC_NOERR) status = (int)rlen;
+        rd_amnt = 0;
+    }
+#else
     err = ncmpio_read_write(ncp, NC_REQ_RD, 0, rd_buf_view, rd_buf);
     if (status == NC_NOERR) status = err;
+#endif
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     ncmpi_inq_malloc_size(&mem_max);
@@ -2404,6 +2482,13 @@ ncmpio_ina_nreqs(NC         *ncp,
     double timing = MPI_Wtime();
 #endif
 
+/*
+int ina_rank, ina_nprocs;
+MPI_Comm_size(ncp->comm_attr.ina_intra_comm, &ina_nprocs);
+MPI_Comm_rank(ncp->comm_attr.ina_intra_comm, &ina_rank);
+printf("%s at %d: rank %d ina_intra_comm nprocs %d ina_rank %d\n",__func__,__LINE__,ncp->rank,ina_nprocs,ina_rank);
+*/
+
     /* populate reqs[].offset_start, starting offset of each request */
     NC_req *reqs = req_list;
     int i, descreasing=0;
@@ -2473,6 +2558,8 @@ ncmpio_ina_nreqs(NC         *ncp,
     err = flat_buf_type(ncp, reqMode, num_reqs, reqs, &buf_view, &buf);
     if (status == NC_NOERR) status = err;
 
+if (num_reqs > 0) assert(buf_view.count > 0);
+
     if (req_list != NULL)
         /* All metadata in req_list have been used to construct bufType and
          * bufLen. It is now safe to release the space occupied by req_list.
@@ -2491,6 +2578,8 @@ ncmpio_ina_nreqs(NC         *ncp,
          */
         ncp->comm_attr.ina_intra_comm = MPI_COMM_SELF;
     }
+
+// printf("%s at %d: ncp->collective_fh %s\n",__func__,__LINE__, (ncp->collective_fh == MPI_FILE_NULL)?"MPI_FILE_NULL":"NOT MPI_FILE_NULL");
 
     /* perform intra-node aggregation */
     if (fIsSet(reqMode, NC_REQ_WR))
@@ -2564,12 +2653,25 @@ ncmpio_ina_req(NC               *ncp,
     double timing = MPI_Wtime();
 #endif
 
+/*
+int ina_rank, ina_nprocs;
+MPI_Comm_size(ncp->comm_attr.ina_intra_comm, &ina_nprocs);
+MPI_Comm_rank(ncp->comm_attr.ina_intra_comm, &ina_rank);
+printf("%s at %d: rank %d ina_intra_comm nprocs %d ina_rank %d\n",__func__,__LINE__,ncp->rank,ina_nprocs,ina_rank);
+*/
+
     /* blocking API's buffer passed here is always contiguous */
     buf_view.type = MPI_BYTE;
     buf_view.size = buf_len;
     buf_view.count = 0;
     buf_view.off = NULL;
     buf_view.len = NULL;
+
+#warning TODO: fix view count
+    MPI_Count bufOff=0, bufLen=buf_len;
+    buf_view.count = 1;
+    buf_view.off = &bufOff;
+    buf_view.len = &bufLen;
 
     if (buf_len == 0 || buf == NULL) {
         /* This is a zero-length request. When in collective data mode, this
