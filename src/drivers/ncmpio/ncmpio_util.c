@@ -65,11 +65,11 @@ void ncmpio_hint_extract(NC       *ncp,
     /* number of INA aggregators per compute node */
     ncp->num_aggrs_per_node = 0;
 
-    /* default I/O driver */
+    ncp->driver = PNC_DRIVER_MPIIO;
+
+    /* default I/O driver is GIO, if it is not disabled at configure time */
 #ifdef ENABLE_GIO
     ncp->driver = PNC_DRIVER_GIO;
-#else
-    ncp->driver = PNC_DRIVER_MPIIO;
 #endif
 
     if (info == MPI_INFO_NULL) return;
@@ -244,8 +244,12 @@ void ncmpio_hint_extract(NC       *ncp,
      * PnetCDF I/O hint "nc_driver" to "mpiio".
      */
     MPI_Info_get(info, "nc_driver", MPI_MAX_INFO_VAL-1, value, &flag);
-    if (flag && strcasecmp(value, "mpiio") == 0)
+    if (flag) {
+        if (strcasecmp(value, "gio") == 0)
+            ncp->driver = PNC_DRIVER_GIO;
+        else if (strcasecmp(value, "mpiio") == 0)
         ncp->driver = PNC_DRIVER_MPIIO;
+    }
 
     /* Data movement chunk size when variables need to be moved to higher file
      * offsets.
@@ -359,7 +363,7 @@ void ncmpio_hint_set(NC       *ncp,
     if (ncp->driver == PNC_DRIVER_MPIIO)
         MPI_Info_set(info, "nc_driver", "mpiio");
 #ifdef ENABLE_GIO
-    else
+    else if (ncp->driver == PNC_DRIVER_GIO)
         MPI_Info_set(info, "nc_driver", "gio");
 #endif
 
