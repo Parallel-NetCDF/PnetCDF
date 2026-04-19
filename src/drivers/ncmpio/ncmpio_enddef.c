@@ -172,7 +172,6 @@ move_file_block(NC         *ncp,
     MPI_Offset mv_amnt, p_units, end_off, end_block;
     MPI_Offset off_last, off_from, off_to, rlen, wlen;
     MPI_Comm comm;
-    PNCIO_View buf_view;
 
     /* check if this is a valid move request */
     if (to == from || nbytes == 0) return NC_NOERR;
@@ -197,6 +196,9 @@ move_file_block(NC         *ncp,
         nprocs = ncp->nprocs;
     }
 
+// printf("%s at %d: nbytes %lld from %lld to %lld\n",__func__,__LINE__,nbytes,from,to);
+// fflush(stdout); MPI_Barrier(comm); fflush(stdout); MPI_Barrier(comm);
+
     /* align file access for all ranks */
     align_rank = (to / ncp->data_chunk + rank) % nprocs;
 
@@ -205,10 +207,6 @@ move_file_block(NC         *ncp,
      */
     buf = NCI_Malloc(ncp->data_chunk);
     if (buf == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
-
-    /* buffer used to move data is always contiguous */
-    buf_view.type = MPI_BYTE;
-    buf_view.count = 0;
 
     /* movement must start from the last p_units toward to the 1st */
     p_units = (MPI_Offset)ncp->data_chunk * nprocs;
@@ -246,11 +244,28 @@ move_file_block(NC         *ncp,
      * make the entire file visible.
      */
 
-    while (nbytes > 0) {
-        buf_view.size = mv_amnt;
+    MPI_Count f_off, f_len, b_off=0, b_len;
+    PNCIO_View f_view, b_view;
 
+    /* file view and buffer view used to move data are always contiguous */
+    f_view.off = &f_off;
+    f_view.len = &f_len;
+    b_view.off = &b_off;
+    b_view.len = &b_len;
+
+    while (nbytes > 0) {
         /* read from file at off_from for amount of mv_amnt */
-        rlen = ncmpio_file_read_at_all(ncp, off_from, buf, buf_view);
+#if 1
+        f_off = off_from;
+        f_len = mv_amnt;
+        b_len = mv_amnt;
+        f_view.count = (mv_amnt == 0) ? 0 : 1;
+        b_view.count = (mv_amnt == 0) ? 0 : 1;
+
+        rlen = ncmpio_file_read(ncp, NC_REQ_COLL, buf, f_view, b_view);
+#else
+        rlen = ncmpio_file_read_at_all(ncp, off_from, buf, b_view);
+#endif
         if (status == NC_NOERR && rlen < 0) status = (int)rlen;
 
         /* To prevent from one rank's write run faster than other's read, a
@@ -263,10 +278,23 @@ move_file_block(NC         *ncp,
         /* Write to new location at off_to for amount of rlen, the actual read
          * amount is rlen.
          */
-        buf_view.size = rlen;
         wlen = 0;
+
         /* even when rlen == 0, must still participate */
-        wlen = ncmpio_file_write_at_all(ncp, off_to, buf, buf_view);
+#if 1
+        /* file view is contiguous */
+        f_off = off_to;
+        f_len = rlen;
+        b_len = rlen;
+        f_view.count = (rlen == 0) ? 0 : 1;
+        b_view.count = (rlen == 0) ? 0 : 1;
+
+        wlen = ncmpio_file_write(ncp, NC_REQ_COLL, buf, f_view, b_view);
+// if (rlen > 0)printf("%s at %d: rlen %lld wlen %lld\n",__func__,__LINE__,rlen,wlen);
+// else printf("%s at %d: wkl %d - nbytes %lld rlen 0\n",__func__,__LINE__,wkl,nbytes);
+#else
+        wlen = ncmpio_file_write_at_all(ncp, off_to, buf, b_view);
+#endif
         if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
         /* move on to the next round */
@@ -627,13 +655,8 @@ write_NC(NC *ncp)
 {
     int status=NC_NOERR;
     MPI_Offset i, header_wlen, ntimes;
-    PNCIO_View buf_view;
 
     assert(!NC_readonly(ncp));
-
-    buf_view.count = 0;
-    buf_view.off = NULL;
-    buf_view.len = NULL;
 
     /* In NC_begins(), root's ncp->xsz and ncp->begin_var, root's header
      * size and extent, have been broadcast (sync-ed) among processes.
@@ -668,6 +691,17 @@ write_NC(NC *ncp)
     if (ncp->rank == 0) {
         char *buf=NULL, *buf_ptr;
         MPI_Offset offset, remain;
+        MPI_Count f_off, f_len, b_off=0, b_len;
+        PNCIO_View f_view, b_view;
+
+        /* Both file view and buffer view are contiguous */
+        f_view.count = 1;
+        f_view.off   = &f_off;
+        f_view.len   = &f_len;
+
+        b_view.count = 1;
+        b_view.off   = &b_off;
+        b_view.len   = &b_len;
 
 #ifdef ENABLE_NULL_BYTE_HEADER_PADDING
         /* NetCDF classic file formats require the file header null-byte
@@ -695,17 +729,32 @@ write_NC(NC *ncp)
         offset = 0;
         remain = header_wlen;
         buf_ptr = buf;
-        buf_view.type = MPI_BYTE;
-        buf_view.count = 0;
         for (i=0; i<ntimes; i++) {
             MPI_Offset wlen;
-            buf_view.size = MIN(remain, NC_MAX_INT);
-            wlen = ncmpio_file_write_at(ncp, offset, buf_ptr, buf_view);
-            if (status == NC_NOERR && wlen < 0) status = (int)wlen;
+            b_len = MIN(remain, NC_MAX_INT);
+#if 1
+            /* file view is contiguous */
+            f_off = offset;
+            f_len = b_len;
 
-            offset  += buf_view.size;
-            buf_ptr += buf_view.size;
-            remain  -= buf_view.size;
+// printf("%s at %d: f_off %lld f_len %lld\n",__func__,__LINE__,f_off,f_len);
+
+            wlen = ncmpio_file_write(ncp, NC_REQ_INDEP, buf_ptr, f_view, b_view);
+
+            offset  += b_len;
+            buf_ptr += b_len;
+            remain  -= b_len;
+#else
+            b_view.type = MPI_BYTE;
+            b_view.count = 0;
+            b_view.size = MIN(remain, NC_MAX_INT);
+            wlen = ncmpio_file_write_at(ncp, offset, buf_ptr, b_view);
+
+            offset  += b_view.size;
+            buf_ptr += b_view.size;
+            remain  -= b_view.size;
+#endif
+            if (status == NC_NOERR && wlen < 0) status = (int)wlen;
         }
         NCI_Free(buf);
     }
