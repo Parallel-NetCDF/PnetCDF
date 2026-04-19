@@ -144,16 +144,16 @@ fill_var_rec(NC         *ncp,
              NC_var     *varp,
              MPI_Offset  recno) /* record number */
 {
-    int err, status=NC_NOERR, mpireturn;
     void *buf;
+    int err, status=NC_NOERR, mpireturn;
     MPI_Offset var_len, start, count, offset, wlen;
-    PNCIO_View buf_view;
+    MPI_Count f_off, b_off=0, fill_len;
+    PNCIO_View f_view, b_view;
 
-    buf_view.type = MPI_BYTE;
-    buf_view.count = 0;
-    buf_view.size = 0;
-    buf_view.off = NULL;
-    buf_view.len = NULL;
+    f_view.off = &f_off;
+    f_view.len = &fill_len;
+    b_view.off = &b_off;
+    b_view.len = &fill_len;
 
     /* When intra-node aggregation is enabled, use the communicator consisting
      * of aggregators in comm, nprocs, and rank. Non-aggregators do not
@@ -199,15 +199,16 @@ fill_var_rec(NC         *ncp,
     if (err != NC_NOERR) {
         NCI_Free(buf);
         /* still participate collective calls below */
-        buf_view.size = 0;
         status = err;
     }
 
+#if 0
     if (ncp->driver == PNC_DRIVER_MPIIO) {
         /* make the entire file visible */
         err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
         status = (status == NC_NOERR) ? err : status;
     }
+#endif
 
     /* calculate the starting file offset for each process */
     offset = varp->begin;
@@ -222,18 +223,31 @@ fill_var_rec(NC         *ncp,
         DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
         if (status == NC_NOERR) status = err;
         /* participate collective write with 0-length request */
-        buf_view.size = 0;
     }
 #endif
 
-    if (status == NC_NOERR)
-        buf_view.size = count;
+    /* both file view and buffer view are contiguous */
+    if (status == NC_NOERR) {
+        fill_len = count;
+        f_view.count = b_view.count = 1;
+    }
+    else {
+        fill_len = 0;
+        f_view.count = b_view.count = 0;
+    }
 
     /* write to variable collectively */
+#if 1
+    f_off = offset;
+    wlen = ncmpio_file_write(ncp, NC_REQ_COLL, buf, f_view, b_view);
+#else
+    if (status == NC_NOERR) b_view.size = count;
+
     if (nprocs > 1)
-        wlen = ncmpio_file_write_at_all(ncp, offset, buf, buf_view);
+        wlen = ncmpio_file_write_at_all(ncp, offset, buf, b_view);
     else
-        wlen = ncmpio_file_write_at(ncp, offset, buf, buf_view);
+        wlen = ncmpio_file_write_at(ncp, offset, buf, b_view);
+#endif
     if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
     NCI_Free(buf);
@@ -369,9 +383,10 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     char *buf_ptr, *noFill;
     void *buf;
     size_t nsegs;
-    MPI_Offset buf_len, var_len, nrecs, start, *count, wlen;
+    MPI_Offset var_len, nrecs, start, *count, wlen;
     NC_var *varp;
-    PNCIO_View buf_view;
+    MPI_Count b_off=0, b_len;
+    PNCIO_View f_view, b_view;
 
 #ifdef HAVE_MPI_LARGE_COUNT
     MPI_Count *blocklengths=NULL, *offset=NULL;
@@ -452,7 +467,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
 #endif
 
     /* calculate each segment's offset and count */
-    buf_len = 0; /* total write amount, used to allocate buffer */
+    b_len = 0; /* total write amount, used to allocate buffer */
     j = 0;
     for (i=start_vid; i<ncp->vars.ndefined; i++) {
         if (noFill[i-start_vid]) continue;
@@ -489,7 +504,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
             continue;
         }
         /* add up the buffer size */
-        buf_len += count[j] * varp->xsz;
+        b_len += count[j] * varp->xsz;
 
         j++; /* increase j even when count[j] is zero */
     }
@@ -530,7 +545,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
                 continue;
             }
             /* add up the buffer size */
-            buf_len += count[j] * varp->xsz;
+            b_len += count[j] * varp->xsz;
 
             j++; /* increase j even when count[j] is zero */
         }
@@ -550,7 +565,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
 #else
     blocklengths = (int*) NCI_Malloc(sizeof(int) * j);
 #endif
-    buf = NCI_Malloc((size_t)buf_len);
+    buf = NCI_Malloc((size_t)b_len);
     buf_ptr = (char*)buf;
 
     /* fill write buffers for fixed-size variables first */
@@ -664,60 +679,76 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     }
     /* k now is the number of non-zero sized requests */
 
+#if 0
     if (k > 0)
         err = ncmpio_file_set_view(ncp, MPI_BYTE, k, offset, blocklengths);
     else
         err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
     status = (status == NC_NOERR) ? err : status;
 
-    buf_view.type = MPI_BYTE;
-    if (buf_len > NC_MAX_INT) {
+    b_view.type = MPI_BYTE;
+    if (b_len > NC_MAX_INT) {
 #ifdef HAVE_MPI_LARGE_COUNT
         int mpireturn;
 
-        mpireturn = MPI_Type_contiguous_c((MPI_Count)buf_len, MPI_BYTE,
-                                          &buf_view.type);
+        mpireturn = MPI_Type_contiguous_c((MPI_Count)b_len, MPI_BYTE,
+                                          &b_view.type);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous_c");
             /* return the first encountered error if there is any */
             if (status == NC_NOERR) status = err;
-            buf_view.size = 0;
+            b_len = 0;
         }
         else {
-            MPI_Type_commit(&buf_view.type);
+            MPI_Type_commit(&b_view.type);
         }
 #else
         if (status == NC_NOERR)
             DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
 
-        buf_len = 0; /* participate collective write with 0-length request */
+        b_len = 0; /* participate collective write with 0-length request */
 #endif
     }
-
-    /* write buffer is contiguous */
-    buf_view.size      = buf_len;
-    buf_view.count     = 0;
-    buf_view.off       = NULL;
-    buf_view.len       = NULL;
+#endif
 
     /* write to variable collectively */
+#if 1
+    /* write buffer is contiguous */
+    b_view.count = (b_len > 0) ? 1 : 0;
+    b_view.off = &b_off;
+    b_view.len = &b_len;
+
+    /* set file_view */
+    f_view.count = k;
+    f_view.off = offset;
+    f_view.len = blocklengths;
+    wlen = ncmpio_file_write(ncp, NC_REQ_COLL, buf, f_view, b_view);
+#else
+    /* write buffer is contiguous */
+    b_view.count = 0;
+    b_view.off   = NULL;
+    b_view.len   = NULL;
+
     if (nprocs > 1)
-        wlen = ncmpio_file_write_at_all(ncp, 0, buf, buf_view);
+        wlen = ncmpio_file_write_at_all(ncp, 0, buf, b_view);
     else
-        wlen = ncmpio_file_write_at(ncp, 0, buf, buf_view);
+        wlen = ncmpio_file_write_at(ncp, 0, buf, b_view);
+#endif
     if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
     /* free allocated resources */
     NCI_Free(buf);
-    if (buf_view.type != MPI_BYTE) MPI_Type_free(&buf_view.type);
+    // if (b_view.type != MPI_BYTE) MPI_Type_free(&b_view.type);
     if (blocklengths != NULL) NCI_Free(blocklengths);
     if (offset != NULL) NCI_Free(offset);
 
+#if 0
     if (ncp->driver == PNC_DRIVER_MPIIO) {
         /* reset fileview to make the entire file visible */
         err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
         status = (status == NC_NOERR) ? err : status;
     }
+#endif
 
     return status;
 }
