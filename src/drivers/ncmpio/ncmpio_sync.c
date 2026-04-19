@@ -40,11 +40,6 @@ ncmpio_write_numrecs(NC         *ncp,
                      MPI_Offset  new_numrecs)
 {
     int err=NC_NOERR;
-    PNCIO_View buf_view;
-
-    buf_view.type = MPI_BYTE;
-    buf_view.size = 0;
-    buf_view.count = 0;
 
     /* return now if there is no record variable defined */
     if (ncp->vars.num_rec_vars == 0) return NC_NOERR;
@@ -72,6 +67,16 @@ ncmpio_write_numrecs(NC         *ncp,
         int len;
         char pos[8], *buf=pos;
         MPI_Offset wlen;
+        MPI_Count file_off, file_len, buf_off=0, buf_len;
+        PNCIO_View file_view, buf_view;
+
+        /* both file_view and buf_view are contiguous */
+        file_view.count = 1;
+        file_view.off   = &file_off;
+        file_view.len   = &file_len;
+        buf_view.count  = 1;
+        buf_view.off    = &buf_off;
+        buf_view.len    = &buf_len;
 
         /* update ncp->numrecs */
         if (new_numrecs > ncp->numrecs) ncp->numrecs = new_numrecs;
@@ -96,11 +101,21 @@ ncmpio_write_numrecs(NC         *ncp,
              */
             return NC_NOERR;
 
+#if 1
+        file_off = NC_NUMRECS_OFFSET;
+        file_len = len;
+        buf_len  = len;
+
+// printf("%s at %d: file_view count %lld off %lld len %lld buf_view count %lld off %lld len %lld numrecs %d\n",__func__,__LINE__,file_view.count,file_view.off[0],file_view.len[0],buf_view.count,buf_view.off[0],buf_view.len[0],ncp->numrecs);
+
+        wlen = ncmpio_file_write(ncp, NC_REQ_INDEP, (void*)pos, file_view, buf_view);
+#else
         buf_view.size = len;
 
         /* root's file view always includes the entire file header */
         wlen = ncmpio_file_write_at(ncp, NC_NUMRECS_OFFSET, (void*)pos,
                                     buf_view);
+#endif
         if (wlen < 0)
             DEBUG_RETURN_ERROR((int)wlen)
     }
