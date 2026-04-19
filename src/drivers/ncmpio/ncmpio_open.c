@@ -249,7 +249,7 @@ ncmpio_open(MPI_Comm         comm,
     }
 #endif
     else
-        err = NC_EDRIVER;
+        DEBUG_FOPEN_ERROR(NC_EDRIVER);
 
 after_open:
     ncp->striping_unit = 0;
