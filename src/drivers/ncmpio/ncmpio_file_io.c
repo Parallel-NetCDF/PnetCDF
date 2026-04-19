@@ -791,7 +791,6 @@ ncmpio_file_delete(NC *ncp)
     int err=NC_NOERR;
 
     if (ncp->rank == 0) {
-        char *path = ncmpii_remove_file_system_type_prefix(ncp->path);
         if (ncp->driver == PNC_DRIVER_MPIIO) {
             char *mpi_name;
             int mpireturn;
@@ -799,6 +798,12 @@ ncmpio_file_delete(NC *ncp)
             /* MPICH recognizes file system type acronym prefixed to the file name */
             TRACE_IO(MPI_File_delete, ((char *)ncp->path, ncp->mpiinfo));
 #else
+            /* Remove the file system type prefix name if there is any, because
+             * some MPI libraries do not recognize such prefix. For example,
+             * when path = "lustre:/home/foo/testfile.nc", remove "lustre:" to
+             * make filename pointing to "/home/foo/testfile.nc".
+             */
+            char *path = ncmpii_remove_file_system_type_prefix(ncp->path);
             TRACE_IO(MPI_File_delete, (path, ncp->mpiinfo));
 #endif
             if (mpireturn != MPI_SUCCESS)
@@ -806,7 +811,7 @@ ncmpio_file_delete(NC *ncp)
         }
 #ifdef ENABLE_GIO
         else if (ncp->driver == PNC_DRIVER_GIO) {
-            err = GIO_delete(path);
+            err = GIO_delete(ncp->path);
             if (err != GIO_NOERR)
                 err = ncmpii_error_gio2nc(err, "GIO_delete");
         }
