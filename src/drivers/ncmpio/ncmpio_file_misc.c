@@ -79,7 +79,7 @@ dup_NC(const NC *ref)
 int
 ncmpio_redef(void *ncdp)
 {
-    int err, status=NC_NOERR;
+    int status=NC_NOERR;
     NC *ncp = (NC*)ncdp;
 
 #if 0
@@ -104,11 +104,13 @@ ncmpio_redef(void *ncdp)
     /* we are now entering define mode */
     fSet(ncp->flags, NC_MODE_DEF);
 
+#if 0
     if (ncp->driver == PNC_DRIVER_MPIIO) {
         /* must reset fileview as header extent may later change in enddef() */
-        err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
+        int err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
         DEBUG_ASSIGN_ERROR(status, err)
     }
+#endif
 
     return status;
 }
@@ -204,7 +206,7 @@ ncmpio_end_indep_data(void *ncdp)
     if (NC_indef(ncp))  /* must not be in define mode */
         DEBUG_RETURN_ERROR(NC_EINDEFINE)
 
-    if (!NC_indep(ncp)) /* already in collective ata mode */
+    if (!NC_indep(ncp)) /* already in collective data mode */
         return NC_NOERR;
         /* starting from 1.9.0, calling end_indep_data() in collective data
          * mode is no longer considered illegal
