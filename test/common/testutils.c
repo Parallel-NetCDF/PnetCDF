@@ -431,6 +431,10 @@ int tst_main(int        argc,
     SET_OPT(mod)    /* test collective/independent data mode */
     SET_OPT(bb)     /* test of burst-buffering feature */
 
+#if !defined(ENABLE_GIO) || ENABLE_GIO == 0
+    s_drv = e_drv = 1; /* skip testing GIO driver */
+#endif
+
 #if !defined(PNETCDF_BURST_BUFFERING) || PNETCDF_BURST_BUFFERING == 0
     s_bb = e_bb = 0; /* skip testing burst buffering */
 #endif
@@ -583,7 +587,7 @@ int tst_main(int        argc,
                 /* running ncmpidiff also validates the file header */
                 MPI_Offset numDIFF;
                 numDIFF = ncmpidiff_core(out_filename, base_file,
-                                         MPI_COMM_WORLD, MPI_INFO_NULL, 0,
+                                         MPI_COMM_WORLD, info, 0,
                                          quiet, check_header, 0,
                                          check_entire_file, 0, NULL, 0,
                                          first_diff, cmd_opts, 0, 0);
