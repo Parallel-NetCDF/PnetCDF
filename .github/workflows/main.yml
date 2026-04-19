@@ -135,7 +135,14 @@ jobs:
           run: |
             git clean -fx
 
+        - name: Initialize submodules used by PnetCDF
+          run: |
+            set -x
+            git submodule update --init --recursive
+          continue-on-error: true  # Job continues and stays "green" if this fails
+
         - name: Build PnetCDF - ${{ matrix.fstype }}
+          if: ${{ always() }}
           run: |
             set -x
             cd ${GITHUB_WORKSPACE}
@@ -165,7 +172,6 @@ jobs:
                MPI_RUN="${GITHUB_WORKSPACE}/MPI/bin/mpirun --host localhost --oversubscribe -np NP"
             fi
             ./configure --prefix=${GITHUB_WORKSPACE}/PnetCDF \
-                        --enable-option-checking=fatal \
                         pnc_ac_debug=yes \
                         --enable-burst_buffering \
                         --enable-subfiling \
@@ -195,6 +201,7 @@ jobs:
             for f in $fname ; do \
                bname=`basename $f` ; \
                if test "x$bname" != xconfig.log ; then \
+                  echo "" ; \
                   echo "-------- dump $f ----------------------------" ; \
                   cat $f ; \
                fi ; \

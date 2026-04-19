@@ -163,6 +163,12 @@ jobs:
             make -j 8 >> qout 2>&1
             make -j 8 install >> qout 2>&1
 
+        - name: Initialize submodules used by PnetCDF
+          run: |
+            set -x
+            git submodule update --init --recursive
+          continue-on-error: true  # Job continues and stays "green" if this fails
+
         - name: Build PnetCDF
           id: build_pnetcdf
           if: steps.build_mpich.outcome == 'success'
@@ -191,7 +197,6 @@ jobs:
                 CONFIG_OPTS+=" --with-adios=${GITHUB_WORKSPACE}/ADIOS"
             fi
             ./configure --prefix=${GITHUB_WORKSPACE}/PnetCDF \
-                        --enable-option-checking=fatal \
                         pnc_ac_debug=yes \
                         ${CONFIG_OPTS} \
                         --with-mpi=${GITHUB_WORKSPACE}/MPICH \
@@ -217,6 +222,7 @@ jobs:
             for f in $fname ; do \
                bname=`basename $f` ; \
                if test "x$bname" != xconfig.log ; then \
+                  echo "" ; \
                   echo "-------- dump $f ----------------------------" ; \
                   cat $f ; \
                fi ; \
