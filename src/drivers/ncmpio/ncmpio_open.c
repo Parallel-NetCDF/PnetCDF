@@ -48,7 +48,7 @@ ncmpio_open(MPI_Comm         comm,
             PNC_comm_attr    comm_attr, /* node IDs and INA metadata */
             void           **ncpp)
 {
-    char *filename, value[MPI_MAX_INFO_VAL + 1], *mpi_name;
+    char value[MPI_MAX_INFO_VAL + 1], *mpi_name;
     int i, rank, nprocs, mpi_amode, err, status=NC_NOERR, mpireturn, flag;
     int striping_info[2];
     MPI_File fh=MPI_FILE_NULL;
@@ -102,13 +102,6 @@ ncmpio_open(MPI_Comm         comm,
         ncp->fstype = ncmpio_FileSysType(path);
 
     MPI_Bcast(&ncp->fstype, 1, MPI_INT, 0, ncp->comm);
-
-    /* Remove the file system type prefix name if there is any. For example,
-     * when path = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
-     * filename pointing to "/home/foo/testfile.nc", so it can be used in POSIX
-     * access() below
-     */
-    filename = ncmpii_remove_file_system_type_prefix(path);
 
     ncp->path     = path;  /* reuse path duplicated in dispatch layer */
     ncp->nc_amode = omode;
@@ -207,6 +200,13 @@ ncmpio_open(MPI_Comm         comm,
         /* MPICH recognizes file system type acronym prefixed to file names */
         TRACE_IO(MPI_File_open, (comm, path, mpi_amode, user_info, &fh));
 #else
+        /* Remove the file system type prefix name if there is any, because
+         * some MPI libraries do not recognize such prefix. For example, when
+         * path = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
+         * filename pointing to "/home/foo/testfile.nc".
+         */
+        char *filename;
+        filename = ncmpii_remove_file_system_type_prefix(path);
         TRACE_IO(MPI_File_open, (comm, filename, mpi_amode, user_info, &fh));
 #endif
         if (mpireturn != MPI_SUCCESS) {
@@ -235,7 +235,7 @@ ncmpio_open(MPI_Comm         comm,
          * MPI_COMM_NULL (ncp->comm is always assigned to comm).
          */
         int amode = fIsSet(omode, NC_WRITE) ? O_RDWR : O_RDONLY;
-        err = GIO_open(comm, filename, amode, user_info, &ncp->gio_fh);
+        err = GIO_open(comm, path, amode, user_info, &ncp->gio_fh);
         if (err != GIO_NOERR) {
             err = ncmpii_error_gio2nc(err, "GIO_open");
             DEBUG_FOPEN_ERROR(err);
