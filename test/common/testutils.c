@@ -434,11 +434,11 @@ int tst_main(int        argc,
         else /* for tests that are not testing different CDF versions */
             strcpy(ext, "nc");
 
-        for (a=0; a<num_ina; a++) {
-        for (d=0; d<num_drv; d++) {
-        for (b=0; b<num_bb;  b++) {
-        for (s=0; s<num_ds;  s++) {
-        for (m=num_mod-1; m>=0; m--) {
+        for (a=num_ina-1; a>=0; a--) { /* 0 is PnetCDF's default setting */
+        for (d=num_drv-1; d>=0; d--) { /* 0 is PnetCDF's default setting */
+        for (b=num_bb -1; b>=0; b--) { /* 0 is PnetCDF's default setting */
+        for (s=num_ds -1; s>=0; s--) { /* 0 is PnetCDF's default setting */
+        for (m=num_mod-1; m>=0; m--) { /* 0 is PnetCDF's default setting */
 
 #if defined(PNETCDF_PROFILING) && PNETCDF_PROFILING == 1
             MPI_Barrier(MPI_COMM_WORLD);
@@ -447,6 +447,7 @@ int tst_main(int        argc,
 
             sprintf(out_filename, "%s.%s", out_path, ext);
 
+            /* Whether or not to enable the intra-node aggregation */
             if (a == 0) { /* PnetCDF's default */
                 MPI_Info_set(info, "nc_num_aggrs_per_node", "0");
                 strcat(out_filename, ".noina");
@@ -455,14 +456,16 @@ int tst_main(int        argc,
                 strcat(out_filename, ".ina");
             }
 
-            if (d == 0) { /* MPI-IO driver */
-                MPI_Info_set(info, "nc_driver", "mpiio");
-                strcat(out_filename, ".mpio");
-            } else { /* GIO driver */
+            /* Use MPI-IO or GIO driver */
+            if (d == 0) { /* PnetCDF's default */
                 MPI_Info_set(info, "nc_driver", "gio");
                 strcat(out_filename, ".gio");
+            } else {
+                MPI_Info_set(info, "nc_driver", "mpiio");
+                strcat(out_filename, ".mpio");
             }
 
+            /* Whether or not to enable the burst buffering */
             if (b == 0) { /* PnetCDF's default */
                 MPI_Info_set(info, "nc_burst_buf", "disable");
                 strcat(out_filename, ".nobb");
@@ -474,20 +477,19 @@ int tst_main(int        argc,
                 strcat(out_filename, ".bb");
             }
 
-            if (s == 0) { /* disable data sieving */
-                MPI_Info_set(info, "romio_ds_read",  "disable");
-                MPI_Info_set(info, "romio_ds_write", "disable");
-                strcat(out_filename, ".nods");
-            }
-            else { /* PnetCDF's default */
+            /* Whether or not to enable data sieving */
+            if (s == 0) { /* PnetCDF's default */
                 MPI_Info_set(info, "romio_ds_read",  "automatic");
                 MPI_Info_set(info, "romio_ds_write", "automatic");
                 strcat(out_filename, ".ds");
             }
+            else {
+                MPI_Info_set(info, "romio_ds_read",  "disable");
+                MPI_Info_set(info, "romio_ds_write", "disable");
+                strcat(out_filename, ".nods");
+            }
 
-            /* When num_mod == 2, test independent data mode first followed by
-             * collective. Otherwise when num_mod == 1, test collective only.
-             */
+            /* Test PnetCDF collective or independent APIs */
             if (m == 0) /* collective data mode */
                 strcat(out_filename, ".coll_mod");
             else /* independent data mode */
@@ -503,25 +505,25 @@ int tst_main(int        argc,
 
             double time_body = MPI_Wtime();
             if (!quiet && rank == 0)
-                printf("\n%-44s a=%d d=%d b=%d s=%d c=%d",
+                printf("\n%-44s INA=%d drv=%d BB=%d DS=%d coll=%d",
                        out_filename, a,d,b,s,m);
 
-            nerrs = tst_body(out_filename, in_path, opt.formats[i],
-                             m, info);
+            /* tst_body() is the core of test program */
+            nerrs = tst_body(out_filename, in_path, opt.formats[i], m, info);
             MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MAX,
                           MPI_COMM_WORLD);
             if (nerrs > 0) {
                 fflush(stdout);
                 if (rank == 0)
-                    printf("\nFAILED %-44s INA=%d driver=%d BB=%d sieving=%d coll=%d\n",
+                    printf("\nFAILED %-44s INA=%d drv=%d BB=%d DS=%d coll=%d\n",
                            out_filename, a,d,b,s,m);
                 goto err_out;
             }
 
             if (!quiet) {
                 time_body = MPI_Wtime() - time_body;
-                MPI_Allreduce(MPI_IN_PLACE, &time_body, 1, MPI_DOUBLE,
-                              MPI_MAX, MPI_COMM_WORLD);
+                MPI_Allreduce(MPI_IN_PLACE, &time_body, 1, MPI_DOUBLE, MPI_MAX,
+                              MPI_COMM_WORLD);
                 if (rank == 0)
                     printf(" (%.2fs)\n", time_body);
             }
@@ -545,18 +547,18 @@ int tst_main(int        argc,
 
                 check_entire_file = (opt.var_diff == 1);
 
-                /* ncmpidiff does nott support netCDF4 files */
+                /* ncmpidiff does not support netCDF4 files */
                 if (opt.formats[i] == NC_FORMAT_NETCDF4_CLASSIC ||
                     opt.formats[i] == NC_FORMAT_NETCDF4) {
                     goto skip_diff;
                 }
 
                 if (!quiet && rank == 0)
-                    printf("ncmpidiff %-60s %s a=%d d=%d b=%d s=%d\n",
-                           out_filename, base_file,a,d,b,s);
+                    printf("ncmpidiff %-44s %s INA=%d drv=%d BB=%d DS=%d coll=%d\n",
+                           out_filename, base_file, a,d,b,s,m);
 
 #ifdef MIMIC_LUSTRE
-                /* use a larger stripe size when running ncmpidiff */
+                /* use a larger stripe size when running ncmpidiff is faster */
                 setenv("MIMIC_STRIPE_SIZE", "1048576", 1);
 #else
                 unsetenv("MIMIC_STRIPE_SIZE");
