@@ -236,7 +236,10 @@ ncmpio_open(MPI_Comm         comm,
          */
         int amode = fIsSet(omode, NC_WRITE) ? O_RDWR : O_RDONLY;
         err = GIO_open(comm, filename, amode, user_info, &ncp->gio_fh);
-        if (err != NC_NOERR) DEBUG_FOPEN_ERROR(err);
+        if (err != GIO_NOERR) {
+            err = ncmpii_error_gio2nc(err, "GIO_open");
+            DEBUG_FOPEN_ERROR(err);
+        }
 
         /* Now the file has been successfully opened, obtain the I/O hints
          * used/modified by GIO driver.

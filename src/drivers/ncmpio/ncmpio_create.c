@@ -685,7 +685,10 @@ ncmpio_create(MPI_Comm         comm,
          */
         int amode = (mpi_amode & MPI_MODE_CREATE) ? O_CREAT|O_RDWR : O_RDWR;
         err = GIO_open(comm, filename, amode, user_info, &ncp->gio_fh);
-        if (err != NC_NOERR) DEBUG_FOPEN_ERROR(err)
+        if (err != GIO_NOERR) {
+            err = ncmpii_error_gio2nc(err, "GIO_open");
+            DEBUG_FOPEN_ERROR(err);
+        }
 
         /* Now the file has been successfully created, obtain the I/O hints
          * used/modified by GIO driver.
