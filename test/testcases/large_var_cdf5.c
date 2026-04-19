@@ -67,12 +67,12 @@ int main(int argc, char **argv) {
 
     opt.num_fmts = sizeof(formats) / sizeof(int);
     opt.formats  = formats;
-    opt.ina      = 1; /* test intra-node aggregation */
-    opt.drv      = 1; /* test PNCIO driver */
-    opt.bb       = 1; /* test burst-buffering feature */
-    opt.mod      = 0; /* test independent data mode */
-    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
-    opt.var_diff = 0; /* run ncmpidiff for variables */
+    opt.ina      = 2;    /* enable and disable intra-node aggregation */
+    opt.drv      = 2;    /* test GIO and MPI-IO driver */
+    opt.bb       = 2;    /* enable and disable burst-buffering feature */
+    opt.mod      = 0;    /* skip test independent data mode */
+    opt.hdr_diff = true; /* run ncmpidiff for file header */
+    opt.var_diff = false;/* skip ncmpidiff for variables */
 
     err = tst_main(argc, argv, "large var in CDF-5", opt, test_io);
 

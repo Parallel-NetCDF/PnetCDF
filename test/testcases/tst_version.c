@@ -55,12 +55,12 @@ int main(int argc, char **argv) {
 
     opt.num_fmts = sizeof(formats) / sizeof(int);
     opt.formats  = formats;
-    opt.ina      = 0; /* test intra-node aggregation */
+    opt.ina      = 0;    /* skip test intra-node aggregation */
     opt.drv      = 0; /* test PNCIO driver */
-    opt.bb       = 0; /* test burst-buffering feature */
-    opt.mod      = 0; /* test independent data mode */
-    opt.hdr_diff = 0; /* run ncmpidiff for file header only */
-    opt.var_diff = 0; /* run ncmpidiff for variables */
+    opt.bb       = 0;    /* skip test burst-buffering feature */
+    opt.mod      = 0;    /* skip test independent data mode */
+    opt.hdr_diff = false;/* skip ncmpidiff for file header */
+    opt.var_diff = false;/* skip ncmpidiff for variables */
 
     err = tst_main(argc, argv, "PnetCDF library version", opt, test_io);
 

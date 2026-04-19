@@ -377,12 +377,12 @@ int main(int argc, char **argv) {
 
     opt.num_fmts = sizeof(formats) / sizeof(int);
     opt.formats  = formats;
-    opt.ina      = 0; /* test intra-node aggregation */
-    opt.drv      = 0; /* test PNCIO driver */
-    opt.bb       = 1; /* test burst-buffering feature */
-    opt.mod      = 1; /* test independent data mode */
-    opt.hdr_diff = 1; /* run ncmpidiff for file header only */
-    opt.var_diff = 1; /* run ncmpidiff for variables */
+    opt.ina      = 0;    /* skip test intra-node aggregation */
+    opt.drv      = 1;    /* test MPI-IO driver only */
+    opt.bb       = 2;    /* enable and disable burst-buffering feature */
+    opt.mod      = 2;    /* collective and independent data mode */
+    opt.hdr_diff = true; /* run ncmpidiff for file header */
+    opt.var_diff = true; /* run ncmpidiff for variables */
 
     err = tst_main(argc, argv, "2 var in one call", opt, test_io);
 
