@@ -329,23 +329,29 @@ hdr_len_NC_vararray(const NC_vararray *ncap,
 static int
 hdr_fetch(bufferinfo *gbp) {
     int rank, nprocs, err=NC_NOERR, mpireturn;
-    PNCIO_View buf_view;
 
     assert(gbp->base != NULL);
-
-    buf_view.count = 0;
-    buf_view.off = NULL;
-    buf_view.len = NULL;
-    buf_view.type = MPI_BYTE;
 
     MPI_Comm_size(gbp->ncp->comm, &nprocs);
     MPI_Comm_rank(gbp->ncp->comm, &rank);
 
     if (rank == 0) { /* only root reads file header */
         char *readBuf;
-        int readLen;
         size_t slack;
         MPI_Offset rlen;
+        MPI_Count file_off=gbp->offset, buf_off=0, readLen;
+        PNCIO_View file_view, buf_view;
+
+        /* For fetching file header, both file view and buffer view are
+         * contiguous.
+         */
+        file_view.count = 1;
+        file_view.off = &file_off;
+        file_view.len = &readLen;
+
+        buf_view.count = 1;
+        buf_view.off = &buf_off;
+        buf_view.len = &readLen;
 
         /* any leftover data in the buffer */
         slack = gbp->ncp->hdr_chunk - (gbp->pos - gbp->base);
@@ -365,11 +371,12 @@ hdr_fetch(bufferinfo *gbp) {
             readLen -= slack;
         }
 
-        buf_view.size = readLen;
-
-        /* fileview is already entire file visible and MPI_File_read_at does
-           not change the file pointer */
+        file_off = gbp->offset;
+#if 1
+        rlen = ncmpio_file_read(gbp->ncp, NC_REQ_INDEP, readBuf, file_view, buf_view);
+#else
         rlen = ncmpio_file_read_at(gbp->ncp, gbp->offset, readBuf, buf_view);
+#endif
 
         if (rlen > 0) {
             /* rlen is the actual read amount. It may be smaller than readLen,
@@ -381,6 +388,9 @@ hdr_fetch(bufferinfo *gbp) {
              */
             if (rlen < readLen)
                 memset(readBuf + rlen, 0, readLen - rlen);
+
+            /* update the number of bytes read since file open */
+            gbp->ncp->get_size += rlen;
         }
         else if (rlen < 0)
             err = (int)rlen;
