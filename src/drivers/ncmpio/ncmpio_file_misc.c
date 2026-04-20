@@ -154,24 +154,24 @@ ncmpio_begin_indep_data(void *ncdp)
     }
 #endif
 
-    /* PnetCDF's default mode is collective. MPI file handle, collective_fh,
+    /* PnetCDF's default mode is collective. MPI file handle, mpio_fh_coll,
      * will never be MPI_FILE_NULL. We must use a separate MPI file handle
      * opened with MPI_COMM_SELF, because MPI_File_set_view is a collective
      * call and accessing a subarray requires a call to MPI_File_set_view.
      * In independent data mode, no collective MPI operation can be implicitly
      * called.
      */
-    if (ncp->independent_fh == MPI_FILE_NULL) {
+    if (ncp->mpio_fh_indep == MPI_FILE_NULL) {
         char *mpi_name;
         int mpireturn;
 #ifdef MPICH_VERSION
         /* MPICH recognizes file system type acronym prefixed to file name */
         TRACE_IO(MPI_File_open, (MPI_COMM_SELF, ncp->path, ncp->mpi_amode,
-                                 ncp->mpiinfo, &ncp->independent_fh));
+                                 ncp->mpiinfo, &ncp->mpio_fh_indep));
 #else
         char *path = ncmpii_remove_file_system_type_prefix(ncp->path);
         TRACE_IO(MPI_File_open, (MPI_COMM_SELF, path, ncp->mpi_amode,
-                                 ncp->mpiinfo, &ncp->independent_fh));
+                                 ncp->mpiinfo, &ncp->mpio_fh_indep));
 #endif
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, mpi_name);
@@ -179,7 +179,7 @@ ncmpio_begin_indep_data(void *ncdp)
         /* for those ranks whose mpiinfo is NULL, retrieve info */
         if (ncp->mpiinfo == MPI_INFO_NULL) {
             /* get the I/O hints used/modified by MPI-IO */
-            mpireturn = MPI_File_get_info(ncp->independent_fh, &ncp->mpiinfo);
+            mpireturn = MPI_File_get_info(ncp->mpio_fh_indep, &ncp->mpiinfo);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_error_mpi2nc(mpireturn, mpi_name);
 

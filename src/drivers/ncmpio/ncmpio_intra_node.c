@@ -2579,7 +2579,7 @@ if (num_reqs > 0) assert(buf_view.count > 0);
         ncp->comm_attr.ina_intra_comm = MPI_COMM_SELF;
     }
 
-// printf("%s at %d: ncp->collective_fh %s\n",__func__,__LINE__, (ncp->collective_fh == MPI_FILE_NULL)?"MPI_FILE_NULL":"NOT MPI_FILE_NULL");
+// printf("%s at %d: ncp->mpio_fh_coll %s\n",__func__,__LINE__, (ncp->mpio_fh_coll == MPI_FILE_NULL)?"MPI_FILE_NULL":"NOT MPI_FILE_NULL");
 
     /* perform intra-node aggregation */
     if (fIsSet(reqMode, NC_REQ_WR))

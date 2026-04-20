@@ -109,7 +109,7 @@ ncmpio_file_read_at(NC         *ncp,
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
         fh = fIsSet(ncp->flags, NC_MODE_INDEP)
-           ? ncp->independent_fh : ncp->collective_fh;
+           ? ncp->mpio_fh_indep : ncp->mpio_fh_coll;
 
         if (fh == MPI_FILE_NULL) return 0;
 
@@ -190,7 +190,7 @@ ncmpio_file_read_at_all(NC         *ncp,
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
         fh = fIsSet(ncp->flags, NC_MODE_INDEP)
-           ? ncp->independent_fh : ncp->collective_fh;
+           ? ncp->mpio_fh_indep : ncp->mpio_fh_coll;
 
         if (fh == MPI_FILE_NULL) return 0;
 
@@ -281,7 +281,7 @@ ncmpio_file_write_at(NC         *ncp,
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
         fh = fIsSet(ncp->flags, NC_MODE_INDEP)
-           ? ncp->independent_fh : ncp->collective_fh;
+           ? ncp->mpio_fh_indep : ncp->mpio_fh_coll;
 
         if (fh == MPI_FILE_NULL) return 0;
 
@@ -361,7 +361,7 @@ ncmpio_file_write_at_all(NC         *ncp,
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
         fh = fIsSet(ncp->flags, NC_MODE_INDEP)
-           ? ncp->independent_fh : ncp->collective_fh;
+           ? ncp->mpio_fh_indep : ncp->mpio_fh_coll;
 
         if (fh == MPI_FILE_NULL) return 0;
 
@@ -750,15 +750,15 @@ ncmpio_file_close(NC *ncp)
         char *mpi_name;
         int mpireturn;
 
-        if (ncp->independent_fh != ncp->collective_fh &&
-            ncp->independent_fh != MPI_FILE_NULL) {
-            TRACE_IO(MPI_File_close, (&ncp->independent_fh));
+        if (ncp->mpio_fh_indep != ncp->mpio_fh_coll &&
+            ncp->mpio_fh_indep != MPI_FILE_NULL) {
+            TRACE_IO(MPI_File_close, (&ncp->mpio_fh_indep));
             if (mpireturn != MPI_SUCCESS)
                 err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
         }
 
-        if (ncp->collective_fh != MPI_FILE_NULL) {
-            TRACE_IO(MPI_File_close, (&ncp->collective_fh));
+        if (ncp->mpio_fh_coll != MPI_FILE_NULL) {
+            TRACE_IO(MPI_File_close, (&ncp->mpio_fh_coll));
             if (mpireturn != MPI_SUCCESS)
                 err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
         }
@@ -851,21 +851,21 @@ ncmpio_file_sync(NC *ncp) {
 
     /* the remaining of this subroutine are for when using MPI-IO */
 
-    if (ncp->independent_fh != MPI_FILE_NULL) {
-        TRACE_IO(MPI_File_sync, (ncp->independent_fh));
+    if (ncp->mpio_fh_indep != MPI_FILE_NULL) {
+        TRACE_IO(MPI_File_sync, (ncp->mpio_fh_indep));
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, mpi_name);
     }
-    /* when nprocs == 1, ncp->collective_fh == ncp->independent_fh */
+    /* when nprocs == 1, ncp->mpio_fh_coll == ncp->mpio_fh_indep */
     if (ncp->nprocs == 1) return NC_NOERR;
 
     /* When intra-node aggregation is enabled, non-aggregator's
-     * ncp->collective_fh is always MPI_FILE_NULL. When disabled,
-     * ncp->collective_fh on all ranks is never MPI_FILE_NULL as collective
+     * ncp->mpio_fh_coll is always MPI_FILE_NULL. When disabled,
+     * ncp->mpio_fh_coll on all ranks is never MPI_FILE_NULL as collective
      * mode is default in PnetCDF.
      */
-    if (ncp->collective_fh != MPI_FILE_NULL) {
-        TRACE_IO(MPI_File_sync, (ncp->collective_fh));
+    if (ncp->mpio_fh_coll != MPI_FILE_NULL) {
+        TRACE_IO(MPI_File_sync, (ncp->mpio_fh_coll));
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, mpi_name);
     }
@@ -919,23 +919,23 @@ ncmpio_file_set_view(NC           *ncp,
     /* Now, ncp->driver == PNC_DRIVER_MPIIO, i.e. using MPI-IO. */
     int to_free_filetype=0;
 
-    /* when ncp->nprocs == 1, ncp->collective_fh == ncp->independent_fh */
+    /* when ncp->nprocs == 1, ncp->mpio_fh_coll == ncp->mpio_fh_indep */
     fh = (ncp->nprocs > 1 && !fIsSet(ncp->flags, NC_MODE_INDEP))
-       ? ncp->collective_fh : ncp->independent_fh;
+       ? ncp->mpio_fh_coll : ncp->mpio_fh_indep;
 
 #ifdef PNETCDF_DEBUG
     /* When using MPI-IO driver and INA disabled, all processes hold valid
-     * ncp->collective_fh (and ncp->independent_fh once entering independent
+     * ncp->mpio_fh_coll (and ncp->mpio_fh_indep once entering independent
      * data mode).
      *
      * When using MPI-IO driver and INA enabled, all INA aggregators processes
-     * hold valid ncp->collective_fh (and ncp->independent_fh once entering
+     * hold valid ncp->mpio_fh_coll (and ncp->mpio_fh_indep once entering
      * independent data mode). Non-INA aggregators have only valid
-     * ncp->independent_fh once entering independent data mode. Its
-     * ncp->collective_fh should always be MPI_FILE_NULL.
+     * ncp->mpio_fh_indep once entering independent data mode. Its
+     * ncp->mpio_fh_coll should always be MPI_FILE_NULL.
      * */
     if (ncp->num_aggrs_per_node > 0 && !ncp->comm_attr.is_ina_aggr)
-        assert(ncp->collective_fh == MPI_FILE_NULL);
+        assert(ncp->mpio_fh_coll == MPI_FILE_NULL);
 #endif
 
     if (fh == MPI_FILE_NULL) /* This process is not an INA aggregator. */
@@ -1144,9 +1144,9 @@ ncmpio_file_read(NC         *ncp,
 
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
-        /* when ncp->nprocs == 1, ncp->collective_fh == ncp->independent_fh */
+        /* when ncp->nprocs == 1, ncp->mpio_fh_coll == ncp->mpio_fh_indep */
         fh = (ncp->nprocs > 1 && !fIsSet(ncp->flags, NC_MODE_INDEP))
-           ? ncp->collective_fh : ncp->independent_fh;
+           ? ncp->mpio_fh_coll : ncp->mpio_fh_indep;
 
         /* When in collective data mode, if a process makes an independent put
          * call, skip setting the file view. This must come from subroutines
@@ -1357,9 +1357,9 @@ ncmpio_file_write(NC         *ncp,
 
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
-        /* when ncp->nprocs == 1, ncp->collective_fh == ncp->independent_fh */
+        /* when ncp->nprocs == 1, ncp->mpio_fh_coll == ncp->mpio_fh_indep */
         fh = (ncp->nprocs > 1 && !fIsSet(ncp->flags, NC_MODE_INDEP))
-           ? ncp->collective_fh : ncp->independent_fh;
+           ? ncp->mpio_fh_coll : ncp->mpio_fh_indep;
 
         /* When in collective data mode, if a process makes an independent put
          * call, skip setting the file view. This must come from subroutines

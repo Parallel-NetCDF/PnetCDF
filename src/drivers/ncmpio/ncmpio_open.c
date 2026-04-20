@@ -110,8 +110,8 @@ ncmpio_open(MPI_Comm         comm,
     ncp->gio_fh = NULL; /* when using GIO driver */
 #endif
 
-    ncp->collective_fh  = MPI_FILE_NULL;
-    ncp->independent_fh = MPI_FILE_NULL;
+    ncp->mpio_fh_coll  = MPI_FILE_NULL;
+    ncp->mpio_fh_indep = MPI_FILE_NULL;
 
     /* Setting file open mode in mpi_amode which may later be needed in
      * ncmpi_begin_indep_data() to open file for independent data mode.
@@ -215,8 +215,8 @@ ncmpio_open(MPI_Comm         comm,
         }
 
         /* Now the file has been successfully opened */
-        ncp->collective_fh  = fh;
-        ncp->independent_fh = (nprocs > 1) ? MPI_FILE_NULL : fh;
+        ncp->mpio_fh_coll  = fh;
+        ncp->mpio_fh_indep = (nprocs > 1) ? MPI_FILE_NULL : fh;
 
         /* get the I/O hints used/modified by MPI-IO */
         TRACE_IO(MPI_File_get_info, (fh, &ncp->mpiinfo));

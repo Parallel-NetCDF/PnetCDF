@@ -496,8 +496,8 @@ struct NC {
 
     int           NUMA_ID;       /* this rank's NUMA node ID */
     MPI_Info      mpiinfo;       /* used MPI info object */
-    MPI_File      collective_fh; /* MPI-IO file handle for collective mode */
-    MPI_File      independent_fh;/* MPI-IO file handle for independent mode */
+    MPI_File      mpio_fh_coll;  /* MPI-IO file handle for collective mode */
+    MPI_File      mpio_fh_indep; /* MPI-IO file handle for independent mode */
 #ifdef ENABLE_GIO
     GIO_File      gio_fh;        /* GIO file handler */
 #endif

@@ -457,8 +457,8 @@ ncmpio_create(MPI_Comm         comm,
     /* For file create, ignore NC_NOWRITE if set in cmode argument. */
     ncp->nc_amode = cmode | NC_WRITE;
 
-    ncp->collective_fh  = MPI_FILE_NULL;
-    ncp->independent_fh = MPI_FILE_NULL;
+    ncp->mpio_fh_coll  = MPI_FILE_NULL;
+    ncp->mpio_fh_indep = MPI_FILE_NULL;
 
     /* set the file format version based on the create mode, cmode */
          if (fIsSet(cmode, NC_64BIT_DATA))   ncp->format = 5;
@@ -658,8 +658,8 @@ ncmpio_create(MPI_Comm         comm,
             errno = 0;
 
         /* Now the file has been successfully created */
-        ncp->collective_fh  = fh;
-        ncp->independent_fh = (nprocs == 1) ? fh : MPI_FILE_NULL;
+        ncp->mpio_fh_coll  = fh;
+        ncp->mpio_fh_indep = (nprocs == 1) ? fh : MPI_FILE_NULL;
 
         /* Now the file has been successfully created, obtain the I/O hints
          * used/modified by MPI-IO.

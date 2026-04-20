@@ -305,9 +305,9 @@ err_check:
     char *mpi_name;
     MPI_File fh;
 
-    /* when ncp->nprocs == 1, ncp->collective_fh == ncp->independent_fh */
+    /* when ncp->nprocs == 1, ncp->mpio_fh_coll == ncp->mpio_fh_indep */
     fh = (ncp->nprocs > 1 && !fIsSet(ncp->flags, NC_MODE_INDEP))
-       ? ncp->collective_fh : ncp->independent_fh;
+       ? ncp->mpio_fh_coll : ncp->mpio_fh_indep;
 
     TRACE_IO(MPI_File_set_view, (fh, offset, MPI_BYTE, filetype, "native",
                                  MPI_INFO_NULL));
