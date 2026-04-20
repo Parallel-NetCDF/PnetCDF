@@ -276,6 +276,15 @@ void ncmpio_hint_extract(NC       *ncp,
     MPI_Info_get(info, "file_striping", MPI_MAX_INFO_VAL-1, value, &flag);
     if (flag && strcasecmp(value, "inherit") == 0)
         ncp->file_striping = PNCIO_STRIPING_INHERIT;
+
+    /* Check and set hint NUMA_ID, which is set by the dispatcher. */
+    MPI_Info_get(info, "NUMA_ID", MPI_MAX_INFO_VAL-1, value, &flag);
+    if (flag) {
+        errno = 0;  /* errno must set to zero before calling atoi */
+        ival = atoi(value);
+        if (errno == 0 && ival >= 0)
+            ncp->NUMA_ID = ival;
+    }
 }
 
 /*----< ncmpio_hint_set() >--------------------------------------------------*/
@@ -401,6 +410,12 @@ void ncmpio_hint_set(NC       *ncp,
         MPI_Info_set(info, "file_striping", "auto");
     else
         MPI_Info_set(info, "file_striping", "inherit");
+
+    if (ncp->NUMA_ID >= 0) {
+        /* This rank's NUMA_ID, will be used by GIO. */
+        snprintf(int_str, MAX_INT_LEN, "%d", ncp->NUMA_ID);
+        MPI_Info_set(info, "NUMA_ID", int_str);
+    }
 }
 
 /*----< ncmpio_first_offset() >----------------------------------------------*/

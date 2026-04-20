@@ -494,6 +494,7 @@ struct NC {
                                  * compute node IDs of all processes and INA
                                  * metadata */
 
+    int           NUMA_ID;       /* this rank's NUMA node ID */
     MPI_Info      mpiinfo;       /* used MPI info object */
     MPI_File      collective_fh; /* MPI-IO file handle for collective mode */
     MPI_File      independent_fh;/* MPI-IO file handle for independent mode */
