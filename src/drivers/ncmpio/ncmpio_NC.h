@@ -21,6 +21,8 @@
 #include "gio.h"
 #endif
 
+#define PNC_PERM          0666 /* file creation permission mask */
+
 #define PNC_FS_UFS        152  /* Unix file system */
 #define PNC_FS_LUSTRE     163  /* Lustre file system */
 

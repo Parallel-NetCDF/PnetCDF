@@ -70,7 +70,7 @@ void lustre_get_striping(const char *path,
     dirc = NCI_Strdup(path);
     dname = dirname(dirc); /* folder name */
 
-    fd = open(dname, O_RDONLY, PNCIO_PERM);
+    fd = open(dname, O_RDONLY, PNC_PERM);
 
     layout = llapi_layout_get_by_fd(fd, LLAPI_LAYOUT_GET_COPY);
     if (layout == NULL) {
