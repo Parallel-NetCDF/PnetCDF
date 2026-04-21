@@ -882,8 +882,33 @@ ncmpi_create(MPI_Comm    comm,
     }
 #endif
 
-    MPI_Comm_rank(comm, &rank);
-    MPI_Comm_size(comm, &nprocs);
+     *ncidp = -1;
+
+    /* allocate a new PNC object */
+    pncp = (PNC*) NCI_Malloc(sizeof(PNC));
+    if (pncp == NULL)
+        DEBUG_RETURN_ERROR(NC_ENOMEM) /* fatal error */
+
+    pncp->path = NULL;
+
+    /* The first thing is to duplicate the MPI communicator (even if comm is
+     * MPI_COMM_WORLD or MPI_COMM_SELF) before any communication can be made
+     * within PnetCDF. This is because users may use 'comm' to do other
+     * point-to-point communication while PnetCDF also makes some MPI
+     * communication calls. When this happened, user's communication can mess
+     * up with the PnetCDF's communication, particularly when in independent
+     * data mode. Once comm is duplicated, we pass pncp->comm to PnetCDF
+     * drivers, so there is no need for a driver to duplicate it again.
+     */
+    pncp->comm = MPI_COMM_NULL;
+    mpireturn = MPI_Comm_dup(comm, &pncp->comm);
+    if (mpireturn != MPI_SUCCESS) {
+        err = ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_dup");
+        goto err_out;
+    }
+
+    MPI_Comm_rank(pncp->comm, &rank);
+    MPI_Comm_size(pncp->comm, &nprocs);
 
     if (rank == 0)
         set_env_mode(&env_mode);
@@ -891,12 +916,22 @@ ncmpi_create(MPI_Comm    comm,
     /* path's validity is checked in MPI-IO with error code MPI_ERR_BAD_FILE
      * path consistency is checked in MPI-IO with error code MPI_ERR_NOT_SAME
      */
-    if (path == NULL || *path == '\0') DEBUG_RETURN_ERROR(NC_EBAD_FILE)
+    if (path == NULL || *path == '\0') {
+        DEBUG_ASSIGN_ERROR(status, NC_EBAD_FILE)
+        goto err_out;
+    }
+
+    /* duplicate file path */
+    pncp->path = (char*) NCI_Strdup(path);
+    if (pncp->path == NULL) {
+        DEBUG_ASSIGN_ERROR(status, NC_ENOMEM)
+        goto err_out;
+    }
 
     if (nprocs > 1) { /* Check cmode consistency */
         int modes[2] = {cmode, env_mode}; /* only root's matters */
 
-        TRACE_COMM(MPI_Bcast)(&modes, 2, MPI_INT, 0, comm);
+        TRACE_COMM(MPI_Bcast)(&modes, 2, MPI_INT, 0, pncp->comm);
         NCMPII_HANDLE_ERROR("MPI_Bcast")
 
         /* Overwrite cmode with root's cmode */
@@ -909,20 +944,13 @@ ncmpi_create(MPI_Comm    comm,
         if (fIsSet(env_mode, NC_MODE_SAFE)) {
             /* sync status among all processes */
             err = status;
-            TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
+            TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN,
+                                      pncp->comm);
             NCMPII_HANDLE_ERROR("MPI_Allreduce")
         }
         /* continue to use root's cmode to create the file, but will report
          * cmode inconsistency error, if there is any */
     }
-
-#ifdef ENABLE_THREAD_SAFE
-    int perr;
-    perr = pthread_mutex_lock(&lock);
-    if (perr != 0)
-        printf("Warning in file %s line %d: pthread_mutex_lock() failed (%s)\n",
-               __FILE__, __LINE__, strerror(perr));
-#endif
 
     /* combine user's MPI info and PNETCDF_HINTS env variable */
     combine_env_hints(info, &combined_info);
@@ -944,16 +972,17 @@ ncmpi_create(MPI_Comm    comm,
     pnc_num_aggrs_per_node = num_aggrs_per_node;
 #endif
 
+#ifdef ENABLE_THREAD_SAFE
+    int perr;
+    perr = pthread_mutex_lock(&lock);
+    if (perr != 0)
+        printf("Warning in file %s line %d: pthread_mutex_lock() failed (%s)\n",
+               __FILE__, __LINE__, strerror(perr));
+#endif
+
     /* creating communicator attributes must be protected by a mutex */
-    set_get_comm_attr(comm, num_aggrs_per_node, &comm_attr);
+    set_get_comm_attr(pncp->comm, num_aggrs_per_node, &comm_attr);
     /* ignore error, as it is not a critical error */
-
-    if (combined_info == MPI_INFO_NULL)
-        MPI_Info_create(&combined_info);
-
-    /* add this rank's NUMA node ID */
-    snprintf(value, MAX_INT_LEN, "%d", comm_attr.NUMA_IDs[rank]);
-    MPI_Info_set(combined_info, "NUMA_ID", value);
 
 #ifdef ENABLE_THREAD_SAFE
     perr = pthread_mutex_unlock(&lock);
@@ -961,6 +990,13 @@ ncmpi_create(MPI_Comm    comm,
         printf("Warning in file %s line %d: pthread_mutex_unlock() failed (%s)\n",
                __FILE__, __LINE__, strerror(perr));
 #endif
+
+    if (combined_info == MPI_INFO_NULL)
+        MPI_Info_create(&combined_info);
+
+    /* add this rank's NUMA node ID */
+    snprintf(value, MAX_INT_LEN, "%d", comm_attr.NUMA_IDs[rank]);
+    MPI_Info_set(combined_info, "NUMA_ID", value);
 
 #ifdef BUILD_DRIVER_FOO
     if (combined_info != MPI_INFO_NULL) {
@@ -991,24 +1027,21 @@ ncmpi_create(MPI_Comm    comm,
                  (NC_64BIT_OFFSET|NC_NETCDF4) ||
         (cmode & (NC_64BIT_DATA|NC_NETCDF4)) ==
                  (NC_64BIT_DATA|NC_NETCDF4)) {
-        if (combined_info != MPI_INFO_NULL)
-            MPI_Info_free(&combined_info);
-        DEBUG_RETURN_ERROR(NC_EINVAL_CMODE)
+        DEBUG_ASSIGN_ERROR(status, NC_EINVAL_CMODE)
+        goto err_out;
     }
 #else
     if (cmode & NC_NETCDF4) {
-        if (combined_info != MPI_INFO_NULL)
-            MPI_Info_free(&combined_info);
-        DEBUG_RETURN_ERROR(NC_ENOTBUILT)
+        DEBUG_ASSIGN_ERROR(status, NC_ENOTBUILT)
+        goto err_out;
     }
 #endif
 
     /* It is illegal to have both NC_64BIT_OFFSET & NC_64BIT_DATA */
     if ((cmode & (NC_64BIT_OFFSET|NC_64BIT_DATA)) ==
                  (NC_64BIT_OFFSET|NC_64BIT_DATA)) {
-        if (combined_info != MPI_INFO_NULL)
-            MPI_Info_free(&combined_info);
-        DEBUG_RETURN_ERROR(NC_EINVAL_CMODE)
+        DEBUG_ASSIGN_ERROR(status, NC_EINVAL_CMODE)
+        goto err_out;
     }
 
     /* Check if cmode contains format specific flag */
@@ -1044,10 +1077,8 @@ ncmpi_create(MPI_Comm    comm,
         /* Burst buffering does not support NetCDF-4 files yet.
          * If hint nc_burst_buf is enabled in combined_info, disable it.
          */
-        if (enable_bb_driver == 1) {
-            if (combined_info != MPI_INFO_NULL)
-                MPI_Info_set(combined_info, "nc_burst_buf", "disable");
-        }
+        if (enable_bb_driver == 1 && combined_info != MPI_INFO_NULL)
+            MPI_Info_set(combined_info, "nc_burst_buf", "disable");
         enable_bb_driver = 0;
 #endif
     }
@@ -1066,15 +1097,6 @@ ncmpi_create(MPI_Comm    comm,
         /* default is the driver built on top of MPI-IO */
         driver = ncmpio_inq_driver();
 
-    /* allocate a new PNC object */
-    pncp = (PNC*) NCI_Malloc(sizeof(PNC));
-    if (pncp == NULL) {
-        *ncidp = -1;
-        if (combined_info != MPI_INFO_NULL)
-            MPI_Info_free(&combined_info);
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
-    }
-
     pncp->flag = NC_MODE_DEF | NC_MODE_CREATE;
     fSet(pncp->flag, env_mode);
 
@@ -1083,42 +1105,17 @@ ncmpi_create(MPI_Comm    comm,
     if (err != NC_NOERR) {
         if (combined_info != MPI_INFO_NULL)
             MPI_Info_free(&combined_info);
-        return err;
+        DEBUG_ASSIGN_ERROR(status, err)
+        goto err_out;
     }
-
-    /* Duplicate comm, because users may use it doing other point-to-point
-     * communication. When this happened, that communication can mess up with
-     * the PnetCDF/MPI-IO internal communication, particularly when in
-     * independent data mode. Note MPI_Comm_dup() is collective. We pass
-     * pncp->comm to drivers, so there is no need for a driver to duplicate it
-     * again.
-     */
-    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF) {
-        mpireturn = MPI_Comm_dup(comm, &pncp->comm);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_dup");
-    }
-    else
-        pncp->comm = comm;
-
-    /* fill in pncp members */
-    pncp->path = (char*) NCI_Strdup(path);
-    if (pncp->path == NULL)
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* calling the driver's create subroutine */
     err = driver->create(pncp->comm, pncp->path, cmode, *ncidp, env_mode,
                          combined_info, comm_attr, &ncp);
     if (status == NC_NOERR) status = err;
-    if (combined_info != MPI_INFO_NULL) MPI_Info_free(&combined_info);
     if (status != NC_NOERR && status != NC_EMULTIDEFINE_CMODE) {
         del_from_PNCList(*ncidp);
-        if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
-            MPI_Comm_free(&pncp->comm); /* a collective call */
-        NCI_Free(pncp->path);
-        NCI_Free(pncp);
-        *ncidp = -1;
-        return status;
+        goto err_out;
     }
 
     pncp->mode       = cmode;
@@ -1136,6 +1133,19 @@ ncmpi_create(MPI_Comm    comm,
 
     if (fIsSet(env_mode, NC_MODE_STRICT_COORD_BOUND))
         pncp->flag |= NC_MODE_STRICT_COORD_BOUND;
+
+err_out:
+    if (combined_info != MPI_INFO_NULL)
+        MPI_Info_free(&combined_info);
+
+    if (status != NC_NOERR && status != NC_EMULTIDEFINE_CMODE) {
+        if (pncp->comm != MPI_COMM_NULL)
+            MPI_Comm_free(&pncp->comm); /* a collective call */
+        if (pncp->path != NULL)
+            NCI_Free(pncp->path);
+        NCI_Free(pncp);
+        *ncidp = -1;
+    }
 
     return status;
 }
@@ -1181,8 +1191,33 @@ ncmpi_open(MPI_Comm    comm,
     }
 #endif
 
-    MPI_Comm_rank(comm, &rank);
-    MPI_Comm_size(comm, &nprocs);
+    *ncidp = -1;
+
+    /* allocate a PNC object */
+    pncp = (PNC*) NCI_Malloc(sizeof(PNC));
+    if (pncp == NULL)
+        DEBUG_RETURN_ERROR(NC_ENOMEM) /* fatal error */
+
+    pncp->path = NULL;
+
+    /* The first thing is to duplicate the MPI communicator (even if comm is
+     * MPI_COMM_WORLD or MPI_COMM_SELF) before any communication can be made
+     * within PnetCDF. This is because users may use 'comm' to do other
+     * point-to-point communication while PnetCDF also makes some MPI
+     * communication calls. When this happened, user's communication can mess
+     * up with the PnetCDF's communication, particularly when in independent
+     * data mode. Once comm is duplicated, we pass pncp->comm to PnetCDF
+     * drivers, so there is no need for a driver to duplicate it again.
+     */
+    mpireturn = MPI_Comm_dup(comm, &pncp->comm);
+    if (mpireturn != MPI_SUCCESS) {
+        err = ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_dup");
+        if (status == NC_NOERR) status = err;
+        goto err_out;
+    }
+
+    MPI_Comm_rank(pncp->comm, &rank);
+    MPI_Comm_size(pncp->comm, &nprocs);
 
     if (rank == 0)
         set_env_mode(&env_mode);
@@ -1190,7 +1225,10 @@ ncmpi_open(MPI_Comm    comm,
     /* path's validity is checked in MPI-IO with error code MPI_ERR_BAD_FILE
      * path consistency is checked in MPI-IO with error code MPI_ERR_NOT_SAME
      */
-    if (path == NULL || *path == '\0') DEBUG_RETURN_ERROR(NC_EBAD_FILE)
+    if (path == NULL || *path == '\0') {
+        if (status == NC_NOERR) status = NC_EBAD_FILE;
+        goto err_out;
+    }
 
     /* Check the file signature to tell the file format which is later used to
      * select the right driver.
@@ -1199,16 +1237,25 @@ ncmpi_open(MPI_Comm    comm,
     if (rank == 0) {
         err = ncmpi_inq_file_format(path, &format);
         if (err != NC_NOERR) {
-            if (nprocs == 1) return err;
+            if (nprocs == 1) {
+                if (status == NC_NOERR) status = err;
+                goto err_out;
+            }
             format = err;
         }
         else if (format == NC_FORMAT_UNKNOWN) {
-            if (nprocs == 1) DEBUG_RETURN_ERROR(NC_ENOTNC)
+            if (nprocs == 1) {
+                if (status == NC_NOERR) status = NC_ENOTNC;
+                goto err_out;
+            }
             format = NC_ENOTNC;
         }
 #ifndef ENABLE_NETCDF4
         else if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) {
-            if (nprocs == 1) DEBUG_RETURN_ERROR(NC_ENOTBUILT)
+            if (nprocs == 1) {
+                if (status == NC_NOERR) status = NC_ENOTBUILT;
+                goto err_out;
+            }
             format = NC_ENOTBUILT;
         }
 #endif
@@ -1223,38 +1270,34 @@ ncmpi_open(MPI_Comm    comm,
          * In pnetcdf.h, they both are defined the same value, 0.
          */
 
-        TRACE_COMM(MPI_Bcast)(&modes, 3, MPI_INT, 0, comm);
+        TRACE_COMM(MPI_Bcast)(&modes, 3, MPI_INT, 0, pncp->comm);
         NCMPII_HANDLE_ERROR("MPI_Bcast")
 
         /* check format error (a fatal error, must return now) */
         format = modes[0];
-        if (format < 0) return format; /* all netCDF errors are negative */
+        if (format < 0) { /* all netCDF errors are negative */
+            if (status == NC_NOERR) status = format;
+            goto err_out;
+        }
 
         /* check omode consistency */
         if (modes[1] != omode) {
             omode = modes[1];
-            DEBUG_ASSIGN_ERROR(status, NC_EMULTIDEFINE_OMODE)
+            if (status == NC_NOERR) status = NC_EMULTIDEFINE_OMODE;
         }
 
         env_mode = modes[2];
         if (fIsSet(env_mode, NC_MODE_SAFE)) {
             /* sync status among all processes */
             err = status;
-            TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN, comm);
+            TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN,
+                                      pncp->comm);
             NCMPII_HANDLE_ERROR("MPI_Allreduce")
         }
         /* continue to use root's omode to open the file, but will report omode
          * inconsistency error, if there is any
          */
     }
-
-#ifdef ENABLE_THREAD_SAFE
-    int perr;
-    perr = pthread_mutex_lock(&lock);
-    if (perr != 0)
-        printf("Warning in file %s line %d: pthread_mutex_lock() failed (%s)\n",
-               __FILE__, __LINE__, strerror(perr));
-#endif
 
     /* combine user's MPI info and PNETCDF_HINTS env variable */
     combine_env_hints(info, &combined_info);
@@ -1276,16 +1319,17 @@ ncmpi_open(MPI_Comm    comm,
     pnc_num_aggrs_per_node = num_aggrs_per_node;
 #endif
 
+#ifdef ENABLE_THREAD_SAFE
+    int perr;
+    perr = pthread_mutex_lock(&lock);
+    if (perr != 0)
+        printf("Warning in file %s line %d: pthread_mutex_lock() failed (%s)\n",
+               __FILE__, __LINE__, strerror(perr));
+#endif
+
     /* creating communicator attributes must be protected by a mutex */
-    set_get_comm_attr(comm, num_aggrs_per_node, &comm_attr);
+    set_get_comm_attr(pncp->comm, num_aggrs_per_node, &comm_attr);
     /* ignore error, as it is not a critical error */
-
-    if (combined_info == MPI_INFO_NULL)
-        MPI_Info_create(&combined_info);
-
-    /* add this rank's NUMA node ID */
-    snprintf(value, MAX_INT_LEN, "%d", comm_attr.NUMA_IDs[rank]);
-    MPI_Info_set(combined_info, "NUMA_ID", value);
 
 #ifdef ENABLE_THREAD_SAFE
     perr = pthread_mutex_unlock(&lock);
@@ -1293,6 +1337,13 @@ ncmpi_open(MPI_Comm    comm,
         printf("Warning in file %s line %d: pthread_mutex_unlock() failed (%s)\n",
                __FILE__, __LINE__, strerror(perr));
 #endif
+
+    if (combined_info == MPI_INFO_NULL)
+        MPI_Info_create(&combined_info);
+
+    /* add this rank's NUMA node ID */
+    snprintf(value, MAX_INT_LEN, "%d", comm_attr.NUMA_IDs[rank]);
+    MPI_Info_set(combined_info, "NUMA_ID", value);
 
 #ifdef BUILD_DRIVER_FOO
     if (combined_info != MPI_INFO_NULL) {
@@ -1329,8 +1380,10 @@ ncmpi_open(MPI_Comm    comm,
     }
     else
 #else
-    if (format == NC_FORMAT_NETCDF4_CLASSIC || format == NC_FORMAT_NETCDF4)
-        DEBUG_RETURN_ERROR(NC_ENOTBUILT)
+    if (format == NC_FORMAT_NETCDF4_CLASSIC || format == NC_FORMAT_NETCDF4) {
+        if (status == NC_NOERR) status = NC_ENOTBUILT;
+        goto err_out;
+    }
     else
 #endif
 #ifdef BUILD_DRIVER_FOO
@@ -1355,59 +1408,39 @@ ncmpi_open(MPI_Comm    comm,
             driver = ncadios_inq_driver();
         }
 #endif
-        else /* unrecognized file format */
-            DEBUG_RETURN_ERROR(NC_ENOTNC)
-    }
-
-    /* allocate a PNC object */
-    pncp = (PNC*) NCI_Malloc(sizeof(PNC));
-    if (pncp == NULL) {
-        *ncidp = -1;
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
+        else { /* unrecognized file format */
+            if (status == NC_NOERR) status = NC_ENOTNC;
+            goto err_out;
+        }
     }
 
     pncp->flag = 0;
     fSet(pncp->flag, env_mode);
 
+    /* duplicate file path */
+    pncp->path = (char*) NCI_Strdup(path);
+    if (pncp->path == NULL) {
+        if (status == NC_NOERR) status = NC_ENOMEM;
+        goto err_out;
+    }
+
     /* generate a new nc file ID from NCPList */
     err = new_id_PNCList(ncidp, pncp);
-    if (err != NC_NOERR) return err;
-
-    /* Duplicate comm, because users may use it doing other point-to-point
-     * communication. When this happened, that communication can mess up with
-     * the PnetCDF/MPI-IO internal communication, particularly when in
-     * independent data mode. Note MPI_Comm_dup() is collective. We pass
-     * pncp->comm to drivers, so there is no need for a driver to duplicate it
-     * again.
-     */
-    if (comm != MPI_COMM_WORLD && comm != MPI_COMM_SELF) {
-        mpireturn = MPI_Comm_dup(comm, &pncp->comm);
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_dup");
+    if (err != NC_NOERR) {
+        if (status == NC_NOERR) status = err;
+        goto err_out;
     }
-    else
-        pncp->comm = comm;
-
-    pncp->path = (char*) NCI_Strdup(path);
-    if (pncp->path == NULL)
-        DEBUG_RETURN_ERROR(NC_ENOMEM)
 
     /* calling the driver's open subroutine */
     err = driver->open(pncp->comm, pncp->path, omode, *ncidp, env_mode,
                        combined_info, comm_attr, &ncp);
     if (status == NC_NOERR) status = err;
-    if (combined_info != MPI_INFO_NULL) MPI_Info_free(&combined_info);
     if (status != NC_NOERR && status != NC_EMULTIDEFINE_OMODE &&
         status != NC_ENULLPAD) {
         /* NC_EMULTIDEFINE_OMODE and NC_ENULLPAD are not fatal error. We
          * continue the rest open procedure */
         del_from_PNCList(*ncidp);
-        if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
-            MPI_Comm_free(&pncp->comm); /* a collective call */
-        NCI_Free(pncp->path);
-        NCI_Free(pncp);
-        *ncidp = -1;
-        return status;
+        goto err_out;
     }
 
     /* fill in pncp members */
@@ -1433,9 +1466,15 @@ ncmpi_open(MPI_Comm    comm,
     /* inquire number of dimensions, variables defined and rec dim ID */
     err = driver->inq(pncp->ncp, &pncp->ndims, &pncp->nvars, NULL,
                       &pncp->unlimdimid);
-    if (err != NC_NOERR) goto fn_exit;
+    if (err != NC_NOERR) {
+        driver->close(ncp); /* close file and ignore error */
+        del_from_PNCList(*ncidp);
+        if (status == NC_NOERR) status = err;
+        goto err_out;
+    }
 
-    if (pncp->nvars == 0) return status; /* no variable defined in the file */
+    if (pncp->nvars == 0) /* no variable defined in the file */
+        goto err_out;
 
     /* make a copy of variable metadata at the dispatcher layer, because sanity
      * check is done at the dispatcher layer
@@ -1445,8 +1484,10 @@ ncmpi_open(MPI_Comm    comm,
     nalloc = PNETCDF_RNDUP(pncp->nvars, PNC_VARS_CHUNK);
     pncp->vars = NCI_Malloc(sizeof(PNC_var) * nalloc);
     if (pncp->vars == NULL) {
-        DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
-        goto fn_exit;
+        driver->close(ncp); /* close file and ignore error */
+        del_from_PNCList(*ncidp);
+        if (status == NC_NOERR) status = NC_ENOMEM;
+        goto err_out;
     }
 
     dimids = DIMIDS;
@@ -1483,6 +1524,7 @@ ncmpi_open(MPI_Comm    comm,
         }
         if (pncp->vars[i].recdim >= 0) pncp->nrec_vars++;
     }
+
     if (err != NC_NOERR) { /* error happens in loop i */
         assert(i < pncp->nvars);
         for (j=0; j<=i; j++) {
@@ -1490,19 +1532,24 @@ ncmpi_open(MPI_Comm    comm,
                 NCI_Free(pncp->vars[j].shape);
         }
         NCI_Free(pncp->vars);
+        driver->close(ncp); /* close file and ignore error */
+        del_from_PNCList(*ncidp);
+        if (status == NC_NOERR) status = err;
     }
     if (dimids != DIMIDS) NCI_Free(dimids);
 
-fn_exit:
-    if (err != NC_NOERR) {
-        driver->close(ncp); /* close file and ignore error */
-        if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
+err_out:
+    if (combined_info != MPI_INFO_NULL)
+        MPI_Info_free(&combined_info);
+
+    if (status != NC_NOERR && status != NC_EMULTIDEFINE_OMODE &&
+        status != NC_ENULLPAD) {
+        if (pncp->comm != MPI_COMM_NULL)
             MPI_Comm_free(&pncp->comm); /* a collective call */
-        del_from_PNCList(*ncidp);
-        NCI_Free(pncp->path);
+        if (pncp->path != NULL)
+            NCI_Free(pncp->path);
         NCI_Free(pncp);
         *ncidp = -1;
-        if (status == NC_NOERR) status = err;
     }
 
     return status;
@@ -1648,8 +1695,7 @@ ncmpi_close(int ncid)
 #endif
 
     /* free the PNC object */
-    if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
-        MPI_Comm_free(&pncp->comm); /* a collective call */
+    MPI_Comm_free(&pncp->comm); /* a collective call */
 
     NCI_Free(pncp->path);
     for (i=0; i<pncp->nvars; i++)
@@ -1848,8 +1894,7 @@ ncmpi_abort(int ncid)
     del_from_PNCList(ncid);
 
     /* free the PNC object */
-    if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
-        MPI_Comm_free(&pncp->comm); /* a collective call */
+    MPI_Comm_free(&pncp->comm); /* a collective call */
 
     NCI_Free(pncp->path);
     for (i=0; i<pncp->nvars; i++)
