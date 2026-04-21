@@ -1342,21 +1342,21 @@ ncmpio__enddef(void       *ncdp,
         fClr(ncp->ncp_sf->flags, NC_MODE_CREATE | NC_MODE_DEF);
 #endif
 
-    if (ncp->mpiinfo != MPI_INFO_NULL) {
+    if (ncp->info != MPI_INFO_NULL) {
         /* reflect the hint changes to the MPI info object, so the user can
          * inquire what the true hint values are being used
          */
         sprintf(value, OFFFMT, ncp->v_align);
-        MPI_Info_set(ncp->mpiinfo, "nc_var_align_size", value);
+        MPI_Info_set(ncp->info, "nc_var_align_size", value);
         sprintf(value, OFFFMT, ncp->r_align);
-        MPI_Info_set(ncp->mpiinfo, "nc_record_align_size", value);
+        MPI_Info_set(ncp->info, "nc_record_align_size", value);
 
 #ifdef ENABLE_SUBFILING
         sprintf(value, "%d", ncp->num_subfiles);
-        MPI_Info_set(ncp->mpiinfo, "nc_num_subfiles", value);
+        MPI_Info_set(ncp->info, "nc_num_subfiles", value);
 #else
-        MPI_Info_set(ncp->mpiinfo, "pnetcdf_subfiling", "disable");
-        MPI_Info_set(ncp->mpiinfo, "nc_num_subfiles", "0");
+        MPI_Info_set(ncp->info, "pnetcdf_subfiling", "disable");
+        MPI_Info_set(ncp->info, "nc_num_subfiles", "0");
 #endif
     }
 

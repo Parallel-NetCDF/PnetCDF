@@ -42,11 +42,11 @@ ncmpio_free_NC(NC *ncp)
     ncmpio_free_NC_attrarray(&ncp->attrs);
     ncmpio_free_NC_vararray(&ncp->vars);
 
-    /* The only case that ncp->mpiinfo is MPI_INFO_NULL is when exiting
+    /* The only case that ncp->info is MPI_INFO_NULL is when exiting
      * enddef() from a redef(). All other cases reaching here are from
-     * ncmpi_close, in which case ncp->mpiinfo is never MPI_INFO_NULL.
+     * ncmpi_close, in which case ncp->info is never MPI_INFO_NULL.
      */
-    if (ncp->mpiinfo != MPI_INFO_NULL) MPI_Info_free(&ncp->mpiinfo);
+    if (ncp->info != MPI_INFO_NULL) MPI_Info_free(&ncp->info);
 
     if (ncp->get_list      != NULL) NCI_Free(ncp->get_list);
     if (ncp->put_list      != NULL) NCI_Free(ncp->put_list);

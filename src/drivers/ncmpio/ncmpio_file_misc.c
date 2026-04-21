@@ -64,12 +64,12 @@ dup_NC(const NC *ref)
     ncp->comm_attr = ref->comm_attr;
 
     /* fields below should not copied from ref */
-    ncp->comm       = MPI_COMM_NULL;
-    ncp->mpiinfo    = MPI_INFO_NULL;
-    ncp->get_list   = NULL;
-    ncp->put_list   = NULL;
-    ncp->abuf       = NULL;
-    ncp->path       = NULL;
+    ncp->comm     = MPI_COMM_NULL;
+    ncp->info     = MPI_INFO_NULL;
+    ncp->get_list = NULL;
+    ncp->put_list = NULL;
+    ncp->abuf     = NULL;
+    ncp->path     = NULL;
 
     return ncp;
 }
@@ -167,24 +167,24 @@ ncmpio_begin_indep_data(void *ncdp)
 #ifdef MPICH_VERSION
         /* MPICH recognizes file system type acronym prefixed to file name */
         TRACE_IO(MPI_File_open, (MPI_COMM_SELF, ncp->path, ncp->mpi_amode,
-                                 ncp->mpiinfo, &ncp->mpio_fh_indep));
+                                 ncp->info, &ncp->mpio_fh_indep));
 #else
         char *path = ncmpii_remove_file_system_type_prefix(ncp->path);
         TRACE_IO(MPI_File_open, (MPI_COMM_SELF, path, ncp->mpi_amode,
-                                 ncp->mpiinfo, &ncp->mpio_fh_indep));
+                                 ncp->info, &ncp->mpio_fh_indep));
 #endif
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, mpi_name);
 
-        /* for those ranks whose mpiinfo is NULL, retrieve info */
-        if (ncp->mpiinfo == MPI_INFO_NULL) {
+        /* for those ranks whose info is NULL, retrieve info */
+        if (ncp->info == MPI_INFO_NULL) {
             /* get the I/O hints used/modified by MPI-IO */
-            mpireturn = MPI_File_get_info(ncp->mpio_fh_indep, &ncp->mpiinfo);
+            mpireturn = MPI_File_get_info(ncp->mpio_fh_indep, &ncp->info);
             if (mpireturn != MPI_SUCCESS)
                 return ncmpii_error_mpi2nc(mpireturn, mpi_name);
 
-            /* Copy MPI-IO hints into ncp->mpiinfo */
-            ncmpio_hint_set(ncp, ncp->mpiinfo);
+            /* Copy MPI-IO hints into ncp->info */
+            ncmpio_hint_set(ncp, ncp->info);
         }
     }
     return NC_NOERR;
@@ -390,11 +390,11 @@ ncmpio_inq_misc(void       *ncdp,
     if (header_extent != NULL) *header_extent = ncp->begin_var;
 
     if (info_used != NULL) {
-        mpireturn = MPI_Info_dup(ncp->mpiinfo, info_used);
+        mpireturn = MPI_Info_dup(ncp->info, info_used);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Info_dup");
 
-        /* PnetCDF hints have been added to ncp->mpiinfo at ncmpi_enddef.
+        /* PnetCDF hints have been added to ncp->info at ncmpi_enddef.
          *
          * Note MPI implementations may choose to ignore unrecognized hints and
          * MPI_File_get_info() may returns no PnetCDF hints. We need to add the

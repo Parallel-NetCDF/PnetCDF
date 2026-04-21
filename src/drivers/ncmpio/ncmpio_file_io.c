@@ -796,7 +796,7 @@ ncmpio_file_delete(NC *ncp)
             int mpireturn;
 #ifdef MPICH_VERSION
             /* MPICH recognizes file system type acronym prefixed to the file name */
-            TRACE_IO(MPI_File_delete, ((char *)ncp->path, ncp->mpiinfo));
+            TRACE_IO(MPI_File_delete, ((char *)ncp->path, ncp->info));
 #else
             /* Remove the file system type prefix name if there is any, because
              * some MPI libraries do not recognize such prefix. For example,
@@ -804,7 +804,7 @@ ncmpio_file_delete(NC *ncp)
              * make filename pointing to "/home/foo/testfile.nc".
              */
             char *path = ncmpii_remove_file_system_type_prefix(ncp->path);
-            TRACE_IO(MPI_File_delete, (path, ncp->mpiinfo));
+            TRACE_IO(MPI_File_delete, (path, ncp->info));
 #endif
             if (mpireturn != MPI_SUCCESS)
                 err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
@@ -1226,7 +1226,7 @@ ncmpio_file_read(NC         *ncp,
 
             /* Check file open mode */
             int amode = fIsSet(ncp->flags, NC_MODE_RDONLY) ? O_RDONLY : O_RDWR;
-            err = GIO_open(MPI_COMM_SELF, ncp->path, amode, ncp->mpiinfo,
+            err = GIO_open(MPI_COMM_SELF, ncp->path, amode, ncp->info,
                            &ncp->gio_fh);
             if (err != GIO_NOERR) {
                 err = ncmpii_error_gio2nc(err, "GIO_open");
@@ -1441,7 +1441,7 @@ ncmpio_file_write(NC         *ncp,
 
             /* Check file open mode */
             int amode = fIsSet(ncp->flags, NC_MODE_RDONLY) ? O_RDONLY : O_RDWR;
-            err = GIO_open(MPI_COMM_SELF, ncp->path, amode, ncp->mpiinfo,
+            err = GIO_open(MPI_COMM_SELF, ncp->path, amode, ncp->info,
                            &ncp->gio_fh);
             if (err != GIO_NOERR) {
                 err = ncmpii_error_gio2nc(err, "GIO_open");

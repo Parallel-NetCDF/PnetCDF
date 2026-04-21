@@ -78,11 +78,11 @@ ncmpio_open(MPI_Comm         comm,
 
     *ncpp = (void*)ncp;
 
-    ncp->ncid     = ncid;
-    ncp->comm     = comm;     /* reuse comm duplicated in dispatch layer */
-    ncp->rank     = rank;
-    ncp->nprocs   = nprocs;
-    ncp->mpiinfo  = MPI_INFO_NULL;
+    ncp->ncid   = ncid;
+    ncp->comm   = comm;     /* reuse comm duplicated in dispatch layer */
+    ncp->rank   = rank;
+    ncp->nprocs = nprocs;
+    ncp->info   = MPI_INFO_NULL;
 
     /* Extract hints from user_info. Two hints must be extracted now in order
      * to continue:
@@ -175,7 +175,7 @@ ncmpio_open(MPI_Comm         comm,
          */
         if (comm == MPI_COMM_NULL) {
             if (user_info != MPI_INFO_NULL)
-                MPI_Info_dup(user_info, &ncp->mpiinfo);
+                MPI_Info_dup(user_info, &ncp->info);
             goto after_open; /* non-INA aggregators skip to 'after_open' */
         }
 
@@ -219,7 +219,7 @@ ncmpio_open(MPI_Comm         comm,
         ncp->mpio_fh_indep = (nprocs > 1) ? MPI_FILE_NULL : fh;
 
         /* get the I/O hints used/modified by MPI-IO */
-        TRACE_IO(MPI_File_get_info, (fh, &ncp->mpiinfo));
+        TRACE_IO(MPI_File_get_info, (fh, &ncp->info));
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
             DEBUG_FOPEN_ERROR(err);
@@ -244,7 +244,7 @@ ncmpio_open(MPI_Comm         comm,
         /* Now the file has been successfully opened, obtain the I/O hints
          * used/modified by GIO driver.
          */
-        err = GIO_get_info(ncp->gio_fh, &ncp->mpiinfo);
+        err = GIO_get_info(ncp->gio_fh, &ncp->info);
         if (err != NC_NOERR) DEBUG_FOPEN_ERROR(err);
     }
 #endif
@@ -261,7 +261,7 @@ after_open:
      * nc_data_move_chunk_size is not set by the user.
      *
      * When INA is enabled, only INA aggregators have valid striping_unit and
-     * striping_factor in their ncp->mpiinfo. This is because non-INA
+     * striping_factor in their ncp->info. This is because non-INA
      * aggregators do not participate the call to MPI_File_open() or
      * GIO_open(). We need to have INA root to broadcast these 2 info to its
      * INA group members.
@@ -272,7 +272,7 @@ after_open:
          * When INA is enabled, each INA aggregator extracts hints and
          * broadcasts to its non-INA aggregators.
          */
-        MPI_Info_get(ncp->mpiinfo, "striping_unit", MPI_MAX_INFO_VAL-1,
+        MPI_Info_get(ncp->info, "striping_unit", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         striping_info[0] = 0;
         if (flag) {
@@ -281,7 +281,7 @@ after_open:
             if (errno != 0) striping_info[0] = 0;
         }
 
-        MPI_Info_get(ncp->mpiinfo, "striping_factor", MPI_MAX_INFO_VAL-1,
+        MPI_Info_get(ncp->info, "striping_factor", MPI_MAX_INFO_VAL-1,
                      value, &flag);
         striping_info[1] = 0;
         if (flag) {
@@ -295,7 +295,7 @@ after_open:
         comm_attr.ina_intra_comm != MPI_COMM_NULL) {
         /* When INA is enabled, each INA aggregator broadcasts hints to the
          * non-INA aggregators assigned to it. At this moment, only the non-INA
-         * aggregators have not yet set the striping hints to ncp->mpiinfo
+         * aggregators have not yet set the striping hints to ncp->info
          */
         int intra_nprocs;
         MPI_Comm_size(comm_attr.ina_intra_comm, &intra_nprocs);
@@ -307,11 +307,11 @@ after_open:
             MPI_Bcast(striping_info, 2, MPI_INT, 0, comm_attr.ina_intra_comm);
 
             if (intra_rank > 0) {
-                /* Only non-INA aggregators need to add these to ncp->mpiinfo */
+                /* Only non-INA aggregators need to add these to ncp->info */
                 sprintf(value, "%d", striping_info[0]);
-                MPI_Info_set(ncp->mpiinfo, "striping_unit", value);
+                MPI_Info_set(ncp->info, "striping_unit", value);
                 sprintf(value, "%d", striping_info[1]);
-                MPI_Info_set(ncp->mpiinfo, "striping_factor", value);
+                MPI_Info_set(ncp->info, "striping_factor", value);
             }
         }
     }
@@ -324,12 +324,12 @@ after_open:
         ncp->data_chunk = (ncp->striping_unit > 0) ? ncp->striping_unit
                                                    : PNC_DATA_MOVE_CHUNK_SIZE;
 
-    /* Add PnetCDF hints into ncp->mpiinfo. This step is necessary, because the
+    /* Add PnetCDF hints into ncp->info. This step is necessary, because the
      * underneath MPI-IO may discard hints it does not recognize, which include
      * all PnetCDF hints. PnetCDF hints need to be added to info, so users can
      * inquire them.
      */
-    ncmpio_hint_set(ncp, ncp->mpiinfo);
+    ncmpio_hint_set(ncp, ncp->info);
 
     /* read header from file into NC object pointed by ncp ------------------*/
     err = ncmpio_hdr_get_NC(ncp);
