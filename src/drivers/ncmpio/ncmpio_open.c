@@ -60,8 +60,7 @@ ncmpio_open(MPI_Comm         comm,
     MPI_Comm_size(comm, &nprocs);
 
     /* Note path's validity and omode consistency have been checked in
-     * ncmpi_open() in src/dispatchers/file.c and path consistency will be done
-     * in MPI_File_open.
+     * ncmpi_open() in src/dispatchers/file.c.
      */
 
     /* First, check whether omode is valid or supported ---------------------*/

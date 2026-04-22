@@ -139,8 +139,7 @@ ncmpio_create(MPI_Comm         comm,
     MPI_Comm_size(comm, &nprocs);
 
     /* Note path's validity and cmode consistency have been checked in
-     * ncmpi_create() in src/dispatchers/file.c and path consistency will be
-     * done in MPI_File_open()/GIO_open().
+     * ncmpi_create() in src/dispatchers/file.c.
      */
 
     /* First, check whether cmode is valid or supported ---------------------*/

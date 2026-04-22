@@ -905,19 +905,24 @@ ncmpi_create(MPI_Comm    comm,
         goto err_out;
     }
 
+    /* Rudimentary check path's validity.
+     *
+     * Note MPI standard's requirement for filename argument is: " ... all
+     * processes must provide filenames that reference the same file. ... The
+     * user is responsible for ensuring that a single file is referenced by the
+     * filename argument, as it may be impossible for an implementation to
+     * detect this type of namespace error."
+     */
+    if (path == NULL || *path == '\0') {
+        if (status == NC_NOERR) status = NC_EBAD_FILE;
+        goto err_out;
+    }
+
     MPI_Comm_rank(pncp->comm, &rank);
     MPI_Comm_size(pncp->comm, &nprocs);
 
     if (rank == 0)
         set_env_mode(&env_mode);
-
-    /* path's validity is checked in MPI-IO with error code MPI_ERR_BAD_FILE
-     * path consistency is checked in MPI-IO with error code MPI_ERR_NOT_SAME
-     */
-    if (path == NULL || *path == '\0') {
-        DEBUG_ASSIGN_ERROR(status, NC_EBAD_FILE)
-        goto err_out;
-    }
 
     /* duplicate file path */
     pncp->path = (char*) NCI_Strdup(path);
@@ -1205,10 +1210,24 @@ ncmpi_open(MPI_Comm    comm,
      * data mode. Once comm is duplicated, we pass pncp->comm to PnetCDF
      * drivers, so there is no need for a driver to duplicate it again.
      */
+    pncp->comm = MPI_COMM_NULL;
     mpireturn = MPI_Comm_dup(comm, &pncp->comm);
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_dup");
         if (status == NC_NOERR) status = err;
+        goto err_out;
+    }
+
+    /* Rudimentary check path's validity.
+     *
+     * Note MPI standard's requirement for filename argument is: " ... all
+     * processes must provide filenames that reference the same file. ... The
+     * user is responsible for ensuring that a single file is referenced by the
+     * filename argument, as it may be impossible for an implementation to
+     * detect this type of namespace error."
+     */
+    if (path == NULL || *path == '\0') {
+        if (status == NC_NOERR) status = NC_EBAD_FILE;
         goto err_out;
     }
 
@@ -1217,14 +1236,6 @@ ncmpi_open(MPI_Comm    comm,
 
     if (rank == 0)
         set_env_mode(&env_mode);
-
-    /* path's validity is checked in MPI-IO with error code MPI_ERR_BAD_FILE
-     * path consistency is checked in MPI-IO with error code MPI_ERR_NOT_SAME
-     */
-    if (path == NULL || *path == '\0') {
-        if (status == NC_NOERR) status = NC_EBAD_FILE;
-        goto err_out;
-    }
 
     /* Check the file signature to tell the file format which is later used to
      * select the right driver.
@@ -1607,10 +1618,10 @@ void print_profiled(MPI_Comm comm)
         for (i=0; i<NTIMERS; i++) max_MiB[i] = (float)max_c[i] / 1048576.0;
 
         if (rank == 0 && pnc_ina_npairs_put > 0) {
-            printf("INA put npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
+            printf("PNC INA put npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
                    pnc_ina_npairs_put,
                    max_MiB[0],max_MiB[1],max_MiB[2],max_MiB[3],max_MiB[4],max_MiB[5]);
-            printf("INA put time: init %.2f flat %.2f MD %.2f sort %.2f post %.2f wait %.2f setview %.2f total %.2f (write %.2f)\n",
+            printf("PNC INA put time: init %.2f flat %.2f MD %.2f sort %.2f post %.2f wait %.2f setview %.2f total %.2f (write %.2f)\n",
                    pnc_ina_init,pnc_ina_flatten,
                    pnc_ina_put[0],pnc_ina_put[1],pnc_ina_put[2],pnc_ina_put[3],pnc_ina_put[4],
                    wr_total,pnc_ina_put[5]);
@@ -1626,10 +1637,10 @@ void print_profiled(MPI_Comm comm)
         for (i=0; i<NTIMERS; i++) max_MiB[i] = (float)max_c[i] / 1048576.0;
 
         if (rank == 0 && pnc_ina_npairs_get > 0) {
-            printf("INA get npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
+            printf("PNC INA get npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
                    pnc_ina_npairs_get,
                    max_MiB[0],max_MiB[1],max_MiB[2],max_MiB[3],max_MiB[4],max_MiB[5]);
-            printf("INA get time: init %.2f flat %.2f MD %.2f sort %.2f post %.2f wait %.2f total %.2f (read %.2f)\n",
+            printf("PNC INA get time: init %.2f flat %.2f MD %.2f sort %.2f post %.2f wait %.2f total %.2f (read %.2f)\n",
                    pnc_ina_init,pnc_ina_flatten,
                    pnc_ina_get[0],pnc_ina_get[1],pnc_ina_get[3],pnc_ina_get[4],
                    rd_total,pnc_ina_get[2]);
