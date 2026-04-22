@@ -935,7 +935,6 @@ cmp_exit:
         if (ncid[i] >= 0) {
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
             /* disable printing of profiling timers */
-            pnc_wr_count[0] = pnc_rd_count[0] = 0;
             pnc_ina_npairs_put = pnc_ina_npairs_get = 0;
 #endif
             err = ncmpi_close(ncid[i]);

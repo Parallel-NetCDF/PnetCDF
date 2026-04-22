@@ -874,8 +874,6 @@ ncmpi_create(MPI_Comm    comm,
         pnc_ina_npairs_get = 0;
 
         for (i=0; i<NTIMERS; i++) {
-            pnc_drv_wr_t[i]    = pnc_drv_rd_t[i] = 0;
-            pnc_wr_count[i]    = pnc_rd_count[i] = 0;
             pnc_ina_put[i]     = pnc_ina_get[i] = 0;
             pnc_ina_mem_put[i] = pnc_ina_mem_get[i] = 0;
         }
@@ -1184,8 +1182,6 @@ ncmpi_open(MPI_Comm    comm,
     pnc_ina_npairs_get = 0;
 
     for (i=0; i<NTIMERS; i++) {
-        pnc_drv_wr_t[i]    = pnc_drv_rd_t[i] = 0;
-        pnc_wr_count[i]    = pnc_rd_count[i] = 0;
         pnc_ina_put[i]     = pnc_ina_get[i] = 0;
         pnc_ina_mem_put[i] = pnc_ina_mem_get[i] = 0;
     }
@@ -1558,10 +1554,6 @@ err_out:
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
 
 int       pnc_num_aggrs_per_node;
-double    pnc_drv_wr_t[NTIMERS];
-double    pnc_drv_rd_t[NTIMERS];
-MPI_Count pnc_wr_count[NTIMERS];
-MPI_Count pnc_rd_count[NTIMERS];
 double    pnc_ina_init;
 double    pnc_ina_flatten;
 double    pnc_ina_put[NTIMERS];
@@ -1579,32 +1571,6 @@ void print_profiled(MPI_Comm comm)
     MPI_Count max_c[NTIMERS];
 
     MPI_Comm_rank(comm, &rank);
-
-    /* collect two-phase I/O timers */
-    MPI_Reduce(pnc_drv_wr_t, max_t, NTIMERS, MPI_DOUBLE, MPI_MAX, 0, comm);
-    for (i=0; i<NTIMERS; i++) pnc_drv_wr_t[i] = max_t[i];
-
-    MPI_Reduce(pnc_drv_rd_t, max_t, NTIMERS, MPI_DOUBLE, MPI_MAX, 0, comm);
-    for (i=0; i<NTIMERS; i++) pnc_drv_rd_t[i] = max_t[i];
-
-    MPI_Reduce(pnc_wr_count, max_c, NTIMERS, MPI_COUNT, MPI_MAX, 0, comm);
-    for (i=0; i<NTIMERS; i++) pnc_wr_count[i] = max_c[i];
-
-    MPI_Reduce(pnc_rd_count, max_c, NTIMERS, MPI_COUNT, MPI_MAX, 0, comm);
-    for (i=0; i<NTIMERS; i++) pnc_rd_count[i] = max_c[i];
-
-    /* print 2-phase write timers */
-    if (rank == 0 && pnc_wr_count[0] > 0) {
-        printf("PNC 2-PHASE write: init %.2f pwrite %.2f pread %.2f post %.2f hsort %.2f comm %.2f total %.2f\n",
-        pnc_drv_wr_t[1], pnc_drv_wr_t[2], pnc_drv_rd_t[2], pnc_drv_wr_t[4], pnc_drv_wr_t[5], pnc_drv_wr_t[3], pnc_drv_wr_t[0]);
-        printf("PNC 2-PHASE write: ntimes %lld check_hole %lld (npairs %lld nrecv %lld) no check %lld (npairs %lld nrecv %lld)\n",
-        pnc_wr_count[0], pnc_wr_count[1], pnc_wr_count[2], pnc_wr_count[3], pnc_wr_count[4], pnc_wr_count[5], pnc_wr_count[6]);
-    }
-
-    /* print 2-phase read timers */
-    if (rank == 0 && pnc_rd_count[0] > 0)
-        printf("PNC 2-PHASE read: init %.2f pread %.2f post %.2f wait %.2f total %.2f (ntimes %lld)\n",
-        pnc_drv_rd_t[1], pnc_drv_rd_t[2], pnc_drv_rd_t[3], pnc_drv_rd_t[4], pnc_drv_rd_t[0], pnc_rd_count[0]);
 
     /* print intra-node aggregation timing breakdown */
     if (pnc_num_aggrs_per_node > 0) {

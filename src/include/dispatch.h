@@ -173,10 +173,6 @@ extern int PNC_check_id(int ncid, PNC **pncp);
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
 #define NTIMERS 10
 extern int       pnc_num_aggrs_per_node;
-extern double    pnc_drv_wr_t[NTIMERS];
-extern double    pnc_drv_rd_t[NTIMERS];
-extern MPI_Count pnc_wr_count[NTIMERS];
-extern MPI_Count pnc_rd_count[NTIMERS];
 extern double    pnc_ina_init;
 extern double    pnc_ina_flatten;
 extern double    pnc_ina_put[NTIMERS];
