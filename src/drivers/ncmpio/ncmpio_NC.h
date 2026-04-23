@@ -26,8 +26,8 @@
 #define PNC_FS_UFS        152  /* Unix file system */
 #define PNC_FS_LUSTRE     163  /* Lustre file system */
 
-#define PNC_DRIVER_MPIIO  -1  /* Use MPI-IO driver */
-#define PNC_DRIVER_GIO    0   /* Use GIO driver */
+#define PNC_DRIVER_GIO    0    /* Use GIO driver (default if enabled) */
+#define PNC_DRIVER_MPIIO  1    /* Use MPI-IO driver */
 
 #define PNCIO_STRIPING_AUTO    -1
 #define PNCIO_STRIPING_INHERIT 0
