@@ -429,22 +429,22 @@ typedef struct NC_buf {
 #define NC_HDIRTY 0x800000  /* header info has changed */
 
 struct NC {
-    int           ncid;         /* file ID */
-    int           flags;        /* various modes, i.e. define/data, fill,
-                                   indep/coll, header dirty, etc */
-    int           nc_amode;     /* cmode or omode used in ncmpi_create/open */
-    int           mpi_amode;    /* mode used in MPI_File_open, passed from
-                                 * collective open to independent open */
-    int           format;       /* 1, 2, or 5 corresponding to CDF-1, 2, or 5 */
-    int           is_open;      /* 0: not open yet 1: is open. When INA is
-                                 * enabled, only INA aggregators' is_open is
-                                 * set to 1 after file create/open. Non-INA
-                                 * aggregators' is_open 0. Once a non-INA
-                                 * aggregators makes an independent I/O call,
-                                 * its is_open will be set to 1. When INA is
-                                 * disabled, all processes' is_open is set to 1
-                                 * after file create/open.
-                                 */
+    int ncid;         /* file ID */
+    int flags;        /* various modes, i.e. define/data, fill, indep/coll,
+                       * header dirty, etc.
+                       */
+    int nc_amode;     /* cmode or omode used in ncmpi_create/open */
+    int mpi_amode;    /* mode used in MPI_File_open, passed from collective
+                       * open to independent open
+                       */
+    int format;       /* 1, 2, or 5 corresponding to CDF-1, 2, or 5 */
+    int is_open;      /* 0: not open yet 1: is open. When INA is enabled, only
+                       * INA aggregators' is_open is set to 1 after file
+                       * create/open. Non-INA aggregators' is_open 0. Once a
+                       * non-INA aggregators makes an independent I/O call, its
+                       * is_open will be set to 1. When INA is disabled, all
+                       * processes' is_open is set to 1 after file create/open.
+                       */
 #ifdef ENABLE_SUBFILING
     int           subfile_mode; /* 0 or 1, for disable/enable subfiling */
     int           num_subfiles; /* no. subfiles */
@@ -452,83 +452,108 @@ struct NC {
     MPI_Comm      comm_sf;      /* subfile MPI communicator */
     PNC_comm_attr node_ids_sf;  /* node IDs of subfile MPI communicator */
 #endif
-    int           hdr_chunk;    /* chunk size for reading header, one chunk at
-                                 * a time */
-    int           data_chunk;   /* chunk size for moving variables to higher
-                                 * offsets */
-    int           file_striping;/* used to set file striping configuration,
-                                 * either PNCIO_STRIPING_AUTO or
-                                 * PNCIO_STRIPING_INHERIT */
-    int           striping_unit;  /* file striping size */
-    int           striping_factor;/* file striping count */
 
-    MPI_Offset    v_align;      /* file offset alignment for the beginning of
-                                 * fixed-size variable section */
-    MPI_Offset    r_align;      /* file offset alignment for the beginning of
-                                 * record variable section */
-    MPI_Offset    info_v_align; /* v_align set in MPI Info object */
-    MPI_Offset    info_r_align; /* r_align set in MPI Info object */
-    MPI_Offset    h_minfree;    /* pad at the end of the header section */
-    MPI_Offset    v_minfree;    /* pad at the end of fixed-size variable
-                                 * section */
-    MPI_Offset    ibuf_size;    /* packing buffer size for write, used when
-                                 * user write buffer is noncontiguous and
-                                 * smaller than this value. */
-    MPI_Offset    xsz;          /* size of this file header, <= var[0].begin */
-    MPI_Offset    begin_var;    /* file offset of the 1st fixed-size variable,
-                                 * if no fixed-sized variable, it is the offset
-                                 * of first record variable. This value is also
-                                 * the size of file header extent. */
-    MPI_Offset    begin_rec;    /* file offset of the first 'record' */
+    int  hdr_chunk;          /* chunk size used when reading file header, which
+                              * is read one chunk at a time
+                              */
+    int  data_chunk;         /* chunk size for moving data to higher offsets */
+    int  file_striping;      /* hint for setting file striping configuration,
+                              * available values are PNCIO_STRIPING_AUTO and
+                              * PNCIO_STRIPING_INHERIT
+                              */
+    int  striping_unit;      /* file striping size */
+    int  striping_factor;    /* file striping count */
 
-    MPI_Offset    fix_end;      /* end offset of last fix-sized variable */
-    MPI_Offset    recsize;      /* length of 'record': sum of single record
-                                 * sizes of all the record variables */
-    MPI_Offset    numrecs;      /* no. 'records' allocated */
-    MPI_Offset    put_size;     /* amount of writes committed so far in bytes */
-    MPI_Offset    get_size;     /* amount of reads  committed so far in bytes */
+    MPI_Offset v_align;      /* hint of file offset alignment for setting the
+                              * beginning of fixed-size variable section
+                              */
+    MPI_Offset r_align;      /* hint of file offset alignment for setting the
+                              * beginning of record variable section
+                              */
+    MPI_Offset info_v_align; /* v_align set in MPI Info object */
+    MPI_Offset info_r_align; /* r_align set in MPI Info object */
+    MPI_Offset h_minfree;    /* hint for padding  at the end of the header
+                              * section
+                              */
+    MPI_Offset v_minfree;    /* hint for padding at the end of fixed-size
+                              * variable section
+                              */
+    MPI_Offset ibuf_size;    /* hint for an internal buffer size used to pack
+                              * non-contiguous user write buffer into a
+                              * contiguous one, when the buffer size is smaller
+                              * than this value. Default PNC_DEFAULT_IBUF_SIZE
+                              */
 
-    MPI_Comm      comm;         /* MPI communicator */
-    int           rank;         /* MPI rank of this process */
-    int           nprocs;       /* no. MPI processes */
+    MPI_Offset xsz;          /* size of this file header, <= var[0].begin */
+    MPI_Offset begin_var;    /* file offset of the 1st fixed-size variable,
+                              * if no fixed-sized variable, it is the offset
+                              * of first record variable. This value is also
+                              * the size of file header extent.
+                              */
+    MPI_Offset begin_rec;    /* file offset of the first record variable */
 
-    PNC_comm_attr comm_attr;    /* attributes cached in communicator storing
-                                 * compute node IDs of all processes and INA
-                                 * metadata */
+    MPI_Offset fix_end;      /* end offset of last fix-sized variable. This may
+                              * be different from begin_rec, due to padding.
+                              */
+
+    MPI_Offset recsize;      /* length of a record: sum of single record sizes
+                              * of all the record variables
+                              */
+    MPI_Offset numrecs;      /* number of records allocated */
+    MPI_Offset put_size;     /* amount of writes committed so far in bytes */
+    MPI_Offset get_size;     /* amount of reads  committed so far in bytes */
+
+    MPI_Comm      comm;      /* MPI communicator, duplicated */
+    int           rank;      /* MPI rank of this process within comm */
+    int           nprocs;    /* number of MPI processes in comm */
+
+    PNC_comm_attr comm_attr; /* attributes cached in communicator, comm. See
+                              * PNC_comm_attr defined in include/dispatch.h
+                              */
 
     int           NUMA_ID;       /* this rank's NUMA node ID */
-    MPI_Info      info;          /* used MPI info object */
+    MPI_Info      info;          /* hints used by MPI/GIO */
+
     MPI_File      mpio_fh_coll;  /* MPI-IO file handle for collective mode */
     MPI_File      mpio_fh_indep; /* MPI-IO file handle for independent mode */
 #ifdef ENABLE_GIO
     GIO_File      gio_fh;        /* GIO file handler */
 #endif
-    PNCIO_View    file_view;
-    int           driver;        /* PNC_DRIVER_GIO, PNC_DRIVER_MPIIO */
-    int           fstype;        /* PNCIO_FS_LUSTRE, PNCIO_FS_UFS */
 
-    NC_dimarray   dims;     /* dimensions defined */
-    NC_attrarray  attrs;    /* global attributes defined */
-    NC_vararray   vars;     /* variables defined */
+/* TODO: remove unused */
+PNCIO_View    file_view;
 
-    int hash_size_attr;  /* hash table size for non-global attributes */
+    int           driver;        /* I/O driver: PNC_DRIVER_GIO or
+                                  * PNC_DRIVER_MPIIO
+                                  */
+    int           fstype;        /* file system type: PNCIO_FS_LUSTRE or
+                                  * PNCIO_FS_UFS
+                                  */
 
-    int           maxGetReqID;    /* max get request ID */
-    int           maxPutReqID;    /* max put request ID */
-    int           numLeadGetReqs; /* no. pending lead get requests */
-    int           numLeadPutReqs; /* no. pending lead put requests */
-    NC_lead_req  *get_lead_list;  /* list of lead nonblocking read requests */
-    NC_lead_req  *put_lead_list;  /* list of lead nonblocking write requests */
+    NC_dimarray   dims;          /* dimensions defined */
+    NC_attrarray  attrs;         /* global attributes defined */
+    NC_vararray   vars;          /* variables defined */
 
-    int           numGetReqs;   /* no. pending nonblocking get requests */
-    int           numPutReqs;   /* no. pending nonblocking put requests */
-    NC_req       *get_list;     /* list of nonblocking read requests */
-    NC_req       *put_list;     /* list of nonblocking write requests */
+    int hash_size_attr;          /* hash table size for non-global attributes */
 
-    NC_buf       *abuf;     /* attached buffer, used by bput APIs */
+    int          maxGetReqID;    /* max get request ID */
+    int          maxPutReqID;    /* max put request ID */
+    int          numLeadGetReqs; /* no. pending lead get requests */
+    int          numLeadPutReqs; /* no. pending lead put requests */
+    NC_lead_req *get_lead_list;  /* list of lead nonblocking read requests */
+    NC_lead_req *put_lead_list;  /* list of lead nonblocking write requests */
 
-    const char   *path;     /* file name */
-    struct NC    *old;      /* contains the previous NC during redef. */
+    int          numGetReqs;     /* no. pending nonblocking get requests */
+    int          numPutReqs;     /* no. pending nonblocking put requests */
+    NC_req      *get_list;       /* list of nonblocking read requests */
+    NC_req      *put_list;       /* list of nonblocking write requests */
+
+    NC_buf      *abuf; /* attached buffer, used by bput APIs */
+
+    const char  *path; /* file name (duplicated from user's) */
+    struct NC   *old;  /* NC metadata object containing the previous one being
+                        * re-defined during ncmpi_redef()
+                        */
 
     int num_aggrs_per_node;  /* Number of intra-node aggregators per compute
                               * node, set through a user hint. 0 to disable the
