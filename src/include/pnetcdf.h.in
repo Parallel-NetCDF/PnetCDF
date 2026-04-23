@@ -35,6 +35,7 @@
 #define PNETCDF_THREAD_SAFE              @ENABLE_THREAD_SAFE@
 #define PNETCDF_DRIVER_NETCDF4           @ENABLE_NETCDF4@
 #define PNETCDF_DRIVER_ADIOS             @ENABLE_ADIOS@
+#define PNETCDF_DRIVER_GIO               @ENABLE_GIO@
 
 #if defined(__cplusplus)
 extern "C" {

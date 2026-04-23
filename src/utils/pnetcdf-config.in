@@ -66,9 +66,12 @@ enable_relax_coord_bound="@RELAX_COORD_BOUND@"
 is_bigendian="@ac_cv_c_bigendian@"
 in_place_swap="@in_place_swap@"
 enable_bbdriver="@ENABLE_BURST_BUFFER@"
-enable_netcdf4="@ENABLE_NETCDF4@"
-enable_adios="@ENABLE_ADIOS@"
 
+enable_gio="@ENABLE_GIO@"
+# GIO is built as a sub-module of PnetCDF, thus it is not necessary to add
+# GIO install paths to LDFLAGS or LIBS.
+
+enable_netcdf4="@ENABLE_NETCDF4@"
 if test "x$enable_netcdf4" = x1; then
    # NetCDF4 header files are required to build PnetCDF, but not PnetCDF applications
    # CPPFLAGS="$CPPFLAGS @NETCDF4_INC@"
@@ -76,6 +79,7 @@ if test "x$enable_netcdf4" = x1; then
    LIBS="@NETCDF4_LIBS@ $LIBS"
 fi
 
+enable_adios="@ENABLE_ADIOS@"
 if test "x$enable_adios" = x1; then
    # ADIOS header files are required to build PnetCDF, but not PnetCDF applications
    LDFLAGS="@ADIOS_LDFLAGS@ $LDFLAGS"
@@ -111,6 +115,7 @@ Available values for OPTION include:
   --fcflags                   Fortran 9x compiler flags used to build PnetCDF
   --ldflags                   Linker flags used to build PnetCDF
   --libs                      Extra libraries used to build PnetCDF
+  --gio                       Whether GIO support is enabled or disabled
   --netcdf4                   Whether NetCDF-4 support is enabled or disabled
   --adios                     Whether ADIOS support is enabled or disabled
   --relax-coord-bound         Whether using a relaxed coordinate boundary check
@@ -139,6 +144,11 @@ all()
         echo
         echo "  --has-c++                   -> $has_cxx"
         echo "  --has-fortran               -> $has_fortran"
+if test "x$enable_gio" = x1; then
+        echo "  --gio                       -> enabled"
+else
+        echo "  --gio                       -> disabled"
+fi
 if test "x$enable_netcdf4" = x1; then
         echo "  --netcdf4                   -> enabled"
 else
@@ -329,6 +339,14 @@ while test $# -gt 0; do
 #    --fclibs)
 #        echo "$FCLIBS" | sed -e 's/^[ \t]*//'
 #        ;;
+
+    --gio)
+if test "x$enable_gio" = x1; then
+        echo "enabled"
+else
+        echo "disabled"
+fi
+        ;;
 
     --netcdf4)
 if test "x$enable_netcdf4" = x1; then

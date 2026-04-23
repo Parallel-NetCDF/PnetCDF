@@ -2826,14 +2826,18 @@ if ! test -f ${srcdir}/gio/configure.ac ; then
    enable_gio=no
 fi
 
-AM_CONDITIONAL(BUILD_GIO, [test "x$enable_gio" != xno])
+ENABLE_GIO=0
 if test "x$enable_gio" = xyes ; then
+   ENABLE_GIO=1
    AC_DEFINE(ENABLE_GIO)
    # Tell GIO that it will be built as a sub-module of PnetCDF,
    # so 'make install' will skip libgio.so
    export GIO_SUB_BUILD=$enable_gio
    AC_CONFIG_SUBDIRS([gio])
+   AC_SUBST([GIO_PACKAGE], [gio])
 fi
+AC_SUBST(ENABLE_GIO)
+AM_CONDITIONAL(BUILD_GIO, [test "x$enable_gio" != xno])
 
 dnl AC_CONFIG_HEADERS([src/binding/f77/nfconfig_inc])
 AC_CONFIG_FILES(Makefile \
