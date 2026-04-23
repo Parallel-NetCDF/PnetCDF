@@ -301,7 +301,7 @@ err_check:
 
     /* set the MPI-IO fileview, this is a collective call */
 
-    /* vard API is only supported when using MPI-IO, not PNCIO */
+    /* vard API is only supported when using MPI-IO, not GIO */
     char *mpi_name;
     MPI_File fh;
 
@@ -320,7 +320,7 @@ err_check:
         filetype_size = 0; /* skip this request */
     }
 
-    /* vard API is only supported when using MPI-IO, not PNCIO */
+    /* vard API is only supported when using MPI-IO, not GIO */
     int coll_indep = NC_REQ_INDEP;
     if (ncp->nprocs > 1 && !fIsSet(ncp->flags, NC_MODE_INDEP))
         coll_indep = NC_REQ_COLL;

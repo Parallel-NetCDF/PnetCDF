@@ -22,7 +22,7 @@ for i in ${check_PROGRAMS} ; do
         if test "$mpiio_mode" = 1 ; then
            USEMPIO_HINTS="nc_driver=mpiio"
         else
-           USEMPIO_HINTS="nc_driver=pncio"
+           USEMPIO_HINTS="nc_driver=gio"
         fi
     for intra_aggr in 0 1 ; do
         if test "$intra_aggr" = 1 ; then
@@ -33,7 +33,7 @@ for i in ${check_PROGRAMS} ; do
 
         if [[ "$i" == *"vard"* ]] ; then
            if test "x$mpiio_mode" == x0 || test "x$intra_aggr" == x1 ; then
-              # vard APIs are not supported when using PNCIO
+              # vard APIs have deprecated
               continue
            fi
         fi

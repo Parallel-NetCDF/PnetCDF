@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
     opt.num_fmts = sizeof(formats) / sizeof(int);
     opt.formats  = formats;
     opt.ina      = 0;    /* skip test intra-node aggregation */
-    opt.drv      = 0; /* test PNCIO driver */
+    opt.drv      = 0;    /* test GIO driver only */
     opt.bb       = 0;    /* skip test burst-buffering feature */
     opt.mod      = 0;    /* skip test independent data mode */
     opt.hdr_diff = false;/* skip ncmpidiff for file header */

@@ -14,10 +14,9 @@ Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
     aggregators per compute node.
 
 * New optimization
-  + A new internal I/O driver, named "pncio", is added which implements several
-    strategies for performance improvement. A significant portion of this
-    driver was developed to improve performance when Lustre is used. It
-    includes the followings.
+  + A new internal I/O driver, named "gio", is added. It is an external library
+    used by PnetCDF as a sub-module. GIO is an alternative driver to MPI-IO. It
+    implements several strategies for performance improvement, including:
     * When creating a new file, it tries to set the Lustre file striping count
       to the number of compute nodes allocated to the MPI communicator passed
       to "ncmpi_create()", when I/O hint "striping_factor" is not explicitly

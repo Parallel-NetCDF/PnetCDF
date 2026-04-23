@@ -19,7 +19,7 @@ for mpiio_mode in 0 1 ; do
     if test "$mpiio_mode" = 1 ; then
        USEMPIO_HINTS="nc_driver=mpiio"
     else
-       USEMPIO_HINTS="nc_driver=pncio"
+       USEMPIO_HINTS="nc_driver=gio"
     fi
 
     PNETCDF_HINTS=

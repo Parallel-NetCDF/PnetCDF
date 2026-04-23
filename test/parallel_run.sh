@@ -110,9 +110,9 @@ for i in ${check_PROGRAMS} ; do
            DRIVER_OUT_FILE="${OUT_PREFIX}.mpio"
            driver_hint=" MPIO"
         else
-           USEMPIO_HINTS="nc_driver=pncio"
-           DRIVER_OUT_FILE="${OUT_PREFIX}.pncio"
-           driver_hint="PNCIO"
+           USEMPIO_HINTS="nc_driver=gio"
+           DRIVER_OUT_FILE="${OUT_PREFIX}.gio"
+           driver_hint="GIO"
         fi
     for intra_aggr in 0 1 ; do
         if test "$intra_aggr" = 1 ; then
@@ -130,7 +130,7 @@ for i in ${check_PROGRAMS} ; do
 
         if [[ "$i" == *"vard"* ]] ; then
            if test "x$mpiio_mode" == x0 || test "x$intra_aggr" == x1 ; then
-              # vard APIs are not supported when using PNCIO
+              # vard APIs have deprecated
               continue
            fi
         fi
@@ -287,26 +287,26 @@ for i in ${check_PROGRAMS} ; do
     if test "$i" = put_all_kinds || test "$i" = iput_all_kinds ; then
        for j in 1 2 5; do
           exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc$j $OUT_PREFIX.mpio.ina.nc$j
-          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc$j $OUT_PREFIX.pncio.nc$j
-          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.nc$j $OUT_PREFIX.pncio.ina.nc$j
+          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc$j $OUT_PREFIX.gio.nc$j
+          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.gio.nc$j $OUT_PREFIX.gio.ina.nc$j
        done
     elif test "$i" = tst_pthread ; then
        for j in `seq 0 ${NTHREADS}` ; do
           exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.mpio.ina.nc.$j
-          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.pncio.nc.$j
-          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.nc.$j $OUT_PREFIX.pncio.ina.nc.$j
+          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.gio.nc.$j
+          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.gio.nc.$j $OUT_PREFIX.gio.ina.nc.$j
        done
     elif test "$i" = mcoll_perf ; then
        for j in `seq 0 9` ; do
           ext="2.4.$j.nc"
           exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.$ext $OUT_PREFIX.mpio.ina.$ext
-          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.$ext $OUT_PREFIX.pncio.$ext
-          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.$ext $OUT_PREFIX.pncio.ina.$ext
+          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.$ext $OUT_PREFIX.gio.$ext
+          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.gio.$ext $OUT_PREFIX.gio.ina.$ext
        done
     else
        exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc
-       exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.pncio.nc
-       exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.nc $OUT_PREFIX.pncio.ina.nc
+       exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.gio.nc
+       exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.gio.nc $OUT_PREFIX.gio.ina.nc
     fi
 
     done # safe_modes

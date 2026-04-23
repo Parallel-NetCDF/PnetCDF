@@ -1231,7 +1231,7 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
      * assigned to it.
      * For write operation, keeping the original offset-length pairs is not
      * necessary, as they will later be sorted and coalesced before calling
-     * MPI-IO or PNCIO file write.
+     * MPI-IO or GIO file write.
      *
      * Once ina_collect_md() returns, this aggregator's offsets and lengths may
      * grow to include the ones from non-aggregators (appended).
@@ -1267,7 +1267,7 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
         if (offsets != NULL) NCI_Free(offsets);
         if (lengths != NULL) NCI_Free(lengths);
 
-        /* Non-aggregators are done here, as only aggregators call MPI-IO/PNCIO
+        /* Non-aggregators are done here, as only aggregators call MPI-IO/GIO
          * functions to write data to the file. Non-aggregators do not
          * participate MPI-IO calls.
          */
@@ -1529,16 +1529,16 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
 
         /* Allocate receive buffer. Once write data from non-aggregators have
          * received into recv_buf, it is packed into wr_buf. Then, wr_buf is
-         * used to call MPI-IO/PNCIO file write. Note the wr_buf is always
+         * used to call MPI-IO/GIO file write. Note the wr_buf is always
          * contiguous.
          *
          * When nprocs == 1, wr_buf is set to buf which is directly passed to
-         * MPI-IO/PNCIO file write.
+         * MPI-IO/GIO file write.
          *
          * If file offset-length pairs have not been re-ordered, i.e. sorted
          * and overlaps removed, and this aggregator will not receive any write
          * data from its non-aggregators, then we can use user's buffer, buf,
-         * to call MPI-IO/PNCIO to write to the file, without allocating an
+         * to call MPI-IO/GIO to write to the file, without allocating an
          * additional temporary buffer.
          */
         if (!do_sort && buf_view.size == recv_amnt && !overlap)
@@ -1626,14 +1626,14 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
          * In case the user buffer, buf, can not be used to write to the file,
          * loop below packs recv_buf, data received from non-aggregators, into
          * wr_buf, a contiguous buffer, wr_buf, which will later be used in a
-         * call to MPI-IO/PNCIO file write.
+         * call to MPI-IO/GIO file write.
          */
         if (!do_sort && wr_amnt == recv_amnt) {
             wr_buf = recv_buf;
 
             if (wr_buf != buf) {
                 /* If write data has been packed in wr_buf, a contiguous buffer,
-                 * update buf_view before passing it to the MPI-IO/PNCIO file
+                 * update buf_view before passing it to the MPI-IO/GIO file
                  * write.
                  */
 #if 1
@@ -1677,7 +1677,7 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
              * wr_buf, and write it to the file. Note when npairs and wr_amnt
              * are large, copying write data into a contiguous buffer can be
              * expensive, making INA cost high. Although it makes the two-phase
-             * I/O MPI-IO and PNCIO run faster, this memory copy cost may not
+             * I/O MPI-IO and GIO run faster, this memory copy cost may not
              * be worthy. Besides, the memory footprint high-water mark is
              * doubled.
              */
@@ -1689,7 +1689,7 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
                 ptr += len_ptr[j];
             }
             /* Write data has been packed in wr_buf, a contiguous buffer,
-             * update buf_view before passing it to the MPI-IO/PNCIO file
+             * update buf_view before passing it to the MPI-IO/GIO file
              * write.
              */
 #if 1
@@ -1935,7 +1935,7 @@ int ina_get(NC         *ncp,
         if (lengths != NULL) NCI_Free(lengths);
 
         /* Non-INA aggregators are now done, as they do not participate MPI-IO
-         * or PNCIO file read (neither collective nor independent).
+         * or GIO file read (neither collective nor independent).
          */
         NCI_Free(meta);
         return status;
@@ -2153,8 +2153,8 @@ file_view.len = len_ptr;
      *
      * If file offset-length pairs have not been re-ordered, i.e. sorted and
      * overlaps removed, and this aggregator will not send any read data to its
-     * non-aggregators, then we can use user's buffer, buf, to call MPI-IO/
-     * PNCIO to read from the file, without allocating an additional temporary
+     * non-aggregators, then we can use user's buffer, buf, to call MPI-IO/GIO
+     * to read from the file, without allocating an additional temporary
      * buffer.
      */
     if (!do_sort && buf_view.size == send_amnt && !overlap) {
@@ -2411,7 +2411,7 @@ if (rd_buf_view.count == 0 && rd_buf_view.size > 0) {
     NCI_Free(disps);
 
 fn_exit:
-    /* offsets[] and lengths[] are used in PNCIO read subroutines as flattened
+    /* offsets[] and lengths[] are used in GIO read subroutines as flattened
      * filetype. They cannot be freed before the I/O is done.
      */
     if (rd_buf != NULL && rd_buf != buf) NCI_Free(rd_buf);

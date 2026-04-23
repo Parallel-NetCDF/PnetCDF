@@ -2717,7 +2717,7 @@ else
       # no name prefix end with ':'
       FSTYPE_PREFIX=
    else
-      # check if name prefix is one of file system types known to PNCIO
+      # check if name prefix is one of file system types known to MPI-IO and GIO
       known_fstypes=(ufs nfs xfs pvfs2 gpfs panfs lustre daos testfs ime quobyte)
       known_fstype=
       for pre in $known_fstypes ; do

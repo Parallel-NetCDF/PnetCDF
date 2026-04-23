@@ -60,9 +60,9 @@ for i in ${check_PROGRAMS} ; do
            DRIVER_OUT_FILE="${OUT_PREFIX}.mpio"
            driver_hint=" MPIO"
         else
-           USEMPIO_HINTS="nc_driver=pncio"
-           DRIVER_OUT_FILE="${OUT_PREFIX}.pncio"
-           driver_hint="PNCIO"
+           USEMPIO_HINTS="nc_driver=gio"
+           DRIVER_OUT_FILE="${OUT_PREFIX}.gio"
+           driver_hint="GIO"
         fi
     for intra_aggr in 0 1 ; do
         if test "$intra_aggr" = 1 ; then
@@ -139,18 +139,18 @@ for i in ${check_PROGRAMS} ; do
 
     for ext in $FILE_EXTS ; do
        if test "x$TEST_MPIIO_MODES" = "x0" ; then
-          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.pncio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc ---"
-          $NCMPIDIFF -q $OUT_PREFIX.pncio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.gio.$ext.nc $OUT_PREFIX.gio.ina.$ext.nc ---"
+          $NCMPIDIFF -q $OUT_PREFIX.gio.$ext.nc $OUT_PREFIX.gio.ina.$ext.nc
        elif test "x$TEST_MPIIO_MODES" = "x1" ; then
           # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc ---"
           $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc
        elif test "x$TEST_MPIIO_MODES" = "x0 1" ; then
           # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc ---"
           $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc
-          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.$ext.nc ---"
-          $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.pncio.$ext.nc
-          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.pncio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc ---"
-          $NCMPIDIFF -q $OUT_PREFIX.pncio.$ext.nc $OUT_PREFIX.pncio.ina.$ext.nc
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.gio.$ext.nc ---"
+          $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.gio.$ext.nc
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.gio.$ext.nc $OUT_PREFIX.gio.ina.$ext.nc ---"
+          $NCMPIDIFF -q $OUT_PREFIX.gio.$ext.nc $OUT_PREFIX.gio.ina.$ext.nc
        fi
     done # ext
 

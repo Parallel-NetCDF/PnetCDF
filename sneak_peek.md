@@ -62,8 +62,9 @@ This is essentially a placeholder for the next release note ...
     or `striping_unit`, then their values will be used instead of parent
     folder's. This hint's default value is "auto".
     See [PR #222](https://github.com/Parallel-NetCDF/PnetCDF/pull/222).
-  + "nc_driver" -- To select the I/O driver. String value of "pncio" is the
-    PnetCDF I/O driver and "mpiio" the MPI-IO driver. The default is "pncio".
+  + "nc_driver" -- To select the I/O driver. String value of "gio" is to use
+    the GIO driver, an external library used as a sub-module used by PnetCDF,
+    and "mpiio" the MPI-IO driver. The default is "gio".
 
 * New run-time environment variables
   + none

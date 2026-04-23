@@ -54,9 +54,9 @@ for i in ${check_PROGRAMS} ; do
            DRIVER_OUT_FILE="${OUT_PREFIX}.mpio"
            driver_hint=" MPIO"
         else
-           USEMPIO_HINTS="nc_driver=pncio"
-           DRIVER_OUT_FILE="${OUT_PREFIX}.pncio"
-           driver_hint="PNCIO"
+           USEMPIO_HINTS="nc_driver=gio"
+           DRIVER_OUT_FILE="${OUT_PREFIX}.gio"
+           driver_hint="GIO"
         fi
     for intra_aggr in 0 1 ; do
         if test "$intra_aggr" = 1 ; then
@@ -123,9 +123,9 @@ for i in ${check_PROGRAMS} ; do
     DIFF_OPT="-q"
     if test "x$TEST_MPIIO_MODES" = "x0 1" ; then
        run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc
-       run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.pncio.nc
+       run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.gio.nc
     fi
-    run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.pncio.nc $OUT_PREFIX.pncio.ina.nc
+    run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.gio.nc $OUT_PREFIX.gio.ina.nc
 
     rm -f ${OUTDIR}/$i*nc*
 

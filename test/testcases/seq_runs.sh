@@ -25,7 +25,7 @@ exe_name=`basename $1`
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
-# PNCIO driver does not support vard APIs
+# vard APIs have deprecated
 if test "x$exe_name" = xtest_vard ||
    test "x$exe_name" = xtest_vard_multiple ||
    test "x$exe_name" = xtest_vard_rec ||

@@ -39,7 +39,7 @@ for i in ${check_PROGRAMS} ; do
 
    exe_name=`basename $i`
 
-   # PNCIO driver does not support vard APIs
+   # vard APIs have deprecated
    if test "x$exe_name" = xtest_vardf90 || test "x$exe_name" = xtest_vardf ; then
       export PNETCDF_HINTS="nc_driver=mpiio;$PNETCDF_HINTS"
    fi

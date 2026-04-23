@@ -75,9 +75,6 @@ endif
 ../drivers/ncmpio/libncmpio.la:
 	set -e; cd ../drivers/ncmpio && $(MAKE) $(MFLAGS)
 
-../drivers/pncio/libpncio.la:
-	set -e; cd ../drivers/pncio && $(MAKE) $(MFLAGS)
-
 ../drivers/ncncio/libncncio.la:
 	set -e; cd ../drivers/ncncio && $(MAKE) $(MFLAGS)
 

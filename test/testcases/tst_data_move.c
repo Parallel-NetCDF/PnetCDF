@@ -632,8 +632,8 @@ int main(int argc, char **argv) {
 
     opt.num_fmts = sizeof(formats) / sizeof(int);
     opt.formats  = formats;
-    opt.ina      = 2; /* test intra-node aggregation */
-    opt.drv      = 2; /* test PNCIO driver */
+    opt.ina      = 2;    /* enable and disable intra-node aggregation */
+    opt.drv      = 2;    /* test GIO and MPI-IO driver */
     opt.bb       = 2;    /* enable and disable burst-buffering feature */
     opt.mod      = 2;    /* collective and independent data mode */
     opt.hdr_diff = true; /* run ncmpidiff for file header */

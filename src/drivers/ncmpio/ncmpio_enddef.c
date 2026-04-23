@@ -157,9 +157,9 @@ move_file_block(NC         *ncp,
 }
 #else
 /*----< move_file_block() >--------------------------------------------------*/
-/* Call PNCIO/MPI collective I/O subroutines to move data.
- * PNCIO/MPI collective I/O subroutines themselves may switch to use
- * independent subroutines if the file access pattern meet the condition.
+/* Call GIO/MPI collective I/O subroutines to move data.
+ * GIO/MPI collective I/O subroutines themselves may switch to use independent
+ * subroutines if the file access pattern meet the condition.
  */
 static int
 move_file_block(NC         *ncp,

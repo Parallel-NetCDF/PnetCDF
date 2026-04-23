@@ -149,7 +149,7 @@ ncmpio_begin_indep_data(void *ncdp)
 
 #ifdef ENABLE_GIO
     if (ncp->driver == PNC_DRIVER_GIO) {
-        /* PNCIO driver implements open-on-demand mechanism. */
+        /* GIO driver implements open-on-demand mechanism. */
         return NC_NOERR;
     }
 #endif
