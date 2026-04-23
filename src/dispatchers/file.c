@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>     /* getenv() */
-#include <string.h>     /* strtok(), strtok_r(), strchr(), strcpy(), strdup() */
+#include <string.h>     /* strtok(), strtok_r(), strchr(), strcpy() */
 #include <strings.h>    /* strcasecmp() */
 #include <fcntl.h>      /* open() */
 #include <sys/types.h>  /* lseek() */
@@ -97,8 +97,8 @@ static int pncio_init_keyval = MPI_KEYVAL_INVALID;
  * A new MPI communicator consisting of all INA aggregators across all nodes
  * will be created, which is referred to as the inter-node communicator. The
  * inter-node communicator will be used to open the file, i.e. in the call to
- * GIO_File_open()/MPI_File_open() later. Only the INA aggregators make calls
- * to the GIO/MPI-IO APIs to access the file. Thus, this subroutine must be
+ * GIO_open()/MPI_File_open() later. Only the INA aggregators make calls to
+ * the GIO/MPI-IO APIs to access the file. Thus, this subroutine must be
  * called before opening the file and should be called only once in
  * ncmpi_create() or ncmpi_open().
  *
@@ -126,7 +126,7 @@ static int pncio_init_keyval = MPI_KEYVAL_INVALID;
  *    + comm_attr->ina_inter_comm is the INA inter-node communicator.
  *    + MPI_Comm_size(comm_attr->ina_inter_comm, &size) is the total number of
  *      INA aggregators.
- *    + comm_attr->ina_inter_comm will be used when calling GIO_File_open()/
+ *    + comm_attr->ina_inter_comm will be used when calling GIO_open()/
  *      MPI_File_open().
  */
 static

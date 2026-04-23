@@ -142,12 +142,12 @@ ncmpio_file_read_at(NC         *ncp,
     }
 #ifdef ENABLE_GIO
     else if (ncp->driver == PNC_DRIVER_GIO) {
-        amnt = GIO_read_at(ncp->gio_fh, buf, ncp->file_view.count,
-                                             ncp->file_view.off,
-                                             ncp->file_view.len,
-                                             buf_view.count,
-                                             buf_view.off,
-                                             buf_view.len);
+        amnt = GIO_read(ncp->gio_fh, buf, ncp->file_view.count,
+                                          ncp->file_view.off,
+                                          ncp->file_view.len,
+                                          buf_view.count,
+                                          buf_view.off,
+                                          buf_view.len);
     }
 #endif
     else
@@ -230,12 +230,12 @@ ncmpio_file_read_at_all(NC         *ncp,
         /* When INA is disabled, all processes must participate this collective
          * read. When INA is enabled, only the INA aggregators participate.
          */
-        amnt = GIO_read_at(ncp->gio_fh, buf, ncp->file_view.count,
-                                             ncp->file_view.off,
-                                             ncp->file_view.len,
-                                             buf_view.count,
-                                             buf_view.off,
-                                             buf_view.len);
+        amnt = GIO_read(ncp->gio_fh, buf, ncp->file_view.count,
+                                          ncp->file_view.off,
+                                          ncp->file_view.len,
+                                          buf_view.count,
+                                          buf_view.off,
+                                          buf_view.len);
     }
 #endif
     else
@@ -263,7 +263,7 @@ ncmpio_file_write_at(NC         *ncp,
     int err=NC_NOERR;
     MPI_Offset amnt=0;
 
-    /* For zero-sized requests, independent read can return now. */
+    /* For zero-sized requests, independent write can return now. */
     if (buf_view.size == 0) return 0;
 
     if (ncp->driver == PNC_DRIVER_MPIIO) {
@@ -313,12 +313,12 @@ ncmpio_file_write_at(NC         *ncp,
     }
 #ifdef ENABLE_GIO
     else if (ncp->driver == PNC_DRIVER_GIO) {
-        amnt = GIO_write_at(ncp->gio_fh, buf, ncp->file_view.count,
-                                              ncp->file_view.off,
-                                              ncp->file_view.len,
-                                              buf_view.count,
-                                              buf_view.off,
-                                              buf_view.len);
+        amnt = GIO_write(ncp->gio_fh, buf, ncp->file_view.count,
+                                           ncp->file_view.off,
+                                           ncp->file_view.len,
+                                           buf_view.count,
+                                           buf_view.off,
+                                           buf_view.len);
     }
 #endif
     else
@@ -400,12 +400,12 @@ ncmpio_file_write_at_all(NC         *ncp,
         /* When INA is disabled, all processes must participate this collective
          * write. When INA is enabled, only the INA aggregators participate.
          */
-        amnt = GIO_write_at_all(ncp->gio_fh, buf, ncp->file_view.count,
-                                                  ncp->file_view.off,
-                                                  ncp->file_view.len,
-                                                  buf_view.count,
-                                                  buf_view.off,
-                                                  buf_view.len);
+        amnt = GIO_write_all(ncp->gio_fh, buf, ncp->file_view.count,
+                                               ncp->file_view.off,
+                                               ncp->file_view.len,
+                                               buf_view.count,
+                                               buf_view.off,
+                                               buf_view.len);
     }
 #endif
     else
@@ -767,7 +767,7 @@ ncmpio_file_close(NC *ncp)
     else if (ncp->driver == PNC_DRIVER_GIO) {
         if (ncp->gio_fh != NULL)
             /* When INA is enabled, non-INA aggregators' gio_fh may be NULL */
-            err = GIO_close(ncp->gio_fh);
+            err = GIO_close(&ncp->gio_fh);
         ncp->gio_fh = NULL;
     }
 #endif
@@ -795,7 +795,9 @@ ncmpio_file_delete(NC *ncp)
             char *mpi_name;
             int mpireturn;
 #ifdef MPICH_VERSION
-            /* MPICH recognizes file system type acronym prefixed to the file name */
+            /* MPICH recognizes file system type acronym prefixed to the file
+             * name.
+             */
             TRACE_IO(MPI_File_delete, ((char *)ncp->path, ncp->info));
 #else
             /* Remove the file system type prefix name if there is any, because
@@ -1072,7 +1074,7 @@ ncmpio_file_read(NC         *ncp,
     MPI_Count off_zero=0, f_amnt, b_amnt;
     PNCIO_View orig_buf_view;
 
-    /* If zero-sized request and independent write, this rank can return now. */
+    /* If zero-sized request and independent read, this rank can return now. */
     if (buf_view.count == 0 && coll_indep == NC_REQ_INDEP)
         return NC_NOERR;
 
@@ -1107,7 +1109,7 @@ ncmpio_file_read(NC         *ncp,
 #endif
         if (coll_indep == NC_REQ_COLL) {
             DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
-            /* write nothing, but participate the collective call */
+            /* read nothing, but participate the collective call */
             buf_view.count = 0;
         }
         else
@@ -1202,7 +1204,7 @@ ncmpio_file_read(NC         *ncp,
 
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EWRITE)
+            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD)
             if (status == NC_NOERR) status = err;
         }
         else
@@ -1211,7 +1213,8 @@ ncmpio_file_read(NC         *ncp,
 // printf("%s at %d: rlen %lld\n",__func__,__LINE__,rlen);
 
         if (set_file_view) /* reset the file view to entire file visible */
-            MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL);
+            MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native",
+                              MPI_INFO_NULL);
 
         if (bufType != MPI_DATATYPE_NULL) MPI_Type_free(&bufType);
     }
@@ -1236,21 +1239,21 @@ ncmpio_file_read(NC         *ncp,
         }
 
         if (ncp->nprocs > 1 && coll_indep == NC_REQ_COLL)
-            rlen = GIO_read_at_all(ncp->gio_fh, xbuf,
-                                   file_view.count,
-                                   file_view.off,
-                                   file_view.len,
-                                   buf_view.count,
-                                   buf_view.off,
-                                   buf_view.len);
+            rlen = GIO_read_all(ncp->gio_fh, xbuf,
+                                file_view.count,
+                                file_view.off,
+                                file_view.len,
+                                buf_view.count,
+                                buf_view.off,
+                                buf_view.len);
         else
-            rlen = GIO_read_at(ncp->gio_fh, xbuf,
-                                   file_view.count,
-                                   file_view.off,
-                                   file_view.len,
-                                   buf_view.count,
-                                   buf_view.off,
-                                   buf_view.len);
+            rlen = GIO_read(ncp->gio_fh, xbuf,
+                                file_view.count,
+                                file_view.off,
+                                file_view.len,
+                                buf_view.count,
+                                buf_view.off,
+                                buf_view.len);
 
         if (status == NC_NOERR && rlen < 0) status = (int)rlen;
     }
@@ -1451,21 +1454,21 @@ ncmpio_file_write(NC         *ncp,
         }
 
         if (ncp->nprocs > 1 && coll_indep == NC_REQ_COLL)
-            wlen = GIO_write_at_all(ncp->gio_fh, xbuf,
-                                    file_view.count,
-                                    file_view.off,
-                                    file_view.len,
-                                    buf_view.count,
-                                    buf_view.off,
-                                    buf_view.len);
+            wlen = GIO_write_all(ncp->gio_fh, xbuf,
+                                 file_view.count,
+                                 file_view.off,
+                                 file_view.len,
+                                 buf_view.count,
+                                 buf_view.off,
+                                 buf_view.len);
         else
-            wlen = GIO_write_at(ncp->gio_fh, xbuf,
-                                    file_view.count,
-                                    file_view.off,
-                                    file_view.len,
-                                    buf_view.count,
-                                    buf_view.off,
-                                    buf_view.len);
+            wlen = GIO_write(ncp->gio_fh, xbuf,
+                                 file_view.count,
+                                 file_view.off,
+                                 file_view.len,
+                                 buf_view.count,
+                                 buf_view.off,
+                                 buf_view.len);
 
         if (status == NC_NOERR && wlen < 0) status = (int)wlen;
     }
