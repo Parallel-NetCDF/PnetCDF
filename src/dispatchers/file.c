@@ -57,10 +57,10 @@ static int  pnc_numfiles;
 static int ncmpi_default_create_format = NC_FORMAT_CLASSIC;
 
 /* attribute to be cached in all communicators */
-static int pncio_comm_keyval = MPI_KEYVAL_INVALID;
+static int ncmpi_comm_keyval = MPI_KEYVAL_INVALID;
 
 /* attribute to be cached in MPI_COMM_SELF */
-static int pncio_init_keyval = MPI_KEYVAL_INVALID;
+static int ncmpi_init_keyval = MPI_KEYVAL_INVALID;
 
 #define NCMPII_HANDLE_ERROR(func)                                  \
     if (mpireturn != MPI_SUCCESS) {                                \
@@ -406,10 +406,10 @@ int end_call(MPI_Comm  comm,
 {
     /* Free all keyvals used by PnetCDF */
 
-    MPI_Comm_free_keyval(&keyval); /* free pncio_init_keyval */
+    MPI_Comm_free_keyval(&keyval); /* free ncmpi_init_keyval */
 
-    if (pncio_comm_keyval != MPI_KEYVAL_INVALID)
-        MPI_Comm_free_keyval(&pncio_comm_keyval);
+    if (ncmpi_comm_keyval != MPI_KEYVAL_INVALID)
+        MPI_Comm_free_keyval(&ncmpi_comm_keyval);
 
     return MPI_SUCCESS;
 }
@@ -428,33 +428,33 @@ int set_get_comm_attr(MPI_Comm        comm,
 
     MPI_Comm_size(comm, &nprocs);
 
-    if (pncio_init_keyval == MPI_KEYVAL_INVALID) {
+    if (ncmpi_init_keyval == MPI_KEYVAL_INVALID) {
         /* This is the first call ever to PnetCDF API. Creating key
-         * pncio_init_keyval is necessary for MPI_Finalize() to free key
-         * pncio_comm_keyval.
+         * ncmpi_init_keyval is necessary for MPI_Finalize() to free key
+         * ncmpi_comm_keyval.
          */
         err = MPI_Comm_create_keyval(MPI_COMM_NULL_COPY_FN, end_call,
-                                     &pncio_init_keyval, (void*)0);
+                                     &ncmpi_init_keyval, (void*)0);
         if (err != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(err, "MPI_Comm_create_keyval");
 
-        err = MPI_Comm_set_attr(MPI_COMM_SELF, pncio_init_keyval, (void*)0);
+        err = MPI_Comm_set_attr(MPI_COMM_SELF, ncmpi_init_keyval, (void*)0);
         if (err != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(err, "MPI_Comm_set_attr");
     }
 
-    if (pncio_comm_keyval == MPI_KEYVAL_INVALID) {
+    if (ncmpi_comm_keyval == MPI_KEYVAL_INVALID) {
         err = MPI_Comm_create_keyval(comm_attr_copy,
                                      comm_attr_delete,
-                                     &pncio_comm_keyval, NULL);
+                                     &ncmpi_comm_keyval, NULL);
         if (err != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(err, "MPI_Comm_create_keyval");
     }
 
-    if (pncio_comm_keyval != MPI_KEYVAL_INVALID) {
+    if (ncmpi_comm_keyval != MPI_KEYVAL_INVALID) {
         int found;
 
-        err = MPI_Comm_get_attr(comm, pncio_comm_keyval, &attr, &found);
+        err = MPI_Comm_get_attr(comm, ncmpi_comm_keyval, &attr, &found);
         if (err != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(err, "MPI_Comm_get_attr");
 
@@ -498,10 +498,10 @@ int set_get_comm_attr(MPI_Comm        comm,
                 attr->num_aggrs_per_node = num_aggrs_per_node;
             }
 
-            /* FYI. The same key pncio_comm_keyval can be added to different
+            /* FYI. The same key ncmpi_comm_keyval can be added to different
              * MPI communicators with same or different values.
              */
-            err = MPI_Comm_set_attr(comm, pncio_comm_keyval, attr);
+            err = MPI_Comm_set_attr(comm, ncmpi_comm_keyval, attr);
             if (err != MPI_SUCCESS)
                 return ncmpii_error_mpi2nc(err, "MPI_Comm_set_attr");
         }
@@ -558,7 +558,7 @@ int set_get_comm_attr(MPI_Comm        comm,
                 err = ina_init(comm, num_aggrs_per_node, new_attr);
                 if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
 
-                err = MPI_Comm_set_attr(comm, pncio_comm_keyval, new_attr);
+                err = MPI_Comm_set_attr(comm, ncmpi_comm_keyval, new_attr);
                 if (err != MPI_SUCCESS)
                     return ncmpii_error_mpi2nc(err, "MPI_Comm_set_attr");
                 attr = new_attr;
