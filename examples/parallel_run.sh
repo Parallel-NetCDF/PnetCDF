@@ -59,6 +59,12 @@ OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 # let NTHREADS=$1*6-1
 NTHREADS=`expr $1 \* 6 - 1`
 
+if test "x$ENABLE_GIO" = x0 ; then
+   IO_MODES="mpiio"
+else
+   IO_MODES="gio mpiio"
+fi
+
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
@@ -73,8 +79,8 @@ for i in ${check_PROGRAMS} ; do
     fi
     OUT_PREFIX="${TESTOUTDIR}/$i"
 
-    for mpiio_mode in 0 1 ; do
-        if test "$mpiio_mode" = 1 ; then
+    for io_mode in $IO_MODES ; do
+        if test "x$io_mode" = xmpiio ; then
            USEMPIO_HINTS="nc_driver=mpiio"
            DRIVER_OUT_FILE="${OUT_PREFIX}.mpio"
            driver_hint=" MPIO"
@@ -98,7 +104,7 @@ for i in ${check_PROGRAMS} ; do
         OUT_FILE=$INA_OUT_FILE
 
         if [[ "$i" == *"vard"* ]] ; then
-           if test "x$mpiio_mode" == x0 || test "x$intra_aggr" == x1 ; then
+           if test "x$io_mode" = xgio || test "x$intra_aggr" = x1 ; then
               # vard APIs have deprecated
               continue
            fi
@@ -177,7 +183,7 @@ for i in ${check_PROGRAMS} ; do
            # Validator does not support nc4
         fi
     done # intra_aggr
-    done # mpiio_mode
+    done # io_mode
 
     if [[ "$i" == *"vard"* ]] ; then
        continue
@@ -194,13 +200,17 @@ for i in ${check_PROGRAMS} ; do
     if test "$i" = pthread ; then
        for j in `seq 0 ${NTHREADS}` ; do
           exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.mpio.ina.nc.$j
-          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.gio.nc.$j
-          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.gio.nc.$j $OUT_PREFIX.gio.ina.nc.$j
+          if test "x$ENABLE_GIO" = x1 ; then
+             exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.gio.nc.$j
+             exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.gio.nc.$j $OUT_PREFIX.gio.ina.nc.$j
+          fi
        done
     else
        exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc
-       exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.gio.nc
-       exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.gio.nc $OUT_PREFIX.gio.ina.nc
+       if test "x$ENABLE_GIO" = x1 ; then
+          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.gio.nc
+          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.gio.nc $OUT_PREFIX.gio.ina.nc
+       fi
     fi
 
     rm -f ${OUTDIR}/$i*nc*

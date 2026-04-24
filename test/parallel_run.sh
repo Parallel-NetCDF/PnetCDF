@@ -66,6 +66,12 @@ else
    safe_modes="0"
 fi
 
+if test "x$ENABLE_GIO" = x0 ; then
+   IO_MODES="gio mpiio"
+else
+   IO_MODES="mpiio"
+fi
+
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
@@ -104,8 +110,8 @@ for i in ${check_PROGRAMS} ; do
         fi
         OUT_PREFIX="${TESTOUTDIR}/$i"
 
-    for mpiio_mode in 0 1 ; do
-        if test "$mpiio_mode" = 1 ; then
+    for io_mode in $IO_MODES ; do
+        if test "x$io_mode" = xmpiio ; then
            USEMPIO_HINTS="nc_driver=mpiio"
            DRIVER_OUT_FILE="${OUT_PREFIX}.mpio"
            driver_hint=" MPIO"
@@ -129,7 +135,7 @@ for i in ${check_PROGRAMS} ; do
         TEST_OPTS="$safe_hint $driver_hint $ina_hint"
 
         if [[ "$i" == *"vard"* ]] ; then
-           if test "x$mpiio_mode" == x0 || test "x$intra_aggr" == x1 ; then
+           if test "x$io_mode" == xmpiio || test "x$intra_aggr" == x1 ; then
               # vard APIs have deprecated
               continue
            fi
@@ -255,7 +261,7 @@ for i in ${check_PROGRAMS} ; do
            # Validator does not support nc4
         fi
     done # intra_aggr
-    done # mpiio_mode
+    done # io_mode
 
     if [[ "$i" == *"vard"* ]] ; then
        continue

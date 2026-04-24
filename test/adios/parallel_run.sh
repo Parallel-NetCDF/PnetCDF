@@ -14,12 +14,18 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "MPIRUN = ${MPIRUN}"
 # echo "check_PROGRAMS=${check_PROGRAMS}"
 
+if test "x$ENABLE_GIO" = x0 ; then
+   IO_MODES="mpiio"
+else
+   IO_MODES="gio mpiio"
+fi
+
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
 for i in ${check_PROGRAMS} ; do
-    for mpiio_mode in 0 1 ; do
-        if test "$mpiio_mode" = 1 ; then
+    for io_mode in $IO_MODES ; do
+        if test "x$io_mode" = xmpiio ; then
            USEMPIO_HINTS="nc_driver=mpiio"
         else
            USEMPIO_HINTS="nc_driver=gio"
@@ -32,7 +38,7 @@ for i in ${check_PROGRAMS} ; do
         fi
 
         if [[ "$i" == *"vard"* ]] ; then
-           if test "x$mpiio_mode" == x0 || test "x$intra_aggr" == x1 ; then
+           if test "x$io_mode" == xmpiio || test "x$intra_aggr" == x1 ; then
               # vard APIs have deprecated
               continue
            fi

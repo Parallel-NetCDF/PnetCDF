@@ -37,12 +37,16 @@ OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 # let NTHREADS=$1*6-1
 NTHREADS=`expr $1 \* 6 - 1`
 
+if test "x$ENABLE_GIO" = x0 ; then
+   IO_MODES="mpiio"
+else
+   IO_MODES="gio mpiio"
+fi
+
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
 FILE_EXTS="ncmpi_chk_0000 ncmpi_plt_cnt_0000 ncmpi_plt_crn_0000"
-
-TEST_MPIIO_MODES="0 1"
 
 DATA_MODE="indep coll"
 
@@ -54,8 +58,8 @@ for i in ${check_PROGRAMS} ; do
 
     for data_mode in ${DATA_MODE} ; do
 
-    for mpiio_mode in ${TEST_MPIIO_MODES} ; do
-        if test "$mpiio_mode" = 1 ; then
+    for io_mode in $IO_MODES ; do
+        if test "x$io_mode" = xmpiio ; then
            USEMPIO_HINTS="nc_driver=mpiio"
            DRIVER_OUT_FILE="${OUT_PREFIX}.mpio"
            driver_hint=" MPIO"
@@ -135,22 +139,17 @@ for i in ${check_PROGRAMS} ; do
            # Validator does not support nc4
         fi
     done # intra_aggr
-    done # mpiio_mode
+    done # io_mode
 
     for ext in $FILE_EXTS ; do
-       if test "x$TEST_MPIIO_MODES" = "x0" ; then
-          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.gio.$ext.nc $OUT_PREFIX.gio.ina.$ext.nc ---"
-          $NCMPIDIFF -q $OUT_PREFIX.gio.$ext.nc $OUT_PREFIX.gio.ina.$ext.nc
-       elif test "x$TEST_MPIIO_MODES" = "x1" ; then
-          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc ---"
-          $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc
-       elif test "x$TEST_MPIIO_MODES" = "x0 1" ; then
-          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc ---"
-          $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc
+       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc ---"
+       $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc
+
+       if test "x$ENABLE_GIO" = x1 ; then
           # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.gio.$ext.nc ---"
           $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.gio.$ext.nc
-          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.gio.$ext.nc $OUT_PREFIX.gio.ina.$ext.nc ---"
-          $NCMPIDIFF -q $OUT_PREFIX.gio.$ext.nc $OUT_PREFIX.gio.ina.$ext.nc
+          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.gio.ina.$ext.nc ---"
+          $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.gio.ina.$ext.nc
        fi
     done # ext
 

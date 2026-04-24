@@ -37,6 +37,12 @@ OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 # let NTHREADS=$1*6-1
 NTHREADS=`expr $1 \* 6 - 1`
 
+if test "x$ENABLE_GIO" = x0 ; then
+   IO_MODES="mpiio"
+else
+   IO_MODES="gio mpiio"
+fi
+
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
@@ -48,8 +54,8 @@ for i in ${check_PROGRAMS} ; do
 
     OUT_PREFIX="${TESTOUTDIR}/$i"
 
-    for mpiio_mode in ${TEST_MPIIO_MODES} ; do
-        if test "$mpiio_mode" = 1 ; then
+    for io_mode in $IO_MODES ; do
+        if test "x$io_mode" = xmpiio ; then
            USEMPIO_HINTS="nc_driver=mpiio"
            DRIVER_OUT_FILE="${OUT_PREFIX}.mpio"
            driver_hint=" MPIO"
@@ -114,14 +120,14 @@ for i in ${check_PROGRAMS} ; do
            # Validator does not support nc4
         fi
     done # intra_aggr
-    done # mpiio_mode
+    done # io_mode
 
     DIFF_OPT="-q"
-    if test "x$TEST_MPIIO_MODES" = "x0 1" ; then
-       run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc
+    run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc
+    if test "x$ENABLE_GIO" = x1 ; then
        run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.gio.nc
+       run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.gio.ina.nc
     fi
-    run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.gio.nc $OUT_PREFIX.gio.ina.nc
 
     rm -f ${OUTDIR}/$i*nc*
 
