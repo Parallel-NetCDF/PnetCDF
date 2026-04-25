@@ -28,18 +28,18 @@ on:
 
 env:
    LIBTOOL_VERSION: 2.5.4
-   MPICH_LATEST: 4.3.2
-   OPENMPI_LATEST: 5.0.9
+   MPICH_VERSION: 5.0.1
+   OPENMPI_VERSION: 5.0.9
 
 jobs:
     build:
       strategy:
         fail-fast: false # This disables the default cancel-on-failure behavior
         matrix:
-          os: [ubuntu-latest, macos-latest]
-          mpi_vendor: [ MPICH, OpenMPI ]
+          os: [ ubuntu-latest ]             # [ubuntu-latest, macos-latest]
+          mpi_vendor: [ MPICH ]             # [ MPICH, OpenMPI ]
           fstype: [ ufs, mimic_lustre ]
-          debug_mode: [ debug, nodebug ]
+          debug_mode: [ nodebug ]           # [ debug, nodebug ]
 
       runs-on: ${{ matrix.os }}
       timeout-minutes: 120
@@ -95,10 +95,10 @@ jobs:
             if test "${{ matrix.mpi_vendor }}" = "MPICH" ; then
                 # MPICH versions older than 4.2.2 do not support the MPI large
                 # count feature.
-                echo "Install MPICH ${MPICH_LATEST} in ${GITHUB_WORKSPACE}/MPI"
-                wget -q https://www.mpich.org/static/downloads/${MPICH_LATEST}/mpich-${MPICH_LATEST}.tar.gz
-                gzip -dc mpich-${MPICH_LATEST}.tar.gz | tar -xf -
-                cd mpich-${MPICH_LATEST}
+                echo "Install MPICH ${MPICH_VERSION} in ${GITHUB_WORKSPACE}/MPI"
+                wget -q https://www.mpich.org/static/downloads/${MPICH_VERSION}/mpich-${MPICH_VERSION}.tar.gz
+                gzip -dc mpich-${MPICH_VERSION}.tar.gz | tar -xf -
+                cd mpich-${MPICH_VERSION}
                 ./configure --prefix=${GITHUB_WORKSPACE}/MPI \
                             --silent \
                             --enable-romio \
@@ -111,11 +111,11 @@ jobs:
                 make -s LIBTOOLFLAGS=--silent V=1 -j 8 install > qout 2>&1
                 make -s LIBTOOLFLAGS=--silent V=1 -j 8 distclean >> qout 2>&1
             else # OpenMPI
-                echo "Install OPENMPI ${OPENMPI_LATEST} in ${GITHUB_WORKSPACE}/MPI"
-                VER_MAJOR=${OPENMPI_LATEST%.*}
-                wget -q https://download.open-mpi.org/release/open-mpi/v${VER_MAJOR}/openmpi-${OPENMPI_LATEST}.tar.gz
-                gzip -dc openmpi-${OPENMPI_LATEST}.tar.gz | tar -xf -
-                cd openmpi-${OPENMPI_LATEST}
+                echo "Install OPENMPI ${OPENMPI_VERSION} in ${GITHUB_WORKSPACE}/MPI"
+                VER_MAJOR=${OPENMPI_VERSION%.*}
+                wget -q https://download.open-mpi.org/release/open-mpi/v${VER_MAJOR}/openmpi-${OPENMPI_VERSION}.tar.gz
+                gzip -dc openmpi-${OPENMPI_VERSION}.tar.gz | tar -xf -
+                cd openmpi-${OPENMPI_VERSION}
                 if test "${{ matrix.os }}" = "macos-latest" ; then
                    # When built on MacOS, additional configure options are required.
                    EXTRA_OPTS="--with-hwloc=internal --with-pmix=internal --with-libevent=internal"

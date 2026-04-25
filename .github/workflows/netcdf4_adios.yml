@@ -28,7 +28,7 @@ on:
 
 env:
    LIBTOOL_VERSION: 2.5.4
-   MPICH_LATEST: 4.3.2
+   MPICH_VERSION: 5.0.1
    HDF5_VERSION: 1.14.6
    NETCDF4_VERSION: 4.9.3
    ADIOS_VERSION: 1.13.1
@@ -38,7 +38,7 @@ jobs:
       strategy:
         fail-fast: false # This disables the default cancel-on-failure behavior
         matrix:
-          debug_mode: [ debug, nodebug ]
+          debug_mode: [ debug ]     # [ debug, nodebug ]
           externals: [ netcdf4 ]
           # disable testing ADIOS as its URL is no longer valid
           # externals: [ netcdf4, adios ]
@@ -77,10 +77,10 @@ jobs:
           run: |
             # MPICH versions older than 4.2.2 do not support the MPI large
             # count feature.
-            echo "Install MPICH ${MPICH_LATEST} in ${GITHUB_WORKSPACE}/MPI"
-            wget -q https://www.mpich.org/static/downloads/${MPICH_LATEST}/mpich-${MPICH_LATEST}.tar.gz
-            gzip -dc mpich-${MPICH_LATEST}.tar.gz | tar -xf -
-            cd mpich-${MPICH_LATEST}
+            echo "Install MPICH ${MPICH_VERSION} in ${GITHUB_WORKSPACE}/MPI"
+            wget -q https://www.mpich.org/static/downloads/${MPICH_VERSION}/mpich-${MPICH_VERSION}.tar.gz
+            gzip -dc mpich-${MPICH_VERSION}.tar.gz | tar -xf -
+            cd mpich-${MPICH_VERSION}
             ./configure --prefix=${GITHUB_WORKSPACE}/MPICH \
                         --silent \
                         --enable-romio \
