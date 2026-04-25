@@ -767,7 +767,8 @@ int main(int argc, char **argv) {
     opt.formats  = formats;
     opt.ina      = 2;    /* enable and disable intra-node aggregation */
     opt.drv      = 2;    /* test GIO and MPI-IO driver */
-    opt.bb       = 0; /* test burst-buffering feature */
+    opt.ibuf     = 2;    /* enable and disable hint nc_ibuf_size */
+    opt.bb       = 0;    /* disable burst-buffering */
     opt.mod      = 2;    /* collective and independent data mode */
     opt.hdr_diff = true; /* run ncmpidiff for file header */
     opt.var_diff = true; /* run ncmpidiff for variables */

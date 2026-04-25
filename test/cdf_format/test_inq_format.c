@@ -83,6 +83,7 @@ int main(int argc, char **argv) {
     opt.formats  = nc_formats;
     opt.ina      = 0;    /* skip test intra-node aggregation */
     opt.drv      = 2;    /* test GIO and MPI-IO driver */
+    opt.ibuf     = 0;    /* test default hint nc_ibuf_size only */
     opt.bb       = 0;    /* skip test burst-buffering feature */
     opt.mod      = 2;    /* collective and independent data mode */
     opt.hdr_diff = false;/* skip ncmpidiff for file header */

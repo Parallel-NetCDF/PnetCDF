@@ -322,6 +322,7 @@ int main(int argc, char **argv) {
     opt.formats  = formats;
     opt.ina      = 0;    /* skip test intra-node aggregation */
     opt.drv      = 0;    /* test GIO driver only */
+    opt.ibuf     = 2;    /* enable and disable hint nc_ibuf_size */
     opt.bb       = 0;    /* skip test burst-buffering feature */
     opt.mod      = 0;    /* skip test independent data mode */
     opt.hdr_diff = true; /* run ncmpidiff for file header */
