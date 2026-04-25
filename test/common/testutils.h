@@ -162,10 +162,11 @@ typedef struct {
      *      1 for testing non-default setting only.
      *      0 for testing     defaulte setting only.
      */
-    int  ina; /* test of intra-node aggregation */
-    int  drv; /* test of GIO and MPI-IO drivers */
-    int  bb;  /* test of burst-buffering feature */
-    int  mod; /* test of independent data mode */
+    int  ina;  /* test of intra-node aggregation */
+    int  drv;  /* test of GIO and MPI-IO drivers */
+    int  ibuf; /* test of hint nc_ibuf_size */
+    int  bb;   /* test of burst-buffering feature */
+    int  mod;  /* test of independent data mode */
 
     boolean  hdr_diff; /* run ncmpidiff for file header */
     boolean  var_diff; /* run ncmpidiff for variables
