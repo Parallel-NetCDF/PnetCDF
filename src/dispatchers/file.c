@@ -213,28 +213,28 @@ int ina_init(MPI_Comm        comm,
     }
     comm_attr->ina_intra_comm = MPI_COMM_NULL;
 
-    if (grp_nprocs == 1) {
-        /* When the number of processes in this INA group is 1, the aggregation
-         * is not performed.
-         *
-         * Note this does not mean intra-node aggregation is disabled globally.
-         * The indicator of whether intra-node aggregation is enabled or
-         * disabled is num_aggrs_per_node, whose value should be consistent
-         * across all processes. It is possible for some groups containing only
-         * one process, in which case the aggregation is not necessarily to
-         * perform within those groups.
-         */
-        comm_attr->ina_intra_comm = MPI_COMM_NULL;
-    }
-    else { /* grp_nprocs > 1 */
-        /* Split NUMA comm into INA intra-node comm based on the assigned INA
-         * aggregator's rank ID, i.e. processes sharing the same INA aggregator
-         * form an ina_intra_comm. This process's local rank on the NUMA node
-         * is my_node_rank and its INA aggregator's rank is aggr_rank.
-         */
-        TRACE_COMM(MPI_Comm_split)(comm_attr->numa_comm, aggr_rank, my_node_rank,
-                                   &comm_attr->ina_intra_comm);
-    }
+    /* Split NUMA comm into INA intra-node comm based on the assigned INA
+     * aggregator's rank ID, i.e. processes sharing the same INA aggregator
+     * form an ina_intra_comm. This process's local rank on the NUMA node
+     * is my_node_rank and its INA aggregator's rank is aggr_rank.
+     *
+     * Special note on when the number of processes in this INA group is 1. In
+     * this case, there is only one process in this group and thus the
+     * intra-node aggregation of this group will not perform. However, the
+     * intra-node communicator of this INA group must still be created. This is
+     * because MPI_Comm_split is a collective call with the processes running
+     * on the same NUMA node, i.e. on comm_attr->numa_comm.
+     *
+     * The case of grp_nprocs == 1, does not mean intra-node aggregation is
+     * disabled globally. It just means this group will not perform INA
+     * aggregation. The indicator of whether intra-node aggregation is globally
+     * enabled or disabled is 'num_aggrs_per_node', whose value must be kept
+     * consistent across all processes. It is possible for some groups
+     * containing only one process, in which case the aggregation is not
+     * necessarily to perform within those groups.
+     */
+    TRACE_COMM(MPI_Comm_split)(comm_attr->numa_comm, aggr_rank, my_node_rank,
+                               &comm_attr->ina_intra_comm);
 
     /* Next step is to construct an inter-node MPI communicator consisting of
      * all INA aggregators. It will later be used to call MPI_File_open(), and
@@ -541,8 +541,8 @@ int set_get_comm_attr(MPI_Comm        comm,
                 /* Must duplicate numa_comm that has been established, because
                  * it will be freed at the call to MPI_Comm_set_attr() below.
                  * Once created, numa_comm remains fixed with 'comm'. Unlike
-                 * ina_inter_comm and ina_intra_comm, it does not change when
-                 * num_aggrs_per_node changes.
+                 * ina_inter_comm and ina_intra_comm, numa_comm does not change
+                 * when num_aggrs_per_node changes.
                  */
                 MPI_Comm_dup(attr->numa_comm, &new_attr->numa_comm);
 
@@ -987,6 +987,13 @@ ncmpi_create(MPI_Comm    comm,
     set_get_comm_attr(pncp->comm, num_aggrs_per_node, &comm_attr);
     /* ignore error, as it is not a critical error */
 
+#if PNETCDF_DEBUG_MODE == 1
+    if (num_aggrs_per_node == 0)
+        assert(comm_attr.ina_intra_comm == MPI_COMM_NULL);
+    else
+        assert(comm_attr.ina_intra_comm != MPI_COMM_NULL);
+#endif
+
 #ifdef ENABLE_THREAD_SAFE
     perr = pthread_mutex_unlock(&lock);
     if (perr != 0)
@@ -1337,6 +1344,13 @@ ncmpi_open(MPI_Comm    comm,
     /* creating communicator attributes must be protected by a mutex */
     set_get_comm_attr(pncp->comm, num_aggrs_per_node, &comm_attr);
     /* ignore error, as it is not a critical error */
+
+#if PNETCDF_DEBUG_MODE == 1
+    if (num_aggrs_per_node == 0)
+        assert(comm_attr.ina_intra_comm == MPI_COMM_NULL);
+    else
+        assert(comm_attr.ina_intra_comm != MPI_COMM_NULL);
+#endif
 
 #ifdef ENABLE_THREAD_SAFE
     perr = pthread_mutex_unlock(&lock);

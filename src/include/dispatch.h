@@ -54,7 +54,10 @@ typedef struct {
     int  is_ina_aggr;        /* Whether this rank is an INA aggregator */
     int *ina_ranks;          /* all INA aggregators' rank IDs in this comm */
     MPI_Comm ina_inter_comm; /* inter-node communicator of INA aggregators */
-    MPI_Comm ina_intra_comm; /* intra-node communicator within an INA group */
+    MPI_Comm ina_intra_comm; /* intra-node communicator within an INA group.
+                              * being MPI_COMM_NULL or not also indicates
+                              * whether INA is disable or not.
+                              */
 } PNC_comm_attr;
 
 struct PNC_driver {

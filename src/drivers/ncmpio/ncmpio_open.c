@@ -144,6 +144,13 @@ ncmpio_open(MPI_Comm         comm,
      */
     ncp->comm_attr = comm_attr;
 
+#if PNETCDF_DEBUG_MODE == 1
+    if (ncp->num_aggrs_per_node == 0)
+        assert(comm_attr.ina_intra_comm == MPI_COMM_NULL);
+    else
+        assert(comm_attr.ina_intra_comm != MPI_COMM_NULL);
+#endif
+
     /* When the total number of aggregators >= number of processes, disable
      * intra-node aggregation.
      */
@@ -265,11 +272,12 @@ after_open:
      * GIO_open(). We need to have INA root to broadcast these 2 info to its
      * INA group members.
      */
-    if (ncp->num_aggrs_per_node == 0 ||
-        comm_attr.ina_intra_comm != MPI_COMM_NULL) {
+    if (ncp->num_aggrs_per_node == 0) {
         /* When INA is disabled, all processes extract hints.
          * When INA is enabled, each INA aggregator extracts hints and
          * broadcasts to its non-INA aggregators.
+         *
+         * Note ncp->num_aggrs_per_node may have been adjusted above.
          */
         MPI_Info_get(ncp->info, "striping_unit", MPI_MAX_INFO_VAL-1,
                      value, &flag);
@@ -289,14 +297,18 @@ after_open:
             if (errno != 0) striping_info[1] = 0;
         }
     }
-
-    if (ncp->num_aggrs_per_node > 0 &&
-        comm_attr.ina_intra_comm != MPI_COMM_NULL) {
+    else { /* ncp->num_aggrs_per_node > 0 */
         /* When INA is enabled, each INA aggregator broadcasts hints to the
          * non-INA aggregators assigned to it. At this moment, only the non-INA
          * aggregators have not yet set the striping hints to ncp->info
+         *
+         * Note ncp->num_aggrs_per_node may have been adjusted above.
          */
         int intra_nprocs;
+
+#ifdef PNETCDF_DEBUG
+        assert(comm_attr.ina_intra_comm != MPI_COMM_NULL);
+#endif
         MPI_Comm_size(comm_attr.ina_intra_comm, &intra_nprocs);
 
         if (intra_nprocs > 1) {
