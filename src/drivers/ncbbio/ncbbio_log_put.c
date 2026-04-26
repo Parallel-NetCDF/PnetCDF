@@ -121,7 +121,7 @@ int ncbbio_log_put_var(NC_bb            *ncbbp,
 
     err = mpitype2logtype(buftype, &itype);
     if (err != NC_NOERR){
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
         int name_len;
         char type_name[MPI_MAX_OBJECT_NAME];
         MPI_Type_get_name(buftype, type_name, &name_len);
@@ -299,7 +299,7 @@ int ncbbio_log_put_varn(NC_bb            *ncbbp,
     /* Convert to ext type */
     err = mpitype2logtype(buftype, &itype);
     if (err != NC_NOERR){
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
         int name_len;
         char type_name[MPI_MAX_OBJECT_NAME];
         MPI_Type_get_name(buftype, type_name, &name_len);

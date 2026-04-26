@@ -41,7 +41,7 @@ int ncmpii_error_posix2nc(char *err_msg)       /* extra error message */
 
     /* other errors that currently have no corresponding PnetCDF error codes */
     if (err_msg == NULL) err_msg = "";
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
     /* report the world rank */
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

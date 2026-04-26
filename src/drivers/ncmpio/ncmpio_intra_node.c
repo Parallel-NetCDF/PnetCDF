@@ -923,7 +923,7 @@ int ina_collect_md(NC          *ncp,
     MPI_Aint num_pairs=meta[0];
     MPI_Comm comm = ncp->comm_attr.ina_intra_comm;
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
     assert(comm != MPI_COMM_NULL);
 #endif
 
@@ -1482,7 +1482,7 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
             memcpy(file_len, len_ptr, cpy_amnt);
 
             for (i=0, j=1; j<file_npairs; j++) {
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
                 /* any overlap should have been removed from the loop above */
                 assert(off_ptr[i] + file_len[i] <= off_ptr[j]);
 #endif
@@ -1506,7 +1506,7 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
             file_len = len_ptr;
         }
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
         /* check if file_view's offset-lengths have been coalesced */
         for (i=1; i<file_npairs; i++) {
             assert(file_len[i-1] > 0);

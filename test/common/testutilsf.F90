@@ -85,7 +85,7 @@
           CHARACTER ESC
           PARAMETER (ESC=char(27))
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
           CHARACTER (LEN=20) PASS_STR, FAIL_STR
           PARAMETER (PASS_STR='-- '//ESC//'[32mpass'//ESC//'[0m (')
           PARAMETER (FAIL_STR='-- '//ESC//'[31mfail'//ESC//'[0m')

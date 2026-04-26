@@ -147,7 +147,7 @@ int ina_init(MPI_Comm        comm,
     MPI_Comm_size(comm, &nprocs);
     MPI_Comm_rank(comm, &rank);
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
     /* Note that ill value of num_aggrs_per_node has been checked before
      * entering this subroutine. Thus num_aggrs_per_node must be > 0.
      */
@@ -198,7 +198,7 @@ int ina_init(MPI_Comm        comm,
     /* whether this rank is an INA aggregator */
     comm_attr->is_ina_aggr = (my_node_rank == aggr_rank);
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
     /* Make sure the number of processes in my INA group does not go beyond
      * my_node_nprocs.
      */
@@ -808,7 +808,7 @@ void set_env_mode(int *env_mode)
 {
     char *env_str;
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
     fSet(*env_mode, NC_MODE_SAFE);
     /* When debug mode is enabled at the configure time, safe mode is by
      * default enabled. This can be overwritten by the run-time environment

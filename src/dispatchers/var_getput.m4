@@ -106,7 +106,7 @@ int check_EEDGE(const MPI_Offset *start,
     return NC_NOERR;
 }
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
 #define DEBUG_PRINT_EEDGE(dim) {                                            \
     if (err != NC_NOERR) {                                                  \
         char *_env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");              \

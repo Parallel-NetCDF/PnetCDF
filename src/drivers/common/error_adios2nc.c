@@ -57,7 +57,7 @@ int ncmpii_error_adios2nc(int adios_err, char *err_msg)       /* extra error mes
     errstr = adios_errmsg();
     if (err_msg == NULL) err_msg = "";
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
     /* report the world rank */
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

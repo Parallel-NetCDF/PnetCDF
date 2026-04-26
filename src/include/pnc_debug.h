@@ -44,7 +44,7 @@
     }                                                                         \
 }
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
 
 /* PNETCDF_VERBOSE_DEBUG_MODE environment variable can be used to print the
  * location in the source code where the error code is originated, no matter

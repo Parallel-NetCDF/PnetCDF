@@ -44,7 +44,7 @@ int ncmpii_error_gio2nc(int         gio_err, /* returned value from GIO call */
         case GIO_EFILEVIEW:     return NC_EFILEVIEW;
     }
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
     /* report the world rank */
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

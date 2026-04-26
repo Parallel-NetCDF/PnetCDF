@@ -623,7 +623,7 @@ hdr_get_NC_name(bufferinfo *gbp, char **namep, size_t *name_len)
         char pad[X_ALIGN-1];
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
             fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, non-zero padding found\n",__FILE__,__func__,__LINE__);
 #endif
             DEBUG_ASSIGN_ERROR(err, NC_ENULLPAD) /* not a fatal error */
@@ -761,7 +761,7 @@ hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap)
 
     /* Now, ndefined > 0, tag must be NC_DIMENSION */
     if (tag != NC_DIMENSION) {
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
         fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag NC_DIMENSION but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
         DEBUG_RETURN_ERROR(NC_ENOTNC)
@@ -863,7 +863,7 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
         char pad[X_ALIGN-1];
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
             fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, non-zero padding found\n",__FILE__,__func__,__LINE__);
 #endif
             DEBUG_ASSIGN_ERROR(err, NC_ENULLPAD)
@@ -1005,7 +1005,7 @@ hdr_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap)
 
     /* Now, ndefined > 0, tag must be NC_ATTRIBUTE */
     if (tag != NC_ATTRIBUTE) {
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
         fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag NC_ATTRIBUTE but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
         DEBUG_RETURN_ERROR(NC_ENOTNC)
@@ -1251,7 +1251,7 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
 
     /* Now, ndefined > 0, tag must be NC_VARIABLE */
     if (tag != NC_VARIABLE) {
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
         fprintf(stderr,"Error in file %s func %s line %d: NetCDF header corrupted, expecting tag NC_VARIABLE but got %d\n",__FILE__,__func__,__LINE__,tag);
 #endif
         DEBUG_RETURN_ERROR(NC_ENOTNC)

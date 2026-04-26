@@ -98,7 +98,7 @@ enum {false=0, true=1};
 
 int inq_env_hint(char *hint_key, char **hint_value);
 
-#if defined(PNETCDF_DEBUG_MODE) && PNETCDF_DEBUG_MODE == 1
+#if PNETCDF_DEBUG_MODE == 1
 #define PASS_STR "\x1b[32mpass\x1b[0m (%4.1fs)\n"
 #define SKIP_STR "\x1b[32mskip\x1b[0m\n"
 #define FAIL_STR "\x1b[31mfail\x1b[0m with %d mismatches\n"

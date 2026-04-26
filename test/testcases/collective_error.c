@@ -50,7 +50,7 @@ int test_io(const char *out_path,
 
     val = getenv("PNETCDF_SAFE_MODE");
     if (val != NULL && atoi(val) == 1) safe_mode = 1;
-#if defined(PNETCDF_DEBUG_MODE) && PNETCDF_DEBUG_MODE == 1
+#if PNETCDF_DEBUG_MODE == 1
     if (val == NULL && !safe_mode) safe_mode = 1;
 #endif
 

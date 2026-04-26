@@ -66,7 +66,7 @@ int ncmpii_error_mpi2nc(int mpi_errorcode,   /* returned value from MPI call */
      */
 
     MPI_Error_string(mpi_errorcode, errorString, &errorStringLen);
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
     /* report the world rank */
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

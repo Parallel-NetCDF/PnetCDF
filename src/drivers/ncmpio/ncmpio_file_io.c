@@ -122,7 +122,7 @@ ncmpio_file_read_at(NC         *ncp,
         int count = (buf_view.type == MPI_BYTE) ? buf_view.size : 1;
 
         if (buf_view.size > NC_MAX_INT) {
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
             fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buffer size="OFFFMT"\n",
                     ncp->rank, __func__,__LINE__,buf_view.size);
 #endif
@@ -203,7 +203,7 @@ ncmpio_file_read_at_all(NC         *ncp,
         int count = (buf_view.type == MPI_BYTE) ? buf_view.size : 1;
 
         if (buf_view.size > NC_MAX_INT) {
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
             fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buffer size="OFFFMT"\n",
                     ncp->rank, __func__,__LINE__,buf_view.size);
 #endif
@@ -294,7 +294,7 @@ ncmpio_file_write_at(NC         *ncp,
         int count = (buf_view.type == MPI_BYTE) ? buf_view.size : 1;
 
         if (buf_view.size > NC_MAX_INT) {
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
             fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buffer size="OFFFMT"\n",
                     ncp->rank, __func__,__LINE__,buf_view.size);
 #endif
@@ -374,7 +374,7 @@ ncmpio_file_write_at_all(NC         *ncp,
         int count = (buf_view.type == MPI_BYTE) ? buf_view.size : 1;
 
         if (buf_view.size > NC_MAX_INT) {
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
             fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buffer size="OFFFMT"\n",
                     ncp->rank, __func__,__LINE__,buf_view.size);
 #endif
@@ -531,7 +531,7 @@ ncmpio_read_write(NC         *ncp,
 
 #ifndef HAVE_MPI_LARGE_COUNT
         if (buf_view.size > NC_MAX_INT) {
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
             fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buffer size="OFFFMT"\n",
                     ncp->rank, __func__,__LINE__,buf_view.size);
 #endif
@@ -925,7 +925,7 @@ ncmpio_file_set_view(NC           *ncp,
     fh = (ncp->nprocs > 1 && !fIsSet(ncp->flags, NC_MODE_INDEP))
        ? ncp->mpio_fh_coll : ncp->mpio_fh_indep;
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
     /* When using MPI-IO driver and INA disabled, all processes hold valid
      * ncp->mpio_fh_coll (and ncp->mpio_fh_indep once entering independent
      * data mode).
@@ -1089,7 +1089,7 @@ ncmpio_file_read(NC         *ncp,
     for (b_amnt=0, i=0; i<buf_view.count; i++)
         b_amnt += buf_view.len[i];
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
     assert(f_amnt == b_amnt);
 #endif
 
@@ -1103,7 +1103,7 @@ ncmpio_file_read(NC         *ncp,
 
 #ifndef HAVE_MPI_LARGE_COUNT
     if (b_amnt > NC_MAX_INT) {
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
         fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buffer size="OFFFMT"\n",
                 ncp->rank, __func__,__LINE__,b_amnt);
 #endif
@@ -1319,7 +1319,7 @@ ncmpio_file_write(NC         *ncp,
     for (b_amnt=0, i=0; i<buf_view.count; i++)
         b_amnt += buf_view.len[i];
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
     assert(f_amnt == b_amnt);
 #endif
 

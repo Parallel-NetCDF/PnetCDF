@@ -161,7 +161,7 @@ ncmpio_open(MPI_Comm         comm,
      * is disabled or enabled globally for all processes.
      */
     if (ncp->num_aggrs_per_node > 0) {
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
         if (comm_attr.is_ina_aggr) /* INA aggregator */
             assert(comm_attr.ina_inter_comm != MPI_COMM_NULL);
         else
@@ -185,7 +185,7 @@ ncmpio_open(MPI_Comm         comm,
             goto after_open; /* non-INA aggregators skip to 'after_open' */
         }
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
         assert(comm_attr.is_ina_aggr); /* INA aggregator */
 #endif
 
@@ -306,7 +306,7 @@ after_open:
          */
         int intra_nprocs;
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
         assert(comm_attr.ina_intra_comm != MPI_COMM_NULL);
 #endif
         MPI_Comm_size(comm_attr.ina_intra_comm, &intra_nprocs);

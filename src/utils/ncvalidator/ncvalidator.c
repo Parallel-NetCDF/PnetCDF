@@ -56,7 +56,7 @@ static const char *off_limit = "https://docs.unidata.ucar.edu/nug/current/file_s
 
 #define IS_RECVAR(vp) ((vp)->shape != NULL ? (*(vp)->shape == NC_UNLIMITED) : 0 )
 
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
 #define DEBUG_RETURN_ERROR(err) {                               \
     if (verbose) printf("\t(Error %s at line %d in file %s)\n", \
                  #err,__LINE__,__FILE__);                       \

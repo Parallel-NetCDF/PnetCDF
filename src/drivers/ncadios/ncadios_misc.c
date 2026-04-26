@@ -47,25 +47,25 @@ nc_type ncadios_to_nc_type(enum ADIOS_DATATYPES atype){
         case adios_string:
             return NC_CHAR;
         case adios_complex:
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
             printf("Warning: unsupported adios type: adios_string_array\n");
             fflush(stdout);
 #endif
             return NC_BYTE;
         case adios_double_complex:
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
             printf("Warning: unsupported adios type: adios_string_array\n");
             fflush(stdout);
 #endif
             return NC_BYTE;
         case adios_string_array:
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
             printf("Warning: unsupported adios type: adios_string_array\n");
             fflush(stdout);
 #endif
             return NC_BYTE;
         case adios_unknown:
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
             printf("Warning: unsupported adios type: adios_unknown\n");
             fflush(stdout);
 #endif
@@ -104,19 +104,19 @@ MPI_Datatype ncadios_to_mpi_type(enum ADIOS_DATATYPES atype){
         case adios_string_array:
             return MPI_CHAR;
         case adios_complex:
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
             printf("Warning: unsupported adios type: adios_string_array\n");
             fflush(stdout);
 #endif
             return NC_BYTE;
         case adios_double_complex:
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
             printf("Warning: unsupported adios type: adios_string_array\n");
             fflush(stdout);
 #endif
             return NC_BYTE;
         case adios_unknown:
-#ifdef PNETCDF_DEBUG
+#if PNETCDF_DEBUG_MODE == 1
             printf("Warning: unsupported adios type: adios_unknown\n");
             fflush(stdout);
 #endif
