@@ -927,7 +927,6 @@ int ina_collect_md(NC          *ncp,
     assert(comm != MPI_COMM_NULL);
 #endif
 
-assert(comm != MPI_COMM_NULL);
     MPI_Comm_size(comm, &nprocs);
     MPI_Comm_rank(comm, &rank);
 
@@ -1198,7 +1197,7 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
 */
 
     intra_comm = ncp->comm_attr.ina_intra_comm;
-    if (intra_comm == MPI_COMM_NULL) {
+    if (intra_comm == MPI_COMM_NULL) { /* INA is disabled */
         nprocs = 1;
         rank = 0;
     }
@@ -1864,7 +1863,7 @@ int ina_get(NC         *ncp,
 #endif
 
     intra_comm = ncp->comm_attr.ina_intra_comm;
-    if (intra_comm == MPI_COMM_NULL) {
+    if (intra_comm == MPI_COMM_NULL) { /* INA is disabled */
         nprocs = 1;
         rank = 0;
     }
@@ -2578,8 +2577,6 @@ if (num_reqs > 0) assert(buf_view.count > 0);
          */
         ncp->comm_attr.ina_intra_comm = MPI_COMM_SELF;
     }
-
-// printf("%s at %d: ncp->mpio_fh_coll %s\n",__func__,__LINE__, (ncp->mpio_fh_coll == MPI_FILE_NULL)?"MPI_FILE_NULL":"NOT MPI_FILE_NULL");
 
     /* perform intra-node aggregation */
     if (fIsSet(reqMode, NC_REQ_WR))
