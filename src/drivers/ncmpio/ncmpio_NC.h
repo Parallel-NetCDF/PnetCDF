@@ -450,7 +450,7 @@ struct NC {
     int           num_subfiles; /* no. subfiles */
     struct NC    *ncp_sf;       /* ncp of subfile */
     MPI_Comm      comm_sf;      /* subfile MPI communicator */
-    PNC_comm_attr node_ids_sf;  /* node IDs of subfile MPI communicator */
+    PNC_comm_attr comm_attr_sf; /* node IDs of subfile MPI communicator */
 #endif
 
     int  hdr_chunk;          /* chunk size used when reading file header, which
