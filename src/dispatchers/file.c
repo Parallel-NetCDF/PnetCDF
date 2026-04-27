@@ -235,6 +235,34 @@ int ina_init(MPI_Comm        comm,
      */
     TRACE_COMM(MPI_Comm_split)(comm_attr->numa_comm, aggr_rank, my_node_rank,
                                &comm_attr->ina_intra_comm);
+    if (mpireturn != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(mpireturn, "MPI_Comm_split");
+
+#if PNETCDF_DEBUG_MODE == 1
+    {
+        /* check whether or not this rank's MPI processor name is the same as
+         * its INA aggregator's .
+         */
+        int world_rank, intra_rank, mpi_namelen, root_mpi_namelen;
+        char mpi_name[MPI_MAX_PROCESSOR_NAME];
+        char root_mpi_name[MPI_MAX_PROCESSOR_NAME];
+
+        MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+        MPI_Comm_rank(comm_attr->ina_intra_comm, &intra_rank);
+        MPI_Get_processor_name(mpi_name, &mpi_namelen);
+
+        memcpy(root_mpi_name, mpi_name, MPI_MAX_PROCESSOR_NAME);
+        root_mpi_namelen = mpi_namelen + 1;
+        MPI_Bcast(&root_mpi_namelen, 1, MPI_INT, 0, comm_attr->ina_intra_comm);
+        MPI_Bcast(root_mpi_name, root_mpi_namelen, MPI_CHAR, 0, comm_attr->ina_intra_comm);
+
+        if (strncmp(root_mpi_name, mpi_name, MPI_MAX_PROCESSOR_NAME)) {
+            printf("%s at %d: intra-node rank %d (world rank %d) MPI name (%s) != root's (%s)\n",
+                   __func__,__LINE__, intra_rank, world_rank, mpi_name, root_mpi_name);
+            assert(0);
+        }
+    }
+#endif
 
     /* Next step is to construct an inter-node MPI communicator consisting of
      * all INA aggregators. It will later be used to call MPI_File_open(), and
