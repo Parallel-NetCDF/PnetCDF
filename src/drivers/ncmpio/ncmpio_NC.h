@@ -50,6 +50,14 @@ typedef struct {
     MPI_Offset  *off;       /* [count] byte offsets */
     MPI_Offset  *len;       /* [count] block lengths in bytes */
 #else
+    /* Note in MPI_Type_create_hindexed()
+     *    argument count is of type 'int'
+     *    argument array_of_blocklengths[] is of type 'int'
+     *    argument array_of_displacements[] is of type 'MPI_Aint'
+     * Must check int overflow error, NC_EINTOVERFLOW
+     *
+     * off[0] is also used to set fileview's disp argument.
+     */
     MPI_Offset  *off;       /* [count] byte offsets */
     int         *len;       /* [count] block lengths in bytes */
 #endif

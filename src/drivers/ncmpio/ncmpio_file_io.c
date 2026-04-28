@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h> /* memset() */
 #include <fcntl.h>  /* O_RDONLY, O_RDWR */
+#include <limits.h> /* INT_MAX */
 
 #include <assert.h>
 
@@ -998,22 +999,32 @@ int type_create_hindexed(PNCIO_View    view,
     char *mpi_name;
     int status=NC_NOERR, err=NC_NOERR, mpireturn;
 
-    *newType = MPI_DATATYPE_NULL;
+#if PNETCDF_DEBUG_MODE == 1
+    /* contiguous view should NOT call this subroutine */
+    assert(view.count > 1);
+#endif
 
-    /* construct a buftype */
+    *newType = MPI_BYTE;
+
 #ifdef HAVE_MPI_LARGE_COUNT
-    /* TODO: MPI_Type_create_hindexed_c
-     *       view.count should be of type MPI_Count
-     *       view.len   should be of type MPI_Count
-     *       view.off   should be of type MPI_Count
+    /* view.off is of type 'MPI_Offset' but argument array_of_displacements[]
+     * in MPI_Type_create_hindexed_c() is of type 'MPI_Count'.
      */
-    mpireturn = MPI_Type_create_hindexed_c(view.count,
-                                           view.len,
-                                           view.off,
+#if PNETCDF_DEBUG_MODE == 1
+    /* size of MPI_Count and MPI_Offset should match */
+    assert(sizeof(MPI_Count) == sizeof(MPI_Offset));
+#endif
+    mpireturn = MPI_Type_create_hindexed_c(view.count, view.len, view.off,
                                            MPI_BYTE, newType);
     mpi_name = "MPI_Type_create_hindexed_c";
 #else
+    /* MPI _c APIs are not available */
     MPI_Aint *disp;
+
+    if (view.count > INT_MAX)
+        /* count argument in MPI_Type_create_hindexed() is of type int */
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
 #if SIZEOF_MPI_AINT == SIZEOF_MPI_OFFSET
     disp = (MPI_Aint*) view.off;
 #else
@@ -1021,20 +1032,14 @@ int type_create_hindexed(PNCIO_View    view,
     for (j=0; j<view.count; j++)
         disp[j] = (MPI_Aint)view.off[j];
 #endif
-    /* TODO: MPI_Type_create_hindexed
-     *       view.count should be of type int
-     *       view.len   should be of type int
-     *       view.off   should be of type MPI_Aint
-     */
-    mpireturn = MPI_Type_create_hindexed(view.count,
-                                         view.len,
-                                         disp,
+    mpireturn = MPI_Type_create_hindexed((int)view.count, view.len, disp,
                                          MPI_BYTE, newType);
-    mpi_name = "MPI_Type_create_hindexed";
 #if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
     NCI_Free(disp);
 #endif
+    mpi_name = "MPI_Type_create_hindexed";
 #endif
+
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
         /* return the first encountered error if there is any */
@@ -1048,6 +1053,7 @@ int type_create_hindexed(PNCIO_View    view,
             if (status == NC_NOERR) status = err;
         }
     }
+
     return status;
 }
 
@@ -1069,6 +1075,7 @@ ncmpio_file_read(NC         *ncp,
                  PNCIO_View  file_view,
                  PNCIO_View  buf_view)
 {
+    char *xbuf;
     int i, status=NC_NOERR, err=NC_NOERR;
     MPI_Offset rlen=0;
     MPI_Count off_zero=0, f_amnt, b_amnt;
@@ -1093,8 +1100,6 @@ ncmpio_file_read(NC         *ncp,
     assert(f_amnt == b_amnt);
 #endif
 
-    void *xbuf=buf;
-
     /* Save the original buf_view.count, as it may be modified when
      * b_amnt <= ibuf_size, original buf_view is required to unpack the read
      * data to user read buffer.
@@ -1117,6 +1122,8 @@ ncmpio_file_read(NC         *ncp,
     }
 #endif
 
+    xbuf = (char*)buf;
+
     if (buf_view.count > 1 && b_amnt <= ncp->ibuf_size) {
         /* If this read buffer is noncontiguous and amount is less than
          * ncp->ibuf_size, we allocate a temporary contiguous buffer and use it
@@ -1128,7 +1135,7 @@ ncmpio_file_read(NC         *ncp,
          *
          * Note ncp->ibuf_size is never > NC_MAX_INT.
          */
-        xbuf = NCI_Malloc(b_amnt);
+        xbuf = (char*) NCI_Malloc(b_amnt);
 
         /* mark buf_view is contiguous */
         buf_view.count = 1;
@@ -1137,12 +1144,12 @@ ncmpio_file_read(NC         *ncp,
     }
 
     if (ncp->driver == PNC_DRIVER_MPIIO) {
-        char *mpi_name;
-        int set_file_view, mpireturn;
+        char *xbuf_ptr, *mpi_name;
+        int bufCount, set_file_view, mpireturn;
         MPI_Offset disp;
         MPI_File fh;
         MPI_Status mpistatus;
-        MPI_Datatype fileType=MPI_BYTE, bufType=MPI_DATATYPE_NULL;
+        MPI_Datatype fileType=MPI_BYTE, bufType=MPI_BYTE;
 
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
@@ -1154,7 +1161,9 @@ ncmpio_file_read(NC         *ncp,
          * call, skip setting the file view. This must come from subroutines
          * that would like to access file header or perform data section
          * movement at ncmpi_enddef(), due to new metadata was added. In these
-         * cases, their file views are always contiguous.
+         * cases, their file views are always contiguous. However, argument
+         * 'disp' to be used in MPI_File_read_at() call must be set to
+         * file_view.off[0].
          *
          * In all other cases, we must set the file view.
          */
@@ -1176,7 +1185,7 @@ ncmpio_file_read(NC         *ncp,
         }
 
         if (set_file_view) {
-            TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, fileType,
+            TRACE_IO(MPI_File_set_view, (fh, disp, MPI_BYTE, fileType,
                                          "native", MPI_INFO_NULL));
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
@@ -1185,21 +1194,38 @@ ncmpio_file_read(NC         *ncp,
         }
         if (fileType != MPI_BYTE) MPI_Type_free(&fileType);
 
-        /* Construct a derived data type for MPI_File_read_xxx call, no matter
-         * if buf_view is contiguous or not.
+        /* Construct a derived data type describing user buffer data layout to
+         * be used in MPI_File_read_xxx call.
          */
-        err = type_create_hindexed(buf_view, &bufType);
-        if (err != NC_NOERR && status == NC_NOERR) status = err;
+        bufCount = 0;
+        xbuf_ptr = xbuf;
+        if (buf_view.count == 1) { /* buffer view is contiguous */
+            if (buf_view.len[0] <= INT_MAX)
+                bufCount = (int)buf_view.len[0];
+            else if (status == NC_NOERR)
+                status = NC_EINTOVERFLOW;
+            xbuf_ptr += buf_view.off[0];
+        }
+        else if (buf_view.count > 1) {
+            err = type_create_hindexed(buf_view, &bufType);
+            if (err == NC_NOERR)
+                bufCount = 1;
+            else if (status == NC_NOERR)
+                status = err;
+        }
+        /* else is for zero-sized request */
+
+        if (set_file_view) disp = 0;
 
         if (ncp->nprocs > 1 && coll_indep == NC_REQ_COLL) {
             /* call MPI collective read */
-            TRACE_IO(MPI_File_read_at_all, (fh, disp, xbuf, 1, bufType,
-                                            &mpistatus));
+            TRACE_IO(MPI_File_read_at_all, (fh, disp, xbuf_ptr, bufCount,
+                                            bufType, &mpistatus));
         }
         else {
             /* call MPI independent read */
-            TRACE_IO(MPI_File_read_at, (fh, disp, xbuf, 1, bufType,
-                                        &mpistatus));
+            TRACE_IO(MPI_File_read_at, (fh, disp, xbuf_ptr, bufCount,
+                                        bufType, &mpistatus));
         }
 
         if (mpireturn != MPI_SUCCESS) {
@@ -1210,13 +1236,12 @@ ncmpio_file_read(NC         *ncp,
         else
             /* update the number of bytes read */
             rlen = get_count(&mpistatus, MPI_BYTE);
-// printf("%s at %d: rlen %lld\n",__func__,__LINE__,rlen);
 
         if (set_file_view) /* reset the file view to entire file visible */
             MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native",
                               MPI_INFO_NULL);
 
-        if (bufType != MPI_DATATYPE_NULL) MPI_Type_free(&bufType);
+        if (bufType != MPI_BYTE) MPI_Type_free(&bufType);
     }
 #ifdef ENABLE_GIO
     else if (ncp->driver == PNC_DRIVER_GIO) {
@@ -1297,6 +1322,7 @@ ncmpio_file_write(NC         *ncp,
                   PNCIO_View  file_view,
                   PNCIO_View  buf_view)
 {
+    char *xbuf;
     int i, status=NC_NOERR, err=NC_NOERR;
     MPI_Offset wlen=0;
     MPI_Count off_zero=0, f_amnt, b_amnt;
@@ -1323,7 +1349,7 @@ ncmpio_file_write(NC         *ncp,
     assert(f_amnt == b_amnt);
 #endif
 
-    void *xbuf= (void*)buf;
+    xbuf = (char*)buf;
 
     if (buf_view.count > 1 && b_amnt <= ncp->ibuf_size) {
         /* If this write buffer is noncontiguous and amount is less than
@@ -1351,12 +1377,12 @@ ncmpio_file_write(NC         *ncp,
     }
 
     if (ncp->driver == PNC_DRIVER_MPIIO) {
-        char *mpi_name;
-        int set_file_view, mpireturn;
+        char *xbuf_ptr, *mpi_name;
+        int bufCount, set_file_view, mpireturn;
         MPI_Offset disp;
         MPI_File fh;
         MPI_Status mpistatus;
-        MPI_Datatype fileType=MPI_BYTE, bufType=MPI_DATATYPE_NULL;
+        MPI_Datatype fileType=MPI_BYTE, bufType=MPI_BYTE;
 
         memset(&mpistatus, 0, sizeof(MPI_Status));
 
@@ -1390,7 +1416,7 @@ ncmpio_file_write(NC         *ncp,
         }
 
         if (set_file_view) {
-            TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, fileType,
+            TRACE_IO(MPI_File_set_view, (fh, disp, MPI_BYTE, fileType,
                                          "native", MPI_INFO_NULL));
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
@@ -1399,21 +1425,38 @@ ncmpio_file_write(NC         *ncp,
         }
         if (fileType != MPI_BYTE) MPI_Type_free(&fileType);
 
-        /* Construct a derived data type for MPI_File_write_xxx call, no matter
-         * if buf_view is contiguous or not.
+        /* Construct a derived data type describing user buffer data layout to
+         * be used in MPI_File_read_xxx call.
          */
-        err = type_create_hindexed(buf_view, &bufType);
-        if (err != NC_NOERR && status == NC_NOERR) status = err;
+        bufCount = 0;
+        xbuf_ptr = xbuf;
+        if (buf_view.count == 1) { /* buffer view is contiguous */
+            if (buf_view.len[0] <= INT_MAX)
+                bufCount = (int)buf_view.len[0];
+            else if (status == NC_NOERR)
+                status = NC_EINTOVERFLOW;
+            xbuf_ptr += buf_view.off[0];
+        }
+        else if (buf_view.count > 1) {
+            err = type_create_hindexed(buf_view, &bufType);
+            if (err == NC_NOERR)
+                bufCount = 1;
+            if (status == NC_NOERR)
+                status = err;
+        }
+        /* else is for zero-sized request */
+
+        if (set_file_view) disp = 0;
 
         if (ncp->nprocs > 1 && coll_indep == NC_REQ_COLL) {
             /* call MPI collective write */
-            TRACE_IO(MPI_File_write_at_all, (fh, disp, xbuf, 1, bufType,
-                                             &mpistatus));
+            TRACE_IO(MPI_File_write_at_all, (fh, disp, xbuf_ptr, bufCount,
+                                             bufType, &mpistatus));
         }
         else {
             /* call MPI independent write */
-            TRACE_IO(MPI_File_write_at, (fh, disp, xbuf, 1, bufType,
-                                         &mpistatus));
+            TRACE_IO(MPI_File_write_at, (fh, disp, xbuf_ptr, bufCount,
+                                         bufType, &mpistatus));
         }
 
         if (mpireturn != MPI_SUCCESS) {
@@ -1421,17 +1464,15 @@ ncmpio_file_write(NC         *ncp,
             if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EWRITE)
             if (status == NC_NOERR) status = err;
         }
-        else {
+        else
             /* update the number of bytes written */
             wlen = get_count(&mpistatus, MPI_BYTE);
-// printf("%s at %d: wlen %lld\n",__func__,__LINE__,wlen);
-        }
 
         if (set_file_view) /* reset the file view to entire file visible */
             MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native",
                               MPI_INFO_NULL);
 
-        if (bufType != MPI_DATATYPE_NULL) MPI_Type_free(&bufType);
+        if (bufType != MPI_BYTE) MPI_Type_free(&bufType);
     }
 #ifdef ENABLE_GIO
     else if (ncp->driver == PNC_DRIVER_GIO) {
