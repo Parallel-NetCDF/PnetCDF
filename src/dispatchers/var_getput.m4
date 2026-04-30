@@ -943,6 +943,10 @@ ncmpi_$1_vard$2(int           ncid,
     int err, status, reqMode=0;
     PNC *pncp;
 
+    fprintf(stderr,
+            "PnetCDF vard APIs have been deprecated since 1.15.0 release.\n");
+    return NC_ENOTSUPPORT;
+
     /* check if ncid is valid.
      * For invalid ncid, we must return error now, as there is no way to
      * continue with invalid ncp. However, collective APIs might hang if this

@@ -71,9 +71,6 @@ check_PROGRAMS = file_create_open \
                  modes \
                  one_record \
                  inq_recsize \
-                 test_vard \
-                 test_vard_rec \
-                 test_vard_multiple \
                  varn_contig \
                  ivarn \
                  check_striping \
@@ -155,24 +152,20 @@ if HAS_FORTRAN
                    attrf \
                    buftype_freef \
                    put_parameter \
-                   test_vardf \
                    flexible_api
 
        varn_intf_SOURCES = varn_intf.f
            attrf_SOURCES = attrf.f
    buftype_freef_SOURCES = buftype_freef.f
    put_parameter_SOURCES = put_parameter.f
-      test_vardf_SOURCES = test_vardf.F
     flexible_api_SOURCES = flexible_api.f
 if HAVE_MPI_MOD
    check_PROGRAMS += inq_num_varsf \
                      inq_recsizef \
-                     test_vardf90 \
                      varn_real
 
    inq_num_varsf_SOURCES = inq_num_varsf.f90
     inq_recsizef_SOURCES = inq_recsizef.f90
-    test_vardf90_SOURCES = test_vardf90.f90
        varn_real_SOURCES = varn_real.f90
 endif
 endif

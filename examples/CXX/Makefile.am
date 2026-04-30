@@ -26,7 +26,6 @@ check_PROGRAMS = collective_write \
                  put_vara \
                  get_vara \
                  transpose \
-                 vard_int \
                  fill_mode \
                  SimpleXyWr
 

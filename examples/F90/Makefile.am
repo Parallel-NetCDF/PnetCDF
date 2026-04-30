@@ -36,8 +36,7 @@ check_PROGRAMS = nonblocking_write \
                  put_varn_real \
                  put_varn_int \
                  transpose \
-                 fill_mode \
-                 vard_int
+                 fill_mode
 
 if INSTALL_EXAMPLES
    example_execbin_PROGRAMS = $(check_PROGRAMS)

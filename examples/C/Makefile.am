@@ -30,15 +30,12 @@ check_PROGRAMS = collective_write \
                  get_vara \
                  transpose \
                  transpose2D \
-                 vard_int \
-                 vard_bottom \
                  i_varn_int64 \
                  bput_varn_uint \
                  bput_varn_int64 \
                  fill_mode \
                  ghost_cell \
                  req_all \
-                 vard_mvars \
                  time_var \
                  create_from_cdl
 
