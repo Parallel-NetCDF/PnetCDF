@@ -715,45 +715,43 @@ after_open:
      * striping_unit is also used to set ncp->data_chunk if hint
      * nc_data_move_chunk_size is not set by the user.
      *
-     * When INA is enabled, only INA aggregators have valid striping_unit and
-     * striping_factor in their ncp->info. This is because non-INA
-     * aggregators do not participate the call to MPI_File_open() or
-     * GIO_open(). We need to have INA root to broadcast these 2 info to its
-     * INA group members.
+     * When INA is enabled, only INA aggregators have valid hints striping_unit
+     * and striping_factor stored in their ncp->info, returned from the call to
+     * MPI_File_get_info() or GIO_get_info(). When non-INA aggregators have
+     * never call MPI_File_open() or GIO_open(), only happened when performing
+     * independent I/O, they do not have valid file striping hints store in
+     * their ncp->info. We need to make INA root to broadcast these 2 info to
+     * its INA group members. It is OK to have all processes extract these 2
+     * hints below. In this case, the INA aggregators' hints will be valid and
+     * non-INA aggregators' hints will be overwritten by their INA aggregator's
+     * after the call of MPI_Bcast() later.
+     *
+     * When INA is disabled, all processes extract hints.
      */
-    if (ncp->num_aggrs_per_node == 0) {
-        /* When INA is disabled, all processes extract hints.
-         * When INA is enabled, each INA aggregator extracts hints and
-         * broadcasts to its non-INA aggregators.
-         *
-         * Note ncp->num_aggrs_per_node may have been adjusted above.
-         */
-        MPI_Info_get(ncp->info, "striping_unit", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        striping_info[0] = 0;
-        if (flag) {
-            errno = 0;  /* errno must set to zero before calling strtoll */
-            striping_info[0] = (int)strtol(value,NULL,10);
-            if (errno != 0) striping_info[0] = 0;
-        }
-
-        MPI_Info_get(ncp->info, "striping_factor", MPI_MAX_INFO_VAL-1,
-                     value, &flag);
-        striping_info[1] = 0;
-        if (flag) {
-            errno = 0;  /* errno must set to zero before calling strtoll */
-            striping_info[1] = (int)strtol(value,NULL,10);
-            if (errno != 0) striping_info[1] = 0;
-        }
+    MPI_Info_get(ncp->info, "striping_unit", MPI_MAX_INFO_VAL-1, value, &flag);
+    striping_info[0] = 0;
+    if (flag) {
+        errno = 0;  /* errno must set to zero before calling strtoll */
+        striping_info[0] = (int)strtol(value,NULL,10);
+        if (errno != 0) striping_info[0] = 0;
     }
-    else { /* ncp->num_aggrs_per_node > 0 */
-        /* When INA is enabled, each INA aggregator broadcasts hints to the
-         * non-INA aggregators assigned to it. At this moment, only the non-INA
-         * aggregators have not yet set the striping hints to ncp->info
+
+    MPI_Info_get(ncp->info, "striping_factor", MPI_MAX_INFO_VAL-1, value,
+                 &flag);
+    striping_info[1] = 0;
+    if (flag) {
+        errno = 0;  /* errno must set to zero before calling strtoll */
+        striping_info[1] = (int)strtol(value,NULL,10);
+        if (errno != 0) striping_info[1] = 0;
+    }
+
+    if (ncp->num_aggrs_per_node > 0) {
+        /* When INA is enabled, each INA aggregator broadcasts the file
+         * striping  hints to its INA group members.
          *
          * Note ncp->num_aggrs_per_node may have been adjusted above.
          */
-        int intra_nprocs;
+        int intra_nprocs, intra_rank;
 
 #if PNETCDF_DEBUG_MODE == 1
         assert(comm_attr.ina_intra_comm != MPI_COMM_NULL);
@@ -761,7 +759,24 @@ after_open:
         MPI_Comm_size(comm_attr.ina_intra_comm, &intra_nprocs);
 
         if (intra_nprocs > 1) {
-            int intra_rank;
+            MPI_Info_get(ncp->info, "striping_unit", MPI_MAX_INFO_VAL-1, value,
+                         &flag);
+            striping_info[0] = 0;
+            if (flag) {
+                errno = 0;  /* errno must set to zero before calling strtoll */
+                striping_info[0] = (int)strtol(value,NULL,10);
+                if (errno != 0) striping_info[0] = 0;
+            }
+
+            MPI_Info_get(ncp->info, "striping_factor", MPI_MAX_INFO_VAL-1,
+                         value, &flag);
+            striping_info[1] = 0;
+            if (flag) {
+                errno = 0;  /* errno must set to zero before calling strtoll */
+                striping_info[1] = (int)strtol(value,NULL,10);
+                if (errno != 0) striping_info[1] = 0;
+            }
+
             MPI_Comm_rank(comm_attr.ina_intra_comm, &intra_rank);
 
             MPI_Bcast(striping_info, 2, MPI_INT, 0, comm_attr.ina_intra_comm);
