@@ -621,13 +621,6 @@ ncmpio_write_header(NC *ncp);
 extern int
 ncmpio_write_numrecs(NC *ncp, MPI_Offset new_numrecs);
 
-/* Begin defined in ncmpio_filetype.c ---------------------------------------*/
-extern int
-ncmpio_filetype_create_vars(const NC* ncp, const NC_var* varp,
-                const MPI_Offset start[], const MPI_Offset count[],
-                const MPI_Offset stride[], MPI_Offset *offset,
-                MPI_Datatype *filetype, int *is_filetype_contig);
-
 /* Begin defined in ncmpio_igetput.m4 ---------------------------------------*/
 extern int
 ncmpio_abuf_malloc(NC *ncp, MPI_Offset nbytes, void **buf, int *abuf_index);
