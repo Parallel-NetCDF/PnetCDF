@@ -150,7 +150,6 @@ AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-
 AH_TEMPLATE([ENABLE_BURST_BUFFER],      [Define if to enable burst buffer feature])
 AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
 AH_TEMPLATE([ENABLE_THREAD_SAFE],       [Define if to enable thread-safe capability])
-AH_TEMPLATE([ENABLE_REQ_AGGREGATION],   [Define if able to support request aggregation in nonblocking routines])
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
 AH_TEMPLATE([HAVE_MPI_LARGE_COUNT],     [Define if required MPI APIs have arguments of type MPI_Count])
 AH_TEMPLATE([ENABLE_GIO],               [Define if GIO library is enabled])
@@ -1329,23 +1328,6 @@ AC_DEFINE_UNQUOTED([OFFFMT], ["$MPI_OFFSET_FMT"], [MPI_Offset printf format])
 
 AC_CHECK_SIZEOF([MPI_Aint], [], [#include <mpi.h>])
 AM_CONDITIONAL(SIZEOF_MPI_AINT_IS_4, [test x$ac_cv_sizeof_MPI_Aint = x4])
-
-# PnetCDF's nonblocking routines build up lists of requests and combined them
-# into one MPI derived data type using MPI_Type_create_struct(). If MPI_Offset
-# is not of the same size as MPI_Aint, the arrays passed around will get
-# mangled.
-if test "$ac_cv_sizeof_MPI_Offset" -ne "$ac_cv_sizeof_MPI_Aint"; then
-   AC_MSG_WARN([
-   -----------------------------------------------------------------------
-     MPI_Offset and MPI_Aint are detected of different sizes.
-     The request aggregation feature implemented in non-blocking APIs is
-     thus disabled.
-   -----------------------------------------------------------------------])
-else
-   AC_DEFINE(ENABLE_REQ_AGGREGATION)
-   ENABLE_REQ_AGGREGATION=1
-   AC_SUBST(ENABLE_REQ_AGGREGATION)
-fi
 
 dnl check availability of MPI_Count, which is added in MPI 3.0 standard.
 dnl The new MPI functions added in 3.0 that have arguments of type MPI_Count:
