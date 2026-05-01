@@ -1093,3 +1093,96 @@ ncmpio_calc_start_end(const NC         *ncp,
     return NC_NOERR;
 }
 
+/*----< ncmpio_type_create_hindexed() >--------------------------------------*/
+int ncmpio_type_create_hindexed(MPI_Count     count,
+                                MPI_Offset   *off,
+                                MPI_Offset   *len,
+                                MPI_Datatype *newType)
+{
+    char *mpi_name;
+    int err, status=NC_NOERR;
+
+    *newType = MPI_BYTE;
+
+    if (count == 0) return NC_NOERR;
+
+#ifdef HAVE_MPI_LARGE_COUNT
+    /* Note argument array_of_displacements[] in MPI_Type_create_hindexed_c()
+     * is of type 'MPI_Count'.
+     */
+    MPI_Count *disp, *blklen;
+#if SIZEOF_MPI_OFFSET == SIZEOF_MPI_COUNT
+    disp = off;
+    blklen = len;
+#else
+    MPI_Count j;
+    disp   = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * count);
+    blklen = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * count);
+    for (j=0; j<count; j++) {
+        disp[j]   = (MPI_Count)off[j];
+        blklen[j] = (MPI_Count)len[j];
+    }
+#endif
+    err = MPI_Type_create_hindexed_c(count, blklen, disp, MPI_BYTE, newType);
+    mpi_name = "MPI_Type_create_hindexed_c";
+#if SIZEOF_MPI_OFFSET != SIZEOF_MPI_COUNT
+    NCI_Free(blklen);
+    NCI_Free(disp);
+#endif
+#else
+    /* MPI _c APIs are not available */
+    int *blklen;
+    MPI_Aint *disp;
+
+    if (count > INT_MAX)
+        /* count argument in MPI_Type_create_hindexed() is of type int */
+        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+
+#if SIZEOF_MPI_AINT == SIZEOF_MPI_OFFSET
+    disp = (MPI_Aint*) off;
+#else
+    MPI_Count j;
+    disp = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * count);
+    for (j=0; j<count; j++)
+        disp[j] = (MPI_Aint)off[j];
+#endif
+#if SIZEOF_INT == SIZEOF_MPI_OFFSET
+    blklen = (int*) len;
+#else
+    MPI_Count k;
+    blklen = (int*) NCI_Malloc(sizeof(int) * count);
+    for (k=0; k<count; k++) {
+        if (len[k] > INT_MAX)
+            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        blklen[k] = (int)len[k];
+    }
+#endif
+
+    err = MPI_Type_create_hindexed((int)count, blklen, disp, MPI_BYTE, newType);
+    mpi_name = "MPI_Type_create_hindexed";
+
+#if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
+    NCI_Free(disp);
+#endif
+#if SIZEOF_INT != SIZEOF_MPI_OFFSET
+    NCI_Free(blklen);
+#endif
+#endif
+
+    if (err != MPI_SUCCESS) {
+        /* return the first encountered error if there is any */
+        if (status == NC_NOERR)
+            status = ncmpii_error_mpi2nc(err, mpi_name);
+    }
+    else {
+        err = MPI_Type_commit(newType);
+        if (err != MPI_SUCCESS) {
+            /* return the first encountered error if there is any */
+            if (status == NC_NOERR)
+                status = ncmpii_error_mpi2nc(err,"MPI_Type_commit");
+        }
+    }
+
+    return status;
+}
+

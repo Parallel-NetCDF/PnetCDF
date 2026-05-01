@@ -1355,6 +1355,7 @@ dnl AC_CHECK_TYPE([MPI_Count], [], [], [#include <mpi.h>])
 dnl if test "x${ac_cv_type_MPI_Count}" = xyes; then
 dnl    AC_DEFINE(HAVE_MPI_COUNT)
 dnl fi
+AC_CHECK_SIZEOF([MPI_Count], [], [#include <mpi.h>])
 
 dnl Because MPI-IO was first introduced in MPI 2.0 and MPI-IO is a requirement
 dnl of PnetCDF, there is no need to check the below APIs which were also

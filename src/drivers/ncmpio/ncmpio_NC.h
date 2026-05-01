@@ -33,22 +33,22 @@
 #define PNCIO_STRIPING_INHERIT 0
 
 typedef struct {
-    MPI_Datatype type;      /* MPI derived datatype, it is used only by
-                             * buf_view.
-                             */
-    MPI_Offset   size;      /* total size in bytes, i.e. sum of len[*],
-                             * 0 means zero-sized request. -1 means view has
-                             * been reset (in this case count should be 0).
-                             */
-    MPI_Count    count;     /* number of off-len pairs. 0 means the entire file
-                             * is visible. 0 or 1 means buf_view/file_view is
-                             * contiguous. Only when noncontiguous, off and len
-                             * are malloc-ed. Note 0 does not necessarily means
-                             * zero-sized request.
-                             */
+    MPI_Datatype type; /* MPI derived datatype, it is used only by
+                        * buf_view.
+                        */
+    MPI_Offset   size; /* total size in bytes, i.e. sum of len[*],
+                        * 0 means zero-sized request. -1 means view has
+                        * been reset (in this case count should be 0).
+                        */
+    MPI_Count    count;  /* number of off-len pairs. 0 means the entire file
+                        * is visible. 0 or 1 means buf_view/file_view is
+                        * contiguous. Only when noncontiguous, off and len
+                        * are malloc-ed. Note 0 does not necessarily means
+                        * zero-sized request.
+                        */
 #ifdef HAVE_MPI_LARGE_COUNT
-    MPI_Offset  *off;       /* [count] byte offsets */
-    MPI_Offset  *len;       /* [count] block lengths in bytes */
+    MPI_Offset  *off;  /* [count] byte offsets */
+    MPI_Offset  *len;  /* [count] block lengths in bytes */
 #else
     /* Note in MPI_Type_create_hindexed()
      *    argument count is of type 'int'
@@ -751,6 +751,10 @@ ncmpio_calc_start_end(const NC *ncp, const NC_var *varp,
                       const MPI_Offset *start, const MPI_Offset *count,
                       const MPI_Offset *stride, MPI_Offset *start_off,
                       MPI_Offset *end_off);
+
+extern int
+ncmpio_type_create_hindexed(MPI_Count count, MPI_Offset *off, MPI_Offset *len,
+                            MPI_Datatype *newType);
 
 /* Begin defined in ncmpio_file_io.c ----------------------------------------*/
 
