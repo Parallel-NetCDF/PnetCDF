@@ -43,8 +43,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>   /* strcmp() strdup() */
+#include <limits.h>   /* INT_MAX */
 #include <assert.h>
 #include <errno.h>
+
 #include <mpi.h>
 
 #include <pnc_debug.h>
@@ -442,7 +444,7 @@ flatten_subarray(int                ndim,       /* number of dimensions */
     }
 
     /* offsets[] and lengths[] may be coalescable, but this will be delayed
-     * until this subroutine callers, flatten_req() and flatten_reqs(), where
+     * until this subroutine callers, flatten_req() and flatten_nreqs(), where
      * both fix-sized and record variables have been flattened.
      */
 
@@ -460,70 +462,45 @@ flatten_req(NC                *ncp,
             const MPI_Offset  *count,
             const MPI_Offset  *stride,
             int               *is_incr,   /* OUT: are offsets incrementing */
-            MPI_Aint          *num_pairs, /* OUT: number of off-len pairs */
-#ifdef HAVE_MPI_LARGE_COUNT
-            MPI_Count        **off_ptr,   /* OUT: array of flattened offsets */
-            MPI_Count        **len_ptr    /* OUT: array of flattened lengths */
-#else
-            MPI_Offset       **off_ptr,   /* OUT: array of flattened offsets */
-            int              **len_ptr    /* OUT: array of flattened lengths */
-#endif
-                                   )
+            PNCIO_View        *file_view) /* OUT: flattened file view */
 {
     int i, j, err=NC_NOERR, ndims;
     MPI_Aint num, idx;
     MPI_Offset var_begin, *shape, count0, *ones=NULL;
-#ifdef HAVE_MPI_LARGE_COUNT
-    MPI_Count  prev_end_off;
-    MPI_Count *offsets;
-    MPI_Count *lengths;
-#else
-    MPI_Offset  prev_end_off;
-    MPI_Offset *offsets;
-    int        *lengths;
-#endif
+    MPI_Offset prev_end_off;
 
-    *num_pairs = 0;    /* total number of offset-length pairs */
+    file_view->count = 0;   /* number of offset-length pairs */
+    file_view->off = NULL;  /* array of offsets */
+    file_view->len = NULL;  /* array of lengths */
 
-    /* Count the number off-len pairs, so we can malloc a contiguous memory
-     * space for storing off-len pairs
-     */
-    if (varp->ndims == 0) { /* scalar variable */
-#ifdef HAVE_MPI_LARGE_COUNT
-        offsets = (MPI_Count*)NCI_Malloc(sizeof(MPI_Count) * 2);
-        lengths = (MPI_Count*)NCI_Malloc(sizeof(MPI_Count) * 2);
-#else
-        offsets = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * 2);
-        lengths = (int*)       NCI_Malloc(sizeof(int) * 2);
-#endif
-        offsets[0] = varp->begin;
-        lengths[0] = varp->xsz;
-        *num_pairs = 1;
-        *off_ptr = offsets;
-        *len_ptr = lengths;
+    /* Count the number offset-length pairs */
+
+    if (varp->ndims == 0) { /* scalar variable has 1 pair offset-length */
+        file_view->count  = 1;
+        file_view->off    = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset));
+        file_view->len    = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset));
+        file_view->off[0] = varp->begin;
+        file_view->len[0] = varp->xsz;
         return NC_NOERR;
     }
-    else if (varp->ndims == 1 && IS_RECVAR(varp)) { /* scalar variable */
-        num = count[0];
+
+    if (varp->ndims == 1 && IS_RECVAR(varp)) {
+        /* scalar record variable has 1 pair offset-length */
+        file_view->count = count[0];
     }
     else {
-        num = 1;
+        file_view->count = 1;
         if (stride != NULL && stride[varp->ndims-1] > 1)
-            num = count[varp->ndims-1];  /* count of last dimension */
-        for (i=0; i<varp->ndims-1; i++)
-            num *= count[i];  /* all count[] except the last dimension */
-    }
-    *num_pairs = num;
+            /* count of last dimension */
+            file_view->count = count[varp->ndims-1];
 
-#ifdef HAVE_MPI_LARGE_COUNT
-    offsets = (MPI_Count*)NCI_Malloc(sizeof(MPI_Count) * (num+1));
-    lengths = (MPI_Count*)NCI_Malloc(sizeof(MPI_Count) * (num+1));
-#else
-    offsets = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * (num+1));
-    lengths = (int*)       NCI_Malloc(sizeof(int)        * (num+1));
-#endif
-    *off_ptr = offsets;
-    *len_ptr = lengths;
+        for (i=0; i<varp->ndims-1; i++)
+            /* all count[] except the last dimension */
+            file_view->count *= count[i];
+    }
+
+    file_view->off = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * file_view->count);
+    file_view->len = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * file_view->count);
 
     if (stride == NULL) { /* equivalent to {1, 1, ..., 1} */
         ones = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * varp->ndims);
@@ -553,81 +530,77 @@ flatten_req(NC                *ncp,
         err = flatten_subarray(ndims, varp->xsz, var_begin, shape,
                                start, count, (stride == NULL) ? ones : stride,
                                &num,           /* OUT: num of off-len pairs */
-                               offsets + idx,  /* OUT: array of offsets */
-                               lengths + idx); /* OUT: array of lengths */
-
+                               file_view->off + idx,  /* OUT: array of offsets */
+                               file_view->len + idx); /* OUT: array of lengths */
+        if (err != NC_NOERR) goto err_out;
         if (num == 0) continue;
 
-        /* check if offsets[] are in an increasing order */
+        /* check if file_view->off[] are in an increasing order */
         for (j=0; j<num; j++) {
-            if (prev_end_off > offsets[idx+j])
-                *is_incr = 0;  /* offsets are not incrementing */
+            if (prev_end_off > file_view->off[idx+j])
+                *is_incr = 0;  /* file_view->off are not incrementing */
             else
-                prev_end_off = offsets[idx+j];
+                prev_end_off = file_view->off[idx+j];
         }
 
         idx += num;
-        assert(idx <= *num_pairs);
+        assert(idx <= file_view->count);
 
         if (IS_RECVAR(varp))
             var_begin += ncp->recsize;
     }
-    if (ones != NULL)
-        NCI_Free(ones);
 
-    *num_pairs = idx;
+    file_view->count = idx;
 
     /* check if the offsets-lengths can be coalesced */
-    for (i=0, j=1; j<*num_pairs; j++) {
-        if (offsets[i] + lengths[i] == offsets[j])
-            lengths[i] += lengths[j];
+    for (i=0, j=1; j<file_view->count; j++) {
+        if (file_view->off[i] + file_view->len[i] == file_view->off[j])
+            file_view->len[i] += file_view->len[j];
         else {
             i++;
             if (i < j) {
-                offsets[i] = offsets[j];
-                lengths[i] = lengths[j];
+                file_view->off[i] = file_view->off[j];
+                file_view->len[i] = file_view->len[j];
             }
         }
     }
-    *num_pairs = i + 1;
+    file_view->count = i + 1;
 
+err_out:
+    if (ones != NULL) NCI_Free(ones);
+    if (err != NC_NOERR) {
+        NCI_Free(file_view->off);
+        NCI_Free(file_view->len);
+        file_view->off = NULL;
+        file_view->len = NULL;
+        file_view->count = 0;
+    }
     return err;
 }
 
-/*----< flatten_reqs() >-----------------------------------------------------*/
+/*----< flatten_nreqs() >----------------------------------------------------*/
 /* Flatten multiple subarray requests into file offset-length pairs. Arrays
  * offsets and lengths are allocated here and need to be freed by the caller.
  */
 static int
-flatten_reqs(NC            *ncp,
-             int            reqMode,   /* IN: NC_REQ_RD or NC_REQ_WR */
-             int            num_reqs,  /* IN: # requests */
-             const NC_req  *reqs,      /* [num_reqs] requests */
-             int           *is_incr,   /* OUT: are offsets incrementing */
-             MPI_Aint      *num_pairs, /* OUT: total number of off-len pairs */
-#ifdef HAVE_MPI_LARGE_COUNT
-             MPI_Count    **off_ptr,   /* OUT: array of flattened offsets */
-             MPI_Count    **len_ptr    /* OUT: array of flattened lengths */
-#else
-             MPI_Offset   **off_ptr,   /* OUT: array of flattened offsets */
-             int          **len_ptr    /* OUT: array of flattened lengths */
-#endif
-                                   )
+flatten_nreqs(NC            *ncp,
+              int            reqMode,   /* IN: NC_REQ_RD or NC_REQ_WR */
+              int            num_reqs,  /* IN: # requests */
+              const NC_req  *reqs,      /* [num_reqs] requests */
+              int           *is_incr,   /* OUT: are offsets incrementing */
+              PNCIO_View    *file_view) /* OUT: flattened file view */
 {
     int i, j, status=NC_NOERR, ndims, max_ndims=0;
     MPI_Aint num, idx;
     MPI_Offset *start, *count, *shape, *stride, *ones;
-#ifdef HAVE_MPI_LARGE_COUNT
-    MPI_Count  prev_end_off;
-    MPI_Count *offsets;
-    MPI_Count *lengths;
-#else
-    MPI_Offset  prev_end_off;
-    MPI_Offset *offsets;
-    int        *lengths;
-#endif
+    MPI_Offset prev_end_off;
 
-    *num_pairs = 0;    /* total number of offset-length pairs */
+    file_view->count = 0; /* total number of offset-length pairs */
+    file_view->off = NULL;
+    file_view->len = NULL;
+    file_view->size = 0;
+
+    if (num_reqs == 0) return NC_NOERR;
 
     /* Count the number off-len pairs from reqs[], so we can malloc a
      * contiguous memory space for storing off-len pairs
@@ -636,7 +609,7 @@ flatten_reqs(NC            *ncp,
         /* reqs[i].npairs is the number of offset-length pairs of this request,
          * calculated in ncmpio_igetput_varm() and igetput_varn()
          */
-        *num_pairs += reqs[i].npairs;
+        file_view->count += reqs[i].npairs;
         if (fIsSet(reqMode, NC_REQ_WR))
             ndims = ncp->put_lead_list[reqs[i].lead_off].varp->ndims;
         else
@@ -645,15 +618,8 @@ flatten_reqs(NC            *ncp,
     }
 
     /* now we can allocate a contiguous memory space for the off-len pairs */
-#ifdef HAVE_MPI_LARGE_COUNT
-    offsets = (MPI_Count*)NCI_Malloc(sizeof(MPI_Count) * (*num_pairs+1));
-    lengths = (MPI_Count*)NCI_Malloc(sizeof(MPI_Count) * (*num_pairs+1));
-#else
-    offsets = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * (*num_pairs+1));
-    lengths = (int*)       NCI_Malloc(sizeof(int)        * (*num_pairs+1));
-#endif
-    *off_ptr = offsets;
-    *len_ptr = lengths;
+    file_view->off = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * file_view->count);
+    file_view->len = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * file_view->count);
 
     ones = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * max_ndims);
     for (i=0; i<max_ndims; i++) ones[i] = 1;
@@ -676,14 +642,14 @@ flatten_reqs(NC            *ncp,
              * reqs[i].offset_start, which has been generated earlier at a call
              * to ncmpio_intra_node_aggregation_nreqs().
              */
-            offsets[idx] = reqs[i].offset_start;
-            lengths[idx] = reqs[i].nelems * lead->varp->xsz;
+            file_view->off[idx] = reqs[i].offset_start;
+            file_view->len[idx] = reqs[i].nelems * lead->varp->xsz;
 
-            /* check if offsets[] are in an increasing order */
-            if (prev_end_off > offsets[idx])
-                *is_incr = 0;  /* offsets are not incrementing */
+            /* check if file_view->off[] are in an increasing order */
+            if (prev_end_off > file_view->off[idx])
+                *is_incr = 0;  /* file_view->off are not incrementing */
             else
-                prev_end_off = offsets[idx];
+                prev_end_off = file_view->off[idx];
             idx++;
             continue;
         }
@@ -721,35 +687,35 @@ flatten_reqs(NC            *ncp,
         flatten_subarray(ndims, lead->varp->xsz, var_begin, shape,
                          start, count, (stride == NULL) ? ones : stride,
                          &num,           /* OUT: number of off-len pairs */
-                         offsets + idx,  /* OUT: array of offsets */
-                         lengths + idx); /* OUT: array of lengths */
+                         file_view->off + idx,  /* OUT: array of offsets */
+                         file_view->len + idx); /* OUT: array of lengths */
 
-        /* check if offsets[] are in an increasing order */
+        /* check if file_view->off[] are in an increasing order */
         for (j=0; j<num; j++) {
-            if (prev_end_off > offsets[idx+j])
+            if (prev_end_off > file_view->off[idx+j])
                 *is_incr = 0;  /* offsets are not incrementing */
             else
-                prev_end_off = offsets[idx+j];
+                prev_end_off = file_view->off[idx+j];
         }
         idx += num;
     }
     NCI_Free(ones);
 
-    *num_pairs = idx;
+    file_view->count = idx;
 
     /* check if the offsets-lengths can be coalesced */
-    for (i=0, j=1; j<*num_pairs; j++) {
-        if (offsets[i] + lengths[i] == offsets[j])
-            lengths[i] += lengths[j];
+    for (i=0, j=1; j<file_view->count; j++) {
+        if (file_view->off[i] + file_view->len[i] == file_view->off[j])
+            file_view->len[i] += file_view->len[j];
         else {
             i++;
             if (i < j) {
-                offsets[i] = offsets[j];
-                lengths[i] = lengths[j];
+                file_view->off[i] = file_view->off[j];
+                file_view->len[i] = file_view->len[j];
             }
         }
     }
-    *num_pairs = i + 1;
+    file_view->count = i + 1;
 
     for (i=0; i<num_reqs; i++) {
         NC_lead_req *lead;
@@ -776,7 +742,7 @@ flatten_reqs(NC            *ncp,
 static int
 flat_buf_type(const NC      *ncp,
               int            reqMode,  /* IN: NC_REQ_RD or NC_REQ_WR */
-              int            num_reqs, /* IN: # requests */
+              int            num_reqs, /* IN: number of requests */
               const NC_req  *reqs,     /* IN: [num_reqs] requests */
               PNCIO_View    *buf_view, /* OUT: flattened buftype */
               void         **buf)      /* OUT: pointer to I/O buffer */
@@ -786,7 +752,6 @@ flat_buf_type(const NC      *ncp,
     MPI_Aint addr, addr0;
     /* TODO: buffer offset should be of type MPI_Aint. length should be size_t. */
 
-    buf_view->type = MPI_BYTE;
     buf_view->size = 0;
     buf_view->count = 0;
     buf_view->off = NULL;
@@ -796,11 +761,9 @@ flat_buf_type(const NC      *ncp,
         return NC_NOERR;
 
     buf_view->off = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * num_reqs);
-#ifdef HAVE_MPI_LARGE_COUNT
+    if (buf_view->off == NULL) return NC_ENOMEM;
     buf_view->len = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * num_reqs);
-#else
-    buf_view->len = (int*)       NCI_Malloc(sizeof(int)        * num_reqs);
-#endif
+    if (buf_view->len == NULL) return NC_ENOMEM;
 
     *buf = reqs[0].xbuf;
 
@@ -839,61 +802,22 @@ flat_buf_type(const NC      *ncp,
             }
         }
     }
-    /* After coalescing, the true number of requests may be reduced */
+    /* After coalescing, the true number of requests may be reduced, but should
+     * still be > 0.
+     */
 
     if (i + 1 < num_reqs) {
         num_reqs = i + 1; /* num_reqs is reduced */
         buf_view->off = (MPI_Offset*)NCI_Realloc(buf_view->off,
                                        sizeof(MPI_Offset) * num_reqs);
-#ifdef HAVE_MPI_LARGE_COUNT
+        if (buf_view->off == NULL) return NC_ENOMEM;
         buf_view->len = (MPI_Offset*)NCI_Realloc(buf_view->len,
                                        sizeof(MPI_Offset) * num_reqs);
-#else
-        buf_view->len = (int*)       NCI_Realloc(buf_view->len,
-                                       sizeof(int)        * num_reqs);
-#endif
+        if (buf_view->len == NULL) return NC_ENOMEM;
     }
+    assert(num_reqs > 0);
 
     buf_view->count = num_reqs;
-
-    /* construct buf_view->type if it is noncontiguous */
-    if (num_reqs > 1) {
-        int mpireturn;
-#ifdef HAVE_MPI_LARGE_COUNT
-        mpireturn = MPI_Type_create_hindexed_c(num_reqs, buf_view->len,
-                                               buf_view->off, MPI_BYTE,
-                                               &buf_view->type);
-#else
-        MPI_Aint *disp;
-#if SIZEOF_MPI_AINT == SIZEOF_MPI_OFFSET
-        disp = (MPI_Aint*) buf_view->off;
-#else
-        disp = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * num_reqs);
-        for (j=0; j<num_reqs; j++)
-            disp[j] = (MPI_Aint) buf_view->off[j];
-#endif
-
-        mpireturn = MPI_Type_create_hindexed(num_reqs, buf_view->len, disp,
-                                             MPI_BYTE, &buf_view->type);
-#if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
-        NCI_Free(disp);
-#endif
-#endif
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_create_hindexed");
-
-            buf_view->type = MPI_BYTE;
-            NCI_Free(buf_view->off);
-            NCI_Free(buf_view->len);
-            buf_view->off = NULL;
-            buf_view->len = NULL;
-            buf_view->count = 0;
-            buf_view->size = 0;
-        }
-        else {
-            MPI_Type_commit(&buf_view->type);
-        }
-    }
 
     return err;
 }
@@ -1168,6 +1092,8 @@ int ina_put(NC         *ncp,
     MPI_Aint buf_npairs=0, file_npairs=0;
     MPI_Offset wr_amnt=0;
     MPI_Comm intra_comm;
+    PNCIO_View wr_buf_view=buf_view;
+
 #ifdef HAVE_MPI_LARGE_COUNT
     MPI_Count *off_ptr, *len_ptr, *file_len=NULL;
 #else
@@ -1185,17 +1111,6 @@ MPI_Count buf_off=0, buf_len;
     pnc_ina_mem_put[0] = MAX(pnc_ina_mem_put[0], mem_max);
 #endif
 
-    /* buf may be noncontiguous ! */
-
-/*
-int ina_rank, ina_nprocs;
-MPI_Comm_size(ncp->comm_attr.ina_intra_comm, &ina_nprocs);
-MPI_Comm_rank(ncp->comm_attr.ina_intra_comm, &ina_rank);
-printf("%s at %d: rank %d ina_intra_comm nprocs %d ina_rank %d\n",__func__,__LINE__,ncp->rank,ina_nprocs,ina_rank);
-
-if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm != MPI_COMM_NULL);
-*/
-
     intra_comm = ncp->comm_attr.ina_intra_comm;
     if (intra_comm == MPI_COMM_NULL) { /* INA is disabled */
         nprocs = 1;
@@ -1205,8 +1120,6 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
         MPI_Comm_size(intra_comm, &nprocs);
         MPI_Comm_rank(intra_comm, &rank);
     }
-// printf("%s at %d: intra_comm %s\n",__func__,__LINE__, (intra_comm==MPI_COMM_NULL)?"MPI_COMM_NULL":"NOT MPI_COMM_NULL");
-// if (ncp->comm_attr.num_aggrs_per_node > 0) assert(nprocs == 2);
 
     /* Firstly, aggregators collect metadata from non-aggregators.
      *
@@ -1249,22 +1162,33 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
      * write data to the aggregator.
      */
     if (rank > 0) { /* non-aggregator */
-        if (meta[0] > 0) {
+        if (buf_view.count > 0) {
+            MPI_Datatype sendType=MPI_BYTE;
             /* Non-aggregators send write data to the aggregator */
+            if (buf_view.count > 1) {
+                err = ncmpio_type_create_hindexed(buf_view.count, buf_view.off,
+                                                  buf_view.len, &sendType);
+                if (status == NC_NOERR) status = err;
+            }
 #ifdef HAVE_MPI_LARGE_COUNT
-            MPI_Count num = (buf_view.count <= 1) ? buf_view.size : 1;
-            TRACE_COMM(MPI_Send_c)(buf, num, buf_view.type, 0, 0, intra_comm);
+            MPI_Count num = (buf_view.count == 1) ? buf_view.size : 1;
+            TRACE_COMM(MPI_Send_c)(buf, num, sendType, 0, 0, intra_comm);
 #else
-            int num = (buf_view.count <= 1) ? buf_view.size : 1;
-            TRACE_COMM(MPI_Send)(buf, num, buf_view.type, 0, 0, intra_comm);
+            int num = (buf_view.count == 1) ? buf_view.size : 1;
+            TRACE_COMM(MPI_Send)(buf, num, sendType, 0, 0, intra_comm);
 #endif
+            if (buf_view.count > 1) MPI_Type_free(&sendType);
+
+            /* free space allocated for buf_view */
+            NCI_Free(buf_view.off);
+            NCI_Free(buf_view.len);
         }
 
-        /* Must free offsets and lengths now, as they may be realloc-ed in
-         * ina_collect_md()
-         */
-        if (offsets != NULL) NCI_Free(offsets);
-        if (lengths != NULL) NCI_Free(lengths);
+        /* free space allocated for file_view */
+        if (num_pairs > 0) {
+            NCI_Free(offsets);
+            NCI_Free(lengths);
+        }
 
         /* Non-aggregators are done here, as only aggregators call MPI-IO/GIO
          * functions to write data to the file. Non-aggregators do not
@@ -1546,21 +1470,11 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
             recv_buf = (char*) NCI_Malloc(recv_amnt);
 
         if (recv_buf != buf) {
-            /* Pack this aggregator's write data into front of recv_buf */
-            if (buf_view.count <= 1 && buf_view.type == MPI_BYTE)
-                memcpy(recv_buf, buf, buf_view.size);
-            else {
-#ifdef HAVE_MPI_LARGE_COUNT
-                MPI_Count pos=0;
-                MPI_Count num = (buf_view.count <= 1) ? buf_view.size : 1;
-                MPI_Pack_c(buf, num, buf_view.type, recv_buf, buf_view.size,
-                           &pos, MPI_COMM_SELF);
-#else
-                int pos=0;
-                MPI_Count num = (buf_view.count <= 1) ? buf_view.size : 1;
-                MPI_Pack(buf, num, buf_view.type, recv_buf, buf_view.size,
-                         &pos, MPI_COMM_SELF);
-#endif
+            /* Copy this aggregator's write data into front of recv_buf */
+            char *recv_ptr=recv_buf;
+            for (j=0; j<buf_view.count; j++) {
+                memcpy(recv_ptr, buf+buf_view.off[j], buf_view.len[j]);
+                recv_ptr += buf_view.len[j];
             }
         }
 
@@ -1574,6 +1488,7 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
         nreqs = 0;
         for (i=1; i<nprocs; i++) {
             if (meta[i*3 + 1] == 0) continue;
+
 #ifdef HAVE_MPI_LARGE_COUNT
             TRACE_COMM(MPI_Irecv_c)(ptr, meta[i*3 + 1], MPI_BYTE, i, 0,
                            intra_comm, &req[nreqs++]);
@@ -1637,16 +1552,16 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
                  */
 #if 1
                 buf_len = wr_amnt;
-                buf_view.len = &buf_len;
-                buf_view.off = &buf_off;
-                buf_view.count = 1;
+                wr_buf_view.len = &buf_len;
+                wr_buf_view.off = &buf_off;
+                wr_buf_view.count = 1;
 #else
-                buf_view.size = wr_amnt;
-                buf_view.type = MPI_BYTE;
-                buf_view.count = 0;
+                wr_buf_view.size = wr_amnt;
+                wr_buf_view.count = 0;
 #endif
             }
-            /* else case is when user's buffer, buf, can be used to write */
+            else /* user's buffer, buf, can be used to write */
+                wr_buf_view = buf_view;
         }
         else if (buf_view.count <= 1 && !overlap) {
             /* Note we can reuse bufAddr[] and len_ptr[] as buf_view.off and
@@ -1655,16 +1570,15 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
              * contiguous.
              */
             wr_buf = recv_buf;
-            buf_view.size      = wr_amnt;
-            buf_view.type      = MPI_BYTE;
-            buf_view.len       = len_ptr;
-            buf_view.count     = buf_npairs;
+            wr_buf_view.size      = wr_amnt;
+            wr_buf_view.len       = len_ptr;
+            wr_buf_view.count     = buf_npairs;
 #if SIZEOF_MPI_AINT == SIZEOF_MPI_OFFSET
-            buf_view.off = (MPI_Offset*)bufAddr; /* based on recv_buf */
+            wr_buf_view.off = (MPI_Offset*)bufAddr; /* based on recv_buf */
 #else
-            buf_view.off = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * buf_npairs);
+            wr_buf_view.off = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * buf_npairs);
             for (j=0; j<buf_npairs; j++)
-                buf_view.off[j] = (MPI_Offset)bufAddr[j];
+                wr_buf_view.off[j] = (MPI_Offset)bufAddr[j];
             free_buf_view_off = 1;
 #endif
         }
@@ -1693,13 +1607,12 @@ if (ncp->comm_attr.num_aggrs_per_node >= 0) assert(ncp->comm_attr.ina_intra_comm
              */
 #if 1
             buf_len = wr_amnt;
-            buf_view.len = &buf_len;
-            buf_view.off = &buf_off;
-            buf_view.count = 1;
+            wr_buf_view.len = &buf_len;
+            wr_buf_view.off = &buf_off;
+            wr_buf_view.count = 1;
 #else
-            buf_view.size = wr_amnt;
-            buf_view.type = MPI_BYTE;
-            buf_view.count = 0;
+            wr_buf_view.size = wr_amnt;
+            wr_buf_view.count = 0;
 #endif
 
             if (recv_buf != buf) NCI_Free(recv_buf);
@@ -1735,37 +1648,29 @@ file_view.len = file_len;
 #endif
 
     /* carry out write request to file */
-#if 1
     int coll_indep = (fIsSet(ncp->flags, NC_MODE_INDEP)) ? NC_REQ_INDEP : NC_REQ_COLL;
 
-if (buf_view.count == 0 && buf_view.size > 0) {
-    buf_view.count = 1;
-    buf_view.off = &buf_off;
-    buf_view.len = &buf_len;
-}
-
-// printf("%s at %d: file_view count %lld off %lld len %lld buf_view count %lld off %lld len %lld\n",__func__,__LINE__,file_view.count,file_view.off[0],file_view.len[0],buf_view.count,buf_view.off[0],buf_view.len[0]);
-
-    MPI_Offset wlen = ncmpio_file_write(ncp, coll_indep, wr_buf, file_view, buf_view);
+    MPI_Offset wlen = ncmpio_file_write(ncp, coll_indep, wr_buf, file_view, wr_buf_view);
     if (wlen < 0) {
         if (status == NC_NOERR) status = (int)wlen;
         wr_amnt = 0;
     }
-#else
-    err = ncmpio_read_write(ncp, NC_REQ_WR, 0, buf_view, wr_buf);
-    if (status == NC_NOERR) status = err;
-#endif
 
-    if (free_buf_view_off) NCI_Free(buf_view.off);
+    if (free_buf_view_off) NCI_Free(wr_buf_view.off);
     if (wr_buf != buf)  NCI_Free(wr_buf);
     if (bufAddr != NULL) NCI_Free(bufAddr);
 
-    /* Must free offsets and lengths now, as they may be realloc-ed in
-     * ina_collect_md()
-     */
-    if (offsets != NULL) NCI_Free(offsets);
-    if (lengths != NULL) NCI_Free(lengths);
+    /* free space allocated for file_view and buf_view */
+    if (npairs > 0) {
+        NCI_Free(offsets);
+        NCI_Free(lengths);
+    }
     if (coalesceable) NCI_Free(file_len);
+
+    if (buf_view.count > 0) {
+        NCI_Free(buf_view.off);
+        NCI_Free(buf_view.len);
+    }
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     ncmpi_inq_malloc_size(&mem_max);
@@ -1911,27 +1816,38 @@ int ina_get(NC         *ncp,
         npairs = num_pairs;
 
     if (rank > 0) { /* not an INA aggregator */
-        if (meta[0] > 0) {
-            /* For read operation, the non-aggregators now can start receiving
-             * their read data from the aggregator.
-             */
+        /* For read operation, the non-aggregators now can start receiving
+         * their read data from the aggregator.
+         */
+        if (buf_view.count > 0) {
             MPI_Status st;
+            MPI_Datatype recvType=MPI_BYTE;
+
+            /* Non-aggregators send write data to the aggregator */
+            if (buf_view.count > 1) {
+                err = ncmpio_type_create_hindexed(buf_view.count, buf_view.off,
+                                                  buf_view.len, &recvType);
+                if (status == NC_NOERR) status = err;
+            }
 #ifdef HAVE_MPI_LARGE_COUNT
             MPI_Count num = (buf_view.count <= 1) ? buf_view.size : 1;
-            TRACE_COMM(MPI_Recv_c)(buf, num, buf_view.type, 0, 0, intra_comm,
-                                   &st);
+            TRACE_COMM(MPI_Recv_c)(buf, num, recvType, 0, 0, intra_comm, &st);
 #else
             int num = (buf_view.count <= 1) ? buf_view.size : 1;
-            TRACE_COMM(MPI_Recv)(buf, num, buf_view.type, 0, 0, intra_comm,
-                                 &st);
+            TRACE_COMM(MPI_Recv)(buf, num, recvType, 0, 0, intra_comm, &st);
 #endif
+            if (buf_view.count > 1) MPI_Type_free(&recvType);
+
+            /* free space allocated for buf_view */
+            NCI_Free(buf_view.off);
+            NCI_Free(buf_view.len);
         }
 
-        /* Must free offsets and lengths now, as they may be realloc-ed in
-         * ina_collect_md()
-         */
-        if (offsets != NULL) NCI_Free(offsets);
-        if (lengths != NULL) NCI_Free(lengths);
+        /* free space allocated for file_view */
+        if (num_pairs > 0) {
+            NCI_Free(offsets);
+            NCI_Free(lengths);
+        }
 
         /* Non-INA aggregators are now done, as they do not participate MPI-IO
          * or GIO file read (neither collective nor independent).
@@ -2163,7 +2079,6 @@ file_view.len = len_ptr;
     else {
         /* Read data will be stored in a contiguous read buffer. */
         rd_buf_view.size = rd_amnt;
-        rd_buf_view.type = MPI_BYTE;
         rd_buf_view.count = 0;
         if (rd_amnt > 0)
             rd_buf = (char*) NCI_Malloc(rd_amnt);
@@ -2267,15 +2182,11 @@ if (rd_buf_view.count == 0 && rd_buf_view.size > 0) {
 
         /* unpack read data to user read buffer, if not done already */
         if (bufLen > 0 && buf_view.count > 1) {
-#ifdef HAVE_MPI_LARGE_COUNT
-            MPI_Count pos=0;
-            MPI_Unpack_c(tmp_buf, bufLen, &pos, buf, 1, buf_view.type,
-                         MPI_COMM_SELF);
-#else
-            int pos=0;
-            MPI_Unpack(tmp_buf, bufLen, &pos, buf, 1, buf_view.type,
-                       MPI_COMM_SELF);
-#endif
+            char *buf_ptr=tmp_buf;
+            for (j=0; j<buf_view.count; j++) {
+                memcpy((char*)buf + buf_view.off[j], buf_ptr, buf_view.len[j]);
+                buf_ptr += buf_view.len[j];
+            }
             NCI_Free(tmp_buf);
         }
     }
@@ -2419,11 +2330,16 @@ fn_exit:
     if (req != NULL) NCI_Free(req);
     if (meta != NULL) NCI_Free(meta);
 
-    /* Must free offsets and lengths now, as they may be realloc-ed in
-     * ina_collect_md()
-     */
-    if (offsets != NULL) NCI_Free(offsets);
-    if (lengths != NULL) NCI_Free(lengths);
+    /* free space allocated for file_view and buf_view */
+    if (npairs > 0) {
+        NCI_Free(offsets);
+        NCI_Free(lengths);
+    }
+
+    if (buf_view.count > 0) {
+        NCI_Free(buf_view.off);
+        NCI_Free(buf_view.len);
+    }
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     ncmpi_inq_malloc_size(&mem_max);
@@ -2470,23 +2386,11 @@ ncmpio_ina_nreqs(NC         *ncp,
 {
     int err, status=NC_NOERR, is_incr=1;
     void *buf=NULL;
-    MPI_Aint num_pairs;
-#ifdef HAVE_MPI_LARGE_COUNT
-    MPI_Count *offsets=NULL, *lengths=NULL;
-#else
-    MPI_Offset *offsets=NULL;
-    int *lengths=NULL;
-#endif
+    PNCIO_View file_view, buf_view;
+
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double timing = MPI_Wtime();
 #endif
-
-/*
-int ina_rank, ina_nprocs;
-MPI_Comm_size(ncp->comm_attr.ina_intra_comm, &ina_nprocs);
-MPI_Comm_rank(ncp->comm_attr.ina_intra_comm, &ina_rank);
-printf("%s at %d: rank %d ina_intra_comm nprocs %d ina_rank %d\n",__func__,__LINE__,ncp->rank,ina_nprocs,ina_rank);
-*/
 
     /* populate reqs[].offset_start, starting offset of each request */
     NC_req *reqs = req_list;
@@ -2532,32 +2436,29 @@ printf("%s at %d: rank %d ina_intra_comm nprocs %d ina_rank %d\n",__func__,__LIN
     if (descreasing)
         qsort(reqs, (size_t)num_reqs, sizeof(NC_req), req_compare);
 
-    /* construct file offset-length pairs
-     *     num_pairs: total number of off-len pairs
-     *     offsets:   array of flattened offsets
-     *     lengths:   array of flattened lengths
-     *     is_incr:   whether offsets are incremental
+    /* construct file_view, the file access offset-length pairs
+     *   file_view.count: total number of offset_length pairs
+     *   file_view.off[]: array of file offsets
+     *   file_view.len[]: array of lengths
+     *   is_incr: whether file_view.off[] are incremental
      */
-    if (num_reqs > 0)
-        flatten_reqs(ncp, reqMode, num_reqs, reqs, &is_incr, &num_pairs,
-                     &offsets, &lengths);
-    else
-        num_pairs = 0;
+    err = flatten_nreqs(ncp, reqMode, num_reqs, reqs, &is_incr, &file_view);
+    if (status == NC_NOERR) status = err;
 
     /* Note offsets lengths may contain overlaps between consecutive pairs when
      * the user's requests contain overlaps. They, if exist, will be resolved
      * later in ina_put() and ina_get().
      */
 
-    /* Populate buf_view, which contains metadata of the user buffers in the
-     * nonblocking requests. If buf is non-contiguous, buf to NULL and
-     * buf_view.type will be a derived datatype constructed using MPI_BOTTOM.
+    /* Populate buf_view, which contains metadata describing the user buffer
+     * from the nonblocking requests.
      */
-    PNCIO_View buf_view;
     err = flat_buf_type(ncp, reqMode, num_reqs, reqs, &buf_view, &buf);
     if (status == NC_NOERR) status = err;
 
-if (num_reqs > 0) assert(buf_view.count > 0);
+#if PNETCDF_DEBUG_MODE == 1
+    if (num_reqs > 0) assert(buf_view.count > 0);
+#endif
 
     if (req_list != NULL)
         /* All metadata in req_list have been used to construct bufType and
@@ -2580,19 +2481,15 @@ if (num_reqs > 0) assert(buf_view.count > 0);
 
     /* perform intra-node aggregation */
     if (fIsSet(reqMode, NC_REQ_WR))
-        err = ina_put(ncp, is_incr, num_pairs, offsets, lengths, buf_view, buf);
+        err = ina_put(ncp, is_incr, file_view.count, file_view.off, file_view.len, buf_view, buf);
     else
-        err = ina_get(ncp, is_incr, num_pairs, offsets, lengths, buf_view, buf);
+        err = ina_get(ncp, is_incr, file_view.count, file_view.off, file_view.len, buf_view, buf);
     if (status == NC_NOERR) status = err;
 
     if (ncp->num_aggrs_per_node == 0 || fIsSet(ncp->flags, NC_MODE_INDEP)) {
         /* restore ncp->comm_attr.ina_intra_comm */
         ncp->comm_attr.ina_intra_comm = saved_ina_intra_comm;
     }
-
-    if (buf_view.type != MPI_BYTE) MPI_Type_free(&buf_view.type);
-    if (buf_view.off != NULL) NCI_Free(buf_view.off);
-    if (buf_view.len != NULL) NCI_Free(buf_view.len);
 
     /* Update the number of records if new records have been created.
      * For nonblocking APIs, there is no way for a process to know whether
@@ -2638,37 +2535,13 @@ ncmpio_ina_req(NC               *ncp,
                void             *buf)
 {
     int err, status=NC_NOERR, is_incr=1;
-    MPI_Aint num_pairs;
-    PNCIO_View buf_view;
-#ifdef HAVE_MPI_LARGE_COUNT
-    MPI_Count *offsets=NULL, *lengths=NULL;
-#else
-    MPI_Offset *offsets=NULL;
-    int *lengths=NULL;
-#endif
+    PNCIO_View file_view, buf_view;
+
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     double timing = MPI_Wtime();
 #endif
 
-/*
-int ina_rank, ina_nprocs;
-MPI_Comm_size(ncp->comm_attr.ina_intra_comm, &ina_nprocs);
-MPI_Comm_rank(ncp->comm_attr.ina_intra_comm, &ina_rank);
-printf("%s at %d: rank %d ina_intra_comm nprocs %d ina_rank %d\n",__func__,__LINE__,ncp->rank,ina_nprocs,ina_rank);
-*/
-
-    /* blocking API's buffer passed here is always contiguous */
-    buf_view.type = MPI_BYTE;
-    buf_view.size = buf_len;
-    buf_view.count = 0;
-    buf_view.off = NULL;
-    buf_view.len = NULL;
-
 #warning TODO: fix view count
-    MPI_Count bufOff=0, bufLen=buf_len;
-    buf_view.count = 1;
-    buf_view.off = &bufOff;
-    buf_view.len = &bufLen;
 
     if (buf_len == 0 || buf == NULL) {
         /* This is a zero-length request. When in collective data mode, this
@@ -2676,29 +2549,32 @@ printf("%s at %d: rank %d ina_intra_comm nprocs %d ina_rank %d\n",__func__,__LIN
          * this rank tells its aggregator that it has no I/O data. When INA is
          * disabled, this rank must participate other collective file call.
          */
-        num_pairs = 0;
-        buf_view.size = 0;
+        file_view.count = 0;
         buf_view.count = 0;
+        buf_view.size = 0;
     }
     else {
-        /* construct file access offset-length pairs
-         *     num_pairs: total number of off-len pairs
-         *     offsets:   array of flattened offsets
-         *     lengths:   array of flattened lengths
-         *     is_incr:   whether offsets are incremental
+        /* construct file_view, the file access offset-length pairs
+         *   file_view.count: total number of offset_length pairs
+         *   file_view.off[]: array of file offsets
+         *   file_view.len[]: array of lengths
+         *   is_incr: whether file_view.off[] are incremental
          */
         err = flatten_req(ncp, varp, start, count, stride, &is_incr,
-                          &num_pairs, &offsets, &lengths);
-        if (err != NC_NOERR) { /* make this rank zero-sized request */
-            is_incr = 1;
-            num_pairs = 0;
-            buf_len = 0;
-            buf_view.size = 0;
+                          &file_view);
+        if (err == NC_NOERR) {
+            /* buffer passed to blocking APIs is always contiguous */
+            buf_view.count = 1;
+            buf_view.off = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset));
+            buf_view.len = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset));
+            buf_view.off[0] = 0;
+            buf_view.len[0] = buf_len;
+            buf_view.size = buf_len;
+        }
+        else { /* make this rank zero-sized request */
+            file_view.count = 0;
             buf_view.count = 0;
-            if (offsets != NULL) NCI_Free(offsets);
-            if (lengths != NULL) NCI_Free(lengths);
-            offsets = NULL;
-            lengths = NULL;
+            buf_view.size = 0;
         }
         status = err;
     }
@@ -2718,11 +2594,11 @@ printf("%s at %d: rank %d ina_intra_comm nprocs %d ina_rank %d\n",__func__,__LIN
 
     /* perform intra-node aggregation */
     if (fIsSet(reqMode, NC_REQ_WR)) {
-        err = ina_put(ncp, is_incr, num_pairs, offsets, lengths, buf_view, buf);
+        err = ina_put(ncp, is_incr, file_view.count, file_view.off, file_view.len, buf_view, buf);
         if (status == NC_NOERR) status = err;
     }
     else {
-        err = ina_get(ncp, is_incr, num_pairs, offsets, lengths, buf_view, buf);
+        err = ina_get(ncp, is_incr, file_view.count, file_view.off, file_view.len, buf_view, buf);
         if (status == NC_NOERR) status = err;
     }
 
