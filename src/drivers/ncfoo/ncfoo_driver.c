@@ -56,8 +56,6 @@ static PNC_driver ncfoo_driver = {
     ncfoo_put_var,
     ncfoo_get_varn,
     ncfoo_put_varn,
-    ncfoo_get_vard,
-    ncfoo_put_vard,
     ncfoo_iget_var,
     ncfoo_iput_var,
     ncfoo_bput_var,

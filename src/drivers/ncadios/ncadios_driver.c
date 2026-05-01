@@ -55,8 +55,6 @@ static PNC_driver ncadios_driver = {
     ncadios_put_var,
     ncadios_get_varn,
     ncadios_put_varn,
-    ncadios_get_vard,
-    ncadios_put_vard,
     ncadios_iget_var,
     ncadios_iput_var,
     ncadios_bput_var,

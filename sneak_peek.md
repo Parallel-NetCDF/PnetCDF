@@ -22,6 +22,12 @@ This is essentially a placeholder for the next release note ...
 * New APIs
   + none
 
+* APIs deprecated
+  + The vard family APIs are deprecated starting from this release. This is
+    due to the security risk of direct file access and the burden put on the
+    users for creating an MPI derived data type which can be complicate and
+    error prone.
+
 * API syntax changes
   + none
 

@@ -36,9 +36,6 @@
  * ncmpi_iget_varn_<type>()         : dispatcher->iget_varn()
  * ncmpi_iput_varn_<type>()         : dispatcher->iput_varn()
  * ncmpi_bput_varn_<type>()         : dispatcher->bput_varn()
- *
- * ncmpi_get_vard()                 : dispatcher->get_vard()
- * ncmpi_put_vard()                 : dispatcher->put_vard()
  */
 
 #ifdef HAVE_CONFIG_H
@@ -572,42 +569,5 @@ ncbbio_bput_varn(void               *ncdp,
     /* bput calls iput in burst buffer driver */
     return ncbbio_iput_varn(ncdp, varid, num, starts, counts, buf,
                             bufcount, buftype, reqid, reqMode);
-}
-
-int
-ncbbio_get_vard(void         *ncdp,
-                int           varid,
-                MPI_Datatype  filetype,
-                void         *buf,
-                MPI_Offset    bufcount,
-                MPI_Datatype  buftype,
-                int           reqMode)
-{
-    int err, status = NC_NOERR;
-    NC_bb *ncbbp = (NC_bb*)ncdp;
-
-    /* Flush on read */
-    if (ncbbp->inited)
-        status = ncbbio_log_flush(ncbbp);
-
-    err = ncbbp->ncmpio_driver->get_vard(ncbbp->ncp, varid, filetype, buf,
-                                         bufcount, buftype, reqMode);
-    return (status == NC_NOERR) ? err : status;
-}
-
-int
-ncbbio_put_vard(void         *ncdp,
-                int           varid,
-                MPI_Datatype  filetype,
-                const void   *buf,
-                MPI_Offset    bufcount,
-                MPI_Datatype  buftype,
-                int           reqMode)
-{
-    NC_bb *ncbbp = (NC_bb*)ncdp;
-
-    /* BB driver does not support vard */
-    return ncbbp->ncmpio_driver->put_vard(ncbbp->ncp, varid, filetype, buf,
-                                          bufcount, buftype, reqMode);
 }
 

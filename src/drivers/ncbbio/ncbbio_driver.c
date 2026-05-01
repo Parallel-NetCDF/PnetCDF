@@ -55,8 +55,6 @@ static PNC_driver ncbbio_driver = {
     ncbbio_put_var,
     ncbbio_get_varn,
     ncbbio_put_varn,
-    ncbbio_get_vard,
-    ncbbio_put_vard,
     ncbbio_iget_var,
     ncbbio_iput_var,
     ncbbio_bput_var,

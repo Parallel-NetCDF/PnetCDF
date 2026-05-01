@@ -57,8 +57,6 @@ static PNC_driver ncmpio_driver = {
     ncmpio_put_var,
     ncmpio_get_varn,
     ncmpio_put_varn,
-    ncmpio_get_vard,
-    ncmpio_put_vard,
     ncmpio_iget_var,
     ncmpio_iput_var,
     ncmpio_bput_var,

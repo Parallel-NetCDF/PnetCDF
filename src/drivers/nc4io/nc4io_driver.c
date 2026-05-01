@@ -56,8 +56,6 @@ static PNC_driver nc4io_driver = {
     nc4io_put_var,
     nc4io_get_varn,
     nc4io_put_varn,
-    nc4io_get_vard,
-    nc4io_put_vard,
     nc4io_iget_var,
     nc4io_iput_var,
     nc4io_bput_var,

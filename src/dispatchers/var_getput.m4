@@ -940,61 +940,9 @@ ncmpi_$1_vard$2(int           ncid,
                 MPI_Offset    bufcount,
                 MPI_Datatype  buftype)   /* data type of the buffer */
 {
-    int err, status, reqMode=0;
-    PNC *pncp;
-
     fprintf(stderr,
             "PnetCDF vard APIs have been deprecated since 1.15.0 release.\n");
     return NC_ENOTSUPPORT;
-
-    /* check if ncid is valid.
-     * For invalid ncid, we must return error now, as there is no way to
-     * continue with invalid ncp. However, collective APIs might hang if this
-     * error occurs only on a subset of processes
-     */
-    err = PNC_check_id(ncid, &pncp);
-    if (err != NC_NOERR) return err;
-
-    err = sanity_check(pncp, varid, IO_TYPE($1), MPI_DATATYPE_NULL, IS_COLL($2));
-
-    /* when bufcount == NC_COUNT_IGNORE, buftype must be an MPI predefined datatype */
-    if (err == NC_NOERR &&
-        buftype != MPI_DATATYPE_NULL && bufcount == NC_COUNT_IGNORE &&
-        buftype != MPI_CHAR          &&
-        buftype != MPI_SIGNED_CHAR   && buftype != MPI_UNSIGNED_CHAR      &&
-        buftype != MPI_SHORT         && buftype != MPI_UNSIGNED_SHORT     &&
-        buftype != MPI_INT           && buftype != MPI_UNSIGNED           &&
-        buftype != MPI_FLOAT         && buftype != MPI_DOUBLE             &&
-        buftype != MPI_LONG_LONG_INT && buftype != MPI_UNSIGNED_LONG_LONG &&
-        buftype != MPI_LONG)
-        DEBUG_ASSIGN_ERROR(err, NC_EINVAL)
-
-    ifelse(`$2',`',
-    `/* for independent API, return now if error encountered or zero request */
-    if (err != NC_NOERR) return err;
-    if (buftype != MPI_DATATYPE_NULL && bufcount == 0) return NC_NOERR;',
-    `/* In safe mode, check errors across all processes */
-    if (pncp->flag & NC_MODE_SAFE) {
-        err = allreduce_error(pncp, err);
-        if (err != NC_NOERR) return err;
-    }
-    else if (err == NC_EPERM || err == NC_EINDEFINE || err == NC_EINDEP ||
-             err == NC_ENOTINDEP) /* cannot continue if fatal errors */
-        return err;
-    else if (err != NC_NOERR) { /* other errors, participate collective call */
-        int nprocs;
-        MPI_Comm_size(pncp->comm, &nprocs);
-        if (nprocs == 1) return err;
-        reqMode |= NC_REQ_ZERO;
-    }')
-
-    reqMode |= IO_MODE($1) | NC_REQ_BLK | NC_REQ_FLEX | COLL_MODE($2);
-
-    /* calling the subroutine that implements ncmpi_$1_vard$2() */
-    status = pncp->driver->$1_vard(pncp->ncp, varid, filetype, buf,
-                                   bufcount, buftype, reqMode);
-
-    return ifelse(`$2',`',`status;',`(err != NC_NOERR) ? err : status; /* first error encountered */')
 }
 ')
 dnl

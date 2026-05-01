@@ -36,9 +36,6 @@
  * ncmpi_iget_varn_<type>()         : dispatcher->iget_varn()
  * ncmpi_iput_varn_<type>()         : dispatcher->iput_varn()
  * ncmpi_bput_varn_<type>()         : dispatcher->bput_varn()
- *
- * ncmpi_get_vard()                 : dispatcher->get_vard()
- * ncmpi_put_vard()                 : dispatcher->put_vard()
  */
 
 #ifdef HAVE_CONFIG_H
@@ -393,44 +390,6 @@ ncfoo_bput_varn(void               *ncdp,
 
     err = foo->driver->bput_varn(foo->ncp, varid, num, starts, counts, buf,
                                  bufcount, buftype, reqid, reqMode);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
-}
-
-int
-ncfoo_get_vard(void         *ncdp,
-               int           varid,
-               MPI_Datatype  filetype,
-               void         *buf,
-               MPI_Offset    bufcount,
-               MPI_Datatype  buftype,
-               int           reqMode)
-{
-    int err;
-    NC_foo *foo = (NC_foo*)ncdp;
-
-    err = foo->driver->get_vard(foo->ncp, varid, filetype, buf, bufcount,
-                                buftype, reqMode);
-    if (err != NC_NOERR) return err;
-
-    return NC_NOERR;
-}
-
-int
-ncfoo_put_vard(void         *ncdp,
-               int           varid,
-               MPI_Datatype  filetype,
-               const void   *buf,
-               MPI_Offset    bufcount,
-               MPI_Datatype  buftype,
-               int           reqMode)
-{
-    int err;
-    NC_foo *foo = (NC_foo*)ncdp;
-
-    err = foo->driver->put_vard(foo->ncp, varid, filetype, buf, bufcount,
-                                buftype, reqMode);
     if (err != NC_NOERR) return err;
 
     return NC_NOERR;

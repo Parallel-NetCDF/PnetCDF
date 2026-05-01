@@ -35,9 +35,6 @@
  * ncmpi_iget_varn_<type>()         : dispatcher->iget_varn()
  * ncmpi_iput_varn_<type>()         : dispatcher->iput_varn()
  * ncmpi_bput_varn_<type>()         : dispatcher->bput_varn()
- *
- * ncmpi_get_vard()                 : dispatcher->get_vard()
- * ncmpi_put_vard()                 : dispatcher->put_vard()
  */
 
 #ifdef HAVE_CONFIG_H
@@ -332,32 +329,6 @@ ncadios_bput_varn(void               *ncdp,
                 MPI_Datatype        buftype,
                 int                *reqid,
                 int                 reqMode)
-{
-    /* Read only driver */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-}
-
-int
-ncadios_get_vard(void         *ncdp,
-               int           varid,
-               MPI_Datatype  filetype,
-               void         *buf,
-               MPI_Offset    bufcount,
-               MPI_Datatype  buftype,
-               int           reqMode)
-{
-    /* ADIOS has no vard interface */
-    DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
-}
-
-int
-ncadios_put_vard(void         *ncdp,
-               int           varid,
-               MPI_Datatype  filetype,
-               const void   *buf,
-               MPI_Offset    bufcount,
-               MPI_Datatype  buftype,
-               int           reqMode)
 {
     /* Read only driver */
     DEBUG_RETURN_ERROR(NC_ENOTSUPPORT);
