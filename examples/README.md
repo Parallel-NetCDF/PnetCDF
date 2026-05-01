@@ -70,7 +70,7 @@ with C, C++, F77, and F90 versions.
   ```
 
 * flexible_api
-  + ./C/flexible_api.c ./C/flexible_bottom.c ./C/vard_bottom.c
+  + ./C/flexible_api.c ./C/flexible_bottom.c
   + ./CXX/flexible_api.cpp
   + ./F77/flexible_api.f
   + ./F90/flexible_api.f90
@@ -285,14 +285,6 @@ with C, C++, F77, and F90 versions.
                  38, 86, 134, 182,                   39, 87, 135, 183,
                  46, 94, 142, 190,                   47, 95, 143, 191 ;
   ```
-
-* vard_int
-  + ./C/vard_int.c
-  + ./CXX/vard_int.cpp
-  + ./F77/vard_int.f
-  + ./F90/vard_int.f90
-  + These examples show how to use `vard` APIs to write/read record and
-    fixed-size variables.
 
 * bput_varn_uint
   + ./C/bput_varn_uint.c

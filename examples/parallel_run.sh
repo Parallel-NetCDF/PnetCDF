@@ -105,13 +105,6 @@ for i in ${check_PROGRAMS} ; do
 
         OUT_FILE=$INA_OUT_FILE
 
-        if [[ "$i" == *"vard"* ]] ; then
-           if test "x$io_mode" = xgio || test "x$intra_aggr" = x1 ; then
-              # vard APIs have deprecated
-              continue
-           fi
-        fi
-
         PNETCDF_HINTS=
         if test "x$USEMPIO_HINTS" != x ; then
            PNETCDF_HINTS="$USEMPIO_HINTS;$PNETCDF_HINTS"
@@ -186,10 +179,6 @@ for i in ${check_PROGRAMS} ; do
         fi
     done # intra_aggr
     done # io_mode
-
-    if [[ "$i" == *"vard"* ]] ; then
-       continue
-    fi
 
     if test "$i" = get_vara ; then
        continue
