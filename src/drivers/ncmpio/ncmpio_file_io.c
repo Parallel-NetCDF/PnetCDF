@@ -64,8 +64,8 @@ MPI_Offset get_count(MPI_Status   *mpistatus,
 
     if (mpireturn != MPI_SUCCESS || count == MPI_UNDEFINED)
         /* In case of partial read/write, MPI_Get_elements() is supposed to be
-         * called to obtain the number of type map elements actually
-         * read/written in order to calculate the true read/write amount. Below
+         * called to obtain the number of type map elements actually read/
+         * written in order to calculate the true read/write amount. Below
          * skips this step and simply returns the partial read/write amount.
          * See an example usage of MPI_Get_count() in Example 5.12 from MPI
          * standard document.
@@ -245,9 +245,6 @@ ncmpio_file_read(NC         *ncp,
     if (buf_view.count == 0 && coll_indep == NC_REQ_INDEP)
         return NC_NOERR;
 
-// printf("\n%s at %d: file_view count %lld off[0] %lld len[0] %lld buf_view count %lld off[0] %lld len[0] %lld\n",__func__,__LINE__,file_view.count,file_view.off[0], file_view.len[0], buf_view.count,buf_view.off[0], buf_view.len[0]);
-    /* buf_view.count is the number of offset-length pairs */
-
     /* Calculate file_view amount in bytes, may be > NC_MAX_INT */
     for (f_amnt=0, i=0; i<file_view.count; i++)
         f_amnt += file_view.len[i];
@@ -265,22 +262,6 @@ ncmpio_file_read(NC         *ncp,
      * data to user read buffer.
      */
     orig_buf_view = buf_view;
-
-#ifndef HAVE_MPI_LARGE_COUNT
-    if (b_amnt > NC_MAX_INT) {
-#if PNETCDF_DEBUG_MODE == 1
-        fprintf(stderr,"%d: %s line %d:  NC_EINTOVERFLOW buffer size="OFFFMT"\n",
-                ncp->rank, __func__,__LINE__,b_amnt);
-#endif
-        if (coll_indep == NC_REQ_COLL) {
-            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
-            /* read nothing, but participate the collective call */
-            buf_view.count = 0;
-        }
-        else
-            DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-    }
-#endif
 
     xbuf = (char*)buf;
 
@@ -356,15 +337,24 @@ ncmpio_file_read(NC         *ncp,
         if (fileType != MPI_BYTE) MPI_Type_free(&fileType);
 
         /* Construct a derived data type describing user buffer data layout to
-         * be used in MPI_File_read_xxx call.
+         * be used in MPI_File_read_at().
          */
         bufCount = 0;
         xbuf_ptr = xbuf;
         if (buf_view.count == 1) { /* buffer view is contiguous */
             if (buf_view.len[0] <= INT_MAX)
                 bufCount = (int)buf_view.len[0];
-            else if (status == NC_NOERR)
-                status = NC_EINTOVERFLOW;
+            else {
+                /* Try creating bufType */
+                err = ncmpio_type_contiguous(buf_view.len[0], &bufType);
+                if (err == NC_NOERR)
+                    bufCount = 1;
+                else { /* make this a zero-size request */
+                    bufCount = 0;
+                    if (status == NC_NOERR)
+                        status = err;
+                }
+            }
             xbuf_ptr += buf_view.off[0];
         }
         else if (buf_view.count > 1) {
@@ -445,8 +435,9 @@ ncmpio_file_read(NC         *ncp,
         if (status == NC_NOERR && rlen < 0) status = (int)rlen;
     }
 #endif
-    else
-        status = NC_EDRIVER;
+    else {
+        if (status == NC_NOERR) status = NC_EDRIVER;
+    }
 
     if (xbuf != buf) { /* unpack contiguous xbuf to noncontiguous buf */
         char *in_ptr, *out_ptr;
@@ -492,12 +483,6 @@ ncmpio_file_write(NC         *ncp,
     /* If zero-sized request and independent write, this rank can return now. */
     if (buf_view.count == 0 && coll_indep == NC_REQ_INDEP)
         return NC_NOERR;
-
-    /* buf_view.count is the number of offset-length pairs */
-
-// if (file_view.off[0]==600 && file_view.len[0]==0) assert(0);
-
-// printf("\n%s at %d: file_view count %lld off[0] %lld len[0] %lld buf_view count %lld off[0] %lld len[0] %lld\n",__func__,__LINE__,file_view.count,file_view.off[0], file_view.len[0], buf_view.count,buf_view.off[0], buf_view.len[0]);
 
     /* Calculate file_view amount in bytes, may be > NC_MAX_INT */
     for (f_amnt=0, i=0; i<file_view.count; i++)
@@ -589,15 +574,24 @@ ncmpio_file_write(NC         *ncp,
         if (fileType != MPI_BYTE) MPI_Type_free(&fileType);
 
         /* Construct a derived data type describing user buffer data layout to
-         * be used in MPI_File_read_xxx call.
+         * be used in MPI_File_write_at().
          */
         bufCount = 0;
         xbuf_ptr = xbuf;
         if (buf_view.count == 1) { /* buffer view is contiguous */
             if (buf_view.len[0] <= INT_MAX)
                 bufCount = (int)buf_view.len[0];
-            else if (status == NC_NOERR)
-                status = NC_EINTOVERFLOW;
+            else {
+                /* Try creating bufType */
+                err = ncmpio_type_contiguous(buf_view.len[0], &bufType);
+                if (err == NC_NOERR)
+                    bufCount = 1;
+                else { /* make this a zero-size request */
+                    bufCount = 0;
+                    if (status == NC_NOERR)
+                        status = err;
+                }
+            }
             xbuf_ptr += buf_view.off[0];
         }
         else if (buf_view.count > 1) {
@@ -605,7 +599,7 @@ ncmpio_file_write(NC         *ncp,
                                               buf_view.len, &bufType);
             if (err == NC_NOERR)
                 bufCount = 1;
-            if (status == NC_NOERR)
+            else if (status == NC_NOERR)
                 status = err;
         }
         /* else is for zero-sized request */
@@ -678,8 +672,9 @@ ncmpio_file_write(NC         *ncp,
         if (status == NC_NOERR && wlen < 0) status = (int)wlen;
     }
 #endif
-    else
-        status = NC_EDRIVER;
+    else {
+        if (status == NC_NOERR) status = NC_EDRIVER;
+    }
 
     if (xbuf != buf) NCI_Free(xbuf);
 

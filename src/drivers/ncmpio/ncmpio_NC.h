@@ -742,6 +742,9 @@ ncmpio_calc_start_end(const NC *ncp, const NC_var *varp,
                       const MPI_Offset *stride, MPI_Offset *start_off,
                       MPI_Offset *end_off);
 
+extern
+int ncmpio_type_contiguous(MPI_Count count, MPI_Datatype *newType);
+
 extern int
 ncmpio_type_create_hindexed(MPI_Count count, MPI_Offset *off, MPI_Offset *len,
                             MPI_Datatype *newType);

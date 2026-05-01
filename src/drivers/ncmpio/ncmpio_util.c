@@ -1093,6 +1093,42 @@ ncmpio_calc_start_end(const NC         *ncp,
     return NC_NOERR;
 }
 
+/*----< ncmpio_type_contiguous() >-------------------------------------------*/
+int ncmpio_type_contiguous(MPI_Count     count,
+                           MPI_Datatype *newType)
+{
+    char *mpi_name;
+    int err;
+
+    *newType = MPI_BYTE;
+
+    if (count == 0) return NC_NOERR;
+
+#ifdef HAVE_MPI_LARGE_COUNT
+    err = MPI_Type_contiguous_c(count, MPI_BYTE, newType);
+    mpi_name = "MPI_Type_contiguous_c";
+#else
+    if (count > INT_MAX)
+        return NC_EINTOVERFLOW;
+
+    err = MPI_Type_contiguous((int)count, MPI_BYTE, newType);
+    mpi_name = "MPI_Type_contiguous";
+#endif
+
+    if (err != MPI_SUCCESS)
+        return ncmpii_error_mpi2nc(err, mpi_name);
+    else {
+        err = MPI_Type_commit(newType);
+        if (err != MPI_SUCCESS) {
+            MPI_Type_free(newType);
+            *newType = MPI_BYTE;
+            return ncmpii_error_mpi2nc(err,"MPI_Type_commit");
+        }
+    }
+
+    return NC_NOERR;
+}
+
 /*----< ncmpio_type_create_hindexed() >--------------------------------------*/
 int ncmpio_type_create_hindexed(MPI_Count     count,
                                 MPI_Offset   *off,
@@ -1100,7 +1136,7 @@ int ncmpio_type_create_hindexed(MPI_Count     count,
                                 MPI_Datatype *newType)
 {
     char *mpi_name;
-    int err, status=NC_NOERR;
+    int err;
 
     *newType = MPI_BYTE;
 
@@ -1170,19 +1206,17 @@ int ncmpio_type_create_hindexed(MPI_Count     count,
 #endif
 
     if (err != MPI_SUCCESS) {
-        /* return the first encountered error if there is any */
-        if (status == NC_NOERR)
-            status = ncmpii_error_mpi2nc(err, mpi_name);
+        return ncmpii_error_mpi2nc(err, mpi_name);
     }
     else {
         err = MPI_Type_commit(newType);
         if (err != MPI_SUCCESS) {
-            /* return the first encountered error if there is any */
-            if (status == NC_NOERR)
-                status = ncmpii_error_mpi2nc(err,"MPI_Type_commit");
+            MPI_Type_free(newType);
+            *newType = MPI_BYTE;
+            return ncmpii_error_mpi2nc(err,"MPI_Type_commit");
         }
     }
 
-    return status;
+    return NC_NOERR;
 }
 
