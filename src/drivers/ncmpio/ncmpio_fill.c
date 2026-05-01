@@ -679,38 +679,6 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     }
     /* k now is the number of non-zero sized requests */
 
-#if 0
-    if (k > 0)
-        err = ncmpio_file_set_view(ncp, MPI_BYTE, k, offset, blocklengths);
-    else
-        err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
-    status = (status == NC_NOERR) ? err : status;
-
-    b_view.type = MPI_BYTE;
-    if (b_len > NC_MAX_INT) {
-#ifdef HAVE_MPI_LARGE_COUNT
-        int mpireturn;
-
-        mpireturn = MPI_Type_contiguous_c((MPI_Count)b_len, MPI_BYTE,
-                                          &b_view.type);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous_c");
-            /* return the first encountered error if there is any */
-            if (status == NC_NOERR) status = err;
-            b_len = 0;
-        }
-        else {
-            MPI_Type_commit(&b_view.type);
-        }
-#else
-        if (status == NC_NOERR)
-            DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
-
-        b_len = 0; /* participate collective write with 0-length request */
-#endif
-    }
-#endif
-
     /* write to variable collectively */
 #if 1
     /* write buffer is contiguous */
@@ -738,7 +706,6 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
 
     /* free allocated resources */
     NCI_Free(buf);
-    // if (b_view.type != MPI_BYTE) MPI_Type_free(&b_view.type);
     if (blocklengths != NULL) NCI_Free(blocklengths);
     if (offset != NULL) NCI_Free(offset);
 

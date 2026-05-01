@@ -564,7 +564,6 @@ int ncmpio_write_header(NC *ncp)
 
             wlen = ncmpio_file_write(ncp, NC_REQ_INDEP, buf_ptr, file_view, buf_view);
 #else
-            buf_view.type = MPI_BYTE;
             buf_view.size = writeLen;
 
             wlen = ncmpio_file_write_at(ncp, offset, buf_ptr, buf_view);

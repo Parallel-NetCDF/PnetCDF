@@ -33,9 +33,6 @@
 #define PNCIO_STRIPING_INHERIT 0
 
 typedef struct {
-    MPI_Datatype type; /* MPI derived datatype, it is used only by
-                        * buf_view.
-                        */
     MPI_Offset   size; /* total size in bytes, i.e. sum of len[*],
                         * 0 means zero-sized request. -1 means view has
                         * been reset (in this case count should be 0).

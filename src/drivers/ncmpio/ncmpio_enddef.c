@@ -745,7 +745,6 @@ write_NC(NC *ncp)
             buf_ptr += b_len;
             remain  -= b_len;
 #else
-            b_view.type = MPI_BYTE;
             b_view.count = 0;
             b_view.size = MIN(remain, NC_MAX_INT);
             wlen = ncmpio_file_write_at(ncp, offset, buf_ptr, b_view);
