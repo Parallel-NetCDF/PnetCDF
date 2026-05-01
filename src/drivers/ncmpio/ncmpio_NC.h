@@ -755,37 +755,6 @@ ncmpio_type_create_hindexed(MPI_Count count, MPI_Offset *off, MPI_Offset *len,
 
 /* Begin defined in ncmpio_file_io.c ----------------------------------------*/
 
-/* Below API is only used in ncmpio_vard.c, vard APIs have been deprecated. */
-extern MPI_Offset
-ncmpio_file_read_at(NC *ncp, MPI_Offset offset, void *buf,
-                    PNCIO_View buf_view);
-
-/* Below API is only used in ncmpio_vard.c, vard APIs have been deprecated. */
-extern MPI_Offset
-ncmpio_file_read_at_all(NC *ncp, MPI_Offset offset, void *buf,
-                    PNCIO_View buf_view);
-
-/* Below API is only used in ncmpio_vard.c, vard APIs have been deprecated. */
-extern MPI_Offset
-ncmpio_file_write_at(NC *ncp, MPI_Offset offset, const void *buf,
-                    PNCIO_View buf_view);
-
-/* Below API is only used in ncmpio_vard.c, vard APIs have been deprecated. */
-extern MPI_Offset
-ncmpio_file_write_at_all(NC *ncp, MPI_Offset offset, const void *buf,
-                    PNCIO_View buf_view);
-
-/* Below API is only used in ncmpio_vard.c, vard APIs have been deprecated. */
-extern int
-ncmpio_getput_zero_req(NC *ncp, int rw_flag);
-
-/* Below API is no longer used. */
-#if 0
-extern int
-ncmpio_read_write(NC *ncp, int rw_flag, MPI_Offset offset,
-                  PNCIO_View flat_btype, void *buf);
-#endif
-
 extern MPI_Offset
 ncmpio_file_read(NC *ncp, int coll_indep, void *buf,
                     PNCIO_View file_view, PNCIO_View buf_view);
@@ -802,15 +771,6 @@ ncmpio_file_delete(NC *ncp);
 
 extern int
 ncmpio_file_sync(NC *ncp);
-
-extern int
-ncmpio_file_set_view(NC *ncp, MPI_Datatype filetype, MPI_Aint npairs,
-#ifdef HAVE_MPI_LARGE_COUNT
-                MPI_Count *offsets, MPI_Count *lengths
-#else
-                MPI_Offset *offsets, int *lengths
-#endif
-);
 
 /* Begin defined in ncmpio_intranode.c --------------------------------------*/
 extern int

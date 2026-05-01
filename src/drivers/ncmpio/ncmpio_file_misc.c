@@ -104,14 +104,6 @@ ncmpio_redef(void *ncdp)
     /* we are now entering define mode */
     fSet(ncp->flags, NC_MODE_DEF);
 
-#if 0
-    if (ncp->driver == PNC_DRIVER_MPIIO) {
-        /* must reset fileview as header extent may later change in enddef() */
-        int err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
-        DEBUG_ASSIGN_ERROR(status, err)
-    }
-#endif
-
     return status;
 }
 

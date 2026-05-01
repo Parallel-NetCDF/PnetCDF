@@ -255,7 +255,6 @@ move_file_block(NC         *ncp,
 
     while (nbytes > 0) {
         /* read from file at off_from for amount of mv_amnt */
-#if 1
         f_off = off_from;
         f_len = mv_amnt;
         b_len = mv_amnt;
@@ -263,9 +262,6 @@ move_file_block(NC         *ncp,
         b_view.count = (mv_amnt == 0) ? 0 : 1;
 
         rlen = ncmpio_file_read(ncp, NC_REQ_COLL, buf, f_view, b_view);
-#else
-        rlen = ncmpio_file_read_at_all(ncp, off_from, buf, b_view);
-#endif
         if (status == NC_NOERR && rlen < 0) status = (int)rlen;
 
         /* To prevent from one rank's write run faster than other's read, a
@@ -281,7 +277,6 @@ move_file_block(NC         *ncp,
         wlen = 0;
 
         /* even when rlen == 0, must still participate */
-#if 1
         /* file view is contiguous */
         f_off = off_to;
         f_len = rlen;
@@ -290,11 +285,6 @@ move_file_block(NC         *ncp,
         b_view.count = (rlen == 0) ? 0 : 1;
 
         wlen = ncmpio_file_write(ncp, NC_REQ_COLL, buf, f_view, b_view);
-// if (rlen > 0)printf("%s at %d: rlen %lld wlen %lld\n",__func__,__LINE__,rlen,wlen);
-// else printf("%s at %d: wkl %d - nbytes %lld rlen 0\n",__func__,__LINE__,wkl,nbytes);
-#else
-        wlen = ncmpio_file_write_at_all(ncp, off_to, buf, b_view);
-#endif
         if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
         /* move on to the next round */
@@ -732,27 +722,17 @@ write_NC(NC *ncp)
         for (i=0; i<ntimes; i++) {
             MPI_Offset wlen;
             b_len = MIN(remain, NC_MAX_INT);
-#if 1
+
             /* file view is contiguous */
             f_off = offset;
             f_len = b_len;
-
-// printf("%s at %d: f_off %lld f_len %lld\n",__func__,__LINE__,f_off,f_len);
 
             wlen = ncmpio_file_write(ncp, NC_REQ_INDEP, buf_ptr, f_view, b_view);
 
             offset  += b_len;
             buf_ptr += b_len;
             remain  -= b_len;
-#else
-            b_view.count = 0;
-            b_view.size = MIN(remain, NC_MAX_INT);
-            wlen = ncmpio_file_write_at(ncp, offset, buf_ptr, b_view);
 
-            offset  += b_view.size;
-            buf_ptr += b_view.size;
-            remain  -= b_view.size;
-#endif
             if (status == NC_NOERR && wlen < 0) status = (int)wlen;
         }
         NCI_Free(buf);

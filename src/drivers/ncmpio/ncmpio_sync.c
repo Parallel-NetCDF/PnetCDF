@@ -101,21 +101,11 @@ ncmpio_write_numrecs(NC         *ncp,
              */
             return NC_NOERR;
 
-#if 1
         file_off = NC_NUMRECS_OFFSET;
         file_len = len;
         buf_len  = len;
 
-// printf("%s at %d: file_view count %lld off %lld len %lld buf_view count %lld off %lld len %lld numrecs %d\n",__func__,__LINE__,file_view.count,file_view.off[0],file_view.len[0],buf_view.count,buf_view.off[0],buf_view.len[0],ncp->numrecs);
-
         wlen = ncmpio_file_write(ncp, NC_REQ_INDEP, (void*)pos, file_view, buf_view);
-#else
-        buf_view.size = len;
-
-        /* root's file view always includes the entire file header */
-        wlen = ncmpio_file_write_at(ncp, NC_NUMRECS_OFFSET, (void*)pos,
-                                    buf_view);
-#endif
         if (wlen < 0)
             DEBUG_RETURN_ERROR((int)wlen)
     }

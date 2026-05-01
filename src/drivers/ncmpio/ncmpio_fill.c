@@ -202,14 +202,6 @@ fill_var_rec(NC         *ncp,
         status = err;
     }
 
-#if 0
-    if (ncp->driver == PNC_DRIVER_MPIIO) {
-        /* make the entire file visible */
-        err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
-        status = (status == NC_NOERR) ? err : status;
-    }
-#endif
-
     /* calculate the starting file offset for each process */
     offset = varp->begin;
     if (IS_RECVAR(varp))
@@ -237,17 +229,9 @@ fill_var_rec(NC         *ncp,
     }
 
     /* write to variable collectively */
-#if 1
     f_off = offset;
-    wlen = ncmpio_file_write(ncp, NC_REQ_COLL, buf, f_view, b_view);
-#else
-    if (status == NC_NOERR) b_view.size = count;
 
-    if (nprocs > 1)
-        wlen = ncmpio_file_write_at_all(ncp, offset, buf, b_view);
-    else
-        wlen = ncmpio_file_write_at(ncp, offset, buf, b_view);
-#endif
+    wlen = ncmpio_file_write(ncp, NC_REQ_COLL, buf, f_view, b_view);
     if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
     NCI_Free(buf);
@@ -680,7 +664,6 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     /* k now is the number of non-zero sized requests */
 
     /* write to variable collectively */
-#if 1
     /* write buffer is contiguous */
     b_view.count = (b_len > 0) ? 1 : 0;
     b_view.off = &b_off;
@@ -690,32 +673,14 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     f_view.count = k;
     f_view.off = offset;
     f_view.len = blocklengths;
-    wlen = ncmpio_file_write(ncp, NC_REQ_COLL, buf, f_view, b_view);
-#else
-    /* write buffer is contiguous */
-    b_view.count = 0;
-    b_view.off   = NULL;
-    b_view.len   = NULL;
 
-    if (nprocs > 1)
-        wlen = ncmpio_file_write_at_all(ncp, 0, buf, b_view);
-    else
-        wlen = ncmpio_file_write_at(ncp, 0, buf, b_view);
-#endif
+    wlen = ncmpio_file_write(ncp, NC_REQ_COLL, buf, f_view, b_view);
     if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
     /* free allocated resources */
     NCI_Free(buf);
     if (blocklengths != NULL) NCI_Free(blocklengths);
     if (offset != NULL) NCI_Free(offset);
-
-#if 0
-    if (ncp->driver == PNC_DRIVER_MPIIO) {
-        /* reset fileview to make the entire file visible */
-        err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
-        status = (status == NC_NOERR) ? err : status;
-    }
-#endif
 
     return status;
 }

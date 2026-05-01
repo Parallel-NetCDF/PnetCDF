@@ -372,11 +372,7 @@ hdr_fetch(bufferinfo *gbp) {
         }
 
         file_off = gbp->offset;
-#if 1
         rlen = ncmpio_file_read(gbp->ncp, NC_REQ_INDEP, readBuf, file_view, buf_view);
-#else
-        rlen = ncmpio_file_read_at(gbp->ncp, gbp->offset, readBuf, buf_view);
-#endif
 
         if (rlen > 0) {
             /* rlen is the actual read amount. It may be smaller than readLen,

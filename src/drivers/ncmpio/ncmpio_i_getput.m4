@@ -197,7 +197,8 @@ ncmpio_igetput_varm(NC               *ncp,
 
         /* When bufcount > NC_MAX_INT, we construct a datatype to bypass the
          * limitation of MPI file read/write APIs on the argument "count" of
-         * type int.  See ncmpio_read_write() in ncmpio_file_io.c
+         * type int. See ncmpi_file_read()/ncmpi_file_write() in
+         * ncmpio_file_io.c
          *
          * Note not all MPI-IO libraries support single requests larger than
          * NC_MAX_INT. In this case, MPI-IO should report an error.
