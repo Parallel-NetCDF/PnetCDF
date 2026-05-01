@@ -116,7 +116,10 @@ int main(int argc, char** argv) {
     else {
         err = ncmpi_put_var1_all(ncid, varid, start, &buf, 1, btype); EXPECT_ERR(NC_ENOTSUPPORT);
 
-        err = ncmpi_put_vard_all(ncid, varid, btype, &buf, 1, btype); EXPECT_ERR(NC_ENOTSUPPORT);
+/* vard API family has been deprecated since version 1.15.0.
+        err = ncmpi_put_vard_all(ncid, varid, btype, &buf, 1, btype);
+        EXPECT_ERR(NC_ENOTSUPPORT);
+*/
         err = MPI_Type_free(&btype);
         if (err != MPI_SUCCESS ){
             nerrs++;

@@ -37,13 +37,6 @@ for i in ${check_PROGRAMS} ; do
            INA_HINTS="nc_num_aggrs_per_node=0"
         fi
 
-        if [[ "$i" == *"vard"* ]] ; then
-           if test "x$io_mode" == xmpiio || test "x$intra_aggr" == x1 ; then
-              # vard APIs have deprecated
-              continue
-           fi
-        fi
-
         PNETCDF_HINTS=
         if test "x$USEMPIO_HINTS" != x ; then
            PNETCDF_HINTS="$USEMPIO_HINTS;$PNETCDF_HINTS"

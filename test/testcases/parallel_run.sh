@@ -39,11 +39,6 @@ for i in ${check_PROGRAMS} ; do
 
    exe_name=`basename $i`
 
-   # vard APIs have deprecated
-   if test "x$exe_name" = xtest_vardf90 || test "x$exe_name" = xtest_vardf ; then
-      export PNETCDF_HINTS="nc_driver=mpiio;$PNETCDF_HINTS"
-   fi
-
    run_cmd ./$i -q -o ${TESTOUTDIR}/${exe_name}.nc
 
    # # echo "Elapsed: $SECONDS seconds"
