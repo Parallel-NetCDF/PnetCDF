@@ -217,72 +217,6 @@ ncmpio_file_sync(NC *ncp) {
     return NC_NOERR;
 }
 
-/*----< type_create_hindexed() >---------------------------------------------*/
-static
-int type_create_hindexed(PNCIO_View    view,
-                         MPI_Datatype *newType)
-{
-    char *mpi_name;
-    int status=NC_NOERR, err=NC_NOERR, mpireturn;
-
-#if PNETCDF_DEBUG_MODE == 1
-    /* contiguous view should NOT call this subroutine */
-    assert(view.count > 1);
-#endif
-
-    *newType = MPI_BYTE;
-
-#ifdef HAVE_MPI_LARGE_COUNT
-    /* view.off is of type 'MPI_Offset' but argument array_of_displacements[]
-     * in MPI_Type_create_hindexed_c() is of type 'MPI_Count'.
-     */
-#if PNETCDF_DEBUG_MODE == 1
-    /* size of MPI_Count and MPI_Offset should match */
-    assert(sizeof(MPI_Count) == sizeof(MPI_Offset));
-#endif
-    mpireturn = MPI_Type_create_hindexed_c(view.count, view.len, view.off,
-                                           MPI_BYTE, newType);
-    mpi_name = "MPI_Type_create_hindexed_c";
-#else
-    /* MPI _c APIs are not available */
-    MPI_Aint *disp;
-
-    if (view.count > INT_MAX)
-        /* count argument in MPI_Type_create_hindexed() is of type int */
-        DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
-
-#if SIZEOF_MPI_AINT == SIZEOF_MPI_OFFSET
-    disp = (MPI_Aint*) view.off;
-#else
-    disp = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * view.count);
-    for (j=0; j<view.count; j++)
-        disp[j] = (MPI_Aint)view.off[j];
-#endif
-    mpireturn = MPI_Type_create_hindexed((int)view.count, view.len, disp,
-                                         MPI_BYTE, newType);
-#if SIZEOF_MPI_AINT != SIZEOF_MPI_OFFSET
-    NCI_Free(disp);
-#endif
-    mpi_name = "MPI_Type_create_hindexed";
-#endif
-
-    if (mpireturn != MPI_SUCCESS) {
-        err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-        /* return the first encountered error if there is any */
-        if (status == NC_NOERR) status = err;
-    }
-    else {
-        mpireturn = MPI_Type_commit(newType);
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn,"MPI_Type_commit");
-            /* return the first encountered error if there is any */
-            if (status == NC_NOERR) status = err;
-        }
-    }
-
-    return status;
-}
-
 /*----< ncmpio_file_read() >-------------------------------------------------*/
 /* For zero-sized requests, file_view.count == buf_view.count == 0.
  * For non-zero sized requests, file_view.count > 0 and buf_view.count > 0 and
@@ -406,7 +340,8 @@ ncmpio_file_read(NC         *ncp,
         }
         else if (file_view.count > 1) {
             /* Construct a file type for setting the file view. */
-            err = type_create_hindexed(file_view, &fileType);
+            err = ncmpio_type_create_hindexed(file_view.count, file_view.off,
+                                              file_view.len, &fileType);
             if (err != NC_NOERR && status == NC_NOERR) status = err;
         }
 
@@ -433,7 +368,8 @@ ncmpio_file_read(NC         *ncp,
             xbuf_ptr += buf_view.off[0];
         }
         else if (buf_view.count > 1) {
-            err = type_create_hindexed(buf_view, &bufType);
+            err = ncmpio_type_create_hindexed(buf_view.count, buf_view.off,
+                                              buf_view.len, &bufType);
             if (err == NC_NOERR)
                 bufCount = 1;
             else if (status == NC_NOERR)
@@ -637,7 +573,8 @@ ncmpio_file_write(NC         *ncp,
         }
         else if (file_view.count > 1) {
             /* Construct a file type for setting the file view. */
-            err = type_create_hindexed(file_view, &fileType);
+            err = ncmpio_type_create_hindexed(file_view.count, file_view.off,
+                                              file_view.len, &fileType);
             if (err != NC_NOERR && status == NC_NOERR) status = err;
         }
 
@@ -664,7 +601,8 @@ ncmpio_file_write(NC         *ncp,
             xbuf_ptr += buf_view.off[0];
         }
         else if (buf_view.count > 1) {
-            err = type_create_hindexed(buf_view, &bufType);
+            err = ncmpio_type_create_hindexed(buf_view.count, buf_view.off,
+                                              buf_view.len, &bufType);
             if (err == NC_NOERR)
                 bufCount = 1;
             if (status == NC_NOERR)
