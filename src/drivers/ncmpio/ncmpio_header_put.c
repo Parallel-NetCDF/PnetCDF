@@ -531,9 +531,7 @@ int ncmpio_write_header(NC *ncp)
     if (ncp->rank == 0) { /* only root writes to file header */
         char *buf, *buf_ptr;
         size_t bufLen = PNETCDF_RNDUP(ncp->xsz, X_ALIGN);
-        MPI_Offset offset;
-
-        MPI_Count file_off, buf_off=0, writeLen, remain;
+        MPI_Offset offset, file_off, buf_off=0, writeLen, remain;
         PNCIO_View file_view, buf_view;
 
         /* For writing to file header, both file view and buffer view are

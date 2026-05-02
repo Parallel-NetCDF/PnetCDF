@@ -338,8 +338,7 @@ hdr_fetch(bufferinfo *gbp) {
     if (rank == 0) { /* only root reads file header */
         char *readBuf;
         size_t slack;
-        MPI_Offset rlen;
-        MPI_Count file_off=gbp->offset, buf_off=0, readLen;
+        MPI_Offset rlen, file_off=gbp->offset, buf_off=0, readLen;
         PNCIO_View file_view, buf_view;
 
         /* For fetching file header, both file view and buffer view are

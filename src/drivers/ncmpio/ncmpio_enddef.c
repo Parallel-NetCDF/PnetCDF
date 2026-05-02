@@ -244,7 +244,7 @@ move_file_block(NC         *ncp,
      * make the entire file visible.
      */
 
-    MPI_Count f_off, f_len, b_off=0, b_len;
+    MPI_Offset f_off, f_len, b_off=0, b_len;
     PNCIO_View f_view, b_view;
 
     /* file view and buffer view used to move data are always contiguous */
@@ -680,8 +680,7 @@ write_NC(NC *ncp)
     /* only rank 0's header gets written to the file */
     if (ncp->rank == 0) {
         char *buf=NULL, *buf_ptr;
-        MPI_Offset offset, remain;
-        MPI_Count f_off, f_len, b_off=0, b_len;
+        MPI_Offset offset, remain, f_off, f_len, b_off=0, b_len;
         PNCIO_View f_view, b_view;
 
         /* Both file view and buffer view are contiguous */

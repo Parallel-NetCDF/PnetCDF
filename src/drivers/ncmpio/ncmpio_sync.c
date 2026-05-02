@@ -66,8 +66,7 @@ ncmpio_write_numrecs(NC         *ncp,
     if (new_numrecs > ncp->numrecs || NC_ndirty(ncp)) {
         int len;
         char pos[8], *buf=pos;
-        MPI_Offset wlen;
-        MPI_Count file_off, file_len, buf_off=0, buf_len;
+        MPI_Offset wlen, file_off, file_len, buf_off=0, buf_len;
         PNCIO_View file_view, buf_view;
 
         /* both file_view and buf_view are contiguous */

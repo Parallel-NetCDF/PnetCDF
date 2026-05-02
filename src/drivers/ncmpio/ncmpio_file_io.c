@@ -237,8 +237,7 @@ ncmpio_file_read(NC         *ncp,
 {
     char *xbuf;
     int i, status=NC_NOERR, err=NC_NOERR;
-    MPI_Offset rlen=0;
-    MPI_Count off_zero=0, f_amnt, b_amnt;
+    MPI_Offset rlen=0, off_zero=0, f_amnt, b_amnt;
     PNCIO_View orig_buf_view;
 
     /* If zero-sized request and independent read, this rank can return now. */
@@ -477,8 +476,7 @@ ncmpio_file_write(NC         *ncp,
 {
     char *xbuf;
     int i, status=NC_NOERR, err=NC_NOERR;
-    MPI_Offset wlen=0;
-    MPI_Count off_zero=0, f_amnt, b_amnt;
+    MPI_Offset wlen=0, off_zero=0, f_amnt, b_amnt;
 
     /* If zero-sized request and independent write, this rank can return now. */
     if (buf_view.count == 0 && coll_indep == NC_REQ_INDEP)

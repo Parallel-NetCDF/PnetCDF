@@ -146,8 +146,7 @@ fill_var_rec(NC         *ncp,
 {
     void *buf;
     int err, status=NC_NOERR, mpireturn;
-    MPI_Offset var_len, start, count, offset, wlen;
-    MPI_Count f_off, b_off=0, fill_len;
+    MPI_Offset var_len, start, count, offset, wlen, f_off, b_off=0, fill_len;
     PNCIO_View f_view, b_view;
 
     f_view.off = &f_off;
@@ -210,27 +209,22 @@ fill_var_rec(NC         *ncp,
 
     count *= varp->xsz;
 
-#ifndef HAVE_MPI_LARGE_COUNT
-    if (count > NC_MAX_INT) {
-        DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-        if (status == NC_NOERR) status = err;
-        /* participate collective write with 0-length request */
-    }
-#endif
+    /* Note if count > NC_MAX_INT and MPI large-count feature is not support.
+     * the call to ncmpio_file_write() will return NC_EINTOVERFLOW.
+     */
 
     /* both file view and buffer view are contiguous */
     if (status == NC_NOERR) {
+        f_off = offset;
         fill_len = count;
         f_view.count = b_view.count = 1;
     }
-    else {
+    else { /* make this a zero-sized request */
         fill_len = 0;
         f_view.count = b_view.count = 0;
     }
 
     /* write to variable collectively */
-    f_off = offset;
-
     wlen = ncmpio_file_write(ncp, NC_REQ_COLL, buf, f_view, b_view);
     if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
@@ -362,22 +356,13 @@ fill_added_recs(NC *ncp, NC *old_ncp)
 static int
 fillerup_aggregate(NC *ncp, NC *old_ncp)
 {
-    int i, j, k, err, status=NC_NOERR;
-    int start_vid, recno, nVarsFill;
-    char *buf_ptr, *noFill;
-    void *buf;
+    int i, j, k, err, status=NC_NOERR, start_vid, recno, nVarsFill;
+    char *buf, *buf_ptr, *noFill;
     size_t nsegs;
-    MPI_Offset var_len, nrecs, start, *count, wlen;
+    MPI_Offset var_len, nrecs, start, wlen;
     NC_var *varp;
-    MPI_Count b_off=0, b_len;
+    MPI_Offset b_off=0, b_len;
     PNCIO_View f_view, b_view;
-
-#ifdef HAVE_MPI_LARGE_COUNT
-    MPI_Count *blocklengths=NULL, *offset=NULL;
-#else
-    int *blocklengths=NULL;
-    MPI_Offset *offset=NULL;
-#endif
 
     /* When intra-node aggregation is enabled, use the communicator consisting
      * of aggregators in comm, nprocs, and rank. Non-aggregators do not
@@ -443,14 +428,10 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
 
     /* find the number of write segments (upper bound) */
     nsegs = (size_t)(ncp->vars.ndefined + ncp->vars.num_rec_vars * nrecs);
-    count  = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * nsegs);
-#ifdef HAVE_MPI_LARGE_COUNT
-    offset = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * nsegs);
-#else
-    offset = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * nsegs);
-#endif
+    f_view.off = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * nsegs);
+    f_view.len = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * nsegs);
 
-    /* calculate each segment's offset and count */
+    /* calculate each segment's offset and length */
     b_len = 0; /* total write amount, used to allocate buffer */
     j = 0;
     for (i=start_vid; i<ncp->vars.ndefined; i++) {
@@ -464,33 +445,23 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         else                  var_len = varp->dsizes[0];
 
         /* divide evenly total number of variable's elements among processes */
-        count[j] = var_len / nprocs;
-        start = count[j] * rank;
+        f_view.len[j] = var_len / nprocs;
+        start = f_view.len[j] * rank;
         if (rank < var_len % nprocs) {
             start += rank;
-            count[j]++;
+            f_view.len[j]++;
         }
         else
             start += var_len % nprocs;
 
         /* calculate the starting file offset */
         start *= varp->xsz;
-        start += varp->begin;
-#ifdef HAVE_MPI_LARGE_COUNT
-        offset[j] = (MPI_Count)start;
-#else
-        offset[j] = start;
-#endif
-        if (start != offset[j]) {
-            DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-            if (status == NC_NOERR) status = err;
-            noFill[i-start_vid] = 1; /* skip this variable */
-            continue;
-        }
-        /* add up the buffer size */
-        b_len += count[j] * varp->xsz;
+        f_view.off[j] = varp->begin + start;
 
-        j++; /* increase j even when count[j] is zero */
+        /* add up the buffer size */
+        b_len += f_view.len[j] * varp->xsz;
+
+        j++; /* increase j even when f_view.len[j] is zero */
     }
 
     /* loop thru all record variables to find the aggregated write amount */
@@ -505,52 +476,36 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
             else                  var_len = varp->dsizes[1];
 
             /* divide total number of variable's elements among all processes */
-            count[j] = var_len / nprocs;
-            start = count[j] * rank;
+            f_view.len[j] = var_len / nprocs;
+            start = f_view.len[j] * rank;
             if (rank < var_len % nprocs) {
                 start += rank;
-                count[j]++;
+                f_view.len[j]++;
             }
             else
                 start += var_len % nprocs;
 
             /* calculate the starting file offset */
             start *= varp->xsz;
-            start += varp->begin + ncp->recsize * recno;
-#ifdef HAVE_MPI_LARGE_COUNT
-            offset[j] = (MPI_Count)start;
-#else
-            offset[j] = start;
-#endif
-            if (start != offset[j]) {
-                DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-                if (status == NC_NOERR) status = err;
-                noFill[i-start_vid] = 1; /* skip this variable */
-                continue;
-            }
-            /* add up the buffer size */
-            b_len += count[j] * varp->xsz;
+            f_view.off[j] = varp->begin + ncp->recsize * recno + start;
 
-            j++; /* increase j even when count[j] is zero */
+            /* add up the buffer size */
+            b_len += f_view.len[j] * varp->xsz;
+
+            j++; /* increase j even when f_view.len[j] is zero */
         }
     }
     /* j is now the number of valid write segments */
 
     if (status == NC_NOERR && j == 0) {
         NCI_Free(noFill);
-        NCI_Free(count);
-        NCI_Free(offset);
+        NCI_Free(f_view.len);
+        NCI_Free(f_view.off);
         return NC_NOERR;
     }
 
-    /* allocate one contiguous buffer space for all writes */
-#ifdef HAVE_MPI_LARGE_COUNT
-    blocklengths = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * j);
-#else
-    blocklengths = (int*) NCI_Malloc(sizeof(int) * j);
-#endif
-    buf = NCI_Malloc((size_t)b_len);
-    buf_ptr = (char*)buf;
+    buf = (char*) NCI_Malloc((size_t)b_len);
+    buf_ptr = buf;
 
     /* fill write buffers for fixed-size variables first */
     j = k = 0;
@@ -560,29 +515,19 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         varp = ncp->vars.value[i];
         if (IS_RECVAR(varp)) continue;
 
-        if (k < j) {  /* coalesce count[] and offset[] */
-            count[k]  = count[j];
-            offset[k] = offset[j];
+        if (k < j) { /* coalesce f_view.off[] and f_view.len[] */
+            f_view.len[k] = f_view.len[j];
+            f_view.off[k] = f_view.off[j];
         }
         j++;
-        err = fill_var_buf(varp, count[k], buf_ptr);
+        err = fill_var_buf(varp, f_view.len[k], buf_ptr);
         if (err != NC_NOERR) {
             if (status == NC_NOERR) status = err;
             continue; /* skip this request */
         }
 
-        count[k] *= varp->xsz;
-#ifdef HAVE_MPI_LARGE_COUNT
-        blocklengths[k] = (MPI_Count)count[k];
-#else
-        if (count[k] != (int)count[k]) {
-            DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-            if (status == NC_NOERR) status = err;
-            continue; /* skip this request */
-        }
-        blocklengths[k] = (int)count[k];
-#endif
-        buf_ptr += count[k];
+        f_view.len[k] *= varp->xsz;
+        buf_ptr += f_view.len[k];
         k++;
     }
     /* k is the number of valid write requests thus far */
@@ -595,67 +540,56 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
             varp = ncp->vars.value[i];
             if (!IS_RECVAR(varp)) continue;
 
-            if (k < j) {  /* coalesce count[] and offset[] */
-                count[k]  = count[j];
-                offset[k] = offset[j];
+            if (k < j) { /* coalesce f_view.off[] and f_view.len[] */
+                f_view.len[k] = f_view.len[j];
+                f_view.off[k] = f_view.off[j];
             }
             j++;
-            err = fill_var_buf(varp, count[k], buf_ptr);
+            err = fill_var_buf(varp, f_view.len[k], buf_ptr);
             if (err != NC_NOERR) {
                 if (status == NC_NOERR) status = err;
                 continue; /* skip this request */
             }
 
-            count[k] *= varp->xsz;
-#ifdef HAVE_MPI_LARGE_COUNT
-            blocklengths[k] = (MPI_Count)count[k];
-#else
-            if (count[k] != (int)count[k]) {
-                DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
-                if (status == NC_NOERR) status = err;
-                continue; /* skip this request */
-            }
-            blocklengths[k] = (int)count[k];
-#endif
-            buf_ptr += count[k];
+            f_view.len[k] *= varp->xsz;
+            buf_ptr += f_view.len[k];
             k++;
         }
     }
     /* k is the number of valid write requests */
     NCI_Free(noFill);
-    NCI_Free(count);
 
-    /* Remove entries whose blocklengths[i] == 0. This happens when the size of
+    /* Remove entries whose f_view.len[i] == 0. This happens when the size of
      * fix-sized variable or record variable section is too small, such that
      * some processes are not assigned data to fille.
      *
-     * In the meantimes, coalesce offset-blocklengths pairs.
+     * In the meantime, coalesce offset-length pairs.
      */
     for (j=0; j<k; j++) {
-        if (blocklengths[j]) { /* i is the first non-zero */
+        if (f_view.len[j]) { /* i is the first non-zero */
             if (j > 0) {
-                blocklengths[0] = blocklengths[j];
-                offset[0] = offset[j];
+                f_view.len[0] = f_view.len[j];
+                f_view.off[0] = f_view.off[j];
             }
             j++; /* next check starts from j */
             break;
         }
     }
 
-    if (blocklengths[0] == 0)
+    if (f_view.len[0] == 0)
         k = 0; /* all zero requests */
     else {
         i = 0;
         for (; j<k; j++) {
-            if (blocklengths[j] == 0) continue;
-            if (offset[i] + blocklengths[i] == offset[j])
+            if (f_view.len[j] == 0) continue;
+            if (f_view.off[i] + f_view.len[i] == f_view.off[j])
                 /* coalesce j into i */
-                blocklengths[i] += blocklengths[j];
+                f_view.len[i] += f_view.len[j];
             else {
                 i++;
                 if (i < j) {
-                    offset[i] = offset[j];
-                    blocklengths[i] = blocklengths[j];
+                    f_view.off[i] = f_view.off[j];
+                    f_view.len[i] = f_view.len[j];
                 }
             }
         }
@@ -663,24 +597,22 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     }
     /* k now is the number of non-zero sized requests */
 
-    /* write to variable collectively */
+    /* set file_view */
+    f_view.count = k;
+
     /* write buffer is contiguous */
     b_view.count = (b_len > 0) ? 1 : 0;
     b_view.off = &b_off;
     b_view.len = &b_len;
 
-    /* set file_view */
-    f_view.count = k;
-    f_view.off = offset;
-    f_view.len = blocklengths;
-
+    /* write to variable collectively */
     wlen = ncmpio_file_write(ncp, NC_REQ_COLL, buf, f_view, b_view);
     if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
     /* free allocated resources */
     NCI_Free(buf);
-    if (blocklengths != NULL) NCI_Free(blocklengths);
-    if (offset != NULL) NCI_Free(offset);
+    if (f_view.len != NULL) NCI_Free(f_view.len);
+    if (f_view.off != NULL) NCI_Free(f_view.off);
 
     return status;
 }
