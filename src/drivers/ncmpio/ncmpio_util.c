@@ -1096,7 +1096,7 @@ ncmpio_calc_start_end(const NC         *ncp,
 }
 
 /*----< ncmpio_type_contiguous() >-------------------------------------------*/
-int ncmpio_type_contiguous(MPI_Count     count,
+int ncmpio_type_contiguous(MPI_Offset    count,
                            MPI_Datatype *newType)
 {
     char *mpi_name;
@@ -1107,7 +1107,7 @@ int ncmpio_type_contiguous(MPI_Count     count,
     if (count == 0) return NC_NOERR;
 
 #ifdef HAVE_MPI_LARGE_COUNT
-    err = MPI_Type_contiguous_c(count, MPI_BYTE, newType);
+    err = MPI_Type_contiguous_c((MPI_Count)count, MPI_BYTE, newType);
     mpi_name = "MPI_Type_contiguous_c";
 #else
     if (count > INT_MAX) {
@@ -1136,7 +1136,7 @@ int ncmpio_type_contiguous(MPI_Count     count,
 }
 
 /*----< ncmpio_type_create_hindexed() >--------------------------------------*/
-int ncmpio_type_create_hindexed(MPI_Count     count,
+int ncmpio_type_create_hindexed(MPI_Offset    count,
                                 MPI_Offset   *off,
                                 MPI_Offset   *len,
                                 MPI_Datatype *newType)
@@ -1165,7 +1165,8 @@ int ncmpio_type_create_hindexed(MPI_Count     count,
         blklen[j] = (MPI_Count)len[j];
     }
 #endif
-    err = MPI_Type_create_hindexed_c(count, blklen, disp, MPI_BYTE, newType);
+    err = MPI_Type_create_hindexed_c((MPI_Count)count, blklen, disp, MPI_BYTE,
+                                     newType);
     mpi_name = "MPI_Type_create_hindexed_c";
 #if SIZEOF_MPI_OFFSET != SIZEOF_MPI_COUNT
     NCI_Free(blklen);
@@ -1185,7 +1186,7 @@ int ncmpio_type_create_hindexed(MPI_Count     count,
 #if SIZEOF_MPI_AINT == SIZEOF_MPI_OFFSET
     disp = (MPI_Aint*) off;
 #else
-    MPI_Count j;
+    MPI_Offset j;
     disp = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * count);
     for (j=0; j<count; j++)
         disp[j] = (MPI_Aint)off[j];
@@ -1193,7 +1194,7 @@ int ncmpio_type_create_hindexed(MPI_Count     count,
 #if SIZEOF_INT == SIZEOF_MPI_OFFSET
     blklen = (int*) len;
 #else
-    MPI_Count k;
+    MPI_Offset k;
     blklen = (int*) NCI_Malloc(sizeof(int) * count);
     for (k=0; k<count; k++) {
         if (len[k] > INT_MAX) {

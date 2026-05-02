@@ -33,18 +33,10 @@
 #define PNCIO_STRIPING_INHERIT 0
 
 typedef struct {
-    MPI_Offset   size; /* total size in bytes, i.e. sum of len[*],
-                        * 0 means zero-sized request. -1 means view has
-                        * been reset (in this case count should be 0).
-                        */
-    MPI_Count    count;  /* number of off-len pairs. 0 means the entire file
-                        * is visible. 0 or 1 means buf_view/file_view is
-                        * contiguous. Only when noncontiguous, off and len
-                        * are malloc-ed. Note 0 does not necessarily means
-                        * zero-sized request.
-                        */
-    MPI_Offset  *off;  /* [count] byte offsets */
-    MPI_Offset  *len;  /* [count] block lengths in bytes */
+    MPI_Offset  size;  /* total size in bytes, i.e. sum of len[*] */
+    MPI_Offset  count; /* number of off-len pairs */
+    MPI_Offset *off;   /* [count] byte offsets */
+    MPI_Offset *len;   /* [count] block lengths in bytes */
 } PNCIO_View;
 
 /* default free space in the file header section. */
@@ -730,10 +722,10 @@ ncmpio_calc_start_end(const NC *ncp, const NC_var *varp,
                       MPI_Offset *end_off);
 
 extern
-int ncmpio_type_contiguous(MPI_Count count, MPI_Datatype *newType);
+int ncmpio_type_contiguous(MPI_Offset count, MPI_Datatype *newType);
 
 extern int
-ncmpio_type_create_hindexed(MPI_Count count, MPI_Offset *off, MPI_Offset *len,
+ncmpio_type_create_hindexed(MPI_Offset count, MPI_Offset *off, MPI_Offset *len,
                             MPI_Datatype *newType);
 
 /* Begin defined in ncmpio_file_io.c ----------------------------------------*/
