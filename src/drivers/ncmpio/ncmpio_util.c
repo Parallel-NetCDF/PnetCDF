@@ -12,8 +12,10 @@
 #include <stdlib.h>   /* strtoll() is first introduced in C99 */
 #include <string.h>   /* strcpy() */
 #include <strings.h>  /* strcasecmp() */
+#include <limits.h>   /* INT_MAX */
 #include <assert.h>
 #include <errno.h>
+
 #include <mpi.h>
 
 #include <pnc_debug.h>
@@ -1108,20 +1110,24 @@ int ncmpio_type_contiguous(MPI_Count     count,
     err = MPI_Type_contiguous_c(count, MPI_BYTE, newType);
     mpi_name = "MPI_Type_contiguous_c";
 #else
-    if (count > INT_MAX)
+    if (count > INT_MAX) {
+        *newType = MPI_DATATYPE_NULL;
         return NC_EINTOVERFLOW;
+    }
 
     err = MPI_Type_contiguous((int)count, MPI_BYTE, newType);
     mpi_name = "MPI_Type_contiguous";
 #endif
 
-    if (err != MPI_SUCCESS)
+    if (err != MPI_SUCCESS) {
+        *newType = MPI_DATATYPE_NULL;
         return ncmpii_error_mpi2nc(err, mpi_name);
+    }
     else {
         err = MPI_Type_commit(newType);
         if (err != MPI_SUCCESS) {
             MPI_Type_free(newType);
-            *newType = MPI_BYTE;
+            *newType = MPI_DATATYPE_NULL;
             return ncmpii_error_mpi2nc(err,"MPI_Type_commit");
         }
     }
@@ -1170,9 +1176,11 @@ int ncmpio_type_create_hindexed(MPI_Count     count,
     int *blklen;
     MPI_Aint *disp;
 
-    if (count > INT_MAX)
+    if (count > INT_MAX) {
         /* count argument in MPI_Type_create_hindexed() is of type int */
+        *newType = MPI_DATATYPE_NULL;
         DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+    }
 
 #if SIZEOF_MPI_AINT == SIZEOF_MPI_OFFSET
     disp = (MPI_Aint*) off;
@@ -1188,8 +1196,10 @@ int ncmpio_type_create_hindexed(MPI_Count     count,
     MPI_Count k;
     blklen = (int*) NCI_Malloc(sizeof(int) * count);
     for (k=0; k<count; k++) {
-        if (len[k] > INT_MAX)
+        if (len[k] > INT_MAX) {
+            *newType = MPI_DATATYPE_NULL;
             DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
+        }
         blklen[k] = (int)len[k];
     }
 #endif
@@ -1206,13 +1216,14 @@ int ncmpio_type_create_hindexed(MPI_Count     count,
 #endif
 
     if (err != MPI_SUCCESS) {
+        *newType = MPI_DATATYPE_NULL;
         return ncmpii_error_mpi2nc(err, mpi_name);
     }
     else {
         err = MPI_Type_commit(newType);
         if (err != MPI_SUCCESS) {
             MPI_Type_free(newType);
-            *newType = MPI_BYTE;
+            *newType = MPI_DATATYPE_NULL;
             return ncmpii_error_mpi2nc(err,"MPI_Type_commit");
         }
     }
