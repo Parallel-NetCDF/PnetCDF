@@ -34,14 +34,14 @@ int ncbbio_log_create(NC_bb* ncbbp,
     char *logbase=NULL, *basename=NULL;
     char procname[MPI_MAX_PROCESSOR_NAME];
     char *fname, *path, *fdir = NULL, *logbasep;
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     double t1, t2;
 #endif
     DIR *logdir;
     ssize_t headersize;
     NC_bb_metadataheader *headerp;
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     t1 = MPI_Wtime();
 #endif
 
@@ -183,7 +183,7 @@ int ncbbio_log_create(NC_bb* ncbbp,
 
     /* Set log file descriptor to NULL */
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     /* Performance counters */
     ncbbp->total_data = 0;
     ncbbp->total_meta = 0;
@@ -285,7 +285,7 @@ int ncbbio_log_create(NC_bb* ncbbp,
 
     ncbbp->datalogsize = 8;
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     t2 = MPI_Wtime();
     ncbbp->total_time += t2 - t1;
     ncbbp->create_time += t2 - t1;
@@ -309,7 +309,7 @@ int ncbbio_log_enddef(NC_bb *ncbbp)
     int err;
     NC_bb_metadataheader *headerp;
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     double t1, t2;
     t1 = MPI_Wtime();
 #endif
@@ -337,7 +337,7 @@ int ncbbio_log_enddef(NC_bb *ncbbp)
         }
     }
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     t2 = MPI_Wtime();
     ncbbp->total_time += t2 - t1;
     ncbbp->enddef_time += t2 - t1;
@@ -357,7 +357,7 @@ int ncbbio_log_close(NC_bb *ncbbp,
     int err, status=NC_NOERR;
     NC_bb_metadataheader* headerp;
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     unsigned long long total_data;
     unsigned long long total_meta;
     unsigned long long buffer_size;
@@ -412,7 +412,7 @@ int ncbbio_log_close(NC_bb *ncbbp,
         MPI_Comm_free(&(ncbbp->logcomm));
     }
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     t2 = MPI_Wtime();
     ncbbp->total_time += t2 - t1;
     ncbbp->close_time += t2 - t1;
@@ -489,7 +489,7 @@ int ncbbio_log_flush(NC_bb* ncbbp)
     int err, status = NC_NOERR;
     NC_bb_metadataheader *headerp;
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     double t1, t2;
     t1 = MPI_Wtime();
 #endif
@@ -539,7 +539,7 @@ int ncbbio_log_flush(NC_bb* ncbbp)
 
     ncbbp->datalogsize = 8;
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     t2 = MPI_Wtime();
     ncbbp->total_time += t2 - t1;
     ncbbp->flush_time += t2 - t1;

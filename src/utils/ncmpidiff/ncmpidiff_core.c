@@ -30,7 +30,7 @@
 
 #include <ncmpidiff_core.h>
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
 #include <dispatch.h>
 #endif
 
@@ -933,7 +933,7 @@ cmp_exit:
     for (i=0; i<2; i++) {
         /* close files */
         if (ncid[i] >= 0) {
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
             /* disable printing of profiling timers */
             pnc_ina_npairs_put = pnc_ina_npairs_get = 0;
 #endif

@@ -947,7 +947,7 @@ int ina_put(NC         *ncp,
     MPI_Offset wr_amnt=0, *bufAddr=NULL, *saved_file_view_len;
     MPI_Comm intra_comm;
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     double endT, startT = MPI_Wtime();
     MPI_Offset mem_max;
     ncmpi_inq_malloc_size(&mem_max);
@@ -1077,7 +1077,7 @@ int ina_put(NC         *ncp,
 
     /* The remaining of this subroutine is for aggregators only -------------*/
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_put[1] = MAX(pnc_ina_mem_put[1], mem_max);
@@ -1333,7 +1333,7 @@ int ina_put(NC         *ncp,
     }
 #endif
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_put[2] = MAX(pnc_ina_mem_put[2], mem_max);
@@ -1416,7 +1416,7 @@ int ina_put(NC         *ncp,
         ptr += meta[i*3 + 1];
     }
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_put[3] = MAX(pnc_ina_mem_put[3], mem_max);
@@ -1443,7 +1443,7 @@ int ina_put(NC         *ncp,
     }
     NCI_Free(req);
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     endT = MPI_Wtime();
     pnc_ina_put[3] += endT - startT; /* wait */
     startT = endT;
@@ -1549,7 +1549,7 @@ int ina_put(NC         *ncp,
 do_write:
     NCI_Free(meta);
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_put[4] = MAX(pnc_ina_mem_put[4], mem_max);
@@ -1587,7 +1587,7 @@ do_write:
         NCI_Free(buf_view.len);
     }
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_put[5] = MAX(pnc_ina_mem_put[5], mem_max);
@@ -1651,7 +1651,7 @@ int ina_get(NC         *ncp,
     MPI_Comm intra_comm;
     PNCIO_View rd_buf_view, orig_fview;
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     double endT, startT = MPI_Wtime();
     MPI_Offset mem_max;
     ncmpi_inq_malloc_size(&mem_max);
@@ -1788,7 +1788,7 @@ int ina_get(NC         *ncp,
 
     /* The remaining of this subroutine is for INA aggregators only. */
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_get[1] = MAX(pnc_ina_mem_get[1], mem_max);
@@ -1818,7 +1818,7 @@ int ina_get(NC         *ncp,
     memcpy(orig_fview.off, file_view.off, alloc_amnt);
     memcpy(orig_fview.len, file_view.len, alloc_amnt);
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_get[2] = MAX(pnc_ina_mem_get[2], mem_max);
@@ -1965,7 +1965,7 @@ int ina_get(NC         *ncp,
     /* update file_view.count after coalesce */
     file_view.count = i+1;
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_get[2] = MAX(pnc_ina_mem_get[2], mem_max);
@@ -2032,7 +2032,7 @@ do_read:
         return status;
     }
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_get[3] = MAX(pnc_ina_mem_get[3], mem_max);
@@ -2229,7 +2229,7 @@ do_read:
         off_start += remote_num_pairs;
     }
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_get[4] = MAX(pnc_ina_mem_get[4], mem_max);
@@ -2279,7 +2279,7 @@ fn_exit:
         NCI_Free(buf_view.len);
     }
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_get[5] = MAX(pnc_ina_mem_get[5], mem_max);
@@ -2326,7 +2326,7 @@ ncmpio_ina_nreqs(NC         *ncp,
     void *buf=NULL;
     PNCIO_View file_view, buf_view;
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     double timing = MPI_Wtime();
 #endif
 
@@ -2405,7 +2405,7 @@ ncmpio_ina_nreqs(NC         *ncp,
         NCI_Free(req_list);
     }
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     pnc_ina_flatten += MPI_Wtime() - timing;
 #endif
 
@@ -2468,7 +2468,7 @@ ncmpio_ina_nreqs(NC         *ncp,
 int
 ncmpio_ina_req(NC               *ncp,
                int               reqMode,
-               NC_var           *varp,
+               const NC_var     *varp,
                const MPI_Offset *start,
                const MPI_Offset *count,
                const MPI_Offset *stride,
@@ -2478,7 +2478,7 @@ ncmpio_ina_req(NC               *ncp,
     int err, status=NC_NOERR, is_incr=1;
     PNCIO_View file_view, buf_view;
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     double timing = MPI_Wtime();
 #endif
 
@@ -2518,7 +2518,7 @@ ncmpio_ina_req(NC               *ncp,
         status = err;
     }
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     pnc_ina_flatten += MPI_Wtime() - timing;
 #endif
 

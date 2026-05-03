@@ -170,7 +170,7 @@ extern PNC_driver* ncbbio_inq_driver(void);
 
 extern int PNC_check_id(int ncid, PNC **pncp);
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
 #define NTIMERS 10
 extern int       pnc_num_aggrs_per_node;
 extern double    pnc_ina_init;

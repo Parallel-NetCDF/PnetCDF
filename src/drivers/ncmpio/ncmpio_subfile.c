@@ -145,7 +145,7 @@ int ina_init(MPI_Comm        comm,
     int my_node_nprocs, my_node_rank;
     int *ina_flags, grp_nprocs, rem;
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     double timing = MPI_Wtime();
 #endif
 
@@ -333,7 +333,7 @@ int ina_init(MPI_Comm        comm,
      *      node.
      */
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     pnc_ina_init = MPI_Wtime() - timing;
 #endif
 

@@ -752,7 +752,7 @@ extern int
 ncmpio_ina_nreqs(NC *ncp, int mode, int num_reqs, NC_req *put_list,
                  MPI_Offset newnumrecs);
 extern int
-ncmpio_ina_req(NC *ncp, int mode, NC_var *varp, const MPI_Offset *start,
+ncmpio_ina_req(NC *ncp, int mode, const NC_var *varp, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                MPI_Offset nbytes, void *buf);
 

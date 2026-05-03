@@ -138,7 +138,7 @@ int ina_init(MPI_Comm        comm,
     int my_node_nprocs, my_node_rank;
     int *ina_flags, grp_nprocs, rem;
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     double timing = MPI_Wtime();
 #endif
 
@@ -354,7 +354,7 @@ int ina_init(MPI_Comm        comm,
      *      node.
      */
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     pnc_ina_init = MPI_Wtime() - timing;
 #endif
 
@@ -892,7 +892,7 @@ ncmpi_create(MPI_Comm    comm,
     int enable_bb_driver=0;
 #endif
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     {
         int i;
         pnc_num_aggrs_per_node = 0;
@@ -999,7 +999,7 @@ ncmpi_create(MPI_Comm    comm,
                 num_aggrs_per_node = ival;
         }
     }
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     pnc_num_aggrs_per_node = num_aggrs_per_node;
 #endif
 
@@ -1214,7 +1214,7 @@ ncmpi_open(MPI_Comm    comm,
     int enable_bb_driver=0;
 #endif
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     pnc_num_aggrs_per_node = 0;
     pnc_ina_init = 0;
     pnc_ina_flatten = 0;
@@ -1357,7 +1357,7 @@ ncmpi_open(MPI_Comm    comm,
                 num_aggrs_per_node = ival;
         }
     }
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     pnc_num_aggrs_per_node = num_aggrs_per_node;
 #endif
 
@@ -1604,7 +1604,7 @@ err_out:
     return status;
 }
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
 
 int       pnc_num_aggrs_per_node;
 double    pnc_ina_init;
@@ -1709,7 +1709,7 @@ ncmpi_close(int ncid)
     /* Remove from the PNCList, even if err != NC_NOERR */
     del_from_PNCList(ncid);
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#if PNETCDF_PROFILING == 1
     print_profiled(pncp->comm);
 #endif
 
