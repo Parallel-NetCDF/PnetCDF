@@ -943,9 +943,10 @@ int ina_put(NC         *ncp,
 {
     char *recv_buf=NULL, *wr_buf = NULL, *mpi_name;
     int i, j, err, mpireturn, status=NC_NOERR, rank, nprocs, coalesceable=0;
-    MPI_Offset saved_file_view_count, *meta=NULL;
-    MPI_Offset wr_amnt=0, *bufAddr=NULL, *saved_file_view_len;
+    MPI_Offset *meta=NULL, wr_amnt=0, *bufAddr=NULL;
+    MPI_Offset saved_put_fview_count, *saved_put_fview_len;
     MPI_Comm intra_comm;
+    PNCIO_View put_fview, put_bview;
 
 #if PNETCDF_PROFILING == 1
     double endT, startT = MPI_Wtime();
@@ -964,6 +965,10 @@ int ina_put(NC         *ncp,
         MPI_Comm_size(intra_comm, &nprocs);
         MPI_Comm_rank(intra_comm, &rank);
     }
+
+    /* put_fview and put_bview will be used when calling ncmpio_file_write() */
+    put_fview = file_view;
+    put_bview = buf_view;
 
     /* Each aggregator's first step is to collect metadata from all INA group
      * members about their request's file offset-length pairs, write amount,
@@ -993,7 +998,7 @@ int ina_put(NC         *ncp,
      * after returned from ina_collect_md().
      */
     if (nprocs > 1) {
-        err = ina_collect_md(ncp, meta, &file_view);
+        err = ina_collect_md(ncp, meta, &put_fview);
         if (err != NC_NOERR) {
             NCI_Free(meta);
             return err;
@@ -1101,7 +1106,7 @@ int ina_put(NC         *ncp,
      *    is permitted to contain overlapping regions.
      */
 
-    if (file_view.count == 0) goto do_write;
+    if (put_fview.count == 0) goto do_write;
 
     /* Now this aggregator has received all offset-length pairs from its
      * non-aggregators. If this INA group makes a non-zero sized request, the
@@ -1144,23 +1149,23 @@ int ina_put(NC         *ncp,
         sum = meta[i*3];
 
         /* prev_end_off is the last offset of INA group member i */
-        prev_end_off = file_view.off[sum-1];
+        prev_end_off = put_fview.off[sum-1];
 
-        /* check if the file_view.off are interleaved */
+        /* check if file_view.off among INA group members are interleaved */
         for (++i; i<nprocs; i++) {
             if (meta[i*3] == 0) /* zero-sized request */
                 continue;
 
             assert(meta[i*3+2] == 1);
 
-            /* file_view.off[sum] is member i' 1st offset */
-            if (prev_end_off > file_view.off[sum]) {
-                do_sort = 1; /* indicate file_view.off are not incrementing */
+            /* put_fview.off[sum] is member i' 1st offset */
+            if (prev_end_off > put_fview.off[sum]) {
+                do_sort = 1; /* indicate put_fview.off are not incrementing */
                 break;
             }
             /* move on to the next member */
             sum += meta[i*3];
-            prev_end_off = file_view.off[sum-1];
+            prev_end_off = put_fview.off[sum-1];
         }
     }
 
@@ -1171,14 +1176,14 @@ int ina_put(NC         *ncp,
      * buf_view.count <= 1. For non-aggregators, their write data will always
      * be received into a contiguous buffer.
      */
-    bufAddr = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * file_view.count);
+    bufAddr = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * put_fview.count);
     bufAddr[0] = 0;
-    for (i=1; i<file_view.count; i++)
-        bufAddr[i] = bufAddr[i-1] + file_view.len[i-1];
+    for (i=1; i<put_fview.count; i++)
+        bufAddr[i] = bufAddr[i-1] + put_fview.len[i-1];
 
     if (do_sort) {
-        /* Sort file_view.off, file_view.len, bufAddr altogether, based on
-         * file_view.off into an increasing order. Note during sorting, the
+        /* Sort put_fview.off, put_fview.len, bufAddr altogether, based on
+         * put_fview.off into an increasing order. Note during sorting, the
          * length and buffer must also be moved together with their
          * corresponding offset.
          */
@@ -1198,18 +1203,18 @@ int ina_put(NC         *ncp,
              * have already been sorted. However, it has a much bigger memory
              * footprint.
              */
-            heap_merge(nprocs, count, file_view.off, file_view.len, bufAddr);
+            heap_merge(nprocs, count, put_fview.off, put_fview.len, bufAddr);
             NCI_Free(count);
         }
         else
             /* When some individual file_view.off are not sorted, we cannot use
              * heap_merge(). Note qsort() is an in-place sorting.
              */
-            qsort_off_len_buf(file_view.count, file_view.off, file_view.len,
+            qsort_off_len_buf(put_fview.count, put_fview.off, put_fview.len,
                               bufAddr);
     }
 
-    /* Now file_view.off and file_view.len are sorted, but overlaps may exist
+    /* Now put_fview.off and put_fview.len are sorted, but overlaps may exist
      * between adjacent pairs. If this is the case, they must be coalesced.
      *
      * The loop below checks if there is an overlap and calculates recv_amnt
@@ -1222,114 +1227,114 @@ int ina_put(NC         *ncp,
      * corresponding buffer addresses, so they can be used to move write data
      * around in the final write buffer.
      *
-     * Note file_view.off[] has been sorted into a monotonically non-decreasing
+     * Note put_fview.off[] has been sorted into a monotonically non-decreasing
      * order. During the sorting, bufAddr[] are moved around based on their
-     * corresponding file_view.off[], and thus bufAddr[] may not be in a
+     * corresponding put_fview.off[], and thus bufAddr[] may not be in a
      * monotonically non-decreasing order.
      */
     coalesceable = 0;
     overlap = 0;
-    wr_amnt = recv_amnt = file_view.len[0];
-    for (i=0, j=1; j<file_view.count; j++) {
-        recv_amnt += file_view.len[j];
-        if (file_view.off[i] + file_view.len[i] >=
-            file_view.off[j] + file_view.len[j]) {
+    wr_amnt = recv_amnt = put_fview.len[0];
+    for (i=0, j=1; j<put_fview.count; j++) {
+        recv_amnt += put_fview.len[j];
+        if (put_fview.off[i] + put_fview.len[i] >=
+            put_fview.off[j] + put_fview.len[j]) {
             /* segment i completely covers segment j, skip j */
             overlap = 1;
             continue;
         }
 
-        MPI_Offset gap = file_view.off[i] + file_view.len[i] - file_view.off[j];
+        MPI_Offset gap = put_fview.off[i] + put_fview.len[i] - put_fview.off[j];
         if (gap >= 0) { /* overlap detected, merge j into i */
             /* when gap > 0,  pairs i and j overlap
              * when gap == 0, pairs i and j are contiguous
              */
             if (gap > 0) overlap = 1;
-            wr_amnt += file_view.len[j] - gap; /* subtract overlapped amount */
-            if (bufAddr[i] + file_view.len[i] == bufAddr[j] + gap) {
+            wr_amnt += put_fview.len[j] - gap; /* subtract overlapped amount */
+            if (bufAddr[i] + put_fview.len[i] == bufAddr[j] + gap) {
                 /* buffers i and j are contiguous, merge j into i and
                  * subtract overlapped amount.
                  */
-                file_view.len[i] += file_view.len[j] - gap;
+                put_fview.len[i] += put_fview.len[j] - gap;
             }
             else { /* buffers are not contiguous, reduce j's len */
                 coalesceable = 1;
-                file_view.off[i+1] = file_view.off[j] + gap;
-                file_view.len[i+1] = file_view.len[j] - gap;
+                put_fview.off[i+1] = put_fview.off[j] + gap;
+                put_fview.len[i+1] = put_fview.len[j] - gap;
                 bufAddr[i+1] = bufAddr[j] + gap;
                 i++;
             }
         }
         else { /* i and j do not overlap */
-            wr_amnt += file_view.len[j];
+            wr_amnt += put_fview.len[j];
             i++;
             if (i < j) {
-                file_view.off[i] = file_view.off[j];
-                file_view.len[i] = file_view.len[j];
+                put_fview.off[i] = put_fview.off[j];
+                put_fview.len[i] = put_fview.len[j];
                 bufAddr[i] = bufAddr[j];
             }
         }
     }
 
-    /* Now file_view.off[], file_view.len[], bufAddr[] are coalesced and no
-     * overlap. Update file_view.count.
+    /* Now put_fview.off[], put_fview.len[], bufAddr[] are coalesced and no
+     * overlap. Update put_fview.count.
      */
-    file_view.count = i+1;
+    put_fview.count = i+1;
 
-    /* If file_view can be further coalesced, a new set of offsets and lengths
-     * must be allocated for file_view. These new offsets and lengths cannot be
+    /* If put_fview can be further coalesced, a new set of offsets and lengths
+     * must be allocated for put_fview. These new offsets and lengths cannot be
      * used for buf_view, because the buffer addresses may not be coalesceable
-     * even the corresponding file_view can. Thus the old offsets must be kept
+     * even the corresponding put_fview can. Thus the old offsets must be kept
      * to construct buf_view.
      *
-     * Note file_view.len can be updated in place, because it will not be used
+     * Note put_fview.len can be updated in place, because it will not be used
      * by buf_view.
      */
 
     /* buf_view to be used in a call to ncmpio_file_write() later will use
-     * bufAddr[] and file_view.len[], as it offset-length pairs. Because
-     * file_view.count and file_view.len may change below if coalesceable is
+     * bufAddr[] and put_fview.len[], as it offset-length pairs. Because
+     * put_fview.count and put_fview.len may change below if coalesceable is
      * true, we now save them for later use.
      */
-    saved_file_view_len = file_view.len;
-    saved_file_view_count = file_view.count;
+    saved_put_fview_len = put_fview.len;
+    saved_put_fview_count = put_fview.count;
 
-    if (coalesceable) { /* file_view can be further coalesced */
+    if (coalesceable) { /* put_fview can be further coalesced */
         size_t cpy_amnt;
         MPI_Offset *file_len;
 
-        cpy_amnt = sizeof(MPI_Offset) * file_view.count;
+        cpy_amnt = sizeof(MPI_Offset) * put_fview.count;
         file_len = (MPI_Offset*) NCI_Malloc(cpy_amnt);
-        memcpy(file_len, file_view.len, cpy_amnt);
-        file_view.len = file_len;
+        memcpy(file_len, put_fview.len, cpy_amnt);
+        put_fview.len = file_len;
 
-        for (i=0, j=1; j<file_view.count; j++) {
+        for (i=0, j=1; j<put_fview.count; j++) {
 #if PNETCDF_DEBUG_MODE == 1
             /* any overlap should have been removed from the loop above */
-            assert(file_view.off[i] + file_view.len[i] <= file_view.off[j]);
+            assert(put_fview.off[i] + put_fview.len[i] <= put_fview.off[j]);
 #endif
-            if (file_view.off[i] + file_view.len[i] == file_view.off[j])
+            if (put_fview.off[i] + put_fview.len[i] == put_fview.off[j])
                 /* coalesce j into i */
-                file_view.len[i] += file_view.len[j];
+                put_fview.len[i] += put_fview.len[j];
             else { /* i and j are not coalesceable */
                 i++;
                 if (i < j) {
-                    file_view.off[i] = file_view.off[j];
-                    file_view.len[i] = file_view.len[j];
+                    put_fview.off[i] = put_fview.off[j];
+                    put_fview.len[i] = put_fview.len[j];
                 }
             }
         }
 
         /* update number of offset-length pairs */
-        file_view.count = i+1;
+        put_fview.count = i+1;
     }
 
 #if PNETCDF_DEBUG_MODE == 1
-    /* check if file_view's offset-lengths have been coalesced */
-    for (i=1; i<file_view.count; i++) {
-        assert(file_view.len[i-1] > 0);
-        assert(file_view.off[i-1] < file_view.off[i]);
-        assert(file_view.off[i-1] + file_view.len[i-1] < file_view.off[i]);
+    /* check if put_fview's offset-lengths have been coalesced */
+    for (i=1; i<put_fview.count; i++) {
+        assert(put_fview.len[i-1] > 0);
+        assert(put_fview.off[i-1] < put_fview.off[i]);
+        assert(put_fview.off[i-1] + put_fview.len[i-1] < put_fview.off[i]);
     }
 #endif
 
@@ -1337,7 +1342,7 @@ int ina_put(NC         *ncp,
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_put[2] = MAX(pnc_ina_mem_put[2], mem_max);
-    pnc_ina_npairs_put = MAX(pnc_ina_npairs_put, file_view.count);
+    pnc_ina_npairs_put = MAX(pnc_ina_npairs_put, put_fview.count);
 
     endT = MPI_Wtime();
     pnc_ina_put[1] += endT - startT; /* sorting */
@@ -1450,8 +1455,8 @@ int ina_put(NC         *ncp,
 #endif
 
     /* Now all write data has been collected into recv_buf. In case of any
-     * overlap, we must coalesce recv_buf into wr_buf using file_view.off[],
-     * file_view.len[], and bufAddr[]. For overlapped regions, requests with
+     * overlap, we must coalesce recv_buf into wr_buf using put_fview.off[],
+     * put_fview.len[], and bufAddr[]. For overlapped regions, requests with
      * lower j indices win the writes to the overlapped regions.
      *
      * In case the user buffer, buf, can not be used to write to the file, loop
@@ -1464,51 +1469,44 @@ int ina_put(NC         *ncp,
 
         if (wr_buf != buf) {
             /* Since write data has been packed in wr_buf, a contiguous buffer,
-             * update buf_view before passing it to ncmpio_file_write().
+             * set put_bview before passing it to ncmpio_file_write().
              */
-            if (buf_view.count > 0) {
-                NCI_Free(buf_view.len);
-                NCI_Free(buf_view.off);
-            }
-            buf_view.off = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset));
-            buf_view.len = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset));
-            buf_view.off[0] = 0;
-            buf_view.len[0] = wr_amnt;
-            buf_view.count = 1;
-            buf_view.size = wr_amnt;
+            put_bview.off = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset));
+            put_bview.len = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset));
+            put_bview.off[0] = 0;
+            put_bview.len[0] = wr_amnt;
+            put_bview.count = 1;
+            put_bview.size = wr_amnt;
         }
-#if PNETCDF_DEBUG_MODE == 1
         else {
             /* User's buffer, buf, can be used to write to the file. In this
              * case, it also means all non-INA aggregators in this group have
              * zero-sized request.
              */
+            put_bview = buf_view;
+#if PNETCDF_DEBUG_MODE == 1
             for (i=1; i<nprocs; i++)
                 assert(meta[3*i+1] == 0);
-        }
 #endif
+        }
     }
     else if (buf_view.count <= 1 && !overlap) {
-        /* Note we can reuse bufAddr[] and file_view.len[] (before it is
-         * coalesced) as buf_view.off and buf_view.len only when buf_view is
+        /* Note we can reuse bufAddr[] and put_fview.len[] (before it is
+         * coalesced) as put_bview.off and put_bview.len only when put_bview is
          * contiguous, because bufAddr[] is constructed based on the assumption
          * that the write buffer is contiguous.
          */
         wr_buf = recv_buf;
 
-        /* Update buf_view before passing it to ncmpio_file_write(). */
-        if (buf_view.count > 0) {
-            NCI_Free(buf_view.len);
-            NCI_Free(buf_view.off);
-        }
-        buf_view.off   = bufAddr; /* based on recv_buf */
-        buf_view.len   = saved_file_view_len;
-        buf_view.count = saved_file_view_count;
-        buf_view.size  = wr_amnt;
+        /* set put_bview before passing it to ncmpio_file_write(). */
+        put_bview.off   = bufAddr; /* based on recv_buf */
+        put_bview.len   = saved_put_fview_len;
+        put_bview.count = saved_put_fview_count;
+        put_bview.size  = wr_amnt;
     }
     else {
         /* do_sort == 1 means buffer's offsets and lengths have been moved
-         * around to make file_view.off[] monotonically non-decreasing. In this
+         * around to make put_fview.off[] monotonically non-decreasing. In this
          * case, we need to re-arrange the write buffer accordingly by copying
          * write data into a temporary buffer, wr_buf, and write it to the
          * file.
@@ -1523,25 +1521,21 @@ int ina_put(NC         *ncp,
         ptr = wr_buf;
 
         /* Copy write data into wr_buf, a contiguous buffer. */
-        for (j=0; j<saved_file_view_count; j++) {
-            memcpy(ptr, recv_buf + bufAddr[j], saved_file_view_len[j]);
-            ptr += saved_file_view_len[j];
+        for (j=0; j<saved_put_fview_count; j++) {
+            memcpy(ptr, recv_buf + bufAddr[j], saved_put_fview_len[j]);
+            ptr += saved_put_fview_len[j];
         }
 
-        /* saved_file_view_len can now be freed, if it is != file_view.len */
-        if (saved_file_view_len != file_view.len) NCI_Free(saved_file_view_len);
+        /* saved_put_fview_len can now be freed, if it is != put_fview.len */
+        if (saved_put_fview_len != put_fview.len) NCI_Free(saved_put_fview_len);
 
-        /* Update buf_view before passing it to ncmpio_file_write(). */
-        if (buf_view.count > 0) {
-            NCI_Free(buf_view.len);
-            NCI_Free(buf_view.off);
-        }
-        buf_view.len = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset));
-        buf_view.off = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset));
-        buf_view.off[0] = 0;
-        buf_view.len[0] = wr_amnt;
-        buf_view.count = 1;
-        buf_view.size = wr_amnt;
+        /* Set put_bview before passing it to ncmpio_file_write(). */
+        put_bview.len = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset));
+        put_bview.off = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset));
+        put_bview.off[0] = 0;
+        put_bview.len[0] = wr_amnt;
+        put_bview.count = 1;
+        put_bview.size = wr_amnt;
 
         if (recv_buf != buf) NCI_Free(recv_buf);
     }
@@ -1565,7 +1559,7 @@ do_write:
 
     MPI_Offset wlen;
 
-    wlen = ncmpio_file_write(ncp, coll_indep, wr_buf, file_view, buf_view);
+    wlen = ncmpio_file_write(ncp, coll_indep, wr_buf, put_fview, put_bview);
     if (wlen < 0) {
         if (status == NC_NOERR) status = (int)wlen;
         wr_amnt = 0;
@@ -1573,14 +1567,19 @@ do_write:
 
     if (wr_buf != buf) NCI_Free(wr_buf);
 
-    /* Free bufAddr if it is not used by buf_view.off */
-    if (bufAddr != NULL && bufAddr != buf_view.off) NCI_Free(bufAddr);
+    /* Free bufAddr if it is not used by put_bview.off */
+    if (bufAddr != NULL && bufAddr != put_bview.off) NCI_Free(bufAddr);
+
+    if (put_bview.len != NULL && put_bview.len != buf_view.len)
+        NCI_Free(put_bview.len);
+    if (put_bview.off != NULL && put_bview.off != buf_view.off)
+        NCI_Free(put_bview.off);
 
     /* free space allocated for file_view and buf_view */
-    if (file_view.count > 0) {
-        NCI_Free(file_view.off);
-        /* file_view.len and buf_view.len may share the same address */
-        if (file_view.len != buf_view.len) NCI_Free(file_view.len);
+    if (put_fview.count > 0) {
+        NCI_Free(put_fview.off);
+        /* put_fview.len and put_bview.len may share the same address */
+        if (put_fview.len != put_bview.len) NCI_Free(put_fview.len);
     }
     if (buf_view.count > 0) {
         NCI_Free(buf_view.off);
@@ -1649,7 +1648,7 @@ int ina_get(NC         *ncp,
     MPI_Offset max_npairs, send_amnt=0, rd_amnt=0, off_start;
     MPI_Request *req=NULL;
     MPI_Comm intra_comm;
-    PNCIO_View rd_buf_view, orig_fview;
+    PNCIO_View get_fview, get_bview, orig_fview;
 
 #if PNETCDF_PROFILING == 1
     double endT, startT = MPI_Wtime();
@@ -1668,6 +1667,10 @@ int ina_get(NC         *ncp,
         MPI_Comm_size(intra_comm, &nprocs);
         MPI_Comm_rank(intra_comm, &rank);
     }
+
+    /* get_fview and get_bview will be used when calling ncmpio_file_read() */
+    get_fview = file_view;
+    get_bview = buf_view;
 
     /* Each aggregator's first step is to collect metadata from all INA group
      * members about their request's file offset-length pairs, write amount,
@@ -1706,7 +1709,7 @@ int ina_get(NC         *ncp,
      * after returned from ina_collect_md().
      */
     if (nprocs > 1) {
-        err = ina_collect_md(ncp, meta, &file_view);
+        err = ina_collect_md(ncp, meta, &get_fview);
         if (err != NC_NOERR) {
             NCI_Free(meta);
             return err;
@@ -1798,7 +1801,7 @@ int ina_get(NC         *ncp,
     startT = endT;
 #endif
 
-    if (file_view.count == 0) {
+    if (get_fview.count == 0) {
         /* This INA aggregation group has zero data to read, but this
          * aggregator must participate the collective I/O calls.
          */
@@ -1859,35 +1862,35 @@ int ina_get(NC         *ncp,
         sum = meta[i*3];
 
         /* prev_end_off is the last offset of INA group member i */
-        prev_end_off = file_view.off[sum-1];
+        prev_end_off = get_fview.off[sum-1];
 
-        /* check if the file_view.off are interleaved */
+        /* check if the file_view.off are interleaved among INA group members */
         for (++i; i<nprocs; i++) {
             if (meta[i*3] == 0) /* zero-sized request */
                 continue;
 
             assert(meta[i*3+2] == 1);
 
-            if (prev_end_off > file_view.off[sum]) {
-                /* file_view.off[sum] is the non-aggregator i' 1st offset */
-                do_sort = 1; /* file_view.off are not incrementing */
+            if (prev_end_off > get_fview.off[sum]) {
+                /* get_fview.off[sum] is the non-aggregator i' 1st offset */
+                do_sort = 1; /* get_fview.off are not incrementing */
                 break;
             }
             /* move on to the next member */
             sum += meta[i*3];
-            prev_end_off = file_view.off[sum-1];
+            prev_end_off = get_fview.off[sum-1];
         }
     }
 
     if (do_sort)
         coalesceable = 1;
     else {
-        /* Check if file_view.off[] and file_view.len[] are coalesceable. */
+        /* Check if get_fview.off[] and get_fview.len[] are coalesceable. */
         coalesceable = 0;
-        send_amnt = file_view.len[0];
-        for (j=1; j<file_view.count; j++) {
-            send_amnt += file_view.len[j];
-            if (file_view.off[j-1] + file_view.len[j-1] >= file_view.off[j]) {
+        send_amnt = get_fview.len[0];
+        for (j=1; j<get_fview.count; j++) {
+            send_amnt += get_fview.len[j];
+            if (get_fview.off[j-1] + get_fview.len[j-1] >= get_fview.off[j]) {
                 coalesceable = 1;
                 break;
             }
@@ -1895,39 +1898,39 @@ int ina_get(NC         *ncp,
     }
 
     if (coalesceable) {
-        /* For read operations, the INA aggregator's current file_view.off[]
-         * and file_view.len[] collected from all its INA group members must be
+        /* For read operations, the INA aggregator's current get_fview.off[]
+         * and get_fview.len[] collected from all its INA group members must be
          * kept untouched, because the later sorting and coalescing will be
-         * performed on file_view, messing up the original ones are needed to
+         * performed on get_fview, messing up the original ones are needed to
          * construct MPI datatype for the INA aggregator to send the data read
          * from file to its INA group members.
          */
-        size_t alloc_amnt = sizeof(MPI_Offset) * file_view.count;
+        size_t alloc_amnt = sizeof(MPI_Offset) * get_fview.count;
         orig_fview.off = (MPI_Offset*) NCI_Malloc(alloc_amnt);
         orig_fview.len = (MPI_Offset*) NCI_Malloc(alloc_amnt);
-        memcpy(orig_fview.off, file_view.off, alloc_amnt);
-        memcpy(orig_fview.len, file_view.len, alloc_amnt);
+        memcpy(orig_fview.off, get_fview.off, alloc_amnt);
+        memcpy(orig_fview.len, get_fview.len, alloc_amnt);
     }
     else {
-        /* Skip allocating orig_fview only when file_view will not be altered,
+        /* Skip allocating orig_fview only when get_fview will not be altered,
          * i.e. its offset-length pairs sorted and coalesced.
          */
         overlap = 0;
         rd_amnt = send_amnt;
-        orig_fview.off = file_view.off;
-        orig_fview.len = file_view.len;
+        orig_fview.off = get_fview.off;
+        orig_fview.len = get_fview.len;
     }
 
     if (do_sort) {
-        /* Sort file_view.off[] into an increasing order. Note during sorting,
-         * file_view.len[] is also moved together with their corresponding
-         * file_view.off[].
+        /* Sort get_fview.off[] into an increasing order. Note during sorting,
+         * get_fview.len[] is also moved together with their corresponding
+         * get_fview.off[].
          */
         if (indv_sorted) {
-            /* Interleaved offsets are found in the aggregated file_view.off[],
-             * but individual file_view.off[] are already sorted. This is
+            /* Interleaved offsets are found in the aggregated get_fview.off[],
+             * but individual get_fview.off[] are already sorted. This is
              * commonly seen from the checkerboard domain partitioning pattern.
-             * In this case, heap_merge() is faster to merge all file_view.off
+             * In this case, heap_merge() is faster to merge all get_fview.off
              * into one single sorted offset list. Note count[] must be
              * initialized, so it can be used in heap_merge()
              */
@@ -1940,29 +1943,29 @@ int ina_get(NC         *ncp,
              * lists have already been sorted. However, it has a much
              * bigger memory footprint.
              */
-            heap_merge(nprocs, count, file_view.off, file_view.len, NULL);
+            heap_merge(nprocs, count, get_fview.off, get_fview.len, NULL);
             NCI_Free(count);
         }
         else
-            /* When some individual file_view.off are not already sorted, we
+            /* When some individual get_fview.off are not already sorted, we
              * cannot use heap_merge(). Note qsort() is an in-place sorting.
              */
-            qsort_off_len_buf(file_view.count, file_view.off, file_view.len,
+            qsort_off_len_buf(get_fview.count, get_fview.off, get_fview.len,
                               NULL);
     }
 
     if (coalesceable) {
-        /* Coalesce the file_view.off[] and file_view.len[] and calculate the
+        /* Coalesce the get_fview.off[] and get_fview.len[] and calculate the
          * total read amount and the total send amounts to all INA group
          * members by this aggregator.
          */
         overlap = 0;
-        send_amnt = rd_amnt = file_view.len[0];
-        for (i=0, j=1; j<file_view.count; j++) {
+        send_amnt = rd_amnt = get_fview.len[0];
+        for (i=0, j=1; j<get_fview.count; j++) {
             MPI_Offset gap;
-            send_amnt += file_view.len[j];
+            send_amnt += get_fview.len[j];
 
-            gap = file_view.off[i] + file_view.len[i] - file_view.off[j];
+            gap = get_fview.off[i] + get_fview.len[i] - get_fview.off[j];
             if (gap >= 0) { /* overlap detected, merge j into i */
                 /* when gap > 0,  pairs i and j overlap
                  * when gap == 0, pairs i and j are contiguous
@@ -1971,33 +1974,33 @@ int ina_get(NC         *ncp,
 
                 if (gap > 0) overlap = 1;
 
-                i_end = file_view.off[i] + file_view.len[i];
-                j_end = file_view.off[j] + file_view.len[j];
+                i_end = get_fview.off[i] + get_fview.len[i];
+                j_end = get_fview.off[j] + get_fview.len[j];
                 if (i_end < j_end) {
-                    file_view.len[i] += j_end - i_end;
+                    get_fview.len[i] += j_end - i_end;
                     rd_amnt += j_end - i_end;
                 }
                 /* else: j is entirely covered by i */
             }
             else { /* j and i are not overlapped */
-                rd_amnt += file_view.len[j];
+                rd_amnt += get_fview.len[j];
                 i++;
                 if (i < j) {
-                    file_view.off[i] = file_view.off[j];
-                    file_view.len[i] = file_view.len[j];
+                    get_fview.off[i] = get_fview.off[j];
+                    get_fview.len[i] = get_fview.len[j];
                 }
             }
         }
 
-        /* update file_view.count after coalesce */
-        file_view.count = i+1;
+        /* update get_fview.count after coalesce */
+        get_fview.count = i+1;
     }
 
 #if PNETCDF_PROFILING == 1
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_get[2] = MAX(pnc_ina_mem_get[2], mem_max);
-    pnc_ina_npairs_get = MAX(pnc_ina_npairs_get, file_view.count);
+    pnc_ina_npairs_get = MAX(pnc_ina_npairs_get, get_fview.count);
 
     endT = MPI_Wtime();
     pnc_ina_get[1] += endT - startT; /* sorting */
@@ -2027,20 +2030,27 @@ do_read:
         /* Only this INA aggregator has non-zero sized data to read and
          * its buf_view does not required to be sorted and overlaps removed.
          */
-        rd_buf_view = buf_view;
+        get_bview = buf_view;
         rd_buf = buf;
     }
     else {
         /* Allocate a read buffer to store data read from the file. */
-        if (rd_amnt > 0)
+        if (rd_amnt > 0) {
             rd_buf = (char*) NCI_Malloc(rd_amnt);
 
-        rd_buf_view.count = 1;
-        rd_buf_view.off = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset));
-        rd_buf_view.len = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset));
-        rd_buf_view.off[0] = 0;
-        rd_buf_view.len[0] = rd_amnt;
-        rd_buf_view.size = rd_amnt;
+            get_bview.count = 1;
+            get_bview.off = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset));
+            get_bview.len = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset));
+            get_bview.off[0] = 0;
+            get_bview.len[0] = rd_amnt;
+        }
+        else {
+            rd_buf = NULL;
+            get_bview.count = 0;
+            get_bview.off = NULL;
+            get_bview.len = NULL;
+        }
+        get_bview.size = rd_amnt;
     }
 
     int coll_indep = (fIsSet(ncp->flags, NC_MODE_INDEP)) ? NC_REQ_INDEP
@@ -2048,13 +2058,13 @@ do_read:
 
     MPI_Offset rlen;
 
-    rlen = ncmpio_file_read(ncp, coll_indep, rd_buf, file_view, rd_buf_view);
+    rlen = ncmpio_file_read(ncp, coll_indep, rd_buf, get_fview, get_bview);
     if (rlen < 0) {
         if (status == NC_NOERR) status = (int)rlen;
         rd_amnt = 0;
     }
 
-    if (file_view.count == 0) {
+    if (get_fview.count == 0) {
         /* This INA aggregation group has zero data to read. */
         if (meta != NULL) NCI_Free(meta);
         return status;
@@ -2070,16 +2080,16 @@ do_read:
     startT = endT;
 #endif
 
-    /* If sorting has been performed, the orders of file_view.off[] and
-     * file_view.len[] may no longer be the same as the original ones. We must
-     * use binary search to find the offset-length pair from file_view that
+    /* If sorting has been performed, the orders of get_fview.off[] and
+     * get_fview.len[] may no longer be the same as the original ones. We must
+     * use binary search to find the offset-length pair from get_fview that
      * contains each INA group member's offset-length pair to construct a send
      * buffer datatype, a view layout to the read buffer, rd_buf, so the data
      * can be directly sent from rd_buf.
      */
     if (rd_buf != buf) {
         /* First, the INA aggregator takes case of its own read, by coping the
-         * read data to its user buffer. Note file_view.off[] has been sorted
+         * read data to its user buffer. Note get_fview.off[] has been sorted
          * in an incremental order.
          *
          * When the offset-length pairs of read buffer have been sorted or the
@@ -2105,32 +2115,32 @@ do_read:
              * orig_fview.off[] and orig_fview.len[] are this INA aggregator's
              * own request.
              *
-             * Note file_view have been modified and now describes the layout
+             * Note get_fview have been modified and now describes the layout
              * of rd_buf.
              *
-             * For each orig_fview's offset-length pair j, find in file_view
+             * For each orig_fview's offset-length pair j, find in get_fview
              * the offset-length pair in rd_buf covering it. Note that if
              * orig_fview's offset-length pairs are not already sorted, i.e.
              * is_incr != 1, this bin_search() below can be very expensive!
              *
              * orig_fview.off[] and orig_fview.len[] are the original aggregated
-             *     file_view.off[] and file_view.len[] of this INA aggregator.
+             *     get_fview.off[] and get_fview.len[] of this INA aggregator.
              *     And, the first orig_fview.count of elements of offset-length
              *     pairs are this aggregator's own requests. orig_fview is no
-             *     longer the same as file_view.off[] and file_view.len[].
-             * file_view.off[] and file_view.len[] describe the offset-length
+             *     longer the same as get_fview.off[] and get_fview.len[].
+             * get_fview.off[] and get_fview.len[] describe the offset-length
              *     pairs of the read buffer, rd_buf. It is a modified
              *     orig_fview with a sorting and coalescing applied.
              */
             if (!is_incr) m = 0;
 
-            if (file_view.count-m == 1)
-                assert(file_view.off[m] <= orig_fview.off[j]);
+            if (get_fview.count-m == 1)
+                assert(get_fview.off[m] <= orig_fview.off[j]);
 
-            k = bin_search(orig_fview.off[j], file_view.count - m,
-                           &file_view.off[m]);
+            k = bin_search(orig_fview.off[j], get_fview.count - m,
+                           &get_fview.off[m]);
 
-            assert(k < file_view.count);
+            assert(k < get_fview.count);
 
             /* k returned from bin_search is relative to m */
             k += m;
@@ -2139,18 +2149,18 @@ do_read:
              * order and we can continue binary search using the index from
              * previous search. When is_incr is 0, the orig_fview.off[] are
              * NOT in an incremental order, we must do binary search on the
-             * entire file_view.off[].
+             * entire get_fview.off[].
              */
             if (!is_incr) scan_off = 0;
             for (; m<k; m++)
-                scan_off += file_view.len[m];
+                scan_off += get_fview.len[m];
 
             /* Note orig_fview.off[j] and orig_fview.len[j] must entirely
-             * covered by file_view.off[k] and file_view.len[k], because
-             * file_view.off[] and file_view.len[] have been coalesced.
+             * covered by get_fview.off[k] and get_fview.len[k], because
+             * get_fview.off[] and get_fview.len[] have been coalesced.
              */
             memcpy(ptr,
-                   rd_buf + (scan_off + orig_fview.off[j] - file_view.off[k]),
+                   rd_buf + (scan_off + orig_fview.off[j] - get_fview.off[k]),
                    orig_fview.len[j]);
 
             ptr += orig_fview.len[j];
@@ -2211,32 +2221,32 @@ do_read:
              */
             if (!remote_is_incr) m = 0;
 
-            if (file_view.count-m == 1)
-                assert(file_view.off[m] <= off[j]);
+            if (get_fview.count-m == 1)
+                assert(get_fview.off[m] <= off[j]);
 
-            k = bin_search(off[j], file_view.count-m, &file_view.off[m]);
+            k = bin_search(off[j], get_fview.count-m, &get_fview.off[m]);
             /* k returned from bin_search is relative to m */
             k += m;
 
-            assert(file_view.off[k] <= off[j] &&
-                   off[j] < file_view.off[k] + file_view.len[k]);
+            assert(get_fview.off[k] <= off[j] &&
+                   off[j] < get_fview.off[k] + get_fview.len[k]);
 
             /* When is_incr is 1, the orig_fview.off[] are in an incremental
              * order, we can continue binary search using the index from the
              * previous search. When is_incr is 0, the orig_fview.off[] are NOT
              * in an incremental order, we must do binary search on the entire
-             * file_view.off[].
+             * get_fview.off[].
              */
             if (!remote_is_incr) scan_off = 0;
 
             for (; m<k; m++)
-                scan_off += file_view.len[m];
+                scan_off += get_fview.len[m];
 
-            /* Note orig_fview.off[j] and file_view.len[j] must entirely
-             * covered by file_view.off[k] and file_view.len[k], because
-             * file_view.off[] and file_view.len[] have been coalesced.
+            /* Note orig_fview.off[j] and get_fview.len[j] must entirely
+             * covered by get_fview.off[k] and get_fview.len[k], because
+             * get_fview.off[] and get_fview.len[] have been coalesced.
              */
-            char *ptr = rd_buf + (scan_off + off[j] - file_view.off[k]);
+            char *ptr = rd_buf + (scan_off + off[j] - get_fview.off[k]);
             MPI_Get_address(ptr, &addr);
             disps[j] = addr;
             blks[j] = len[j];
@@ -2287,21 +2297,22 @@ do_read:
 
 fn_exit:
     if (rd_buf != NULL && rd_buf != buf) {
-        NCI_Free(rd_buf_view.len);
-        NCI_Free(rd_buf_view.off);
+        NCI_Free(get_bview.len);
+        NCI_Free(get_bview.off);
         NCI_Free(rd_buf);
     }
-    if (orig_fview.len != NULL && orig_fview.len != file_view.len)
+
+    if (orig_fview.len != NULL && orig_fview.len != get_fview.len)
         NCI_Free(orig_fview.len);
-    if (orig_fview.off != NULL && orig_fview.off != file_view.off)
+    if (orig_fview.off != NULL && orig_fview.off != get_fview.off)
         NCI_Free(orig_fview.off);
     if (req != NULL) NCI_Free(req);
     if (meta != NULL) NCI_Free(meta);
 
-    /* free space allocated for file_view and buf_view */
-    if (file_view.count > 0) {
-        NCI_Free(file_view.off);
-        NCI_Free(file_view.len);
+    /* free space allocated for get_fview and buf_view */
+    if (get_fview.count > 0) {
+        NCI_Free(get_fview.off);
+        NCI_Free(get_fview.len);
     }
 
     if (buf_view.count > 0) {
