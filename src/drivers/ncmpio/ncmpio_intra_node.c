@@ -2450,13 +2450,12 @@ ncmpio_ina_nreqs(NC         *ncp,
     pnc_ina_flatten += MPI_Wtime() - timing;
 #endif
 
-    /* When a non-INA aggregator performs independent I/O, we need to
-     * temporarily set ncp->comm_attr.ina_intra_comm to be MPI_COMM_SELF, as if
-     * self rank is an INA aggregator and the INA group size is of 1.
+    /* When a process makes an independent I/O call, we need to temporarily set
+     * ncp->comm_attr.ina_intra_comm to be MPI_COMM_SELF, as if self rank is an
+     * INA aggregator and the INA group size is of 1.
      */
-    MPI_Comm saved_ina_intra_comm;
-    saved_ina_intra_comm = ncp->comm_attr.ina_intra_comm;
-    if (ncp->num_aggrs_per_node == 0 || fIsSet(ncp->flags, NC_MODE_INDEP))
+    MPI_Comm saved_ina_intra_comm = ncp->comm_attr.ina_intra_comm;
+    if (fIsSet(ncp->flags, NC_MODE_INDEP))
         ncp->comm_attr.ina_intra_comm = MPI_COMM_SELF;
 
     /* Perform intra-node aggregation and file I/O. Note that the space
@@ -2469,7 +2468,7 @@ ncmpio_ina_nreqs(NC         *ncp,
         err = ina_get(ncp, is_incr, file_view, buf_view, buf);
     if (status == NC_NOERR) status = err;
 
-    if (ncp->num_aggrs_per_node == 0 || fIsSet(ncp->flags, NC_MODE_INDEP))
+    if (fIsSet(ncp->flags, NC_MODE_INDEP))
         /* restore ncp->comm_attr.ina_intra_comm */
         ncp->comm_attr.ina_intra_comm = saved_ina_intra_comm;
 
@@ -2563,19 +2562,19 @@ ncmpio_ina_req(NC               *ncp,
     pnc_ina_flatten += MPI_Wtime() - timing;
 #endif
 
-    /* When a non-INA aggregator performs independent I/O, we need to
-     * temporarily set ncp->comm_attr.ina_intra_comm to be MPI_COMM_SELF, as if
-     * self rank is an INA aggregator and the INA group size is of 1.
+    /* When a process makes an independent I/O call, we need to temporarily set
+     * ncp->comm_attr.ina_intra_comm to be MPI_COMM_SELF, as if self rank is an
+     * INA aggregator and the INA group size is of 1.
      */
-    MPI_Comm saved_ina_intra_comm;
-    saved_ina_intra_comm = ncp->comm_attr.ina_intra_comm;
-    if (ncp->num_aggrs_per_node == 0 || fIsSet(ncp->flags, NC_MODE_INDEP))
+    MPI_Comm saved_ina_intra_comm = ncp->comm_attr.ina_intra_comm;
+    if (fIsSet(ncp->flags, NC_MODE_INDEP))
         ncp->comm_attr.ina_intra_comm = MPI_COMM_SELF;
 
     /* Perform intra-node aggregation and file I/O. Note that the space
      * allocated in file_view and buf_view will be freed at the end of
      * ina_put() and ina_get().
      */
+
     if (fIsSet(reqMode, NC_REQ_WR))
         err = ina_put(ncp, is_incr, file_view, buf_view, buf);
     else
@@ -2583,7 +2582,7 @@ ncmpio_ina_req(NC               *ncp,
 
     if (status == NC_NOERR) status = err;
 
-    if (ncp->num_aggrs_per_node == 0 || fIsSet(ncp->flags, NC_MODE_INDEP))
+    if (fIsSet(ncp->flags, NC_MODE_INDEP))
         /* restore ncp->comm_attr.ina_intra_comm */
         ncp->comm_attr.ina_intra_comm = saved_ina_intra_comm;
 
