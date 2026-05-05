@@ -174,11 +174,11 @@ qsort_off_len_buf(MPI_Offset  num,
  * nelems is the total number of offset-blklens-bufAddr triplets
  */
 static
-void heap_merge(int              nprocs,
+void heap_merge(int               nprocs,
                 const MPI_Offset *count,    /* [nprocs] */
-                MPI_Offset      *offsets,  /* IN/OUT: [nelems] */
-                MPI_Offset      *blklens,  /* IN/OUT: [nelems] */
-                MPI_Offset      *bufAddr)  /* IN/OUT: [nelems] */
+                MPI_Offset       *offsets,  /* IN/OUT: [nelems] */
+                MPI_Offset       *blklens,  /* IN/OUT: [nelems] */
+                MPI_Offset       *bufAddr)  /* IN/OUT: [nelems] */
 {
     typedef struct {
         MPI_Offset *off_list;
@@ -308,16 +308,16 @@ void heap_merge(int              nprocs,
  * a list of file offset-length pairs, offsets[] and lengths[].
  */
 static int
-flatten_subarray(int                ndim,       /* number of dimensions */
-                 int                el_size,    /* array element size */
-                 MPI_Offset         var_begin,  /* starting file offset */
-                 const MPI_Offset  *dimlen,     /* [ndim] dimension lengths */
-                 const MPI_Offset  *start,      /* [ndim] starts of subarray */
-                 const MPI_Offset  *count,      /* [ndim] counts of subarray */
-                 const MPI_Offset  *stride,     /* [ndim] strides of subarray */
-                 MPI_Offset         *npairs,     /* OUT: num of off-len pairs */
-                 MPI_Offset        *offsets,    /* OUT: array of offsets */
-                 MPI_Offset        *lengths)    /* OUT: array of lengths */
+flatten_subarray(int               ndim,       /* number of dimensions */
+                 int               el_size,    /* array element size */
+                 MPI_Offset        var_begin,  /* starting file offset */
+                 const MPI_Offset *dimlen,     /* [ndim] dimension lengths */
+                 const MPI_Offset *start,      /* [ndim] starts of subarray */
+                 const MPI_Offset *count,      /* [ndim] counts of subarray */
+                 const MPI_Offset *stride,     /* [ndim] strides of subarray */
+                 MPI_Offset       *npairs,     /* OUT: num of off-len pairs */
+                 MPI_Offset       *offsets,    /* OUT: array of offsets */
+                 MPI_Offset       *lengths)    /* OUT: array of lengths */
 {
     int i, j;
     MPI_Offset length, nstride, array_len, off, subarray_len;
@@ -404,13 +404,13 @@ flatten_subarray(int                ndim,       /* number of dimensions */
  * lengths are allocated in this subroutine and need to be freed by the caller.
  */
 static int
-flatten_req(const NC          *ncp,
-            const NC_var      *varp,
-            const MPI_Offset  *start,
-            const MPI_Offset  *count,
-            const MPI_Offset  *stride,
-            int               *is_incr,   /* OUT: are offsets incrementing */
-            PNCIO_View        *file_view) /* OUT: flattened file view */
+flatten_req(const NC         *ncp,
+            const NC_var     *varp,
+            const MPI_Offset *start,
+            const MPI_Offset *count,
+            const MPI_Offset *stride,
+            int              *is_incr,   /* OUT: are offsets incrementing */
+            PNCIO_View       *file_view) /* OUT: flattened file view */
 {
     int i, j, err=NC_NOERR, ndims;
     MPI_Offset num, idx, var_begin, prev_end_off;
@@ -534,12 +534,12 @@ err_out:
  * offsets and lengths are allocated here and need to be freed by the caller.
  */
 static int
-flatten_nreqs(const NC      *ncp,
-              int            reqMode,   /* IN: NC_REQ_RD or NC_REQ_WR */
-              int            num_reqs,  /* IN: # requests */
-              const NC_req  *reqs,      /* [num_reqs] requests */
-              int           *is_incr,   /* OUT: are offsets incrementing */
-              PNCIO_View    *file_view) /* OUT: flattened file view */
+flatten_nreqs(const NC     *ncp,
+              int           reqMode,   /* IN: NC_REQ_RD or NC_REQ_WR */
+              int           num_reqs,  /* IN: # requests */
+              const NC_req *reqs,      /* [num_reqs] requests */
+              int          *is_incr,   /* OUT: are offsets incrementing */
+              PNCIO_View   *file_view) /* OUT: flattened file view */
 {
     int i, j, err=NC_NOERR, ndims, max_ndims=0;
     MPI_Offset num, idx, prev_end_off;
@@ -567,8 +567,10 @@ flatten_nreqs(const NC      *ncp,
     }
 
     /* now we can allocate a contiguous memory space for the off-len pairs */
-    file_view->off = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * file_view->count);
-    file_view->len = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * file_view->count);
+    file_view->off = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) *
+                                              file_view->count);
+    file_view->len = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) *
+                                              file_view->count);
 
     ones = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * max_ndims);
     for (i=0; i<max_ndims; i++) ones[i] = 1;
@@ -720,9 +722,9 @@ flat_buf_type(const NC      *ncp,
     if (num_reqs == 0)
         return NC_NOERR;
 
-    buf_view->off = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * num_reqs);
+    buf_view->off = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * num_reqs);
     if (buf_view->off == NULL) return NC_ENOMEM;
-    buf_view->len = (MPI_Offset*)NCI_Malloc(sizeof(MPI_Offset) * num_reqs);
+    buf_view->len = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * num_reqs);
     if (buf_view->len == NULL) return NC_ENOMEM;
 
     *buf = reqs[0].xbuf;
@@ -797,14 +799,13 @@ flat_buf_type(const NC      *ncp,
  *      this INA group (appending).
  */
 static
-int ina_collect_md(const NC   *ncp,
+int ina_collect_md(MPI_Comm    comm, /* INA intra-node MPI communicator */
                    MPI_Offset *meta,
                    PNCIO_View *file_view)
 {
     int i, err, rank, nprocs, mpireturn, status=NC_NOERR, nreqs;
     MPI_Request *req=NULL;
     MPI_Offset num_pairs=meta[0];
-    MPI_Comm comm = ncp->comm_attr.ina_intra_comm;
 
 #if PNETCDF_DEBUG_MODE == 1
     assert(comm != MPI_COMM_NULL);
@@ -931,8 +932,9 @@ int ina_collect_md(const NC   *ncp,
 
 /*----< ina_put() >----------------------------------------------------------*/
 /* This subroutine implements the intra-node aggregation for write operations.
- * It also handles the case when INA is disabled. Note heap space allocated in
- * file_view and buf_view will be freed by end of this subroutine.
+ * It also handles the case when INA is disabled and independent writes when
+ * INA is enabled. Note heap space allocated in file_view and buf_view will be
+ * freed by end of this subroutine.
  */
 static
 int ina_put(NC         *ncp,
@@ -956,8 +958,14 @@ int ina_put(NC         *ncp,
     pnc_ina_mem_put[0] = MAX(pnc_ina_mem_put[0], mem_max);
 #endif
 
+    /* When a process makes an independent I/O call, we must set INA intra-node
+     * communicator, intra_comm, to MPI_COMM_SELF, as if self rank is an INA
+     * aggregator and the INA group size is of 1.
+     */
     intra_comm = ncp->comm_attr.ina_intra_comm;
-    if (intra_comm == MPI_COMM_NULL) { /* INA is disabled */
+    if (intra_comm == MPI_COMM_NULL || fIsSet(ncp->flags, NC_MODE_INDEP)) {
+        /* Either INA is disabled or this is an independent request */
+        intra_comm = MPI_COMM_SELF;
         nprocs = 1;
         rank = 0;
     }
@@ -998,7 +1006,7 @@ int ina_put(NC         *ncp,
      * after returned from ina_collect_md().
      */
     if (nprocs > 1) {
-        err = ina_collect_md(ncp, meta, &put_fview);
+        err = ina_collect_md(intra_comm, meta, &put_fview);
         if (err != NC_NOERR) {
             NCI_Free(meta);
             return err;
@@ -1549,7 +1557,7 @@ do_write:
     pnc_ina_mem_put[4] = MAX(pnc_ina_mem_put[4], mem_max);
 
     endT = MPI_Wtime();
-    pnc_ina_put[4] += endT - startT; /* setview */
+    pnc_ina_put[4] += endT - startT;
     startT = endT;
 #endif
 
@@ -1631,8 +1639,9 @@ size_t bin_search(MPI_Offset        key,
 
 /*----< ina_get() >----------------------------------------------------------*/
 /* This subroutine implements the intra-node aggregation for read operations.
- * It also handles the case when INA is disabled. Note heap space allocated in
- * file_view and buf_view will be freed by end of this subroutine.
+ * It also handles the case when INA is disabled and independent reads when INA
+ * is enabled. Note heap space allocated in file_view and buf_view will be
+ * freed by end of this subroutine.
  */
 static
 int ina_get(NC         *ncp,
@@ -1658,8 +1667,14 @@ int ina_get(NC         *ncp,
     pnc_ina_mem_get[0] = MAX(pnc_ina_mem_get[0], mem_max);
 #endif
 
+    /* When a process makes an independent I/O call, we must set INA intra-node
+     * communicator, intra_comm, to MPI_COMM_SELF, as if self rank is an INA
+     * aggregator and the INA group size is of 1.
+     */
     intra_comm = ncp->comm_attr.ina_intra_comm;
-    if (intra_comm == MPI_COMM_NULL) { /* INA is disabled */
+    if (intra_comm == MPI_COMM_NULL || fIsSet(ncp->flags, NC_MODE_INDEP)) {
+        /* Either INA is disabled or this is an independent request */
+        intra_comm = MPI_COMM_SELF;
         nprocs = 1;
         rank = 0;
     }
@@ -1709,7 +1724,7 @@ int ina_get(NC         *ncp,
      * after returned from ina_collect_md().
      */
     if (nprocs > 1) {
-        err = ina_collect_md(ncp, meta, &get_fview);
+        err = ina_collect_md(intra_comm, meta, &get_fview);
         if (err != NC_NOERR) {
             NCI_Free(meta);
             return err;
@@ -2440,8 +2455,8 @@ ncmpio_ina_nreqs(NC         *ncp,
 #endif
 
     if (req_list != NULL) {
-        /* All metadata in req_list have been used to set file_view and
-         * buf_view. It is now safe to release the space occupied by req_list.
+        /* All metadata in req_list have been extracted to set file_view and
+         * buf_view. It is now safe to release the space allocated by req_list.
          */
         NCI_Free(req_list);
     }
@@ -2450,16 +2465,8 @@ ncmpio_ina_nreqs(NC         *ncp,
     pnc_ina_flatten += MPI_Wtime() - timing;
 #endif
 
-    /* When a process makes an independent I/O call, we need to temporarily set
-     * ncp->comm_attr.ina_intra_comm to be MPI_COMM_SELF, as if self rank is an
-     * INA aggregator and the INA group size is of 1.
-     */
-    MPI_Comm saved_ina_intra_comm = ncp->comm_attr.ina_intra_comm;
-    if (fIsSet(ncp->flags, NC_MODE_INDEP))
-        ncp->comm_attr.ina_intra_comm = MPI_COMM_SELF;
-
     /* Perform intra-node aggregation and file I/O. Note that the space
-     * allocated in file_view and buf_view will be freed at the end of
+     * allocated for file_view and buf_view will be freed at the end of
      * ina_put() and ina_get().
      */
     if (fIsSet(reqMode, NC_REQ_WR))
@@ -2467,10 +2474,6 @@ ncmpio_ina_nreqs(NC         *ncp,
     else
         err = ina_get(ncp, is_incr, file_view, buf_view, buf);
     if (status == NC_NOERR) status = err;
-
-    if (fIsSet(ncp->flags, NC_MODE_INDEP))
-        /* restore ncp->comm_attr.ina_intra_comm */
-        ncp->comm_attr.ina_intra_comm = saved_ina_intra_comm;
 
     /* Update the number of records if new records have been created.
      * For nonblocking APIs, there is no way for a process to know whether
@@ -2522,17 +2525,15 @@ ncmpio_ina_req(NC               *ncp,
     double timing = MPI_Wtime();
 #endif
 
-    if (buf_len == 0 || buf == NULL) {
-        /* This is a zero-length request. When in collective data mode, this
-         * rank must still participate collective calls. When INA is enabled,
-         * this rank tells its aggregator that it has no I/O data. When INA is
-         * disabled, this rank must participate other collective file call.
-         */
-        file_view.count = 0;
-        buf_view.count = 0;
-        buf_view.size = 0;
-    }
-    else {
+    file_view.count = 0;
+    file_view.off   = NULL;
+    file_view.len   = NULL;
+    buf_view.count  = 0;
+    buf_view.off    = NULL;
+    buf_view.len    = NULL;
+    buf_view.size   = 0;
+
+    if (buf_len > 0 && buf != NULL) {
         /* construct file_view, the file access offset-length pairs
          *   file_view.count: total number of offset_length pairs
          *   file_view.off[]: array of file offsets
@@ -2550,41 +2551,32 @@ ncmpio_ina_req(NC               *ncp,
             buf_view.len[0] = buf_len;
             buf_view.size = buf_len;
         }
-        else { /* make this rank zero-sized request */
+        else { /* make this zero-sized request */
             file_view.count = 0;
-            buf_view.count = 0;
-            buf_view.size = 0;
         }
         status = err;
     }
+    /* The else case indicates this is a zero-length request.
+     * When in collective data mode, this rank must still participate
+     * collective calls.  When INA is enabled, this rank tells its aggregator
+     * that it has no I/O data. When INA is disabled, this rank must
+     * participate other collective file call.
+     */
 
 #if PNETCDF_PROFILING == 1
     pnc_ina_flatten += MPI_Wtime() - timing;
 #endif
 
-    /* When a process makes an independent I/O call, we need to temporarily set
-     * ncp->comm_attr.ina_intra_comm to be MPI_COMM_SELF, as if self rank is an
-     * INA aggregator and the INA group size is of 1.
-     */
-    MPI_Comm saved_ina_intra_comm = ncp->comm_attr.ina_intra_comm;
-    if (fIsSet(ncp->flags, NC_MODE_INDEP))
-        ncp->comm_attr.ina_intra_comm = MPI_COMM_SELF;
-
     /* Perform intra-node aggregation and file I/O. Note that the space
-     * allocated in file_view and buf_view will be freed at the end of
+     * allocated for file_view and buf_view will be freed at the end of
      * ina_put() and ina_get().
      */
-
     if (fIsSet(reqMode, NC_REQ_WR))
         err = ina_put(ncp, is_incr, file_view, buf_view, buf);
     else
         err = ina_get(ncp, is_incr, file_view, buf_view, buf);
 
     if (status == NC_NOERR) status = err;
-
-    if (fIsSet(ncp->flags, NC_MODE_INDEP))
-        /* restore ncp->comm_attr.ina_intra_comm */
-        ncp->comm_attr.ina_intra_comm = saved_ina_intra_comm;
 
     return status;
 }
