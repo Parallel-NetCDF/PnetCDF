@@ -128,6 +128,13 @@ static int ncmpi_init_keyval = MPI_KEYVAL_INVALID;
  *      INA aggregators.
  *    + comm_attr->ina_inter_comm will be used when calling GIO_open()/
  *      MPI_File_open().
+ *
+ * The concept of intra-node request aggregation and its performance results
+ * are presented in the following paper.
+ * Q. Kang, S. Lee, K. Hou, R. Ross, A. Agrawal, A. Choudhary, and W. Liao.
+ * Improving MPI Collective I/O for High Volume Non-Contiguous Requests With
+ * Intra-Node Aggregation. IEEE Transactions on Parallel and Distributed
+ * Systems, 31(11):2682-2695, November 2020.
  */
 static
 int ina_init(MPI_Comm        comm,
@@ -2055,13 +2062,15 @@ ncmpi_inq_file_format(const char *filename,
     errno = 0;
     rlen = read(fd, signature, 8);
     if (rlen != 8) {
-        close(fd); /* ignore error */
+#if PNETCDF_DEBUG_MODE == 1
         if (rlen == 0 && errno == 0)
             fprintf(stderr, "Error in %s at %d: empty file %s\n",
                     __func__,__LINE__,filename);
         else
             fprintf(stderr, "Error in %s at %d: fail to read signature of file %s\n",
                     __func__,__LINE__,filename);
+#endif
+        close(fd); /* ignore error */
         DEBUG_RETURN_ERROR(NC_EFILE)
     }
     if (close(fd) == -1)
