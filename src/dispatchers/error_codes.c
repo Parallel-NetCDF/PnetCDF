@@ -595,170 +595,172 @@ ncmpi_strerrno(int err)
         return unknown_str;
     }
 
-    switch (err) {
-        case (NC_NOERR):			return "NC_NOERR";
-        case (NC_EBADID):			return "NC_EBADID";
-        case (NC_ENFILE):			return "NC_ENFILE";
-        case (NC_EEXIST):			return "NC_EEXIST";
-        case (NC_EINVAL):			return "NC_EINVAL";
-        case (NC_EPERM):			return "NC_EPERM";
-        case (NC_ENOTINDEFINE):			return "NC_ENOTINDEFINE";
-        case (NC_EINDEFINE):			return "NC_EINDEFINE";
-        case (NC_EINVALCOORDS):			return "NC_EINVALCOORDS";
-        case (NC_EMAXDIMS):			return "NC_EMAXDIMS";
-        case (NC_ENAMEINUSE):			return "NC_ENAMEINUSE";
-        case (NC_ENOTATT):			return "NC_ENOTATT";
-        case (NC_EMAXATTS):			return "NC_EMAXATTS";
-        case (NC_EBADTYPE):			return "NC_EBADTYPE";
-        case (NC_EBADDIM):			return "NC_EBADDIM";
-        case (NC_EUNLIMPOS):			return "NC_EUNLIMPOS";
-        case (NC_EMAXVARS):			return "NC_EMAXVARS";
-        case (NC_ENOTVAR):			return "NC_ENOTVAR";
-        case (NC_EGLOBAL):			return "NC_EGLOBAL";
-        case (NC_ENOTNC):			return "NC_ENOTNC";
-        case (NC_ESTS):				return "NC_ESTS";
-        case (NC_EMAXNAME):			return "NC_EMAXNAME";
-        case (NC_EUNLIMIT):			return "NC_EUNLIMIT";
-        case (NC_ENORECVARS):			return "NC_ENORECVARS";
-        case (NC_ECHAR):			return "NC_ECHAR";
-        case (NC_EEDGE):			return "NC_EEDGE";
-        case (NC_ESTRIDE):			return "NC_ESTRIDE";
-        case (NC_EBADNAME):			return "NC_EBADNAME";
-        case (NC_ERANGE):			return "NC_ERANGE";
-        case (NC_ENOMEM):			return "NC_ENOMEM";
-        case (NC_EVARSIZE):			return "NC_EVARSIZE";
-        case (NC_EDIMSIZE):			return "NC_EDIMSIZE";
-        case (NC_ETRUNC):			return "NC_ETRUNC";
-        case (NC_EAXISTYPE):			return "NC_EAXISTYPE";
-        case (NC_EDAP):				return "NC_EDAP";
-        case (NC_ECURL):			return "NC_ECURL";
-        case (NC_EIO):				return "NC_EIO";
-        case (NC_ENODATA):			return "NC_ENODATA";
-        case (NC_EDAPSVC):			return "NC_EDAPSVC";
-        case (NC_EDAS):				return "NC_EDAS";
-        case (NC_EDDS):				return "NC_EDDS";
-        case (NC_EDATADDS):			return "NC_EDATADDS";
-        case (NC_EDAPURL):			return "NC_EDAPURL";
-        case (NC_EDAPCONSTRAINT):		return "NC_EDAPCONSTRAINT";
-        case (NC_ETRANSLATION):			return "NC_ETRANSLATION";
-        case (NC_EACCESS):			return "NC_EACCESS";
-        case (NC_EAUTH):			return "NC_EAUTH";
-        case (NC_ENOTFOUND):			return "NC_ENOTFOUND";
-        case (NC_ECANTREMOVE):			return "NC_ECANTREMOVE";
-        case (NC_EINTERNAL):			return "NC_EINTERNAL";
-        case (NC_EPNETCDF):			return "NC_EPNETCDF";
-        case (NC_EHDFERR):			return "NC_EHDFERR";
-        case (NC_ECANTREAD):			return "NC_ECANTREAD";
-        case (NC_ECANTWRITE):			return "NC_ECANTWRITE";
-        case (NC_ECANTCREATE):			return "NC_ECANTCREATE";
-        case (NC_EFILEMETA):			return "NC_EFILEMETA";
-        case (NC_EDIMMETA):			return "NC_EDIMMETA";
-        case (NC_EATTMETA):			return "NC_EATTMETA";
-        case (NC_EVARMETA):			return "NC_EVARMETA";
-        case (NC_ENOCOMPOUND):			return "NC_ENOCOMPOUND";
-        case (NC_EATTEXISTS):			return "NC_EATTEXISTS";
-        case (NC_ENOTNC4):			return "NC_ENOTNC4";
-        case (NC_ESTRICTNC3):			return "NC_ESTRICTNC3";
-        case (NC_ENOTNC3):			return "NC_ENOTNC3";
-        case (NC_ENOPAR):			return "NC_ENOPAR";
-        case (NC_EPARINIT):			return "NC_EPARINIT";
-        case (NC_EBADGRPID):			return "NC_EBADGRPID";
-        case (NC_EBADTYPID):			return "NC_EBADTYPID";
-        case (NC_ETYPDEFINED):			return "NC_ETYPDEFINED";
-        case (NC_EBADFIELD):			return "NC_EBADFIELD";
-        case (NC_EBADCLASS):			return "NC_EBADCLASS";
-        case (NC_EMAPTYPE):			return "NC_EMAPTYPE";
-        case (NC_ELATEFILL):			return "NC_ELATEFILL";
-        case (NC_ELATEDEF):			return "NC_ELATEDEF";
-        case (NC_EDIMSCALE):			return "NC_EDIMSCALE";
-        case (NC_ENOGRP):			return "NC_ENOGRP";
-        case (NC_ESTORAGE):			return "NC_ESTORAGE";
-        case (NC_EBADCHUNK):			return "NC_EBADCHUNK";
-        case (NC_ENOTBUILT):			return "NC_ENOTBUILT";
-        case (NC_EDISKLESS):			return "NC_EDISKLESS";
-        case (NC_ECANTEXTEND):			return "NC_ECANTEXTEND";
-        case (NC_EMPI):				return "NC_EMPI";
-        case (NC_EFILTER):			return "NC_EFILTER";
-        case (NC_ERCFILE):			return "NC_ERCFILE";
-        case (NC_ENULLPAD):			return "NC_ENULLPAD";
-        case (NC_EINMEMORY):			return "NC_EINMEMORY";
-        case (NC_ENOFILTER):			return "NC_ENOFILTER";
-/*
-        case (NC_EURL):				return "NC_EURL";
-        case (NC_ECONSTRAINT):			return "NC_ECONSTRAINT";
-*/
-        case (NC_ESMALL):			return "NC_ESMALL";
-        case (NC_ENOTINDEP):			return "NC_ENOTINDEP";
-        case (NC_EINDEP):			return "NC_EINDEP";
-        case (NC_EFILE):			return "NC_EFILE";
-        case (NC_EREAD):			return "NC_EREAD";
-        case (NC_EWRITE):			return "NC_EWRITE";
-        case (NC_EOFILE):			return "NC_EOFILE";
-        case (NC_EMULTITYPES):			return "NC_EMULTITYPES";
-        case (NC_EIOMISMATCH):			return "NC_EIOMISMATCH";
-        case (NC_ENEGATIVECNT):			return "NC_ENEGATIVECNT";
-        case (NC_EUNSPTETYPE):			return "NC_EUNSPTETYPE";
-        case (NC_EINVAL_REQUEST):		return "NC_EINVAL_REQUEST";
-        case (NC_EAINT_TOO_SMALL):		return "NC_EAINT_TOO_SMALL";
-        case (NC_ENOTSUPPORT):			return "NC_ENOTSUPPORT";
-        case (NC_ENULLBUF):			return "NC_ENULLBUF";
-        case (NC_EPREVATTACHBUF):		return "NC_EPREVATTACHBUF";
-        case (NC_ENULLABUF):			return "NC_ENULLABUF";
-        case (NC_EPENDINGBPUT):			return "NC_EPENDINGBPUT";
-        case (NC_EINSUFFBUF):			return "NC_EINSUFFBUF";
-        case (NC_ENOENT):			return "NC_ENOENT";
-        case (NC_EINTOVERFLOW):			return "NC_EINTOVERFLOW";
-        case (NC_ENOTENABLED):			return "NC_ENOTENABLED";
-        case (NC_EBAD_FILE):			return "NC_EBAD_FILE";
-        case (NC_ENO_SPACE):			return "NC_ENO_SPACE";
-        case (NC_EQUOTA):			return "NC_EQUOTA";
-        case (NC_ENULLSTART):			return "NC_ENULLSTART";
-        case (NC_ENULLCOUNT):			return "NC_ENULLCOUNT";
-        case (NC_EINVAL_CMODE):			return "NC_EINVAL_CMODE";
-        case (NC_ETYPESIZE):			return "NC_ETYPESIZE";
-        case (NC_ETYPE_MISMATCH):		return "NC_ETYPE_MISMATCH";
-        case (NC_ETYPESIZE_MISMATCH):		return "NC_ETYPESIZE_MISMATCH";
-        case (NC_ESTRICTCDF2):			return "NC_ESTRICTCDF2";
-        case (NC_ENOTRECVAR):			return "NC_ENOTRECVAR";
-        case (NC_ENOTFILL):			return "NC_ENOTFILL";
-        case (NC_EINVAL_OMODE):			return "NC_EINVAL_OMODE";
-        case (NC_EPENDING):			return "NC_EPENDING";
-        case (NC_EMAX_REQ):			return "NC_EMAX_REQ";
-        case (NC_EBADLOG):			return "NC_EBADLOG";
-        case (NC_EFLUSHED):			return "NC_EFLUSHED";
-        case (NC_EADIOS):			return "NC_EADIOS";
-        case (NC_EFSTYPE):			return "NC_EFSTYPE";
+#define ERR_CODE_STR(err) case (err): return #err;
 
-        case (NC_EMULTIDEFINE):			return "NC_EMULTIDEFINE";
-        case (NC_EMULTIDEFINE_OMODE):		return "NC_EMULTIDEFINE_OMODE";
-        case (NC_EMULTIDEFINE_DIM_NUM):		return "NC_EMULTIDEFINE_DIM_NUM";
-        case (NC_EMULTIDEFINE_DIM_SIZE):	return "NC_EMULTIDEFINE_DIM_SIZE";
-        case (NC_EMULTIDEFINE_DIM_NAME):	return "NC_EMULTIDEFINE_DIM_NAME";
-        case (NC_EMULTIDEFINE_VAR_NUM):		return "NC_EMULTIDEFINE_VAR_NUM";
-        case (NC_EMULTIDEFINE_VAR_NAME):	return "NC_EMULTIDEFINE_VAR_NAME";
-        case (NC_EMULTIDEFINE_VAR_NDIMS):	return "NC_EMULTIDEFINE_VAR_NDIMS";
-        case (NC_EMULTIDEFINE_VAR_DIMIDS):	return "NC_EMULTIDEFINE_VAR_DIMIDS";
-        case (NC_EMULTIDEFINE_VAR_TYPE):	return "NC_EMULTIDEFINE_VAR_TYPE";
-        case (NC_EMULTIDEFINE_VAR_LEN):		return "NC_EMULTIDEFINE_VAR_LEN";
-        case (NC_EMULTIDEFINE_NUMRECS):		return "NC_EMULTIDEFINE_NUMRECS";
-        case (NC_EMULTIDEFINE_VAR_BEGIN):	return "NC_EMULTIDEFINE_VAR_BEGIN";
-        case (NC_EMULTIDEFINE_ATTR_NUM):	return "NC_EMULTIDEFINE_ATTR_NUM";
-        case (NC_EMULTIDEFINE_ATTR_SIZE):	return "NC_EMULTIDEFINE_ATTR_SIZE";
-        case (NC_EMULTIDEFINE_ATTR_NAME):	return "NC_EMULTIDEFINE_ATTR_NAME";
-        case (NC_EMULTIDEFINE_ATTR_TYPE):	return "NC_EMULTIDEFINE_ATTR_TYPE";
-        case (NC_EMULTIDEFINE_ATTR_LEN):	return "NC_EMULTIDEFINE_ATTR_LEN";
-        case (NC_EMULTIDEFINE_ATTR_VAL):	return "NC_EMULTIDEFINE_ATTR_VAL";
-        case (NC_EMULTIDEFINE_FNC_ARGS):	return "NC_EMULTIDEFINE_FNC_ARGS";
-        case (NC_EMULTIDEFINE_FILL_MODE):	return "NC_EMULTIDEFINE_FILL_MODE";
-        case (NC_EMULTIDEFINE_VAR_FILL_MODE):	return "NC_EMULTIDEFINE_VAR_FILL_MODE";
-        case (NC_EMULTIDEFINE_VAR_FILL_VALUE):	return "NC_EMULTIDEFINE_VAR_FILL_VALUE";
-        case (NC_EMULTIDEFINE_CMODE):		return "NC_EMULTIDEFINE_CMODE";
-        case (NC_EMULTIDEFINE_HINTS):		return "NC_EMULTIDEFINE_HINTS";
-        case (NC_EDRIVER):          		return "NC_EDRIVER";
-        case (NC_EFILEVIEW):          		return "NC_EFILEVIEW";
+    switch (err) {
+        ERR_CODE_STR(NC_NOERR)
+        ERR_CODE_STR(NC_EBADID)
+        ERR_CODE_STR(NC_ENFILE)
+        ERR_CODE_STR(NC_EEXIST)
+        ERR_CODE_STR(NC_EINVAL)
+        ERR_CODE_STR(NC_EPERM)
+        ERR_CODE_STR(NC_ENOTINDEFINE)
+        ERR_CODE_STR(NC_EINDEFINE)
+        ERR_CODE_STR(NC_EINVALCOORDS)
+        ERR_CODE_STR(NC_EMAXDIMS)
+        ERR_CODE_STR(NC_ENAMEINUSE)
+        ERR_CODE_STR(NC_ENOTATT)
+        ERR_CODE_STR(NC_EMAXATTS)
+        ERR_CODE_STR(NC_EBADTYPE)
+        ERR_CODE_STR(NC_EBADDIM)
+        ERR_CODE_STR(NC_EUNLIMPOS)
+        ERR_CODE_STR(NC_EMAXVARS)
+        ERR_CODE_STR(NC_ENOTVAR)
+        ERR_CODE_STR(NC_EGLOBAL)
+        ERR_CODE_STR(NC_ENOTNC)
+        ERR_CODE_STR(NC_ESTS)
+        ERR_CODE_STR(NC_EMAXNAME)
+        ERR_CODE_STR(NC_EUNLIMIT)
+        ERR_CODE_STR(NC_ENORECVARS)
+        ERR_CODE_STR(NC_ECHAR)
+        ERR_CODE_STR(NC_EEDGE)
+        ERR_CODE_STR(NC_ESTRIDE)
+        ERR_CODE_STR(NC_EBADNAME)
+        ERR_CODE_STR(NC_ERANGE)
+        ERR_CODE_STR(NC_ENOMEM)
+        ERR_CODE_STR(NC_EVARSIZE)
+        ERR_CODE_STR(NC_EDIMSIZE)
+        ERR_CODE_STR(NC_ETRUNC)
+        ERR_CODE_STR(NC_EAXISTYPE)
+        ERR_CODE_STR(NC_EDAP)
+        ERR_CODE_STR(NC_ECURL)
+        ERR_CODE_STR(NC_EIO)
+        ERR_CODE_STR(NC_ENODATA)
+        ERR_CODE_STR(NC_EDAPSVC)
+        ERR_CODE_STR(NC_EDAS)
+        ERR_CODE_STR(NC_EDDS)
+        ERR_CODE_STR(NC_EDATADDS)
+        ERR_CODE_STR(NC_EDAPURL)
+        ERR_CODE_STR(NC_EDAPCONSTRAINT)
+        ERR_CODE_STR(NC_ETRANSLATION)
+        ERR_CODE_STR(NC_EACCESS)
+        ERR_CODE_STR(NC_EAUTH)
+        ERR_CODE_STR(NC_ENOTFOUND)
+        ERR_CODE_STR(NC_ECANTREMOVE)
+        ERR_CODE_STR(NC_EINTERNAL)
+        ERR_CODE_STR(NC_EPNETCDF)
+        ERR_CODE_STR(NC_EHDFERR)
+        ERR_CODE_STR(NC_ECANTREAD)
+        ERR_CODE_STR(NC_ECANTWRITE)
+        ERR_CODE_STR(NC_ECANTCREATE)
+        ERR_CODE_STR(NC_EFILEMETA)
+        ERR_CODE_STR(NC_EDIMMETA)
+        ERR_CODE_STR(NC_EATTMETA)
+        ERR_CODE_STR(NC_EVARMETA)
+        ERR_CODE_STR(NC_ENOCOMPOUND)
+        ERR_CODE_STR(NC_EATTEXISTS)
+        ERR_CODE_STR(NC_ENOTNC4)
+        ERR_CODE_STR(NC_ESTRICTNC3)
+        ERR_CODE_STR(NC_ENOTNC3)
+        ERR_CODE_STR(NC_ENOPAR)
+        ERR_CODE_STR(NC_EPARINIT)
+        ERR_CODE_STR(NC_EBADGRPID)
+        ERR_CODE_STR(NC_EBADTYPID)
+        ERR_CODE_STR(NC_ETYPDEFINED)
+        ERR_CODE_STR(NC_EBADFIELD)
+        ERR_CODE_STR(NC_EBADCLASS)
+        ERR_CODE_STR(NC_EMAPTYPE)
+        ERR_CODE_STR(NC_ELATEFILL)
+        ERR_CODE_STR(NC_ELATEDEF)
+        ERR_CODE_STR(NC_EDIMSCALE)
+        ERR_CODE_STR(NC_ENOGRP)
+        ERR_CODE_STR(NC_ESTORAGE)
+        ERR_CODE_STR(NC_EBADCHUNK)
+        ERR_CODE_STR(NC_ENOTBUILT)
+        ERR_CODE_STR(NC_EDISKLESS)
+        ERR_CODE_STR(NC_ECANTEXTEND)
+        ERR_CODE_STR(NC_EMPI)
+        ERR_CODE_STR(NC_EFILTER)
+        ERR_CODE_STR(NC_ERCFILE)
+        ERR_CODE_STR(NC_ENULLPAD)
+        ERR_CODE_STR(NC_EINMEMORY)
+        ERR_CODE_STR(NC_ENOFILTER)
+/*
+        ERR_CODE_STR(NC_EURL)
+        ERR_CODE_STR(NC_ECONSTRAINT)
+*/
+        ERR_CODE_STR(NC_ESMALL)
+        ERR_CODE_STR(NC_ENOTINDEP)
+        ERR_CODE_STR(NC_EINDEP)
+        ERR_CODE_STR(NC_EFILE)
+        ERR_CODE_STR(NC_EREAD)
+        ERR_CODE_STR(NC_EWRITE)
+        ERR_CODE_STR(NC_EOFILE)
+        ERR_CODE_STR(NC_EMULTITYPES)
+        ERR_CODE_STR(NC_EIOMISMATCH)
+        ERR_CODE_STR(NC_ENEGATIVECNT)
+        ERR_CODE_STR(NC_EUNSPTETYPE)
+        ERR_CODE_STR(NC_EINVAL_REQUEST)
+        ERR_CODE_STR(NC_EAINT_TOO_SMALL)
+        ERR_CODE_STR(NC_ENOTSUPPORT)
+        ERR_CODE_STR(NC_ENULLBUF)
+        ERR_CODE_STR(NC_EPREVATTACHBUF)
+        ERR_CODE_STR(NC_ENULLABUF)
+        ERR_CODE_STR(NC_EPENDINGBPUT)
+        ERR_CODE_STR(NC_EINSUFFBUF)
+        ERR_CODE_STR(NC_ENOENT)
+        ERR_CODE_STR(NC_EINTOVERFLOW)
+        ERR_CODE_STR(NC_ENOTENABLED)
+        ERR_CODE_STR(NC_EBAD_FILE)
+        ERR_CODE_STR(NC_ENO_SPACE)
+        ERR_CODE_STR(NC_EQUOTA)
+        ERR_CODE_STR(NC_ENULLSTART)
+        ERR_CODE_STR(NC_ENULLCOUNT)
+        ERR_CODE_STR(NC_EINVAL_CMODE)
+        ERR_CODE_STR(NC_ETYPESIZE)
+        ERR_CODE_STR(NC_ETYPE_MISMATCH)
+        ERR_CODE_STR(NC_ETYPESIZE_MISMATCH)
+        ERR_CODE_STR(NC_ESTRICTCDF2)
+        ERR_CODE_STR(NC_ENOTRECVAR)
+        ERR_CODE_STR(NC_ENOTFILL)
+        ERR_CODE_STR(NC_EINVAL_OMODE)
+        ERR_CODE_STR(NC_EPENDING)
+        ERR_CODE_STR(NC_EMAX_REQ)
+        ERR_CODE_STR(NC_EBADLOG)
+        ERR_CODE_STR(NC_EFLUSHED)
+        ERR_CODE_STR(NC_EADIOS)
+        ERR_CODE_STR(NC_EFSTYPE)
+
+        ERR_CODE_STR(NC_EMULTIDEFINE)
+        ERR_CODE_STR(NC_EMULTIDEFINE_OMODE)
+        ERR_CODE_STR(NC_EMULTIDEFINE_DIM_NUM)
+        ERR_CODE_STR(NC_EMULTIDEFINE_DIM_SIZE)
+        ERR_CODE_STR(NC_EMULTIDEFINE_DIM_NAME)
+        ERR_CODE_STR(NC_EMULTIDEFINE_VAR_NUM)
+        ERR_CODE_STR(NC_EMULTIDEFINE_VAR_NAME)
+        ERR_CODE_STR(NC_EMULTIDEFINE_VAR_NDIMS)
+        ERR_CODE_STR(NC_EMULTIDEFINE_VAR_DIMIDS)
+        ERR_CODE_STR(NC_EMULTIDEFINE_VAR_TYPE)
+        ERR_CODE_STR(NC_EMULTIDEFINE_VAR_LEN)
+        ERR_CODE_STR(NC_EMULTIDEFINE_NUMRECS)
+        ERR_CODE_STR(NC_EMULTIDEFINE_VAR_BEGIN)
+        ERR_CODE_STR(NC_EMULTIDEFINE_ATTR_NUM)
+        ERR_CODE_STR(NC_EMULTIDEFINE_ATTR_SIZE)
+        ERR_CODE_STR(NC_EMULTIDEFINE_ATTR_NAME)
+        ERR_CODE_STR(NC_EMULTIDEFINE_ATTR_TYPE)
+        ERR_CODE_STR(NC_EMULTIDEFINE_ATTR_LEN)
+        ERR_CODE_STR(NC_EMULTIDEFINE_ATTR_VAL)
+        ERR_CODE_STR(NC_EMULTIDEFINE_FNC_ARGS)
+        ERR_CODE_STR(NC_EMULTIDEFINE_FILL_MODE)
+        ERR_CODE_STR(NC_EMULTIDEFINE_VAR_FILL_MODE)
+        ERR_CODE_STR(NC_EMULTIDEFINE_VAR_FILL_VALUE)
+        ERR_CODE_STR(NC_EMULTIDEFINE_CMODE)
+        ERR_CODE_STR(NC_EMULTIDEFINE_HINTS)
+        ERR_CODE_STR(NC_EDRIVER)
+        ERR_CODE_STR(NC_EFILEVIEW)
 
         default:
-              sprintf(unknown_str,"Unknown code %d",err);
+            sprintf(unknown_str,"Unknown code %d",err);
     }
     return unknown_str;
 }
