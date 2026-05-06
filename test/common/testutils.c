@@ -417,6 +417,13 @@ int tst_main(int        argc,
 
     MPI_Info_create(&info);
 
+    /* Set common I/O hints. Using smaller values for hints below can make
+     * the tests more rigorous.
+     */
+    MPI_Info_set(info, "ind_wr_buffer_size", "60");
+    MPI_Info_set(info, "ind_rd_buffer_size", "70");
+    MPI_Info_set(info, "cb_buffer_size", "500");
+
 #define SET_OPT(key) {               \
     if (opt.key == 2) {              \
         s_ ## key = 1; e_##key = 0;  \
