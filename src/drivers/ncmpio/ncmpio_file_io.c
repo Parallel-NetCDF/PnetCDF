@@ -17,7 +17,7 @@
 
 #include <mpi.h>
 
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
 #include <gio.h>
 #endif
 
@@ -101,7 +101,7 @@ ncmpio_file_close(NC *ncp)
                 err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
         }
     }
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
     else if (ncp->driver == PNC_DRIVER_GIO) {
         if (ncp->gio_fh != NULL)
             /* When INA is enabled, non-INA aggregators' gio_fh may be NULL */
@@ -149,7 +149,7 @@ ncmpio_file_delete(NC *ncp)
             if (mpireturn != MPI_SUCCESS)
                 err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
         }
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
         else if (ncp->driver == PNC_DRIVER_GIO) {
             err = GIO_delete(ncp->path);
             if (err != GIO_NOERR)
@@ -175,7 +175,7 @@ ncmpio_file_sync(NC *ncp) {
     char *mpi_name;
     int mpireturn;
 
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
     if (ncp->driver == PNC_DRIVER_GIO) {
         int err=NC_NOERR;
         if (ncp->gio_fh != NULL) {
@@ -394,7 +394,7 @@ ncmpio_file_read(NC         *ncp,
 
         if (bufType != MPI_BYTE) MPI_Type_free(&bufType);
     }
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
     else if (ncp->driver == PNC_DRIVER_GIO) {
 
         if (ncp->gio_fh == GIO_FILE_NULL) {
@@ -630,7 +630,7 @@ ncmpio_file_write(NC         *ncp,
 
         if (bufType != MPI_BYTE) MPI_Type_free(&bufType);
     }
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
     else if (ncp->driver == PNC_DRIVER_GIO) {
 
         if (ncp->gio_fh == GIO_FILE_NULL) {

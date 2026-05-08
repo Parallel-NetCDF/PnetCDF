@@ -17,7 +17,7 @@
 #include <dispatch.h>
 #include "ncmpio_driver.h"
 
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
 #include "gio.h"
 #endif
 
@@ -500,7 +500,7 @@ struct NC {
 
     MPI_File      mpio_fh_coll;  /* MPI-IO file handle for collective mode */
     MPI_File      mpio_fh_indep; /* MPI-IO file handle for independent mode */
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
     GIO_File      gio_fh;        /* GIO file handler */
 #endif
 

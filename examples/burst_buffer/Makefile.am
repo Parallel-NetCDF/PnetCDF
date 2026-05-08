@@ -45,9 +45,7 @@ endif
 if MIMIC_LUSTRE
    TESTS_ENVIRONMENT += export MIMIC_LUSTRE=1;
 endif
-if BUILD_GIO
-   TESTS_ENVIRONMENT += export ENABLE_GIO=1;
-endif
+TESTS_ENVIRONMENT += export ENABLE_GIO=@ENABLE_GIO@;
 
 ptest ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="

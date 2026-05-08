@@ -13,7 +13,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/drivers/include
 AM_CPPFLAGS += -I$(top_builddir)/src/drivers/include
 AM_CPPFLAGS += @ADIOS_INC@
 
-if BUILD_GIO
+if ENABLE_GIO
    AM_CPPFLAGS += -I${top_builddir}/gio/src
 endif
 
@@ -41,7 +41,7 @@ C_SRCS    = utf8proc.c \
             error_mpi2nc.c \
             hash_map.c
 
-if BUILD_GIO
+if ENABLE_GIO
    C_SRCS += error_gio2nc.c
 endif
 

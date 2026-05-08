@@ -30,7 +30,7 @@
 
 #include <mpi.h>
 
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
 #include <gio.h>
 #endif
 
@@ -339,7 +339,7 @@ ncmpio_create(MPI_Comm         comm,
                             err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
                     }
                 }
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
                 else if (ncp->driver == PNC_DRIVER_GIO)
                     err = GIO_delete(filename);
 #endif
@@ -411,7 +411,7 @@ ncmpio_create(MPI_Comm         comm,
                         }
                     }
                 }
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
                 else if (ncp->driver == PNC_DRIVER_GIO) {
                     GIO_File gio_fh;
                     err = GIO_open(MPI_COMM_SELF, filename, O_RDWR,
@@ -449,7 +449,7 @@ ncmpio_create(MPI_Comm         comm,
     ncp->mpi_amode = mpi_amode;
     ncp->info      = MPI_INFO_NULL;
 
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
     ncp->gio_fh = NULL; /* when using GIO driver */
 #endif
 
@@ -676,7 +676,7 @@ ncmpio_create(MPI_Comm         comm,
             DEBUG_FOPEN_ERROR(err);
         }
     }
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
     else if (ncp->driver == PNC_DRIVER_GIO) {
         /* Use GIO driver.
          *

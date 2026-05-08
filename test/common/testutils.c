@@ -442,7 +442,7 @@ int tst_main(int        argc,
     SET_OPT(mod)    /* test collective/independent data mode */
     SET_OPT(bb)     /* test of burst-buffering feature */
 
-#if !defined(ENABLE_GIO) || ENABLE_GIO == 0
+#if PNETCDF_DRIVER_GIO == 0
     s_drv = e_drv = 1; /* skip testing GIO driver */
 #endif
 

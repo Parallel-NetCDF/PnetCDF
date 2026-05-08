@@ -35,8 +35,7 @@ endif
 if ENABLE_ADIOS
    libpnetcdf_la_LIBADD += ../drivers/ncadios/libncadios.la
 endif
-
-if BUILD_GIO
+if ENABLE_GIO
    libpnetcdf_la_LIBADD += ${top_builddir}/gio/src/libgio.la
 endif
 

@@ -70,7 +70,7 @@ void ncmpio_hint_extract(NC       *ncp,
     ncp->driver = PNC_DRIVER_MPIIO;
 
     /* default I/O driver is GIO, if it is not disabled at configure time */
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
     ncp->driver = PNC_DRIVER_GIO;
 #endif
 
@@ -373,7 +373,7 @@ void ncmpio_hint_set(NC       *ncp,
     /* Whether to use MPI-IO or GIO driver. */
     if (ncp->driver == PNC_DRIVER_MPIIO)
         MPI_Info_set(info, "nc_driver", "mpiio");
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
     else if (ncp->driver == PNC_DRIVER_GIO)
         MPI_Info_set(info, "nc_driver", "gio");
 #endif

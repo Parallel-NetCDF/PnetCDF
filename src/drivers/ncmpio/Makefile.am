@@ -13,7 +13,7 @@ AM_CPPFLAGS += -I${top_builddir}/src/include
 AM_CPPFLAGS += -I${top_srcdir}/src/drivers/include
 AM_CPPFLAGS += -I${top_builddir}/src/drivers/include
 
-if BUILD_GIO
+if ENABLE_GIO
    AM_CPPFLAGS += -I${top_builddir}/gio/src
 endif
 

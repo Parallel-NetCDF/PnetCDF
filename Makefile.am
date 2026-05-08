@@ -8,7 +8,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-if BUILD_GIO
+if ENABLE_GIO
    GIO_MOD = gio
 endif
 
@@ -27,7 +27,7 @@ EXTRA_DIST = COPYRIGHT \
              m4/foreach.m4 \
              m4/utils.m4
 
-if ! BUILD_GIO
+if ! ENABLE_GIO
    EXTRA_DIST += gio
 endif
 

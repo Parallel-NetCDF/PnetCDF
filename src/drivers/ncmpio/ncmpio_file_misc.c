@@ -139,7 +139,7 @@ ncmpio_begin_indep_data(void *ncdp)
      */
     MPI_Barrier(ncp->comm);
 
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
     if (ncp->driver == PNC_DRIVER_GIO) {
         /* GIO driver implements open-on-demand mechanism. */
         return NC_NOERR;

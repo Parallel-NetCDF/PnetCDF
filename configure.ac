@@ -152,7 +152,6 @@ AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal pe
 AH_TEMPLATE([ENABLE_THREAD_SAFE],       [Define if to enable thread-safe capability])
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
 AH_TEMPLATE([HAVE_MPI_LARGE_COUNT],     [Define if required MPI APIs have arguments of type MPI_Count])
-AH_TEMPLATE([ENABLE_GIO],               [Define if GIO library is enabled])
 
 AH_TOP([#ifndef H_CONFIG
 #define H_CONFIG])
@@ -2811,7 +2810,6 @@ fi
 ENABLE_GIO=0
 if test "x$enable_gio" = xyes ; then
    ENABLE_GIO=1
-   AC_DEFINE(ENABLE_GIO)
    # Tell GIO that it will be built as a sub-module of PnetCDF,
    # so 'make install' will skip libgio.so
    export GIO_SUB_BUILD=$enable_gio
@@ -2819,7 +2817,7 @@ if test "x$enable_gio" = xyes ; then
    AC_SUBST([GIO_PACKAGE], [gio])
 fi
 AC_SUBST(ENABLE_GIO)
-AM_CONDITIONAL(BUILD_GIO, [test "x$enable_gio" != xno])
+AM_CONDITIONAL(ENABLE_GIO, [test "x$enable_gio" = xyes])
 
 dnl AC_CONFIG_HEADERS([src/binding/f77/nfconfig_inc])
 AC_CONFIG_FILES(Makefile \

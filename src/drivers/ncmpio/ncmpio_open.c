@@ -26,7 +26,7 @@
 
 #include <mpi.h>
 
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
 #include <gio.h>
 #endif
 
@@ -105,7 +105,7 @@ ncmpio_open(MPI_Comm         comm,
     ncp->path     = path;  /* reuse path duplicated in dispatch layer */
     ncp->nc_amode = omode;
 
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
     ncp->gio_fh = NULL; /* when using GIO driver */
 #endif
 
@@ -231,7 +231,7 @@ ncmpio_open(MPI_Comm         comm,
             DEBUG_FOPEN_ERROR(err);
         }
     }
-#ifdef ENABLE_GIO
+#if PNETCDF_DRIVER_GIO == 1
     else if (ncp->driver == PNC_DRIVER_GIO) {
         /* Use GIO driver.
          *
