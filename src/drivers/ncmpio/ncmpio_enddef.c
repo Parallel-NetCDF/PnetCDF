@@ -652,7 +652,7 @@ write_NC(NC *ncp)
      * size and extent, have been broadcast (sync-ed) among processes.
      */
 
-#ifdef ENABLE_NULL_BYTE_HEADER_PADDING
+#if PNETCDF_NULL_BYTE_HEADER_PADDING == 1
     /* NetCDF classic file formats require the file header null-byte padded.
      * PnetCDF's default is not to write the padding area (between ncp->xsz and
      * ncp->begin_var). When this padding feature is enabled, we write the
@@ -692,7 +692,7 @@ write_NC(NC *ncp)
         b_view.off   = &b_off;
         b_view.len   = &b_len;
 
-#ifdef ENABLE_NULL_BYTE_HEADER_PADDING
+#if PNETCDF_NULL_BYTE_HEADER_PADDING == 1
         /* NetCDF classic file formats require the file header null-byte
          * padded. Thus we must calloc a buffer of size equal to file header
          * extent.

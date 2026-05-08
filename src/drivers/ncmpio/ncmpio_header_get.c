@@ -614,7 +614,7 @@ hdr_get_NC_name(bufferinfo *gbp, char **namep, size_t *name_len)
          * and discussion in NetCDF Github issue
          * https://github.com/Unidata/netcdf-c/issues/657.
          */
-#ifdef ENABLE_NULL_BYTE_HEADER_PADDING
+#if PNETCDF_NULL_BYTE_HEADER_PADDING == 1
         char pad[X_ALIGN-1];
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {
@@ -854,7 +854,7 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
          * and discussion in NetCDF Github issue
          * https://github.com/Unidata/netcdf-c/issues/657.
          */
-#ifdef ENABLE_NULL_BYTE_HEADER_PADDING
+#if PNETCDF_NULL_BYTE_HEADER_PADDING == 1
         char pad[X_ALIGN-1];
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {

@@ -143,7 +143,6 @@ AH_TEMPLATE([HDF5_VER_GE_1_10_4],       [Define if HDF5 version is at least 1.10
 AH_TEMPLATE([NETCDF_GE_4_5_0],          [Define if NetCDF version is at least 4.5.0])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
-AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
 AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
 AH_TEMPLATE([HAVE_MPI_LARGE_COUNT],     [Define if required MPI APIs have arguments of type MPI_Count])
@@ -2456,7 +2455,6 @@ AC_ARG_ENABLE([null-byte-header-padding],
 ENABLE_NULL_BYTE_HEADER_PADDING=0
 if test "x${null_byte_header_padding}" = xyes ; then
     ENABLE_NULL_BYTE_HEADER_PADDING=1
-    AC_DEFINE(ENABLE_NULL_BYTE_HEADER_PADDING)
 fi
 AC_SUBST(ENABLE_NULL_BYTE_HEADER_PADDING)
 

@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
     }
 
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
-#ifndef ENABLE_NULL_BYTE_HEADER_PADDING
+#if PNETCDF_NULL_BYTE_HEADER_PADDING == 0
     if (expected_errno == NC_ENULLPAD) CHECK_ERR
     else
 #endif
