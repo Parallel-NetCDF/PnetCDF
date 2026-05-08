@@ -137,8 +137,6 @@ AH_TEMPLATE([NF_INT8_IS_C_],            [C type for Fortran INT8])
 AH_TEMPLATE([NF_INT8_T],                [Type for Fortran INT8])
 AH_TEMPLATE([NF_REAL_IS_C_],            [C type for Fortran REAL])
 AH_TEMPLATE([NO_IEEE_FLOAT],            [Does system have IEEE FLOAT])
-dnl AH_TEMPLATE([ENABLE_IN_PLACE_SWAP], [Define if to enable in-place byte swap])
-dnl AH_TEMPLATE([DISABLE_IN_PLACE_SWAP],[Define if to disable in-place byte swap])
 AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 AH_TEMPLATE([ENABLE_NETCDF4],           [Define if to enable NetCDF-4 support])
 AH_TEMPLATE([HDF5_VER_GE_1_10_4],       [Define if HDF5 version is at least 1.10.4])
@@ -1620,23 +1618,10 @@ AC_ARG_ENABLE([in-place-swap],
     [in_place_swap=${enableval}], [in_place_swap=auto]
 )
 UD_MSG_DEBUG([in_place_swap=$in_place_swap])
-dnl ENABLE_IN_PLACE_SWAP=0
-dnl if test "x${in_place_swap}" = xyes ; then
-dnl    ENABLE_IN_PLACE_SWAP=1
-dnl fi
-dnl AC_DEFINE(ENABLE_IN_PLACE_SWAP, $ENABLE_IN_PLACE_SWAP)
-dnl DISABLE_IN_PLACE_SWAP=0
-dnl if test "x${in_place_swap}" = xno ; then
-dnl    if test "x${ac_cv_c_bigendian}" = xyes ; then
-dnl       AC_MSG_WARN([--disable-in-place-swap takes no effect on Big Endian])
-dnl       in_place_swap=yes
-dnl    else
-dnl       DISABLE_IN_PLACE_SWAP=1
-dnl    fi
-dnl fi
-dnl AC_DEFINE(DISABLE_IN_PLACE_SWAP, $DISABLE_IN_PLACE_SWAP)
 
-dnl IN_PLACE_SWAP being -1 corresponds to "auto"
+dnl values of IN_PLACE_SWAP: -1 corresponds to "auto"
+dnl                           0 corresponds to "disable"
+dnl                           1 corresponds to "enable"
 IN_PLACE_SWAP=-1
 if test "x${ac_cv_c_bigendian}" = xyes && test "x${in_place_swap}" != xauto ; then
    AC_MSG_WARN([--(en/dis)able-in-place-swap takes no effect on Big Endian])
