@@ -13,7 +13,8 @@ AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/include
 AM_CPPFLAGS += -I$(top_srcdir)/src/utils/ncmpidiff
 
-LDADD = @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@ -lm
+LDADD = ${top_builddir}/src/libs/libpnetcdf.la
+LDADD += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@ -lm
 
 check_LTLIBRARIES = libtestutils.la
 
@@ -34,12 +35,7 @@ CLEANFILES += testutilsf.mod
 endif
 
 AM_FFLAGS  =
-AM_FCFLAGS =
-
-if RELAX_COORD_BOUND
-   AM_FFLAGS += $(FC_DEFINE)RELAX_COORD_BOUND
-   AM_FCFLAGS += $(FC_DEFINE)RELAX_COORD_BOUND
-endif
+AM_FCFLAGS = ${FC_MODINC}$(top_builddir)/src/binding/f90 $(FFREEFORMFLAG)
 
 if DECL_GET_ENVIRONMENT_VARIABLE
    AM_FCFLAGS += $(FC_DEFINE)HAS_GET_ENVIRONMENT_VARIABLE

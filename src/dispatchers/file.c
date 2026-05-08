@@ -863,7 +863,7 @@ void set_env_mode(int *env_mode)
     /* get environment variable PNETCDF_RELAX_COORD_BOUND
      * if it is set to 0, then we perform a strict start bound check
      */
-#ifdef RELAX_COORD_BOUND
+#if PNETCDF_RELAX_COORD_BOUND == 1
     fSet(*env_mode, NC_MODE_STRICT_COORD_BOUND);
 #endif
     if ((env_str = getenv("PNETCDF_RELAX_COORD_BOUND")) != NULL) {

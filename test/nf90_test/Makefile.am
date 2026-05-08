@@ -34,11 +34,6 @@ if NAGFORT
   AM_FCFLAGS += -w=uparam
 endif
 
-if RELAX_COORD_BOUND
-   AM_CFLAGS  += -DRELAX_COORD_BOUND
-   AM_FCFLAGS += $(FC_DEFINE)RELAX_COORD_BOUND
-endif
-
 M4SRCS      = test_get.m4 \
               test_put.m4  \
               test_iget.m4 \

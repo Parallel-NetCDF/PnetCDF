@@ -305,7 +305,7 @@ int is_relax_coord_bound(void)
     char *env_str;
     int relax_coord_bound;
 
-#if defined(PNETCDF_RELAX_COORD_BOUND) && PNETCDF_RELAX_COORD_BOUND == 1
+#if PNETCDF_RELAX_COORD_BOUND == 1
     relax_coord_bound = 1;
 #else
     relax_coord_bound = 0;

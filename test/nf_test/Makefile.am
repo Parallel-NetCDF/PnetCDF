@@ -51,10 +51,6 @@ endif
 if HAVE_F77_INT8
    M4FFLAGS += -DHAVE_F77_INT8
 endif
-if RELAX_COORD_BOUND
-   AM_CFLAGS += -DRELAX_COORD_BOUND
-   AM_FFLAGS += $(FC_DEFINE)RELAX_COORD_BOUND
-endif
 
 M4SRCS = test_get.m4 \
          test_put.m4  \

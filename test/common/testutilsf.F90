@@ -85,15 +85,13 @@
           CHARACTER ESC
           PARAMETER (ESC=char(27))
 
-#if PNETCDF_DEBUG_MODE == 1
-          CHARACTER (LEN=20) PASS_STR, FAIL_STR
-          PARAMETER (PASS_STR='-- '//ESC//'[32mpass'//ESC//'[0m (')
-          PARAMETER (FAIL_STR='-- '//ESC//'[31mfail'//ESC//'[0m')
-#else
+          ! screen output in color
+          ! CHARACTER (LEN=20) PASS_STR, FAIL_STR
+          ! PARAMETER (PASS_STR='-- '//ESC//'[32mpass'//ESC//'[0m (')
+          ! PARAMETER (FAIL_STR='-- '//ESC//'[31mfail'//ESC//'[0m')
           CHARACTER (LEN=11) PASS_STR, FAIL_STR
           PARAMETER (PASS_STR='-- pass (')
           PARAMETER (FAIL_STR='-- fail')
-#endif
 
           if (nerrs .EQ. 0) then
               write(*,"(A64,A,F4.1,A)") msg, trim(PASS_STR), timing, 's)'
@@ -103,7 +101,9 @@
       end subroutine pass_fail
 
       subroutine get_env(hint_str, value)
+          implicit none
           character(len=*) hint_str, value
+
 #ifdef HAS_GET_ENVIRONMENT_VARIABLE
           call Get_Environment_Variable(hint_str, Value=value)
 #else
@@ -112,14 +112,17 @@
       end subroutine get_env
 
       LOGICAL FUNCTION relax_coord_bound_f()
+          use pnetcdf
+          implicit none
+
           character(len=256) :: env_str, env_val
           integer :: ierr
 
-#ifdef RELAX_COORD_BOUND
-          relax_coord_bound_f = .TRUE.
-#else
-          relax_coord_bound_f = .FALSE.
-#endif
+          if (PNETCDF_RELAX_COORD_BOUND == 1) then
+              relax_coord_bound_f = .TRUE.
+          else
+              relax_coord_bound_f = .FALSE.
+          endif
           env_str = "PNETCDF_RELAX_COORD_BOUND"
           call get_environment_variable(env_str, value=env_val, status=ierr)
 

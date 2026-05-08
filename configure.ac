@@ -142,7 +142,6 @@ AH_TEMPLATE([ENABLE_NETCDF4],           [Define if to enable NetCDF-4 support])
 AH_TEMPLATE([HDF5_VER_GE_1_10_4],       [Define if HDF5 version is at least 1.10.4])
 AH_TEMPLATE([NETCDF_GE_4_5_0],          [Define if NetCDF version is at least 4.5.0])
 AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
-AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
 AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
 AH_TEMPLATE([HAVE_MPI_LARGE_COUNT],     [Define if required MPI APIs have arguments of type MPI_Count])
@@ -2415,7 +2414,6 @@ UD_MSG_DEBUG(relax_coord_bound=$relax_coord_bound)
 RELAX_COORD_BOUND=0
 if test "x$relax_coord_bound" = xyes ; then
    RELAX_COORD_BOUND=1
-   AC_DEFINE(RELAX_COORD_BOUND)
 fi
 AC_SUBST(RELAX_COORD_BOUND)
 AM_CONDITIONAL([RELAX_COORD_BOUND], [test "x$relax_coord_bound" = xyes])
