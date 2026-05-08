@@ -36,9 +36,9 @@
         call error('   [-1] test CDF-1 format' )
         call error('   [-2] test CDF-2 format' )
         call error('   [-5] test CDF-5 format' )
-#ifdef ENABLE_NETCDF4
-        call error('   [-4] test NetCDF-4 classic-model format' )
-#endif
+        if (PNETCDF_DRIVER_NETCDF4 == 1) then
+            call error('   [-4] test NetCDF-4 classic-model format' )
+        endif
         call error('   [-r] Just do read-only tests' )
         call error( &
         '   [-d directory] directory for storing input/output files' )
@@ -509,14 +509,14 @@
             end if
 1       continue
 
-#ifndef ENABLE_NETCDF4
-        if (cdf_format .EQ. 4) then
-            call error( &
-            "Error: NetCDF-4 support is not enabled at configure time")
-            call MPI_Finalize(err)
-            stop 1
+        if (PNETCDF_DRIVER_NETCDF4 == 0) then
+            if (cdf_format .EQ. 4) then
+                call error( &
+                "Error: NetCDF-4 support is not enabled at configure time")
+                call MPI_Finalize(err)
+                stop 1
+            endif
         endif
-#endif
 
         call MPI_Info_create(info, err)
         ! call MPI_Info_set(info, "romio_pvfs2_posix_write", "enable",err)

@@ -19,7 +19,7 @@
 #include "testutils.h"
 #include <ncmpidiff_core.h>
 
-#if defined(PNETCDF_DRIVER_NETCDF4) && PNETCDF_DRIVER_NETCDF4 == 1
+#if PNETCDF_DRIVER_NETCDF4 == 1
 int nc_formats[5] = {NC_FORMAT_CLASSIC, NC_FORMAT_64BIT_OFFSET, NC_FORMAT_NETCDF4,
                      NC_FORMAT_NETCDF4_CLASSIC, NC_FORMAT_64BIT_DATA};
 #else

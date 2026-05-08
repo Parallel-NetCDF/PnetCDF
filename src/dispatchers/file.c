@@ -24,7 +24,7 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 #ifdef ENABLE_NETCDF4
-#include <netcdf.h>
+#include <netcdf.h>  /* must included before pnetcdf.h if enabled */
 #endif
 
 #include <pnetcdf.h>
@@ -1066,7 +1066,7 @@ ncmpi_create(MPI_Comm    comm,
      * which is later used to select the right driver.
      */
 
-#ifdef ENABLE_NETCDF4
+#if PNETCDF_DRIVER_NETCDF4 == 1
     /* It is illegal to have NC_64BIT_OFFSET & NC_64BIT_DATA & NC_NETCDF4 */
     if ((cmode & (NC_64BIT_OFFSET|NC_NETCDF4)) ==
                  (NC_64BIT_OFFSET|NC_NETCDF4) ||
@@ -1115,7 +1115,7 @@ ncmpi_create(MPI_Comm    comm,
             cmode |= NC_NETCDF4 | NC_CLASSIC_MODEL;
     }
 
-#ifdef ENABLE_NETCDF4
+#if PNETCDF_DRIVER_NETCDF4 == 1
     if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) {
         driver = nc4io_inq_driver();
 #ifdef ENABLE_BURST_BUFFER
@@ -1299,7 +1299,7 @@ ncmpi_open(MPI_Comm    comm,
             }
             format = NC_ENOTNC;
         }
-#ifndef ENABLE_NETCDF4
+#if PNETCDF_DRIVER_NETCDF4 == 0
         else if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) {
             if (nprocs == 1) {
                 if (status == NC_NOERR) status = NC_ENOTBUILT;
@@ -1420,7 +1420,7 @@ ncmpi_open(MPI_Comm    comm,
     }
 #endif
 
-#ifdef ENABLE_NETCDF4
+#if PNETCDF_DRIVER_NETCDF4 == 1
     if (format == NC_FORMAT_NETCDF4_CLASSIC || format == NC_FORMAT_NETCDF4) {
         driver = nc4io_inq_driver();
 #ifdef ENABLE_BURST_BUFFER
@@ -2110,7 +2110,7 @@ ncmpi_inq_file_format(const char *filename,
              * to H5Aget_name(). For now, we do not distinguish
              * NC_CLASSIC_MODEL, but simply return NETCDF4 format.
              */
-#ifdef ENABLE_NETCDF4
+#if PNETCDF_DRIVER_NETCDF4 == 1
             int err, ncid;
             err = nc_open(path, NC_NOWRITE, &ncid);
             if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
@@ -2209,7 +2209,7 @@ ncmpi_inq_version(int ncid, int *nc_mode)
     else if (pncp->format == NC_FORMAT_CLASSIC)
         *nc_mode = NC_CLASSIC_MODEL;
 
-#ifdef ENABLE_NETCDF4
+#if PNETCDF_DRIVER_NETCDF4 == 1
     else if (pncp->format == NC_FORMAT_NETCDF4)
         *nc_mode = NC_NETCDF4;
     else if (pncp->format == NC_FORMAT_NETCDF4_CLASSIC)
@@ -2317,7 +2317,7 @@ ncmpi_inq_num_fix_vars(int ncid, int *num_fix_varsp)
 
     if (num_fix_varsp == NULL) return NC_NOERR;
 
-#ifdef ENABLE_NETCDF4
+#if PNETCDF_DRIVER_NETCDF4 == 1
     if (pncp->format == NC_FORMAT_NETCDF4 ||
         pncp->format == NC_FORMAT_NETCDF4_CLASSIC) {
         /* calling the subroutine that implements ncmpi_inq_num_fix_vars() */
@@ -2355,7 +2355,7 @@ ncmpi_inq_num_rec_vars(int ncid, int *num_rec_varsp)
 
     if (num_rec_varsp == NULL) return NC_NOERR;
 
-#ifdef ENABLE_NETCDF4
+#if PNETCDF_DRIVER_NETCDF4 == 1
     if (pncp->format == NC_FORMAT_NETCDF4 ||
         pncp->format == NC_FORMAT_NETCDF4_CLASSIC) {
         /* calling the subroutine that implements ncmpi_inq_num_rec_vars() */

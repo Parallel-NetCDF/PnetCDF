@@ -422,7 +422,7 @@ do_ncdump(const char *path, struct fspec* specp)
             Printf ("%s file format: CDF-5 (big variables)\n", specp->name);
         else if (NC_mode == NC_64BIT_OFFSET)
             Printf ("%s file format: CDF-2 (large file)\n", specp->name);
-#ifdef ENABLE_NETCDF4
+#if PNETCDF_DRIVER_NETCDF4 == 1
         else if (NC_mode == NC_NETCDF4)
             Printf ("%s file format: NetCDF-4\n", specp->name);
 #endif
@@ -446,7 +446,7 @@ do_ncdump(const char *path, struct fspec* specp)
             Printf ("// file format: CDF-5 (big variables)\n");
         else if (NC_mode == NC_64BIT_OFFSET)
             Printf ("// file format: CDF-2 (large file)\n");
-#ifdef ENABLE_NETCDF4
+#if PNETCDF_DRIVER_NETCDF4 == 1
         else if (NC_mode == NC_NETCDF4)
             Printf ("// file format: NetCDF-4\n");
 #endif

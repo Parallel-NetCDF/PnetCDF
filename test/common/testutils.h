@@ -116,7 +116,10 @@ int inq_env_hint(char *hint_key, char **hint_value);
         printf("MPI Error at file %s line %d (%s)\n",__FILE__,__LINE__,err_string); \
     }
 
-#if defined(PNETCDF_DRIVER_NETCDF4) && PNETCDF_DRIVER_NETCDF4 == 1
+#ifndef PNETCDF_DRIVER_NETCDF4
+#error PNETCDF_DRIVER_NETCDF4 should be defined in pnetcdf.h
+#endif
+#if PNETCDF_DRIVER_NETCDF4 == 1
 extern int nc_formats[5];
 #else
 extern int nc_formats[3];

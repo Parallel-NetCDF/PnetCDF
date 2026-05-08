@@ -504,14 +504,14 @@ C implementation of the netCDF library.
             end if
 1       continue
 
-#ifndef ENABLE_NETCDF4
-        if (cdf_format .EQ. 4) then
-            call error(
-     +      "Error: NetCDF-4 support is not enabled at configure time")
-            call MPI_Finalize(err)
-            stop 1
+        if (PNETCDF_DRIVER_NETCDF4 == 0) then
+            if (cdf_format .EQ. 4) then
+                call error(
+     +          "Error: NetCDF-4 feature is disabled at configure time")
+                call MPI_Finalize(err)
+                stop 1
+            endif
         endif
-#endif
 
         numGatts = 6
         numVars  = 136
