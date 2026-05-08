@@ -108,7 +108,7 @@ ncmpii_error_posix2nc(char *err_msg);
 int ncmpii_error_gio2nc(int gio_err, const char *err_msg);
 #endif
 
-#ifdef ENABLE_ADIOS
+#if PNETCDF_DRIVER_ADIOS == 1
 extern int
 ncmpii_error_adios2nc(int adios_err, char *err_msg);
 #endif

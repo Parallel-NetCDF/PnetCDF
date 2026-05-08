@@ -28,7 +28,7 @@
 #include "dumplib.h"
 #include "vardata.h"
 
-#ifdef ENABLE_ADIOS
+#if PNETCDF_DRIVER_ADIOS == 1
 #include "adios_read.h"
 #include <arpa/inet.h>
 #define BP_MINIFOOTER_SIZE 28
@@ -65,7 +65,7 @@ int main(int argc, char** argv);
 
 char *progname;
 
-#ifdef ENABLE_ADIOS
+#if PNETCDF_DRIVER_ADIOS == 1
 unsigned int bp_ver;
 #endif
 
@@ -426,7 +426,7 @@ do_ncdump(const char *path, struct fspec* specp)
         else if (NC_mode == NC_NETCDF4)
             Printf ("%s file format: NetCDF-4\n", specp->name);
 #endif
-#ifdef ENABLE_ADIOS
+#if PNETCDF_DRIVER_ADIOS == 1
         else if (NC_mode == NC_BP)
             Printf ("%s file format: ADIOS BP Ver. %u\n", specp->name, bp_ver);
 #endif
@@ -450,7 +450,7 @@ do_ncdump(const char *path, struct fspec* specp)
         else if (NC_mode == NC_NETCDF4)
             Printf ("// file format: NetCDF-4\n");
 #endif
-#ifdef ENABLE_ADIOS
+#if PNETCDF_DRIVER_ADIOS == 1
         else if (NC_mode == NC_BP)
             Printf ("// file format: ADIOS BP Ver. %u\n", bp_ver);
 #endif
@@ -721,7 +721,7 @@ enum FILE_KIND {
     UNKNOWN
 };
 
-#ifdef ENABLE_ADIOS
+#if PNETCDF_DRIVER_ADIOS == 1
 static int adios_parse_version (char *footer, unsigned int *version,
                                 int *diff_endianness) {
     unsigned int test = 1; /* If high bit set, big endian */
@@ -776,7 +776,7 @@ enum FILE_KIND check_file_signature(char *path)
         else if (signature[3] == 2)  return CDF2;
         else if (signature[3] == 1)  return CDF1;
     }
-#ifdef ENABLE_ADIOS
+#if PNETCDF_DRIVER_ADIOS == 1
     else{
         off_t fsize;
         int diff_endian;

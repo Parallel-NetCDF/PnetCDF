@@ -36,7 +36,7 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 #define MAX_INT_LEN 24
 #endif
 
-#ifdef ENABLE_ADIOS
+#if PNETCDF_DRIVER_ADIOS == 1
 #include "adios_read.h"
 #include <arpa/inet.h>
 #define BP_MINIFOOTER_SIZE 28
@@ -1459,7 +1459,7 @@ ncmpi_open(MPI_Comm    comm,
             format == NC_FORMAT_CDF5) {
             driver = ncmpio_inq_driver();
         }
-#ifdef ENABLE_ADIOS
+#if PNETCDF_DRIVER_ADIOS == 1
         else if (format == NC_FORMAT_BP) {
             driver = ncadios_inq_driver();
         }
@@ -1986,7 +1986,7 @@ ncmpi_inq_format(int  ncid,
     return NC_NOERR;
 }
 
-#ifdef ENABLE_ADIOS
+#if PNETCDF_DRIVER_ADIOS == 1
 static void swap_64(void *data)
 {
     uint64_t *dest = (uint64_t*) data;
@@ -2124,7 +2124,7 @@ ncmpi_inq_file_format(const char *filename,
         }
     }
 
-#ifdef ENABLE_ADIOS
+#if PNETCDF_DRIVER_ADIOS == 1
     /* check if the file is a BP. */
     if (*formatp == NC_FORMAT_UNKNOWN) {
         off_t fsize;
@@ -2216,7 +2216,7 @@ ncmpi_inq_version(int ncid, int *nc_mode)
         *nc_mode = NC_NETCDF4 | NC_CLASSIC_MODEL;
 #endif
 
-#ifdef ENABLE_ADIOS
+#if PNETCDF_DRIVER_ADIOS == 1
     else if (pncp->format == NC_FORMAT_BP)
         *nc_mode = NC_BP;
 #endif
