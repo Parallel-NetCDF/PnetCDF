@@ -44,9 +44,7 @@ TESTS_ENVIRONMENT += export BAD_FILES="$(BAD_FILES)";
 
 TESTS_ENVIRONMENT += export ENABLE_BURST_BUFFER=@ENABLE_BURST_BUFFER@;
 TESTS_ENVIRONMENT += export ENABLE_THREAD_SAFE=@ENABLE_THREAD_SAFE@;
-if MIMIC_LUSTRE
-   TESTS_ENVIRONMENT += export MIMIC_LUSTRE=1;
-endif
+TESTS_ENVIRONMENT += export MIMIC_LUSTRE=@MIMIC_LUSTRE@;
 
 # During "make check", programs set in TESTS will be run by
 # seq_runs.sh individually. Each produces its own log file.

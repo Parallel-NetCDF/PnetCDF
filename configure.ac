@@ -1594,16 +1594,19 @@ if test "x$has_lustre" = xyes ; then
 fi
 AM_CONDITIONAL(HAVE_LUSTRE, [test x$has_lustre = xyes])
 
-minicking_lustre=no
+minicking_lustre=0
 if test "x$has_lustre" = xno ; then
    AC_MSG_CHECKING([for whether mimicking Lustre])
    if test "x$MIMIC_LUSTRE" = xyes ; then
-      AC_DEFINE(MIMIC_LUSTRE, 1, [Define for mimicking LUSTRE file system])
-      minicking_lustre=yes
+      AC_DEFINE(MIMIC_LUSTRE, 1, [Define if mimicking LUSTRE file system])
+      minicking_lustre=1
+      AC_MSG_RESULT(yes)
+   else
+      AC_MSG_RESULT(no)
    fi
-   AC_MSG_RESULT($minicking_lustre)
 fi
-AM_CONDITIONAL(MIMIC_LUSTRE, [test x$minicking_lustre = xyes])
+AC_SUBST(MIMIC_LUSTRE, [$minicking_lustre])
+AM_CONDITIONAL(MIMIC_LUSTRE, [test x$minicking_lustre = x1])
 
 AC_C_CHAR_UNSIGNED
 AC_C_BIGENDIAN
