@@ -682,7 +682,7 @@ hdr_len_NC_var(const NC_var *varp,
      */
     sz = hdr_len_NC_name(varp->name, sizeof_t);         /* name */
     sz += sizeof_t;                                     /* nelems */
-    sz += sizeof_t * varp->ndims;                       /* [dimid ...] */
+    sz += (long long)sizeof_t * varp->ndims;            /* [dimid ...] */
     sz += hdr_len_NC_attrarray(&varp->attrs, sizeof_t); /* vatt_list */
     sz += X_SIZEOF_NC_TYPE;                             /* nc_type */
     sz += sizeof_t;                                     /* vsize */
