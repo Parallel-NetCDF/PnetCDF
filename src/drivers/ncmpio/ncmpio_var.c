@@ -41,7 +41,7 @@ ncmpio_free_NC_var(NC_var *varp)
 
     ncmpio_free_NC_attrarray(&varp->attrs);
     NCI_Free(varp->name);
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
     if (varp->num_subfiles > 1) /* deallocate it */
         NCI_Free(varp->dimids_org);
 #endif
@@ -524,7 +524,7 @@ ncmpio_inq_var(void       *ncdp,
         *xtypep = varp->xtype;
 
     if (ndimsp != NULL) {
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
         /* varp->num_subfiles is already set during open or enddef */
         if (varp->num_subfiles > 1)
             *ndimsp = varp->ndims_org;
@@ -533,7 +533,7 @@ ncmpio_inq_var(void       *ncdp,
             *ndimsp = varp->ndims;
     }
     if (dimids != NULL) { /* copy dim IDs for non-scalar */
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
         /* varp->dimids_org is already set during open or enddef */
         if (varp->num_subfiles > 1 && varp->ndims_org > 0)
             memcpy(dimids, varp->dimids_org, sizeof(int) * varp->ndims_org);

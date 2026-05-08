@@ -289,7 +289,7 @@ typedef struct {
                               total size in bytes of the array variable.
                               For record variable, this is the record size */
     NC_attrarray  attrs;   /* attribute array */
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
     int           num_subfiles;
     int           ndims_org;  /* ndims before subfiling */
     int          *dimids_org; /* dimids before subfiling */
@@ -429,7 +429,7 @@ struct NC {
                        * is_open will be set to 1. When INA is disabled, all
                        * processes' is_open is set to 1 after file create/open.
                        */
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
     int           subfile_mode; /* 0 or 1, for disable/enable subfiling */
     int           num_subfiles; /* no. subfiles */
     struct NC    *ncp_sf;       /* ncp of subfile */

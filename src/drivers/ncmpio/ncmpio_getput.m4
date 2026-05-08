@@ -40,7 +40,7 @@ dnl
 #include <pnc_debug.h>
 #include <common.h>
 #include "ncmpio_NC.h"
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
 #include "ncmpio_subfile.h"
 #endif
 
@@ -539,7 +539,7 @@ ncmpio_$1_var(void             *ncdp,
      */
     varp = ncp->vars.value[varid];
 
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
     /* call a separate routine if variable is stored in subfiles */
     if (varp->num_subfiles > 1) {
         if (imap != NULL) {

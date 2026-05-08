@@ -28,7 +28,7 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include "ncmpio_NC.h"
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
 #include "ncmpio_subfile.h"
 #endif
 
@@ -85,7 +85,7 @@ ncmpio_close(void *ncdp)
     /* if entering this function in  collective data mode, we do not have to
      * update header in file, as file header is always up-to-date */
 
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
     /* ncmpio__enddef() will update ncp->num_subfiles */
     /* TODO: should check ncid_sf? */
     /* if the file has subfiles, close them first */

@@ -33,7 +33,7 @@
 #include <pnc_debug.h>
 #include <common.h>
 #include "ncmpio_NC.h"
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
 #include "ncmpio_subfile.h"
 #endif
 
@@ -366,7 +366,7 @@ after_open:
         DEBUG_RETURN_ERROR(err);
     }
 
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
     if (ncp->subfile_mode) {
         /* check subfiling attribute */
         err = ncmpio_get_att(ncp, NC_GLOBAL, "_PnetCDF_SubFiling.num_subfiles",

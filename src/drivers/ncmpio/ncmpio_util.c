@@ -52,7 +52,7 @@ void ncmpio_hint_extract(NC       *ncp,
     /* buffer to pack noncontiguous user buffers when calling wait() */
     ncp->ibuf_size = PNC_DEFAULT_IBUF_SIZE;
 
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
     ncp->subfile_mode           = 0;
     ncp->num_subfiles           = 0;
     ncp->comm_attr_sf.num_NUMAs = 0;
@@ -172,7 +172,7 @@ void ncmpio_hint_extract(NC       *ncp,
             ncp->ibuf_size = llval;
     }
 
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
     MPI_Info_get(info, "pnetcdf_subfiling", MPI_MAX_INFO_VAL-1, value, &flag);
     if (flag) {
         if (strcasecmp(value, "enable") == 0)
@@ -344,7 +344,7 @@ void ncmpio_hint_set(NC       *ncp,
     snprintf(int_str, MAX_INT_LEN, OFFFMT, ncp->ibuf_size);
     MPI_Info_set(info, "nc_ibuf_size", int_str);
 
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
     if (ncp->subfile_mode)
         MPI_Info_set(info, "pnetcdf_subfiling", "enable");
     else

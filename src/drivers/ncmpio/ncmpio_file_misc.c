@@ -416,7 +416,7 @@ ncmpio_inq_misc(void       *ncdp,
         sprintf(value, OFFFMT, ncp->ibuf_size);
         MPI_Info_set(*info_used, "nc_ibuf_size", value);
 
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
         if (ncp->subfile_mode)
             MPI_Info_set(*info_used, "pnetcdf_subfiling", "enable");
         else

@@ -137,7 +137,6 @@ AH_TEMPLATE([NF_INT8_IS_C_],            [C type for Fortran INT8])
 AH_TEMPLATE([NF_INT8_T],                [Type for Fortran INT8])
 AH_TEMPLATE([NF_REAL_IS_C_],            [C type for Fortran REAL])
 AH_TEMPLATE([NO_IEEE_FLOAT],            [Does system have IEEE FLOAT])
-AH_TEMPLATE([ENABLE_SUBFILING],         [Define if to enable subfiling feature])
 AH_TEMPLATE([ENABLE_NETCDF4],           [Define if to enable NetCDF-4 support])
 AH_TEMPLATE([HDF5_VER_GE_1_10_4],       [Define if HDF5 version is at least 1.10.4])
 AH_TEMPLATE([NETCDF_GE_4_5_0],          [Define if NetCDF version is at least 4.5.0])
@@ -1914,7 +1913,6 @@ AC_ARG_ENABLE([subfiling],
 
 ENABLE_SUBFILING=0
 if test "x$enable_subfiling" = "xyes" ; then
-   AC_DEFINE(ENABLE_SUBFILING)
    ENABLE_SUBFILING=1
 fi
 AC_SUBST(ENABLE_SUBFILING)

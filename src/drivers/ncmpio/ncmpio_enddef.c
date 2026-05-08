@@ -26,7 +26,7 @@
 #include <common.h>
 #include <ncx.h>
 #include "ncmpio_NC.h"
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
 #include "ncmpio_subfile.h"
 #endif
 
@@ -1162,7 +1162,7 @@ ncmpio__enddef(void       *ncdp,
     ncp->h_minfree = (h_minfree < 0) ? NC_DEFAULT_H_MINFREE : h_minfree;
     ncp->v_minfree = (v_minfree < 0) ? NC_DEFAULT_V_MINFREE : v_minfree;
 
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
     if (ncp->num_subfiles > 1) {
         /* TODO: should return subfile-related msg when there's an error */
         err = ncmpio_subfile_partition(ncp);
@@ -1196,7 +1196,7 @@ ncmpio__enddef(void       *ncdp,
         CHECK_ERROR(err)
     }
 
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
     if (ncp->num_subfiles > 1) {
         /* get ncp info for the subfile */
         err = NC_begins(ncp->ncp_sf, v_align, r_align);
@@ -1295,7 +1295,7 @@ ncmpio__enddef(void       *ncdp,
      * be considered fatal, as inconsistency is about the data structure,
      * rather then contents (such as attribute values) */
 
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
     /* write header to subfile */
     if (ncp->num_subfiles > 1) {
         err = write_NC(ncp->ncp_sf);
@@ -1315,7 +1315,7 @@ ncmpio__enddef(void       *ncdp,
     }
     fClr(ncp->flags, NC_MODE_CREATE | NC_MODE_DEF);
 
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
     if (ncp->num_subfiles > 1)
         fClr(ncp->ncp_sf->flags, NC_MODE_CREATE | NC_MODE_DEF);
 #endif
@@ -1329,7 +1329,7 @@ ncmpio__enddef(void       *ncdp,
         sprintf(value, OFFFMT, ncp->r_align);
         MPI_Info_set(ncp->info, "nc_record_align_size", value);
 
-#ifdef ENABLE_SUBFILING
+#if PNETCDF_SUBFILING == 1
         sprintf(value, "%d", ncp->num_subfiles);
         MPI_Info_set(ncp->info, "nc_num_subfiles", value);
 #else
