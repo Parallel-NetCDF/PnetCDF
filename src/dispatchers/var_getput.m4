@@ -733,7 +733,7 @@ IAPINAME($1,$2,$3)(int ncid,
     if (err != NC_NOERR) return err;
 
     ifelse(`$1',`bput',`
-#ifdef ENABLE_BURST_BUFFER
+#if PNETCDF_BURST_BUFFERING == 1
     if (pncp->driver == ncbbio_inq_driver())
         reqMode = NC_REQ_NBI;
     else
@@ -853,7 +853,7 @@ INAPINAME($1,$2)(int                ncid,
     if (num == 0) return NC_NOERR;
 
     ifelse(`$1',`bput',`
-#ifdef ENABLE_BURST_BUFFER
+#if PNETCDF_BURST_BUFFERING == 1
     if (pncp->driver == ncbbio_inq_driver())
         reqMode = NC_REQ_NBI;
     else

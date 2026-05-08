@@ -895,7 +895,7 @@ ncmpi_create(MPI_Comm    comm,
 #ifdef BUILD_DRIVER_FOO
     int enable_foo_driver=0;
 #endif
-#ifdef ENABLE_BURST_BUFFER
+#if PNETCDF_BURST_BUFFERING == 1
     int enable_bb_driver=0;
 #endif
 
@@ -1052,7 +1052,7 @@ ncmpi_create(MPI_Comm    comm,
             enable_foo_driver = 1;
     }
 #endif
-#ifdef ENABLE_BURST_BUFFER
+#if PNETCDF_BURST_BUFFERING == 1
     if (combined_info != MPI_INFO_NULL) {
         /* check if nc_burst_buf is enabled */
         MPI_Info_get(combined_info, "nc_burst_buf", MPI_MAX_INFO_VAL-1,
@@ -1118,7 +1118,7 @@ ncmpi_create(MPI_Comm    comm,
 #if PNETCDF_DRIVER_NETCDF4 == 1
     if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) {
         driver = nc4io_inq_driver();
-#ifdef ENABLE_BURST_BUFFER
+#if PNETCDF_BURST_BUFFERING == 1
         /* Burst buffering does not support NetCDF-4 files yet.
          * If hint nc_burst_buf is enabled in combined_info, disable it.
          */
@@ -1134,7 +1134,7 @@ ncmpi_create(MPI_Comm    comm,
         driver = ncfoo_inq_driver();
     else
 #endif
-#ifdef ENABLE_BURST_BUFFER
+#if PNETCDF_BURST_BUFFERING == 1
     if (enable_bb_driver)
         driver = ncbbio_inq_driver();
     else
@@ -1217,7 +1217,7 @@ ncmpi_open(MPI_Comm    comm,
 #ifdef BUILD_DRIVER_FOO
     int enable_foo_driver=0;
 #endif
-#ifdef ENABLE_BURST_BUFFER
+#if PNETCDF_BURST_BUFFERING == 1
     int enable_bb_driver=0;
 #endif
 
@@ -1410,7 +1410,7 @@ ncmpi_open(MPI_Comm    comm,
             enable_foo_driver = 1;
     }
 #endif
-#ifdef ENABLE_BURST_BUFFER
+#if PNETCDF_BURST_BUFFERING == 1
     if (combined_info != MPI_INFO_NULL) {
         /* check if nc_burst_buf is enabled */
         MPI_Info_get(combined_info, "nc_burst_buf", MPI_MAX_INFO_VAL-1,
@@ -1423,7 +1423,7 @@ ncmpi_open(MPI_Comm    comm,
 #if PNETCDF_DRIVER_NETCDF4 == 1
     if (format == NC_FORMAT_NETCDF4_CLASSIC || format == NC_FORMAT_NETCDF4) {
         driver = nc4io_inq_driver();
-#ifdef ENABLE_BURST_BUFFER
+#if PNETCDF_BURST_BUFFERING == 1
         /* Burst buffering does not support NetCDF-4 files yet.
          * If hint nc_burst_buf is enabled in combined_info, disable it.
          */
@@ -1447,7 +1447,7 @@ ncmpi_open(MPI_Comm    comm,
         driver = ncfoo_inq_driver();
     else
 #endif
-#ifdef ENABLE_BURST_BUFFER
+#if PNETCDF_BURST_BUFFERING == 1
     if (enable_bb_driver)
         driver = ncbbio_inq_driver();
     else
