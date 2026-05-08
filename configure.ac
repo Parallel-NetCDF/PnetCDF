@@ -147,7 +147,6 @@ AH_TEMPLATE([PNC_MALLOC_TRACE],         [Define if to enable malloc tracing])
 AH_TEMPLATE([RELAX_COORD_BOUND],        [Define if relaxed coordinate check is enabled])
 AH_TEMPLATE([ENABLE_NULL_BYTE_HEADER_PADDING], [Define if to enable strict null-byte padding in file header])
 AH_TEMPLATE([PNETCDF_PROFILING],        [Define if to enable PnetCDF internal performance profiling])
-AH_TEMPLATE([ENABLE_THREAD_SAFE],       [Define if to enable thread-safe capability])
 dnl AH_TEMPLATE([HAVE_MPI_COUNT],       [Define if type MPI_Count is defined])
 AH_TEMPLATE([HAVE_MPI_LARGE_COUNT],     [Define if required MPI APIs have arguments of type MPI_Count])
 
@@ -1955,7 +1954,6 @@ if test "x${thread_safe}" = xyes ; then
          -----------------------------------------------------------------------])
       fi
    fi
-   AC_DEFINE(ENABLE_THREAD_SAFE)
    ENABLE_THREAD_SAFE=1
 fi
 AC_SUBST(ENABLE_THREAD_SAFE)

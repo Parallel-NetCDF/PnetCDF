@@ -18,11 +18,6 @@
 #include <assert.h>     /* assert() */
 #include <errno.h>      /* errno */
 
-#ifdef ENABLE_THREAD_SAFE
-#include<pthread.h>
-static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-#endif
-
 #ifdef ENABLE_NETCDF4
 #include <netcdf.h>  /* must included before pnetcdf.h if enabled */
 #endif
@@ -31,6 +26,11 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 #include <dispatch.h>
 #include <pnc_debug.h>
 #include <common.h>
+
+#if PNETCDF_THREAD_SAFE == 1
+#include<pthread.h>
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 #ifndef MAX_INT_LEN
 #define MAX_INT_LEN 24
@@ -618,7 +618,7 @@ new_id_PNCList(int *new_id, PNC *pncp)
 {
     int i, err=NC_NOERR, perr=0;
 
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     perr = pthread_mutex_lock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_lock")
 #endif
@@ -637,7 +637,7 @@ new_id_PNCList(int *new_id, PNC *pncp)
             }
         }
     }
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     perr = pthread_mutex_unlock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_unlock")
 
@@ -652,7 +652,7 @@ del_from_PNCList(int ncid)
 {
     int perr=0;
 
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     perr = pthread_mutex_lock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_lock")
 #endif
@@ -661,7 +661,7 @@ del_from_PNCList(int ncid)
     pnc_filelist[ncid] = NULL;
     pnc_numfiles--;
 
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     perr = pthread_mutex_unlock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_unlock")
 
@@ -678,7 +678,7 @@ PNC_check_id(int ncid, PNC **pncp)
 
     assert(pncp != NULL);
 
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     perr = pthread_mutex_lock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_lock")
 #endif
@@ -688,7 +688,7 @@ PNC_check_id(int ncid, PNC **pncp)
     else
         *pncp = pnc_filelist[ncid];
 
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     perr = pthread_mutex_unlock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_unlock")
 
@@ -1010,7 +1010,7 @@ ncmpi_create(MPI_Comm    comm,
     pnc_num_aggrs_per_node = num_aggrs_per_node;
 #endif
 
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     int perr;
     perr = pthread_mutex_lock(&lock);
     if (perr != 0)
@@ -1029,7 +1029,7 @@ ncmpi_create(MPI_Comm    comm,
         assert(comm_attr.ina_intra_comm != MPI_COMM_NULL);
 #endif
 
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     perr = pthread_mutex_unlock(&lock);
     if (perr != 0)
         printf("Warning in file %s line %d: pthread_mutex_unlock() failed (%s)\n",
@@ -1368,7 +1368,7 @@ ncmpi_open(MPI_Comm    comm,
     pnc_num_aggrs_per_node = num_aggrs_per_node;
 #endif
 
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     int perr;
     perr = pthread_mutex_lock(&lock);
     if (perr != 0)
@@ -1387,7 +1387,7 @@ ncmpi_open(MPI_Comm    comm,
         assert(comm_attr.ina_intra_comm != MPI_COMM_NULL);
 #endif
 
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     perr = pthread_mutex_unlock(&lock);
     if (perr != 0)
         printf("Warning in file %s line %d: pthread_mutex_unlock() failed (%s)\n",
@@ -2595,7 +2595,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
 {
     int err=NC_NOERR, perr=0;
 
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     perr = pthread_mutex_lock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_lock")
 #endif
@@ -2617,7 +2617,7 @@ ncmpi_set_default_format(int format, int *old_formatp)
         err = NC_NOERR;
     }
 
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     perr = pthread_mutex_unlock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_unlock")
 
@@ -2636,14 +2636,14 @@ ncmpi_inq_default_format(int *formatp)
 
     if (formatp == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     perr = pthread_mutex_lock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_lock")
 #endif
 
     *formatp = ncmpi_default_create_format;
 
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     perr = pthread_mutex_unlock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_unlock")
 
@@ -2662,7 +2662,7 @@ ncmpi_inq_files_opened(int *num,    /* cannot be NULL */
 
     if (num == NULL) DEBUG_RETURN_ERROR(NC_EINVAL)
 
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     perr = pthread_mutex_lock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_lock")
 #endif
@@ -2678,7 +2678,7 @@ ncmpi_inq_files_opened(int *num,    /* cannot be NULL */
             }
         }
     }
-#ifdef ENABLE_THREAD_SAFE
+#if PNETCDF_THREAD_SAFE == 1
     perr = pthread_mutex_unlock(&lock);
     CHECK_ERRNO(perr, "pthread_mutex_unlock")
 
