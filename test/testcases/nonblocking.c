@@ -119,7 +119,7 @@ int tst_iput(const char *out_path,
     for (j=0; j<NY; j++)
         for (i=0; i<NX; i++)
             if (buf[j][i] != j) {
-                printf("Error at line %d in %s: buf[%d][%d]=%d != %d\n",
+                fprintf(stderr,"Error at line %d in %s: buf[%d][%d]=%d != %d\n",
                 __LINE__,__FILE__,j,i,buf[j][i],j);
                 nerrs++;
                 goto fn_exit;
@@ -165,7 +165,7 @@ int tst_iput(const char *out_path,
         int exp = NY - j - 1;
         for (i=0; i<NX; i++)
             if (buf[j][i] != exp) {
-                printf("Error at line %d: expect buf[%d][%d]=%d but got %d\n",
+                fprintf(stderr,"Error at line %d: expect buf[%d][%d]=%d but got %d\n",
                        __LINE__, j,i,exp, buf[j][i]);
                 nerrs++;
                 goto fn_exit;
@@ -235,7 +235,7 @@ int tst_iget(const char *in_path,
         int exp = j;
         for (i=0; i<NX; i++)
             if (buf[j][i] != exp) {
-                printf("Error at line %d: expect buf[%d][%d]=%d but got %d\n",
+                fprintf(stderr,"Error at line %d: expect buf[%d][%d]=%d but got %d\n",
                        __LINE__,j,i,exp,buf[j][i]);
                 nerrs++;
                 goto fn_exit;

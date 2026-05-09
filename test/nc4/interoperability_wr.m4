@@ -77,7 +77,7 @@ int nc_rd_$2(int rank, int ncid, int vid, int *did){
     /* Compare result */
     for(i = 0; i < 5; i++){
         if (buf[i] != ans[i]){
-            printf("Error at line %d in %s: expecting buf[%d] = %$1 but got %$1\n", __LINE__, __FILE__, i, ans[i], buf[i]);
+            fprintf(stderr,"Error at line %d in %s: expecting buf[%d] = %$1 but got %$1\n", __LINE__, __FILE__, i, ans[i], buf[i]);
         }
     }
 

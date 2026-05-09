@@ -283,13 +283,13 @@ pres_temp_4D_rd(char *filename, int rank, int nprocs)
    /* Check the coordinate variable data. */
    for (lat = 0; lat < NLAT; lat++)
       if (lats[lat] != START_LAT + 5.*lat) {
-          printf("\nError at line %d in %s: expect %e but got %e\n", __LINE__,__FILE__, START_LAT+5.*lat,lats[lat]);
+          fprintf(stderr,"\nError at line %d in %s: expect %e but got %e\n", __LINE__,__FILE__, START_LAT+5.*lat,lats[lat]);
 	  nerrs++;
           goto fn_exit;
       }
    for (lon = 0; lon < NLON; lon++)
       if (lons[lon] != START_LON + 5.*lon) {
-          printf("\nError at line %d in %s: expect %e but got %e\n", __LINE__,__FILE__, START_LON+5.*lon,lons[lon]);
+          fprintf(stderr,"\nError at line %d in %s: expect %e but got %e\n", __LINE__,__FILE__, START_LON+5.*lon,lons[lon]);
 	  nerrs++;
           goto fn_exit;
       }
@@ -349,12 +349,12 @@ pres_temp_4D_rd(char *filename, int rank, int nprocs)
 	 for (lat = 0; lat < NLAT; lat++)
 	    for (lon = 0; lon < NLON; lon++) {
 	       if (pres_in[lvl][lat*NLON+lon] != SAMPLE_PRESSURE + i) {
-                  printf("\nError at line %d in %s: expect %e but got %e\n", __LINE__,__FILE__, SAMPLE_PRESSURE+i,pres_in[lvl][lat*NLON+lon]);
+                  fprintf(stderr,"\nError at line %d in %s: expect %e but got %e\n", __LINE__,__FILE__, SAMPLE_PRESSURE+i,pres_in[lvl][lat*NLON+lon]);
 		  nerrs++;
 		  goto fn_exit;
                }
 	       if (temp_in[lvl][lat*NLON+lon] != SAMPLE_TEMP + i) {
-                  printf("\nError at line %d in %s: expect %e but got %e\n", __LINE__,__FILE__, SAMPLE_TEMP+i,temp_in[lvl][lat*NLON+lon]);
+                  fprintf(stderr,"\nError at line %d in %s: expect %e but got %e\n", __LINE__,__FILE__, SAMPLE_TEMP+i,temp_in[lvl][lat*NLON+lon]);
 		  nerrs++;
 		  goto fn_exit;
                }
@@ -426,7 +426,7 @@ main(int argc, char ** argv)
     MPI_Allreduce(MPI_IN_PLACE, &timing, 1, MPI_DOUBLE, MPI_MAX,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (nerrs) printf(FAIL_STR,nerrs);
+        if (nerrs) fprintf(stderr,FAIL_STR,nerrs);
         else       printf(PASS_STR, timing);
     }
 

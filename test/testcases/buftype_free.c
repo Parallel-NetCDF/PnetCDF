@@ -95,7 +95,7 @@ int test_io(const char *out_path,
         for (j=0; j<count[0]*count[1]; j++) {
             int exp = j + rank*10;
             if (buf[i][j] != exp) {
-                printf("Error at line %d in %s: user put buffer[%d][%d] altered from %d to %d\n",
+                fprintf(stderr,"Error at line %d in %s: user put buffer[%d][%d] altered from %d to %d\n",
                        __LINE__,__FILE__,i,j, exp, buf[i][j]);
                 nerrs++;
             }
@@ -159,7 +159,7 @@ int test_io(const char *out_path,
                 else
                     exp = (int)((j-ghost)*count[1]+(k-ghost) + rank*10);
                 if (buf[i][j*gsize[1]+k] != exp) {
-                    printf("Error at %d: var %d expect buf[%d][%d] = %d but got %d\n",
+                    fprintf(stderr,"Error at %d: var %d expect buf[%d][%d] = %d but got %d\n",
                            __LINE__, i, j, k, exp, buf[i][j*gsize[1]+k]);
                     nerrs++;
                     goto err_out;

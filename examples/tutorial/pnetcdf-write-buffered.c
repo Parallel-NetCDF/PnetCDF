@@ -13,7 +13,7 @@
 #include <pnetcdf.h>
 
 #define ERRCODE 2
-#define ERR(e) {printf("Error at line %d: err=%d %s\n", __LINE__, e, ncmpi_strerror(e)); exit(ERRCODE);}
+#define ERR(e) {fprintf(stderr,"Error at line %d: err=%d %s\n", __LINE__, e, ncmpi_strerror(e)); exit(ERRCODE);}
 
 /*----< main() >------------------------------------------------------------*/
 int main(int argc, char **argv) {

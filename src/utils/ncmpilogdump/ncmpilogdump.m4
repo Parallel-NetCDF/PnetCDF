@@ -227,7 +227,7 @@ fn_exit:
         case NC_NOERR:
             break;
         default:
-            printf("Unknown error\n");
+            fprintf(stderr,"Unknown error\n");
 
     }
     return 0;

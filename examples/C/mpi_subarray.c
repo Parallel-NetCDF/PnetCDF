@@ -22,7 +22,7 @@
         int errorStringLen; \
         char errorString[MPI_MAX_ERROR_STRING]; \
         MPI_Error_string(err, errorString, &errorStringLen); \
-        printf("Error at line %d when calling %s: %s\n",__LINE__,fname,errorString); \
+        fprintf(stderr,"Error at line %d when calling %s: %s\n",__LINE__,fname,errorString); \
     }
 
 /*----< main() >------------------------------------------------------------*/

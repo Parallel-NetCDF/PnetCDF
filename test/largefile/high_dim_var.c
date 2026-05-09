@@ -77,7 +77,7 @@ int test_io(const char *out_path,
     for (i=1; i<NDIMS; i++) nelms *= DIMLEN;
     buffer = (short*) malloc(sizeof(short) * nelms);
     if (buffer == NULL) {
-        printf("Error %s at line %d: fail to allocate buffer of size %zu\n",
+        fprintf(stderr,"Error %s at line %d: fail to allocate buffer of size %zu\n",
                basename(__FILE__), __LINE__, nelms * sizeof(short));
         nerrs++;
         goto err_out;
@@ -134,7 +134,7 @@ int test_io(const char *out_path,
                                        buffer); CHECK_ERR
         for (j=0; j<nelms; j++) {
             if (buffer[j] != j%32768) {
-                printf("Error at line %d: expect buffer[%d][%d]=%d but got %hd\n",
+                fprintf(stderr,"Error at line %d: expect buffer[%d][%d]=%d but got %hd\n",
                        __LINE__, i, j, j%32768, buffer[j]);
                 nerrs++;
                 break;
@@ -146,7 +146,7 @@ int test_io(const char *out_path,
                                        buffer); CHECK_ERR
         for (j=0; j<nelms; j++) {
             if (buffer[j] != j%32768) {
-                printf("Error at line %d: expect buffer[%d][%d]=%d but got %hd\n",
+                fprintf(stderr,"Error at line %d: expect buffer[%d][%d]=%d but got %hd\n",
                        __LINE__, i, j, j%32768, buffer[j]);
                 nerrs++;
                 break;

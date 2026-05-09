@@ -87,7 +87,7 @@ int check_int_buf(int *buffer, int lineno)
         else if (nprocs == 3) { if (i == 12) break; }
 
         if (buffer[i] != expected[i]) {
-            printf("Error at line %d: expected read buf[%d]=%d, but got %d\n",
+            fprintf(stderr,"Error at line %d: expected read buf[%d]=%d, but got %d\n",
                    lineno,i,expected[i],buffer[i]);
             return 1;
         }
@@ -116,7 +116,7 @@ int check_flt_buf(float *buffer, float extra, int lineno)
         else if (nprocs == 3) { if (i == 12) break; }
 
         if (buffer[i] != expected[i]) {
-            printf("Error at line %d: expected read buf[%d]=%.1f, but got %.1f\n",
+            fprintf(stderr,"Error at line %d: expected read buf[%d]=%.1f, but got %.1f\n",
                    lineno,i,expected[i],buffer[i]);
             return 1;
         }
@@ -145,7 +145,7 @@ int check_dbl_buf(double *buffer, double extra, int lineno)
         else if (nprocs == 3) { if (i == 12) break; }
 
         if (buffer[i] != expected[i]) {
-            printf("Error at line %d: expected read buf[%d]=%.1f, but got %.1f\n",
+            fprintf(stderr,"Error at line %d: expected read buf[%d]=%.1f, but got %.1f\n",
                    lineno,i,expected[i],buffer[i]);
             return 1;
         }

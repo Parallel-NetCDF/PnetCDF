@@ -310,7 +310,7 @@ int main(int argc, char **argv)
     if (argc - optind != 2) usage(argv[0]);
 
     if (strcmp(argv[optind], argv[optind+1]) == 0) {
-        printf("Error: two input file names are identical (%s) ... exit\n",
+        fprintf(stderr,"Error: two input file names are identical (%s) ... exit\n",
                argv[optind]);
         exit(1);
     }

@@ -156,24 +156,24 @@ non_blocking_put_$1(int         rank,
     /* Check write buffer contents, which should not be altered. */
     exp = (rank + 1) % 128;
     if (buf1[0] != exp) {
-        printf("Error %s at %d: buf1 expects %.f but got %.f\n",
+        fprintf(stderr,"Error %s at %d: buf1 expects %.f but got %.f\n",
                __func__,__LINE__, (float)exp, (float)buf1[0]);
         CHECK_ERR
     }
     for (i=0; i<bufsizeM; i++) {
         exp = (rank + i + 1) % 128;
         if (bufa[i] != exp) {
-            printf("Error %s at %d: bufa[%d] expects %.f but got %.f\n",
+            fprintf(stderr,"Error %s at %d: bufa[%d] expects %.f but got %.f\n",
                    __func__,__LINE__, i, (float)exp, (float)bufa[i]);
             CHECK_ERR
         }
         if (bufs[i] != exp) {
-            printf("Error %s at %d: bufs[%d] expects %.f but got %.f\n",
+            fprintf(stderr,"Error %s at %d: bufs[%d] expects %.f but got %.f\n",
                    __func__,__LINE__, i, (float)exp, (float)bufs[i]);
             CHECK_ERR
         }
         if (bufm[i] != exp) {
-            printf("Error %s at %d: buf[%d] expects %.f but got %.f\n",
+            fprintf(stderr,"Error %s at %d: buf[%d] expects %.f but got %.f\n",
                    __func__,__LINE__, i, (float)exp, (float)bufm[i]);
             CHECK_ERR
         }
@@ -250,24 +250,24 @@ non_blocking_get_$1(int     rank,
     /* Check read contents */
     exp = (rank + 1) % 128;
     if (buf1[0] != exp) {
-        printf("Error %s at %d: buf1 expects %.f but got %.f\n",
+        fprintf(stderr,"Error %s at %d: buf1 expects %.f but got %.f\n",
                __func__,__LINE__, (float)exp, (float)buf1[0]);
         CHECK_ERR
     }
     for (i=0; i<bufsizeM; i++) {
         exp = (rank + i + 1) % 128;
         if (bufa[i] != exp) {
-            printf("Error %s at %d: bufa[%d] expects %.f but got %.f\n",
+            fprintf(stderr,"Error %s at %d: bufa[%d] expects %.f but got %.f\n",
                    __func__,__LINE__, i, (float)exp, (float)bufa[i]);
             CHECK_ERR
         }
         if (bufs[i] != exp) {
-            printf("Error %s at %d: bufs[%d] expects %.f but got %.f\n",
+            fprintf(stderr,"Error %s at %d: bufs[%d] expects %.f but got %.f\n",
                    __func__,__LINE__, i, (float)exp, (float)bufs[i]);
             CHECK_ERR
         }
         if (bufm[i] != exp) {
-            printf("Error %s at %d: buf[%d] expects %.f but got %.f\n",
+            fprintf(stderr,"Error %s at %d: buf[%d] expects %.f but got %.f\n",
                    __func__,__LINE__, i, (float)exp, (float)bufm[i]);
             CHECK_ERR
         }
@@ -290,7 +290,7 @@ define(`TEST_CDF_FORMAT_PUT',dnl
 /* create a new $1 file */
     err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_create() file %s (%s)\n",
+        fprintf(stderr,"Error at line %d in %s: ncmpi_create() file %s (%s)\n",
         __LINE__,__FILE__,out_path,ncmpi_strerror(err));
         CHECK_ERR
     }
@@ -353,7 +353,7 @@ define(`TEST_CDF_FORMAT_GET',dnl
 
     err = ncmpi_open(MPI_COMM_WORLD, out_path, NC_NOWRITE, info, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_open() file %s (%s)\n",
+        fprintf(stderr,"Error at line %d in %s: ncmpi_open() file %s (%s)\n",
         __LINE__,__FILE__,out_path,ncmpi_strerror(err));
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(1);

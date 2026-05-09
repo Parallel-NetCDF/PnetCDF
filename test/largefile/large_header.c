@@ -81,7 +81,7 @@ int test_io(const char *out_path,
     CHECK_ERR
 
     if (buf != rank) {
-        printf("Error at line %d in %s: expecting read buf %d but got %d\n",
+        fprintf(stderr,"Error at line %d in %s: expecting read buf %d but got %d\n",
                __LINE__,__FILE__,rank,buf);
         nerrs++;
     }

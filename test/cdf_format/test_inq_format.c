@@ -40,7 +40,7 @@ int test_io(const char *out_path, /* ignored */
         if (err != NC_NOERR) {
             int rank;
             MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-            printf("Error in %s at %d: rank %d failed to open file %s\n",
+            fprintf(stderr,"Error in %s at %d: rank %d failed to open file %s\n",
                    basename(__FILE__), __LINE__, rank, filename);
             return 1;
         }
@@ -52,7 +52,7 @@ int test_io(const char *out_path, /* ignored */
     err = ncmpi_inq_format(ncid, &fmt); CHECK_ERR
 
     if (fmt != format) {
-        printf("Error in %s at %d: expect CDF-%d format for file %s but got %d\n",
+        fprintf(stderr,"Error in %s at %d: expect CDF-%d format for file %s but got %d\n",
                __FILE__,__LINE__,format,filename,fmt);
         nerrs++;
     }
@@ -64,7 +64,7 @@ int test_io(const char *out_path, /* ignored */
     err = ncmpi_inq_file_format(filename, &fmt); CHECK_ERR
 
     if (fmt != format) {
-        printf("Error in %s at %d: expect CDF-%d format for file %s but got %d\n",
+        fprintf(stderr,"Error in %s at %d: expect CDF-%d format for file %s but got %d\n",
                __FILE__,__LINE__,format,filename,fmt);
         nerrs++;
     }

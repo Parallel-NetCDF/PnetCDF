@@ -67,12 +67,12 @@
 
 static int verbose, debug;
 
-#define CHECK_ERR(name) {                               \
-    if (err != NC_NOERR) {                              \
-        printf("Error at line=%d: name=%s error=%s\n",  \
-               __LINE__, name, ncmpi_strerror(err));    \
-        goto err_out;                                   \
-    }                                                   \
+#define CHECK_ERR(name) {                                       \
+    if (err != NC_NOERR) {                                      \
+        fprintf(stderr,"Error at line=%d: name=%s error=%s\n",  \
+               __LINE__, name, ncmpi_strerror(err));            \
+        goto err_out;                                           \
+    }                                                           \
 }
 
 #define HINT ((flag)?(value):("NOT SET"))
@@ -591,7 +591,7 @@ int check_written_contents(const char *filename,
 
     err = ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at line=%d: opening file %s (%s)\n",
+        fprintf(stderr,"Error at line=%d: opening file %s (%s)\n",
                __LINE__, filename, ncmpi_strerror(err));
         return err;
     }
@@ -625,7 +625,7 @@ int check_written_contents(const char *filename,
                 for (k=0; k<vars[i].nelems; k++) {
                     float exp = rank + k;
                     if (flt_ptr[k] != exp) {
-                        printf("Error at %d: var %s [%d] expect %.1f but got %.1f\n",
+                        fprintf(stderr,"Error at %d: var %s [%d] expect %.1f but got %.1f\n",
                                __LINE__,vars[i].name, k, exp, flt_ptr[k]);
                         nerrs++;
                         goto err_out;
@@ -644,7 +644,7 @@ int check_written_contents(const char *filename,
                 for (k=0; k<vars[i].nelems; k++) {
                     int exp = rank + k;
                     if (int_ptr[k] != exp) {
-                        printf("Error at %d: var %s [%d] expect %d but got %d\n",
+                        fprintf(stderr,"Error at %d: var %s [%d] expect %d but got %d\n",
                                __LINE__,vars[i].name, k, exp, int_ptr[k]);
                         nerrs++;
                         goto err_out;
@@ -663,7 +663,7 @@ int check_written_contents(const char *filename,
                 for (k=0; k<vars[i].nelems; k++) {
                     char exp = '0' + (rank + k) % 9;
                     if (str_ptr[k] != exp) {
-                        printf("Error at %d: var %s [%d] expect %d but got %d\n",
+                        fprintf(stderr,"Error at %d: var %s [%d] expect %d but got %d\n",
                                __LINE__,vars[i].name, k, (int)exp, (int)str_ptr[k]);
                         nerrs++;
                         goto err_out;
@@ -728,7 +728,7 @@ int wrf_w_benchmark(char       *out_file,
     cmode = NC_CLOBBER | NC_64BIT_DATA;
     err = ncmpi_create(MPI_COMM_WORLD, out_file, cmode, info, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at line=%d: creating file %s (%s)\n",
+        fprintf(stderr,"Error at line=%d: creating file %s (%s)\n",
                __LINE__, out_file, ncmpi_strerror(err));
         goto err_out;
     }
@@ -959,7 +959,7 @@ int wrf_r_benchmark(char       *in_file,
     /* open input file */
     err = ncmpi_open(MPI_COMM_WORLD, in_file, NC_NOWRITE, info, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at line=%d: opening file %s (%s)\n",
+        fprintf(stderr,"Error at line=%d: opening file %s (%s)\n",
                __LINE__, in_file, ncmpi_strerror(err));
         goto err_out;
     }
@@ -1205,7 +1205,7 @@ int grow_header_benchmark(char *in_file)
     /* open input file */
     err = ncmpi_open(MPI_COMM_WORLD, in_file, NC_WRITE, MPI_INFO_NULL, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at line=%d: opening file %s (%s)\n",
+        fprintf(stderr,"Error at line=%d: opening file %s (%s)\n",
                __LINE__, in_file, ncmpi_strerror(err));
         goto err_out;
     }

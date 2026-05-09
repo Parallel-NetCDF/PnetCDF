@@ -49,17 +49,17 @@ int check_num_vars(int  ncid,
     err = ncmpi_inq_num_fix_vars(ncid, &num_fix_vars); CHECK_ERR
 
     if (nvars != expected_nvars) {
-        printf("Error at line %d in %s: expecting %d number of variables defined, but got %d\n",
+        fprintf(stderr,"Error at line %d in %s: expecting %d number of variables defined, but got %d\n",
         __LINE__,__FILE__,expected_nvars, nvars);
         nerrs++;
     }
     if (num_rec_vars != expected_num_rec_vars) {
-        printf("Error at line %d in %s: expecting %d number of record variables defined, but got %d\n",
+        fprintf(stderr,"Error at line %d in %s: expecting %d number of record variables defined, but got %d\n",
         __LINE__,__FILE__,expected_num_rec_vars, num_rec_vars);
         nerrs++;
     }
     if (num_fix_vars != expected_num_fix_vars) {
-        printf("Error at line %d in %s: expecting %d number of fixed-size variables defined, but got %d\n",
+        fprintf(stderr,"Error at line %d in %s: expecting %d number of fixed-size variables defined, but got %d\n",
         __LINE__,__FILE__,expected_num_fix_vars, num_fix_vars);
         nerrs++;
     }

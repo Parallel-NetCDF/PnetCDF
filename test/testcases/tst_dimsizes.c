@@ -94,17 +94,17 @@ int test_io(const char *out_path,
     err = ncmpi_inq_dimid(ncid, "testdim", &dimid); CHECK_ERR
     err = ncmpi_inq_dimlen(ncid, dimid, &dimsize); CHECK_ERR
     if (format == NC_FORMAT_CLASSIC && dimsize != DIMMAXCLASSIC) {
-        printf("Error at line %d in %s: expecting dimsize %d but got "OFFFMT"\n",
+        fprintf(stderr,"Error at line %d in %s: expecting dimsize %d but got "OFFFMT"\n",
                 __LINE__,__FILE__,DIMMAXCLASSIC,dimsize);
         nerrs++;
     }
     else if (format == NC_FORMAT_64BIT_OFFSET && dimsize != DIMMAX64OFFSET) {
-        printf("Error at line %d in %s: expecting dimsize %d but got "OFFFMT"\n",
+        fprintf(stderr,"Error at line %d in %s: expecting dimsize %d but got "OFFFMT"\n",
                 __LINE__,__FILE__,DIMMAX64OFFSET,dimsize);
         nerrs++;
     }
     else if (format == NC_FORMAT_64BIT_DATA && dimsize != DIMMAX64DATA) {
-        printf("Error at line %d in %s: expecting dimsize %lld but got "OFFFMT"\n",
+        fprintf(stderr,"Error at line %d in %s: expecting dimsize %lld but got "OFFFMT"\n",
                 __LINE__,__FILE__,(long long)DIMMAX64DATA,dimsize);
         nerrs++;
     }

@@ -77,7 +77,7 @@
                 j < GHOST || GHOST+array_of_subsizes[1] <= j) { \
                 int exp = -1; \
                 if (buf[i][j] != exp) { \
-                    printf("Error at %d: put buf[%d][%d]=%d alter from %d\n", \
+                    fprintf(stderr,"Error at %d: put buf[%d][%d]=%d alter from %d\n", \
                            __LINE__,i,j,buf[i][j],exp); \
                     nerrs++; \
                     goto err_out; \
@@ -86,7 +86,7 @@
             else { \
                 int exp = (i-GHOST)*array_of_subsizes[1]+(j-GHOST); \
                 if (buf[i][j] != exp) { \
-                    printf("Error at %d: put buf[%d][%d]=%d alter from %d\n", \
+                    fprintf(stderr,"Error at %d: put buf[%d][%d]=%d alter from %d\n", \
                            __LINE__,i,j,buf[i][j],exp); \
                     nerrs++; \
                     goto err_out; \
@@ -107,7 +107,7 @@
                 j < GHOST || GHOST+array_of_subsizes[1] <= j) { \
                 int exp = -2; \
                 if (buf[i][j] != exp) { \
-                    printf("Error at %d: expect buf[%d][%d]=%d but got %d\n", \
+                    fprintf(stderr,"Error at %d: expect buf[%d][%d]=%d but got %d\n", \
                            __LINE__,i,j,exp,buf[i][j]); \
                     nerrs++; \
                     goto err_out; \
@@ -116,7 +116,7 @@
             else { \
                 int exp = (i-GHOST)*array_of_subsizes[1]+(j-GHOST); \
                 if (buf[i][j] != exp) { \
-                    printf("Error at %d: expect buf[%d][%d]=%d but got %d\n", \
+                    fprintf(stderr,"Error at %d: expect buf[%d][%d]=%d but got %d\n", \
                            __LINE__,i,j,exp,buf[i][j]); \
                     nerrs++; \
                     goto err_out; \

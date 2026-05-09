@@ -45,9 +45,9 @@ int ncmpii_error_posix2nc(char *err_msg)       /* extra error message */
     /* report the world rank */
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    printf("rank %d: IO error (%s) : %s\n", rank, err_msg, errorString);
+    fprintf(stderr,"rank %d: IO error (%s) : %s\n", rank, err_msg, errorString);
 #else
-    printf("IO error (%s) : %s\n", err_msg, errorString);
+    fprintf(stderr,"IO error (%s) : %s\n", err_msg, errorString);
 #endif
 
     return NC_EFILE; /* other unknown file I/O error */

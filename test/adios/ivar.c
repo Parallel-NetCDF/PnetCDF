@@ -32,7 +32,7 @@
 /* Handle errors by printing an error message and exiting with a
  * non-zero status. */
 #define ERRCODE 2
-#define ERR(e) {printf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
+#define ERR(e) {fprintf(stderr,"Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
 
 int main(int argc, char** argv) {
     int i, nerrs=0, rank, nprocs, err;

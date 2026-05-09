@@ -70,9 +70,9 @@ int ncmpii_error_mpi2nc(int mpi_errorcode,   /* returned value from MPI call */
     /* report the world rank */
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    printf("rank %d: MPI error (%s) : %s\n", rank, dump_str, errorString);
+    fprintf(stderr,"rank %d: MPI error (%s) : %s\n", rank, dump_str, errorString);
 #else
-    printf("MPI error (%s) : %s\n", dump_str, errorString);
+    fprintf(stderr,"MPI error (%s) : %s\n", dump_str, errorString);
 #endif
 
     return NC_EFILE; /* other unknown file I/O error */

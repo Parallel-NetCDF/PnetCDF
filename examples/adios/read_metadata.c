@@ -22,7 +22,7 @@ static int verbose;
 /* This is the name of the data file we will read. */
 #define FILE_NAME "../../test/adios/attributes.bp"
 
-#define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR {if(err!=NC_NOERR){fprintf(stderr,"Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
         snprintf(filename, 256, "%s", argv[optind]);
     else {
         if (rank==0) {
-            printf("Error: input file is required\n");
+            fprintf(stderr,"Error: input file is required\n");
             usage(argv[0]);
         }
         MPI_Finalize();

@@ -42,7 +42,7 @@ static int debug;
         err = ncmpi_inq_varoffset(ncid, varid[i], &new_var_off[i]); \
         CHECK_ERR \
         if (old_var_off[i] > 0 && old_var_off[i] != new_var_off[i]) { \
-            printf("Error: %s var %d old offset %6lld != new offset %6lld\n", \
+            fprintf(stderr,"Error: %s var %d old offset %6lld != new offset %6lld\n", \
                    kind, i, old_var_off[i], new_var_off[i]); \
             nerrs++; \
             goto err_out; \
@@ -99,7 +99,7 @@ int read_back_check(int         ncid,
             for (j=0; j<nelems; j++) {
                 int exp = rank + j + i;
                 if (int_buf[j] != exp) {
-                    printf("Error at rank %d: fix var %s buf[%d] expects %d but got %d\n",
+                    fprintf(stderr,"Error at rank %d: fix var %s buf[%d] expects %d but got %d\n",
                            rank, name, j, exp, int_buf[j]);
                     return 1;
                 }
@@ -117,7 +117,7 @@ int read_back_check(int         ncid,
                 for (j=0; j<nelems; j++) {
                     float exp = rank + j + i;
                     if (flt_buf[j] != exp) {
-                        printf("Error at rank %d: rec %d var %s buf[%d] expects %.f but got %.f\n",
+                        fprintf(stderr,"Error at rank %d: rec %d var %s buf[%d] expects %.f but got %.f\n",
                                rank, k, name, j, exp, flt_buf[j]);
                         return 1;
                     }
@@ -125,7 +125,7 @@ int read_back_check(int         ncid,
             }
         }
         else {
-            printf("Error at rank %d: var %s unexpected ndims %d\n",
+            fprintf(stderr,"Error at rank %d: var %s unexpected ndims %d\n",
                    rank, name, ndims);
             return 1;
         }
@@ -335,7 +335,7 @@ int tst_data_move(const char *out_path,
 
     err = read_back_check(ncid, coll_io, start, count);
     if (err > 0) {
-        printf("Error at rank %d line %d: read_back_check() failed\n",rank, __LINE__);
+        fprintf(stderr,"Error at rank %d line %d: read_back_check() failed\n",rank, __LINE__);
         nerrs++;
         goto err_out;
     }
@@ -349,7 +349,7 @@ int tst_data_move(const char *out_path,
         err = ncmpi_inq_varoffset(ncid, varid[i], &new_var_off[i]);
         CHECK_ERR
         if (new_var_off[i] != old_var_off[i]) {
-            printf("Error: %s var %d offset expect %6lld but got %6lld\n",
+            fprintf(stderr,"Error: %s var %d offset expect %6lld but got %6lld\n",
                    kind, i, old_var_off[i], new_var_off[i]);
             nerrs++;
             goto err_out;
@@ -414,7 +414,7 @@ int tst_data_move(const char *out_path,
 
     err = read_back_check(ncid, coll_io, start, count);
     if (err > 0) {
-        printf("Error at rank %d line %d: read_back_check() failed\n",rank, __LINE__);
+        fprintf(stderr,"Error at rank %d line %d: read_back_check() failed\n",rank, __LINE__);
         nerrs++;
         goto err_out;
     }
@@ -477,7 +477,7 @@ int tst_data_move(const char *out_path,
 
     err = read_back_check(ncid, coll_io, start, count);
     if (err > 0) {
-        printf("Error at rank %d line %d: read_back_check() failed\n",rank, __LINE__);
+        fprintf(stderr,"Error at rank %d line %d: read_back_check() failed\n",rank, __LINE__);
         nerrs++;
         goto err_out;
     }
@@ -573,7 +573,7 @@ int tst_data_move(const char *out_path,
 
     err = read_back_check(ncid, coll_io, start, count);
     if (err > 0) {
-        printf("Error at rank %d line %d: read_back_check() failed\n",rank, __LINE__);
+        fprintf(stderr,"Error at rank %d line %d: read_back_check() failed\n",rank, __LINE__);
         nerrs++;
         goto err_out;
     }

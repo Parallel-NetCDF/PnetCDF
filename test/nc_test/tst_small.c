@@ -27,7 +27,7 @@
 #define ATT_NAME "Atom"
 #define MAX_LEN 16
 
-#define ERR {if (err != NC_NOERR) {printf("Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
+#define ERR {if (err != NC_NOERR) {fprintf(stderr,"Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
 
 static int
 test_small_atts(const char *testfile, int cmode)
@@ -60,11 +60,11 @@ test_small_atts(const char *testfile, int cmode)
 	 /* Reopen the file and check it. */
          err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
 	 err=ncmpi_inq(ncid, &ndims, &nvars, &natts, &unlimdimid); ERR
-	 if (ndims != 0 && nvars != 0 && natts != 1 && unlimdimid != -1) {printf("Error at line %d\n",__LINE__);return 1;}
+	 if (ndims != 0 && nvars != 0 && natts != 1 && unlimdimid != -1) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
 	 err=ncmpi_inq_attlen(ncid, NC_GLOBAL, ATT_NAME, &len_in); ERR
-	 if (len_in != t + 1) {printf("Error at line %d\n",__LINE__);return 1;}
+	 if (len_in != t + 1) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
 	 err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_NAME, att_in); ERR
-	 if (strncmp(att_in, att, t)) {printf("Error at line %d\n",__LINE__);return 1;}
+	 if (strncmp(att_in, att, t)) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
 	 err=ncmpi_close(ncid); ERR
       }
    }
@@ -121,10 +121,10 @@ test_small_unlim(const char *testfile, int cmode)
    /* Reopen the file and check it. */
    err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
    err=ncmpi_inq(ncid, &ndims, &nvars, &natts, &unlimdimid); ERR
-   if (ndims != 2 && nvars != 1 && natts != 0 && unlimdimid != 0) {printf("Error at line %d\n",__LINE__);return 1;}
+   if (ndims != 2 && nvars != 1 && natts != 0 && unlimdimid != 0) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
    err=ncmpi_get_var_text_all(ncid, varid, (char *)data_in); ERR
    for (i = 0; i < NUM_VALS; i++)
-      /* if (strncmp(data[i], data_in[i], STR_LEN)) {printf("Error at line %d\n",__LINE__);return 1;} */
+      /* if (strncmp(data[i], data_in[i], STR_LEN)) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;} */
       if (strncmp(data[i], data_in[i], STR_LEN)) {
 printf("i=%d data=%s data_in=%s\n",i,data[i],data_in[i]);
       }
@@ -170,10 +170,10 @@ test_small_fixed(const char *testfile, int cmode)
    /* Reopen the file and check it. */
    err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
    err=ncmpi_inq(ncid, &ndims, &nvars, &natts, &unlimdimid); ERR
-   if (ndims != 2 && nvars != 1 && natts != 0 && unlimdimid != -1) {printf("Error at line %d\n",__LINE__);return 1;}
+   if (ndims != 2 && nvars != 1 && natts != 0 && unlimdimid != -1) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
    err=ncmpi_get_var_text_all(ncid, varid, (char *)data_in); ERR
    for (i = 0; i < NUM_VALS; i++)
-      if (strncmp(data[i], data_in[i], STR_LEN)) {printf("Error at line %d\n",__LINE__);return 1;}
+      if (strncmp(data[i], data_in[i], STR_LEN)) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
    err=ncmpi_close(ncid); ERR
    return 0;
 }
@@ -204,9 +204,9 @@ test_small_one(const char *testfile, int cmode)
    /* Reopen the file and check it. */
    err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
    err=ncmpi_inq(ncid, &ndims, &nvars, &natts, &unlimdimid); ERR
-   if (ndims != 1 && nvars != 1 && natts != 0 && unlimdimid != 0) {printf("Error at line %d\n",__LINE__);return 1;}
+   if (ndims != 1 && nvars != 1 && natts != 0 && unlimdimid != 0) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
    err=ncmpi_get_var_text_all(ncid, varid, &data_in); ERR
-   if (data_in != data) {printf("Error at line %d\n",__LINE__);return 1;}
+   if (data_in != data) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
    err=ncmpi_close(ncid); ERR
    return 0;
 }
@@ -251,11 +251,11 @@ test_one_growing(const char *testfile, int cmode)
 	 /* Reopen the file and check it. */
          err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
 	 err=ncmpi_inq_dimlen(ncid, 0, &len_in); ERR
-	 if (len_in != r + 1) {printf("Error at line %d\n",__LINE__);return 1;}
+	 if (len_in != r + 1) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
 	 index[0] = r;
 	 err=ncmpi_begin_indep_data(ncid); ERR
 	 err=ncmpi_get_var1_text(ncid, 0, index, &data_in); ERR
-	 if (data_in != data[r]) {printf("Error at line %d\n",__LINE__);return 1;}
+	 if (data_in != data[r]) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
 	 err=ncmpi_close(ncid); ERR
       } /* Next record. */
    }
@@ -304,13 +304,13 @@ test_one_growing_with_att(const char *testfile, int cmode)
       /* Reopen the file and check it. */
       err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
       err=ncmpi_inq_dimlen(ncid, 0, &len_in); ERR
-      if (len_in != r + 1) {printf("Error at line %d\n",__LINE__);return 1;}
+      if (len_in != r + 1) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
       index[0] = r;
       err=ncmpi_begin_indep_data(ncid); ERR
       err=ncmpi_get_var1_text(ncid, 0, index, &data_in); ERR
-      if (data_in != data[r]) {printf("Error at line %d\n",__LINE__);return 1;}
+      if (data_in != data[r]) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
       err=ncmpi_get_att_text(ncid, varid, att_name, &data_in); ERR
-      if (data_in != data[r]) {printf("Error at line %d\n",__LINE__);return 1;}
+      if (data_in != data[r]) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
       err=ncmpi_close(ncid); ERR
    } /* Next record. */
    return 0;
@@ -363,13 +363,13 @@ test_two_growing_with_att(const char *testfile, int cmode)
       /* Reopen the file and check it. */
       err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
       err=ncmpi_inq_dimlen(ncid, 0, &len_in); ERR
-      if (len_in != r + 1) {printf("Error at line %d\n",__LINE__);return 1;}
+      if (len_in != r + 1) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
       index[0] = r;
       err=ncmpi_begin_indep_data(ncid); ERR
       for (v = 0; v < NUM_VARS; v++)
       {
 	 err=ncmpi_get_var1_text(ncid, varid[v], index, &data_in); ERR
-	 if (data_in != data[r]) {printf("Error at line %d\n",__LINE__);return 1;}
+	 if (data_in != data[r]) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
       }
       err=ncmpi_close(ncid); ERR
    } /* Next record. */
@@ -403,11 +403,11 @@ test_one_with_att(const char *testfile, int cmode)
    /* Reopen the file and check it. */
    err=ncmpi_open(MPI_COMM_WORLD, testfile, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
    err=ncmpi_inq(ncid, &ndims, &nvars, &natts, &unlimdimid); ERR
-   if (ndims != 1 && nvars != 1 && natts != 0 && unlimdimid != 0) {printf("Error at line %d\n",__LINE__);return 1;}
+   if (ndims != 1 && nvars != 1 && natts != 0 && unlimdimid != 0) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
    err=ncmpi_get_var_text_all(ncid, varid, &data_in); ERR
-   if (data_in != data) {printf("Error at line %d\n",__LINE__);return 1;}
+   if (data_in != data) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
    err=ncmpi_get_att_text(ncid, NC_GLOBAL, ATT_NAME, &data_in); ERR
-   if (data_in != data) {printf("Error at line %d\n",__LINE__);return 1;}
+   if (data_in != data) {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
    err=ncmpi_close(ncid); ERR
    return 0;
 }

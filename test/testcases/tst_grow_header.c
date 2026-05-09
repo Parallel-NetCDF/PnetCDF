@@ -80,7 +80,7 @@ check_vars(MPI_Comm    comm,
             if (buf[j] != expect) {
                 char name[64];
                 err = ncmpi_inq_varname(ncid, id, name);
-                printf("Error: fix var %s [%d] expect %d but got %d\n",
+                fprintf(stderr,"Error: fix var %s [%d] expect %d but got %d\n",
                        name, j, expect, buf[j]);
                 nerrs++;
                 break;
@@ -106,7 +106,7 @@ check_vars(MPI_Comm    comm,
                 if (buf[j] != expect) {
                     char name[64];
                     err = ncmpi_inq_varname(ncid, id, name);
-                    printf("Error: rec var %s [%d][%d] expect %d but got %d\n",
+                    fprintf(stderr,"Error: rec var %s [%d][%d] expect %d but got %d\n",
                         name, r, j, expect, buf[j]);
                     nerrs++;
                     break;
@@ -138,18 +138,18 @@ err_out:
 #define CHECK_HEADER_SIZE { \
     if (hsize != exp_hsize) { \
         nerrs++; \
-        printf("Error at line %d in %s: header size expecting "OFFFMT" but got "OFFFMT"\n", \
+        fprintf(stderr,"Error at line %d in %s: header size expecting "OFFFMT" but got "OFFFMT"\n", \
                __LINE__,__FILE__, exp_hsize, hsize); \
     } \
     if (extent != exp_extent) { \
         nerrs++; \
-        printf("Error at line %d in %s: header extent expecting "OFFFMT" but got "OFFFMT"\n", \
+        fprintf(stderr,"Error at line %d in %s: header extent expecting "OFFFMT" but got "OFFFMT"\n", \
                __LINE__,__FILE__, exp_extent, extent); \
     } \
     /* read variables back and check contents */ \
     nerrs += check_vars(comm, ncid, coll_io, start, count); \
     if (nerrs > 0) { \
-        printf("Error at line %d in %s: variable contents unexpected\n", \
+        fprintf(stderr,"Error at line %d in %s: variable contents unexpected\n", \
                __LINE__,__FILE__ ); \
         goto err_out; \
     } \

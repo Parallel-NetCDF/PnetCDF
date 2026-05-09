@@ -157,7 +157,7 @@ int test_io_nc4(const char *out_path,
     /* check if the contents of buf are expected */
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
-            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+            fprintf(stderr,"Error file %s line %d: expect buf[%d]=%d, but got %d\n",
                    __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
@@ -178,7 +178,7 @@ int test_io_nc4(const char *out_path,
     /* check if the contents of buf are expected */
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
-            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+            fprintf(stderr,"Error file %s line %d: expect buf[%d]=%d, but got %d\n",
                    __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
@@ -199,7 +199,7 @@ int test_io_nc4(const char *out_path,
     /* check if the contents of buf are expected */
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
-            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+            fprintf(stderr,"Error file %s line %d: expect buf[%d]=%d, but got %d\n",
                    __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
@@ -219,7 +219,7 @@ int test_io_nc4(const char *out_path,
     /* check if the contents of buf are expected */
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
-            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+            fprintf(stderr,"Error file %s line %d: expect buf[%d]=%d, but got %d\n",
                    __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
@@ -344,7 +344,7 @@ int test_io_nc5(const char *out_path,
     /* check if the contents of buf are expected */
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
-            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+            fprintf(stderr,"Error file %s line %d: expect buf[%d]=%d, but got %d\n",
                    __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
@@ -365,7 +365,7 @@ int test_io_nc5(const char *out_path,
     /* check if the contents of buf are expected */
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
-            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+            fprintf(stderr,"Error file %s line %d: expect buf[%d]=%d, but got %d\n",
                    __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
@@ -386,7 +386,7 @@ int test_io_nc5(const char *out_path,
     /* check if the contents of buf are expected */
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
-            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+            fprintf(stderr,"Error file %s line %d: expect buf[%d]=%d, but got %d\n",
                    __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
@@ -406,7 +406,7 @@ int test_io_nc5(const char *out_path,
     /* check if the contents of buf are expected */
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
-            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+            fprintf(stderr,"Error file %s line %d: expect buf[%d]=%d, but got %d\n",
                    __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
@@ -421,7 +421,7 @@ int test_io_nc5(const char *out_path,
         int errorStringLen;
         char errorString[MPI_MAX_ERROR_STRING];
         MPI_Error_string(err, errorString, &errorStringLen);
-        printf("MPI error MPI_File_open : %s\n", errorString);
+        fprintf(stderr,"MPI error MPI_File_open : %s\n", errorString);
     }
 
     /* read back subarray written by the process (rank+1)%nprocs */
@@ -452,7 +452,7 @@ int test_io_nc5(const char *out_path,
     /* check if the contents of buf are expected */
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
-            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+            fprintf(stderr,"Error file %s line %d: expect buf[%d]=%d, but got %d\n",
                    __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
@@ -481,7 +481,7 @@ int test_io_nc5(const char *out_path,
     /* check if the contents of buf are expected */
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
-            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+            fprintf(stderr,"Error file %s line %d: expect buf[%d]=%d, but got %d\n",
                    __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
@@ -510,7 +510,7 @@ int test_io_nc5(const char *out_path,
     /* check if the contents of buf are expected */
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
-            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+            fprintf(stderr,"Error file %s line %d: expect buf[%d]=%d, but got %d\n",
                    __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }
@@ -538,7 +538,7 @@ int test_io_nc5(const char *out_path,
     /* check if the contents of buf are expected */
     for (i=0; i<bufsize; i++) {
         if (buf[i] != expected) {
-            printf("Error file %s line %d: expect buf[%d]=%d, but got %d\n",
+            fprintf(stderr,"Error file %s line %d: expect buf[%d]=%d, but got %d\n",
                    __FILE__, __LINE__, i, expected, buf[i]);
             nerrs++;
         }

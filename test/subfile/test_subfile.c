@@ -59,39 +59,39 @@ int test_io(const char *out_path,
 
     buf = (int **)malloc(sizeof(int*) * nvars);
     if (buf == NULL){
-        printf("buf malloc error\n");
+        fprintf(stderr,"buf malloc error\n");
         nerrs++; goto fn_exit;
     }
     bufcount_list = (MPI_Offset *)malloc(sizeof(MPI_Offset)*nvars);
     if (bufcount_list == NULL){
-        printf("bufcount_list malloc error\n");
+        fprintf(stderr,"bufcount_list malloc error\n");
         nerrs++; goto fn_exit;
     }
     starts_list = (MPI_Offset **)malloc(sizeof(MPI_Offset *)*nvars);
     if (starts_list== NULL){
-        printf("starts_list malloc error\n");
+        fprintf(stderr,"starts_list malloc error\n");
         nerrs++; goto fn_exit;
     }
     count_list = (MPI_Offset **)malloc(sizeof(MPI_Offset *)*nvars);
     if (count_list == NULL){
-        printf("count_list malloc error\n");
+        fprintf(stderr,"count_list malloc error\n");
         nerrs++; goto fn_exit;
     }
     datatype_list = (MPI_Datatype*)malloc(sizeof(MPI_Datatype)*nvars);
     if (datatype_list == NULL){
-        printf("count_list malloc error\n");
+        fprintf(stderr,"count_list malloc error\n");
         nerrs++; goto fn_exit;
     }
 
     for (i=0; i<nvars; i++) {
         starts_list[i] = (MPI_Offset *)malloc(sizeof(MPI_Offset)*ndims);
         if (starts_list[i] == NULL){
-            printf("starts_list[%d] malloc error\n", i);
+            fprintf(stderr,"starts_list[%d] malloc error\n", i);
             nerrs++; goto fn_exit;
         }
         count_list[i] = (MPI_Offset *)malloc(sizeof(MPI_Offset)*ndims);
         if (count_list[i] == NULL){
-            printf("count_list[%d] malloc error\n", i);
+            fprintf(stderr,"count_list[%d] malloc error\n", i);
             nerrs++; goto fn_exit;
         }
     }
@@ -131,7 +131,7 @@ int test_io(const char *out_path,
     for (i=0; i<nvars; i++) {
         buf[i] = (int *) malloc(sizeof(int) * bufcount);
         if (buf[i] == NULL){
-            printf("buf[i]malloc error\n");
+            fprintf(stderr,"buf[i]malloc error\n");
             nerrs++; goto fn_exit;
         }
 
@@ -208,26 +208,26 @@ int test_io(const char *out_path,
 
         sprintf(varname, "var0_%d", i);
         if (strcmp(name, varname)) {
-            printf("Error at line %d in %s: unexpected var[%d] name %s, should be %s\n",
+            fprintf(stderr,"Error at line %d in %s: unexpected var[%d] name %s, should be %s\n",
             __LINE__,__FILE__,i,name,varname);
             nerrs++;
             continue;
         }
         if (typep != NC_INT) {
-            printf("Error at line %d in %s: unexpected var[%d] type %d, should be %d\n",
+            fprintf(stderr,"Error at line %d in %s: unexpected var[%d] type %d, should be %d\n",
             __LINE__,__FILE__,i,typep,NC_INT);
             nerrs++;
             continue;
         }
         if (ndimsp != ndims) {
-            printf("Error at line %d in %s: unexpected var[%d] ndims %d, should be %d\n",
+            fprintf(stderr,"Error at line %d in %s: unexpected var[%d] ndims %d, should be %d\n",
             __LINE__,__FILE__,i,ndimsp,ndims);
             nerrs++;
             continue;
         }
         for (j=0; j<ndims; j++) {
             if (dimids[j] != dimids0[j]) {
-                printf("Error at line %d in %s: unexpected var[%d] dimids[%d] %d, should be %d\n",
+                fprintf(stderr,"Error at line %d in %s: unexpected var[%d] dimids[%d] %d, should be %d\n",
             __LINE__,__FILE__,i,j,dimids0[j],dimids[j]);
                 nerrs++;
                 continue;

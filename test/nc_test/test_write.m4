@@ -2753,7 +2753,7 @@ APIFunc(get_file_version)(char *filename, int *version)
        return errno;
 
    if (read_len != MAGIC_NUM_LEN) {
-       printf("Error: reading NC magic string unexpected short read\n");
+       fprintf(stderr,"Error: reading NC magic string unexpected short read\n");
        return NC_ENOTNC;
    }
 

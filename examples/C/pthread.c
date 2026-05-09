@@ -81,7 +81,7 @@
 
 static int verbose;
 
-#define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR {if(err!=NC_NOERR){fprintf(stderr,"Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
 
 #define ERRNO_HANDLE(errno) {                                   \
     if (errno != 0) {                                           \
@@ -213,7 +213,7 @@ pnetcdf_check_mem_usage(MPI_Comm comm)
                    sum_size);
     }
     else if (err != NC_ENOTENABLED) {
-        printf("Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
+        fprintf(stderr,"Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
         nerrs++;
     }
     return nerrs;
@@ -317,7 +317,7 @@ void* thread_func(void *arg)
     err = ncmpi_get_vara_int_all(ncid, varid[0], start, count, ibuf); ERR
     for (i=0; i<NX; i++) {
         if (ibuf[i] != id) {
-            printf("Error at %s line %d: expect ibuf[%d]=%d but got %d\n",
+            fprintf(stderr,"Error at %s line %d: expect ibuf[%d]=%d but got %d\n",
             __FILE__, __LINE__, i, id, ibuf[i]);
             nerrs++;
             break;
@@ -333,7 +333,7 @@ void* thread_func(void *arg)
     err = ncmpi_get_vara_int_all(ncid, varid[0], start, count, ibuf); ERR
     for (i=0; i<NX; i++) {
         if (ibuf[i] != id) {
-            printf("Error at %s line %d: expect ibuf[%d]=%d but got %d\n",
+            fprintf(stderr,"Error at %s line %d: expect ibuf[%d]=%d but got %d\n",
             __FILE__, __LINE__, i, id, ibuf[i]);
             nerrs++;
             break;
@@ -344,7 +344,7 @@ void* thread_func(void *arg)
     err = ncmpi_get_var_double_all(ncid, varid[1], dbuf); ERR
     for (i=0; i<NY*NX; i++) {
         if (dbuf[i] != (double)id) {
-            printf("Error at %s line %d: expect ibuf[%d]=%d but got %f\n",
+            fprintf(stderr,"Error at %s line %d: expect ibuf[%d]=%d but got %f\n",
             __FILE__, __LINE__, i, id, dbuf[i]);
             nerrs++;
             break;
@@ -389,7 +389,7 @@ int main(int argc, char **argv) {
                                          break;
             case MPI_THREAD_MULTIPLE:    printf("Support MPI_THREAD_MULTIPLE\n");
                                          break;
-            default: printf("Error MPI_Init_thread()\n"); break;
+            default: fprintf(stderr,"Error MPI_Init_thread()\n"); break;
         }
     }
     if (providedT != MPI_THREAD_MULTIPLE) {

@@ -29,7 +29,7 @@
         char errorString[MPI_MAX_ERROR_STRING]; \
         MPI_Comm_rank(MPI_COMM_WORLD, &rank); \
         MPI_Error_string(err, errorString, &errorStringLen); \
-        printf("rank %d: MPI error (%s) : %s\n", rank, err_msg, errorString); \
+        fprintf(stderr,"rank %d: MPI error (%s) : %s\n", rank, err_msg, errorString); \
         assert(err == MPI_SUCCESS); \
     } \
 }

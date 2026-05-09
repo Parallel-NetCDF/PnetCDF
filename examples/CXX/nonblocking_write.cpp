@@ -192,7 +192,7 @@ int main(int argc, char **argv)
 
         for (i=0; i<NUM_VARS; i++) {
             if (st[i] != NC_NOERR)
-                printf("Error: nonblocking write fails on request %d (%s)\n",
+                fprintf(stderr,"Error: nonblocking write fails on request %d (%s)\n",
                        i, ncmpi_strerror(st[i]));
         }
 
@@ -211,7 +211,7 @@ int main(int argc, char **argv)
         nc.Wait_all(NUM_VARS, req, st);
         for (i=0; i<NUM_VARS; i++) {
             if (st[i] != NC_NOERR)
-                printf("Error: nonblocking write fails on request %d (%s)\n",
+                fprintf(stderr,"Error: nonblocking write fails on request %d (%s)\n",
                        i, ncmpi_strerror(st[i]));
         }
 

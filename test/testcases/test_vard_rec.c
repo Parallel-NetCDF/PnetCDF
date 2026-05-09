@@ -110,7 +110,7 @@ int test_io(const char *out_path,
     /* check if the number of records changed to 1 */
     err = ncmpi_inq_dimlen(ncid, unlimit_dimid, &len); CHECK_ERR
     if (len != 1)
-        printf("Error at line %d in %s: number of records should be 1 but got "OFFFMT"\n",
+        fprintf(stderr,"Error at line %d in %s: number of records should be 1 but got "OFFFMT"\n",
         __LINE__,__FILE__,len);
 
     /* create a file type for writing 2nd record */
@@ -136,7 +136,7 @@ int test_io(const char *out_path,
     /* check if the number of records changed to 2 */
     err = ncmpi_inq_dimlen(ncid, unlimit_dimid, &len); CHECK_ERR
     if (len != 2)
-        printf("Error at line %d in %s: number of records should be 2 but got "OFFFMT"\n",
+        fprintf(stderr,"Error at line %d in %s: number of records should be 2 but got "OFFFMT"\n",
         __LINE__,__FILE__,len);
 
     /* file sync before reading */
@@ -189,7 +189,7 @@ int test_io(const char *out_path,
     for (i=0; i<NX; i++) {
         int exp = rank*100 + j*10 + i;
         if (buf[j][i] != exp) {
-            printf("Error at %d: read buf[%d][%d] expect %d but got %d\n",
+            fprintf(stderr,"Error at %d: read buf[%d][%d] expect %d but got %d\n",
                   __LINE__,j,i, exp, buf[j][i]);
             nerrs++;
             break;

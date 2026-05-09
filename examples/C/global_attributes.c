@@ -41,7 +41,7 @@
 
 static int verbose;
 
-#define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR {if(err!=NC_NOERR){fprintf(stderr,"Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -80,7 +80,7 @@ pnetcdf_check_mem_usage(MPI_Comm comm)
                    sum_size);
     }
     else if (err != NC_ENOTENABLED) {
-        printf("Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
+        fprintf(stderr,"Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
         nerrs++;
     }
     return nerrs;
@@ -146,7 +146,7 @@ int main(int argc, char** argv)
     err = ncmpi_inq_natts(ncid, &ngatts); ERR
 
     if (ngatts != 2) {
-        printf("Error at line %d in %s: expected number of global attributes is 2, but got %d\n",
+        fprintf(stderr,"Error at line %d in %s: expected number of global attributes is 2, but got %d\n",
                __LINE__,__FILE__,ngatts);
         nerrs++;
     }
@@ -155,7 +155,7 @@ int main(int argc, char** argv)
     err = ncmpi_inq_attname(ncid, NC_GLOBAL, 0, att_name); ERR
 
     if (strncmp(att_name, "history", strlen("history"))) {
-        printf("Error at line %d in %s: expected attribute name \"history\", but got %s\n",
+        fprintf(stderr,"Error at line %d in %s: expected attribute name \"history\", but got %s\n",
                __LINE__,__FILE__,att_name);
         nerrs++;
     }
@@ -167,7 +167,7 @@ int main(int argc, char** argv)
     err = ncmpi_inq_attname(ncid, NC_GLOBAL, 1, att_name); ERR
 
     if (strncmp(att_name, "digits", strlen("digits"))) {
-        printf("Error at line %d in %s: expected attribute name \"digits\", but got %s\n",
+        fprintf(stderr,"Error at line %d in %s: expected attribute name \"digits\", but got %s\n",
                __LINE__,__FILE__,att_name);
         nerrs++;
     }

@@ -22,7 +22,7 @@
 
 #include <testutils.h>
 
-#define ERR {if (err != NC_NOERR) {printf("Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
+#define ERR {if (err != NC_NOERR) {fprintf(stderr,"Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
 
 static void
 check_err(const int stat, const int line, const char *file) {
@@ -406,7 +406,7 @@ main(int argc, char **argv)
 	   /* How many values in this variable to compare? */
 	   err = ncmpi_inq_varndims(ncid1, varid, &ndims); ERR
 	   dimids = malloc(sizeof(int) * (ndims + 1));
-	   if (!dimids) printf("Error in file %s line %d\n",__FILE__,__LINE__);
+	   if (!dimids) fprintf(stderr,"Error in file %s line %d\n",__FILE__,__LINE__);
 	   err = ncmpi_inq_vardimid (ncid1, varid, dimids); ERR
 	   nvals = 1;
 	   for(dim = 0; dim < ndims; dim++) {
@@ -422,9 +422,9 @@ main(int argc, char **argv)
 	       double *data1, *data2;
 	       /* Allocate space to hold values in both files */
 	       data1 = malloc(sizeof(double) * (nvals + 1));
-	       if (!data1) printf("Error in file %s line %d\n",__FILE__,__LINE__);
+	       if (!data1) fprintf(stderr,"Error in file %s line %d\n",__FILE__,__LINE__);
 	       data2 = malloc(sizeof(double) * (nvals + 1));
-	       if (!data2) printf("Error in file %s line %d\n",__FILE__,__LINE__);
+	       if (!data2) fprintf(stderr,"Error in file %s line %d\n",__FILE__,__LINE__);
 	       /* Read in values */
 	       err = ncmpi_get_var_double_all(ncid1, varid, data1); ERR
 	       err = ncmpi_get_var_double_all(ncid2, varid, data2); ERR
@@ -444,9 +444,9 @@ main(int argc, char **argv)
 	       char *data1, *data2;
 	       /* Allocate space to hold values in both files */
 	       data1 = malloc(sizeof(char) * (nvals + 1));
-	       if (!data1) printf("Error in file %s line %d\n",__FILE__,__LINE__);
+	       if (!data1) fprintf(stderr,"Error in file %s line %d\n",__FILE__,__LINE__);
 	       data2 = malloc(sizeof(char) * (nvals + 1));
-	       if (!data2) printf("Error in file %s line %d\n",__FILE__,__LINE__);
+	       if (!data2) fprintf(stderr,"Error in file %s line %d\n",__FILE__,__LINE__);
 	       /* Read in values */
 	       err = ncmpi_get_var_text_all(ncid1, varid, data1); ERR
 	       err = ncmpi_get_var_text_all(ncid2, varid, data2); ERR
@@ -465,7 +465,7 @@ main(int argc, char **argv)
 	   }
 	   free(dimids);
        }
-       if(badvars > 0) printf("Error in file %s line %d\n",__FILE__,__LINE__);
+       if(badvars > 0) fprintf(stderr,"Error in file %s line %d\n",__FILE__,__LINE__);
        err = ncmpi_close(ncid1); ERR
        err = ncmpi_close(ncid2); ERR
    }

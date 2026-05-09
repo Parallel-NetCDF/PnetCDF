@@ -103,7 +103,7 @@ int test_io(const char *out_path,
     /* check the contents */
     for (i=0; i<NUM_VALS; i++)
       if (strncmp(data[i], data_in+i*STR_LEN, STR_LEN)) {
-          printf("Error at line %d in %s: expecting %s but got %s\n",
+          fprintf(stderr,"Error at line %d in %s: expecting %s but got %s\n",
           __LINE__,__FILE__,data[i],data_in+i*STR_LEN);
           nerrs++;
       }

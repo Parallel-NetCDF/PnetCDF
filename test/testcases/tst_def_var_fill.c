@@ -90,7 +90,7 @@ tst_fmt(const char *out_path, int format, int coll_io, MPI_Info info)
     /* check if user put buffer contents altered */
     for (i=0; i<NY*NX; i++) {
         if (buf[i] != rank+5) {
-            printf("Error in %s line %d: put buf[%d] altered from %d to %d\n",
+            fprintf(stderr,"Error in %s line %d: put buf[%d] altered from %d to %d\n",
                    __FILE__,__LINE__, i, rank+5, buf[i]);
             nerrs++;
         }
@@ -103,7 +103,7 @@ tst_fmt(const char *out_path, int format, int coll_io, MPI_Info info)
     /* check if user put buffer contents altered */
     for (i=0; i<NY*NX; i++) {
         if (buf[i] != rank+5) {
-            printf("Error in %s line %d: put buf[%d] altered from %d to %d\n",
+            fprintf(stderr,"Error in %s line %d: put buf[%d] altered from %d to %d\n",
                    __FILE__,__LINE__, i, rank+5, buf[i]);
             nerrs++;
         }
@@ -126,7 +126,7 @@ tst_fmt(const char *out_path, int format, int coll_io, MPI_Info info)
 
     err = ncmpi_inq_format(ncid, &fmt); CHECK_ERR
     if (fmt != format) {
-        printf("Error at line %d of %s: expect %s but got %s\n",
+        fprintf(stderr,"Error at line %d of %s: expect %s but got %s\n",
                __LINE__,__FILE__,pnc_fmt_string(format),pnc_fmt_string(fmt));
         nerrs++;
     }
@@ -152,7 +152,7 @@ tst_fmt(const char *out_path, int format, int coll_io, MPI_Info info)
     for (i=0; i<NY; i++) for (j=0; j<NX; j++) {
         if (2 <= j && j < 4) {
             if (buf[i*NX+j] != expect) {
-                printf("Error in %s line %d: expect get buf[%d]=%d but got %d\n",
+                fprintf(stderr,"Error in %s line %d: expect get buf[%d]=%d but got %d\n",
                        __FILE__,__LINE__,i*NX+j, expect, buf[i*NX+j]);
                 nerrs++;
             }
@@ -176,7 +176,7 @@ tst_fmt(const char *out_path, int format, int coll_io, MPI_Info info)
         expect = NC_FILL_INT;
         if (2 <= j && j< 4) expect = (rank+1)%nprocs + 5;
         if (buf[i*NX+j] != expect) {
-            printf("Error in %s line %d: expect get buf[%d]=%d but got %d\n",
+            fprintf(stderr,"Error in %s line %d: expect get buf[%d]=%d but got %d\n",
                    __FILE__,__LINE__,i*NX+j, expect, buf[i*NX+j]);
             nerrs++;
         }

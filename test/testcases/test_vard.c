@@ -161,7 +161,7 @@ int get_var_and_verify(int ncid,
     for (j=0; j<count[0]; j++) {
         for (i=0; i<count[1]; i++)
             if (buf[j][i] != ncbuf[(j+2)*(count[1]+4)+(i+2)]) {
-                printf("Error at line %d in %s: expecting ncbuf[%d][%d]=%d but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting ncbuf[%d][%d]=%d but got %d\n",
                        __LINE__,__FILE__,j,i,buf[j][i],ncbuf[(j+2)*(count[1]+4)+(i+2)]);
                 nerrs++;
             }
@@ -208,7 +208,7 @@ int test_io(const char *out_path,
     disps[1] = a1 - a0;
     bufptr = buf[1];
     err = MPI_Type_create_hindexed(2, blocklengths, disps, MPI_INT, &buftype);
-    if (err != MPI_SUCCESS) printf("MPI error MPI_Type_create_hindexed\n");
+    if (err != MPI_SUCCESS) fprintf(stderr,"MPI error MPI_Type_create_hindexed\n");
     MPI_Type_commit(&buftype);
 
     start[0] = 0; start[1] = NX*rank;
@@ -310,7 +310,7 @@ int test_io(const char *out_path,
     if (rank == 0) expected_put_size += (fmt == NC_FORMAT_CDF5) ? 8 : 4;
      */
     if (expected_put_size != new_put_size - put_size) {
-        printf("Error at line %d in %s: unexpected put size ("OFFFMT") reported, expecting %d\n",
+        fprintf(stderr,"Error at line %d in %s: unexpected put size ("OFFFMT") reported, expecting %d\n",
                __LINE__,__FILE__,new_put_size-put_size, expected_put_size);
         nerrs++;
     }
@@ -334,7 +334,7 @@ int test_io(const char *out_path,
     err = ncmpi_inq_put_size(ncid, &new_put_size); CHECK_ERR
     expected_put_size = buftype_size;
     if (expected_put_size != new_put_size - put_size) {
-        printf("Error at line %d in %s: unexpected put size ("OFFFMT") reported, expecting %d\n",
+        fprintf(stderr,"Error at line %d in %s: unexpected put size ("OFFFMT") reported, expecting %d\n",
                __LINE__,__FILE__,new_put_size-put_size, expected_put_size);
         nerrs++;
     }
@@ -392,7 +392,7 @@ int test_io(const char *out_path,
     disps[1] = a1 - a0;
     flt_bufptr = flt_buf[1];
     err = MPI_Type_create_hindexed(2, blocklengths, disps, MPI_FLOAT, &flt_buftype);
-    if (err != MPI_SUCCESS) printf("MPI error MPI_Type_create_hindexed\n");
+    if (err != MPI_SUCCESS) fprintf(stderr,"MPI error MPI_Type_create_hindexed\n");
     MPI_Type_commit(&flt_buftype);
 
     /* write the record variable with type conversion from float to int */
@@ -414,7 +414,7 @@ int test_io(const char *out_path,
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) {
         float expected = rank*100.0 + j*10.0 + i;
         if (flt_buf[j][i] != expected) {
-            printf("Error at line %d in %s: expecting flt_buf[%d][%d]=%.1f but got %.1f\n",
+            fprintf(stderr,"Error at line %d in %s: expecting flt_buf[%d][%d]=%.1f but got %.1f\n",
             __LINE__,__FILE__,j,i,expected,flt_buf[j][i]);
             nerrs++;
         }
@@ -440,7 +440,7 @@ int test_io(const char *out_path,
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) {
         float expected = rank*100.0 + j*10.0 + i;
         if (flt_buf[j][i] != expected) {
-            printf("Error at line %d in %s: expecting flt_buf[%d][%d]=%.1f but got %.1f\n",
+            fprintf(stderr,"Error at line %d in %s: expecting flt_buf[%d][%d]=%.1f but got %.1f\n",
             __LINE__,__FILE__,j,i,expected,flt_buf[j][i]);
             nerrs++;
         }
@@ -461,7 +461,7 @@ int test_io(const char *out_path,
     disps[1] = a1 - a0;
     dbl_bufptr = dbl_buf[1];
     err = MPI_Type_create_hindexed(2, blocklengths, disps, MPI_DOUBLE, &dbl_buftype);
-    if (err != MPI_SUCCESS) printf("MPI error MPI_Type_create_hindexed\n");
+    if (err != MPI_SUCCESS) fprintf(stderr,"MPI error MPI_Type_create_hindexed\n");
     MPI_Type_commit(&dbl_buftype);
 
     /* write the record variable with type conversion from double to int */
@@ -483,7 +483,7 @@ int test_io(const char *out_path,
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) {
         double expected = rank*100.0 + j*10.0 + i;
         if (dbl_buf[j][i] != expected) {
-            printf("Error at line %d in %s: expecting dbl_buf[%d][%d]=%.1f but got %.1f\n",
+            fprintf(stderr,"Error at line %d in %s: expecting dbl_buf[%d][%d]=%.1f but got %.1f\n",
             __LINE__,__FILE__,j,i,expected,dbl_buf[j][i]);
             nerrs++;
         }
@@ -508,7 +508,7 @@ int test_io(const char *out_path,
     for (j=0; j<NY; j++) for (i=0; i<NX; i++) {
         double expected = rank*100.0 + j*10.0 + i;
         if (dbl_buf[j][i] != expected) {
-            printf("Error at line %d in %s: expecting dbl_buf[%d][%d]=%.1f but got %.1f\n",
+            fprintf(stderr,"Error at line %d in %s: expecting dbl_buf[%d][%d]=%.1f but got %.1f\n",
             __LINE__,__FILE__,j,i,expected,dbl_buf[j][i]);
             nerrs++;
         }
@@ -556,7 +556,7 @@ int test_io(const char *out_path,
         if (i<2 || i >= 4)         expected = -1;
         else if (j<2 || j >= NX+2) expected = -1;
         if (schar_buf[i*array_of_sizes[1]+j] != expected) {
-            printf("Error at line %d in %s: expecting schar_buf[%d][%d]=%d but got %d\n",
+            fprintf(stderr,"Error at line %d in %s: expecting schar_buf[%d][%d]=%d but got %d\n",
             __LINE__,__FILE__,i,j,expected,schar_buf[i*array_of_sizes[1]+j]);
             nerrs++;
         }

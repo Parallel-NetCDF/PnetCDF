@@ -78,7 +78,7 @@
 
 #define CHECK_CONTENTS(buf, exp) { \
     if (buf[i] != (exp)) { \
-        printf("Error at line %d in %s: put buffer[%d] altered to %d, expect %d\n", \
+        fprintf(stderr,"Error at line %d in %s: put buffer[%d] altered to %d, expect %d\n", \
         __LINE__,__FILE__,i,buf[i],(exp)); \
         nerrs++; \
     } \

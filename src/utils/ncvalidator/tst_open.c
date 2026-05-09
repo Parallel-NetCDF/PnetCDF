@@ -26,7 +26,7 @@
 #define CHECK_ERR { \
     if (err != NC_NOERR) { \
         nerrs++; \
-        printf("Error at line %d in %s: input file %s (%s)\n", \
+        fprintf(stderr,"Error at line %d in %s: input file %s (%s)\n", \
         __LINE__,__FILE__,filename,ncmpi_strerrno(err)); \
     } \
 }
@@ -34,7 +34,7 @@
 #define EXP_ERR(exp) { \
     if (err != exp) { \
         nerrs++; \
-        printf("Error at line %d in %s: expected_errno %s but got %s\n", \
+        fprintf(stderr,"Error at line %d in %s: expected_errno %s but got %s\n", \
         __LINE__,__FILE__,ncmpi_strerrno(exp), ncmpi_strerrno(err)); \
     } \
 }
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (argc != 3) {
-        if (!rank) printf("Usage: %s [filename] expected_errno\n",argv[0]);
+        if (!rank) fprintf(stderr,"Usage: %s [filename] expected_errno\n",argv[0]);
         goto fn_exit;
     }
     snprintf(filename, 256, "%s", argv[1]);
@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
 fn_exit:
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
-        if (nerrs) printf("fail with %d mismatches\n",nerrs);
+        if (nerrs) fprintf(stderr,"fail with %d mismatches\n",nerrs);
         else       printf("pass\n");
     }
 

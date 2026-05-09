@@ -32,14 +32,14 @@
 #define CHECK_ERR { \
     if (err != NC_NOERR) { \
         nerrs++; \
-        printf("Error at line %d in %s: (%s)\n", \
+        fprintf(stderr,"Error at line %d in %s: (%s)\n", \
         __LINE__,__FILE__,nc_strerror(err)); \
     } \
 }
 #define EXP_ERR(exp) { \
     if (err != exp) { \
         nerrs++; \
-        printf("Error at line %d in %s: expecting %d but got %d\n", \
+        fprintf(stderr,"Error at line %d in %s: expecting %d but got %d\n", \
         __LINE__,__FILE__,exp, err); \
     } \
 }

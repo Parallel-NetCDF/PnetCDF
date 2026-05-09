@@ -77,7 +77,7 @@ union getret
 };
 
 
-#define ERR {if (err != NC_NOERR) {printf("Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
+#define ERR {if (err != NC_NOERR) {fprintf(stderr,"Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
 
 static void
 chkgot(nc_type type, union getret got, double check)

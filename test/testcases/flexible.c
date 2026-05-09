@@ -120,7 +120,7 @@ int test_io(const char *out_path,
     disps[1] = a1 - a0;
     bufptr = buf[1];
     err = MPI_Type_create_hindexed(2, blocklengths, disps, MPI_INT, &buftype);
-    if (err != MPI_SUCCESS) printf("MPI error MPI_Type_create_hindexed\n");
+    if (err != MPI_SUCCESS) fprintf(stderr,"MPI error MPI_Type_create_hindexed\n");
     MPI_Type_commit(&buftype);
 
     start[0] = 0; start[1] = NX*rank;
@@ -137,7 +137,7 @@ int test_io(const char *out_path,
     /* check if the contents of buf are altered */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
         if (buf[j][i] != j+rank+10) {
-            printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
+            fprintf(stderr,"Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,buf[j][i]);
             return 1;
         }
@@ -152,7 +152,7 @@ int test_io(const char *out_path,
     /* check if the contents of buf are altered */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
         if (buf[j][i] != j+rank+10) {
-            printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
+            fprintf(stderr,"Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,buf[j][i]);
             return 1;
         }
@@ -165,7 +165,7 @@ int test_io(const char *out_path,
     disps[0] = 0;
     disps[1] = -NX;
     err = MPI_Type_create_hindexed(2, blocklengths, disps, MPI_SIGNED_CHAR, &buftype);
-    if (err != MPI_SUCCESS) printf("MPI error MPI_Type_create_hindexed\n");
+    if (err != MPI_SUCCESS) fprintf(stderr,"MPI error MPI_Type_create_hindexed\n");
     MPI_Type_commit(&buftype);
 
     if (coll_io)
@@ -177,7 +177,7 @@ int test_io(const char *out_path,
     /* check if the contents of buf are altered */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
         if (schar_buf[j*NX+i] != j+rank+10) {
-            printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
+            fprintf(stderr,"Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,schar_buf[j*NX+i]);
             return 1;
         }
@@ -193,7 +193,7 @@ int test_io(const char *out_path,
     /* check read contents */
     for (j=0; j<NY; j++) for (i=0; i<NX; i++)
         if (schar_buf[j*NX+i] != j+rank+10) {
-            printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
+            fprintf(stderr,"Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,j+rank+10,schar_buf[j*NX+i]);
             return 1;
         }
@@ -243,7 +243,7 @@ int test_io(const char *out_path,
         int expect = (j == 0) ? 1 : 0;
         for (i=0; i<NX; i++)
             if (buf[j][i] != expect+rank+10) {
-                printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
+                fprintf(stderr,"Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                        __FILE__,__LINE__,j,i,expect+rank+10,buf[j][i]);
                 return 1;
             }
@@ -263,7 +263,7 @@ int test_io(const char *out_path,
         int expect = (j == 0) ? 1 : 0;
         for (i=0; i<NX; i++)
             if (buf[j][i] != expect+rank+10) {
-                printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
+                fprintf(stderr,"Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                        __FILE__,__LINE__,j,i,expect+rank+10,buf[j][i]);
                 return 1;
             }
@@ -290,7 +290,7 @@ int test_io(const char *out_path,
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) {
         int getValue = ncbuf[(j+2)*(count[1]+4)+(i+2)];
         if (buf[j][i] != getValue) {
-            printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
+            fprintf(stderr,"Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             return 1;
         }
@@ -306,7 +306,7 @@ int test_io(const char *out_path,
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) {
         int getValue = ncbuf[(j+2)*(count[1]+4)+(i+2)];
         if (buf[j][i] != getValue) {
-            printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
+            fprintf(stderr,"Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             return 1;
         }
@@ -325,7 +325,7 @@ int test_io(const char *out_path,
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) {
         int getValue = ncbuf[(j+2)*(count[1]+4)+(i+2)];
         if (buf[j][i] != getValue) {
-            printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
+            fprintf(stderr,"Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             return 1;
         }
@@ -344,7 +344,7 @@ int test_io(const char *out_path,
     for (j=0; j<count[0]; j++) for (i=0; i<count[1]; i++) {
         int getValue = ncbuf[(j+2)*(count[1]+4)+(i+2)];
         if (buf[j][i] != getValue) {
-            printf("Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
+            fprintf(stderr,"Error at %s line %d: expect buf[%d][%d]=%d but got %d\n",
                    __FILE__,__LINE__,j,i,buf[j][i],getValue);
             return 1;
         }

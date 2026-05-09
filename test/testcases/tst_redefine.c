@@ -196,33 +196,33 @@ err_out:
 #define CHECK_HEADER_SIZE { \
     if (hsize != exp_hsize) { \
         nerrs++; \
-        printf("Error at line %d in %s: header size expecting "OFFFMT" but got "OFFFMT"\n", \
+        fprintf(stderr,"Error at line %d in %s: header size expecting "OFFFMT" but got "OFFFMT"\n", \
                __LINE__,__FILE__, exp_hsize, hsize); \
     } \
     if (extent != exp_extent) { \
         nerrs++; \
-        printf("Error at line %d in %s: header extent expecting "OFFFMT" but got "OFFFMT"\n", \
+        fprintf(stderr,"Error at line %d in %s: header extent expecting "OFFFMT" but got "OFFFMT"\n", \
                __LINE__,__FILE__, exp_extent, extent); \
     } \
     if (extent - hsize < exp_h_free) { \
         nerrs++; \
-        printf("Error at line %d in %s: header free expecting "OFFFMT" but got "OFFFMT"\n", \
+        fprintf(stderr,"Error at line %d in %s: header free expecting "OFFFMT" but got "OFFFMT"\n", \
                __LINE__,__FILE__, exp_h_free, extent - hsize); \
     } \
     if (has_fix_vars && v_free != exp_v_free) { \
         nerrs++; \
-        printf("Error at line %d in %s: v_free expecting "OFFFMT" but got "OFFFMT"\n", \
+        fprintf(stderr,"Error at line %d in %s: v_free expecting "OFFFMT" but got "OFFFMT"\n", \
                __LINE__,__FILE__, exp_v_free, v_free); \
     } \
     if (r_begin != exp_r_begin) { \
         nerrs++; \
-        printf("Error at line %d in %s: record begin expecting "OFFFMT" but got "OFFFMT"\n", \
+        fprintf(stderr,"Error at line %d in %s: record begin expecting "OFFFMT" but got "OFFFMT"\n", \
                __LINE__,__FILE__, exp_r_begin, r_begin); \
     } \
     /* read variables back and check contents */ \
     nerrs += check_vars(comm, ncid, varid, coll_io); \
     if (nerrs > 0) { \
-        printf("Error at line %d in %s: check_vars failed\n", \
+        fprintf(stderr,"Error at line %d in %s: check_vars failed\n", \
                __LINE__,__FILE__); \
         goto err_out; \
     } \

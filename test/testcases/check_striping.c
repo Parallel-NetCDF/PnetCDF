@@ -64,12 +64,12 @@ int test_io(const char *out_path,
     err = MPI_Bcast(&root_striping_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_ERR(err)
     if (root_striping_size != striping_size) {
-        printf("Error at line %d in %s: inconsistent striping_size (root=%d local=%d)\n",
+        fprintf(stderr,"Error at line %d in %s: inconsistent striping_size (root=%d local=%d)\n",
                __LINE__,__FILE__, root_striping_size, striping_size);
         nerrs++;
     }
     if (root_striping_count != striping_count) {
-        printf("Error at line %d in %s: inconsistent striping_count (root=%d local=%d)\n",
+        fprintf(stderr,"Error at line %d in %s: inconsistent striping_count (root=%d local=%d)\n",
                __LINE__,__FILE__, root_striping_count, striping_count);
         nerrs++;
     }
@@ -95,12 +95,12 @@ int test_io(const char *out_path,
     err = MPI_Bcast(&root_striping_count, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_ERR(err)
     if (root_striping_size != striping_size) {
-        printf("Error at line %d in %s: inconsistent striping_size (root=%d local=%d)\n",
+        fprintf(stderr,"Error at line %d in %s: inconsistent striping_size (root=%d local=%d)\n",
                __LINE__,__FILE__, root_striping_size, striping_size);
         nerrs++;
     }
     if (root_striping_count != striping_count) {
-        printf("Error at line %d in %s: inconsistent striping_count (root=%d local=%d)\n",
+        fprintf(stderr,"Error at line %d in %s: inconsistent striping_count (root=%d local=%d)\n",
                __LINE__,__FILE__, root_striping_count, striping_count);
         nerrs++;
     }

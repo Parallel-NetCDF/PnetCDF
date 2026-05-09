@@ -115,13 +115,13 @@ int main(int argc, char **argv) {
 
     /* check if number of dimensions defined in the file is expected */
     if (ndims != 3) {
-        printf("Error: expect ndims=3 but got %d\n", ndims);
+        fprintf(stderr,"Error: expect ndims=3 but got %d\n", ndims);
         nerrs++;
         goto fn_exit;
     }
     /* check if number of variables defined in the file is expected */
     if (nvars != 1) {
-        printf("Error: expect nvars=1 but got %d\n", nvars);
+        fprintf(stderr,"Error: expect nvars=1 but got %d\n", nvars);
         nerrs++;
         goto fn_exit;
     }
@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
     /* check if number of dimensions of the variable is expected */
     err = ncmpi_inq_varndims(ncid, varid, &ndims); CHECK_ERR
     if (ndims != 3) {
-        printf("Error: expect variable's ndims=3 but got %d\n", ndims);
+        fprintf(stderr,"Error: expect variable's ndims=3 but got %d\n", ndims);
         nerrs++;
         goto fn_exit;
     }
@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
     /* check the contents of variable */
     for (i=0; i<bufLen; i++)
         if (buf[i] != i) {
-            printf("Error: expect buf[%d]=%d, but got %d\n",i,i,buf[i]);
+            fprintf(stderr,"Error: expect buf[%d]=%d, but got %d\n",i,i,buf[i]);
             nerrs++;
             break;
         }

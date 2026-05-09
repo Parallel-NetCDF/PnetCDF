@@ -125,7 +125,7 @@ typedef unsigned long long ulonglong;
     for (m=0; m<nelems; m++) { \
         char exp = EXP_VAL(m); \
         if (buf[m] != exp) { \
-            printf("Error: var %d expect buf[%d] = %d but got %d\n", \
+            fprintf(stderr,"Error: var %d expect buf[%d] = %d but got %d\n", \
                    j, m, (int)exp, (int)buf[m]); \
             nerrs++; \
             goto err_out; \
@@ -140,7 +140,7 @@ typedef unsigned long long ulonglong;
     for (m=0; m<nelems; m++) { \
         char exp = EXP_VAL(m); \
         if (buf[m] != exp) { \
-            printf("Error: var %d expect buf[%d] = %d but got %d\n", \
+            fprintf(stderr,"Error: var %d expect buf[%d] = %d but got %d\n", \
                    j, m, (int)exp, (int)buf[m]); \
             nerrs++; \
             goto err_out; \
@@ -168,7 +168,7 @@ typedef unsigned long long ulonglong;
         for (m=0; m<nelems; m++) { \
             double exp = EXP_VAL(m); \
             if (buf[m] != exp) { \
-                printf("Error: var %d expect buf[%d] = %.f but got %.f\n", \
+                fprintf(stderr,"Error: var %d expect buf[%d] = %.f but got %.f\n", \
                        j, m, exp, buf[m]); \
                 nerrs++; \
                 goto err_out; \
@@ -183,7 +183,7 @@ typedef unsigned long long ulonglong;
         for (m=0; m<nelems; m++) { \
             double exp = EXP_VAL(m); \
             if (buf[m] != exp) { \
-                printf("Error: var %d expect buf[%d] = %.f but got %.f\n", \
+                fprintf(stderr,"Error: var %d expect buf[%d] = %.f but got %.f\n", \
                        j, m, exp, buf[m]); \
                 nerrs++; \
                 goto err_out; \

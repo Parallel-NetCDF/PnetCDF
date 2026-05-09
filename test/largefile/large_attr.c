@@ -85,7 +85,7 @@ int test_io(const char *out_path,
     err = ncmpi_inq_attlen(ncid, NC_GLOBAL, "large_attr", &inq_nelems);
     CHECK_ERR
     if (inq_nelems != nelems) {
-        printf("Error at %s line %d: expecting attr nelems "OFFFMT" but got "OFFFMT"\n",
+        fprintf(stderr,"Error at %s line %d: expecting attr nelems "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,nelems,inq_nelems);
         nerrs++;
         goto err_out;
@@ -98,7 +98,7 @@ int test_io(const char *out_path,
     for (i=0; i<nelems; i++) {
         char expect = 'a' + i % 16;
         if (buf[i] != expect) {
-            printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
+            fprintf(stderr,"Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
                    __FILE__,__LINE__,i,expect,buf[i]);
             nerrs++;
             goto err_out;
@@ -137,7 +137,7 @@ int test_io(const char *out_path,
 
     err = ncmpi_inq_attlen(ncid, varid, "large_attr", &inq_nelems);
     if (inq_nelems != nelems) {
-        printf("Error at %s line %d: expecting attr len "OFFFMT" but got "OFFFMT"\n",
+        fprintf(stderr,"Error at %s line %d: expecting attr len "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,nelems,inq_nelems);
         nerrs++;
         goto err_out;
@@ -150,7 +150,7 @@ int test_io(const char *out_path,
     for (i=0; i<nelems; i++) {
         char expect = 'a' + i % 16;
         if (buf[i] != expect) {
-            printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
+            fprintf(stderr,"Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
                    __FILE__,__LINE__,i,expect,buf[i]);
             nerrs++;
             goto err_out;
@@ -186,7 +186,7 @@ int test_io(const char *out_path,
     name = "large_attr_0";
     err = ncmpi_inq_attlen(ncid, NC_GLOBAL, name, &inq_nelems);
     if (inq_nelems != nelems) {
-        printf("Error at %s line %d: expecting attr %s nelems "OFFFMT" but got "OFFFMT"\n",
+        fprintf(stderr,"Error at %s line %d: expecting attr %s nelems "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,name, nelems,inq_nelems);
         nerrs++;
         goto err_out;
@@ -199,7 +199,7 @@ int test_io(const char *out_path,
     for (i=0; i<nelems; i++) {
         char expect = 'a' + i % 16;
         if (buf[i] != expect) {
-            printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
+            fprintf(stderr,"Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
                    __FILE__,__LINE__,i,expect,buf[i]);
             nerrs++;
             goto err_out;
@@ -209,7 +209,7 @@ int test_io(const char *out_path,
     name = "large_attr_1";
     err = ncmpi_inq_attlen(ncid, NC_GLOBAL, name, &inq_nelems);
     if (inq_nelems != nelems) {
-        printf("Error at %s line %d: expecting attr %s nelems "OFFFMT" but got "OFFFMT"\n",
+        fprintf(stderr,"Error at %s line %d: expecting attr %s nelems "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,name, nelems,inq_nelems);
         nerrs++;
         goto err_out;
@@ -222,7 +222,7 @@ int test_io(const char *out_path,
     for (i=0; i<nelems; i++) {
         char expect = 'a' + i % 16;
         if (buf[i] != expect) {
-            printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
+            fprintf(stderr,"Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
                    __FILE__,__LINE__,i,expect,buf[i]);
             nerrs++;
             goto err_out;
@@ -268,7 +268,7 @@ int test_io(const char *out_path,
     name = "large_attr_0";
     err = ncmpi_inq_attlen(ncid, varid, name, &inq_nelems);
     if (inq_nelems != nelems) {
-        printf("Error at %s line %d: expecting attr %s len "OFFFMT" but got "OFFFMT"\n",
+        fprintf(stderr,"Error at %s line %d: expecting attr %s len "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,name,nelems,inq_nelems);
         nerrs++;
         goto err_out;
@@ -281,7 +281,7 @@ int test_io(const char *out_path,
     for (i=0; i<nelems; i++) {
         char expect = 'a' + i % 16;
         if (buf[i] != expect) {
-            printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
+            fprintf(stderr,"Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
                    __FILE__,__LINE__,i,expect,buf[i]);
             nerrs++;
             goto err_out;
@@ -291,7 +291,7 @@ int test_io(const char *out_path,
     name = "large_attr_1";
     err = ncmpi_inq_attlen(ncid, varid, name, &inq_nelems);
     if (inq_nelems != nelems) {
-        printf("Error at %s line %d: expecting attr %s len "OFFFMT" but got "OFFFMT"\n",
+        fprintf(stderr,"Error at %s line %d: expecting attr %s len "OFFFMT" but got "OFFFMT"\n",
                __FILE__,__LINE__,name,nelems,inq_nelems);
         nerrs++;
         goto err_out;
@@ -304,7 +304,7 @@ int test_io(const char *out_path,
     for (i=0; i<nelems; i++) {
         char expect = 'a' + i % 16;
         if (buf[i] != expect) {
-            printf("Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
+            fprintf(stderr,"Error at %s line %d: expecting attr[%zd] value %c but got %c\n",
                    __FILE__,__LINE__,i,expect,buf[i]);
             nerrs++;
             goto err_out;

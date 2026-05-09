@@ -74,7 +74,7 @@
     int _i; \
     for (_i=0; _i<(n); _i++) { \
         if ((a)[_i] != NC_NOERR) { \
-            printf("Error at line %d in %s: err[%d] %s\n", __LINE__, __FILE__, _i, \
+            fprintf(stderr,"Error at line %d in %s: err[%d] %s\n", __LINE__, __FILE__, _i, \
                    ncmpi_strerrno((a)[_i])); \
             nerrs++; \
         } \
@@ -123,7 +123,7 @@ int check_contents_for_fail(int ncid, int *varid, int coll_io, int lineno)
         for (j=0; j<NY*NX; j++) {
             if (expected[i][j] >= nprocs) continue;
             if (r_buffer[j] != expected[i][j]) {
-                printf("Error at line %d in %s: Expected read buf[%d][%d]=%d, but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: Expected read buf[%d][%d]=%d, but got %d\n",
                        lineno,__FILE__,i,j,expected[i][j],r_buffer[j]);
                 nerrs++;
             }
@@ -141,7 +141,7 @@ check_num_pending_reqs(int ncid, int expected, int lineno)
     err = ncmpi_inq_nreqs(ncid, &n_pendings);
     CHECK_ERR
     if (n_pendings != expected) {
-        printf("Error at line %d in %s: expect %d pending requests but got %d\n",
+        fprintf(stderr,"Error at line %d in %s: expect %d pending requests but got %d\n",
                lineno, __FILE__, expected, n_pendings);
         nerrs++;
     }
@@ -298,7 +298,7 @@ int test_io(const char *out_path,
     /* test error code: NC_ENULLSTART */
     err = ncmpi_iput_varn_int(ncid, varid[0], 1, NULL, NULL, NULL, &reqs[4]);
     if (err != NC_ENULLSTART) {
-        printf("expecting error code NC_ENULLSTART but got %s\n",
+        fprintf(stderr,"expecting error code NC_ENULLSTART but got %s\n",
                ncmpi_strerrno(err));
         nerrs++;
     }
@@ -331,7 +331,7 @@ int test_io(const char *out_path,
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (buffer[i][j] != rank+10) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%d\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=%d\n",
                        __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
             }
@@ -396,7 +396,7 @@ int test_io(const char *out_path,
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (cbuffer[i][j] != rank+10) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%d\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=%d\n",
                        __LINE__,__FILE__,i,j,cbuffer[i][j]);
                 nerrs++;
             }
@@ -470,7 +470,7 @@ int test_io(const char *out_path,
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (buffer[i][j] != rank+10) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%d\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=%d\n",
                        __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
             }
@@ -495,7 +495,7 @@ int test_io(const char *out_path,
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (cbuffer[i][j] != rank+10) {
-                printf("Error at line %d in %s: expecting cbuffer[%d][%d]=%d but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting cbuffer[%d][%d]=%d but got %d\n",
                        __LINE__,__FILE__,i,j,rank+10,cbuffer[i][j]);
                 nerrs++;
             }
@@ -596,12 +596,12 @@ int test_io(const char *out_path,
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]*2; j++) {
             if (j%2 && rbuffer[i][j] != -1) {
-                printf("Error at line %d in %s: expecting rbuffer[%d][%d]=-1 but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting rbuffer[%d][%d]=-1 but got %d\n",
                        __LINE__,__FILE__,i,j,rbuffer[i][j]);
                 nerrs++;
             }
             if (j%2 == 0 && rbuffer[i][j] != rank+10) {
-                printf("Error at line %d in %s: expecting rbuffer[%d][%d]=%d but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting rbuffer[%d][%d]=%d but got %d\n",
                        __LINE__,__FILE__,i,j,rank+10,rbuffer[i][j]);
                 nerrs++;
             }
@@ -621,7 +621,7 @@ int test_io(const char *out_path,
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (cbuffer[i][j] != rank+10) {
-                printf("Error at line %d in %s: expecting buffer[%d][%d]=%d but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting buffer[%d][%d]=%d but got %d\n",
                        __LINE__,__FILE__,i,j,rank+10,cbuffer[i][j]);
                 nerrs++;
             }

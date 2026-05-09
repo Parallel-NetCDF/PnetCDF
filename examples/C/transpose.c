@@ -40,7 +40,7 @@
 
 static int verbose;
 
-#define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR {if(err!=NC_NOERR){fprintf(stderr,"Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -82,7 +82,7 @@ pnetcdf_check_mem_usage(MPI_Comm comm)
                    sum_size);
     }
     else if (err != NC_ENOTENABLED) {
-        printf("Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
+        fprintf(stderr,"Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
         nerrs++;
     }
     return nerrs;
@@ -155,7 +155,7 @@ pnetcdf_io(MPI_Comm comm, char *filename, int cmode, int len)
     cmode |= NC_CLOBBER;
     err = ncmpi_create(comm, filename, cmode, info, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_create() file %s (%s)\n",
+        fprintf(stderr,"Error at line %d in %s: ncmpi_create() file %s (%s)\n",
         __LINE__,__FILE__,filename,ncmpi_strerror(err));
         MPI_Abort(comm, -1);
         exit(1);

@@ -165,7 +165,7 @@ int mix_collectives(const char *out_path,
     if (nprocs == 4) {
         for (i=0; i<96; i++) {
             if (check_buf[i] != g_buf[i]) {
-                printf("Error at line %d in %s: expecting var[%d]=%d but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting var[%d]=%d but got %d\n",
                 __LINE__,__FILE__,i,g_buf[i],check_buf[i]);
                 nerrs++;
                 free(check_buf);
@@ -181,7 +181,7 @@ int mix_collectives(const char *out_path,
         start[0] = 1; start[1] = 1;
         err = ncmpi_get_var1_int_all(ncid, varid, start, &buf[0][0]); CHECK_ERR
         if (buf[0][0] != rank) {
-            printf("Error at line %d in %s: expecting buf[0][0]=%d but got %d\n",
+            fprintf(stderr,"Error at line %d in %s: expecting buf[0][0]=%d but got %d\n",
             __LINE__,__FILE__,rank,buf[0][0]);
             nerrs++;
         }
@@ -192,7 +192,7 @@ int mix_collectives(const char *out_path,
         err = ncmpi_get_vara_int_all(ncid, varid, start, count, &buf[0][0]); CHECK_ERR
         for (j=0; j<6; j++) for (i=0; i<4; i++) {
             if (buf[j][i] != j*4+i + rank*100) {
-                printf("Error at line %d in %s: expecting var[%d]=%d but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting var[%d]=%d but got %d\n",
                 __LINE__,__FILE__,i, j*4+i + rank*100, buf[j][i]);
                 nerrs++;
                 goto syn_err;
@@ -207,7 +207,7 @@ int mix_collectives(const char *out_path,
         int *val = &buf[0][0];
         for (j=0; j<count[0]*count[1]; j++) {
             if (*val != j + rank*100) {
-                printf("Error at line %d in %s: expecting var[%d]=%d but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting var[%d]=%d but got %d\n",
                 __LINE__,__FILE__,j, j+rank*100, *val);
                 nerrs++;
                 goto syn_err;
@@ -223,7 +223,7 @@ int mix_collectives(const char *out_path,
         err = ncmpi_get_varm_int_all(ncid, varid, start, count, stride, imap, &buf[0][0]); CHECK_ERR
         for (j=0; j<6; j++) for (i=0; i<4; i++) {
             if (buf[j][i] != j*4+i + rank*100) {
-                printf("Error at line %d in %s: expecting var[%d][%d]=%d but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting var[%d][%d]=%d but got %d\n",
                 __LINE__,__FILE__,j,i, j*4+i + rank*100, buf[j][i]);
                 nerrs++;
                 goto syn_err;
@@ -236,7 +236,7 @@ int mix_collectives(const char *out_path,
         err = ncmpi_get_vara_all(ncid, varid, start, count, &buf[0][0], 0, MPI_DATATYPE_NULL); CHECK_ERR
         for (j=0; j<6; j++) for (i=0; i<4; i++) {
             if (buf[j][i] != -1) {
-                printf("Error at line %d in %s: expecting var[%d][%d]=%d but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting var[%d][%d]=%d but got %d\n",
                 __LINE__,__FILE__,j,i, -1, buf[j][i]);
                 nerrs++;
                 goto syn_err;

@@ -61,9 +61,9 @@ int ncmpii_error_adios2nc(int adios_err, char *err_msg)       /* extra error mes
     /* report the world rank */
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    printf("rank %d: IO error (%s) : %s\n", rank, err_msg, errstr);
+    fprintf(stderr,"rank %d: IO error (%s) : %s\n", rank, err_msg, errstr);
 #else
-    printf("IO error (%s) : %s\n", err_msg, errstr);
+    fprintf(stderr,"IO error (%s) : %s\n", err_msg, errstr);
 #endif
 
     return NC_EFILE; /* other unknown file I/O error */

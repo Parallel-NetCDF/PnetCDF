@@ -28,7 +28,7 @@ check_read_contents(float *rh)
         for (j=0; j<4; j++) {
             if (rh[j*6+i] != k) {
                 if (verbose)
-                    printf("Error at %s:%d : expect rh[%d][%d]=%f but got %f\n",
+                    fprintf(stderr,"Error at %s:%d : expect rh[%d][%d]=%f but got %f\n",
                            __FILE__,__LINE__,j,i,k,rh[j*6+i]);
                 return 1;
             }
@@ -74,7 +74,7 @@ check_write_contents(signed char *varT)
             if (varT[j*6+i] != j*6+i + 50) {
                 if (verbose)
                     /* this error is a pnetcdf internal error, if occurs */
-                    printf("Error at line %d in %s: expecting varT[%d][%d]=%d but got %d\n",
+                    fprintf(stderr,"Error at line %d in %s: expecting varT[%d][%d]=%d but got %d\n",
                            __LINE__,__FILE__,j,i,j*6+i + 50,varT[j*6+i]);
                 return 1;
             }

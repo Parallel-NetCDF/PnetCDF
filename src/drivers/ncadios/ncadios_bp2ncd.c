@@ -31,7 +31,7 @@
 #include "ncadios_driver.h"
 #include <ncadios_internal.h>
 
-#define ERR(e){if(e){printf("Error:%d\n",e);return 2;}}
+#define ERR(e){if(e){fprintf(stderr,"Error:%d\n",e);return 2;}}
 #define DIVIDER "\t---------------------------------\n"
 
 struct var_dim

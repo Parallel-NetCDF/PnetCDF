@@ -140,7 +140,7 @@ define(`TEST_CDF_FORMAT',dnl
     /* create a new file */
     err = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_create() file %s (%s)\n",
+        fprintf(stderr,"Error at line %d in %s: ncmpi_create() file %s (%s)\n",
         __LINE__,__FILE__,fname,ncmpi_strerror(err));
         CHECK_ERR
     }

@@ -69,7 +69,7 @@ int test_io(const char *out_path,
     for (i=0; i<NY; i++)
         for (j=0; j<NX; j++) {
             if (buffer[i][j] != rank+10) {
-                printf("Error at line %d in %s: put buffer[%d][%d]=%hhu altered, should be %d\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer[%d][%d]=%hhu altered, should be %d\n",
                        __LINE__,__FILE__,i,j,buffer[i][j],rank+10);
                 nerrs++;
             }
@@ -85,7 +85,7 @@ int test_io(const char *out_path,
     for (i=0; i<NY; i++)
         for (j=0; j<NX; j++) {
             if (buffer[i][j] != rank+10) {
-                printf("Error at line %d in %s: put buffer[%d][%d]=%hhu altered, should be %d\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer[%d][%d]=%hhu altered, should be %d\n",
                        __LINE__,__FILE__,i,j,buffer[i][j],rank+10);
                 nerrs++;
             }

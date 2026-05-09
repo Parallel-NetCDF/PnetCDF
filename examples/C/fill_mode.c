@@ -67,7 +67,7 @@
 
 static int verbose;
 
-#define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR {if(err!=NC_NOERR){fprintf(stderr,"Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -106,7 +106,7 @@ pnetcdf_check_mem_usage(MPI_Comm comm)
                    sum_size);
     }
     else if (err != NC_ENOTENABLED) {
-        printf("Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
+        fprintf(stderr,"Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
         nerrs++;
     }
     return nerrs;
@@ -200,10 +200,10 @@ int main(int argc, char** argv)
 
     err = ncmpi_inq_var_fill(ncid, fix_varid, &no_fill, &fill_value); ERR
     if (no_fill != 0)
-        printf("Error at line %d in %s: expecting no_fill to be 0\n",
+        fprintf(stderr,"Error at line %d in %s: expecting no_fill to be 0\n",
         __LINE__,__FILE__);
     if (fill_value != NC_FILL_INT)
-        printf("Error at line %d in %s: expecting no_fill to be %d but got %d\n",
+        fprintf(stderr,"Error at line %d in %s: expecting no_fill to be %d but got %d\n",
         __LINE__,__FILE__,NC_FILL_INT,fill_value);
 
     /* fill the 1st record of the record variable */

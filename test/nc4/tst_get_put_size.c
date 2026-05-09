@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
         err = ncmpi_put_var1_int_all(ncid, varid[0], start, buf); CHECK_ERR
         err = ncmpi_inq_put_size(ncid, &size); CHECK_ERR
         if (size != sizeof(int) * (i + 1)){
-            printf("Error at line %d of %s: expect put_size = %ld but got "OFFFMT"\n",
+            fprintf(stderr,"Error at line %d of %s: expect put_size = %ld but got "OFFFMT"\n",
                 __LINE__,__FILE__,sizeof(int) * (i + 1),size);
             nerrs++;
         }
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
         err = ncmpi_get_var1_int_all(ncid, varid[0], start, buf); CHECK_ERR
         err = ncmpi_inq_get_size(ncid, &size); CHECK_ERR
         if (size != sizeof(int) * (i + 1)){
-            printf("Error at line %d of %s: expect put_size = %ld but got "OFFFMT"\n",
+            fprintf(stderr,"Error at line %d of %s: expect put_size = %ld but got "OFFFMT"\n",
                 __LINE__,__FILE__,sizeof(int) * (i + 1),size);
             nerrs++;
         }

@@ -87,7 +87,7 @@ int test_bb(const char *out_path,
     CHECK_ERR
     for(i = 0; i < 10; i++){
         if (buffer[i] != rank + i){
-            printf("Error at line %d in %s: expecting buffer[%d] = %d but got %d\n",
+            fprintf(stderr,"Error at line %d in %s: expecting buffer[%d] = %d but got %d\n",
                     __LINE__, __FILE__, i, rank + 1, buffer[i]);
             nerrs++;
             goto err_out;
@@ -109,7 +109,7 @@ int test_bb(const char *out_path,
     CHECK_ERR
     for(i = 0; i < 10; i++){
         if (buffer[i] != rank + i){
-            printf("Error at line %d in %s: expecting buffer[%d] = %d but got %d\n",
+            fprintf(stderr,"Error at line %d in %s: expecting buffer[%d] = %d but got %d\n",
                     __LINE__, __FILE__, i, rank + 1, buffer[i]);
             nerrs++;
             goto err_out;
@@ -134,7 +134,7 @@ int test_bb(const char *out_path,
     CHECK_ERR
     for(i = 0; i < 10; i++){
         if (buffer[i] != rank + i){
-            printf("Error at line %d in %s: expecting buffer[%d] = %d but got %d\n",
+            fprintf(stderr,"Error at line %d in %s: expecting buffer[%d] = %d but got %d\n",
                     __LINE__, __FILE__, i, rank + 1, buffer[i]);
             nerrs++;
             goto err_out;

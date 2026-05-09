@@ -22,8 +22,8 @@
 
 #include <testutils.h>
 
-#define ERROR {printf("Error at line %d: %s\n",__LINE__,ncmpi_strerror(res)); nerrs++;}
-#define ERRORI {printf("Error at line %d (loop=%d): %s\n",__LINE__,i,ncmpi_strerror(res)); nerrs++;}
+#define ERROR {fprintf(stderr,"Error at line %d: %s\n",__LINE__,ncmpi_strerror(res)); nerrs++;}
+#define ERRORI {fprintf(stderr,"Error at line %d (loop=%d): %s\n",__LINE__,i,ncmpi_strerror(res)); nerrs++;}
 
 /* The data file we will create. */
 #define NDIMS 1

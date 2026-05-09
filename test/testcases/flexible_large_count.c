@@ -79,7 +79,7 @@
     for (i=0; i<Y; i++) { \
         for (j=0; j<X; j++) { \
             if (buf[i][j] != i*X+j) { \
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%d\n", \
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=%d\n", \
                        __LINE__,__FILE__,i,j,buf[i][j]); \
                 nerrs++; \
             } \
@@ -91,13 +91,13 @@
         for (j=0; j<X; j++) { \
             if (i < G || G+Y <= i || j < G || G+X <= j) { \
                 if (buf[i][j] != -1) { \
-                    printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%d\n", \
+                    fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=%d\n", \
                            __LINE__,__FILE__,i,j,buf[i][j]); \
                     nerrs++; \
                 } \
             } \
             else if (buf[i][j] != (i-G)*X+(j-G)) { \
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%d\n", \
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=%d\n", \
                        __LINE__,__FILE__,i,j,buf[i][j]); \
                 nerrs++; \
             } \
@@ -114,7 +114,7 @@
     for (i=0; i<Y; i++) { \
         for (j=0; j<X; j++) { \
             if (buf[i][j] != i*X+j) { \
-                printf("Error at line %d in %s: Unexpected get buffer[%d][%d]=%d\n", \
+                fprintf(stderr,"Error at line %d in %s: Unexpected get buffer[%d][%d]=%d\n", \
                        __LINE__,__FILE__,i,j,buf[i][j]); \
                 nerrs++; \
             } \
@@ -126,13 +126,13 @@
             if (i < G || G+Y <= i || \
                 j < G || G+X <= j) { \
                 if (buf[i][j] != -2) { \
-                    printf("Error at line %d in %s: Unexpected get buffer[%d][%d]=%d\n", \
+                    fprintf(stderr,"Error at line %d in %s: Unexpected get buffer[%d][%d]=%d\n", \
                            __LINE__,__FILE__,i,j,buf[i][j]); \
                     nerrs++; \
                 } \
             } \
             else if (buf[i][j] != (i-G)*X+(j-G)) { \
-                printf("Error at line %d in %s: Unexpected get buffer[%d][%d]=%d\n", \
+                fprintf(stderr,"Error at line %d in %s: Unexpected get buffer[%d][%d]=%d\n", \
                        __LINE__,__FILE__,i,j,buf[i][j]); \
                 nerrs++; \
             } \

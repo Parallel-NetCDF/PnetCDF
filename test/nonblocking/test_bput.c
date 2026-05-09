@@ -91,7 +91,7 @@ int test_io(const char *out_path,
     for (j=0; j<4; j++)
         for (i=0; i<6; i++) {
             if (var[j][i] != 50.5 + j*6+i) {
-                printf("Error at line %d in %s: put buffer[%d][%d]=%f altered, should be %f\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer[%d][%d]=%f altered, should be %f\n",
                        __LINE__,__FILE__,j,i,var[j][i],50.5+j*6+i);
                 assert(0);
             }
@@ -105,7 +105,7 @@ int test_io(const char *out_path,
     for (j=0; j<4; j++)
         for (i=0; i<6; i++) {
             if (var[j][i] != 50.5 + j*6+i) {
-                printf("Error at line %d in %s: put buffer[%d][%d]=%f altered, should be %f\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer[%d][%d]=%f altered, should be %f\n",
                        __LINE__,__FILE__,j,i,var[j][i],50.5+j*6+i);
                 assert(0);
             }
@@ -140,7 +140,7 @@ int test_io(const char *out_path,
         for (i=0; i<6; i++) {
             if (var[j][i] != 50.5+j*6+i) {
                 /* this error is a pnetcdf internal error, if occurs */
-                printf("Error at line %d in %s: put buffer[%d][%d]=%f altered, should be %f\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer[%d][%d]=%f altered, should be %f\n",
                        __LINE__,__FILE__,j,i,var[j][i],50.5+j*6+i);
                 assert(0);
             }

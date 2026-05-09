@@ -48,9 +48,9 @@ int ncmpii_error_gio2nc(int         gio_err, /* returned value from GIO call */
     /* report the world rank */
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    printf("rank %d: GIO error (%s) : %s\n", rank, dump_str, GIO_strerror(gio_err));
+    fprintf(stderr,"rank %d: GIO error (%s) : %s\n", rank, dump_str, GIO_strerror(gio_err));
 #else
-    printf("GIO error (%s) : %s\n", dump_str, GIO_strerror(gio_err));
+    fprintf(stderr,"GIO error (%s) : %s\n", dump_str, GIO_strerror(gio_err));
 #endif
 
     return NC_EFILE; /* other unknown file I/O error */

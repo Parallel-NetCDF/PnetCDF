@@ -73,7 +73,7 @@ int test_cdf12(const char *filename, int format, int coll_io, MPI_Info info)
     uc = 0; /* initialize with a number that is not 0 */
     err = ncmpi_get_att_uchar(ncid, NC_GLOBAL, "att1", &uc); CHECK_ERR
     if (uc != 255) {
-        printf("Error at line %d: unexpected read value %d (expecting 255)\n",__LINE__,(int)uc);
+        fprintf(stderr,"Error at line %d: unexpected read value %d (expecting 255)\n",__LINE__,(int)uc);
         assert(0);
     }
     sc = 3; /* initialize with a number that is not -1 or -0 */
@@ -81,7 +81,7 @@ int test_cdf12(const char *filename, int format, int coll_io, MPI_Info info)
     err = ncmpi_get_att_schar(ncid, NC_GLOBAL, "att1", &sc); CHECK_ERR
     if (   sc != -1     /* 2-complement bit representation */
         && sc != -0) {  /* 1-complement bit representation */
-        printf("Error at line %d: unexpected read value %d (expecting 255)\n",__LINE__,(int)sc);
+        fprintf(stderr,"Error at line %d: unexpected read value %d (expecting 255)\n",__LINE__,(int)sc);
         assert(0);
     }
 
@@ -101,7 +101,7 @@ int test_cdf12(const char *filename, int format, int coll_io, MPI_Info info)
         dbuf = 0.0;
         err = ncmpi_get_att_double(ncid, NC_GLOBAL, "attf", &dbuf); CHECK_ERR
         if (dbuf != NC_FILL_FLOAT) {
-            printf("Error at line %d: unexpected read value %f (expecting %f)\n",__LINE__,dbuf,NC_FILL_FLOAT);
+            fprintf(stderr,"Error at line %d: unexpected read value %f (expecting %f)\n",__LINE__,dbuf,NC_FILL_FLOAT);
             assert(0);
         }
         /* read back attd as float and expect NC_ERANGE */
@@ -158,7 +158,7 @@ int test_cdf12(const char *filename, int format, int coll_io, MPI_Info info)
      * unsigned values was left up to the user.
      */
     if (format != NC_FORMAT_CLASSIC && format != NC_FORMAT_64BIT_OFFSET && uc != 255) {
-        printf("Error %s at %d: uc[0] expect 255 but got %d\n",
+        fprintf(stderr,"Error %s at %d: uc[0] expect 255 but got %d\n",
                 basename(__FILE__),__LINE__,(int)uc);
         assert(0);
     }
@@ -179,7 +179,7 @@ int test_cdf12(const char *filename, int format, int coll_io, MPI_Info info)
     CHECK_ERR
 
     if (format != NC_FORMAT_CLASSIC && format != NC_FORMAT_64BIT_OFFSET && sc != -128) {
-        printf("Error %s at %d: sc expect -128 but got %d\n",
+        fprintf(stderr,"Error %s at %d: sc expect -128 but got %d\n",
                 basename(__FILE__),__LINE__,(int)sc);
         assert(0);
     }
@@ -197,7 +197,7 @@ int test_cdf12(const char *filename, int format, int coll_io, MPI_Info info)
     EXP_ERR(NC_ERANGE)
 
     if (si != -129) { /* check if put buffer content is altered */
-        printf("Error %s at %d: si expect -129 but got %d\n",
+        fprintf(stderr,"Error %s at %d: si expect -129 but got %d\n",
                 basename(__FILE__),__LINE__,si);
         assert(0);
     }
@@ -215,7 +215,7 @@ int test_cdf12(const char *filename, int format, int coll_io, MPI_Info info)
     EXP_ERR(NC_ERANGE)
 
     if (si != 256) { /* check if put buffer content is altered */
-        printf("Error %s at %d: si expect 256 but got %d\n",
+        fprintf(stderr,"Error %s at %d: si expect 256 but got %d\n",
                 basename(__FILE__),__LINE__,si);
         assert(0);
     }
@@ -236,7 +236,7 @@ int test_cdf12(const char *filename, int format, int coll_io, MPI_Info info)
     CHECK_ERR
 
     if (format != NC_FORMAT_CLASSIC && format != NC_FORMAT_64BIT_OFFSET && si != -128) {
-        printf("Error %s at %d: si expect -128 but got %d\n",
+        fprintf(stderr,"Error %s at %d: si expect -128 but got %d\n",
                 basename(__FILE__),__LINE__,si);
         assert(0);
     }
@@ -272,7 +272,7 @@ int test_cdf12(const char *filename, int format, int coll_io, MPI_Info info)
             err = ncmpi_get_var_double(ncid, fvid, &dbuf);
         CHECK_ERR
         if (dbuf != NC_FILL_FLOAT) {
-            printf("Error %s at %d: dbuf expect NC_FILL_FLOAT (%f) but got %f\n",
+            fprintf(stderr,"Error %s at %d: dbuf expect NC_FILL_FLOAT (%f) but got %f\n",
                     basename(__FILE__),__LINE__,NC_FILL_FLOAT,dbuf);
             assert(0);
         }

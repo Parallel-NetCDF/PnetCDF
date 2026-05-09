@@ -221,7 +221,7 @@ int ncbbio_handle_put_req(NC_bb *ncbbp, int reqid, int *stat)
      * If it do, we have mising log entry or corrupt metadata index
      */
     if (!req->ready) {
-        printf("Fatal error: nonblocking request not in log file\n");
+        fprintf(stderr,"Fatal error: nonblocking request not in log file\n");
         MPI_Abort(MPI_COMM_WORLD, -1);
     }
 

@@ -22,7 +22,7 @@
 
 #include <testutils.h>
 
-#define ERR {if (err != NC_NOERR) {printf("Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); nerrs++;}}
+#define ERR {if (err != NC_NOERR) {fprintf(stderr,"Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); nerrs++;}}
 #define ERRV {printf("Unexpected result at %s line %d\n",__func__,__LINE__); nerrs++;}
 static int verbose;
 

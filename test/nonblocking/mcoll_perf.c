@@ -354,27 +354,27 @@ int test_io(const char *out_path,
 
     buf = (int **)malloc(sizeof(int*)*nvars);
     if (buf == NULL){
-        printf("buf malloc error\n");
+        fprintf(stderr,"buf malloc error\n");
         nerrs++; goto fn_exit;
     }
     bufcounts = (MPI_Offset *)malloc(sizeof(MPI_Offset)*nvars);
     if (bufcounts == NULL){
-        printf("bufcounts malloc error\n");
+        fprintf(stderr,"bufcounts malloc error\n");
         nerrs++; goto fn_exit;
     }
     starts = (MPI_Offset **)malloc(sizeof(MPI_Offset*)*nvars);
     if (starts== NULL){
-        printf("starts malloc error\n");
+        fprintf(stderr,"starts malloc error\n");
         nerrs++; goto fn_exit;
     }
     counts = (MPI_Offset **)malloc(sizeof(MPI_Offset*)*nvars);
     if (counts == NULL){
-        printf("counts malloc error\n");
+        fprintf(stderr,"counts malloc error\n");
         nerrs++; goto fn_exit;
     }
     datatype_list = (MPI_Datatype*)malloc(sizeof(MPI_Datatype)*nvars);
     if (datatype_list == NULL){
-        printf("counts malloc error\n");
+        fprintf(stderr,"counts malloc error\n");
         nerrs++; goto fn_exit;
     }
 
@@ -384,12 +384,12 @@ int test_io(const char *out_path,
     for (i=0; i<nvars; i++) {
         starts[i] = (MPI_Offset *)malloc(sizeof(MPI_Offset)*ndims);
         if (starts[i] == NULL){
-            printf("starts[%d] malloc error\n", i);
+            fprintf(stderr,"starts[%d] malloc error\n", i);
             nerrs++; goto fn_exit;
         }
         counts[i] = (MPI_Offset *)malloc(sizeof(MPI_Offset)*ndims);
         if (counts[i] == NULL){
-            printf("counts[%d] malloc error\n", i);
+            fprintf(stderr,"counts[%d] malloc error\n", i);
             nerrs++; goto fn_exit;
         }
     }
@@ -437,7 +437,7 @@ int test_io(const char *out_path,
 
     buf[0] = (int *) malloc(sizeof(int) * bufcount * nvars);
     if (buf[0] == NULL) {
-        printf("buf[i]malloc error\n");
+        fprintf(stderr,"buf[i]malloc error\n");
         nerrs++; goto fn_exit;
     }
     for (i=1; i<nvars; i++) buf[i] = buf[i-1] + bufcount;
@@ -453,7 +453,7 @@ int test_io(const char *out_path,
     nvars2 = (nvars > nprocs) ? nvars : nprocs;
     varid = (int *)malloc(sizeof(int)*nvars2);
     if (varid == NULL){
-        printf("varid malloc error\n");
+        fprintf(stderr,"varid malloc error\n");
         nerrs++; goto fn_exit;
     }
 /*

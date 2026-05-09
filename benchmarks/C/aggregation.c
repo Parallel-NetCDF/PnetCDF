@@ -101,7 +101,7 @@
 
 #define ERR(e) { \
     if ((e) != NC_NOERR) { \
-        printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(e)); \
+        fprintf(stderr,"Error at line=%d: %s\n", __LINE__, ncmpi_strerror(e)); \
         nerrs++; \
     } \
 }

@@ -44,7 +44,7 @@ static int verbose;
 /* Handle errors by printing an error message and exiting with a
  * non-zero status. */
 #define ERRCODE 2
-#define ERR(e) {printf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
+#define ERR(e) {fprintf(stderr,"Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
 
 static void
 usage(char *argv0)
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
         snprintf(filename, 256, "%s", argv[optind]);
     else {
         if (rank==0) {
-            printf("Error: input file is required\n");
+            fprintf(stderr,"Error: input file is required\n");
             usage(argv[0]);
         }
         MPI_Finalize();

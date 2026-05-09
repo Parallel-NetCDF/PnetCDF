@@ -22,7 +22,7 @@
 
 #define EXP_ERR2(e, exp1, exp2) { \
     if (e != exp1 && e != exp2 && e != NC_EFILE) { \
-        printf("Error at line %d in %s: expecting error code %s or %s but got %s\n", \
+        fprintf(stderr,"Error at line %d in %s: expecting error code %s or %s but got %s\n", \
                __LINE__, __FILE__, ncmpi_strerrno(exp1), ncmpi_strerrno(exp2), ncmpi_strerrno(e)); \
         nerrs++; \
     } \
@@ -31,14 +31,14 @@
 #define EXP_SAFE_ERR(expect) { \
     if (safe_mode) { \
         if (err != NC_EMULTIDEFINE && err != expect) { \
-            printf("Error at line %d in %s: expecting error code NC_EMULTIDEFINE or %s but got %s\n", \
+            fprintf(stderr,"Error at line %d in %s: expecting error code NC_EMULTIDEFINE or %s but got %s\n", \
                    __LINE__, __FILE__, ncmpi_strerrno(expect), ncmpi_strerrno(err)); \
             nerrs++; \
         } \
     } \
     else if (rank > 0) { \
         if (err != expect) { \
-            printf("Error at line %d in %s: expecting error code %s but got %s\n", \
+            fprintf(stderr,"Error at line %d in %s: expecting error code %s but got %s\n", \
                    __LINE__, __FILE__, ncmpi_strerrno(expect), ncmpi_strerrno(err)); \
             nerrs++; \
         } \

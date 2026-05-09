@@ -1753,7 +1753,7 @@ ncmpii_err_code_name(int err)
       case NC_EUNLIMIT:  return "NC_EUNLIMIT";
       case NC_EVARSIZE : return "NC_EVARSIZE";
       default:
-         printf("Unknown error code %d\n",err);
+         fprintf(stderr,"Unknown error code %d\n",err);
          return "Unknown error code";
    }
 }
@@ -1914,7 +1914,7 @@ int main(int argc, char *argv[])
     /* open file */
     int fd = open(filename, O_RDONLY, 0666);
     if (fd == -1) {
-        printf("Error: file open %s (%s)\n",filename,strerror(errno));
+        fprintf(stderr,"Error: file open %s (%s)\n",filename,strerror(errno));
         exit(1);
     }
 
@@ -1959,7 +1959,7 @@ int main(int argc, char *argv[])
                 }
             }
             if (j == ncp->vars.ndefined) {
-                printf("Error: variable %s not found\n",fspecp->lvars[i]);
+                fprintf(stderr,"Error: variable %s not found\n",fspecp->lvars[i]);
                 free(fspecp->varids);
                 free(fspecp->varp);
                 for (i=0; i<fspecp->nlvars; i++)

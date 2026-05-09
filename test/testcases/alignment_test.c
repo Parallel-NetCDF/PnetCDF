@@ -110,7 +110,7 @@ int alignment_test(const char *out_path,
             for (j=0; j<NX; j++) {
                 int exp = rank*1000 + i*10 + j;
                 if (buf[j] != exp) {
-                    printf("\nError at line %d: %s[%d] altered from %d to %d\n",
+                    fprintf(stderr,"\nError at line %d: %s[%d] altered from %d to %d\n",
                            __LINE__,str, j, exp, buf[j]);
                     nerrs++;
                     goto err_out;
@@ -140,7 +140,7 @@ int alignment_test(const char *out_path,
             for (j=0; j<NX; j++) {
                 int exp = rank*1000 + 100 + i*10 + j;
                 if (buf[j] != exp) {
-                    printf("\nError at line %d: %s[%d] altered from %d to %d\n",
+                    fprintf(stderr,"\nError at line %d: %s[%d] altered from %d to %d\n",
                            __LINE__,str, j, exp, buf[j]);
                     nerrs++;
                     goto err_out;
@@ -281,7 +281,7 @@ int alignment_test(const char *out_path,
             for (j=0; j<NX; j++) {
                 int exp = -1 * (i*10 + j);
                 if (buf[j] != exp) {
-                    printf("\nError at line %d: %s[%d] altered from %d to %d\n",
+                    fprintf(stderr,"\nError at line %d: %s[%d] altered from %d to %d\n",
                            __LINE__,str, j, exp, buf[j]);
                     nerrs++;
                     goto err_out;
@@ -311,7 +311,7 @@ int alignment_test(const char *out_path,
             for (j=0; j<NX; j++) {
                 int exp = -1 * (100 + i*10 + j);
                 if (buf[j] != exp) {
-                    printf("\nError at line %d: %s[%d] altered from %d to %d\n",
+                    fprintf(stderr,"\nError at line %d: %s[%d] altered from %d to %d\n",
                            __LINE__,str, j, exp, buf[j]);
                     nerrs++;
                     goto err_out;
@@ -343,7 +343,7 @@ int alignment_test(const char *out_path,
             for (j=0; j<NX; j++) {
                 int exp = rank*1000 + i*10 + j;
                 if (buf[j] != exp) {
-                    printf("\nError at %d: expect %s[%d]=%d but got %d\n",
+                    fprintf(stderr,"\nError at %d: expect %s[%d]=%d but got %d\n",
                            __LINE__,str,j,exp,buf[j]);
                     nerrs++;
                     goto err_out;
@@ -365,7 +365,7 @@ int alignment_test(const char *out_path,
             for (j=0; j<NX; j++) {
                 int exp = rank*1000+i*10+j;
                 if (buf[j] != exp) {
-                    printf("\nError at %d: expect %s[%d]=%d but got %d\n",
+                    fprintf(stderr,"\nError at %d: expect %s[%d]=%d but got %d\n",
                            __LINE__,str,j,exp,buf[j]);
                     nerrs++;
                     goto err_out;
@@ -382,7 +382,7 @@ int alignment_test(const char *out_path,
             for (j=0; j<NX; j++) {
                 int exp = rank*1000 + 100 + i*10 + j;
                 if (buf[j] != exp) {
-                    printf("\nError at %d: expect %s[%d]=%d but got %d\n",
+                    fprintf(stderr,"\nError at %d: expect %s[%d]=%d but got %d\n",
                            __LINE__,str,j,exp,buf[j]);
                     nerrs++;
                     goto err_out;

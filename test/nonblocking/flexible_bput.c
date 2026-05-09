@@ -77,7 +77,7 @@
             if (i < GHOST || GHOST+array_of_subsizes[0] <= i || \
                 j < GHOST || GHOST+array_of_subsizes[1] <= j) { \
                 if (buf[i][j] != -1) { \
-                    printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%f\n", \
+                    fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=%f\n", \
                            __LINE__,__FILE__,i,j,(double)buf[i][j]); \
                     nerrs++; \
                     goto err_out; \
@@ -85,7 +85,7 @@
             } \
             else { \
                 if (buf[i][j] != (i-GHOST)*array_of_subsizes[1]+(j-GHOST)) { \
-                    printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%f\n", \
+                    fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=%f\n", \
                            __LINE__,__FILE__,i,j,(double)buf[i][j]); \
                     nerrs++; \
                     goto err_out; \
@@ -105,7 +105,7 @@
             if (i < GHOST || GHOST+array_of_subsizes[0] <= i || \
                 j < GHOST || GHOST+array_of_subsizes[1] <= j) { \
                 if (buf[i][j] != -2) { \
-                    printf("Error at line %d in %s: expect buffer[%d][%d] to be %d but got %f\n", \
+                    fprintf(stderr,"Error at line %d in %s: expect buffer[%d][%d] to be %d but got %f\n", \
                            __LINE__,__FILE__,i,j,-2,(double)buf[i][j]); \
                     nerrs++; \
                     goto err_out; \
@@ -114,7 +114,7 @@
             else { \
                 int exp = (i-GHOST)*array_of_subsizes[1]+(j-GHOST); \
                 if (buf[i][j] != exp) { \
-                    printf("Error at line %d in %s: expect buffer[%d][%d] to be %d but got %f\n", \
+                    fprintf(stderr,"Error at line %d in %s: expect buffer[%d][%d] to be %d but got %f\n", \
                            __LINE__,__FILE__,i,j,exp,(double)buf[i][j]); \
                     nerrs++; \
                     goto err_out; \

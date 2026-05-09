@@ -117,7 +117,7 @@ test_vars_$1(const char *out_path, int coll_io, MPI_Info info)
                 for (j=0; j<NX; j++) {
                     if (j % stride[1] == 0) {
                         if (buf[i][j] != ($1)rank) {
-                            printf("Error at line %d in %s: expect %s[%d][%d]=IFMT($1) but got IFMT($1)\n",
+                            fprintf(stderr,"Error at line %d in %s: expect %s[%d][%d]=IFMT($1) but got IFMT($1)\n",
                                    __LINE__,__FILE__, var_name, i,j, ($1)rank, buf[i][j]);
                             nerrs++;
                             goto fn_exit;
@@ -125,7 +125,7 @@ test_vars_$1(const char *out_path, int coll_io, MPI_Info info)
                     }
                     else {
                         if (buf[i][j] != NC_FILL_VALUE($1)) {
-                            printf("Error at line %d in %s: expect %s[%d][%d]=IFMT($1) but got IFMT($1)\n",
+                            fprintf(stderr,"Error at line %d in %s: expect %s[%d][%d]=IFMT($1) but got IFMT($1)\n",
                                    __LINE__,__FILE__, var_name, i,j, ($1)NC_FILL_VALUE($1), buf[i][j]);
                             nerrs++;
                             goto fn_exit;
@@ -136,7 +136,7 @@ test_vars_$1(const char *out_path, int coll_io, MPI_Info info)
             else { /* the entire row should be NC_FILL_VALUE($1) */
                 for (j=0; j<NX; j++) {
                     if (buf[i][j] != NC_FILL_VALUE($1)) {
-                        printf("Error at line %d in %s: expect %s[%d][%d]=IFMT($1) but got IFMT($1)\n",
+                        fprintf(stderr,"Error at line %d in %s: expect %s[%d][%d]=IFMT($1) but got IFMT($1)\n",
                                __LINE__,__FILE__, var_name, i,j, ($1)NC_FILL_VALUE($1), buf[i][j]);
                         nerrs++;
                         goto fn_exit;

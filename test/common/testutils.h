@@ -36,7 +36,7 @@ enum {false=0, true=1};
 
 #define CHECK_ERR { \
     if (err != NC_NOERR) { \
-        printf("Error at line %d in %s: (%s)\n", \
+        fprintf(stderr,"Error at line %d in %s: (%s)\n", \
         __LINE__,__FILE__,ncmpi_strerrno(err)); \
         assert(0); \
     } \
@@ -45,7 +45,7 @@ enum {false=0, true=1};
 #define CHECK_ERR_ALL { \
     if (err != NC_NOERR) { \
         nerrs++; \
-        printf("Error at line %d in %s: (%s)\n", \
+        fprintf(stderr,"Error at line %d in %s: (%s)\n", \
         __LINE__,__FILE__,ncmpi_strerrno(err)); \
     } \
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD); \
@@ -55,7 +55,7 @@ enum {false=0, true=1};
 #define CHECK_ERROUT { \
     if (err != NC_NOERR) { \
         nerrs++; \
-        printf("Error at line %d in %s: (%s)\n", \
+        fprintf(stderr,"Error at line %d in %s: (%s)\n", \
         __LINE__,__FILE__,ncmpi_strerrno(err)); \
         goto err_out; \
     } \
@@ -64,7 +64,7 @@ enum {false=0, true=1};
 #define CHECK_FATAL_ERR { \
     if (err != NC_NOERR) { \
         nerrs++; \
-        printf("Error at line %d in %s: (%s)\n", \
+        fprintf(stderr,"Error at line %d in %s: (%s)\n", \
         __LINE__,__FILE__,ncmpi_strerrno(err)); \
         assert(0); \
     } \
@@ -73,7 +73,7 @@ enum {false=0, true=1};
 #define EXP_ERR(exp) { \
     if (err != exp) { \
         nerrs++; \
-        printf("Error at line %d in %s: expecting %s but got %s\n", \
+        fprintf(stderr,"Error at line %d in %s: expecting %s but got %s\n", \
         __LINE__,__FILE__,ncmpi_strerrno(exp), ncmpi_strerrno(err)); \
     } \
 }
@@ -81,7 +81,7 @@ enum {false=0, true=1};
 #define CHECK_EXP_ERR_ALL(exp) { \
     if (err != exp) { \
         nerrs++; \
-        printf("Error at line %d in %s: expecting %s but got %s\n", \
+        fprintf(stderr,"Error at line %d in %s: expecting %s but got %s\n", \
         __LINE__,__FILE__,ncmpi_strerrno(exp), ncmpi_strerrno(err)); \
     } \
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD); \
@@ -113,7 +113,7 @@ int inq_env_hint(char *hint_key, char **hint_value);
         char err_string[MPI_MAX_ERROR_STRING+1]; \
         int  err_len; \
         MPI_Error_string(err, err_string, &err_len); \
-        printf("MPI Error at file %s line %d (%s)\n",__FILE__,__LINE__,err_string); \
+        fprintf(stderr,"MPI Error at file %s line %d (%s)\n",__FILE__,__LINE__,err_string); \
     }
 
 #ifndef PNETCDF_DRIVER_NETCDF4

@@ -85,7 +85,7 @@ typedef long long MPI_Offset;
                              break; \
             default: err_str = "Other unknown error"; \
         } \
-        printf("Error in %s and %d : %s\n", __FILE__,__LINE__, err_str); \
+        fprintf(stderr,"Error in %s and %d : %s\n", __FILE__,__LINE__, err_str); \
         err = 1; \
         goto err_out; \
     } \
@@ -95,7 +95,7 @@ typedef long long MPI_Offset;
 #define LINE_SIZE 1024
 
 #define ERR_FORMAT(msg) { \
-    printf("Error in %s at %d: input file format at %s\n", \
+    fprintf(stderr,"Error in %s at %d: input file format at %s\n", \
            __func__,__LINE__,msg); \
     err = NC_ENOTNC; \
     goto err_out; \
@@ -182,7 +182,7 @@ int get_dimid(CDL_header *header,
             return NC_NOERR;
         }
 
-    printf("Error in %s at %d: failed to find dim ID for %s\n",
+    fprintf(stderr,"Error in %s at %d: failed to find dim ID for %s\n",
            __func__,__LINE__,name);
     return NC_EBADDIM;
 }
@@ -303,7 +303,7 @@ int parse_dims(char         **bptr,
             dims->value = (CDL_dim*) realloc(dims->value,
                                              sizeof(CDL_dim) * len);
             if (dims->value == NULL) {
-                printf("Error in %s at %d: fail to realloc of size %zd (%s)\n",
+                fprintf(stderr,"Error in %s at %d: fail to realloc of size %zd (%s)\n",
                        __func__,__LINE__,sizeof(CDL_dim)*len,strerror(errno));
                 return NC_ENOMEM;
             }
@@ -387,7 +387,7 @@ int parse_attr_value(CDL_attr *attrp,
 
         attrp->value = (void*) malloc(sizeof(double) * nelems);
         if (attrp->value == NULL) {
-            printf("Error in %s at %d: fail to malloc of size %zd (%s)\n",
+            fprintf(stderr,"Error in %s at %d: fail to malloc of size %zd (%s)\n",
                     __func__,__LINE__,sizeof(double)*nelems,strerror(errno));
             return NC_ENOMEM;
         }
@@ -466,7 +466,7 @@ int parse_attr(char          **bptr,
                 attrs->value = (CDL_attr*) realloc(attrs->value,
                                                    sizeof(CDL_attr) * len);
                 if (attrs->value == NULL) {
-                    printf("Error in %s at %d: fail to realloc of size %zd (%s)\n",
+                    fprintf(stderr,"Error in %s at %d: fail to realloc of size %zd (%s)\n",
                            __func__,__LINE__,sizeof(CDL_attr)*len,strerror(errno));
                     return NC_ENOMEM;
                 }
@@ -478,7 +478,7 @@ int parse_attr(char          **bptr,
                 attrs->value = (CDL_attr*) realloc(attrs->value,
                                                    sizeof(CDL_attr) * len);
                 if (attrs->value == NULL) {
-                    printf("Error in %s at %d: fail to realloc of size %zd (%s)\n",
+                    fprintf(stderr,"Error in %s at %d: fail to realloc of size %zd (%s)\n",
                         __func__,__LINE__,sizeof(CDL_attr)*len,strerror(errno));
                     return NC_ENOMEM;
                 }
@@ -543,7 +543,7 @@ int parse_vars(char       **bptr,
             vars->value = (CDL_var*) realloc(vars->value,
                                              sizeof(CDL_var) * len);
             if (vars->value == NULL) {
-                printf("Error in %s at %d: fail to realloc of size %zd (%s)\n",
+                fprintf(stderr,"Error in %s at %d: fail to realloc of size %zd (%s)\n",
                         __func__,__LINE__,sizeof(CDL_var)*len,strerror(errno));
                 return NC_ENOMEM;
             }
@@ -578,7 +578,7 @@ int parse_vars(char       **bptr,
 
             varp->dimids = (int*) malloc(sizeof(int) * varp->ndims);
             if (varp->dimids == NULL) {
-                printf("Error in %s at %d: fail to malloc of size %zd (%s)\n",
+                fprintf(stderr,"Error in %s at %d: fail to malloc of size %zd (%s)\n",
                         __func__,__LINE__,sizeof(int)*varp->ndims,strerror(errno));
                 return NC_ENOMEM;
             }
@@ -694,13 +694,13 @@ int cdl_hdr_open(const char *filename,
 
     fptr = fopen(filename, "r");
     if (fptr == NULL) {
-        printf("Error in %s at %d: fail to open file %s (%s)\n",
+        fprintf(stderr,"Error in %s at %d: fail to open file %s (%s)\n",
                __func__,__LINE__,filename,strerror(errno));
         return NC_ENOENT;
     }
     err = fseek(fptr, 0, SEEK_END);
     if (err < 0) {
-        printf("Error in %s at %d: fail to fseek SEEK_END file %s (%s)\n",
+        fprintf(stderr,"Error in %s at %d: fail to fseek SEEK_END file %s (%s)\n",
                __func__,__LINE__,filename,strerror(errno));
         return NC_EFILE;
     }
@@ -709,26 +709,26 @@ int cdl_hdr_open(const char *filename,
     long file_size = ftell(fptr);
     fbuf = (char *) malloc(file_size);
     if (fbuf == NULL) {
-        printf("Error in %s at %d: fail to malloc of size %zd (%s)\n",
+        fprintf(stderr,"Error in %s at %d: fail to malloc of size %zd (%s)\n",
                __func__,__LINE__,file_size,strerror(errno));
         return NC_ENOMEM;
     }
     err = fseek(fptr, 0, SEEK_SET);
     if (err < 0) {
-        printf("Error in %s at %d: fail to fseek SEEK_SET file %s (%s)\n",
+        fprintf(stderr,"Error in %s at %d: fail to fseek SEEK_SET file %s (%s)\n",
                __func__,__LINE__,filename,strerror(errno));
         return NC_EFILE;
     }
     rlen = fread(fbuf, 1, file_size, fptr);
     if (file_size > 0 && rlen == 0) {
-        printf("Error in %s at %d: fail to fread file %s (%s)\n",
+        fprintf(stderr,"Error in %s at %d: fail to fread file %s (%s)\n",
                __func__,__LINE__,filename,strerror(errno));
         return NC_EFILE;
     }
     bptr = fbuf;
     err = fclose(fptr);
     if (err == EOF) {
-        printf("Error in %s at %d: fail to fclose file %s (%s)\n",
+        fprintf(stderr,"Error in %s at %d: fail to fclose file %s (%s)\n",
                __func__,__LINE__,filename,strerror(errno));
         return NC_EFILE;
     }
@@ -739,7 +739,7 @@ int cdl_hdr_open(const char *filename,
 
     header = (CDL_header*) calloc(1, sizeof(CDL_header));
     if (header == NULL) {
-        printf("Error in %s at %d: fail to calloc of size %zd (%s)\n",
+        fprintf(stderr,"Error in %s at %d: fail to calloc of size %zd (%s)\n",
                __func__,__LINE__,sizeof(CDL_header),strerror(errno));
         return NC_ENOMEM;
     }

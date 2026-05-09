@@ -23,14 +23,14 @@
 #define CHECK_ERR { \
     if (err != NC_NOERR) { \
         nerrs++; \
-        printf("Error at line %d in %s: (%s)\n", \
+        fprintf(stderr,"Error at line %d in %s: (%s)\n", \
         __LINE__,__FILE__,nc_strerror(err)); \
     } \
 }
 #define EXP_ERR(exp) { \
     if (err != exp) { \
         nerrs++; \
-        printf("Error at line %d in %s: expecting %d but got %d\n", \
+        fprintf(stderr,"Error at line %d in %s: expecting %d but got %d\n", \
         __LINE__,__FILE__,exp, err); \
     } \
 }
@@ -80,13 +80,13 @@ int test_attr_types(const char *filename,
         err = PutAttInt(ncid, NC_GLOBAL, name, xtype[i], 1, &attr);
 #ifdef TEST_NETCDF
         if (err != NC_EBADTYPE) {
-            printf("Error at line %d in %s: expect NC_EBADTYPE but got %d\n",
+            fprintf(stderr,"Error at line %d in %s: expect NC_EBADTYPE but got %d\n",
                    __LINE__, __FILE__, err);
             nerrs++;
         }
 #else
         if (err != NC_ESTRICTCDF2) {
-            printf("Error at line %d in %s: expect NC_ESTRICTCDF2 but got %s\n",
+            fprintf(stderr,"Error at line %d in %s: expect NC_ESTRICTCDF2 but got %s\n",
                    __LINE__, __FILE__,NC_ERR_CODE_NAME(err));
             nerrs++;
         }
@@ -120,13 +120,13 @@ int test_var_types(const char *filename,
         err = DefVar(ncid, name, xtype[i], 1, &dimid, &varid[i]);
 #ifdef TEST_NETCDF
         if (err != NC_EBADTYPE) {
-            printf("Error at line %d in %s: expect NC_EBADTYPE but got %d\n",
+            fprintf(stderr,"Error at line %d in %s: expect NC_EBADTYPE but got %d\n",
                    __LINE__, __FILE__, err);
             nerrs++;
         }
 #else
         if (err != NC_ESTRICTCDF2) {
-            printf("Error at line %d in %s: expect NC_ESTRICTCDF2 but got %s\n",
+            fprintf(stderr,"Error at line %d in %s: expect NC_ESTRICTCDF2 but got %s\n",
                    __LINE__, __FILE__,NC_ERR_CODE_NAME(err));
             nerrs++;
         }

@@ -44,7 +44,7 @@
 
 static int verbose;
 
-#define ERR(e) {if((e)!=NC_NOERR){printf("Error at line=%d: %s\n", __LINE__, ncmpi_strerror(e));nerrs++;}}
+#define ERR(e) {if((e)!=NC_NOERR){fprintf(stderr,"Error at line=%d: %s\n", __LINE__, ncmpi_strerror(e));nerrs++;}}
 
 /*----< print_info() >------------------------------------------------------*/
 static

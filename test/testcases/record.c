@@ -64,7 +64,7 @@ int test_only_record_var_1D(const char *out_path, int format, MPI_Info info)
 
     err = ncmpi_inq_dimlen(ncid, dimid, &length); CHECK_ERR
     if (length != 2) {
-        printf("Error at line %d in %s: expecting 2 records, but got "OFFFMT" record(s)\n",
+        fprintf(stderr,"Error at line %d in %s: expecting 2 records, but got "OFFFMT" record(s)\n",
         __LINE__,__FILE__,length);
         nerrs++;
     }
@@ -86,7 +86,7 @@ int test_only_record_var_1D(const char *out_path, int format, MPI_Info info)
 
         err = ncmpi_inq_dimlen(ncid, dimid, &length); CHECK_ERR
         if (length != 4) {
-            printf("Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
+            fprintf(stderr,"Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
                    __LINE__,__FILE__,length);
             nerrs++;
         }
@@ -130,7 +130,7 @@ int test_only_record_var_3D(const char *out_path, int format, MPI_Info info)
 
     err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
     if (length != 2) {
-        printf("Error at line %d in %s: expecting 2 records, but got "OFFFMT" record(s)\n",
+        fprintf(stderr,"Error at line %d in %s: expecting 2 records, but got "OFFFMT" record(s)\n",
         __LINE__,__FILE__,length);
         nerrs++;
     }
@@ -152,7 +152,7 @@ int test_only_record_var_3D(const char *out_path, int format, MPI_Info info)
 
         err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
         if (length != 4) {
-            printf("Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
+            fprintf(stderr,"Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
                    __LINE__,__FILE__,length);
             nerrs++;
         }
@@ -195,7 +195,7 @@ int test_two_record_var(const char *out_path, int format, MPI_Info info)
 
     err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
     if (length != 2) {
-        printf("Error at line %d in %s: expecting 2 records, but got "OFFFMT" record(s)\n",
+        fprintf(stderr,"Error at line %d in %s: expecting 2 records, but got "OFFFMT" record(s)\n",
         __LINE__,__FILE__,length);
         nerrs++;
     }
@@ -226,7 +226,7 @@ int test_two_record_var(const char *out_path, int format, MPI_Info info)
 
         err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
         if (length != 4) {
-            printf("Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
+            fprintf(stderr,"Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
                    __LINE__,__FILE__,length);
             nerrs++;
         }
@@ -249,7 +249,7 @@ int test_two_record_var(const char *out_path, int format, MPI_Info info)
 
     err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
     if (length != 4) {
-        printf("Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
+        fprintf(stderr,"Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
         __LINE__,__FILE__,length);
         nerrs++;
     }
@@ -280,7 +280,7 @@ int test_two_record_var(const char *out_path, int format, MPI_Info info)
 
         err = ncmpi_inq_dimlen(ncid, dimid[0], &length); CHECK_ERR
         if (length != 4) {
-            printf("Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
+            fprintf(stderr,"Error at line %d in %s: expecting 4 records, but got "OFFFMT" record(s)\n",
                    __LINE__,__FILE__,length);
             nerrs++;
         }

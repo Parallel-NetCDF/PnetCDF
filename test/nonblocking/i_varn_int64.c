@@ -101,7 +101,7 @@
 
 #define FATAL_ERR \
     if (err != NC_NOERR) { \
-        printf("Error at line %d in %s: %s\n", __LINE__, __FILE__, ncmpi_strerrno(err)); \
+        fprintf(stderr,"Error at line %d in %s: %s\n", __LINE__, __FILE__, ncmpi_strerrno(err)); \
         exit(1); \
     }
 
@@ -109,7 +109,7 @@
     int _i; \
     for (_i=0; _i<(n); _i++) { \
         if ((a)[_i] != NC_NOERR) { \
-            printf("Error at line %d in %s: err[%d] %s\n", __LINE__, __FILE__, _i, \
+            fprintf(stderr,"Error at line %d in %s: err[%d] %s\n", __LINE__, __FILE__, _i, \
                    ncmpi_strerrno((a)[_i])); \
             assert(0); \
         } \
@@ -199,7 +199,7 @@ int check_contents_for_fail(int ncid, int *varid, int coll_io)
         for (j=0; j<NY*NX; j++) {
             if (expected[i][j] >= nprocs) continue;
             if (r_buffer[j] != expected[i][j]) {
-                printf("Error at line %d in %s: expect read buf[%d][%d]=%lld, but got %lld\n",
+                fprintf(stderr,"Error at line %d in %s: expect read buf[%d][%d]=%lld, but got %lld\n",
                        __LINE__,__FILE__,i,j,expected[i][j],r_buffer[j]);
                 assert(0);
             }
@@ -217,7 +217,7 @@ check_num_pending_reqs(int ncid, int expected, int lineno)
     err = ncmpi_inq_nreqs(ncid, &n_pendings);
     CHECK_ERR
     if (n_pendings != expected) {
-        printf("Error at line %d in %s: expect %d pending requests but got %d\n",
+        fprintf(stderr,"Error at line %d in %s: expect %d pending requests but got %d\n",
                lineno, __FILE__, expected, n_pendings);
         assert(0);
     }
@@ -312,7 +312,7 @@ test_varn(int ncid, int rank, int *varid, int coll_io)
     err = ncmpi_iput_varn_longlong(ncid, varid[0], 1, NULL, NULL,
                                    NULL, &reqs[0]);
     if (err != NC_ENULLSTART) {
-        printf("expecting error code NC_ENULLSTART but got %s\n",
+        fprintf(stderr,"expecting error code NC_ENULLSTART but got %s\n",
                nc_err_code_name(err));
         assert(0);
     }
@@ -376,7 +376,7 @@ test_varn(int ncid, int rank, int *varid, int coll_io)
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (wbuf[i][j] != rank+10) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%lld\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=%lld\n",
                 __LINE__,__FILE__,i,j,wbuf[i][j]);
                 assert(0);
             }
@@ -407,7 +407,7 @@ test_varn(int ncid, int rank, int *varid, int coll_io)
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (c_wbuf[i][j] != rank+10) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%lld\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=%lld\n",
                 __LINE__,__FILE__,i,j,c_wbuf[i][j]);
                 assert(0);
             }
@@ -447,7 +447,7 @@ test_varn(int ncid, int rank, int *varid, int coll_io)
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (wbuf[i][j] != rank+10) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%lld\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=%lld\n",
                 __LINE__,__FILE__,i,j,wbuf[i][j]);
                 assert(0);
             }
@@ -478,7 +478,7 @@ test_varn(int ncid, int rank, int *varid, int coll_io)
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (rbuf[i][j] != rank+10) {
-                printf("Error at line %d in %s: expecting var %d buffer[%d][%d]=%d but got %lld\n",
+                fprintf(stderr,"Error at line %d in %s: expecting var %d buffer[%d][%d]=%d but got %lld\n",
                        __LINE__,__FILE__,varid[i],i,j,rank+10,rbuf[i][j]);
                 assert(0);
             }
@@ -512,7 +512,7 @@ test_varn(int ncid, int rank, int *varid, int coll_io)
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]*2; j++) {
             if (wbuf[i][j] != rank+10) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=%lld\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=%lld\n",
                 __LINE__,__FILE__,i,j,wbuf[i][j]);
                 assert(0);
             }
@@ -547,12 +547,12 @@ test_varn(int ncid, int rank, int *varid, int coll_io)
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]*2; j++) {
             if (j%2 && rbuf[i][j] != -1) {
-                printf("Error at line %d in %s: expecting buffer[%d][%d]=-1 but got %lld\n",
+                fprintf(stderr,"Error at line %d in %s: expecting buffer[%d][%d]=-1 but got %lld\n",
                        __LINE__,__FILE__,i,j,rbuf[i][j]);
                 assert(0);
             }
             if (j%2 == 0 && rbuf[i][j] != rank+10) {
-                printf("Error at line %d in %s: expecting buffer[%d][%d]=%d but got %lld\n",
+                fprintf(stderr,"Error at line %d in %s: expecting buffer[%d][%d]=%d but got %lld\n",
                        __LINE__,__FILE__,i,j,rank+10,rbuf[i][j]);
                 assert(0);
             }
@@ -590,7 +590,7 @@ test_varn(int ncid, int rank, int *varid, int coll_io)
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (c_rbuf[i][j] != rank+10) {
-                printf("Error at line %d in %s: expecting buffer[%d][%d]=%d but got %lld\n",
+                fprintf(stderr,"Error at line %d in %s: expecting buffer[%d][%d]=%d but got %lld\n",
                        __LINE__,__FILE__,i,j,rank+10,c_rbuf[i][j]);
                 assert(0);
             }

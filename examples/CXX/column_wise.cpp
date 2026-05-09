@@ -169,7 +169,7 @@ int main(int argc, char** argv)
         /* check status of all requests */
         for (i=0; i<num_reqs; i++)
             if (sts[i] != NC_NOERR)
-                printf("Error: nonblocking write fails on request %d (%s)\n",
+                fprintf(stderr,"Error: nonblocking write fails on request %d (%s)\n",
                        i, ncmpi_strerror(sts[i]));
 
         free(sts);

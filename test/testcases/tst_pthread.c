@@ -264,7 +264,7 @@ void* thread_func(void *arg)
     CHECK_ERR
     for (i=0; i<NX; i++) {
         if (ibuf[i] != id) {
-            printf("Error at %s line %d: expect ibuf[%d]=%d but got %d\n",
+            fprintf(stderr,"Error at %s line %d: expect ibuf[%d]=%d but got %d\n",
             __FILE__, __LINE__, i, id, ibuf[i]);
             nerrs++;
             break;
@@ -284,7 +284,7 @@ void* thread_func(void *arg)
     CHECK_ERR
     for (i=0; i<NX; i++) {
         if (ibuf[i] != id) {
-            printf("Error at %s line %d: expect ibuf[%d]=%d but got %d\n",
+            fprintf(stderr,"Error at %s line %d: expect ibuf[%d]=%d but got %d\n",
             __FILE__, __LINE__, i, id, ibuf[i]);
             nerrs++;
             break;
@@ -300,7 +300,7 @@ void* thread_func(void *arg)
 
     for (i=0; i<NY*NX; i++) {
         if (dbuf[i] != (double)id) {
-            printf("Error at %s line %d: expect ibuf[%d]=%d but got %f\n",
+            fprintf(stderr,"Error at %s line %d: expect ibuf[%d]=%d but got %f\n",
             __FILE__, __LINE__, i, id, dbuf[i]);
             nerrs++;
             break;
@@ -409,7 +409,7 @@ int main(int argc, char **argv) {
                                          break;
             case MPI_THREAD_MULTIPLE:    printf("Support MPI_THREAD_MULTIPLE\n");
                                          break;
-            default: printf("Error MPI_Init_thread()\n"); break;
+            default: fprintf(stderr,"Error MPI_Init_thread()\n"); break;
         }
     }
 #endif

@@ -81,7 +81,7 @@ int test_bb(const char *out_path,
     stride = (MPI_Offset*)malloc(sizeof(MPI_Offset) * ndims);
     buffer = (int*)malloc(sizeof(int) * BSIZE);
     if (dimid == NULL || start == NULL || count == NULL || stride == NULL || buffer == NULL) {
-        printf("Error at line %d in %s: malloc error\n", __LINE__, __FILE__);
+        fprintf(stderr,"Error at line %d in %s: malloc error\n", __LINE__, __FILE__);
         nerrs++;
         goto err_out;
     }
@@ -166,7 +166,7 @@ int test_bb(const char *out_path,
     /* Verify the result */
     for (i = 0; i < BSIZE; i++) {
         if (buffer[i] != rank + 1) {
-            printf("Error at line %d in %s: expecting buffer[%d] = %d but got %d\n",
+            fprintf(stderr,"Error at line %d in %s: expecting buffer[%d] = %d but got %d\n",
                     __LINE__, __FILE__, i, rank + 1, buffer[i]);
             nerrs++;
             goto err_out;

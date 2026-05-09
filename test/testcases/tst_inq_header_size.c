@@ -80,7 +80,7 @@ int tst_inq_header_size(const char *out_path,
                old_h_size, old_h_extent);
 
     if (old_h_extent != 0) {
-        printf("Error at %d: expect file extent size to be 0 but got %lld\n",
+        fprintf(stderr,"Error at %d: expect file extent size to be 0 but got %lld\n",
                __LINE__, old_h_extent);
         nerrs++;
         goto err_out;
@@ -97,14 +97,14 @@ int tst_inq_header_size(const char *out_path,
                new_h_size, new_h_extent);
 
     if (new_h_size != old_h_size) {
-        printf("Error at %d: expect file header size %lld but got %lld\n",
+        fprintf(stderr,"Error at %d: expect file header size %lld but got %lld\n",
                __LINE__, old_h_size, new_h_size);
         nerrs++;
         goto err_out;
     }
 
     if (new_h_extent <= old_h_extent) {
-        printf("Error at %d: expect file extent size > %lld but got %lld\n",
+        fprintf(stderr,"Error at %d: expect file extent size > %lld but got %lld\n",
                __LINE__, old_h_extent, new_h_extent);
         nerrs++;
         goto err_out;
@@ -133,14 +133,14 @@ int tst_inq_header_size(const char *out_path,
                new_h_size, new_h_extent);
 
     if (new_h_size != old_h_size) {
-        printf("Error at %d: expect file header size %lld but got %lld\n",
+        fprintf(stderr,"Error at %d: expect file header size %lld but got %lld\n",
                __LINE__, old_h_size, new_h_size);
         nerrs++;
         goto err_out;
     }
 
     if (new_h_extent != old_h_extent) {
-        printf("Error at %d: expect file extent size %lld but got %lld\n",
+        fprintf(stderr,"Error at %d: expect file extent size %lld but got %lld\n",
                __LINE__, old_h_extent, new_h_extent);
         nerrs++;
         goto err_out;
@@ -179,14 +179,14 @@ int tst_inq_header_size(const char *out_path,
                new_h_size, new_h_extent);
 
     if (new_h_size <= old_h_size) {
-        printf("Error at %d: expect file header size > %lld but got %lld\n",
+        fprintf(stderr,"Error at %d: expect file header size > %lld but got %lld\n",
                __LINE__, old_h_size, new_h_size);
         nerrs++;
         goto err_out;
     }
 
     if (new_h_extent != old_h_extent) {
-        printf("Error at %d: expect file extent size %lld but got %lld\n",
+        fprintf(stderr,"Error at %d: expect file extent size %lld but got %lld\n",
                __LINE__, old_h_extent, new_h_extent);
         nerrs++;
         goto err_out;
@@ -211,14 +211,14 @@ int tst_inq_header_size(const char *out_path,
                new_h_size, new_h_extent);
 
     if (new_h_size != old_h_size) {
-        printf("Error at %d: expect file header size %lld but got %lld\n",
+        fprintf(stderr,"Error at %d: expect file header size %lld but got %lld\n",
                __LINE__, old_h_size, new_h_size);
         nerrs++;
         goto err_out;
     }
 
     if (new_h_extent < old_h_extent) {
-        printf("Error at %d: expect file extent size >= %lld but got %lld\n",
+        fprintf(stderr,"Error at %d: expect file extent size >= %lld but got %lld\n",
                __LINE__, old_h_extent, new_h_extent);
         nerrs++;
         goto err_out;

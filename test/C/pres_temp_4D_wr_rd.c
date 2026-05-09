@@ -332,7 +332,7 @@ int pres_temp_4D_rd(const char *filename,
     for (lat = 0; lat < NLAT; lat++) {
         float exp =  START_LAT + 5. * lat;
         if (lats[lat] != exp) {
-            printf("\nError at line %d in %s: %s[%d] expect %.1f but got %.1f\n",
+            fprintf(stderr,"\nError at line %d in %s: %s[%d] expect %.1f but got %.1f\n",
                    __LINE__, __FILE__, LAT_NAME, lat, exp, lats[lat]);
             nerrs++;
             break;
@@ -341,7 +341,7 @@ int pres_temp_4D_rd(const char *filename,
     for (lon = 0; lon < NLON; lon++) {
         float exp =  START_LON + 5. * lon;
         if (lons[lon] != START_LON + 5. * lon) {
-            printf("\nError at line %d in %s: %s[%d] expect %.1f but got %.1f\n",
+            fprintf(stderr,"\nError at line %d in %s: %s[%d] expect %.1f but got %.1f\n",
                    __LINE__, __FILE__, LON_NAME, lon, exp, lons[lon]);
             nerrs++;
             break;
@@ -410,14 +410,14 @@ int pres_temp_4D_rd(const char *filename,
             float exp = SAMPLE_PRESSURE + i;
             int indx = lat * NLON + lon;
             if (pres_in[lvl][indx] != exp) {
-                printf("\nError at line %d in %s: %s[%d][%d][%d][%d] expect %.1f but got %.1f\n",
+                fprintf(stderr,"\nError at line %d in %s: %s[%d][%d][%d][%d] expect %.1f but got %.1f\n",
                 __LINE__, __FILE__, PRES_NAME, rec, lvl, lat, lon, exp, pres_in[lvl][indx]);
                 nerrs++;
                 goto loop_exit;
             }
             exp = SAMPLE_TEMP + i;
             if (temp_in[lvl][indx] != exp) {
-                printf("\nError at line %d in %s: %s[%d][%d][%d][%d] expect %.1f but got %.1f\n",
+                fprintf(stderr,"\nError at line %d in %s: %s[%d][%d][%d][%d] expect %.1f but got %.1f\n",
                 __LINE__, __FILE__, TEMP_NAME, rec, lvl, lat, lon, exp, temp_in[lvl][indx]);
                 nerrs++;
                 goto loop_exit;

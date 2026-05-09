@@ -27,7 +27,7 @@
 #define EXPECT_ERR(err_no1) \
     if (err != err_no1) { \
         nerrs++; \
-        printf("Error at line %d in %s: expect error code %s but got %s\n", \
+        fprintf(stderr,"Error at line %d in %s: expect error code %s but got %s\n", \
                __LINE__,__FILE__,ncmpi_strerrno(err_no1),ncmpi_strerrno(err)); \
     }
 
@@ -106,12 +106,12 @@ int main(int argc, char** argv) {
     err = MPI_Type_vector(1, 2, 1, MPI_INT, &btype);
     if (err != MPI_SUCCESS ){
         nerrs++;
-        printf("Error at line %d in %s: %d\n", __LINE__, __FILE__, err);
+        fprintf(stderr,"Error at line %d in %s: %d\n", __LINE__, __FILE__, err);
     }
     err = MPI_Type_commit(&btype);
     if (err != MPI_SUCCESS ){
         nerrs++;
-        printf("Error at line %d in %s: %d\n", __LINE__, __FILE__, err);
+        fprintf(stderr,"Error at line %d in %s: %d\n", __LINE__, __FILE__, err);
     }
     else {
         err = ncmpi_put_var1_all(ncid, varid, start, &buf, 1, btype); EXPECT_ERR(NC_ENOTSUPPORT);
@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
         err = MPI_Type_free(&btype);
         if (err != MPI_SUCCESS ){
             nerrs++;
-            printf("Error at line %d in %s: %d\n", __LINE__, __FILE__, err);
+            fprintf(stderr,"Error at line %d in %s: %d\n", __LINE__, __FILE__, err);
         }
     }
 

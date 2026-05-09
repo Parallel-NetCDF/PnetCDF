@@ -62,21 +62,21 @@ static int ncmpi_comm_keyval = MPI_KEYVAL_INVALID;
 /* attribute to be cached in MPI_COMM_SELF */
 static int ncmpi_init_keyval = MPI_KEYVAL_INVALID;
 
-#define NCMPII_HANDLE_ERROR(func)                                  \
-    if (mpireturn != MPI_SUCCESS) {                                \
-        int errorStringLen;                                        \
-        char errorString[MPI_MAX_ERROR_STRING];                    \
-        MPI_Error_string(mpireturn, errorString, &errorStringLen); \
-        printf("Error: file %s line %d calling func %s: (%s)\n",   \
-               __FILE__, __LINE__, func, errorString);             \
+#define NCMPII_HANDLE_ERROR(func)                                          \
+    if (mpireturn != MPI_SUCCESS) {                                        \
+        int errorStringLen;                                                \
+        char errorString[MPI_MAX_ERROR_STRING];                            \
+        MPI_Error_string(mpireturn, errorString, &errorStringLen);         \
+        fprintf(stderr,"Error: file %s line %d calling func %s: (%s)\n",   \
+               __FILE__, __LINE__, func, errorString);                     \
     }
 
-#define CHECK_ERRNO(err, func) {                                   \
-    if (err != 0) {                                                \
-        printf("Error: file %s line %d calling func %s: (%s)\n",   \
-               __FILE__, __LINE__, func, strerror(err));           \
-        goto err_out;                                              \
-    }                                                              \
+#define CHECK_ERRNO(err, func) {                                           \
+    if (err != 0) {                                                        \
+        fprintf(stderr,"Error: file %s line %d calling func %s: (%s)\n",   \
+               __FILE__, __LINE__, func, strerror(err));                   \
+        goto err_out;                                                      \
+    }                                                                      \
 }
 
 /* struct PNC_comm_attr is defined in dispatch.h */

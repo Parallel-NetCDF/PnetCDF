@@ -147,7 +147,7 @@ int test_io(const char *out_path,
         /* check read buf contents */
         for (i=0; i<nreqs; i++)
             if (buf[i] != -rank) {
-                printf("Error at line %d in %s: expecting buf[%d]=%d but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting buf[%d]=%d but got %d\n",
                         __LINE__,__FILE__,i,-rank,buf[i]);
                 nerrs++;
                 goto err_out;
@@ -197,7 +197,7 @@ int test_io(const char *out_path,
         /* check read buf contents */
         for (i=0; i<nreqs; i++)
             if (buf[i] != -rank) {
-                printf("Error at line %d in %s: expecting buf[%d]=%d but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting buf[%d]=%d but got %d\n",
                         __LINE__,__FILE__,i,-rank,buf[i]);
                 nerrs++;
                 goto err_out;

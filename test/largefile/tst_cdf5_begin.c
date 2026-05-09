@@ -33,14 +33,14 @@
 #define CHECK_ERR { \
     if (err != NC_NOERR) { \
         nerrs++; \
-        printf("Error at line %d in %s: (%s)\n", \
+        fprintf(stderr,"Error at line %d in %s: (%s)\n", \
         __LINE__,__FILE__,nc_strerror(err)); \
     } \
 }
 #define EXP_ERR(exp) { \
     if (err != exp) { \
         nerrs++; \
-        printf("Error at line %d in %s: expecting %d but got %d\n", \
+        fprintf(stderr,"Error at line %d in %s: expecting %d but got %d\n", \
         __LINE__,__FILE__,exp, err); \
     } \
 }
@@ -128,7 +128,7 @@ int test_io(const char *out_path,
     err = GetVaraShort(ncid, varid[0], start, count,buf); CHECK_ERR
     for (i=0; i<10; i++) {
         if (buf[i] != i) {
-            printf("Error at buf[%d] expect %d but got %hd\n",i,i,buf[i]);
+            fprintf(stderr,"Error at buf[%d] expect %d but got %hd\n",i,i,buf[i]);
             nerrs++;
         }
     }

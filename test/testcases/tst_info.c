@@ -38,7 +38,7 @@
 #define CHECK_HINT(hint) { \
     MPI_Info_get(info_used, hint, len, value, &flag); \
     if (!flag) { \
-        printf("Error: hint \"%s\" is missing\n", hint); \
+        fprintf(stderr,"Error: hint \"%s\" is missing\n", hint); \
         nerrs++; \
     } \
 }
@@ -150,12 +150,12 @@ int test_io(const char *out_path,
         MPI_Info_get(info_used, "nc_var_align_size", len+1, value, &flag);
         expect = PNETCDF_RNDUP(197, 4);
         if (expect != strtoll(value,NULL,10)) {
-            printf("Error: nc_var_align_size expect "OFFFMT" but got %lld\n",
+            fprintf(stderr,"Error: nc_var_align_size expect "OFFFMT" but got %lld\n",
                    expect, strtoll(value,NULL,10));
             nerrs++;
         }
     } else {
-        printf("Error: hint \"nc_var_align_size\" is missing\n");
+        fprintf(stderr,"Error: hint \"nc_var_align_size\" is missing\n");
         nerrs++;
     }
 
@@ -163,7 +163,7 @@ int test_io(const char *out_path,
     if (flag) {
         MPI_Info_get(info_used, "romio_ds_write", len+1, value, &flag);
         if (strcasecmp("disable", value)) {
-            printf("Error: romio_ds_write expect \"disable\" but got \"%s\"\n",
+            fprintf(stderr,"Error: romio_ds_write expect \"disable\" but got \"%s\"\n",
                    value);
             nerrs++;
         }
@@ -174,19 +174,19 @@ int test_io(const char *out_path,
         MPI_Info_get(info_used, "pnetcdf_subfiling", len+1, value, &flag);
 #if defined(PNETCDF_SUBFILING) && PNETCDF_SUBFILING == 1
         if (strcasecmp("enable", value)) {
-            printf("Error: pnetcdf_subfiling expect \"enable\" but got \"%s\"\n",
+            fprintf(stderr,"Error: pnetcdf_subfiling expect \"enable\" but got \"%s\"\n",
                    value);
             nerrs++;
         }
 #else
         if (strcasecmp("disable", value)) {
-            printf("Error: pnetcdf_subfiling expect \"disable\" but got \"%s\"\n",
+            fprintf(stderr,"Error: pnetcdf_subfiling expect \"disable\" but got \"%s\"\n",
                    value);
             nerrs++;
         }
 #endif
     } else {
-        printf("Error: hint \"pnetcdf_subfiling\" is missing\n");
+        fprintf(stderr,"Error: hint \"pnetcdf_subfiling\" is missing\n");
         nerrs++;
     }
     MPI_Info_free(&info_used);

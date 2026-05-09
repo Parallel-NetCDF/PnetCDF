@@ -48,7 +48,7 @@ using namespace PnetCDF::exceptions;
 
 #define HANDLE_ERROR {                                \
     if (err != NC_NOERR)                              \
-        printf("Error at line %d (%s)\n", __LINE__,   \
+        fprintf(stderr,"Error at line %d (%s)\n", __LINE__,   \
                ncmpi_strerror(err));                  \
 }
 

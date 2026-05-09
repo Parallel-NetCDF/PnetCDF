@@ -83,7 +83,7 @@
 
 static int verbose;
 
-#define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR {if(err!=NC_NOERR){fprintf(stderr,"Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -122,7 +122,7 @@ pnetcdf_check_mem_usage(MPI_Comm comm)
                    sum_size);
     }
     else if (err != NC_ENOTENABLED) {
-        printf("Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
+        fprintf(stderr,"Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
         nerrs++;
     }
     return nerrs;
@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
     /* check status of all requests */
     for (i=0; i<num_reqs; i++)
         if (sts[i] != NC_NOERR)
-            printf("Error at line %d in %s: nonblocking write fails on request %d (%s)\n",
+            fprintf(stderr,"Error at line %d in %s: nonblocking write fails on request %d (%s)\n",
                    __LINE__,__FILE__,i, ncmpi_strerror(sts[i]));
 
     err = ncmpi_close(ncid);
@@ -310,7 +310,7 @@ int main(int argc, char** argv) {
     /* check status of all requests */
     for (i=0; i<num_reqs; i++)
         if (sts[i] != NC_NOERR)
-            printf("Error at line %d in %s: nonblocking read fails on request %d (%s)\n",
+            fprintf(stderr,"Error at line %d in %s: nonblocking read fails on request %d (%s)\n",
                    __LINE__,__FILE__,i, ncmpi_strerror(sts[i]));
 
     err = ncmpi_close(ncid);

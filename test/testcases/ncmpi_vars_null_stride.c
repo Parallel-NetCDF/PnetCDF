@@ -20,7 +20,7 @@
     for (i=0; i<NY*NX; i++) { \
         int exp = rank+10; \
         if (buf[i] != exp) { \
-            printf("Error at line %d : put buf[%d]=%d alter from %d\n", \
+            fprintf(stderr,"Error at line %d : put buf[%d]=%d alter from %d\n", \
                    __LINE__, i, buf[i], exp); \
             nerrs++; \
             goto err_out; \
@@ -184,7 +184,7 @@ int test_io(const char *out_path,
             for (k=0; k<NX; k++) {
                 int idx = i*nprocs*NX+j*NX+k;
                 if (buf[idx] != j+10) {
-                    printf("Error at line %d: expect v0[%d]=%d but got %d\n",
+                    fprintf(stderr,"Error at line %d: expect v0[%d]=%d but got %d\n",
                            __LINE__, idx, j+10, buf[idx]);
                     nerrs++;
                     goto err_out;
@@ -212,7 +212,7 @@ int test_io(const char *out_path,
             for (k=0; k<NX; k++) {
                 int idx = i*nprocs*NX+j*NX+k;
                 if (buf[idx] != j+10) {
-                    printf("Error at line %d: expect v1[%d]=%d but got %d\n",
+                    fprintf(stderr,"Error at line %d: expect v1[%d]=%d but got %d\n",
                            __LINE__,idx, j+10, buf[idx]);
                     nerrs++;
                     goto err_out;
@@ -240,7 +240,7 @@ int test_io(const char *out_path,
             for (j=0; j<nprocs; j++) {
                 int idx = i*nprocs*NX+k*nprocs+j;
                 if (buf[idx] != j+10) {
-                    printf("Error at line %d: expect v2[%d]=%d but got %d\n",
+                    fprintf(stderr,"Error at line %d: expect v2[%d]=%d but got %d\n",
                            __LINE__,idx, j+10, buf[idx]);
                     nerrs++;
                     goto err_out;
@@ -268,7 +268,7 @@ int test_io(const char *out_path,
             for (k=0; k<NX; k++) {
                 int idx = i*nprocs*NX+j*NX+k;
                 if (buf[idx] != j+10) {
-                    printf("Error at line %d: expect v3[%d]=%d but got %d\n",
+                    fprintf(stderr,"Error at line %d: expect v3[%d]=%d but got %d\n",
                            __LINE__,idx, j+10, buf[idx]);
                     nerrs++;
                     goto err_out;
@@ -296,7 +296,7 @@ int test_io(const char *out_path,
             for (j=0; j<nprocs; j++) {
                 int idx = i*nprocs*NX+k*nprocs+j;
                 if (buf[idx] != j+10) {
-                    printf("Error at line %d: expect v4[%d]=%d but got %d\n",
+                    fprintf(stderr,"Error at line %d: expect v4[%d]=%d but got %d\n",
                            __LINE__,idx, j+10, buf[idx]);
                     nerrs++;
                     goto err_out;

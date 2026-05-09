@@ -171,7 +171,7 @@ int test_column_wise_$1(const char *out_path, int format, int coll_io, MPI_Info 
     for (i=0; i<myNX; i++) {
         for (j=0; j<NY; j++) {
             if (buf[i][j] != ($1)rank+10) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
                        __LINE__,__FILE__,i,j,buf[i][j]);
                 nerrs++;
                 i = myNX; break;
@@ -205,7 +205,7 @@ int test_column_wise_$1(const char *out_path, int format, int coll_io, MPI_Info 
     for (i=0; i<myNX; i++) {
         for (j=0; j<NY; j++) {
             if (buf[i][j] != ($1)rank+10) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
                        __LINE__,__FILE__,i,j,buf[i][j]);
                 nerrs++;
                 i = myNX; break;
@@ -216,12 +216,12 @@ int test_column_wise_$1(const char *out_path, int format, int coll_io, MPI_Info 
     /* check status of all requests */
     for (i=0; i<num_reqs; i++) {
         if (reqs[i] != NC_REQ_NULL) { /* add in PnetCDF v1.7.0 */
-            printf("Error at line %d in %s: request ID %d fails to be set to NC_REQ_NULL\n",__LINE__,__FILE__,i);
+            fprintf(stderr,"Error at line %d in %s: request ID %d fails to be set to NC_REQ_NULL\n",__LINE__,__FILE__,i);
             nerrs++;
             break;
         }
         if (sts[i] != NC_NOERR) {
-            printf("Error at line %d in %s: nonblocking write fails on request %d (%s)\n",
+            fprintf(stderr,"Error at line %d in %s: nonblocking write fails on request %d (%s)\n",
                    __LINE__,__FILE__,i, ncmpi_strerror(sts[i]));
             nerrs++;
             break;
@@ -285,7 +285,7 @@ int test_column_wise_$1(const char *out_path, int format, int coll_io, MPI_Info 
     /* check status of all requests */
     for (i=0; i<num_reqs; i++)
         if (sts[i] != NC_NOERR) {
-            printf("Error at line %d in %s: nonblocking write fails on request %d (%s)\n",
+            fprintf(stderr,"Error at line %d in %s: nonblocking write fails on request %d (%s)\n",
                    __LINE__,__FILE__,i, ncmpi_strerror(sts[i]));
             nerrs++;
             break;
@@ -295,7 +295,7 @@ int test_column_wise_$1(const char *out_path, int format, int coll_io, MPI_Info 
         for (j=0; j<NY; j++) {
             $1 expected = ($1)rank+10;
             if (buf[i][j] != expected) {
-                printf("Error at line %d in %s: expect buf[%d][%d]=IFMT($1) but got IFMT($1)\n",
+                fprintf(stderr,"Error at line %d in %s: expect buf[%d][%d]=IFMT($1) but got IFMT($1)\n",
                        __LINE__,__FILE__,i,j,expected,buf[i][j]);
                 nerrs++;
                 i = myNX; break;

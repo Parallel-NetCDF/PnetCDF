@@ -75,7 +75,7 @@ void lustre_get_striping(const char *path,
     layout = llapi_layout_get_by_fd(fd, LLAPI_LAYOUT_GET_COPY);
     if (layout == NULL) {
 #ifdef PNETCDF_LUSTRE_DEBUG
-        printf("Error at %s (%d) llapi_layout_get_by_fd() fails\n",
+        fprintf(stderr,"Error at %s (%d) llapi_layout_get_by_fd() fails\n",
                 __FILE__, __LINE__);
 #endif
         goto err_out;
@@ -88,7 +88,7 @@ void lustre_get_striping(const char *path,
 #ifdef PNETCDF_LUSTRE_DEBUG
             char int_str[32];
             snprintf(int_str, 32, "%lu", *stripe_count);
-            printf("Error at %s (%d) llapi_layout_stripe_count_get() fails to get stripe count %s\n",
+            fprintf(stderr,"Error at %s (%d) llapi_layout_stripe_count_get() fails to get stripe count %s\n",
                 __FILE__, __LINE__, PATTERN_STR(*stripe_count, int_str));
 #endif
             goto err_out;
@@ -102,7 +102,7 @@ void lustre_get_striping(const char *path,
 #ifdef PNETCDF_LUSTRE_DEBUG
             char int_str[32];
             snprintf(int_str, 32, "%lu", *stripe_size);
-            printf("Error at %s (%d) llapi_layout_stripe_size_get() fails to get stripe size %s\n",
+            fprintf(stderr,"Error at %s (%d) llapi_layout_stripe_size_get() fails to get stripe size %s\n",
                 __FILE__,__LINE__, PATTERN_STR(*stripe_size, int_str));
 #endif
             goto err_out;

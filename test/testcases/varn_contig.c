@@ -202,7 +202,7 @@ int test_io(const char *out_path,
     else
         err = ncmpi_put_varn_int(ncid, varid[0], 1, NULL, NULL, NULL);
     if (err != NC_ENULLSTART) {
-        printf("expecting error code NC_ENULLSTART but got %s\n",ncmpi_strerrno(err));
+        fprintf(stderr,"expecting error code NC_ENULLSTART but got %s\n",ncmpi_strerrno(err));
         nerrs++;
     }
 

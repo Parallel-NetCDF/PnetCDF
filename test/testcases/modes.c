@@ -28,7 +28,7 @@
 #define EXPECT_ERR2(err_no1, err_no2) \
     if (err != err_no1 && err != err_no2) { \
         nerrs++; \
-        printf("Error at line %d in %s: expect error code %s or %s but got %s\n", \
+        fprintf(stderr,"Error at line %d in %s: expect error code %s or %s but got %s\n", \
                __LINE__,__FILE__,ncmpi_strerrno(err_no1),ncmpi_strerrno(err_no2),ncmpi_strerrno(err)); \
     }
 
@@ -71,7 +71,7 @@ int test_io(const char *out_path,
     /* The file should not be created */
     if (rank == 0) {
         if (access(path, F_OK) == 0) {
-            printf("Error at %s:%d : file (%s) should not be created\n",
+            fprintf(stderr,"Error at %s:%d : file (%s) should not be created\n",
                    __FILE__,__LINE__, out_path);
             nerrs++;
             /* delete the file and ignore error */
@@ -96,7 +96,7 @@ int test_io(const char *out_path,
         /* The file should not be created */
         if (rank == 0) {
             if (access(path, F_OK) == 0) {
-                printf("Error at %s:%d : file (%s) should not be created\n",
+                fprintf(stderr,"Error at %s:%d : file (%s) should not be created\n",
                        __FILE__,__LINE__, out_path);
                 nerrs++;
                 /* delete the file and ignore error */
@@ -120,7 +120,7 @@ int test_io(const char *out_path,
         /* The file should not be created */
         if (rank == 0) {
             if (access(path, F_OK) == 0) {
-                printf("Error at %s:%d : file (%s) should not be created\n",
+                fprintf(stderr,"Error at %s:%d : file (%s) should not be created\n",
                        __FILE__,__LINE__, out_path);
                 nerrs++;
                 /* delete the file and ignore error */
@@ -153,7 +153,7 @@ int test_io(const char *out_path,
         /* The file should not be created */
         if (rank == 0) {
             if (access(path, F_OK) == 0) {
-                printf("Error at line %d in %s: file (%s) should not be created\n",
+                fprintf(stderr,"Error at line %d in %s: file (%s) should not be created\n",
                        __LINE__,__FILE__, out_path);
                 nerrs++;
                 /* delete the file and ignore error */
@@ -186,7 +186,7 @@ int test_io(const char *out_path,
         /* The file should not be created */
         if (rank == 0) {
             if (access(path, F_OK) == 0) {
-                printf("Error at line %d in %s: file (%s) should not be created\n",
+                fprintf(stderr,"Error at line %d in %s: file (%s) should not be created\n",
                        __LINE__,__FILE__, out_path);
                 nerrs++;
                 /* delete the file and ignore error */

@@ -88,7 +88,7 @@ define(`CHECK_DEFAULT_FILL_VALUE',`
     CHECK_ERR
     for (i=0; i<LEN; i++) {
         if (buf_$1[i] != NC_FILL_VALUE($1)) {
-            printf("Error at %s line %d: expect buf_$1[%d]=IFMT($1) but got IFMT($1)\n",
+            fprintf(stderr,"Error at %s line %d: expect buf_$1[%d]=IFMT($1) but got IFMT($1)\n",
                    __func__,__LINE__,i,($1)NC_FILL_VALUE($1),buf_$1[i]);
             nerrs++;
         }
@@ -106,7 +106,7 @@ int test_default_fill_mode(const char *out_path, int format, int coll_io, MPI_In
     err = ncmpi_create(comm, out_path, NC_CLOBBER, info, &ncid); CHECK_ERR
     err = ncmpi_set_fill(ncid, NC_FILL, &old_mode); CHECK_ERR
     if (old_mode == NC_FILL) {
-        printf("Error at %s line %d: expected NC_NOFILL but got NC_FILL\n",__func__,__LINE__);
+        fprintf(stderr,"Error at %s line %d: expected NC_NOFILL but got NC_FILL\n",__func__,__LINE__);
         nerrs++;
     }
 
@@ -145,7 +145,7 @@ define(`CHECK_USER_FILL_VALUE',`
     CHECK_ERR
     for (i=0; i<LEN; i++) {
         if (buf_$1[i] != fillv_$1) {
-            printf("Error at %s line %d: expect buf_$1[%d]=IFMT($1) but got IFMT($1)\n",
+            fprintf(stderr,"Error at %s line %d: expect buf_$1[%d]=IFMT($1) but got IFMT($1)\n",
                    __func__,__LINE__,i,fillv_$1,buf_$1[i]);
             nerrs++;
         }
@@ -267,7 +267,7 @@ int test_erange_put_$1_$2(const char *out_path, int coll_io, MPI_Info info) {
         $1 expect = ($1)NC_FILL_VALUE($1);
         ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf != NC_FORMAT_CDF5) expect = ($1)wbuf[i];')')
         if (buf[i] != expect) {
-            printf("Error at %s line %d: expect buf[%d]=IFMT($1) but got IFMT($1)\n",
+            fprintf(stderr,"Error at %s line %d: expect buf[%d]=IFMT($1) but got IFMT($1)\n",
                    __func__,__LINE__,i,expect,buf[i]);
             nerrs++;
         }
@@ -283,7 +283,7 @@ int test_erange_put_$1_$2(const char *out_path, int coll_io, MPI_Info info) {
         $1 expect = fillv;
         ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf != NC_FORMAT_CDF5) expect = ($1)wbuf[i];')')
         if (buf[i] != expect) {
-            printf("Error at %s line %d: expect buf[%d]=IFMT($1) but got IFMT($1)\n",
+            fprintf(stderr,"Error at %s line %d: expect buf[%d]=IFMT($1) but got IFMT($1)\n",
                    __func__,__LINE__,i,expect,buf[i]);
             nerrs++;
         }
@@ -352,7 +352,7 @@ int test_erange_get_$1_$2(const char *out_path, int coll_io, MPI_Info info) {
         $2 expect = ($2)NC_FILL_VALUE($2);
         ifelse(`$1',`schar',`ifelse(`$2',`uchar',`if (cdf != NC_FORMAT_CDF5) expect = ($2)wbuf[i];')')
         if (rbuf[i] != expect) {
-            printf("Error at %s line %d: expect rbuf[%d]=IFMT($2) but got IFMT($2)\n",
+            fprintf(stderr,"Error at %s line %d: expect rbuf[%d]=IFMT($2) but got IFMT($2)\n",
                    __func__,__LINE__,i,expect,rbuf[i]);
             nerrs++;
         }

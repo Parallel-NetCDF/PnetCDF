@@ -53,14 +53,14 @@
 
 static int verbose;
 
-#define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR {if(err!=NC_NOERR){fprintf(stderr,"Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
 
 #define CHECK_MPI_ERR \
     if (err != MPI_SUCCESS) { \
         int errorStringLen; \
         char errorString[MPI_MAX_ERROR_STRING]; \
         MPI_Error_string(err, errorString, &errorStringLen); \
-        printf("Error at line %d: %s\n",__LINE__, errorString); \
+        fprintf(stderr,"Error at line %d: %s\n",__LINE__, errorString); \
     }
 
 static void
@@ -100,7 +100,7 @@ pnetcdf_check_mem_usage(MPI_Comm comm)
                    sum_size);
     }
     else if (err != NC_ENOTENABLED) {
-        printf("Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
+        fprintf(stderr,"Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
         nerrs++;
     }
     return nerrs;

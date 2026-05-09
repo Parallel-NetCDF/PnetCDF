@@ -26,7 +26,7 @@
 
 static int verbose;
 
-#define ERR {if (err != NC_NOERR) {printf("Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
+#define ERR {if (err != NC_NOERR) {fprintf(stderr,"Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
 #define ERRV {printf("Unexpected result at %s line %d\n",__func__,__LINE__); return 1;}
 
 
@@ -2068,7 +2068,7 @@ create_file(char *filename, int cmode)
 
     err=ncmpi_inq_dimlen(ncid, Dr_dim, &num_records); ERR
     if (num_records != 2) {
-        printf("Error at %s:%d expecting number of records = 2, but got "OFFFMT"\n",
+        fprintf(stderr,"Error at %s:%d expecting number of records = 2, but got "OFFFMT"\n",
                __FILE__,__LINE__,num_records);
         return 1;
     }

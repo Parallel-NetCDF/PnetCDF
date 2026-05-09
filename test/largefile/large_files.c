@@ -51,7 +51,7 @@ int test_io(const char *out_path,
 
     err = ncmpi_create(MPI_COMM_SELF, out_path, NC_CLOBBER, info, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at line %d in %s: (%s)\n", __LINE__,__FILE__,ncmpi_strerrno(err));
+        fprintf(stderr,"Error at line %d in %s: (%s)\n", __LINE__,__FILE__,ncmpi_strerrno(err));
         return 1;
     }
 
@@ -123,7 +123,7 @@ int test_io(const char *out_path,
             for (j=0; j<J_LEN; j++) {
                 for (k=0; k<K_LEN; k++) {
                     if (buf[j*K_LEN+k] != (signed char) n % 128) {
-                        printf("Error on read, var[%d, %d, %d, %d] = %d wrong, should be %d !\n",
+                        fprintf(stderr,"Error on read, var[%d, %d, %d, %d] = %d wrong, should be %d !\n",
                                rec, i, j, k, buf[j*K_LEN+k], (signed char)n);
                         nerrs++;
                         goto err_out;
@@ -139,7 +139,7 @@ int test_io(const char *out_path,
         count[1] = N_LEN;
         ncmpi_get_vara_schar_all(ncid, x_id, start, count, buf); CHECK_ERR
         if (buf[0] != 42 || buf[1] != 21) {
-            printf("Error on read, x[] = %d, %d\n", buf[0], buf[1]);
+            fprintf(stderr,"Error on read, x[] = %d, %d\n", buf[0], buf[1]);
             nerrs++;
         }
     }

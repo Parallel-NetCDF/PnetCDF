@@ -33,7 +33,7 @@ tst_fmt(char *filename, int cmode)
     cmode |= NC_CLOBBER;
     err = ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at %s:%d ncmpi_create %s\n",__FILE__,__LINE__,
+        fprintf(stderr,"Error at %s:%d ncmpi_create %s\n",__FILE__,__LINE__,
                ncmpi_strerrno(err));
         return 1;
     }
@@ -67,7 +67,7 @@ tst_fmt(char *filename, int cmode)
 
     err = ncmpi_inq_dimlen(ncid, dimid[0], &num_records); CHECK_ERR
     if (num_records != Y_LEN) {
-        printf("Error at %s:%d: expect num_records=%d but got "OFFFMT"\n",
+        fprintf(stderr,"Error at %s:%d: expect num_records=%d but got "OFFFMT"\n",
                __FILE__,__LINE__,Y_LEN,num_records);
         nerrs++;
     }
@@ -77,7 +77,7 @@ tst_fmt(char *filename, int cmode)
 
     err = ncmpi_inq_dimlen(ncid, dimid[0], &num_records); CHECK_ERR
     if (num_records != Y_LEN) {
-        printf("Error at %s:%d: expect num_records=%d but got "OFFFMT"\n",
+        fprintf(stderr,"Error at %s:%d: expect num_records=%d but got "OFFFMT"\n",
                __FILE__,__LINE__,Y_LEN,num_records);
         nerrs++;
     }
@@ -96,7 +96,7 @@ tst_fmt(char *filename, int cmode)
             int k= i*X_LEN+j;
             int expect=k+(rank * 100);
             if (buf[k] != expect) {
-                printf("Error at %s:%d: expect buf[%d]=%d but got %d\n",
+                fprintf(stderr,"Error at %s:%d: expect buf[%d]=%d but got %d\n",
                        __FILE__,__LINE__,k,expect,buf[k]);
                 nerrs++;
                 i = Y_LEN;
@@ -115,7 +115,7 @@ tst_fmt(char *filename, int cmode)
         int k=i*X_LEN+j;
         int expect=k+((rank+1)%nprocs * 100);
         if (buf[k] != expect) {
-            printf("Error at %s:%d: expect buf[%d]=%d but got %d\n",
+            fprintf(stderr,"Error at %s:%d: expect buf[%d]=%d but got %d\n",
                    __FILE__,__LINE__,k,expect,buf[k]);
             nerrs++;
             i = Y_LEN;

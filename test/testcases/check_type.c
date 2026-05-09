@@ -28,7 +28,7 @@
 
 #define EXP_ERR_N_TYPE(expect_err,itype,etype) { \
     if (err != expect_err) { \
-        printf("Error at line %d in %s: itype=%9s etype=%-9s err=%s\n", \
+        fprintf(stderr,"Error at line %d in %s: itype=%9s etype=%-9s err=%s\n", \
                __LINE__,__FILE__,itype,etype_name(etype),ncmpi_strerrno(err)); \
         nerrs++; \
     }  \

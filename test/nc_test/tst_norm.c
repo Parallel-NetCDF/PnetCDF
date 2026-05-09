@@ -26,7 +26,7 @@
 #define NDIMS 1
 #define NX 18
 
-#define ERR {if (err != NC_NOERR) {printf("Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
+#define ERR {if (err != NC_NOERR) {fprintf(stderr,"Error at %s line %d: %s\n",__func__,__LINE__,ncmpi_strerror(err)); return 1;}}
 
 static
 int tst_norm(char *filename, int cmode)
@@ -126,12 +126,12 @@ int tst_norm(char *filename, int cmode)
     * should have been normalized in library, so these are attempts to
     * create duplicate netCDF objects. */
    if ((err = ncmpi_def_dim(ncid, NNAME, NX, &dimid)) != NC_ENAMEINUSE) {
-       printf("Error at line %d: expecting error code %d but got %d\n",__LINE__,NC_ENAMEINUSE,err);
+       fprintf(stderr,"Error at line %d: expecting error code %d but got %d\n",__LINE__,NC_ENAMEINUSE,err);
        return 1;
    }
 
    if ((err=ncmpi_def_var(ncid, NNAME, NC_CHAR, NDIMS, dimids, &varid)) != NC_ENAMEINUSE) {
-       printf("Error at line %d: expecting error code %d but got %d\n",__LINE__,NC_ENAMEINUSE,err);
+       fprintf(stderr,"Error at line %d: expecting error code %d but got %d\n",__LINE__,NC_ENAMEINUSE,err);
        return 1;
    }
    err = ncmpi_enddef(ncid); ERR
@@ -147,19 +147,19 @@ int tst_norm(char *filename, int cmode)
    err = strncmp(NNAME, name_in, NNAMELEN); ERR
    err = ncmpi_inq_varid(ncid, NNAME, &varid_in); ERR
    if ((err = ncmpi_inq_dimid(ncid, UNAME, &dimid_in)) || dimid != dimid_in)
-       {printf("Error at line %d\n",__LINE__);return 1;}
+       {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
    if ((err = ncmpi_inq_dimid(ncid, NNAME, &dimid_in)) || dimid != dimid_in)
-       {printf("Error at line %d\n",__LINE__);return 1;}
+       {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
    err = ncmpi_inq_att(ncid, varid, UNITS, &att_type, &att_len); ERR
    if ( att_type != NC_CHAR || att_len != UNAMELEN)
-       {printf("Error at line %d\n",__LINE__);return 1;}
+       {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
    err = ncmpi_get_att_text(ncid, varid, UNITS, strings_in); ERR
    strings_in[UNAMELEN] = '\0';
    err = strncmp(UNAME, strings_in, UNAMELEN); ERR
    if ((err = ncmpi_inq_attid(ncid, varid, UNAME, &attnum_in)) || ATTNUM != attnum_in)
-       {printf("Error at line %d\n",__LINE__);return 1;}
+       {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
    if ((err = ncmpi_inq_attid(ncid, varid, NNAME, &attnum_in)) || ATTNUM != attnum_in)
-       {printf("Error at line %d\n",__LINE__);return 1;}
+       {fprintf(stderr,"Error at line %d\n",__LINE__);return 1;}
    err = ncmpi_close(ncid); ERR
 
    return 0;

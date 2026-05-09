@@ -352,7 +352,7 @@ int test_io(const char *out_path,
     err = ncmpi_inq_unlimdim(ncid, &unlimit_dimid); CHECK_ERR
     err = ncmpi_inq_dimlen(ncid, unlimit_dimid, &len); CHECK_ERR
     if (len != 2)
-        printf("Error at line %d in %s: number of records should be 2 but got "OFFFMT"\n",
+        fprintf(stderr,"Error at line %d in %s: number of records should be 2 but got "OFFFMT"\n",
         __LINE__,__FILE__,len);
 
     MPI_Type_free(&vtype[0]);

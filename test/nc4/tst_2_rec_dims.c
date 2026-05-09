@@ -85,21 +85,21 @@ int main(int argc, char** argv) {
 
     err = ncmpi_inq_num_rec_vars(ncid, &num_rec_vars); CHECK_ERR
     if (num_rec_vars != 1){
-        printf("Error at line %d of %s: expect num_rec_vars %d but got %d\n",
+        fprintf(stderr,"Error at line %d of %s: expect num_rec_vars %d but got %d\n",
                 __LINE__,__FILE__,2,num_rec_vars);
         nerrs++;
     }
     
     err = ncmpi_inq_num_fix_vars(ncid, &num_rec_vars); CHECK_ERR
     if (num_rec_vars != 0){
-        printf("Error at line %d of %s: expect num_fix_vars %d but got %d\n",
+        fprintf(stderr,"Error at line %d of %s: expect num_fix_vars %d but got %d\n",
                 __LINE__,__FILE__,0,num_rec_vars);
         nerrs++;
     }       
 
     err = ncmpi_inq_recsize(ncid, &recsize);  CHECK_ERR
     if (recsize != 4){
-        printf("Error at line %d of %s: expect recsize "OFFFMT" but got "OFFFMT"\n",
+        fprintf(stderr,"Error at line %d of %s: expect recsize "OFFFMT" but got "OFFFMT"\n",
                 __LINE__,__FILE__, (MPI_Offset)4, recsize);
         nerrs++;
     }  

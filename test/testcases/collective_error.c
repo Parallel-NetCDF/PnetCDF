@@ -90,12 +90,12 @@ int test_io(const char *out_path,
 
     /* check if user put buffer contents altered */
     if (buf[0] != 1.0) {
-        printf("Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
+        fprintf(stderr,"Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
                __LINE__,__FILE__,0, 1.0, buf[0]);
         nerrs++;
     }
     if (buf[1] != 2.0) {
-        printf("Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
+        fprintf(stderr,"Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
                __LINE__,__FILE__,1, 2.0, buf[1]);
         nerrs++;
     }
@@ -107,12 +107,12 @@ int test_io(const char *out_path,
 
     /* check if user put buffer contents altered */
     if (buf[0] != 1.0) {
-        printf("Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
+        fprintf(stderr,"Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
                __LINE__,__FILE__,0, 1.0, buf[0]);
         nerrs++;
     }
     if (buf[1] != 2.0) {
-        printf("Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
+        fprintf(stderr,"Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
                __LINE__,__FILE__,1, 2.0, buf[1]);
         nerrs++;
     }
@@ -126,12 +126,12 @@ int test_io(const char *out_path,
 
         /* check if user put buffer contents altered */
         if (buf[0] != 1.0) {
-            printf("Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
+            fprintf(stderr,"Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
                    __LINE__,__FILE__,0, 1.0, buf[0]);
             nerrs++;
         }
         if (buf[1] != 2.0) {
-            printf("Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
+            fprintf(stderr,"Error at line %d in %s: user put buffer[%d] altered from %f to %f\n",
                    __LINE__,__FILE__,1, 2.0, buf[1]);
             nerrs++;
         }

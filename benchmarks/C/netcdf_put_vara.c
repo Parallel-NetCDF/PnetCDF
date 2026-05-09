@@ -77,7 +77,7 @@ static int verbose;
 
 #define ERR { \
     if (err != NC_NOERR) { \
-        printf("Error at %s:%d : %s\n", __FILE__,__LINE__, nc_strerror(err)); \
+        fprintf(stderr,"Error at %s:%d : %s\n", __FILE__,__LINE__, nc_strerror(err)); \
         nerrs++; \
     } \
 }

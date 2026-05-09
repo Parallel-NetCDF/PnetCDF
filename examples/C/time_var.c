@@ -67,7 +67,7 @@
 
 static int verbose;
 
-#define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR {if(err!=NC_NOERR){fprintf(stderr,"Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -108,7 +108,7 @@ pnetcdf_check_mem_usage(MPI_Comm comm)
                    sum_size);
     }
     else if (err != NC_ENOTENABLED) {
-        printf("Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
+        fprintf(stderr,"Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
         nerrs++;
     }
     return nerrs;
@@ -132,7 +132,7 @@ pnetcdf_write(MPI_Comm comm, char *filename, int cmode)
     cmode |= NC_CLOBBER;
     err = ncmpi_create(comm, filename, cmode, MPI_INFO_NULL, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));
+        fprintf(stderr,"Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));
         return 1;
     }
 
@@ -219,7 +219,7 @@ pnetcdf_read(MPI_Comm comm, char *filename)
     /* open file for reading ----------------------------------------*/
     err = ncmpi_open(comm, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));
+        fprintf(stderr,"Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));
         return 1;
     }
 
@@ -259,7 +259,7 @@ pnetcdf_read(MPI_Comm comm, char *filename)
     for (i=0; i<local_nx; i++) {
         double expect=1.0 * rank + 100.0;
         if (buf[i] != expect) {
-            printf("Read error at line %d: buf[%d] expect %f but got %f\n",
+            fprintf(stderr,"Read error at line %d: buf[%d] expect %f but got %f\n",
                    __LINE__, i, expect, buf[i]);
             nerrs++;
             break;
@@ -278,7 +278,7 @@ pnetcdf_read(MPI_Comm comm, char *filename)
     for (i=0; i<global_ny*local_nx; i++) {
         double expect=1.0*rank;
         if (buf[i] != expect) {
-            printf("Read error at line %d: buf[%d][%d] expect %f but got %f\n",
+            fprintf(stderr,"Read error at line %d: buf[%d][%d] expect %f but got %f\n",
                    __LINE__, i/local_nx, i%local_nx, expect, buf[i]);
             nerrs++;
             break;
@@ -297,7 +297,7 @@ pnetcdf_read(MPI_Comm comm, char *filename)
     for (i=0; i<local_nx; i++) {
         double expect=1.0 * rank + 200.0;
         if (buf[i] != expect) {
-            printf("Read error at line %d: buf[%d] expect %f but got %f\n",
+            fprintf(stderr,"Read error at line %d: buf[%d] expect %f but got %f\n",
                    __LINE__, i, expect, buf[i]);
             nerrs++;
             break;

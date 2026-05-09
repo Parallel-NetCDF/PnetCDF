@@ -91,7 +91,7 @@ int test_bb(const char *out_path,
         }
         for (i = 0; i < NREQ; i++) {
             if (reqs[i] != NC_REQ_NULL) {
-                printf("Error at line %d in %s: expecting reqs[%d] = NC_REQ_NULL but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting reqs[%d] = NC_REQ_NULL but got %d\n",
                         __LINE__, __FILE__, i, reqs[i]);
                 nerrs++;
                 goto err_out;
@@ -115,7 +115,7 @@ int test_bb(const char *out_path,
         }
         for (i = 0; i < NREQ; i++) {
             if (buffer[i] != rank + 1) {
-                printf("Error at line %d in %s: expecting buffer[%d] = %d but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting buffer[%d] = %d but got %d\n",
                         __LINE__, __FILE__, i, rank + 1, buffer[i]);
                 nerrs++;
                 goto err_out;
@@ -123,7 +123,7 @@ int test_bb(const char *out_path,
         }
         for (i = 0; i < NREQ; i++) {
             if (reqs[i] != NC_REQ_NULL) {
-                printf("Error at line %d in %s: expecting reqs[%d] = NC_REQ_NULL but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expecting reqs[%d] = NC_REQ_NULL but got %d\n",
                         __LINE__, __FILE__, i, reqs[i]);
                 nerrs++;
                 goto err_out;

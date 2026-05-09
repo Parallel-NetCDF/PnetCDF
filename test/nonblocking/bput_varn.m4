@@ -92,7 +92,7 @@ include(`utils.m4')dnl
     int _i; \
     for (_i=0; _i<(n); _i++) { \
         if ((a)[_i] != NC_NOERR) { \
-            printf("Error at line %d in %s: err[%d] %s\n", __LINE__, __FILE__, _i, \
+            fprintf(stderr,"Error at line %d in %s: err[%d] %s\n", __LINE__, __FILE__, _i, \
                    ncmpi_strerrno((a)[_i])); \
             nerrs++; \
             goto err_out; \
@@ -111,7 +111,7 @@ check_num_pending_reqs(int ncid, int expected, int lineno)
 
     err = ncmpi_inq_nreqs(ncid, &n_pendings); CHECK_ERR
     if (n_pendings != expected) {
-        printf("Error at line %d in %s: expect %d pending requests but got %d\n",
+        fprintf(stderr,"Error at line %d in %s: expect %d pending requests but got %d\n",
                lineno, __FILE__, expected, n_pendings);
         nerrs++;
     }
@@ -138,14 +138,14 @@ int check_attached_buffer_usage(int ncid,
     err = ncmpi_inq_buffer_size(ncid, &buf_size);
     CHECK_ERR
     if (expected_size != buf_size) {
-        printf("Error at line %d in %s: expect buffer size "OFFFMT" but got "OFFFMT"\n",
+        fprintf(stderr,"Error at line %d in %s: expect buffer size "OFFFMT" but got "OFFFMT"\n",
                lineno, __FILE__,expected_size, buf_size);
         nerrs++;
     }
 
     err = ncmpi_inq_buffer_usage(ncid, &usage); CHECK_ERR
     if (expected_usage != usage) {
-        printf("Error at line %d in %s: expect buffer usage "OFFFMT" but got "OFFFMT"\n",
+        fprintf(stderr,"Error at line %d in %s: expect buffer usage "OFFFMT" but got "OFFFMT"\n",
                lineno, __FILE__,expected_usage, usage);
         nerrs++;
     }
@@ -419,7 +419,7 @@ test_bput_varn_$1(const char *out_path, int format, int coll_io, MPI_Info info)
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (buffer[i][j] != ($1)rank) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
                        __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
                 i = nreqs;
@@ -484,7 +484,7 @@ test_bput_varn_$1(const char *out_path, int format, int coll_io, MPI_Info info)
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]; j++) {
             if (buffer[i][j] != ($1)rank) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
                        __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
                 i = nreqs;
@@ -549,7 +549,7 @@ test_bput_varn_$1(const char *out_path, int format, int coll_io, MPI_Info info)
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]*2; j++) {
             if (buffer[i][j] != ($1)rank) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
                        __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
                 i = nreqs;
@@ -586,7 +586,7 @@ test_bput_varn_$1(const char *out_path, int format, int coll_io, MPI_Info info)
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]*2; j++) {
             if (buffer[i][j] != ($1)rank) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
                        __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
                 i = nreqs;
@@ -633,7 +633,7 @@ test_bput_varn_$1(const char *out_path, int format, int coll_io, MPI_Info info)
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]*2; j++) {
             if (buffer[i][j] != ($1)rank) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
                        __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
                 i = nreqs;
@@ -670,7 +670,7 @@ test_bput_varn_$1(const char *out_path, int format, int coll_io, MPI_Info info)
     for (i=0; i<nreqs; i++) {
         for (j=0; j<req_lens[i]*2; j++) {
             if (buffer[i][j] != ($1)rank) {
-                printf("Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
+                fprintf(stderr,"Error at line %d in %s: put buffer altered buffer[%d][%d]=IFMT($1)\n",
                        __LINE__,__FILE__,i,j,buffer[i][j]);
                 nerrs++;
                 i = nreqs;

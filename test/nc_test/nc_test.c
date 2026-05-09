@@ -191,7 +191,7 @@ main(int argc, char *argv[])
 
 #ifndef ENABLE_NETCDF4
     if (cdf_format == 4) {
-        printf("Error: NetCDF-4 support is not enabled at configure time\n");
+        fprintf(stderr,"Error: NetCDF-4 support is not enabled at configure time\n");
         MPI_Finalize();
         return 1;
     }

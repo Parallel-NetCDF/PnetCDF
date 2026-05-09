@@ -40,14 +40,14 @@ dnl
 #define CHECK_ERR { \
     if (err != NC_NOERR) { \
         nerrs++; \
-        printf("Error at line %d in %s: (%s)\n", \
+        fprintf(stderr,"Error at line %d in %s: (%s)\n", \
         __LINE__,__FILE__,nc_strerror(err)); \
     } \
 }
 #define EXP_ERR(exp) { \
     if (err != exp) { \
         nerrs++; \
-        printf("Error at line %d in %s: expecting " #exp " but got %d\n", \
+        fprintf(stderr,"Error at line %d in %s: expecting " #exp " but got %d\n", \
         __LINE__,__FILE__, err); \
     } \
 }
@@ -162,7 +162,7 @@ test_format_nc$1(const char *out_path, int coll_io, MPI_Info info)
     /* create a new file */
     err=FileCreate(out_path, NC_CLOBBER, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at line %d in %s: FileCreate() file %s (%s)\n",
+        fprintf(stderr,"Error at line %d in %s: FileCreate() file %s (%s)\n",
         __LINE__,__FILE__,out_path,StrError(err));
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(1);
@@ -521,7 +521,7 @@ test_format_nc$1(const char *out_path, int coll_io, MPI_Info info)
     /* open the file with read-only permission */
     err=FileOpen(out_path, NC_NOWRITE, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at line %d in %s: FileOpen() file %s (%s)\n",
+        fprintf(stderr,"Error at line %d in %s: FileOpen() file %s (%s)\n",
         __LINE__,__FILE__,out_path,StrError(err));
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(1);

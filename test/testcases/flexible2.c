@@ -165,7 +165,7 @@ int test_io(const char *out_path,
     /* check the contents of put buffer */
     for (i=0; i<buffer_len; i++) {
         if (buf_zy[i] != rank+10) {
-            printf("Error at line %d in %s: put buffer[%d] is altered\n",__LINE__,__FILE__,i);
+            fprintf(stderr,"Error at line %d in %s: put buffer[%d] is altered\n",__LINE__,__FILE__,i);
             nerrs++;
             goto err_out;
         }
@@ -242,7 +242,7 @@ int test_io(const char *out_path,
     /* check the contents of put buffer */
     for (i=0; i<buffer_len; i++) {
         if (buf_yx[i] != rank+10) {
-            printf("Error at line %d in %s: iput buffer[%d]=%f is altered\n",__LINE__,__FILE__,i,buf_yx[i]);
+            fprintf(stderr,"Error at line %d in %s: iput buffer[%d]=%f is altered\n",__LINE__,__FILE__,i,buf_yx[i]);
             nerrs++;
             goto err_out;
         }
@@ -271,7 +271,7 @@ int test_io(const char *out_path,
             else
                 exp = rank+10;
             if (buf_yx[index] != exp) {
-                printf("Error at %d: expect buffer[%d][%d]=%.1f but got %.1f\n",
+                fprintf(stderr,"Error at %d: expect buffer[%d][%d]=%.1f but got %.1f\n",
                        __LINE__,i,j,exp,buf_yx[index]);
                 nerrs++;
                 goto err_out;

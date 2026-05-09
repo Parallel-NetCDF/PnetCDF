@@ -45,7 +45,7 @@
 /* Handle errors by printing an error message and exiting with a
  * non-zero status. */
 #define ERRCODE 2
-#define ERR(e) {printf("Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
+#define ERR(e) {fprintf(stderr,"Error: %s\n", nc_strerror(e)); exit(ERRCODE);}
 
 int main(int argc, char** argv) {
     char filename[256];
@@ -128,19 +128,19 @@ int main(int argc, char** argv) {
     /* Check if number of dimensions matches */
     err = ncmpi_inq_ndims(ncid, &ndim); CHECK_ERR
     if (ndim != 2) {
-        printf("Error at line %d in %s: expect ndim = %d, but got %d\n",
+        fprintf(stderr,"Error at line %d in %s: expect ndim = %d, but got %d\n",
         __LINE__, __FILE__, 2, ndim);
     }
 
     /* Check if dimension size matches */
     err = ncmpi_inq_dim(ncid, x_dimid, tmp, &dlen); CHECK_ERR
     if (dlen != NX) {
-        printf("Error at line %d in %s: expect X dim size = %d, but got %d\n",
+        fprintf(stderr,"Error at line %d in %s: expect X dim size = %d, but got %d\n",
         __LINE__, __FILE__, NX, (int)dlen);
     }
     err = ncmpi_inq_dim(ncid, y_dimid, tmp, &dlen); CHECK_ERR
     if (dlen != NY) {
-        printf("Error at line %d in %s: expect X dim size = %d, but got %d\n",
+        fprintf(stderr,"Error at line %d in %s: expect X dim size = %d, but got %d\n",
         __LINE__, __FILE__, NY, (int)dlen);
     }
 
@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
     for(i = 0; i < NX; i++){
         for(j = 0; j < NY; j++){
             if (data_out[i][j] != data_in[i][j]){
-                printf("Error at line %d in %s: expect data_in[%d][%d] = %d, but got %d\n",
+                fprintf(stderr,"Error at line %d in %s: expect data_in[%d][%d] = %d, but got %d\n",
                 __LINE__, __FILE__, i, j, data_out[i][j], data_in[i][j]);
             }
         }

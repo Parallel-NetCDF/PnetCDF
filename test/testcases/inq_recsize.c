@@ -88,7 +88,7 @@ int test_io(const char *out_path,
 
     err = ncmpi_inq_recsize(ncid, &recsize); CHECK_ERR
     if (expected_recsize != recsize) {
-        printf("Error at line %d in %s: expecting record size "OFFFMT" but got "OFFFMT"\n",
+        fprintf(stderr,"Error at line %d in %s: expecting record size "OFFFMT" but got "OFFFMT"\n",
         __LINE__,__FILE__,expected_recsize, recsize);
         nerrs++;
     }

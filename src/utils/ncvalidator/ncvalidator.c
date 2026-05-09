@@ -58,12 +58,12 @@ static const char *off_limit = "https://docs.unidata.ucar.edu/nug/current/file_s
 
 #if PNETCDF_DEBUG_MODE == 1
 #define DEBUG_RETURN_ERROR(err) {                               \
-    if (verbose) printf("\t(Error %s at line %d in file %s)\n", \
+    if (verbose) fprintf(stderr,"\t(Error %s at line %d in file %s)\n", \
                  #err,__LINE__,__FILE__);                       \
     return err;                                                 \
 }
 #define DEBUG_ASSIGN_ERROR(status, err) {                       \
-    if (verbose) printf("\t(Error %s at line %d in file %s)\n", \
+    if (verbose) fprintf(stderr,"\t(Error %s at line %d in file %s)\n", \
                  #err,__LINE__,__FILE__);                       \
     status = err;                                               \
 }
@@ -659,14 +659,14 @@ var_shape64(NC_var            *varp,
         const NC_dim *dimp;
 
         if (varp->dimids[i] < 0) {
-            if (verbose) printf("Error:\n");
-            if (verbose) printf("\t%s: dimension ID [%d] invalid (%d)\n",loc,i,varp->dimids[i]);
+            if (verbose) fprintf(stderr,"Error:\n");
+            if (verbose) fprintf(stderr,"\t%s: dimension ID [%d] invalid (%d)\n",loc,i,varp->dimids[i]);
             DEBUG_RETURN_ERROR(NC_EBADDIM);
         }
 
         if (varp->dimids[i] >= ((dims != NULL) ? dims->ndefined : 1)) {
-            if (verbose) printf("Error:\n");
-            if (verbose) printf("\t%s: dimension ID [%d] (%d) larger than defined (%d)\n",loc,i,varp->dimids[i], ((dims != NULL) ? dims->ndefined : 1));
+            if (verbose) fprintf(stderr,"Error:\n");
+            if (verbose) fprintf(stderr,"\t%s: dimension ID [%d] (%d) larger than defined (%d)\n",loc,i,varp->dimids[i], ((dims != NULL) ? dims->ndefined : 1));
             DEBUG_RETURN_ERROR(NC_EBADDIM);
         }
 
@@ -677,8 +677,8 @@ var_shape64(NC_var            *varp,
         /* check for record variable, only the highest dimension can
          * be unlimited */
         if (varp->shape[i] == NC_UNLIMITED && i != 0) {
-            if (verbose) printf("Error:\n");
-            if (verbose) printf("\t%s: dimension ID [%d] is NC_UNLIMITED in the wrong index\n",loc,i);
+            if (verbose) fprintf(stderr,"Error:\n");
+            if (verbose) fprintf(stderr,"\t%s: dimension ID [%d] is NC_UNLIMITED in the wrong index\n",loc,i);
             DEBUG_RETURN_ERROR(NC_EUNLIMPOS);
         }
     }
@@ -753,13 +753,13 @@ compute_var_shape(NC *ncp)
         /* check if dimids are valid */
         for (j=0; j<ncp->vars.value[i]->ndims; j++) {
             if (ncp->vars.value[i]->dimids[j] < 0) {
-                if (verbose) printf("Error:\n");
-                if (verbose) printf("\t%s: dimension ID [%d] invalid (%d)\n",xloc,i,ncp->vars.value[i]->dimids[i]);
+                if (verbose) fprintf(stderr,"Error:\n");
+                if (verbose) fprintf(stderr,"\t%s: dimension ID [%d] invalid (%d)\n",xloc,i,ncp->vars.value[i]->dimids[i]);
                 DEBUG_RETURN_ERROR(NC_EBADDIM) /* dimid is not defined */
             }
             else if (ncp->vars.value[i]->dimids[j] >= ncp->dims.ndefined) {
-                if (verbose) printf("Error:\n");
-                if (verbose) printf("\t%s: dimension ID [%d] (%d) larger than defined (%d)\n",xloc,i,ncp->vars.value[i]->dimids[i], ncp->dims.ndefined);
+                if (verbose) fprintf(stderr,"Error:\n");
+                if (verbose) fprintf(stderr,"\t%s: dimension ID [%d] (%d) larger than defined (%d)\n",xloc,i,ncp->vars.value[i]->dimids[i], ncp->dims.ndefined);
                 DEBUG_RETURN_ERROR(NC_EBADDIM);
             }
         }
@@ -781,8 +781,8 @@ compute_var_shape(NC *ncp)
 
     if (first_rec != NULL) {
         if (ncp->begin_rec > first_rec->begin) {
-            if (verbose) printf("Error:\n");
-            if (verbose) printf("\tbegin of record section (%lld) greater than the begin of first record (%lld)\n",ncp->begin_rec, first_rec->begin);
+            if (verbose) fprintf(stderr,"Error:\n");
+            if (verbose) fprintf(stderr,"\tbegin of record section (%lld) greater than the begin of first record (%lld)\n",ncp->begin_rec, first_rec->begin);
             DEBUG_RETURN_ERROR(NC_ENOTNC) /* not a netCDF file or corrupted */
         }
 
@@ -800,23 +800,23 @@ compute_var_shape(NC *ncp)
         ncp->begin_var = ncp->begin_rec;
 
     if (ncp->begin_var <= 0) {
-        if (verbose) printf("Error:\n");
-        if (verbose) printf("\tbegin of variable section (%lld) is negative\n",ncp->begin_var);
+        if (verbose) fprintf(stderr,"Error:\n");
+        if (verbose) fprintf(stderr,"\tbegin of variable section (%lld) is negative\n",ncp->begin_var);
         DEBUG_RETURN_ERROR(NC_ENOTNC) /* not a netCDF file or corrupted */
     }
     else if (ncp->xsz > ncp->begin_var) {
-        if (verbose) printf("Error:\n");
-        if (verbose) printf("\tfile header size (%lld) is larger than the begin of data section (%lld)\n",ncp->xsz, ncp->begin_var);
+        if (verbose) fprintf(stderr,"Error:\n");
+        if (verbose) fprintf(stderr,"\tfile header size (%lld) is larger than the begin of data section (%lld)\n",ncp->xsz, ncp->begin_var);
         DEBUG_RETURN_ERROR(NC_ENOTNC) /* not a netCDF file or corrupted */
     }
     else if (ncp->begin_rec <= 0) {
-        if (verbose) printf("Error:\n");
-        if (verbose) printf("\tbegin of record section (%lld) is zero or negative\n",ncp->begin_rec);
+        if (verbose) fprintf(stderr,"Error:\n");
+        if (verbose) fprintf(stderr,"\tbegin of record section (%lld) is zero or negative\n",ncp->begin_rec);
         DEBUG_RETURN_ERROR(NC_ENOTNC) /* not a netCDF file or corrupted */
     }
     else if (ncp->begin_var > ncp->begin_rec) {
-        if (verbose) printf("Error:\n");
-        if (verbose) printf("\tbegin of data section (%lld) is larger than record section (%lld)\n",ncp->begin_var, ncp->begin_rec);
+        if (verbose) fprintf(stderr,"Error:\n");
+        if (verbose) fprintf(stderr,"\tbegin of data section (%lld) is larger than record section (%lld)\n",ncp->begin_var, ncp->begin_rec);
         DEBUG_RETURN_ERROR(NC_ENOTNC) /* not a netCDF file or corrupted */
     }
 
@@ -833,18 +833,18 @@ val_repair(int fd, off_t offset, size_t len, void *buf)
 
     if (-1 == lseek(fd, offset, SEEK_SET)) {
         if (verbose)
-            printf("Error at line %d: lseek %s\n",__LINE__,strerror(errno));
+            fprintf(stderr,"Error at line %d: lseek %s\n",__LINE__,strerror(errno));
         return -1;
     }
     nn = write(fd, buf, len);
     if (nn == -1) {
         if (verbose)
-            printf("Error at line %d: write %s\n",__LINE__,strerror(errno));
+            fprintf(stderr,"Error at line %d: write %s\n",__LINE__,strerror(errno));
         return -1;
     }
     if (nn != len) {
         if (verbose)
-            printf("Error at line %d: writing %zd bytes but only %zd written\n",
+            fprintf(stderr,"Error at line %d: writing %zd bytes but only %zd written\n",
                    __LINE__,len, nn);
         return -1;
     }
@@ -928,15 +928,15 @@ val_get_NC_tag(int fd, bufferinfo *gbp, NC_tag *tagp, const char *loc)
         case 12: *tagp = NC_ATTRIBUTE;   break;
         default:
             *tagp = NC_INVALID;
-            if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-            if (verbose) printf("\tInvalid NC component tag (%d)\n",tag);
+            if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+            if (verbose) fprintf(stderr,"\tInvalid NC component tag (%d)\n",tag);
             return NC_ENOTNC;
     }
     return NC_NOERR;
 
 fn_exit:
-    if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-    if (verbose) printf("\t%s: Fail to read NC component tag\n",loc);
+    if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+    if (verbose) fprintf(stderr,"\t%s: Fail to read NC component tag\n",loc);
     return status;
 }
 
@@ -953,7 +953,7 @@ hdr_get_NON_NEG(int fd, bufferinfo *gbp, long long *sp)
     sizeof_NON_NEG = (gbp->version < 5) ? 4 : 8;
     status = val_check_buffer(fd, gbp, sizeof_NON_NEG);
     if (status != NC_NOERR) {
-        if (verbose) printf("%d-byte size is expected for ", sizeof_NON_NEG);
+        if (verbose) fprintf(stderr,"%d-byte size is expected for ", sizeof_NON_NEG);
         return status;
     }
     if (gbp->version < 5)
@@ -993,8 +993,8 @@ hdr_get_name(int          fd,
     err_addr = ERR_ADDR;
     err = hdr_get_NON_NEG(fd, gbp, &nchars);
     if (err != NC_NOERR) {
-        if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-        if (verbose) printf("\t%s: Failed to read name string length\n", loc);
+        if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+        if (verbose) fprintf(stderr,"\t%s: Failed to read name string length\n", loc);
         return err;
     }
     *name_len = nchars;
@@ -1021,8 +1021,8 @@ hdr_get_name(int          fd,
             err_addr = ERR_ADDR;
             err = val_fetch(fd, gbp);
             if (err != NC_NOERR) {
-                if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-                if (verbose) printf("\t%s - fetching name string\n", loc);
+                if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+                if (verbose) fprintf(stderr,"\t%s - fetching name string\n", loc);
                 free(*namep);
                 *namep = NULL;
                 return err;
@@ -1035,8 +1035,8 @@ hdr_get_name(int          fd,
         err_addr = ERR_ADDR;
         err = val_check_buffer(fd, gbp, padding);
         if (err != NC_NOERR) {
-            if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-            if (verbose) printf("\t%s - fetching name string padding\n", loc);
+            if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+            if (verbose) fprintf(stderr,"\t%s - fetching name string padding\n", loc);
             free(*namep);
             *namep = NULL;
             return err;
@@ -1044,13 +1044,13 @@ hdr_get_name(int          fd,
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {
             /* This is considered not a fatal error, we continue to validate */
-            if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-            if (verbose) printf("\t%s \"%s\": name padding is non-null byte\n", loc, *namep);
+            if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+            if (verbose) fprintf(stderr,"\t%s \"%s\": name padding is non-null byte\n", loc, *namep);
             DEBUG_ASSIGN_ERROR(err, NC_ENULLPAD)
             if (repair) {
                 val_repair(fd, err_addr, (size_t)padding, (void*)nada);
                 if (verbose)
-                    printf("\t%s \"%s\": name padding error has been **repaired**\n",loc,*namep);
+                    fprintf(stderr,"\t%s \"%s\": name padding error has been **repaired**\n",loc,*namep);
             }
         }
         gbp->pos = (void *)((char *)gbp->pos + padding);
@@ -1079,16 +1079,16 @@ val_get_NC_dim(int fd, bufferinfo *gbp, NC_dim **dimpp, NC_dimarray *ncap) {
     err_addr = ERR_ADDR;
     err = hdr_get_NON_NEG(fd, gbp, &dim_length);
     if (err != NC_NOERR) { /* frees dimp */
-        if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-        if (verbose) printf("\tDimension \"%s\": Failed to read dimension size\n",name);
+        if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+        if (verbose) fprintf(stderr,"\tDimension \"%s\": Failed to read dimension size\n",name);
         free(name);
         return err;
     }
 
     /* check if unlimited_id already set */
     if (ncap->unlimited_id != -1 && dim_length == 0) {
-        if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-        if (verbose) printf("\tDimension \"%s\": NC_UNLIMITED dimension already found (\"%s\")\n",name,ncap->value[ncap->unlimited_id]->name);
+        if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+        if (verbose) fprintf(stderr,"\tDimension \"%s\": NC_UNLIMITED dimension already found (\"%s\")\n",name,ncap->value[ncap->unlimited_id]->name);
         free(name);
         return NC_EUNLIMIT;
     }
@@ -1140,14 +1140,14 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap, long long numrec
     nelems_err_addr = ERR_ADDR;
     err = hdr_get_NON_NEG(fd, gbp, &tmp);
     if (err != NC_NOERR) {
-        if (verbose) printf("Error @ [0x%8.8zx]:\n", nelems_err_addr);
-        if (verbose) printf("\tFailed to read tag NC_DIMENSION\n");
+        if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", nelems_err_addr);
+        if (verbose) fprintf(stderr,"\tFailed to read tag NC_DIMENSION\n");
         return err;
     }
     if (tmp > NC_MAX_DIMS) {
         /* number of allowable defined dimensions NC_MAX_DIMS */
-        if (verbose) printf("Error @ [0x%8.8zx]:\n", nelems_err_addr);
-        if (verbose) printf("\tNumber of dimensions (%lld) defined in file exceeds NC_MAX_DIMS (%d)\n",tmp,NC_MAX_DIMS);
+        if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", nelems_err_addr);
+        if (verbose) fprintf(stderr,"\tNumber of dimensions (%lld) defined in file exceeds NC_MAX_DIMS (%d)\n",tmp,NC_MAX_DIMS);
         DEBUG_RETURN_ERROR(NC_EMAXDIMS)
     }
     ncap->ndefined = (int)tmp;
@@ -1165,15 +1165,15 @@ val_get_NC_dimarray(int fd, bufferinfo *gbp, NC_dimarray *ncap, long long numrec
         return NC_NOERR;
 #if 0
         if (tag != ABSENT) {
-            if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-            if (verbose) printf("\tInvalid NC component tag, while ABSENT is expected for ");
+            if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+            if (verbose) fprintf(stderr,"\tInvalid NC component tag, while ABSENT is expected for ");
             DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
 #endif
     } else {
         if (tag != NC_DIMENSION) {
-            if (verbose) printf("Error @ [0x%8.8zx]:\n", tag_err_addr);
-            if (verbose) printf("\tInvalid NC component tag (%d), expecting NC_DIMENSION (%d)\n",tag,NC_DIMENSION);
+            if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", tag_err_addr);
+            if (verbose) fprintf(stderr,"\tInvalid NC component tag (%d), expecting NC_DIMENSION (%d)\n",tag,NC_DIMENSION);
             DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
         if (trace) {
@@ -1241,13 +1241,13 @@ val_get_nc_type(int         fd,
     return NC_NOERR;
 
 read_err_exit:
-    if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-    if (verbose) printf("\t%s: Failed to read NC data type\n",loc);
+    if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+    if (verbose) fprintf(stderr,"\t%s: Failed to read NC data type\n",loc);
     return status;
 
 err_exit:
-    if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-    if (verbose) printf("\t%s: Unknown NC data type (%u)\n",loc, xtype);
+    if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+    if (verbose) fprintf(stderr,"\t%s: Unknown NC data type (%u)\n",loc, xtype);
     DEBUG_RETURN_ERROR(NC_EBADTYPE)
 }
 
@@ -1285,8 +1285,8 @@ val_get_NC_attrV(int         fd,
             err_addr = ERR_ADDR;
             status = val_fetch(fd, gbp);
             if (status != NC_NOERR) {
-                if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-                if (verbose) printf("\t%s: Failed to fetch next chunk into a buffer\n", loc);
+                if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+                if (verbose) fprintf(stderr,"\t%s: Failed to fetch next chunk into a buffer\n", loc);
                 return status;
             }
             bufremain = gbp->size;
@@ -1297,8 +1297,8 @@ val_get_NC_attrV(int         fd,
         memset(pad, 0, X_ALIGN-1);
         if (memcmp(gbp->pos, pad, padding) != 0) {
             /* This is considered not a fatal error, we continue to validate */
-            if (verbose) printf("Error @ [0x%8.8zx]:\n", ERR_ADDR);
-            if (verbose) printf("\t%s: value padding is non-null byte\n", loc);
+            if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", ERR_ADDR);
+            if (verbose) fprintf(stderr,"\t%s: value padding is non-null byte\n", loc);
             DEBUG_ASSIGN_ERROR(status, NC_ENULLPAD)
             if (repair) {
                 val_repair(fd, ERR_ADDR, (size_t)padding, (void*)nada);
@@ -1411,8 +1411,8 @@ val_get_NC_attr(int          fd,
     err_addr = ERR_ADDR;
     err = hdr_get_NON_NEG(fd, gbp, &nelems);
     if (err != NC_NOERR) {
-        if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-        if (verbose) printf("\t%s: Failed to read attribute length\n",xloc);
+        if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+        if (verbose) fprintf(stderr,"\t%s: Failed to read attribute length\n",xloc);
         if (name != NULL) free(name);
         return err;
     }
@@ -1474,14 +1474,14 @@ val_get_NC_attrarray(int           fd,
     nelems_err_addr = ERR_ADDR;
     err = hdr_get_NON_NEG(fd, gbp, &tmp);
     if (err != NC_NOERR) {
-        if (verbose) printf("Error @ [0x%8.8zx]:\n", nelems_err_addr);
-        if (verbose) printf("\tFailed to read tag NC_ATTRIBUTE\n");
+        if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", nelems_err_addr);
+        if (verbose) fprintf(stderr,"\tFailed to read tag NC_ATTRIBUTE\n");
         return err;
     }
     if (tmp > NC_MAX_ATTRS) {
         /* number of allowable defined attributes NC_MAX_ATTRS */
-        if (verbose) printf("Error @ [0x%8.8zx]:\n", nelems_err_addr);
-        if (verbose) printf("\t%s attributes: number of attributes (%lld) exceeds NC_MAX_ATTRS (%d)\n",loc,tmp,NC_MAX_ATTRS);
+        if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", nelems_err_addr);
+        if (verbose) fprintf(stderr,"\t%s attributes: number of attributes (%lld) exceeds NC_MAX_ATTRS (%d)\n",loc,tmp,NC_MAX_ATTRS);
         return NC_EMAXATTS;
     }
     ncap->ndefined = (int)tmp;
@@ -1506,16 +1506,16 @@ val_get_NC_attrarray(int           fd,
         return NC_NOERR;
 #if 0
         if (tag != ABSENT) {
-            if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-            if (verbose) printf("\tInvalid NC component tag, while ABSENT is expected for ");
+            if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+            if (verbose) fprintf(stderr,"\tInvalid NC component tag, while ABSENT is expected for ");
             DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
 #endif
     } else {
         sprintf(xloc, "%s attribute", loc);
         if (tag != NC_ATTRIBUTE) {
-            if (verbose) printf("Error @ [0x%8.8zx]:\n", tag_err_addr);
-            if (verbose) printf("\t%s: Invalid NC component tag (%d), expecting NC_ATTRIBUTE (%d)\n",xloc,tag,NC_ATTRIBUTE);
+            if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", tag_err_addr);
+            if (verbose) fprintf(stderr,"\t%s: Invalid NC component tag (%d), expecting NC_ATTRIBUTE (%d)\n",xloc,tag,NC_ATTRIBUTE);
             DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
         if (trace) {
@@ -1639,8 +1639,8 @@ val_get_NC_var(int          fd,
     err_addr = ERR_ADDR;
     err = hdr_get_NON_NEG(fd, gbp, &ndims64);
     if (err != NC_NOERR) {
-        if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-        if (verbose) printf("\t%s: Failed to read number of dimensions\n",xloc);
+        if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+        if (verbose) fprintf(stderr,"\t%s: Failed to read number of dimensions\n",xloc);
         if (name != NULL) free(name);
         return err;
     }
@@ -1648,8 +1648,8 @@ val_get_NC_var(int          fd,
 
     /* cannot be more than NC_MAX_VAR_DIMS */
     if (ndims64 > NC_MAX_VAR_DIMS) {
-        if (verbose) printf("Error:\n");
-        if (verbose) printf("\t%s: number of dimensions (%lld) larger than NC_MAX_VAR_DIMS (%d)\n",xloc,ndims64,NC_MAX_VAR_DIMS);
+        if (verbose) fprintf(stderr,"Error:\n");
+        if (verbose) fprintf(stderr,"\t%s: number of dimensions (%lld) larger than NC_MAX_VAR_DIMS (%d)\n",xloc,ndims64,NC_MAX_VAR_DIMS);
         if (name != NULL) free(name);
         DEBUG_RETURN_ERROR(NC_EMAXDIMS)
     }
@@ -1671,8 +1671,8 @@ val_get_NC_var(int          fd,
         err = val_check_buffer(fd, gbp, (gbp->version < 5 ? 4 : 8));
         if (err != NC_NOERR) {
             if (trace) printf("\n");
-            if (verbose) printf("Error @ [0x%8.8zx]:\n", ERR_ADDR);
-            if (verbose) printf("\t%s: Fail to read dimid[%d]\n",xloc,dim);
+            if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", ERR_ADDR);
+            if (verbose) fprintf(stderr,"\t%s: Fail to read dimid[%d]\n",xloc,dim);
             free_NC_var(varp);
             return err;
         }
@@ -1687,8 +1687,8 @@ val_get_NC_var(int          fd,
         /* dimid should be < f_ndims (num of dimensions defined in file) */
         if (dimid >= f_ndims) {
             if (trace) printf("\n");
-            if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-            if (verbose) printf("\t%s \"%s\": dimid[%d]=%d is larger than the number of dimensions defined in file (%d)\n",loc,name,dim,dimid,f_ndims);
+            if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+            if (verbose) fprintf(stderr,"\t%s \"%s\": dimid[%d]=%d is larger than the number of dimensions defined in file (%d)\n",loc,name,dim,dimid,f_ndims);
             free_NC_var(varp);
             DEBUG_RETURN_ERROR(NC_EBADDIM)
         }
@@ -1724,8 +1724,8 @@ val_get_NC_var(int          fd,
     err_addr = ERR_ADDR;
     err = hdr_get_NON_NEG(fd, gbp, &varp->len);
     if (err != NC_NOERR) {
-        if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-        if (verbose) printf("\t%s: Failed to read vsize\n",xloc);
+        if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+        if (verbose) fprintf(stderr,"\t%s: Failed to read vsize\n",xloc);
         free_NC_var(varp);
         return err;
     }
@@ -1733,8 +1733,8 @@ val_get_NC_var(int          fd,
 
     err = val_check_buffer(fd, gbp, (gbp->version == 1 ? 4 : 8));
     if (err != NC_NOERR) {
-        if (verbose) printf("Error @ [0x%8.8zx]:\n", ERR_ADDR);
-        if (verbose) printf("\t%s: Fail to read begin\n",xloc);
+        if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", ERR_ADDR);
+        if (verbose) fprintf(stderr,"\t%s: Fail to read begin\n",xloc);
         free_NC_var(varp);
         return err;
     }
@@ -1790,14 +1790,14 @@ val_get_NC_vararray(int          fd,
     nelems_err_addr = ERR_ADDR;
     err = hdr_get_NON_NEG(fd, gbp, &tmp);
     if (err != NC_NOERR) {
-        if (verbose) printf("Error @ [0x%8.8zx]:\n", nelems_err_addr);
-        if (verbose) printf("\tFailed to read tag NC_VARIABLE\n");
+        if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", nelems_err_addr);
+        if (verbose) fprintf(stderr,"\tFailed to read tag NC_VARIABLE\n");
         return err;
     }
     if (tmp > NC_MAX_VARS) {
         /* number of allowable defined variables NC_MAX_VARS */
-        if (verbose) printf("Error @ [0x%8.8zx]:\n", nelems_err_addr);
-        if (verbose) printf("\tNumber of variables (%lld) exceeds NC_MAX_VARS (%d)\n",tmp,NC_MAX_VARS);
+        if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", nelems_err_addr);
+        if (verbose) fprintf(stderr,"\tNumber of variables (%lld) exceeds NC_MAX_VARS (%d)\n",tmp,NC_MAX_VARS);
         DEBUG_RETURN_ERROR(NC_EMAXVARS);
     }
     ncap->ndefined = (int)tmp;
@@ -1813,15 +1813,15 @@ val_get_NC_vararray(int          fd,
         return NC_NOERR;
 #if 0
         if (tag != ABSENT) {
-            if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-            if (verbose) printf("\tInvalid NC component tag, while ABSENT is expected for ");
+            if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+            if (verbose) fprintf(stderr,"\tInvalid NC component tag, while ABSENT is expected for ");
             DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
 #endif
     } else {
         if (tag != NC_VARIABLE) {
-            if (verbose) printf("Error @ [0x%8.8zx]:\n", tag_err_addr);
-            if (verbose) printf("\tInvalid NC component tag (%d), expecting NC_VARIABLE (%d)\n",tag,NC_VARIABLE);
+            if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", tag_err_addr);
+            if (verbose) fprintf(stderr,"\tInvalid NC component tag (%d), expecting NC_VARIABLE (%d)\n",tag,NC_VARIABLE);
             DEBUG_RETURN_ERROR(NC_ENOTNC)
         }
         if (trace) printf("\ttag = NC_VARIABLE\n");
@@ -1918,10 +1918,10 @@ val_NC_check_vlens(NC *ncp)
                 if (ncp->format >= 5) { /* CDF-5 */
                     if (verbose) {
                         NC_var *varp = (*vpp);
-                        printf("Error:\n");
-                        printf("\tvar %s",varp->name);
+                        fprintf(stderr,"Error:\n");
+                        fprintf(stderr,"\tvar %s",varp->name);
                         DUMP_DIMS(varp)
-                        printf(": variable size greater than max (%lld) allowable by CDF-%d\n",vlen_max,ncp->format);
+                        fprintf(stderr,": variable size greater than max (%lld) allowable by CDF-%d\n",vlen_max,ncp->format);
                     }
                     DEBUG_RETURN_ERROR(NC_EVARSIZE)
                 }
@@ -1939,21 +1939,21 @@ val_NC_check_vlens(NC *ncp)
     if (large_fix_vars_count > 1) {  /* only one "too-large" variable allowed */
         if (verbose) {
             NC_var *varp;
-            printf("Error:\n");
-            printf("\tInput file contains %lld large fixed-size variables\n",large_fix_vars_count);
-            printf("\tCDF-%d format allows only one large fixed-size variable\n",ncp->format);
+            fprintf(stderr,"Error:\n");
+            fprintf(stderr,"\tInput file contains %lld large fixed-size variables\n",large_fix_vars_count);
+            fprintf(stderr,"\tCDF-%d format allows only one large fixed-size variable\n",ncp->format);
             varp = ncp->vars.value[first_large_fix_var];
-            printf("\tThe 1st large fixed-size variable is %s",varp->name);
+            fprintf(stderr,"\tThe 1st large fixed-size variable is %s",varp->name);
             DUMP_DIMS(varp)
-            printf("\n");
+            fprintf(stderr,"\n");
             varp = ncp->vars.value[second_large_fix_var];
-            printf("\tThe 2nd large fixed-size variable is %s\n",varp->name);
+            fprintf(stderr,"\tThe 2nd large fixed-size variable is %s\n",varp->name);
             DUMP_DIMS(varp)
-            printf("\n");
+            fprintf(stderr,"\n");
             if (ncp->format == 1)
-                printf("\tSee: %s\n", fmt_limit);
+                fprintf(stderr,"\tSee: %s\n", fmt_limit);
             else if (ncp->format == 2)
-                printf("\tSee: %s\n", off_limit);
+                fprintf(stderr,"\tSee: %s\n", off_limit);
         }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
@@ -1961,16 +1961,16 @@ val_NC_check_vlens(NC *ncp)
     /* The only "too-large" variable must be the last one defined */
     if (large_fix_vars_count == 1 && last == 0) {
         if (verbose) {
-            printf("Error:\n");
-            printf("\tCDF-%d format allows only one large fixed-size variable which must be defined last and there is no record variable\n",ncp->format);
+            fprintf(stderr,"Error:\n");
+            fprintf(stderr,"\tCDF-%d format allows only one large fixed-size variable which must be defined last and there is no record variable\n",ncp->format);
             NC_var *varp = ncp->vars.value[first_large_fix_var];
-            printf("\tThe large fixed-size variable is %s",varp->name);
+            fprintf(stderr,"\tThe large fixed-size variable is %s",varp->name);
             DUMP_DIMS(varp)
-            printf("\n");
+            fprintf(stderr,"\n");
             if (ncp->format == 1)
-                printf("\tSee: %s\n", fmt_limit);
+                fprintf(stderr,"\tSee: %s\n", fmt_limit);
             else if (ncp->format == 2)
-                printf("\tSee: %s\n", off_limit);
+                fprintf(stderr,"\tSee: %s\n", off_limit);
         }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
@@ -1981,13 +1981,13 @@ val_NC_check_vlens(NC *ncp)
      * allowed */
     if (large_fix_vars_count == 1) {
         if (verbose) {
-            printf("Error:\n");
-            printf("\tInput file contains 1 large fixed-size variables and %lld record variables\n", rec_vars_count);
-            printf("\tCDF-%d format allows only one large fixed-size variable which must be defined last and there is no record variable\n",ncp->format);
+            fprintf(stderr,"Error:\n");
+            fprintf(stderr,"\tInput file contains 1 large fixed-size variables and %lld record variables\n", rec_vars_count);
+            fprintf(stderr,"\tCDF-%d format allows only one large fixed-size variable which must be defined last and there is no record variable\n",ncp->format);
             if (ncp->format == 1)
-                printf("\tSee: %s\n", fmt_limit);
+                fprintf(stderr,"\tSee: %s\n", fmt_limit);
             else if (ncp->format == 2)
-                printf("\tSee: %s\n", off_limit);
+                fprintf(stderr,"\tSee: %s\n", off_limit);
         }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
@@ -2003,10 +2003,10 @@ val_NC_check_vlens(NC *ncp)
                 if (ncp->format >= 5) { /* CDF-5 */
                     if (verbose) {
                         NC_var *varp = (*vpp);
-                        printf("Error:\n");
-                        printf("\tvar %s",varp->name);
+                        fprintf(stderr,"Error:\n");
+                        fprintf(stderr,"\tvar %s",varp->name);
                         DUMP_DIMS(varp)
-                        printf(": variable size greater than max (%lld) allowable by CDF-%d\n",vlen_max,ncp->format);
+                        fprintf(stderr,": variable size greater than max (%lld) allowable by CDF-%d\n",vlen_max,ncp->format);
                     }
                     DEBUG_RETURN_ERROR(NC_EVARSIZE)
                 }
@@ -2025,21 +2025,21 @@ val_NC_check_vlens(NC *ncp)
     if (large_rec_vars_count > 1) { /* only one "too-large" variable allowed */
         if (verbose) {
             NC_var *varp;
-            printf("Error:\n");
-            printf("\tInput file contains %lld large record variables\n",large_rec_vars_count);
+            fprintf(stderr,"Error:\n");
+            fprintf(stderr,"\tInput file contains %lld large record variables\n",large_rec_vars_count);
             varp = ncp->vars.value[first_large_rec_var];
-            printf("\tThe 1st large record variable is %s",varp->name);
+            fprintf(stderr,"\tThe 1st large record variable is %s",varp->name);
             DUMP_DIMS(varp)
-            printf("\n");
+            fprintf(stderr,"\n");
             varp = ncp->vars.value[second_large_rec_var];
-            printf("\tThe 2nd large record variable is %s",varp->name);
+            fprintf(stderr,"\tThe 2nd large record variable is %s",varp->name);
             DUMP_DIMS(varp)
-            printf("\n");
-            printf("\tCDF-%d format allows only one large record variable\n",ncp->format);
+            fprintf(stderr,"\n");
+            fprintf(stderr,"\tCDF-%d format allows only one large record variable\n",ncp->format);
             if (ncp->format == 1)
-                printf("\tSee: %s\n", fmt_limit);
+                fprintf(stderr,"\tSee: %s\n", fmt_limit);
             else if (ncp->format == 2)
-                printf("\tSee: %s\n", off_limit);
+                fprintf(stderr,"\tSee: %s\n", off_limit);
         }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
@@ -2047,16 +2047,16 @@ val_NC_check_vlens(NC *ncp)
     /* and it has to be the last one */
     if (large_rec_vars_count == 1 && last == 0) {
         if (verbose) {
-            printf("Error:\n");
+            fprintf(stderr,"Error:\n");
             NC_var *varp = ncp->vars.value[first_large_rec_var];
-            printf("\tThe 1st large record variable that is not defined last is %s",varp->name);
+            fprintf(stderr,"\tThe 1st large record variable that is not defined last is %s",varp->name);
             DUMP_DIMS(varp)
-            printf("\n");
-            printf("\tCDF-%d format allows only one large record variable and it must be defined last\n",ncp->format);
+            fprintf(stderr,"\n");
+            fprintf(stderr,"\tCDF-%d format allows only one large record variable and it must be defined last\n",ncp->format);
             if (ncp->format == 1)
-                printf("\tSee: %s\n", fmt_limit);
+                fprintf(stderr,"\tSee: %s\n", fmt_limit);
             else if (ncp->format == 2)
-                printf("\tSee: %s\n", off_limit);
+                fprintf(stderr,"\tSee: %s\n", off_limit);
         }
         DEBUG_RETURN_ERROR(NC_EVARSIZE)
     }
@@ -2107,8 +2107,8 @@ val_NC_check_voff(NC *ncp)
         NC_var *varp = ncp->vars.value[i];
         if (varp->begin < ncp->begin_var) {
             if (verbose) {
-                printf("Error - variable begin offset:\n");
-                printf("\tvar \"%s\" begin offset (%lld) is less than file header extent (%lld)\n",
+                fprintf(stderr,"Error - variable begin offset:\n");
+                fprintf(stderr,"\tvar \"%s\" begin offset (%lld) is less than file header extent (%lld)\n",
                        varp->name, varp->begin, ncp->begin_var);
             }
             DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
@@ -2136,8 +2136,8 @@ val_NC_check_voff(NC *ncp)
             if (verbose) {
                 NC_var *var_cur = ncp->vars.value[var_off_len[i].ID];
                 NC_var *var_prv = ncp->vars.value[var_off_len[i-1].ID];
-                printf("Error - variable begin offset:\n");
-                printf("\tvar \"%s\" begin offset (%lld) overlaps var %s (begin=%lld, length=%lld)\n",
+                fprintf(stderr,"Error - variable begin offset:\n");
+                fprintf(stderr,"\tvar \"%s\" begin offset (%lld) overlaps var %s (begin=%lld, length=%lld)\n",
                        var_cur->name, var_cur->begin, var_prv->name, var_prv->begin, var_prv->len);
             }
             DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
@@ -2147,8 +2147,8 @@ val_NC_check_voff(NC *ncp)
     }
 
     if (ncp->begin_rec < max_var_end) {
-        if (verbose) printf("Error:\n");
-        if (verbose) printf("\tRecord variable section begin offset (%lld) is less than fixed-size variable section end offset (%lld)\n", ncp->begin_rec, max_var_end);
+        if (verbose) fprintf(stderr,"Error:\n");
+        if (verbose) fprintf(stderr,"\tRecord variable section begin offset (%lld) is less than fixed-size variable section end offset (%lld)\n", ncp->begin_rec, max_var_end);
         DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
     }
     free(var_off_len);
@@ -2182,8 +2182,8 @@ check_rec_var:
             if (verbose) {
                 NC_var *var_cur = ncp->vars.value[var_off_len[i].ID];
                 NC_var *var_prv = ncp->vars.value[var_off_len[i-1].ID];
-                printf("Error - variable begin offset:\n");
-                printf("\tvar \"%s\" begin offset (%lld) overlaps var %s (begin=%lld, length=%lld)\n",
+                fprintf(stderr,"Error - variable begin offset:\n");
+                fprintf(stderr,"\tvar \"%s\" begin offset (%lld) overlaps var %s (begin=%lld, length=%lld)\n",
                        var_cur->name, var_cur->begin, var_prv->name, var_prv->begin, var_prv->len);
             }
             DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
@@ -2203,11 +2203,11 @@ check_rec_var:
 
         if (varp->begin < prev_off) {
             if (verbose) {
-                printf("Error - variable begin offset orders:\n");
+                fprintf(stderr,"Error - variable begin offset orders:\n");
                 if (i == 0)
-                    printf("\tvar \"%s\" begin offset (%lld) is less than header extent (%lld)\n", varp->name, varp->begin, prev_off);
+                    fprintf(stderr,"\tvar \"%s\" begin offset (%lld) is less than header extent (%lld)\n", varp->name, varp->begin, prev_off);
                 else
-                    printf("\tvar \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n", varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
+                    fprintf(stderr,"\tvar \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n", varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
             }
             DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
         }
@@ -2216,8 +2216,8 @@ check_rec_var:
     }
 
     if (ncp->begin_rec < prev_off) {
-        if (verbose) printf("Error:\n");
-        if (verbose) printf("\tRecord variable section begin offset (%lld) is less than fixed-size variable section end offset (%lld)\n", ncp->begin_rec, prev_off);
+        if (verbose) fprintf(stderr,"Error:\n");
+        if (verbose) fprintf(stderr,"\tRecord variable section begin offset (%lld) is less than fixed-size variable section end offset (%lld)\n", ncp->begin_rec, prev_off);
         DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
     }
 
@@ -2233,11 +2233,11 @@ check_rec_var:
 
         if (varp->begin < prev_off) {
             if (verbose) {
-                printf("Error:\n");
+                fprintf(stderr,"Error:\n");
                 if (i == 0)
-                    printf("Variable \"%s\" begin offset (%lld) is less than record variable section begin offset (%lld)\n", varp->name, varp->begin, prev_off);
+                    fprintf(stderr,"Variable \"%s\" begin offset (%lld) is less than record variable section begin offset (%lld)\n", varp->name, varp->begin, prev_off);
                 else
-                    printf("Variable \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n", varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
+                    fprintf(stderr,"Variable \"%s\" begin offset (%lld) is less than previous variable \"%s\" end offset (%lld)\n", varp->name, varp->begin, ncp->vars.value[prev]->name, prev_off);
             }
             DEBUG_ASSIGN_ERROR(status, NC_ENOTNC)
         }
@@ -2280,8 +2280,8 @@ val_get_NC(int fd, NC *ncp)
     getbuf.pos = (char*)getbuf.pos + 4;
 
     if (memcmp(magic, ncmagic, 3) != 0) {
-        if (verbose) printf("Error: Unknown file signature\n");
-        if (verbose) printf("\tExpecting \"CDF1\", \"CDF2\", or \"CDF5\", but got \"%4s\"\n",magic);
+        if (verbose) fprintf(stderr,"Error: Unknown file signature\n");
+        if (verbose) fprintf(stderr,"\tExpecting \"CDF1\", \"CDF2\", or \"CDF5\", but got \"%4s\"\n",magic);
         status = NC_ENOTNC;
         goto fn_exit;
     }
@@ -2297,8 +2297,8 @@ val_get_NC(int fd, NC *ncp)
         getbuf.version = 5;
         ncp->format = 5;
     } else {
-        if (verbose) printf("Error: Unknown file signature\n");
-        if (verbose) printf("\tExpecting \"CDF1\", \"CDF2\", or \"CDF5\", but got \"%4s\"\n",magic);
+        if (verbose) fprintf(stderr,"Error: Unknown file signature\n");
+        if (verbose) fprintf(stderr,"\tExpecting \"CDF1\", \"CDF2\", or \"CDF5\", but got \"%4s\"\n",magic);
         status = NC_ENOTNC;
         goto fn_exit;
     }
@@ -2310,8 +2310,8 @@ val_get_NC(int fd, NC *ncp)
     err_addr = 4;
     status = val_check_buffer(fd, &getbuf, (getbuf.version < 5) ? 4 : 8);
     if (status != NC_NOERR) {
-        if (verbose) printf("Error @ [0x%8.8zx]:\n", err_addr);
-        if (verbose) printf("\tFailed to read the number of records\n");
+        if (verbose) fprintf(stderr,"Error @ [0x%8.8zx]:\n", err_addr);
+        if (verbose) fprintf(stderr,"\tFailed to read the number of records\n");
         status = NC_ENOTNC;
         goto fn_exit;
     }
@@ -2400,14 +2400,14 @@ val_get_NC(int fd, NC *ncp)
 
         if (-1 == lseek(fd, ncp->xsz, SEEK_SET)) {
             if (verbose)
-                printf("Error at line %d: lseek %s\n",__LINE__,strerror(errno));
+                fprintf(stderr,"Error at line %d: lseek %s\n",__LINE__,strerror(errno));
             free(buf);
             goto fn_exit;
         }
         readLen = read(fd, buf, gap);
         if (readLen == -1) {
             if (verbose)
-                printf("Error at line %d: read %s\n",__LINE__,strerror(errno));
+                fprintf(stderr,"Error at line %d: read %s\n",__LINE__,strerror(errno));
             free(buf);
             status = -1;
             goto fn_exit;
@@ -2496,7 +2496,7 @@ check_signature(char *filename)
         exit(1);
     }
     if (rlen != 8) { /* file size less than 8 bytes */
-        printf("Error at line %d: invalid file %s\n",__LINE__,filename);
+        fprintf(stderr,"Error at line %d: invalid file %s\n",__LINE__,filename);
         close(fd); /* ignore error */
         exit(1);
     }
@@ -2528,9 +2528,9 @@ check_signature(char *filename)
 
     if (rlen == 8) { /* HDF5 signature found */
         if (verbose) {
-            printf("Error: Input file is in HDF format\n");
-            printf("       'ncvalidator' only validates NetCDF classic files\n");
-            printf("       Consider 'h5check', the HDF5 format checker\n");
+            fprintf(stderr,"Error: Input file is in HDF format\n");
+            fprintf(stderr,"       'ncvalidator' only validates NetCDF classic files\n");
+            fprintf(stderr,"       Consider 'h5check', the HDF5 format checker\n");
         }
         return NC_FORMAT_NETCDF4;
     }
@@ -2595,7 +2595,7 @@ int main(int argc, char **argv)
     if (fmt != NC_FORMAT_CDF5 && fmt != NC_FORMAT_CDF2 &&
         fmt != NC_FORMAT_CLASSIC) {
         if (fmt == NC_FORMAT_UNKNOWN && verbose)
-            printf("File \"%s\" format is unknown\n",filename);
+            fprintf(stderr,"File \"%s\" format is unknown\n",filename);
         return EXIT_FAILURE;
     }
 
@@ -2613,7 +2613,7 @@ int main(int argc, char **argv)
     ncp = (NC*) calloc(1, sizeof(NC));
     if (ncp == NULL) {
         status = NC_ENOMEM;
-        if (verbose) printf("Error at line %d when calling calloc()\n",__LINE__);
+        if (verbose) fprintf(stderr,"Error at line %d when calling calloc()\n",__LINE__);
         goto prog_exit;
     }
 
@@ -2627,7 +2627,7 @@ int main(int argc, char **argv)
 
     /* check file size */
     if (-1 == fstat(fd, &ncfilestat)) {
-        if (verbose) printf("Error at line %d fstat (%s)\n",__LINE__,strerror(errno));
+        if (verbose) fprintf(stderr,"Error at line %d fstat (%s)\n",__LINE__,strerror(errno));
         status = NC_EFILE;
         goto prog_exit;
     }
@@ -2636,8 +2636,8 @@ int main(int argc, char **argv)
         expect_fsize = ncp->begin_rec + ncp->recsize * ncp->numrecs;
         if (expect_fsize < ncfilestat.st_size) {
             if (verbose) {
-                printf("Warning: file size (%lld) is larger than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
-                printf("\tbegin_rec=%lld recsize=%lld numrecs=%lld ncfilestat.st_size=%lld\n",ncp->begin_rec, ncp->recsize, ncp->numrecs, (long long) ncfilestat.st_size);
+                fprintf(stderr,"Warning: file size (%lld) is larger than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
+                fprintf(stderr,"\tbegin_rec=%lld recsize=%lld numrecs=%lld ncfilestat.st_size=%lld\n",ncp->begin_rec, ncp->recsize, ncp->numrecs, (long long) ncfilestat.st_size);
             }
         }
         else if (expect_fsize > ncfilestat.st_size) {
@@ -2645,8 +2645,8 @@ int main(int argc, char **argv)
              * less than expected, then this is due to partial data written
              * to the variable while the file is in no fill mode */
             if (verbose) {
-                printf("Warning:\n");
-                printf("\tfile size (%lld) is less than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
+                fprintf(stderr,"Warning:\n");
+                fprintf(stderr,"\tfile size (%lld) is less than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
             }
         }
     }
@@ -2672,8 +2672,8 @@ int main(int argc, char **argv)
             /* if file header are valid and the only error is the file size
              * less than expected, then this is due to partial data written
              * to the variable while the file is in no fill mode */
-            if (verbose) printf("Warning:\n");
-            if (verbose) printf("\tfile size (%lld) is less than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
+            if (verbose) fprintf(stderr,"Warning:\n");
+            if (verbose) fprintf(stderr,"\tfile size (%lld) is less than expected (%lld)!\n",(long long)ncfilestat.st_size, expect_fsize);
         }
     }
 
@@ -2691,10 +2691,10 @@ prog_exit:
         if (status == NC_NOERR)
             printf("File \"%s\" is a valid NetCDF classic CDF-%d file.\n",filename, fmt);
         else {
-            printf("File \"%s\" fails to conform with classic CDF-%d file format specifications\n",filename, fmt);
+            fprintf(stderr,"File \"%s\" fails to conform with classic CDF-%d file format specifications\n",filename, fmt);
             if (repair) {
-                printf("and it has been repaired in place to remove the errors.\n");
-                printf("Please run \"%s %s\" to validate again.\n",argv[0],filename);
+                fprintf(stderr,"and it has been repaired in place to remove the errors.\n");
+                fprintf(stderr,"Please run \"%s %s\" to validate again.\n",argv[0],filename);
             }
         }
     }

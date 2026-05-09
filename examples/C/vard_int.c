@@ -54,7 +54,7 @@
 
 static int verbose;
 
-#define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
+#define ERR {if(err!=NC_NOERR){fprintf(stderr,"Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
 
 static void
 usage(char *argv0)
@@ -93,7 +93,7 @@ pnetcdf_check_mem_usage(MPI_Comm comm)
                    sum_size);
     }
     else if (err != NC_ENOTENABLED) {
-        printf("Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
+        fprintf(stderr,"Error at %s:%d: %s\n", __FILE__,__LINE__,ncmpi_strerror(err));
         nerrs++;
     }
     return nerrs;
@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
     err = ncmpi_inq_unlimdim(ncid, &dimids[0]); ERR
     err = ncmpi_inq_dimlen(ncid, dimids[0], &len); ERR
     if (len != 2)
-        printf("Error at line %d in %s: number of records should be 2 but got %lld\n",
+        fprintf(stderr,"Error at line %d in %s: number of records should be 2 but got %lld\n",
         __LINE__,__FILE__,len);
 
     /* write the fixed-size variable */

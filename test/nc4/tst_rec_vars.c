@@ -79,28 +79,28 @@ int main(int argc, char** argv) {
 
     err = ncmpi_inq_dimlen(ncid, dimid[0], start); CHECK_ERR
     if (start[0] != (MPI_Offset)nprocs){
-        printf("Error at line %d of %s: expect NC_UNLIMITED dimension X of len "OFFFMT" but got "OFFFMT"\n",
+        fprintf(stderr,"Error at line %d of %s: expect NC_UNLIMITED dimension X of len "OFFFMT" but got "OFFFMT"\n",
                 __LINE__,__FILE__,(MPI_Offset)nprocs,start[0]);
         nerrs++;
     }
 
     err = ncmpi_inq_num_rec_vars(ncid, &v1); CHECK_ERR
     if (v1 != 2){
-        printf("Error at line %d of %s: expect num_rec_vars %d but got %d\n",
+        fprintf(stderr,"Error at line %d of %s: expect num_rec_vars %d but got %d\n",
                 __LINE__,__FILE__,2,v1);
         nerrs++;
     }
     
     err = ncmpi_inq_num_fix_vars(ncid, &v1); CHECK_ERR
     if (v1 != 0){
-        printf("Error at line %d of %s: expect num_fix_vars %d but got %d\n",
+        fprintf(stderr,"Error at line %d of %s: expect num_fix_vars %d but got %d\n",
                 __LINE__,__FILE__,0,v1);
         nerrs++;
     }       
 
     err = ncmpi_inq_recsize(ncid, start);  CHECK_ERR
     if (start[0] != 8){
-        printf("Error at line %d of %s: expect recsize "OFFFMT" but got "OFFFMT"\n",
+        fprintf(stderr,"Error at line %d of %s: expect recsize "OFFFMT" but got "OFFFMT"\n",
                 __LINE__,__FILE__, (MPI_Offset)8, start[0]);
         nerrs++;
     }  
@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
     buf[0] = -1;
     err = ncmpi_get_vara_int_all(ncid, varid[0], start, count, buf); CHECK_ERR
     if (buf[0] != rank + 1){
-        printf("Error at line %d of %s: expect buf = %d but got %d\n",
+        fprintf(stderr,"Error at line %d of %s: expect buf = %d but got %d\n",
                 __LINE__,__FILE__, rank + 1, buf[0]);
         nerrs++;
     }  
@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
     start[0] = nprocs - rank - 1;
     err = ncmpi_get_vara_int_all(ncid, varid[1], start, count, buf); CHECK_ERR
     if (buf[0] != rank + 1){
-        printf("Error at line %d of %s: expect buf = %d but got %d\n",
+        fprintf(stderr,"Error at line %d of %s: expect buf = %d but got %d\n",
                 __LINE__,__FILE__, rank + 1, buf[0]);
         nerrs++;
     }  

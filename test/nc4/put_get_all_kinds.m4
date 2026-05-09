@@ -118,7 +118,7 @@ define(`TEST_CDF_FORMAT',dnl
     sprintf(fname, "%s.cdf%d",filename, $1);
     err = ncmpi_create(MPI_COMM_WORLD, fname, cmode, info, &ncid);
     if (err != NC_NOERR) {
-        printf("Error at line %d in %s: ncmpi_create() file %s (%s)\n",
+        fprintf(stderr,"Error at line %d in %s: ncmpi_create() file %s (%s)\n",
         __LINE__,__FILE__,fname,ncmpi_strerror(err));
         MPI_Abort(MPI_COMM_WORLD, -1);
         exit(1);

@@ -33,7 +33,7 @@
 
 #define ATTR_EXP_ERR(expect_err,name) { \
     if (err != expect_err) { \
-        printf("Error at line %d in %s: attr=%s err=%s\n", \
+        fprintf(stderr,"Error at line %d in %s: attr=%s err=%s\n", \
                __LINE__,__FILE__,name,ncmpi_strerrno(err)); \
         nerrs++; \
     }  \
@@ -125,7 +125,7 @@ int test_io(const char *out_path,
             int fd = open(fname, O_RDONLY, 0666);
 
             if (fd == -1) {
-                printf("Error: file open %s (%s)\n",fname,strerror(errno));
+                fprintf(stderr,"Error: file open %s (%s)\n",fname,strerror(errno));
                 return 1;
             }
 
