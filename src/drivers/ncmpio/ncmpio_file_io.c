@@ -237,22 +237,37 @@ ncmpio_file_read(NC         *ncp,
 {
     char *xbuf;
     int i, status=NC_NOERR, err=NC_NOERR;
-    MPI_Offset rlen=0, off_zero=0, f_amnt, b_amnt;
+    MPI_Offset rlen=0, off_zero=0, b_amnt;
     PNCIO_View orig_buf_view;
 
     /* If zero-sized request and independent read, this rank can return now. */
     if (buf_view.count == 0 && coll_indep == NC_REQ_INDEP)
         return NC_NOERR;
 
-    /* Calculate file_view amount in bytes, may be > NC_MAX_INT */
-    for (f_amnt=0, i=0; i<file_view.count; i++)
-        f_amnt += file_view.len[i];
+#if PNETCDF_DEBUG_MODE == 1
+    assert(file_view.count >= 0);
+    if (file_view.count > 0) {
+        assert(file_view.off != NULL);
+        assert(file_view.len != NULL);
+    }
+    assert(buf_view.count >= 0);
+    if (buf_view.count > 0) {
+        assert(buf_view.off != NULL);
+        assert(buf_view.len != NULL);
+    }
+#endif
 
     /* Calculate buf_view amount in bytes, may be > NC_MAX_INT */
     for (b_amnt=0, i=0; i<buf_view.count; i++)
         b_amnt += buf_view.len[i];
 
 #if PNETCDF_DEBUG_MODE == 1
+    /* Calculate file_view amount in bytes, may be > NC_MAX_INT */
+    MPI_Offset f_amnt;
+
+    for (f_amnt=0, i=0; i<file_view.count; i++)
+        f_amnt += file_view.len[i];
+
     assert(f_amnt == b_amnt);
 #endif
 
@@ -476,21 +491,35 @@ ncmpio_file_write(NC         *ncp,
 {
     char *xbuf;
     int i, status=NC_NOERR, err=NC_NOERR;
-    MPI_Offset wlen=0, off_zero=0, f_amnt, b_amnt;
+    MPI_Offset wlen=0, off_zero=0, b_amnt;
 
     /* If zero-sized request and independent write, this rank can return now. */
     if (buf_view.count == 0 && coll_indep == NC_REQ_INDEP)
         return NC_NOERR;
 
-    /* Calculate file_view amount in bytes, may be > NC_MAX_INT */
-    for (f_amnt=0, i=0; i<file_view.count; i++)
-        f_amnt += file_view.len[i];
+#if PNETCDF_DEBUG_MODE == 1
+    assert(file_view.count >= 0);
+    if (file_view.count > 0) {
+        assert(file_view.off != NULL);
+        assert(file_view.len != NULL);
+    }
+    assert(buf_view.count >= 0);
+    if (buf_view.count > 0) {
+        assert(buf_view.off != NULL);
+        assert(buf_view.len != NULL);
+    }
+#endif
 
     /* Calculate buf_view amount in bytes, may be > NC_MAX_INT */
     for (b_amnt=0, i=0; i<buf_view.count; i++)
         b_amnt += buf_view.len[i];
 
 #if PNETCDF_DEBUG_MODE == 1
+    MPI_Offset f_amnt;
+    /* Calculate file_view amount in bytes, may be > NC_MAX_INT */
+    for (f_amnt=0, i=0; i<file_view.count; i++)
+        f_amnt += file_view.len[i];
+
     assert(f_amnt == b_amnt);
 #endif
 
