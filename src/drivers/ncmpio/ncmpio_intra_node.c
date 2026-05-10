@@ -1038,27 +1038,20 @@ int ina_put(NC         *ncp,
                 mpi_name = "MPI_Send";
             }
             else { /* buf_view.count == 1 */
+                if (buf_view.size > INT_MAX) {
 #ifdef HAVE_MPI_LARGE_COUNT
-                TRACE_COMM(MPI_Send_c)(buf, buf_view.size, MPI_BYTE, 0, 0,
-                                       intra_comm);
-                mpi_name = "MPI_Send_c";
+                    TRACE_COMM(MPI_Send_c)(buf, buf_view.size, MPI_BYTE, 0, 0,
+                                           intra_comm);
+                    mpi_name = "MPI_Send_c";
 #else
-                int num;
-                if (buf_view.size <= INT_MAX)
-                    num = (int)buf_view.size;
-                else {
-                    num = 1;
-                    err = ncmpio_type_contiguous(buf_view.size, &sendType);
-                    if (status == NC_NOERR)
-                        status = err;
-                }
-
-                /* When err != NC_NOERR, sendType is set to MPI_DATATYPE_NULL
-                 * which will trigger an error when calling MPI_Send().
-                 */
-                TRACE_COMM(MPI_Send)(buf, num, sendType, 0, 0, intra_comm);
-                mpi_name = "MPI_Send";
+                    if (status == NC_NOERR) status = NC_EINTOVERFLOW;
 #endif
+                }
+                else {
+                    TRACE_COMM(MPI_Send)(buf, (int)buf_view.size, MPI_BYTE,
+                                         0, 0, intra_comm);
+                    mpi_name = "MPI_Send";
+                }
             }
 
             if (mpireturn != MPI_SUCCESS && status == NC_NOERR)
@@ -1396,33 +1389,21 @@ int ina_put(NC         *ncp,
     for (i=1; i<nprocs; i++) {
         if (meta[i*3 + 1] == 0) continue;
 
+        if (meta[i*3 + 1] > INT_MAX) {
 #ifdef HAVE_MPI_LARGE_COUNT
-        TRACE_COMM(MPI_Irecv_c)(ptr, meta[i*3 + 1], MPI_BYTE, i, 0,
-                                intra_comm, &req[nreqs++]);
-        mpi_name = "MPI_Irecv_c";
+            TRACE_COMM(MPI_Irecv_c)(ptr, meta[i*3 + 1], MPI_BYTE, i, 0,
+                                    intra_comm, &req[nreqs++]);
+            mpi_name = "MPI_Irecv_c";
 #else
-        int num;
-        MPI_Datatype recvType=MPI_BYTE;
-
-        if (meta[i*3 + 1] <= INT_MAX)
-            num = (int)meta[i*3 + 1];
+            if (status == NC_NOERR) status = NC_EINTOVERFLOW;
+#endif
+        }
         else {
-            num = 1;
-            err = ncmpio_type_contiguous(meta[i*3 + 1], &recvType);
-            if (status == NC_NOERR)
-                status = err;
+            TRACE_COMM(MPI_Irecv)(ptr, (int)meta[i*3 + 1], MPI_BYTE, i, 0,
+                                  intra_comm, &req[nreqs++]);
+            mpi_name = "MPI_Irecv";
         }
 
-        /* When err != NC_NOERR, recvType is set to MPI_DATATYPE_NULL
-         * which will trigger an error when calling MPI_Recv().
-         */
-        TRACE_COMM(MPI_Irecv)(ptr, num, recvType, i, 0, intra_comm,
-                              &req[nreqs++]);
-        mpi_name = "MPI_Irecv";
-
-        if (recvType != MPI_BYTE && recvType != MPI_DATATYPE_NULL)
-            MPI_Type_free(&recvType);
-#endif
         if (mpireturn != MPI_SUCCESS && status == NC_NOERR)
             status = ncmpii_error_mpi2nc(mpireturn, mpi_name);
 
@@ -1601,6 +1582,11 @@ do_write:
 
     endT = MPI_Wtime();
     pnc_ina_put[5] += endT - startT; /* write */
+
+    if (rank > 0) { /* set timers to zeros for non-INA aggregators */
+        for (i=0; i<NTIMERS; i++)
+            pnc_ina_put[i] = 0;
+    }
 #endif
 
     return status;
@@ -1757,27 +1743,20 @@ int ina_get(NC         *ncp,
                 mpi_name = "MPI_Recv";
             }
             else { /* buf_view.count == 1 */
+                if (buf_view.size > INT_MAX) {
 #ifdef HAVE_MPI_LARGE_COUNT
-                TRACE_COMM(MPI_Recv_c)(buf, buf_view.size, MPI_BYTE, 0, 0,
-                                       intra_comm, &st);
-                mpi_name = "MPI_Recv_c";
+                    TRACE_COMM(MPI_Recv_c)(buf, buf_view.size, MPI_BYTE, 0, 0,
+                                           intra_comm, &st);
+                    mpi_name = "MPI_Recv_c";
 #else
-                int num;
-                if (buf_view.size <= INT_MAX)
-                    num = (int)buf_view.size;
-                else {
-                    num = 1;
-                    err = ncmpio_type_contiguous(buf_view.size, &recvType);
-                    if (status == NC_NOERR)
-                        status = err;
-                }
-
-                /* When err != NC_NOERR, recvType is set to MPI_DATATYPE_NULL
-                 * which will trigger an error when calling MPI_Recv().
-                 */
-                TRACE_COMM(MPI_Recv)(buf, num, recvType, 0, 0, intra_comm, &st);
-                mpi_name = "MPI_Recv";
+                    if (status == NC_NOERR) status = NC_EINTOVERFLOW;
 #endif
+                }
+                else {
+                    TRACE_COMM(MPI_Recv)(buf, (int)buf_view.size, MPI_BYTE,
+                                         0, 0, intra_comm, &st);
+                    mpi_name = "MPI_Recv";
+                }
             }
 
             if (mpireturn != MPI_SUCCESS && status == NC_NOERR)
@@ -2342,6 +2321,11 @@ fn_exit:
 
     endT = MPI_Wtime();
     pnc_ina_get[4] += endT - startT;
+
+    if (rank > 0) { /* set timers to zeros for non-INA aggregators */
+        for (i=0; i<NTIMERS; i++)
+            pnc_ina_put[i] = 0;
+    }
 #endif
 
     return status;
