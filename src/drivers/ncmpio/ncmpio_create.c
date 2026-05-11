@@ -341,7 +341,7 @@ ncmpio_create(MPI_Comm         comm,
                 }
 #if PNETCDF_DRIVER_GIO == 1
                 else if (ncp->driver == PNC_DRIVER_GIO)
-                    err = GIO_delete(filename);
+                    err = GIO_delete(path);
 #endif
                 else
                     err = NC_EDRIVER;
@@ -414,8 +414,8 @@ ncmpio_create(MPI_Comm         comm,
 #if PNETCDF_DRIVER_GIO == 1
                 else if (ncp->driver == PNC_DRIVER_GIO) {
                     GIO_File gio_fh;
-                    err = GIO_open(MPI_COMM_SELF, filename, O_RDWR,
-                                   MPI_INFO_NULL, &gio_fh);
+                    err = GIO_open(MPI_COMM_SELF, path, O_RDWR, MPI_INFO_NULL,
+                                   &gio_fh);
                     if (err == NC_NOERR)
                         GIO_set_size(gio_fh, 0); /* may be expensive */
                     else
@@ -690,7 +690,7 @@ ncmpio_create(MPI_Comm         comm,
          * symbolic link, For a symbolic link file, we cannot add O_CREAT.
          */
         int amode = (mpi_amode & MPI_MODE_CREATE) ? O_CREAT|O_RDWR : O_RDWR;
-        err = GIO_open(comm, filename, amode, user_info, &ncp->gio_fh);
+        err = GIO_open(comm, path, amode, user_info, &ncp->gio_fh);
         if (err != GIO_NOERR) {
             err = ncmpii_error_gio2nc(err, "GIO_open");
             DEBUG_FOPEN_ERROR(err);
