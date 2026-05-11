@@ -320,8 +320,8 @@ flatten_subarray(int               ndim,       /* number of dimensions */
                  MPI_Offset       *lengths)    /* OUT: array of lengths */
 {
     int i, j;
-    MPI_Offset length, nstride, array_len, off, subarray_len;
     size_t idx=0, idx0;
+    MPI_Offset length, nstride, array_len, off, subarray_len;
 
     *npairs = 0;
     if (ndim < 0) return NC_NOERR;
@@ -391,7 +391,7 @@ flatten_subarray(int               ndim,       /* number of dimensions */
         subarray_len *= count[ndim];
     }
 
-    /* offsets[] and lengths[] may be coalescable, but this will be delayed
+    /* offsets[] and lengths[] may be coalesceable, but this will be delayed
      * until this subroutine callers, flatten_req() and flatten_nreqs(), where
      * both fix-sized and record variables have been flattened.
      */
@@ -413,8 +413,7 @@ flatten_req(const NC         *ncp,
             PNCIO_View       *file_view) /* OUT: flattened file view */
 {
     int i, j, err=NC_NOERR, ndims;
-    MPI_Offset num, idx, var_begin, prev_end_off;
-    MPI_Offset *shape, count0, *ones=NULL;
+    MPI_Offset num, idx, var_begin, prev_end_off, *shape, count0, *ones=NULL;
 
     file_view->count = 0;   /* number of offset-length pairs */
     file_view->off = NULL;  /* array of offsets */
@@ -707,7 +706,7 @@ flat_buf_type(const NC      *ncp,
               int            reqMode,  /* IN: NC_REQ_RD or NC_REQ_WR */
               int            num_reqs, /* IN: number of requests */
               const NC_req  *reqs,     /* IN: [num_reqs] requests */
-              PNCIO_View    *buf_view, /* OUT: flattened buftype */
+              PNCIO_View    *buf_view, /* OUT: flattened buffer view */
               void         **buf)      /* OUT: pointer to I/O buffer */
 {
     int i, j, err=NC_NOERR;
@@ -719,8 +718,7 @@ flat_buf_type(const NC      *ncp,
     buf_view->off = NULL;
     buf_view->len = NULL;
 
-    if (num_reqs == 0)
-        return NC_NOERR;
+    if (num_reqs == 0) return NC_NOERR;
 
     buf_view->off = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * num_reqs);
     if (buf_view->off == NULL) return NC_ENOMEM;
@@ -943,7 +941,7 @@ int ina_put(NC         *ncp,
             PNCIO_View  buf_view,
             void       *buf)       /* user write buffer */
 {
-    char *recv_buf=NULL, *wr_buf = NULL, *mpi_name;
+    char *recv_buf=NULL, *wr_buf = NULL;
     int i, j, err, mpireturn, status=NC_NOERR, rank, nprocs, coalesceable=0;
     MPI_Offset *meta=NULL, wr_amnt=0, *bufAddr=NULL;
     MPI_Offset saved_put_fview_count, *saved_put_fview_len;
@@ -1035,14 +1033,16 @@ int ina_put(NC         *ncp,
                  * which will trigger an error when calling MPI_Send().
                  */
                 TRACE_COMM(MPI_Send)(buf, 1, sendType, 0, 0, intra_comm);
-                mpi_name = "MPI_Send";
+                if (mpireturn != MPI_SUCCESS && status == NC_NOERR)
+                    status = ncmpii_error_mpi2nc(mpireturn, "MPI_Send");
             }
             else { /* buf_view.count == 1 */
                 if (buf_view.size > INT_MAX) {
 #ifdef HAVE_MPI_LARGE_COUNT
                     TRACE_COMM(MPI_Send_c)(buf, buf_view.size, MPI_BYTE, 0, 0,
                                            intra_comm);
-                    mpi_name = "MPI_Send_c";
+                    if (mpireturn != MPI_SUCCESS && status == NC_NOERR)
+                        status = ncmpii_error_mpi2nc(mpireturn, "MPI_Send_c");
 #else
                     if (status == NC_NOERR) status = NC_EINTOVERFLOW;
 #endif
@@ -1050,12 +1050,10 @@ int ina_put(NC         *ncp,
                 else {
                     TRACE_COMM(MPI_Send)(buf, (int)buf_view.size, MPI_BYTE,
                                          0, 0, intra_comm);
-                    mpi_name = "MPI_Send";
+                    if (mpireturn != MPI_SUCCESS && status == NC_NOERR)
+                        status = ncmpii_error_mpi2nc(mpireturn, "MPI_Send");
                 }
             }
-
-            if (mpireturn != MPI_SUCCESS && status == NC_NOERR)
-                status = ncmpii_error_mpi2nc(mpireturn, mpi_name);
 
             if (sendType != MPI_BYTE && sendType != MPI_DATATYPE_NULL)
                 MPI_Type_free(&sendType);
@@ -1393,7 +1391,8 @@ int ina_put(NC         *ncp,
 #ifdef HAVE_MPI_LARGE_COUNT
             TRACE_COMM(MPI_Irecv_c)(ptr, meta[i*3 + 1], MPI_BYTE, i, 0,
                                     intra_comm, &req[nreqs++]);
-            mpi_name = "MPI_Irecv_c";
+            if (mpireturn != MPI_SUCCESS && status == NC_NOERR)
+                status = ncmpii_error_mpi2nc(mpireturn, "MPI_Irecv_c");
 #else
             if (status == NC_NOERR) status = NC_EINTOVERFLOW;
 #endif
@@ -1401,11 +1400,9 @@ int ina_put(NC         *ncp,
         else {
             TRACE_COMM(MPI_Irecv)(ptr, (int)meta[i*3 + 1], MPI_BYTE, i, 0,
                                   intra_comm, &req[nreqs++]);
-            mpi_name = "MPI_Irecv";
+            if (mpireturn != MPI_SUCCESS && status == NC_NOERR)
+                status = ncmpii_error_mpi2nc(mpireturn, "MPI_Irecv");
         }
-
-        if (mpireturn != MPI_SUCCESS && status == NC_NOERR)
-            status = ncmpii_error_mpi2nc(mpireturn, mpi_name);
 
         ptr += meta[i*3 + 1];
     }
@@ -1722,7 +1719,6 @@ int ina_get(NC         *ncp,
      */
     if (rank > 0) { /* not an INA aggregator */
         if (buf_view.count > 0) {
-            char *mpi_name;
             MPI_Status st;
             MPI_Datatype recvType=MPI_BYTE;
 
@@ -1740,14 +1736,16 @@ int ina_get(NC         *ncp,
                  * which will trigger an error when calling MPI_Send().
                  */
                 TRACE_COMM(MPI_Recv)(buf, 1, recvType, 0, 0, intra_comm, &st);
-                mpi_name = "MPI_Recv";
+                if (mpireturn != MPI_SUCCESS && status == NC_NOERR)
+                    status = ncmpii_error_mpi2nc(mpireturn, "MPI_Recv");
             }
             else { /* buf_view.count == 1 */
                 if (buf_view.size > INT_MAX) {
 #ifdef HAVE_MPI_LARGE_COUNT
                     TRACE_COMM(MPI_Recv_c)(buf, buf_view.size, MPI_BYTE, 0, 0,
                                            intra_comm, &st);
-                    mpi_name = "MPI_Recv_c";
+                    if (mpireturn != MPI_SUCCESS && status == NC_NOERR)
+                        status = ncmpii_error_mpi2nc(mpireturn, "MPI_Recv_c");
 #else
                     if (status == NC_NOERR) status = NC_EINTOVERFLOW;
 #endif
@@ -1755,12 +1753,10 @@ int ina_get(NC         *ncp,
                 else {
                     TRACE_COMM(MPI_Recv)(buf, (int)buf_view.size, MPI_BYTE,
                                          0, 0, intra_comm, &st);
-                    mpi_name = "MPI_Recv";
+                    if (mpireturn != MPI_SUCCESS && status == NC_NOERR)
+                        status = ncmpii_error_mpi2nc(mpireturn, "MPI_Recv");
                 }
             }
-
-            if (mpireturn != MPI_SUCCESS && status == NC_NOERR)
-                status = ncmpii_error_mpi2nc(mpireturn, mpi_name);
 
             if (recvType != MPI_BYTE && recvType != MPI_DATATYPE_NULL)
                 MPI_Type_free(&recvType);
