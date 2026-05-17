@@ -498,7 +498,7 @@ void dump(const MPI_Comm &comm, const char* path)
 }
 
 /* Test everything for classic, 64-bit offset, 64-bit data, and netCDF4 files. */
-#if defined(PNETCDF_DRIVER_NETCDF4) && PNETCDF_DRIVER_NETCDF4 == 1
+#if PNETCDF_DRIVER_NETCDF4 == 1
 #define NUM_FORMATS (4)
 #else
 #define NUM_FORMATS (3)
@@ -535,7 +535,7 @@ main(int argc, char* argv[])	// test new netCDF interface
 
    // Set up the format constants.
    NcmpiFile::FileFormat format[NUM_FORMATS] =
-#if defined(PNETCDF_DRIVER_NETCDF4) && PNETCDF_DRIVER_NETCDF4 == 1
+#if PNETCDF_DRIVER_NETCDF4 == 1
        {NcmpiFile::classic, NcmpiFile::classic2, NcmpiFile::nc4, NcmpiFile::classic5};
 #else
        {NcmpiFile::classic, NcmpiFile::classic2, NcmpiFile::classic5};

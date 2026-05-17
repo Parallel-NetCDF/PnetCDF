@@ -352,7 +352,7 @@ int tst_main(int        argc,
     MPI_Info info=MPI_INFO_NULL;
     double timing = MPI_Wtime();
 
-#if defined(PNETCDF_PROFILING) && PNETCDF_PROFILING == 1
+#if PNETCDF_PROFILING == 1
     double itiming[256]; int k=0;
 #endif
 
@@ -469,7 +469,7 @@ int tst_main(int        argc,
         for (s=s_ds;   s>=e_ds;   s--) {
         for (m=s_mod;  m>=e_mod;  m--) {
 
-#if defined(PNETCDF_PROFILING) && PNETCDF_PROFILING == 1
+#if PNETCDF_PROFILING == 1
             MPI_Barrier(MPI_COMM_WORLD);
             itiming[k] = MPI_Wtime();
 #endif
@@ -579,7 +579,7 @@ int tst_main(int        argc,
                     printf(" (%.2fs)\n", time_body);
             }
 
-#if defined(PNETCDF_PROFILING) && PNETCDF_PROFILING == 1
+#if PNETCDF_PROFILING == 1
             itiming[k] = MPI_Wtime() - itiming[k]; k++;
 #endif
             /* wait for all processes to complete */
@@ -682,7 +682,7 @@ err_out:
     MPI_Allreduce(MPI_IN_PLACE, &timing, 1, MPI_DOUBLE, MPI_MAX,MPI_COMM_WORLD);
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
-#if defined(PNETCDF_PROFILING) && PNETCDF_PROFILING == 1
+#if PNETCDF_PROFILING == 1
     MPI_Allreduce(MPI_IN_PLACE, itiming, 256, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
     if (rank == 0 && !quiet) {
         for (i=0; i<k; i++) printf("k=%d timing[%3d]=%.4f\n",k,i,itiming[i]);

@@ -94,7 +94,7 @@ int test_cdf12(const char *filename, int format, int coll_io, MPI_Info info)
     err = ncmpi_put_att_double(ncid, NC_GLOBAL, "attd", NC_DOUBLE, 1, &dbuf);
     CHECK_ERR
 
-#if defined(PNETCDF_ERANGE_FILL) && PNETCDF_ERANGE_FILL == 1
+#if PNETCDF_ERANGE_FILL == 1
     if (format != NC_FORMAT_NETCDF4 && format != NC_FORMAT_NETCDF4_CLASSIC) {
         float fbuf;
         /* read back attf and expect NC_FILL_FLOAT */
@@ -261,7 +261,7 @@ int test_cdf12(const char *filename, int format, int coll_io, MPI_Info info)
     CHECK_ERR
 
 
-#if defined(PNETCDF_ERANGE_FILL) && PNETCDF_ERANGE_FILL == 1
+#if PNETCDF_ERANGE_FILL == 1
     if (format != NC_FORMAT_NETCDF4 && format != NC_FORMAT_NETCDF4_CLASSIC) {
         float fbuf;
         /* read back and expect NC_FILL_FLOAT */

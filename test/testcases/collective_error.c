@@ -178,7 +178,7 @@ err_out:
     nerrs += test_collective_error(filename, 0, NC_64BIT_OFFSET);
     if (nerrs) goto err_out;
     if (!bb_enabled) {
-#if defined(PNETCDF_DRIVER_NETCDF4) && PNETCDF_DRIVER_NETCDF4 == 1
+#if PNETCDF_DRIVER_NETCDF4 == 1
         nerrs += test_collective_error(filename, 0, NC_NETCDF4);
         if (nerrs) goto err_out;
         nerrs += test_collective_error(filename, 0, NC_NETCDF4 | NC_CLASSIC_MODEL);
@@ -195,7 +195,7 @@ err_out:
     nerrs += test_collective_error(filename, 1, NC_64BIT_OFFSET);
     if (nerrs) goto err_out;
     if (!bb_enabled) {
-#if defined(PNETCDF_DRIVER_NETCDF4) && PNETCDF_DRIVER_NETCDF4 == 1
+#if PNETCDF_DRIVER_NETCDF4 == 1
         nerrs += test_collective_error(filename, 1, NC_NETCDF4);
         if (nerrs) goto err_out;
         nerrs += test_collective_error(filename, 1, NC_NETCDF4 | NC_CLASSIC_MODEL);
