@@ -1340,15 +1340,16 @@ ncmpio_hdr_get_NC(NC *ncp)
     getbuf.pos    = getbuf.base;
     getbuf.end    = getbuf.base + getbuf.ncp->hdr_chunk;
 
-    /* Fetch the next header chunk. The chunk is 'gbp->ncp->hdr_chunk' bytes
-     * big.
+    /* Fetch the first chunk of file header. The chunk size is of size
+     * 'gbp->ncp->hdr_chunk' bytes. Its value can be customized by setting the
+     * PnetCDF I/O hint 'nc_header_read_chunk_size'.
      */
     err = hdr_fetch(&getbuf);
     if (err != NC_NOERR) return err;
 
     /* processing the header from getbuf, the get buffer */
 
-    /* First get the file format information, magic */
+    /* First get the file format signature, "magic" = "CDF"+version */
     err = ncmpix_getn_text((const void **)(&getbuf.pos), NC_MAGIC_LEN, magic);
     if (err != NC_NOERR) return err;
 
@@ -1379,7 +1380,7 @@ ncmpio_hdr_get_NC(NC *ncp)
         DEBUG_RETURN_ERROR(NC_ENOTNC) /* not a netCDF file */
     }
 
-    /* get numrecs from getbuf into ncp */
+    /* After "magic" is "numrecs", get numrecs from getbuf into ncp */
     if (getbuf.ncp->format < 5) {
         uint tmp=0;
         err = hdr_get_uint32(&getbuf, &tmp);
@@ -1393,19 +1394,22 @@ ncmpio_hdr_get_NC(NC *ncp)
         ncp->numrecs = (MPI_Offset)tmp;
     }
 
+#if PNETCDF_DEBUG_MODE == 1
+    /* getbuf.pos now should be 4 bytes for CDF-1 and 2, 8 bytes for CDF-5 */
     assert(getbuf.pos < getbuf.end);
+#endif
 
-    /* get dim_list from getbuf into ncp */
+    /* After "numrecs" is "dim_list", get dim_list from getbuf into ncp */
     err = hdr_get_NC_dimarray(&getbuf, &ncp->dims);
     if (err == NC_ENULLPAD) status = NC_ENULLPAD; /* non-fatal error */
     else if (err != NC_NOERR) goto fn_exit;
 
-    /* get gatt_list from getbuf into ncp */
+    /* After "dim_list" is "gatt_list", get gatt_list from getbuf into ncp */
     err = hdr_get_NC_attrarray(&getbuf, &ncp->attrs);
     if (err == NC_ENULLPAD) status = NC_ENULLPAD; /* non-fatal error */
     else if (err != NC_NOERR) goto fn_exit;
 
-    /* get var_list from getbuf into ncp */
+    /* After "gatt_list" is "var_list", get var_list from getbuf into ncp */
     err = hdr_get_NC_vararray(&getbuf, &ncp->vars, ncp->dims.ndefined);
     if (err == NC_ENULLPAD) status = NC_ENULLPAD; /* non-fatal error */
     else if (err != NC_NOERR) goto fn_exit;

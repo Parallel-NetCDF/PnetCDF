@@ -129,14 +129,18 @@ typedef enum {
      att_list     = ABSENT | NC_ATTRIBUTE  nelems  [attr ...]
      var_list     = ABSENT | NC_VARIABLE   nelems  [var ...]
      ABSENT       = ZERO  ZERO                  // Means list is not present
-     ZERO         = \x00 \x00 \x00 \x00         // 32-bit zero
+     ZERO         = \x00 \x00 \x00 \x00         // 32-bit zero for CDF-1/2
+                                                // 64-bit zero for CDF-5
 
   Minimum happens when nothing is defined, i.e.
      magic              -- 4 bytes
-     numrecs            -- 4 bytes for CDF-1 and CDF-2, 8 bytes for CDF-5
-     dim_list = ABSENT  -- 8 bytes
-     gatt_list = ABSENT -- 8 bytes
-     var_list = ABSENT  -- 8 bytes
+     numrecs            -- 4 bytes for CDF-1 and CDF-2,  8 bytes for CDF-5
+     dim_list = ABSENT  -- 8 bytes for CDF-1 and CDF-2, 12 bytes for CDF-5
+     gatt_list = ABSENT -- 8 bytes for CDF-1 and CDF-2, 12 bytes for CDF-5
+     var_list = ABSENT  -- 8 bytes for CDF-1 and CDF-2, 12 bytes for CDF-5
+
+  Thus, the minimum file size for CDF-1/2 files are of size 32 bytes, and CDF-5
+  files 48 bytes.
 */
 
 typedef struct NC NC; /* forward reference */

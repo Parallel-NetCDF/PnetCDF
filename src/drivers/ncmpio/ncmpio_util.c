@@ -135,6 +135,9 @@ void ncmpio_hint_extract(NC       *ncp,
                 ncp->hdr_chunk = PNC_HDR_READ_CHUNK_SIZE;
             else if (llval > NC_MAX_INT) /* limit to NC_MAX_INT */
                 ncp->hdr_chunk = NC_MAX_INT;
+            else if (llval < 48)
+                /* minimum file sizes: 32 bytes for CDF-1 and 2, 48 for CDF5 */
+                ncp->hdr_chunk = 48;
             else
                 ncp->hdr_chunk = (int)llval;
 
