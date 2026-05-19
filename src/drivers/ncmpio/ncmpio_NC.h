@@ -48,7 +48,7 @@ typedef struct {
 /* default alignment for the starting offset of record variable section. */
 #define NC_DEFAULT_R_ALIGN   4
 
-/* The default file header extent size is aligned with FILE_ALIGNMENT_DEFAULT.
+/* The default file header extent size is aligned with NC_DEFAULT_V_ALIGN.
  * This default will be overwritten by hint nc_header_align_size or
  * nc_var_align_size. Note when both hints are set by users, hint
  * nc_var_align_size supersedes nc_header_align_size.

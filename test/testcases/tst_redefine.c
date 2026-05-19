@@ -11,12 +11,14 @@
  * 2. v_align: alignment of the beginning of the fix-size variable section, i.e.
  *       (header extent) % v_align == 0
  *       If no fixed-size variable is defined, v_align is ignored.
- *       Default value of v_align is 512.
+ *       Default value of v_align is 512 (NC_DEFAULT_V_ALIGN defined in file
+ *       src/drivers/ncmpio/ncmpio_NC.h.
  * 3. v_minfree: free space between the end of last fix-sized variable and the
  *       record variable section.
  *       If no fixed-size variable is defined, v_minfree is ignored.
  * 4. r_align: alignment of the beginning of the record variable section.
- *       If no fixed-size variable is defined, default value of r_align is 512.
+ *       If no fixed-size variable is defined, default value of r_align is
+ *       512, i.e. NC_DEFAULT_V_ALIGN.
  *       Otherwise, default value of r_align is 4.
  *
  * Tests are done by reentering the define mode multiple times.
@@ -38,7 +40,26 @@
 
 #include <pnetcdf.h>
 
+#ifdef STAND_ALONE
+#define OFFFMT "%lld"
+#define CHECK_ERR { \
+    if (err != NC_NOERR) { \
+        fprintf(stderr,"Error at line %d in %s: (%s)\n", \
+        __LINE__,__FILE__,ncmpi_strerrno(err)); \
+        assert(0); \
+    } \
+}
+#define CHECK_ERROUT { \
+    if (err != NC_NOERR) { \
+        nerrs++; \
+        fprintf(stderr,"Error at line %d in %s: (%s)\n", \
+        __LINE__,__FILE__,ncmpi_strerrno(err)); \
+        goto err_out; \
+    } \
+}
+#else
 #include <testutils.h>
+#endif
 
 #define LEN 101
 
@@ -241,15 +262,20 @@ err_out:
                __LINE__,hsize, hsize+growth); \
 }
 
+/* Make sure NC_DEFAULT_V_ALIGN is set to the same value as the one defined in
+ * src/drivers/ncmpio/ncmpio_NC.h.
+ */
+#define NC_DEFAULT_V_ALIGN 512
+
 #define CHECK_ALIGNMENTS { \
     /* hints set in MPI info precede ncmpi__enddef */ \
     v_align = (env_v_align) ? env_v_align : \
               (info_v_align) ? info_v_align : \
-              (v_align > 0) ? v_align : 512; \
+              (v_align > 0) ? v_align : NC_DEFAULT_V_ALIGN; \
     r_align = (env_r_align) ? env_r_align : \
               (info_r_align) ? info_r_align : \
               (r_align > 0) ? r_align : \
-              (has_fix_vars) ? 4 : 512;\
+              (has_fix_vars) ? 4 : NC_DEFAULT_V_ALIGN;\
     if (h_minfree == -1) h_minfree = 0; \
     if (v_minfree == -1) v_minfree = 0; \
     exp_hsize  = old_hsize + increment; \
@@ -273,10 +299,10 @@ err_out:
 #define PRINT_HINTS \
     if (verbose && rank == 0) { \
         printf("\n========================================\n"); \
-        printf("  Line %d hsize %lld extent %lld r_begin %lld has_fix_vars %d\n", \
+        printf("  Line %d old hsize %lld extent %lld r_begin %lld has_fix_vars %d\n", \
                __LINE__,hsize,extent,r_begin, has_fix_vars); \
-        printf("  Line %d ncmpi__enddef() increment %lld h_minfree %lld v_align %lld v_minfree %lld r_align %lld\n", \
-               __LINE__, increment, h_minfree, v_align, v_minfree, r_align); \
+        printf("  Line %d ncmpi__enddef(h_minfree %lld v_align %lld v_minfree %lld r_align %lld) increment %lld\n", \
+               __LINE__, h_minfree, v_align, v_minfree, r_align, increment); \
     }
 
 /* test alignments hints
@@ -821,6 +847,34 @@ int test_io(const char *out_path,
     return 0;
 }
 
+#ifdef STAND_ALONE
+int main(int argc, char **argv) {
+
+    int err, rank, format, coll_io;
+    MPI_Info info;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if (argc < 2) {
+        if (rank == 0)
+            printf("Usage: %s out_path\n",argv[0]);
+        MPI_Finalize();
+        return 1;
+    }
+
+    format  = NC_FORMAT_CLASSIC;
+    coll_io = 1;
+    MPI_Info_create(&info);
+
+    err = test_io(argv[1], NULL, format, coll_io, info);
+
+    MPI_Info_free(&info);
+
+    MPI_Finalize();
+
+    return err;
+}
+#else
 int main(int argc, char **argv) {
 
     int err;
@@ -845,3 +899,4 @@ int main(int argc, char **argv) {
 
     return err;
 }
+#endif
