@@ -296,9 +296,9 @@ ncmpi_strerror(int err)
         case NC_EFLUSHED:
             return "Nonblocking requests already flushed.";
         case NC_EADIOS:
-            return "unknown ADIOS error.";
+            return "Unknown ADIOS error.";
         case NC_EFSTYPE:
-            return "Invalid file system type.";
+            return "File system type not supported by the GIO driver.";
         case NC_EDRIVER:
             return "Invalid PnetCDF I/O driver.";
         case NC_EFILEVIEW:
