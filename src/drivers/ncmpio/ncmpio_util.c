@@ -269,10 +269,10 @@ void ncmpio_hint_extract(NC       *ncp,
     /* When creating a file, inherit file striping from the parent folder or
      * let PnetCDF to decide.
      */
-    ncp->pnc_striping = PNCIO_STRIPING_AUTO;
-    MPI_Info_get(info, "pnc_striping", MPI_MAX_INFO_VAL-1, value, &flag);
+    ncp->file_striping = PNCIO_STRIPING_AUTO;
+    MPI_Info_get(info, "file_striping", MPI_MAX_INFO_VAL-1, value, &flag);
     if (flag && strcasecmp(value, "inherit") == 0)
-        ncp->pnc_striping = PNCIO_STRIPING_INHERIT;
+        ncp->file_striping = PNCIO_STRIPING_INHERIT;
 }
 
 /*----< ncmpio_hint_set() >--------------------------------------------------*/
@@ -386,10 +386,10 @@ void ncmpio_hint_set(NC       *ncp,
     /* When creating a file, inherit file striping from the parent folder or
      * let PnetCDF to decide.
      */
-    if (ncp->pnc_striping == PNCIO_STRIPING_AUTO)
-        MPI_Info_set(info, "pnc_striping", "auto");
+    if (ncp->file_striping == PNCIO_STRIPING_AUTO)
+        MPI_Info_set(info, "file_striping", "auto");
     else
-        MPI_Info_set(info, "pnc_striping", "inherit");
+        MPI_Info_set(info, "file_striping", "inherit");
 }
 
 /*----< ncmpio_first_offset() >----------------------------------------------*/

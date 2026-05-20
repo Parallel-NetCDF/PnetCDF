@@ -507,11 +507,11 @@ ncmpio_create(MPI_Comm         comm,
 
     /* create file collectively -------------------------------------------- */
     if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
-        /* If hint pnc_striping is set to "auto" and hint striping_factor is
+        /* If hint file_striping is set to "auto" and hint striping_factor is
          * not set by the user, then set hint striping_factor to
          * ncp->comm_attr.num_nodes.
          */
-        if (ncp->pnc_striping == PNCIO_STRIPING_AUTO) {
+        if (ncp->file_striping == PNCIO_STRIPING_AUTO) {
             int striping_factor=0;
             if (user_info != MPI_INFO_NULL) {
                 MPI_Info_get(user_info, "striping_factor", MPI_MAX_INFO_VAL-1,
@@ -524,7 +524,7 @@ ncmpio_create(MPI_Comm         comm,
                 MPI_Info_set(user_info, "striping_factor", value);
             }
         }
-        else { /* ncp->pnc_striping == PNCIO_STRIPING_INHERIT */
+        else { /* ncp->file_striping == PNCIO_STRIPING_INHERIT */
             if (user_info != MPI_INFO_NULL) {
                 int stripings[2] = {0, 0};
 

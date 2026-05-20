@@ -409,7 +409,7 @@ struct NC {
 #endif
     int hdr_chunk;    /* chunk size for reading header, one chunk at a time */
     int data_chunk;   /* chunk size for moving variables to higher offsets */
-    int pnc_striping; /* PNCIO_STRIPING_AUTO or PNCIO_STRIPING_INHERIT */
+    int file_striping;/* PNCIO_STRIPING_AUTO or PNCIO_STRIPING_INHERIT */
 
     MPI_Offset    v_align;      /* alignment of beginning of fixed-size variable section */
     MPI_Offset    r_align;      /* file alignment for record variable section */
