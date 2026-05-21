@@ -13,10 +13,6 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/drivers/include
 AM_CPPFLAGS += -I$(top_builddir)/src/drivers/include
 AM_CPPFLAGS += @ADIOS_INC@
 
-if PNETCDF_DEBUG
-   AM_CPPFLAGS += -DPNETCDF_DEBUG
-endif
-
 if BUILD_GIO
    AM_CPPFLAGS += -I${top_builddir}/gio/src
 endif

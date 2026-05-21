@@ -11,10 +11,6 @@ SUFFIXES = .o .c
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/include
 
-if PNETCDF_DEBUG
-   AM_CPPFLAGS += -DPNETCDF_DEBUG
-endif
-
 bin_PROGRAMS = ncvalidator
 ncvalidator_SOURCES = ncvalidator.c
 

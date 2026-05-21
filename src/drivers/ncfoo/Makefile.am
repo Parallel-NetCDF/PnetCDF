@@ -13,10 +13,6 @@ AM_CPPFLAGS += -I${top_builddir}/src/include
 AM_CPPFLAGS += -I${top_srcdir}/src/drivers/include
 AM_CPPFLAGS += -I${top_builddir}/src/drivers/include
 
-if PNETCDF_DEBUG
-   AM_CPPFLAGS += -DPNETCDF_DEBUG
-endif
-
 noinst_LTLIBRARIES = libncfoo.la
 
 M4FLAGS += -I${top_srcdir}/m4

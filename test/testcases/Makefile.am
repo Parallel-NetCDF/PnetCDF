@@ -22,10 +22,6 @@ AM_FFLAGS   = -I$(top_builddir)/src/binding/f77 $(FFIXEDFORMFLAG)
 LDADD       = ../common/libtestutils.la ${top_builddir}/src/libs/libpnetcdf.la
 LDADD      += @NETCDF4_LDFLAGS@ @ADIOS_LDFLAGS@ @NETCDF4_LIBS@ @ADIOS_LIBS@ -lm
 
-if PNETCDF_DEBUG
-   AM_CPPFLAGS += -DPNETCDF_DEBUG
-endif
-
 if SIZEOF_MPI_AINT_IS_4
    AM_FFLAGS += $(FC_DEFINE)SIZEOF_MPI_AINT_IS_4
 endif
@@ -193,9 +189,6 @@ TESTS_ENVIRONMENT += export TESTSEQRUN="$(TESTSEQRUN)";
 TESTS_ENVIRONMENT += export TESTMPIRUN="$(TESTMPIRUN)";
 TESTS_ENVIRONMENT += export check_PROGRAMS="$(check_PROGRAMS)";
 
-if PNETCDF_DEBUG
-   TESTS_ENVIRONMENT += export PNETCDF_DEBUG=1;
-endif
 if ENABLE_BURST_BUFFER
    TESTS_ENVIRONMENT += export ENABLE_BURST_BUFFER=1;
 endif

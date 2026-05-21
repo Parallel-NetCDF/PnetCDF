@@ -16,10 +16,6 @@ AM_CPPFLAGS += -I${srcdir}/adios_headers/core/transforms
 AM_CPPFLAGS += -I${srcdir}/adios_headers/transforms
 AM_CPPFLAGS += @ADIOS_INC@
 
-if PNETCDF_DEBUG
-   AM_CPPFLAGS += -DPNETCDF_DEBUG
-endif
-
 noinst_LTLIBRARIES = libncadios.la
 
 M4FLAGS += -I${top_srcdir}/m4

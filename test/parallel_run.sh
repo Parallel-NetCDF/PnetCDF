@@ -59,8 +59,9 @@ OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 # let NTHREADS=$1*6-1
 NTHREADS=`expr $1 \* 6 - 1`
 
-# echo "${LINENO}: PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
-if test "x${PNETCDF_DEBUG}" = x1 ; then
+PNETCDF_DEBUG_MODE=`grep PNETCDF_DEBUG_MODE ${top_builddir}/src/include/pnetcdf.h | tr -s ' ' | cut -d ' ' -f 3`
+# echo "${LINENO}: PNETCDF_DEBUG_MODE = ${PNETCDF_DEBUG_MODE}"
+if test "x${PNETCDF_DEBUG_MODE}" = x1 ; then
    safe_modes="0 1"
 else
    safe_modes="0"

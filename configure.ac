@@ -1269,7 +1269,6 @@ if test "x${debug}" = xyes; then
    PNETCDF_DEBUG=1
 fi
 AC_SUBST(PNETCDF_DEBUG)
-AM_CONDITIONAL(PNETCDF_DEBUG, [test x"$PNETCDF_DEBUG" = x1])
 
 dnl Data type MPI_Offset was first introduced in MPI 2 and since PnetCDF
 dnl requires MPI-IO (also introduced in MPI 2), there is no need to check

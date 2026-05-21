@@ -68,11 +68,13 @@ fi
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
+PNETCDF_DEBUG_MODE=`grep PNETCDF_DEBUG_MODE ${top_builddir}/src/include/pnetcdf.h | tr -s ' ' | cut -d ' ' -f 3`
+
 for i in ${check_PROGRAMS} ; do
     # Capture start time in seconds and nanoseconds
     start_time=$(date +%s.%1N)
 
-    if test "${PNETCDF_DEBUG}" = 1 ; then # test only in safe mode
+    if test "${PNETCDF_DEBUG_MODE}" = 1 ; then # test only in safe mode
        safe_hint="  SAFE"
     else
        safe_hint="NOSAFE"
