@@ -42,6 +42,10 @@ check_PROGRAMS = collective_write \
                  time_var \
                  create_from_cdl
 
+if ENABLE_COMPRESSION
+  check_PROGRAMS += chunk_compress chunk_io chunk_2D
+endif
+
 if INSTALL_EXAMPLES
    example_execbin_PROGRAMS = $(check_PROGRAMS)
    example_execbindir = $(exec_prefix)/pnetcdf_examples/C
@@ -84,7 +88,8 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(NC_FILES) $(TESTOUTDIR)/pthread.nc.* $(TESTOUTDIR)/testfile.nc
 
-EXTRA_DIST = run_c_examples.sh cdl_header.txt
+EXTRA_DIST = run_c_examples.sh cdl_header.txt \
+             parallel_run.sh chunk_compress_FLDS.c
 
 ptest ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="
