@@ -12,27 +12,29 @@
 #include <string.h> /* strcpy(), strncpy() */
 #include <unistd.h> /* getopt() */
 #include <time.h>   /* time() localtime(), asctime() */
-#include <mpi.h>
-#include <pnetcdf.h>
 #include <stdint.h>
-
 #include <math.h>
-
-
 #include <assert.h>
 
+#include <mpi.h>
+#include <pnetcdf.h>
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * This program creates a large number of data objects and writes substantial metadata
- * to an output file. Each MPI process is responsible for creating a distinct, non-overlapping
- * subset of data objects, including variables, dimensions and variable attributes. All processes 
- * participate in MPI communication to synchronize metadata definitions, ensuring that each process
- * holds a consistent copy of metadata required to collectively define variables, dimensions, and 
- * attributes. The metadata is stored in the header of the output file, and the data objects created by
- * each process are independent (i.e., not shared across processes).
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ * This program creates a large number of data objects and writes substantial
+ * metadata to an output file. Each MPI process is responsible for creating a
+ * distinct, non-overlapping subset of data objects, including variables,
+ * dimensions and variable attributes. All processes participate in MPI
+ * communication to synchronize metadata definitions, ensuring that each
+ * process holds a consistent copy of metadata required to collectively define
+ * variables, dimensions, and attributes. The metadata is stored in the header
+ * of the output file, and the data objects created by each process are
+ * independent (i.e., not shared across processes).
  *
- * The compile and run commands are given below, together with an ncmpidump (header only) of
- * the output file.
+ * This benchmark is used in a paper published in the PSDW Workshop of SC 2025.
+ * DOI: 10.1145/3731599.3767512
+ *
+ * The compile and run commands are given below, together with an ncmpidump
+ * (header only) of the output file.
  *
  *    % mpicc -O2 -o indep_data_obj_create indep_data_obj_create.c -lpnetcdf
  *
@@ -108,9 +110,6 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
-static int verbose;
-
-
 #define ERR {if(err!=NC_NOERR){printf("Error at %s:%d : %s\n", __FILE__,__LINE__, ncmpi_strerror(err));nerrs++;}}
 
 #define OUTPUT_NAME "benchmark_testfile.nc"
@@ -122,13 +121,8 @@ static int verbose;
 #define ATTR_SIZE 10
 #define HASH_SIZE 4096
 
-double def_start_time, total_def_time = 0;
-
-
-
-#define NC_NOERR        0  
-
-
+static int verbose;
+static double def_start_time, total_def_time = 0;
 
 // Static variables to track memory usage
 static size_t current_memory_usage = 0;
@@ -272,7 +266,6 @@ void clear_max_malloc(void) {
     max_memory_usage = current_memory_usage;
 }
 
-
 void* tracked_realloc(void* ptr, size_t new_size) {
     if (!ptr) {
         // If ptr is NULL, behave like tracked_malloc
@@ -309,7 +302,6 @@ void* tracked_realloc(void* ptr, size_t new_size) {
     return new_ptr;
 }
 
-
 typedef enum {
     NC_UNSPECIFIED =  0,  /* ABSENT */
     NC_DIMENSION   = 10,  /* \x00 \x00 \x00 \x0A */
@@ -338,12 +330,10 @@ typedef struct {
     void      *xvalue;   /* the actual data, in external representation */
 } hdr_attr;
 
-
 typedef struct hdr_attrarray {
     int            ndefined;  /* number of defined attributes */
     hdr_attr      **value;
 } hdr_attrarray;
-
 
 typedef struct {
     nc_type       xtype;   /* variable's external NC data type */
@@ -354,33 +344,28 @@ typedef struct {
     hdr_attrarray  attrs;   /* attribute array */
 } hdr_var;
 
-
 typedef struct hdr_vararray {
-    int            ndefined;    /* number of defined variables */
-    hdr_var       **value;
+    int       ndefined;    /* number of defined variables */
+    hdr_var **value;
 } hdr_vararray;
-
 
 /* various file modes stored in flags */
 struct hdr {
-    MPI_Offset    xsz;      /* size occupied on the buffer */
+    MPI_Offset     xsz;      /* size occupied on the buffer */
     hdr_dimarray   dims;     /* dimensions defined */
     hdr_attrarray  attrs;    /* global attributes defined */
     hdr_vararray   vars;     /* variables defined */
 };
 
-
-
 typedef struct metabuffer {
     // MPI_Comm    comm;
-    int         size;     /* allocated size of the buffer */
+    MPI_Offset  size;     /* allocated size of the buffer */
     char       *base;     /* beginning of read/write buffer */
     char       *pos;      /* current position in buffer */
     char       *end;      /* end position of buffer */
 } metabuffer;
 
-
-int
+static int
 xlen_nc_type(nc_type xtype, int *size)
 {
     switch(xtype) {
@@ -399,7 +384,7 @@ xlen_nc_type(nc_type xtype, int *size)
     return 0;
 }
 
-static int 
+static int
 putn_text(void **xpp, MPI_Offset nelems, const char *tp)
 {
 	(void) memcpy(*xpp, tp, (size_t)nelems);
@@ -472,9 +457,8 @@ static int
 serialize_attrV(metabuffer    *pbp,
                  const hdr_attr *attrp)
 {
-
     int xsz;
-    int sz;
+    MPI_Offset sz;
 
     /* xlen_nc_type() returns the element size (unaligned) of
      * attrp->xtype attrp->xsz is the aligned total size of attribute values
@@ -575,7 +559,6 @@ serialize_var(metabuffer   *pbp,
     return NC_NOERR;
 }
 
-
 /*----< serialize_vararray() >----------------------------------------------*/
 static int
 serialize_vararray(metabuffer        *pbp,
@@ -607,8 +590,6 @@ serialize_vararray(metabuffer        *pbp,
     return NC_NOERR;
 }
 
-
-
 /*----< serialize_hdr() >----------------------------------------------*/
 int
 serialize_hdr(struct hdr *ncp, void *buf)
@@ -616,9 +597,9 @@ serialize_hdr(struct hdr *ncp, void *buf)
     int status;
     metabuffer putbuf;
 
-    putbuf.pos           = buf;
-    putbuf.base          = buf;
-    putbuf.size          = ncp->xsz;
+    putbuf.pos  = buf;
+    putbuf.base = buf;
+    putbuf.size = ncp->xsz;
 
     /* copy dim_list */
     status = serialize_dimarray(&putbuf, &ncp->dims);
@@ -629,12 +610,9 @@ serialize_hdr(struct hdr *ncp, void *buf)
     status = serialize_vararray(&putbuf, &ncp->vars);
     if (status != NC_NOERR) return status;
 
-    size_t serializedSize = putbuf.pos - putbuf.base;
-
+    // size_t serializedSize = putbuf.pos - putbuf.base;
     // Print the result
     // printf("Number of bytes taken after serialization: %zu\n", serializedSize);
-
-
 
     return NC_NOERR;
 }
@@ -688,7 +666,7 @@ static int deserialize_dim(metabuffer *gbp, hdr_dim *dimp) {
     uint32_t tmp;
     char *name;
     int err;
-    err = deserialize_name(gbp, &name); 
+    err = deserialize_name(gbp, &name);
     if (err != NC_NOERR) return err;
     get_uint32((void**)&gbp->pos, &tmp);
     dim_length = (MPI_Offset)tmp;
@@ -730,7 +708,8 @@ static int deserialize_dimarray(metabuffer *gbp, hdr_dimarray *ncap) {
 }
 
 static int deserialize_attrV(metabuffer *gbp, hdr_attr *attrp) {
-    int xsz, sz, err;
+    int xsz;
+    MPI_Offset sz;
 
     xlen_nc_type(attrp->xtype, &xsz);
     sz = attrp->nelems * xsz;
@@ -842,7 +821,6 @@ static int deserialize_var(metabuffer *gbp, hdr_var *varp) {
 
 static int deserialize_vararray(metabuffer *gbp, hdr_vararray *ncap) {
     unsigned int tag;
-    int err;
     uint32_t tmp;
     get_uint32((void**)&gbp->pos, &tag);
 
@@ -887,7 +865,7 @@ int deserialize_hdr(struct hdr *ncp, void *buf, int buf_size) {
     /* get dim_list from getbuf into ncp */
     status = deserialize_dimarray(&getbuf, &ncp->dims);
     if (status != NC_NOERR) return status;
-    
+
 
     status = deserialize_vararray(&getbuf, &ncp->vars);
     if (status != NC_NOERR) return status;
@@ -912,7 +890,7 @@ void free_hdr_dim(hdr_dim *dim) {
 void free_hdr_dimarray(hdr_dimarray *dims) {
     if (dims != NULL) {
         for (int i = 0; i < dims->ndefined; i++) {
-            
+
             free_hdr_dim(dims->value[i]);
         }
         tracked_free(dims->value);
@@ -1093,8 +1071,8 @@ app_check_crt_mem(MPI_Comm comm, int checkpoint)
 
 void generate_metadata(int rank, int nproc, struct hdr *file_info, int num_vars, int num_dims, int num_attrs, int dim_size, int att_size) {
 
-    int ncid,  tot_num_dims, elem_sz, v_attrV_xsz, status;
-    MPI_Offset start, count;
+    int tot_num_dims, elem_sz, v_attrV_xsz;
+    int start, count;
     file_info->dims.ndefined = 0;
     file_info->attrs.ndefined = 0;
     file_info->vars.ndefined = 0;
@@ -1104,7 +1082,6 @@ void generate_metadata(int rank, int nproc, struct hdr *file_info, int num_vars,
     file_info->xsz += 2 * sizeof(uint32_t); // NC_Variable and ndefined
     file_info->xsz += 2 * sizeof(uint32_t); // NC_Dimension and nelems
     // Calculate equal distribution of variables among processes
-    num_vars = num_vars;
     int vars_per_process = num_vars / nproc;
     int remainder = num_vars % nproc;
 
@@ -1124,7 +1101,7 @@ void generate_metadata(int rank, int nproc, struct hdr *file_info, int num_vars,
 
         // Get variable information
         char var_name[NC_MAX_NAME + 1];
-        sprintf(var_name, "process_%d_var_%d", rank, i - (int)start);
+        sprintf(var_name, "process_%d_var_%d", rank, i - start);
         variable_info->name_len = strlen(var_name);
         variable_info->name = (char *)tracked_malloc((variable_info->name_len + 1) * sizeof(char));
         strcpy(variable_info->name, var_name);
@@ -1138,7 +1115,7 @@ void generate_metadata(int rank, int nproc, struct hdr *file_info, int num_vars,
 
         // Get varaible nc_type and attributes
         nc_type xtype = VAR_TYPE;
-        
+
         variable_info->attrs.ndefined = num_attrs;
         variable_info->xtype = xtype;
 
@@ -1149,17 +1126,16 @@ void generate_metadata(int rank, int nproc, struct hdr *file_info, int num_vars,
 
 
 
-        //Read and store dimension information 
+        //Read and store dimension information
         file_info->dims.ndefined += num_dims;
         if (tot_num_dims == 0) {
             file_info->dims.value = (hdr_dim **)tracked_malloc(file_info->dims.ndefined * sizeof(hdr_dim *));
         }else{
             file_info->dims.value = (hdr_dim **)tracked_realloc(file_info->dims.value, file_info->dims.ndefined * sizeof(hdr_dim *));
-        } 
+        }
 
         for (int k = 0; k < num_dims; ++k) {
             hdr_dim *dimension_info = (hdr_dim *)tracked_malloc(sizeof(hdr_dim));
-            int dimid = variable_info->dimids[k];
             // Get dimension name
             char dim_name[NC_MAX_NAME + 1];
             sprintf(dim_name, "process_%d_var_%d_dim_%d", rank, i, k);
@@ -1186,7 +1162,7 @@ void generate_metadata(int rank, int nproc, struct hdr *file_info, int num_vars,
             variable_info->attrs.value[j] = (hdr_attr *)tracked_malloc(sizeof(hdr_attr));
             variable_info->attrs.value[j]->name_len = 0;  // Initialize attribute name length
 
-            // Get attribute name 
+            // Get attribute name
             char att_name[NC_MAX_NAME + 1];
             sprintf(att_name, "process_%d_var_%d_attr_%d", rank, i, j);
             variable_info->attrs.value[j]->name_len = strlen(att_name);
@@ -1209,7 +1185,7 @@ void generate_metadata(int rank, int nproc, struct hdr *file_info, int num_vars,
             file_info->xsz += sizeof(uint32_t) + sizeof(char) * variable_info->attrs.value[j]->name_len; //attr name
             file_info->xsz += sizeof(uint32_t); // nc_type
             file_info->xsz += sizeof(uint32_t); // nelems
-            status = xlen_nc_type(variable_info->attrs.value[j]->xtype, &v_attrV_xsz);
+            xlen_nc_type(variable_info->attrs.value[j]->xtype, &v_attrV_xsz);
             file_info->xsz += variable_info->attrs.value[j]->nelems * v_attrV_xsz; // attr_value
         }
 
@@ -1236,13 +1212,13 @@ int define_hdr(struct hdr *hdr_data, int ncid){
     //define variables
     int nvars = hdr_data->vars.ndefined;
     int *varid = (int *)tracked_malloc(nvars * sizeof(int));
-    int v_ndims, v_namelen, xtype, n_att;
+    int v_ndims, xtype, n_att;
     int *v_dimids;
-    int att_namelen, att_xtype, att_nelems;
+    int att_xtype;
+    MPI_Offset att_nelems;
 
     for (i=0; i<nvars; i++){
 
-        v_namelen =  hdr_data->vars.value[i]->name_len;
         xtype = hdr_data->vars.value[i]->xtype;
 
         v_ndims = hdr_data->vars.value[i]->ndims;
@@ -1254,11 +1230,14 @@ int define_hdr(struct hdr *hdr_data, int ncid){
         n_att = hdr_data->vars.value[i]->attrs.ndefined;
 
         for(k=0; k<n_att; k++){
-            att_namelen = hdr_data->vars.value[i]->attrs.value[k]->name_len;
             att_xtype = hdr_data->vars.value[i]->attrs.value[k]->xtype;
             att_nelems = hdr_data->vars.value[i]->attrs.value[k]->nelems;
-            err = ncmpi_put_att(ncid, varid[i],  hdr_data->vars.value[i]->attrs.value[k]->name, att_xtype, 
-            att_nelems, (const void *)hdr_data->vars.value[i]->attrs.value[k]->xvalue); ERR
+            err = ncmpi_put_att(ncid, varid[i],
+                                hdr_data->vars.value[i]->attrs.value[k]->name,
+                                att_xtype,
+                                att_nelems,
+                                (const void *)hdr_data->vars.value[i]->attrs.value[k]->xvalue);
+            ERR
         }
         tracked_free(v_dimids);
 
@@ -1320,21 +1299,23 @@ static void usage(const char *argv0)
             ATTR_SIZE,
             HASH_SIZE,
             OUTPUT_NAME);
-
 }
 
 int main(int argc, char *argv[]) {
-    MPI_Init(&argc, &argv);
-    int rank, nproc, status, err, i, nerrs=0;
+    int rank, nproc, err, i, nerrs=0;
     char filename[256];
-    double end_to_end_time, mpi_time, io_time, enddef_time, close_time, max_time, min_time;
+    double end_to_end_time, mpi_time, io_time, enddef_time, close_time;
     double start_time, start_time1, end_time1, end_time2, end_time3, end_time;
+    struct hdr local_hdr;
+    int mem_track=0, num_vars=NUM_VARS, num_dims_per_var=NUM_DIMS;
+    int num_attrs_per_var=NUM_ATTRS, dim_size=DIM_SIZE, attr_size=ATTR_SIZE;
+    int hash_size=HASH_SIZE;
+
+    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
-    struct hdr local_hdr;
 
-
-    int verbose=1, mem_track=0, num_vars=NUM_VARS, num_dims_per_var=NUM_DIMS, num_attrs_per_var=NUM_ATTRS, dim_size=DIM_SIZE, attr_size=ATTR_SIZE, hash_size=HASH_SIZE;
+    verbose = 1;
 
     while ((i = getopt(argc, argv, "hqma:d:l:s:t:n:")) != EOF)
         switch(i) {
@@ -1354,7 +1335,7 @@ int main(int argc, char *argv[]) {
                       break;
             case 't': hash_size = atoi(optarg);
                       break;
-            case 'h': 
+            case 'h':
             default:  if (rank==0) usage(argv[0]);
                       MPI_Finalize();
                       return 1;
@@ -1373,11 +1354,11 @@ int main(int argc, char *argv[]) {
     }
 
     generate_metadata(rank, nproc, &local_hdr, num_vars, num_dims_per_var, num_attrs_per_var, dim_size, attr_size);
-    
+
     MPI_Barrier(MPI_COMM_WORLD);
     start_time = start_time1 = MPI_Wtime();
     char* send_buffer = (char*) tracked_malloc(local_hdr.xsz);
-    status = serialize_hdr(&local_hdr, send_buffer);
+    serialize_hdr(&local_hdr, send_buffer);
 
     // Phase 1: Communicate the sizes of the header structure for each process
     MPI_Offset* all_collection_sizes = (MPI_Offset*) tracked_malloc(nproc * sizeof(MPI_Offset));
@@ -1385,13 +1366,12 @@ int main(int argc, char *argv[]) {
 
     // Calculate displacements for the second phase
     int* recv_displs = (int*) tracked_malloc(nproc * sizeof(int));
-    int total_recv_size, min_size, max_size;
+    MPI_Offset total_recv_size, min_size, max_size;
     total_recv_size = min_size = max_size = all_collection_sizes[0];
     recv_displs[0] = 0;
 
-
     for (int i = 1; i < nproc; ++i) {
-        recv_displs[i] = recv_displs[i - 1] + all_collection_sizes[i - 1];
+        recv_displs[i] = recv_displs[i - 1] + (int)all_collection_sizes[i - 1];
         total_recv_size += all_collection_sizes[i];
         if(all_collection_sizes[i] > max_size){
             max_size = all_collection_sizes[i];
@@ -1400,9 +1380,6 @@ int main(int argc, char *argv[]) {
             min_size = all_collection_sizes[i];
         }
     }
-    double total_recv_size_MB = total_recv_size / (1024.0 * 1024.0);
-    double min_size_MB = min_size / (1024.0 * 1024.0);
-    double max_size_MB = max_size / (1024.0 * 1024.0);
 
     char* all_collections_buffer = (char*) tracked_malloc(total_recv_size);
     int* recvcounts =  (int*)tracked_malloc(nproc * sizeof(int));
@@ -1411,9 +1388,11 @@ int main(int argc, char *argv[]) {
     }
     // Phase 2: Communicate the actual header data
     // Before MPI_Allgatherv
-    MPI_Allgatherv(send_buffer, local_hdr.xsz, MPI_BYTE, all_collections_buffer, recvcounts, recv_displs, MPI_BYTE, MPI_COMM_WORLD);
+    MPI_Allgatherv(send_buffer, (int)local_hdr.xsz, MPI_BYTE,
+                   all_collections_buffer, recvcounts, recv_displs,
+                   MPI_BYTE, MPI_COMM_WORLD);
     // Deserialize the received data and print if rank is 0
-    
+
     int ncid, cmode;
 
     cmode = NC_64BIT_DATA | NC_CLOBBER;
@@ -1441,9 +1420,6 @@ int main(int argc, char *argv[]) {
         pnetcdf_check_crt_mem(MPI_COMM_WORLD, 1);
     }
 
-
-
-
     io_time = MPI_Wtime() - end_time1;
 
     free_all_hdr(all_recv_hdr, nproc);
@@ -1462,7 +1438,6 @@ int main(int argc, char *argv[]) {
     }
     enddef_time = end_time3 - end_time2;
 
-
     // Clean up
     free_hdr(&local_hdr);
     tracked_free(send_buffer);
@@ -1479,7 +1454,7 @@ int main(int argc, char *argv[]) {
     MPI_Offset header_extent;
     err = ncmpi_inq_header_size(ncid, &header_size); ERR
     err = ncmpi_inq_header_extent(ncid, &header_extent); ERR
-    
+
     err = ncmpi_close(ncid); ERR
     end_time = MPI_Wtime();
     close_time = end_time - end_time3;
@@ -1500,7 +1475,7 @@ int main(int argc, char *argv[]) {
         printf("-------------------------------------------------------------------\n");
         double mib = total_recv_size / (1024.0);
         double gib = total_recv_size / (1024.0 * 1024.0);
-        printf("Total metadata amount        = %10d B = %10.2f MiB = %8.2f GiB\n", total_recv_size, mib, gib);
+        printf("Total metadata amount        = %10lld B = %10.2f MiB = %8.2f GiB\n", total_recv_size, mib, gib);
         for (int i = 0; i < 6; i++) {
             // printf("Min %s time: %f seconds\n", names[i], min_times[i]);
             printf("Max %-25s time =     %.4f sec\n", names[i], max_times[i]);
@@ -1515,5 +1490,5 @@ int main(int argc, char *argv[]) {
     }
     free_allocation_struct();
     MPI_Finalize();
-    return 0;
+    return (nerrs > 1);
 }

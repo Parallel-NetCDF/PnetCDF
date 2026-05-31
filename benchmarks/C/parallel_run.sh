@@ -5,7 +5,7 @@
 #
 
 # Exit immediately if a command exits with a non-zero status.
-# set -e
+set -e
 
 DRY_RUN=no
 VERBOSE=no
@@ -20,6 +20,20 @@ run_cmd() {
    fi
    if test $? != 0 ; then
       echo "FAIL: nprocs=$1 ---- $i $TEST_OPTS"
+      exit 1
+   fi
+}
+
+seq_run_cmd() {
+   local lineno=${BASH_LINENO[$((${#BASH_LINENO[@]} - 2))]}
+   if test "x$VERBOSE" = xyes || test "x$DRY_RUN" = xyes ; then
+      echo "Line $lineno CMD: $MPIRUN $@"
+   fi
+   if test "x$DRY_RUN" = xno ; then
+      $TESTSEQRUN $@
+   fi
+   if test $? != 0 ; then
+      echo "FAIL: nprocs=1 ---- $i $TEST_OPTS"
       exit 1
    fi
 }
@@ -49,6 +63,13 @@ unset PNETCDF_HINTS
 for i in ${check_PROGRAMS} ; do
     # Capture start time in seconds and nanoseconds
     start_time=$(date +%s.%1N)
+
+    DIFF_OPT="-q"
+    if test "x$i" = xindep_data_obj_create ; then
+       # compare file header only, as indep_data_obj_create does not write to
+       # variables
+       DIFF_OPT="-q -h"
+    fi
 
     OUT_PREFIX="${TESTOUTDIR}/$i"
 
@@ -99,8 +120,8 @@ for i in ${check_PROGRAMS} ; do
 
         run_cmd ./$i $CMD_OPTS ${OUT_FILE}.nc
 
-        # echo "${LINENO}:--- validating file ${OUT_FILE}.nc"
-        ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.nc
+        # validating output file
+        seq_run_cmd ${VALIDATOR} -q ${OUT_FILE}.nc
 
         if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
            # echo "${LINENO}: ---- test burst buffering feature"
@@ -111,9 +132,9 @@ for i in ${check_PROGRAMS} ; do
 
            export PNETCDF_HINTS=${saved_PNETCDF_HINTS}
 
-           ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.bb.nc
+           # validating output file
+           seq_run_cmd ${VALIDATOR} -q ${OUT_FILE}.bb.nc
 
-           DIFF_OPT="-q"
            run_cmd ${NCMPIDIFF} $DIFF_OPT $OUT_FILE.nc $OUT_FILE.bb.nc
         fi
 
@@ -124,7 +145,6 @@ for i in ${check_PROGRAMS} ; do
     done # intra_aggr
     done # io_mode
 
-    DIFF_OPT="-q"
     run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc
     if test "x$ENABLE_GIO" = x1 ; then
        run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.gio.nc
