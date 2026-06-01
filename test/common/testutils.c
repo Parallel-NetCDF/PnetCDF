@@ -444,6 +444,9 @@ int tst_main(int        argc,
 
 #if PNETCDF_DRIVER_GIO == 0
     s_drv = e_drv = 1; /* skip testing GIO driver */
+#else
+    if (getenv("GIO_ONLY") != NULL)
+        s_drv = e_drv = 0; /* testing GIO driver only */
 #endif
 
 #if !defined(PNETCDF_BURST_BUFFERING) || PNETCDF_BURST_BUFFERING == 0

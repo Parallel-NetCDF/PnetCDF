@@ -31,6 +31,10 @@ exe_name=`basename $1`
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
+if test "x$GIO_ONLY" = x1 ; then
+   export PNETCDF_HINTS="nc_driver=gio"
+fi
+
 # ncmpidiff/ncdiff should error out when two input file names are identical.
 IDENT_FILE=${srcdir}/tst_file.nc
 

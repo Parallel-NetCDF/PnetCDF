@@ -13,6 +13,10 @@ NCMPIDIFF=../../src/utils/ncmpidiff/ncmpidiff
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
+if test "x$GIO_ONLY" = x1 ; then
+   export PNETCDF_HINTS="nc_driver=gio"
+fi
+
 # PNETCDF_HINTS=
 # export PNETCDF_HINTS="$PNETCDF_HINTS"
 # echo "PNETCDF_HINTS=$PNETCDF_HINTS"

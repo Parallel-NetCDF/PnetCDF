@@ -22,6 +22,9 @@ if test "x$ENABLE_GIO" = x0 ; then
    IO_MODES="mpiio"
 else
    IO_MODES="gio mpiio"
+   if test "x$GIO_ONLY" = x1 ; then
+      IO_MODES="gio"
+   fi
 fi
 
 for io_mode in $IO_MODES ; do

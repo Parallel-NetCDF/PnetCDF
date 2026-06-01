@@ -25,6 +25,10 @@ exe_name=`basename $1`
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
+if test "x$GIO_ONLY" = x1 ; then
+   export PNETCDF_HINTS="nc_driver=gio"
+fi
+
 if test "x$exe_name" = xtst_io ; then
    run_cmd ./$1 -q -o ${TESTOUTDIR}
 else

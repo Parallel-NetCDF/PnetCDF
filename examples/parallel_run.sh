@@ -63,6 +63,9 @@ if test "x$ENABLE_GIO" = x0 ; then
    IO_MODES="mpiio"
 else
    IO_MODES="gio mpiio"
+   if test "x$GIO_ONLY" = x1 ; then
+      IO_MODES="gio"
+   fi
 fi
 
 # prevent user environment setting of PNETCDF_HINTS to interfere
@@ -73,6 +76,15 @@ PNETCDF_DEBUG_MODE=`grep PNETCDF_DEBUG_MODE ${top_builddir}/src/include/pnetcdf.
 for i in ${check_PROGRAMS} ; do
     # Capture start time in seconds and nanoseconds
     start_time=$(date +%s.%1N)
+
+    VERIFY_OUT_FILE=
+    VERIFY_OUT_FILE_PTHREAD=
+
+    if test "$i" = create_from_cdl ; then
+       DIFF_OPT="-q -h"
+    else
+       DIFF_OPT="-q"
+    fi
 
     if test "${PNETCDF_DEBUG_MODE}" = 1 ; then # test only in safe mode
        safe_hint="  SAFE"
@@ -99,7 +111,7 @@ for i in ${check_PROGRAMS} ; do
            ina_hint="  INA"
         else
            INA_HINTS="nc_num_aggrs_per_node=0"
-           INA_OUT_FILE="${DRIVER_OUT_FILE}"
+           INA_OUT_FILE="${DRIVER_OUT_FILE}.noina"
            ina_hint="NOINA"
         fi
 
@@ -135,6 +147,14 @@ for i in ${check_PROGRAMS} ; do
            for k in `seq 0 ${NTHREADS}` ; do
                seq_cmd ${VALIDATOR} -q ${OUT_FILE}.nc.$k
            done
+
+           if test "x$VERIFY_OUT_FILE_PTHREAD" = x ; then
+              VERIFY_OUT_FILE_PTHREAD=${OUT_FILE}.nc
+           else
+              for j in `seq 0 ${NTHREADS}` ; do
+                  exe_cmd $NCMPIDIFF $DIFF_OPT $VERIFY_OUT_FILE_PTHREAD.$j $OUT_FILE.nc.$j
+              done
+           fi
            continue
         elif test "$i" = put_vara ; then
            exe_cmd ./$i $CMD_OPT ${OUT_FILE}.nc
@@ -152,6 +172,12 @@ for i in ${check_PROGRAMS} ; do
 
         seq_cmd ${VALIDATOR} -q ${OUT_FILE}.nc
 
+        if test "x$VERIFY_OUT_FILE" = x ; then
+           VERIFY_OUT_FILE=${OUT_FILE}
+        else
+           exe_cmd ${NCMPIDIFF} $DIFF_OPT $VERIFY_OUT_FILE.nc $OUT_FILE.nc
+        fi
+
         if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
            saved_PNETCDF_HINTS=${PNETCDF_HINTS}
            export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
@@ -166,11 +192,7 @@ for i in ${check_PROGRAMS} ; do
            seq_cmd ${VALIDATOR} -q ${OUT_FILE}.bb.nc
 
            # compare file header only for large file tests
-           DIFF_OPT="-q"
-           if test "$i" = create_from_cdl ; then
-              DIFF_OPT+=" -h"
-           fi
-           exe_cmd ${NCMPIDIFF} $DIFF_OPT $OUT_FILE.nc $OUT_FILE.bb.nc
+           exe_cmd ${NCMPIDIFF} $DIFF_OPT $VERIFY_OUT_FILE.nc $OUT_FILE.bb.nc
         fi
 
         if test "x${ENABLE_NETCDF4}" = x1 ; then
@@ -182,26 +204,6 @@ for i in ${check_PROGRAMS} ; do
 
     if test "$i" = get_vara ; then
        continue
-    fi
-
-    DIFF_OPT="-q"
-    if test "$i" = create_from_cdl ; then
-       DIFF_OPT+=" -h"
-    fi
-    if test "$i" = pthread ; then
-       for j in `seq 0 ${NTHREADS}` ; do
-          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.mpio.ina.nc.$j
-          if test "x$ENABLE_GIO" = x1 ; then
-             exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc.$j $OUT_PREFIX.gio.nc.$j
-             exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.gio.nc.$j $OUT_PREFIX.gio.ina.nc.$j
-          fi
-       done
-    else
-       exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc
-       if test "x$ENABLE_GIO" = x1 ; then
-          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.gio.nc
-          exe_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.gio.nc $OUT_PREFIX.gio.ina.nc
-       fi
     fi
 
     rm -f ${OUTDIR}/$i*nc*

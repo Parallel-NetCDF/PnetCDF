@@ -18,6 +18,10 @@ OUTDIR=`echo "$TESTOUTDIR" | cut -d: -f2-`
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
+if test "x$GIO_ONLY" = x1 ; then
+   export PNETCDF_HINTS="nc_driver=gio"
+fi
+
 rm -f ${OUTDIR}/test.nc
 rm -f ${OUTDIR}/scratch.nc
 rm -f ${OUTDIR}/tooth-fairy.nc
