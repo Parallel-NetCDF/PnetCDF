@@ -16,10 +16,17 @@ if test "x$ENABLE_GIO" = x0 ; then
    IO_MODES="mpiio"
 else
    IO_MODES="gio mpiio"
+   if test "x$GIO_ONLY" = x1 ; then
+      IO_MODES="gio"
+   fi
 fi
 
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
+
+if test "x$GIO_ONLY" = x1 ; then
+   export PNETCDF_HINTS="nc_driver=gio"
+fi
 
 for io_mode in $IO_MODES ; do
     if test "x$io_mode" = xmpiio ; then

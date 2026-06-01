@@ -17,13 +17,17 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # prevent user environment setting of PNETCDF_HINTS to interfere
 unset PNETCDF_HINTS
 
-for i in ${check_PROGRAMS} ; do
-    PNETCDF_HINTS=
-    if test "x$MIMIC_LUSTRE" != x1 ; then
-       PNETCDF_HINTS="cb_nodes=2;$PNETCDF_HINTS"
-    fi
-    export PNETCDF_HINTS="$PNETCDF_HINTS"
+PNETCDF_HINTS=
+if test "x$GIO_ONLY" = x1 ; then
+   PNETCDF_HINTS+="nc_driver=gio;"
+fi
 
+if test "x$MIMIC_LUSTRE" != x1 ; then
+   PNETCDF_HINTS+="cb_nodes=2"
+fi
+export PNETCDF_HINTS=$PNETCDF_HINTS
+
+for i in ${check_PROGRAMS} ; do
     ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
     rm -f ${OUTDIR}/$i.nc
     rm -f ${OUTDIR}/$i.nc.cdf4

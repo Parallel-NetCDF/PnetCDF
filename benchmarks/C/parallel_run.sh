@@ -55,6 +55,9 @@ if test "x$ENABLE_GIO" = x0 ; then
    IO_MODES="mpiio"
 else
    IO_MODES="gio mpiio"
+   if test "x$GIO_ONLY" = x1 ; then
+      IO_MODES="gio"
+   fi
 fi
 
 # prevent user environment setting of PNETCDF_HINTS to interfere
@@ -63,6 +66,8 @@ unset PNETCDF_HINTS
 for i in ${check_PROGRAMS} ; do
     # Capture start time in seconds and nanoseconds
     start_time=$(date +%s.%1N)
+
+    VERIFY_OUT_FILE=
 
     DIFF_OPT="-q"
     if test "x$i" = xindep_data_obj_create ; then
@@ -90,7 +95,7 @@ for i in ${check_PROGRAMS} ; do
            ina_hint="  INA"
         else
            INA_HINTS="nc_num_aggrs_per_node=0"
-           INA_OUT_FILE="${DRIVER_OUT_FILE}"
+           INA_OUT_FILE="${DRIVER_OUT_FILE}.noina"
            ina_hint="NOINA"
         fi
 
@@ -120,6 +125,12 @@ for i in ${check_PROGRAMS} ; do
 
         run_cmd ./$i $CMD_OPTS ${OUT_FILE}.nc
 
+        if test "x$VERIFY_OUT_FILE" = x ; then
+           VERIFY_OUT_FILE=${OUT_FILE}.nc
+        else
+           run_cmd $NCMPIDIFF $DIFF_OPT $VERIFY_OUT_FILE ${OUT_FILE}.nc
+        fi
+
         # validating output file
         seq_run_cmd ${VALIDATOR} -q ${OUT_FILE}.nc
 
@@ -144,12 +155,6 @@ for i in ${check_PROGRAMS} ; do
         fi
     done # intra_aggr
     done # io_mode
-
-    run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc
-    if test "x$ENABLE_GIO" = x1 ; then
-       run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.gio.nc
-       run_cmd $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.gio.ina.nc
-    fi
 
     rm -f ${OUTDIR}/$i*nc*
 

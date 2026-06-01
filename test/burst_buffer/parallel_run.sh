@@ -39,3 +39,4 @@ for i in ${check_PROGRAMS} ; do
 
 done # check_PROGRAMS
 
+rm -rf ${TESTOUTDIR}/*.meta ${TESTOUTDIR}/*data

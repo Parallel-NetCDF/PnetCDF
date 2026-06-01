@@ -41,6 +41,9 @@ if test "x$ENABLE_GIO" = x0 ; then
    IO_MODES="mpiio"
 else
    IO_MODES="gio mpiio"
+   if test "x$GIO_ONLY" = x1 ; then
+      IO_MODES="gio"
+   fi
 fi
 
 # prevent user environment setting of PNETCDF_HINTS to interfere
@@ -53,6 +56,8 @@ DATA_MODE="indep coll"
 for i in ${check_PROGRAMS} ; do
     # Capture start time in seconds and nanoseconds
     start_time=$(date +%s.%1N)
+
+    VERIFY_OUT_FILE=
 
     OUT_PREFIX="${TESTOUTDIR}/$i"
 
@@ -75,7 +80,7 @@ for i in ${check_PROGRAMS} ; do
            ina_hint="  INA"
         else
            INA_HINTS="nc_num_aggrs_per_node=0"
-           INA_OUT_FILE="${DRIVER_OUT_FILE}"
+           INA_OUT_FILE="${DRIVER_OUT_FILE}.noina"
            ina_hint="NOINA"
         fi
 
@@ -95,12 +100,14 @@ for i in ${check_PROGRAMS} ; do
         export PNETCDF_HINTS="$PNETCDF_HINTS"
         # echo "${LINENO}: PNETCDF_HINTS=$PNETCDF_HINTS"
 
-        CMD_OPTS="-q -f ${OUT_FILE}."
         if test "$data_mode" = indep ; then
-           CMD_OPTS="-i $CMD_OPTS"
+           OUT_FILE="$OUT_FILE.indp"
+           CMD_OPTS="-q -f ${OUT_FILE}. -i"
            TEST_OPTS="$driver_hint $ina_hint INDEP"
         else
-           TEST_OPTS="$driver_hint $ina_hint  COLL"
+           OUT_FILE="$OUT_FILE.coll"
+           CMD_OPTS="-q -f ${OUT_FILE}."
+           TEST_OPTS="$driver_hint $ina_hint COLL"
         fi
 
         run_cmd ./$i $CMD_OPTS
@@ -114,6 +121,14 @@ for i in ${check_PROGRAMS} ; do
            ${TESTSEQRUN} ${VALIDATOR} -q $OUT_FILE.$ext.nc
         done
 
+        if test "x$VERIFY_OUT_FILE" = x ; then
+           VERIFY_OUT_FILE=${OUT_FILE}
+        else
+           for ext in $FILE_EXTS ; do
+              run_cmd $NCMPIDIFF -q $VERIFY_OUT_FILE.$ext.nc $OUT_FILE.$ext.nc
+           done # ext
+        fi
+
         if test "x${ENABLE_BURST_BUFFER}" = x1 ; then
            # echo "${LINENO}: ---- test burst buffering feature"
            saved_PNETCDF_HINTS=${PNETCDF_HINTS}
@@ -121,7 +136,7 @@ for i in ${check_PROGRAMS} ; do
            # echo "${LINENO}: PNETCDF_HINTS=$PNETCDF_HINTS"
            CMD_OPTS="-q -f ${OUT_FILE}.bb."
            if test "$data_mode" = indep ; then
-              CMD_OPTS="-i $CMD_OPTS"
+              CMD_OPTS="$CMD_OPTS -i"
            fi
            run_cmd ./$i $CMD_OPTS
 
@@ -130,7 +145,7 @@ for i in ${check_PROGRAMS} ; do
            for ext in $FILE_EXTS ; do
               # echo "${LINENO}: --- validating file ${OUT_FILE}.bb.nc"
               ${TESTSEQRUN} ${VALIDATOR} -q $OUT_FILE.bb.$ext.nc
-              run_cmd ${NCMPIDIFF} -q $OUT_FILE.$ext.nc $OUT_FILE.bb.$ext.nc
+              run_cmd ${NCMPIDIFF} -q $VERIFY_OUT_FILE.$ext.nc $OUT_FILE.bb.$ext.nc
            done
         fi
 
@@ -140,19 +155,6 @@ for i in ${check_PROGRAMS} ; do
         fi
     done # intra_aggr
     done # io_mode
-
-    for ext in $FILE_EXTS ; do
-       # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc ---"
-       $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.mpio.ina.$ext.nc
-
-       if test "x$ENABLE_GIO" = x1 ; then
-          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.gio.$ext.nc ---"
-          $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.gio.$ext.nc
-          # echo "${LINENO}: --- ncmpidiff $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.gio.ina.$ext.nc ---"
-          $NCMPIDIFF -q $OUT_PREFIX.mpio.$ext.nc $OUT_PREFIX.gio.ina.$ext.nc
-       fi
-    done # ext
-
     done # data_mode
     rm -f ${OUTDIR}/$i*nc*
 
