@@ -5,15 +5,11 @@
 
 /*
    This is an example program which writes some 4D pressure and
-   temperatures. It is intended to illustrate the use of the netCDF
-   C API. The companion program pres_temp_4D_rd.c shows how
-   to read the netCDF data file created by this program.
+   temperatures, followed by reading the data back. It is intended to
+   illustrate the use of the PnetCDF C API.
 
-   This program is part of the netCDF tutorial:
+   This program derived from a part of the netCDF tutorial:
    http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-tutorial
-
-   Full documentation of the netCDF C API can be found at:
-   http://www.unidata.ucar.edu/software/netcdf/docs/netcdf-c
 */
 
 #include <stdio.h>
@@ -289,6 +285,9 @@ int pres_temp_4D_rd(const char *filename,
     /* Error handling. */
     int err, nerrs = 0;
 
+    int rec_dimid;
+    MPI_Offset num_recs;
+
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -301,6 +300,21 @@ int pres_temp_4D_rd(const char *filename,
         goto err_out;
     }
 
+    /* check the number of records, should be == NREC */
+    err = ncmpi_inq_dimid(ncid, REC_NAME, &rec_dimid);
+    CHECK_ERR
+    err = ncmpi_inq_dimlen(ncid, rec_dimid, &num_recs);
+    CHECK_ERR
+    if (num_recs != NREC) {
+        fprintf(stderr, "Error: number of records expect %d but got %lld\n",
+               NREC, num_recs);
+        fflush(stderr);
+        ncmpi_close(ncid);
+        nerrs++;
+        goto err_out;
+    }
+
+    /* switch to independent data mode */
     if (!coll_io) {
         err = ncmpi_begin_indep_data(ncid);
         CHECK_ERR
@@ -434,13 +448,13 @@ loop_exit:
     err = ncmpi_close(ncid);
     CHECK_ERR
 
+err_out:
     if (pres_in != NULL) {
         if (pres_in[0] != NULL)
             free(pres_in[0]);
         free(pres_in);
     }
 
-err_out:
     return nerrs;
 }
 
