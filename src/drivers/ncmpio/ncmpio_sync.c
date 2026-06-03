@@ -44,23 +44,11 @@ ncmpio_write_numrecs(NC         *ncp,
     /* return now if there is no record variable defined */
     if (ncp->vars.num_rec_vars == 0) return NC_NOERR;
 
-    /* When intra-node aggregation is enabled, non-aggregators do not
-     * participate any collective calls below.
+    /* Non-root processes can return now, because only root process writes
+     * numrecs to the file header.
      */
-    if (ncp->num_aggrs_per_node > 0 && !ncp->comm_attr.is_ina_aggr)
-        return NC_NOERR;
+    if (ncp->rank > 0) return NC_NOERR;
 
-    if (ncp->rank > 0) {
-        /* Currently in independent data mode */
-        if (NC_indep(ncp))
-            return NC_NOERR;
-
-        /* If not requiring all MPI-IO calls to be collective, non-root
-         * processes can return now. This is because only root process writes
-         * numrecs to the file header.
-         */
-        return NC_NOERR;
-    }
     /* codes below run by root only */
 
     if (new_numrecs > ncp->numrecs || NC_ndirty(ncp)) {
