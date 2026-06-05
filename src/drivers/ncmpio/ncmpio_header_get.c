@@ -336,7 +336,6 @@ hdr_fetch(bufferinfo *gbp) {
     buf_view.count = 0;
     buf_view.off = NULL;
     buf_view.len = NULL;
-    buf_view.is_contig = 1;
     buf_view.type = MPI_BYTE;
 
     MPI_Comm_size(gbp->ncp->comm, &nprocs);

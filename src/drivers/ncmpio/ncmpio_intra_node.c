@@ -776,7 +776,6 @@ flat_buf_type(const NC      *ncp,
     buf_view->count = 0;
     buf_view->off = NULL;
     buf_view->len = NULL;
-    buf_view->is_contig = 1;
 
     if (num_reqs == 0)
         return NC_NOERR;
@@ -841,7 +840,6 @@ flat_buf_type(const NC      *ncp,
     }
 
     buf_view->count = num_reqs;
-    buf_view->is_contig = (num_reqs <= 1);
 
     /* construct buf_view->type if it is noncontiguous */
     if (num_reqs > 1) {
@@ -1209,11 +1207,11 @@ int ina_put(NC         *ncp,
         if (meta[0] > 0) {
             /* Non-aggregators send write data to the aggregator */
 #ifdef HAVE_MPI_LARGE_COUNT
-            MPI_Count num = (buf_view.is_contig) ? buf_view.size : 1;
+            MPI_Count num = (buf_view.count <= 1) ? buf_view.size : 1;
             TRACE_COMM(MPI_Send_c)(buf, num, buf_view.type, ina_meta.my_aggr,
                                    0, ncp->comm);
 #else
-            int num = (buf_view.is_contig) ? buf_view.size : 1;
+            int num = (buf_view.count <= 1) ? buf_view.size : 1;
             TRACE_COMM(MPI_Send)(buf, num, buf_view.type, ina_meta.my_aggr,
                                  0, ncp->comm);
 #endif
@@ -1328,8 +1326,8 @@ int ina_put(NC         *ncp,
          * buffer used to receive write data from non-aggregators and the
          * buffer used to write to file. bufAddr[] is calculated based on the
          * assumption that the write buffer of this aggregator is contiguous,
-         * i.e. buf_view.is_contig being 1. For non-aggregators, their write
-         * data will always be received into a contiguous buffer.
+         * i.e. buf_view.count <= 1. For non-aggregators, their write data will
+         * always be received into a contiguous buffer.
          */
         bufAddr = (MPI_Aint*)NCI_Malloc(sizeof(MPI_Aint) * npairs);
         bufAddr[0] = 0;
@@ -1449,17 +1447,17 @@ int ina_put(NC         *ncp,
 
         if (recv_buf != buf) {
             /* Pack this aggregator's write data into front of recv_buf */
-            if (buf_view.is_contig && buf_view.type == MPI_BYTE)
+            if (buf_view.count <= 1 && buf_view.type == MPI_BYTE)
                 memcpy(recv_buf, buf, buf_view.size);
             else {
 #ifdef HAVE_MPI_LARGE_COUNT
                 MPI_Count pos=0;
-                MPI_Count num = (buf_view.is_contig) ? buf_view.size : 1;
+                MPI_Count num = (buf_view.count <= 1) ? buf_view.size : 1;
                 MPI_Pack_c(buf, num, buf_view.type, recv_buf, buf_view.size,
                            &pos, MPI_COMM_SELF);
 #else
                 int pos=0;
-                MPI_Count num = (buf_view.is_contig) ? buf_view.size : 1;
+                MPI_Count num = (buf_view.count <= 1) ? buf_view.size : 1;
                 MPI_Pack(buf, num, buf_view.type, recv_buf, buf_view.size,
                          &pos, MPI_COMM_SELF);
 #endif
@@ -1537,20 +1535,19 @@ int ina_put(NC         *ncp,
                  */
                 buf_view.size = wr_amnt;
                 buf_view.type = MPI_BYTE;
-                buf_view.is_contig = 1;
+                buf_view.count = 0;
             }
             /* else case is when user's buffer, buf, can be used to write */
         }
-        else if (buf_view.is_contig && !overlap) {
+        else if (buf_view.count <= 1 && !overlap) {
             /* Note we can reuse bufAddr[] and len_ptr[] as buf_view.off and
-             * buf_view.len only when buf_view.is_contig is true, because
-             * bufAddr[] is constructed based on the assumption that the write
-             * buffer is contiguous.
+             * buf_view.len only when buf_view is contiguous, because bufAddr[]
+             * is constructed based on the assumption that the write buffer is
+             * contiguous.
              */
             wr_buf = recv_buf;
             buf_view.size      = wr_amnt;
             buf_view.type      = MPI_BYTE;
-            buf_view.is_contig = (npairs <= 1);
             buf_view.len       = len_ptr;
             buf_view.count     = npairs;
 #if SIZEOF_MPI_AINT == SIZEOF_MPI_OFFSET
@@ -1587,7 +1584,7 @@ int ina_put(NC         *ncp,
              */
             buf_view.size = wr_amnt;
             buf_view.type = MPI_BYTE;
-            buf_view.is_contig = 1;
+            buf_view.count = 0;
 
             if (recv_buf != buf) NCI_Free(recv_buf);
         }
@@ -1758,11 +1755,11 @@ int ina_get(NC         *ncp,
              */
             MPI_Status st;
 #ifdef HAVE_MPI_LARGE_COUNT
-            MPI_Count num = (buf_view.is_contig) ? buf_view.size : 1;
+            MPI_Count num = (buf_view.count <= 1) ? buf_view.size : 1;
             TRACE_COMM(MPI_Recv_c)(buf, num, buf_view.type, ina_meta.my_aggr,
                                    0, ncp->comm, &st);
 #else
-            int num = (buf_view.is_contig) ? buf_view.size : 1;
+            int num = (buf_view.count <= 1) ? buf_view.size : 1;
             TRACE_COMM(MPI_Recv)(buf, num, buf_view.type, ina_meta.my_aggr,
                                  0, ncp->comm, &st);
 #endif
@@ -1987,7 +1984,7 @@ int ina_get(NC         *ncp,
         /* Read data will be stored in a contiguous read buffer. */
         rd_buf_view.size = rd_amnt;
         rd_buf_view.type = MPI_BYTE;
-        rd_buf_view.is_contig = 1;
+        rd_buf_view.count = 0;
         if (rd_amnt > 0)
             rd_buf = (char*) NCI_Malloc(rd_amnt);
     }
@@ -2031,7 +2028,7 @@ int ina_get(NC         *ncp,
          * read buffer. If not, allocate a temporary buffer, copy the read
          * data over, and then unpacking it to the user buffer.
          */
-        if (buf_view.is_contig)
+        if (buf_view.count <= 1)
             ptr = buf;
         else if (bufLen > 0)
             ptr = tmp_buf = (char*) NCI_Malloc(bufLen);
@@ -2078,7 +2075,7 @@ int ina_get(NC         *ncp,
         }
 
         /* unpack read data to user read buffer, if not done already */
-        if (bufLen > 0 && !buf_view.is_contig) {
+        if (bufLen > 0 && buf_view.count > 1) {
 #ifdef HAVE_MPI_LARGE_COUNT
             MPI_Count pos=0;
             MPI_Unpack_c(tmp_buf, bufLen, &pos, buf, 1, buf_view.type,
@@ -2447,7 +2444,6 @@ ncmpio_ina_req(NC               *ncp,
 
     /* blocking API's buffer passed here is always contiguous */
     buf_view.type = MPI_BYTE;
-    buf_view.is_contig = 1;
     buf_view.size = buf_len;
     buf_view.count = 0;
     buf_view.off = NULL;

@@ -98,12 +98,12 @@ ncmpio_file_read_at(NC         *ncp,
         if (fh == MPI_FILE_NULL) return 0;
 
 #ifdef HAVE_MPI_LARGE_COUNT
-        MPI_Count count = (buf_view.is_contig) ? buf_view.size : 1;
+        MPI_Count count = (buf_view.type == MPI_BYTE) ? buf_view.size : 1;
 
         TRACE_IO(MPI_File_read_at_c, (fh, offset, buf, count, buf_view.type,
                                       &mpistatus));
 #else
-        int count = (buf_view.is_contig) ? buf_view.size : 1;
+        int count = (buf_view.type == MPI_BYTE) ? buf_view.size : 1;
 
         if (buf_view.size > NC_MAX_INT) {
 #ifdef PNETCDF_DEBUG
@@ -166,12 +166,12 @@ ncmpio_file_read_at_all(NC         *ncp,
         if (fh == MPI_FILE_NULL) return 0;
 
 #ifdef HAVE_MPI_LARGE_COUNT
-        MPI_Count count = (buf_view.is_contig) ? buf_view.size : 1;
+        MPI_Count count = (buf_view.type == MPI_BYTE) ? buf_view.size : 1;
 
         TRACE_IO(MPI_File_read_at_all_c, (fh, offset, buf, count,
                                           buf_view.type, &mpistatus));
 #else
-        int count = (buf_view.is_contig) ? buf_view.size : 1;
+        int count = (buf_view.type == MPI_BYTE) ? buf_view.size : 1;
 
         if (buf_view.size > NC_MAX_INT) {
 #ifdef PNETCDF_DEBUG
@@ -236,12 +236,12 @@ ncmpio_file_write_at(NC         *ncp,
         if (fh == MPI_FILE_NULL) return 0;
 
 #ifdef HAVE_MPI_LARGE_COUNT
-        MPI_Count count = (buf_view.is_contig) ? buf_view.size : 1;
+        MPI_Count count = (buf_view.type == MPI_BYTE) ? buf_view.size : 1;
 
         TRACE_IO(MPI_File_write_at_c, (fh, offset, buf, count, buf_view.type,
                                        &mpistatus));
 #else
-        int count = (buf_view.is_contig) ? buf_view.size : 1;
+        int count = (buf_view.type == MPI_BYTE) ? buf_view.size : 1;
 
         if (buf_view.size > NC_MAX_INT) {
 #ifdef PNETCDF_DEBUG
@@ -303,12 +303,12 @@ ncmpio_file_write_at_all(NC         *ncp,
         if (fh == MPI_FILE_NULL) return 0;
 
 #ifdef HAVE_MPI_LARGE_COUNT
-        MPI_Count count = (buf_view.is_contig) ? buf_view.size : 1;
+        MPI_Count count = (buf_view.type == MPI_BYTE) ? buf_view.size : 1;
 
         TRACE_IO(MPI_File_write_at_all_c, (fh, offset, buf, count,
                                            buf_view.type, &mpistatus));
 #else
-        int count = (buf_view.is_contig) ? buf_view.size : 1;
+        int count = (buf_view.type == MPI_BYTE) ? buf_view.size : 1;
 
         if (buf_view.size > NC_MAX_INT) {
 #ifdef PNETCDF_DEBUG
@@ -433,6 +433,13 @@ ncmpio_read_write(NC         *ncp,
 
     if (rw_flag == NC_REQ_RD) {
         void *xbuf=buf;
+        MPI_Count orig_count;
+
+        /* Save the original buf_view.count, as it may be modified when
+         * buf_view.size <= ibuf_size, original buf_view.count is required to
+         * unpack the read data to user read buffer.
+         */
+        orig_count = buf_view.count;
 
 #ifndef HAVE_MPI_LARGE_COUNT
         if (buf_view.size > NC_MAX_INT) {
@@ -444,13 +451,14 @@ ncmpio_read_write(NC         *ncp,
                 DEBUG_ASSIGN_ERROR(status, NC_EINTOVERFLOW)
                 /* write nothing, but participate the collective call */
                 buf_view.size = 0;
+                buf_view.count = 0;
             }
             else
                 DEBUG_RETURN_ERROR(NC_EINTOVERFLOW)
         }
 #endif
 
-        if (!buf_view.is_contig && buf_view.size <= ncp->ibuf_size) {
+        if (buf_view.count > 1 && buf_view.size <= ncp->ibuf_size) {
             /* The only case of read buffer being noncontiguous is when
              * nonblocking API ncmpi_wait/wait_all() is called and INA is
              * disabled. If read buffer is noncontiguous and size is <
@@ -462,11 +470,11 @@ ncmpio_read_write(NC         *ncp,
              * Note ncp->ibuf_size is never > NC_MAX_INT.
              */
             xbuf = NCI_Malloc(buf_view.size);
+            /* mark buf_view is contiguous */
             buf_view.type = MPI_BYTE;
-            buf_view.is_contig = 1;
+            buf_view.count = 0;
         }
-
-        if (!buf_view.is_contig && ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+        else if (buf_view.count > 1 && ncp->fstype == PNCIO_FSTYPE_MPIIO) {
             /* construct a buftype */
 #ifdef HAVE_MPI_LARGE_COUNT
             /* TODO: MPI_Type_create_hindexed_c
@@ -502,6 +510,7 @@ ncmpio_read_write(NC         *ncp,
                 /* return the first encountered error if there is any */
                 if (status == NC_NOERR) status = err;
                 buf_view.size = 0;
+                buf_view.count = 0;
             }
             else {
                 mpireturn = MPI_Type_commit(&buf_view.type);
@@ -510,6 +519,7 @@ ncmpio_read_write(NC         *ncp,
                     /* return the first encountered error if there is any */
                     if (status == NC_NOERR) status = err;
                     buf_view.size = 0;
+                    buf_view.count = 0;
                 }
                 else
                     to_free_buftype = 1;
@@ -526,7 +536,7 @@ ncmpio_read_write(NC         *ncp,
             char *in_ptr, *out_ptr;
             in_ptr = xbuf;
 
-            for (i=0; i<buf_view.count; i++) {
+            for (i=0; i<orig_count; i++) {
                 out_ptr = (char*)buf + buf_view.off[i]; // - buf_view.off[0]);
                 memcpy(out_ptr, in_ptr, buf_view.len[i]);
                 in_ptr += buf_view.len[i];
@@ -539,7 +549,7 @@ ncmpio_read_write(NC         *ncp,
     } else { /* NC_REQ_WR */
         void *xbuf=buf;
 
-        if (!buf_view.is_contig && buf_view.size <= ncp->ibuf_size) {
+        if (buf_view.count > 1 && buf_view.size <= ncp->ibuf_size) {
             /* The only case of write buffer being noncontiguous is when
              * nonblocking API ncmpi_wait/wait_all() is called and INA is
              * disabled. If write buffer is noncontiguous and size is <
@@ -558,12 +568,11 @@ ncmpio_read_write(NC         *ncp,
                 memcpy(out_ptr, in_ptr, buf_view.len[i]);
                 out_ptr += buf_view.len[i];
             }
-            /* mark the xbuf is contiguous */
+            /* mark buf_view is contiguous */
             buf_view.type = MPI_BYTE;
-            buf_view.is_contig = 1;
+            buf_view.count = 0;
         }
-
-        if (!buf_view.is_contig && ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+        else if (buf_view.count > 1 && ncp->fstype == PNCIO_FSTYPE_MPIIO) {
             /* construct a buftype */
 #ifdef HAVE_MPI_LARGE_COUNT
             /* TODO: MPI_Type_create_hindexed_c

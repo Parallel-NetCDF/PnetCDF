@@ -151,7 +151,6 @@ fill_var_rec(NC         *ncp,
 
     buf_view.type = MPI_BYTE;
     buf_view.count = 0;
-    buf_view.is_contig = 1;
     buf_view.size = 0;
     buf_view.off = NULL;
     buf_view.len = NULL;
@@ -672,7 +671,6 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     buf_view.count     = 0;
     buf_view.off       = NULL;
     buf_view.len       = NULL;
-    buf_view.is_contig = 1;
 
     /* write to variable collectively */
     if (nprocs > 1)

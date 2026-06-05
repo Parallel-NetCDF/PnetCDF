@@ -329,7 +329,6 @@ err_check:
     buf_view.type = MPI_BYTE;
     buf_view.size = filetype_size;
     buf_view.count = 1;
-    buf_view.is_contig = 1;
 
     if (fIsSet(reqMode, NC_REQ_RD)) {
         MPI_Offset rlen;

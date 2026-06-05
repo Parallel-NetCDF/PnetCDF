@@ -507,7 +507,6 @@ int ncmpio_write_header(NC *ncp)
     PNCIO_View buf_view;
 
     buf_view.count = 1;
-    buf_view.is_contig = 1;
 
     /* Write the entire header to the file. This function may be called from
      * a rename API. In that case, we cannot just change the variable name in

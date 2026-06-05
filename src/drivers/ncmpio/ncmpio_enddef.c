@@ -214,7 +214,6 @@ move_file_block(NC         *ncp,
     /* buffer used to move data is always contiguous */
     buf_view.type = MPI_BYTE;
     buf_view.count = 0;
-    buf_view.is_contig = 1;
 
     /* movement must start from the last p_units toward to the 1st */
     p_units = (MPI_Offset)ncp->data_chunk * nprocs;
@@ -631,7 +630,7 @@ write_NC(NC *ncp)
 
     assert(!NC_readonly(ncp));
 
-    buf_view.is_contig = 1;
+    buf_view.count = 0;
     buf_view.off = NULL;
     buf_view.len = NULL;
 
