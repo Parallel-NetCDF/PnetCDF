@@ -171,11 +171,13 @@ move_file_block(NC         *ncp,
     MPI_Comm comm;
     PNCIO_View buf_view;
 
-    /* If intra-node aggregation is enabled, then only the aggregators perform
-     * the movement.
+    /* check if this is a valid move request */
+    if (to == from || nbytes == 0) return NC_NOERR;
+
+    /* When intra-node aggregation is enabled, only INA aggregators perform
+     * the data movement.
      */
     if (ncp->num_aggrs_per_node > 0) {
-
         if (ncp->comm_attr.ina_comm == MPI_COMM_NULL)
             return NC_NOERR;
 
@@ -191,19 +193,6 @@ move_file_block(NC         *ncp,
 
     /* align file access for all ranks */
     align_rank = (to / ncp->data_chunk + rank) % nprocs;
-
-    /* Use MPI collective I/O subroutines to move data, only if nproc > 1 and
-     * MPI-IO hint "romio_no_indep_rw" is set to true. Otherwise, use MPI
-     * independent I/O subroutines, as the data partitioned among processes are
-     * not interleaved and thus need no collective I/O.
-     */
-    do_coll = (nprocs > 1 && fIsSet(ncp->flags, NC_HCOLL));
-
-    if (!do_coll && (to == from || nbytes == 0)) return NC_NOERR;
-
-    /* MPI-IO fileview has been reset in ncmpi_redef() to make the entire file
-     * visible
-     */
 
     /* buf will be used as a temporal buffer to move data in chunks, i.e.
      * read a chunk and later write to the new location
@@ -247,6 +236,17 @@ move_file_block(NC         *ncp,
     /* pad the remaining of last p_units */
     nbytes += p_units - end_block;
 
+    /* Use MPI collective I/O subroutines to move data, only if nproc > 1 and
+     * MPI-IO hint "romio_no_indep_rw" is set to true. Otherwise, use MPI
+     * independent I/O subroutines, as the data partitioned among processes are
+     * not interleaved and thus need no collective I/O.
+     */
+    do_coll = (nprocs > 1 && fIsSet(ncp->flags, NC_HCOLL));
+
+    /* No need to set fileview, as fileview has been reset in ncmpi_redef() to
+     * make the entire file visible.
+     */
+
     while (nbytes > 0) {
         buf_view.size = mv_amnt;
 
@@ -258,7 +258,12 @@ move_file_block(NC         *ncp,
             rlen = ncmpio_file_read_at(ncp, off_from, buf, buf_view);
         if (status == NC_NOERR && rlen < 0) status = (int)rlen;
 
-        /* to prevent from one rank's write run faster than other's read */
+        /* To prevent from one rank's write run faster than other's read,
+         * a barrier is required. Even with collective read/write, some
+         * processes may exit MPI_File_read_at_all()/PNCIO_File_read_at_all()
+         * than others and start writing to file while others are still reading
+         * it.
+         */
         if (nprocs > 1) MPI_Barrier(comm);
 
         /* Write to new location at off_to for amount of rlen, the actual read
