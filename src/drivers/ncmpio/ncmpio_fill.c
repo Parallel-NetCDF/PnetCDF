@@ -205,7 +205,7 @@ fill_var_rec(NC         *ncp,
     }
 
     /* make the entire file visible */
-    err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, 0, NULL, NULL);
+    err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
     status = (status == NC_NOERR) ? err : status;
 
     /* calculate the starting file offset for each process */
@@ -624,7 +624,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     NCI_Free(noFill);
     NCI_Free(count);
 
-    err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, k, offset, blocklengths);
+    err = ncmpio_file_set_view(ncp, MPI_BYTE, k, offset, blocklengths);
     status = (status == NC_NOERR) ? err : status;
 
     buf_view.type = MPI_BYTE;
@@ -672,7 +672,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     if (offset != NULL) NCI_Free(offset);
 
     /* reset fileview to make the entire file visible */
-    err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, 0, NULL, NULL);
+    err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
     status = (status == NC_NOERR) ? err : status;
 
     return status;

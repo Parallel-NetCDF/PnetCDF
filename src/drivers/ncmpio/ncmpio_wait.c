@@ -2045,7 +2045,7 @@ req_aggregation(NC     *ncp,
     NCI_Free(reqs);
 
     /* set the MPI-IO fileview, this is a collective call */
-    err = ncmpio_file_set_view(ncp, 0, filetype, 0, NULL, NULL);
+    err = ncmpio_file_set_view(ncp, filetype, 0, NULL, NULL);
     if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
     if (err != NC_NOERR) {
         if (status == NC_NOERR) status = err;
@@ -2386,7 +2386,7 @@ mpi_io:
     NCI_Free(reqs);
 
     /* set the MPI-IO fileview, this is a collective call */
-    err = ncmpio_file_set_view(ncp, 0, filetype, 0, NULL, NULL);
+    err = ncmpio_file_set_view(ncp, filetype, 0, NULL, NULL);
     if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
     if (err != NC_NOERR) {
         if (status == NC_NOERR) status = err;

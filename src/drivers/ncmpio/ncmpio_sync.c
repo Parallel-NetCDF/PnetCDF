@@ -106,7 +106,7 @@ ncmpio_write_numrecs(NC         *ncp,
 
         if (ncp->fstype != PNCIO_FSTYPE_MPIIO) {
             /* reset fileview */
-            err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, 0, NULL, NULL);
+            err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
             if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
         }
 

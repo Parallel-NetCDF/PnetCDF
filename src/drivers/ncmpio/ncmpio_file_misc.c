@@ -104,7 +104,7 @@ ncmpio_redef(void *ncdp)
     fSet(ncp->flags, NC_MODE_DEF);
 
     /* must reset fileview as header extent may later change in enddef() */
-    err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, 0, NULL, NULL);
+    err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
     DEBUG_ASSIGN_ERROR(status, err)
 
     return status;

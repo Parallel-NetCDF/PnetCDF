@@ -1601,7 +1601,7 @@ int ina_put(NC         *ncp,
 #endif
 
     /* set the fileview */
-    err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, npairs, off_ptr, len_ptr);
+    err = ncmpio_file_set_view(ncp, MPI_BYTE, npairs, off_ptr, len_ptr);
     if (err != NC_NOERR) {
         if (status == NC_NOERR) status = err;
         wr_amnt = 0;
@@ -1960,7 +1960,7 @@ int ina_get(NC         *ncp,
      */
 
     /* set the fileview */
-    err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, npairs, off_ptr, len_ptr);
+    err = ncmpio_file_set_view(ncp, MPI_BYTE, npairs, off_ptr, len_ptr);
     if (err != NC_NOERR) {
         if (status == NC_NOERR) status = err;
         rd_amnt = 0;

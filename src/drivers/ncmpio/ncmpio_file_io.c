@@ -366,7 +366,7 @@ ncmpio_getput_zero_req(NC *ncp, int reqMode)
     /* do nothing if this came from an independent API */
     if (fIsSet(reqMode, NC_REQ_INDEP)) return NC_NOERR;
 
-    err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, 0, NULL, NULL);
+    err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
     if (status == NC_NOERR) status = err;
 
     if (fIsSet(reqMode, NC_REQ_RD)) {
@@ -385,7 +385,7 @@ ncmpio_getput_zero_req(NC *ncp, int reqMode)
     }
 
     /* Reset fileview. Note fileview is never reused in PnetCDF */
-    ncmpio_file_set_view(ncp, 0, MPI_BYTE, 0, NULL, NULL);
+    ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
 
     /* No longer need to reset the file view, as the root's fileview includes
      * the whole file header.
@@ -631,7 +631,7 @@ ncmpio_read_write(NC         *ncp,
 
 fn_exit:
     /* Reset fileview. Note fileview is never reused in PnetCDF */
-    ncmpio_file_set_view(ncp, 0, MPI_BYTE, 0, NULL, NULL);
+    ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
 
     return status;
 }
@@ -762,7 +762,6 @@ ncmpio_file_sync(NC *ncp) {
  */
 int
 ncmpio_file_set_view(const NC     *ncp,
-                     MPI_Offset    disp,    /* IN/OUT */
                      MPI_Datatype  filetype,
                      MPI_Aint      npairs,
 #ifdef HAVE_MPI_LARGE_COUNT
@@ -779,7 +778,6 @@ ncmpio_file_set_view(const NC     *ncp,
     MPI_File fh;
 
 assert(filetype == MPI_BYTE);
-assert(disp == 0);
 
     if (ncp->fstype != PNCIO_FSTYPE_MPIIO) {
         /* Skip setting fileview for ranks whose pncio_fh is NULL */
@@ -793,8 +791,8 @@ assert(disp == 0);
          * type struct, which avoids repeated work of constructing and
          * flattening the filetype.
          */
-        return PNCIO_File_set_view(ncp->pncio_fh, disp, filetype, npairs,
-                                   offsets, lengths);
+        return PNCIO_File_set_view(ncp->pncio_fh, filetype, npairs, offsets,
+                                   lengths);
     }
 
     /* Now, ncp->fstype == PNCIO_FSTYPE_MPIIO, i.e. using MPI-IO. */
@@ -838,12 +836,14 @@ assert(disp == 0);
         }
     }
 
-    TRACE_IO(MPI_File_set_view, (fh, disp, MPI_BYTE, filetype, "native",
+    /* PnetCDF always builds filetype using flatten offset-length pairs, so
+     * argument displacement is always 0.
+     */
+    TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, filetype, "native",
                                  MPI_INFO_NULL));
     if (mpireturn != MPI_SUCCESS) {
         err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
         if (status == NC_NOERR) status = err;
-assert(0);
     }
 
     if (to_free_filetype)

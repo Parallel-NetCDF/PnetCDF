@@ -53,7 +53,7 @@ getput_vard(NC               *ncp,
             int               reqMode)
 {
     void *xbuf=NULL;
-    int mpireturn, status=NC_NOERR, err=NC_NOERR, xtype_is_contig=1;
+    int mpireturn, status=NC_NOERR, err=NC_NOERR;
     int el_size, buftype_is_contig=0, need_swap_back_buf=0;
     int need_convert=0, need_swap=0;
     MPI_Offset fnelems=0, bnelems=0, offset=0;
@@ -198,7 +198,6 @@ getput_vard(NC               *ncp,
             goto err_check;
         }
     }
-    xtype_is_contig = buftype_is_contig;
 
     /* check if type conversion and Endianness byte swap is needed */
     need_convert = ncmpii_need_convert(ncp->format, varp->xtype, etype);
@@ -240,7 +239,6 @@ getput_vard(NC               *ncp,
                 goto err_check;
             }
             need_swap_back_buf = 0;
-            xtype_is_contig = 1;
 
             /* pack buf to xbuf, byte-swap and type-convert on xbuf, which
              * will later be used in MPI file write */
@@ -266,7 +264,6 @@ getput_vard(NC               *ncp,
                 DEBUG_ASSIGN_ERROR(err, NC_ENOMEM)
                 goto err_check;
             }
-            xtype_is_contig = 1;
         }
     }
 
