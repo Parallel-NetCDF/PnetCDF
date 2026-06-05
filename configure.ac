@@ -1609,6 +1609,8 @@ AC_CHECK_HEADERS([lustre/lustre_user.h linux/lustre/lustre_user.h],
 if test "x$has_lustre" = xyes ; then
    AC_DEFINE(HAVE_LUSTRE, 1, [Define for LUSTRE])
    LIBS="$LIBS -llustreapi"
+   # llapi_get_obd_count() can get the total number of available OSTs
+   AC_CHECK_FUNCS([llapi_get_obd_count])
 fi
 AM_CONDITIONAL(HAVE_LUSTRE, [test x$has_lustre = xyes])
 
