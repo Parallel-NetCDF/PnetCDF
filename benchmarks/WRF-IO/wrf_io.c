@@ -696,6 +696,8 @@ int wrf_w_benchmark(char       *out_file,
         printf("MPI-IO hint cb_config_list:         %s\n", HINT);
         MPI_Info_get(info_used, "cb_node_list",     MPI_MAX_INFO_VAL, value, &flag);
         printf("MPI-IO hint cb_node_list:           %s\n", HINT);
+        MPI_Info_get(info_used, "nc_pncio",         MPI_MAX_INFO_VAL, value, &flag);
+        printf("PnetCDF hint nc_pncio:              %s\n", HINT);
         MPI_Info_get(info_used, "nc_num_aggrs_per_node",MPI_MAX_INFO_VAL, value, &flag);
         printf("PnetCDF hint nc_num_aggrs_per_node: %s\n", HINT);
         MPI_Info_get(info_used, "nc_ina_node_list", MPI_MAX_INFO_VAL, value, &flag);
@@ -703,7 +705,7 @@ int wrf_w_benchmark(char       *out_file,
         MPI_Info_get(info_used, "cray_cb_nodes_multiplier", MPI_MAX_INFO_VAL, value, &flag);
         printf("Hint cray_cb_nodes_multiplier:      %s\n", HINT);
         MPI_Info_get(info_used, "cray_cb_write_lock_mode", MPI_MAX_INFO_VAL, value, &flag);
-        printf("Hint cray_cb_write_lock_mode:      %s\n", HINT);
+        printf("Hint cray_cb_write_lock_mode:       %s\n", HINT);
         printf("-----------------------------------------------------------\n");
     }
     MPI_Info_free(&info_used);
@@ -935,6 +937,8 @@ int wrf_r_benchmark(char       *in_file,
         printf("MPI-IO hint cb_config_list:         %s\n", HINT);
         MPI_Info_get(info_used, "cb_node_list",     MPI_MAX_INFO_VAL, value, &flag);
         printf("MPI-IO hint cb_node_list:           %s\n", HINT);
+        MPI_Info_get(info_used, "nc_pncio",         MPI_MAX_INFO_VAL, value, &flag);
+        printf("PnetCDF hint nc_pncio:              %s\n", HINT);
         MPI_Info_get(info_used, "nc_num_aggrs_per_node",MPI_MAX_INFO_VAL, value, &flag);
         printf("PnetCDF hint nc_num_aggrs_per_node: %s\n", HINT);
         MPI_Info_get(info_used, "nc_ina_node_list", MPI_MAX_INFO_VAL, value, &flag);
@@ -942,7 +946,7 @@ int wrf_r_benchmark(char       *in_file,
         MPI_Info_get(info_used, "cray_cb_nodes_multiplier", MPI_MAX_INFO_VAL, value, &flag);
         printf("Hint cray_cb_nodes_multiplier:      %s\n", HINT);
         MPI_Info_get(info_used, "cray_cb_write_lock_mode", MPI_MAX_INFO_VAL, value, &flag);
-        printf("Hint cray_cb_write_lock_mode:      %s\n", HINT);
+        printf("Hint cray_cb_write_lock_mode:       %s\n", HINT);
         printf("-----------------------------------------------------------\n");
     }
     MPI_Info_free(&info_used);

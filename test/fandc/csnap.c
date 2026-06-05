@@ -64,7 +64,7 @@ int pe_coords[3];                           /* Cartesian PE coords */
 
 /*** function prototypes ***/
 
-void find_locnx(MPI_Offset nx, int mype, int totpes, MPI_Offset *locnx, MPI_Offset *xbegin);
+void find_locnx(MPI_Offset nx, int rank, int nprocs, MPI_Offset *locnx, MPI_Offset *xbegin);
 void write_file(char *filename, double *t);
 void read_file(char *filename, double *t);
 void get_fields(double *tt, double *smf);
@@ -390,14 +390,14 @@ void read_file(char *filename, double *t) {
 }
 
 
-void find_locnx(MPI_Offset nx, int mype, int totpes, MPI_Offset *locnx, MPI_Offset *xbegin) {
+void find_locnx(MPI_Offset nx, int rank, int nprocs, MPI_Offset *locnx, MPI_Offset *xbegin) {
   MPI_Offset xremain;
 
-  *locnx = nx / totpes;
-  xremain = nx - totpes*(*locnx);
-  if (mype < xremain) (*locnx)++;
-  *xbegin = mype*(nx/totpes) + xremain;
-  if (mype < xremain) *xbegin += mype - xremain;
+  *locnx = nx / nprocs;
+  xremain = nx - nprocs*(*locnx);
+  if (rank < xremain) (*locnx)++;
+  *xbegin = rank*(nx/nprocs) + xremain;
+  if (rank < xremain) *xbegin += rank - xremain;
 }
 
 

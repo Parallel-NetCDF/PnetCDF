@@ -118,8 +118,8 @@ move_file_block(NC         *ncp,
             get_size = pread(fd, buf, chunk_size, off_from);
             if (get_size < 0) {
                 fprintf(stderr,
-                "Error at %s line %d: pread file %s offset "OFFFMT" size %zd (%s)\n",
-                __func__,__LINE__,path,off_from,chunk_size,strerror(errno));
+                "Error at %s line %d: pread file %s offset %lld size %zd (%s)\n",
+                __func__,__LINE__,path,(long long)off_from,chunk_size,strerror(errno));
                 DEBUG_RETURN_ERROR(NC_EREAD)
             }
             ncp->get_size += get_size;
@@ -138,8 +138,8 @@ move_file_block(NC         *ncp,
             put_size = pwrite(fd, buf, get_size, off_to);
             if (put_size < 0) {
                 fprintf(stderr,
-                "Error at %s line %d: pwrite file %s offset "OFFFMT" size %zd (%s)\n",
-                __func__,__LINE__,path,off_to,get_size,strerror(errno));
+                "Error at %s line %d: pwrite file %s offset %lld size %zd (%s)\n",
+                __func__,__LINE__,path,(long long)off_to,get_size,strerror(errno));
                 DEBUG_RETURN_ERROR(NC_EREAD)
             }
             ncp->put_size += put_size;
@@ -167,21 +167,21 @@ move_file_block(NC         *ncp,
                 MPI_Offset  from,   /* source      starting file offset */
                 MPI_Offset  nbytes) /* amount to be moved */
 {
-    char *mpi_name;
-    int rank, nprocs, mpireturn, err, status=NC_NOERR, do_coll;
+    int rank, nprocs, status=NC_NOERR, do_coll;
     void *buf;
     size_t num_moves, mv_amnt, p_units;
-    MPI_Offset off_last, off_from, off_to;
-    MPI_Status mpistatus;
-    MPI_File fh;
+    MPI_Offset off_last, off_from, off_to, rlen, wlen;
+    MPI_Comm comm;
 
-    rank = ncp->rank;
-    nprocs = ncp->nprocs;
-
-    /* collective_fh can be used in either MPI independent or collective I/O
-     * APIs to move data, within this subroutine.
+    /* If intra-node aggregation is enabled, then only the aggregators perform
+     * the movement.
      */
-    fh = ncp->collective_fh;
+    if (ncp->num_aggrs_per_node > 0 && ncp->ina_comm == MPI_COMM_NULL)
+        return NC_NOERR;
+
+    comm = (ncp->ina_comm == MPI_COMM_NULL) ? ncp->comm : ncp->ina_comm;
+    rank = (ncp->ina_comm == MPI_COMM_NULL) ? ncp->rank : ncp->ina_rank;
+    nprocs = (ncp->ina_comm == MPI_COMM_NULL) ? ncp->nprocs : ncp->ina_nprocs;
 
     /* MPI-IO fileview has been reset in ncmpi_redef() to make the entire file
      * visible
@@ -192,7 +192,7 @@ move_file_block(NC         *ncp,
      * independent I/O subroutines, as the data partitioned among processes are
      * not interleaved and thus need no collective I/O.
      */
-    do_coll = (ncp->nprocs > 1 && fIsSet(ncp->flags, NC_HCOLL));
+    do_coll = (nprocs > 1 && fIsSet(ncp->flags, NC_HCOLL));
 
     /* buf will be used as a temporal buffer to move data in chunks, i.e.
      * read a chunk and later write to the new location
@@ -211,7 +211,7 @@ move_file_block(NC         *ncp,
 
     /* move the data section starting from its tail toward its beginning */
     while (nbytes > 0) {
-        int chunk_size, get_size=0;
+        int chunk_size;
 
         if (mv_amnt == p_units) {
             /* each rank moves amount of chunk_size */
@@ -231,88 +231,33 @@ move_file_block(NC         *ncp,
                 chunk_size = 0;
         }
 
-        /* explicitly initialize mpistatus object to 0. For zero-length read,
-         * MPI_Get_count may report incorrect result for some MPICH version,
-         * due to the uninitialized MPI_Status object passed to MPI-IO calls.
-         * Thus we initialize it above to work around.
-         */
-        memset(&mpistatus, 0, sizeof(MPI_Status));
-        mpireturn = MPI_SUCCESS;
+        PNCIO_View buf_view;
+        buf_view.type = MPI_BYTE;
+        buf_view.size = chunk_size;
+        buf_view.count = 1;
+        buf_view.is_contig = 1;
 
         /* read from file at off_from for amount of chunk_size */
-        if (do_coll) {
-            TRACE_IO(MPI_File_read_at_all, (fh, off_from, buf, chunk_size,
-                                            MPI_BYTE, &mpistatus));
-        }
-        else if (chunk_size > 0) {
-            TRACE_IO(MPI_File_read_at, (fh, off_from, buf, chunk_size,
-                                        MPI_BYTE, &mpistatus));
-        }
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-            if (status == NC_NOERR && err == NC_EFILE)
-                DEBUG_ASSIGN_ERROR(status, NC_EREAD)
-            get_size = chunk_size;
-        }
-        else if (chunk_size > 0) {
-            /* for zero-length read, MPI_Get_count may report incorrect result
-             * for some MPICH version, due to the uninitialized MPI_Status
-             * object passed to MPI-IO calls. Thus we initialize it above to
-             * work around. See MPICH ticket:
-             * https://trac.mpich.org/projects/mpich/ticket/2332
-             *
-             * Update the number of bytes read since file open.
-             * Because each rank reads and writes no more than one chunk_size
-             * at a time and chunk_size is < NC_MAX_INT, it is OK to call
-             * MPI_Get_count, instead of MPI_Get_count_c.
-             */
-            MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-            ncp->get_size += get_size;
-        }
+        rlen = 0;
+        if (do_coll)
+            rlen = ncmpio_file_read_at_all(ncp, off_from, buf, buf_view);
+        else if (chunk_size > 0)
+            rlen = ncmpio_file_read_at(ncp, off_from, buf, buf_view);
+        if (status == NC_NOERR && rlen < 0) status = (int)rlen;
 
         /* to prevent from one rank's write run faster than other's read */
-        if (ncp->nprocs > 1) MPI_Barrier(ncp->comm);
+        if (nprocs > 1) MPI_Barrier(comm);
 
-        /* explicitly initialize mpistatus object to 0. For zero-length read,
-         * MPI_Get_count may report incorrect result for some MPICH version,
-         * due to the uninitialized MPI_Status object passed to MPI-IO calls.
-         * Thus we initialize it above to work around.
+        /* Write to new location at off_to for amount of rlen, the actual read
+         * amount is rlen.
          */
-        memset(&mpistatus, 0, sizeof(MPI_Status));
-        mpireturn = MPI_SUCCESS;
-
-        /* Write to new location at off_to for amount of get_size. Assuming the
-         * call to MPI_Get_count() above returns the actual amount of data read
-         * from the file, i.e. get_size.
-         */
-        if (do_coll) {
-            TRACE_IO(MPI_File_write_at_all, (fh, off_to, buf,
-                                             get_size /* NOT chunk_size */,
-                                             MPI_BYTE, &mpistatus));
-        }
-        else if (get_size > 0) {
-            TRACE_IO(MPI_File_write_at, (fh, off_to, buf,
-                                         get_size /* NOT chunk_size */,
-                                         MPI_BYTE, &mpistatus));
-        }
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-            if (status == NC_NOERR && err == NC_EFILE)
-                DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
-        }
-        else if (get_size > 0) {
-            /* update the number of bytes written since file open.
-             * Because each rank reads and writes no more than one chunk_size
-             * at a time and chunk_size is < NC_MAX_INT, it is OK to call
-             * MPI_Get_count, instead of MPI_Get_count_c.
-             */
-            int put_size;
-            mpireturn = MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-            if (mpireturn != MPI_SUCCESS || put_size == MPI_UNDEFINED)
-                ncp->put_size += get_size; /* or chunk_size */
-            else
-                ncp->put_size += put_size;
-        }
+        buf_view.size = rlen;
+        wlen = 0;
+        if (do_coll && rlen > 0)
+            wlen = ncmpio_file_write_at_all(ncp, off_to, buf, buf_view);
+        else if (rlen > 0)
+            wlen = ncmpio_file_write_at(ncp, off_to, buf, buf_view);
+        if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
         /* move on to the next round */
         mv_amnt   = p_units;
@@ -602,20 +547,26 @@ NC_begins(NC *ncp)
 static int
 write_NC(NC *ncp)
 {
-    char *mpi_name;
-    int status=NC_NOERR, mpireturn, err, is_coll;
+    int status=NC_NOERR, is_coll=0;
     MPI_Offset i, header_wlen, ntimes;
-    MPI_File fh;
-    MPI_Status mpistatus;
+    PNCIO_View buf_view;
 
     assert(!NC_readonly(ncp));
+
+    buf_view.is_contig = 1;
 
     /* Depending on whether NC_HCOLL is set, writing file header can be done
      * through either MPI collective or independent write call.
      * When * ncp->nprocs == 1, ncp->collective_fh == ncp->independent_fh
+     * For those ranks participating the collective MPI write call, their
+     * is_coll is set to 1, otherwise 0.
      */
-    is_coll = (ncp->nprocs > 1 && fIsSet(ncp->flags, NC_HCOLL)) ? 1 : 0;
-    fh = ncp->collective_fh;
+    if (fIsSet(ncp->flags, NC_HCOLL)) {
+        if (ncp->num_aggrs_per_node > 0)
+            is_coll = (ncp->ina_nprocs > 1 && ncp->rank == ncp->my_aggr);
+        else
+            is_coll = (ncp->nprocs > 1);
+    }
 
     /* In NC_begins(), root's ncp->xsz and ncp->begin_var, root's header
      * size and extent, have been broadcast (sync-ed) among processes.
@@ -673,64 +624,44 @@ write_NC(NC *ncp)
 
         /* rank 0's fileview already includes the file header */
 
-        /* explicitly initialize mpistatus object to 0. For zero-length read,
-         * MPI_Get_count may report incorrect result for some MPICH version,
-         * due to the uninitialized MPI_Status object passed to MPI-IO calls.
-         * Thus we initialize it above to work around.
-         */
-        memset(&mpistatus, 0, sizeof(MPI_Status));
-
         /* write the header in chunks */
         offset = 0;
         remain = header_wlen;
         buf_ptr = buf;
+        buf_view.type = MPI_BYTE;
+        buf_view.count = 1;
         for (i=0; i<ntimes; i++) {
-            int bufCount = (int) MIN(remain, NC_MAX_INT);
-            if (is_coll) {
-                TRACE_IO(MPI_File_write_at_all, (fh, offset, buf_ptr, bufCount,
-                                                 MPI_BYTE, &mpistatus));
-            }
-            else {
-                TRACE_IO(MPI_File_write_at, (fh, offset, buf_ptr, bufCount,
-                                             MPI_BYTE, &mpistatus));
-            }
-            if (mpireturn != MPI_SUCCESS) {
-                err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-                /* write has failed, which is more serious than inconsistency */
-                if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
-            }
-            else {
-                /* Update the number of bytes read since file open.
-                 * Because each rank writes no more than NC_MAX_INT at a time,
-                 * it is OK to call MPI_Get_count, instead of MPI_Get_count_c.
-                 */
-                int put_size;
-                mpireturn = MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-                if (mpireturn != MPI_SUCCESS || put_size == MPI_UNDEFINED)
-                    ncp->put_size += bufCount;
-                else
-                    ncp->put_size += put_size;
-            }
-            offset  += bufCount;
-            buf_ptr += bufCount;
-            remain  -= bufCount;
+            MPI_Offset wlen;
+            buf_view.size = MIN(remain, NC_MAX_INT);
+            if (is_coll)
+                wlen = ncmpio_file_write_at_all(ncp, offset, buf_ptr, buf_view);
+            else
+                wlen = ncmpio_file_write_at(ncp, offset, buf_ptr, buf_view);
+            if (status == NC_NOERR && wlen < 0) status = (int)wlen;
+
+            offset  += buf_view.size;
+            buf_ptr += buf_view.size;
+            remain  -= buf_view.size;
         }
         NCI_Free(buf);
     }
-    else if (fIsSet(ncp->flags, NC_HCOLL)) {
+    else if (is_coll) {
         /* other processes participate the collective call */
-        for (i=0; i<ntimes; i++) {
-            TRACE_IO(MPI_File_write_at_all, (fh, 0, NULL, 0, MPI_BYTE, &mpistatus));
-        }
+        buf_view.size = 0;
+        for (i=0; i<ntimes; i++)
+            ncmpio_file_write_at_all(ncp, 0, NULL, buf_view);
     }
 
 fn_exit:
     if (ncp->safe_mode == 1 && ncp->nprocs > 1) {
         /* broadcast root's status, because only root writes to the file */
-        int root_status = status;
+        int mpireturn, root_status = status;
         TRACE_COMM(MPI_Bcast)(&root_status, 1, MPI_INT, 0, ncp->comm);
-        /* root's write has failed, which is more serious than inconsistency */
-        if (root_status == NC_EWRITE) DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
+        if (mpireturn != MPI_SUCCESS)
+            status = ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
+        else if (root_status == NC_EWRITE)
+            /* root's write has failed, more serious than inconsistency */
+            DEBUG_ASSIGN_ERROR(status, NC_EWRITE)
     }
 
     fClr(ncp->flags, NC_NDIRTY);
@@ -746,14 +677,14 @@ fn_exit:
  */
 #define CHECK_ERROR(err) {                                              \
     if (ncp->safe_mode == 1 && ncp->nprocs > 1) {                       \
-        int status;                                                     \
-        TRACE_COMM(MPI_Allreduce)(&err, &status, 1, MPI_INT, MPI_MIN,   \
+        int min_err;                                                    \
+        TRACE_COMM(MPI_Allreduce)(&err, &min_err, 1, MPI_INT, MPI_MIN,  \
                                   ncp->comm);                           \
         if (mpireturn != MPI_SUCCESS) {                                 \
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");      \
             DEBUG_RETURN_ERROR(err)                                     \
         }                                                               \
-        if (status != NC_NOERR) return status;                          \
+        if (min_err != NC_NOERR) return min_err;                        \
     }                                                                   \
     else if (err != NC_NOERR)                                           \
         return err;                                                     \
@@ -1120,7 +1051,7 @@ read_hints(NC *ncp)
 
     /* get hints from the environment variable PNETCDF_HINTS, a string of
      * hints separated by ";" and each hint is in the form of hint=value. E.g.
-     * "cb_nodes=16;cb_config_list=*:6". If this environment variable is set,
+     * "cb_nodes=16;romio_ds_write=true". If this environment variable is set,
      * it overrides the same hints that were set by MPI_Info_set() called in
      * the application program.
      */
@@ -1309,26 +1240,28 @@ ncmpio__enddef(void       *ncdp,
     if (ncp->r_align == 0) ncp->r_align = 4;
     else                   ncp->r_align = D_RNDUP(ncp->r_align, 4);
 
-    /* reflect the hint changes to the MPI info object, so the user can inquire
-     * what the true hint values are being used
-     */
-    sprintf(value, OFFFMT, ncp->v_align);
-    MPI_Info_set(ncp->mpiinfo, "nc_var_align_size", value);
-    sprintf(value, OFFFMT, ncp->r_align);
-    MPI_Info_set(ncp->mpiinfo, "nc_record_align_size", value);
+    if (ncp->mpiinfo != MPI_INFO_NULL) {
+        /* reflect the hint changes to the MPI info object, so the user can
+         * inquire what the true hint values are being used
+         */
+        sprintf(value, OFFFMT, ncp->v_align);
+        MPI_Info_set(ncp->mpiinfo, "nc_var_align_size", value);
+        sprintf(value, OFFFMT, ncp->r_align);
+        MPI_Info_set(ncp->mpiinfo, "nc_record_align_size", value);
 
 #ifdef ENABLE_SUBFILING
-    sprintf(value, "%d", ncp->num_subfiles);
-    MPI_Info_set(ncp->mpiinfo, "nc_num_subfiles", value);
-    if (ncp->num_subfiles > 1) {
-        /* TODO: should return subfile-related msg when there's an error */
-        err = ncmpio_subfile_partition(ncp);
-        CHECK_ERROR(err)
-    }
+        sprintf(value, "%d", ncp->num_subfiles);
+        MPI_Info_set(ncp->mpiinfo, "nc_num_subfiles", value);
+        if (ncp->num_subfiles > 1) {
+            /* TODO: should return subfile-related msg when there's an error */
+            err = ncmpio_subfile_partition(ncp);
+            CHECK_ERROR(err)
+        }
 #else
-    MPI_Info_set(ncp->mpiinfo, "pnetcdf_subfiling", "disable");
-    MPI_Info_set(ncp->mpiinfo, "nc_num_subfiles", "0");
+        MPI_Info_set(ncp->mpiinfo, "pnetcdf_subfiling", "disable");
+        MPI_Info_set(ncp->mpiinfo, "nc_num_subfiles", "0");
 #endif
+    }
 
     /* check whether sizes of all variables are legal */
     err = ncmpio_NC_check_vlens(ncp);
@@ -1491,7 +1424,8 @@ ncmpio__enddef(void       *ncdp,
 
     /* first sync header objects in memory across all processes, and then root
      * writes the header to file. Note safe_mode error check will be done in
-     * write_NC() */
+     * write_NC().
+     */
     status = write_NC(ncp);
 
     /* we should continue to exit define mode, even if header is inconsistent

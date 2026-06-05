@@ -18,7 +18,7 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "PARALLEL_PROGS=${PARALLEL_PROGS}"
 
 # echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
-if test ${PNETCDF_DEBUG} = 1 ; then
+if test "x${PNETCDF_DEBUG}" = x1 ; then
    safe_modes="0 1"
 else
    safe_modes="0"
@@ -29,17 +29,47 @@ unset PNETCDF_HINTS
 
 for i in ${PARALLEL_PROGS} ; do
     for j in ${safe_modes} ; do
-    for intra_aggr in 0 1 ; do
         if test "$j" = 1 ; then # test only in safe mode
-           export PNETCDF_HINTS="romio_no_indep_rw=true"
+           SAFE_HINTS="romio_no_indep_rw=true"
         else
-           export PNETCDF_HINTS=
+           SAFE_HINTS="romio_no_indep_rw=false"
         fi
+    for mpiio_mode in 0 1 ; do
+        if test "$mpiio_mode" = 1 ; then
+           USEMPIO_HINTS="nc_pncio=disable"
+        else
+           USEMPIO_HINTS="nc_pncio=enable"
+        fi
+    for intra_aggr in 0 1 ; do
         if test "$intra_aggr" = 1 ; then
-           export PNETCDF_HINTS="${PNETCDF_HINTS};nc_num_aggrs_per_node=2"
+           INA_HINTS="nc_num_aggrs_per_node=2"
+        else
+           INA_HINTS="nc_num_aggrs_per_node=0"
         fi
+
+        if [[ "$i" == *"vard"* ]] ; then
+           if test "x$mpiio_mode" == x0 || test "x$intra_aggr" == x1 ; then
+              # vard APIs are not supported when using PNCIO
+              continue
+           fi
+        fi
+
+        PNETCDF_HINTS=
+        if test "x$SAFE_HINTS" != x ; then
+           PNETCDF_HINTS="$SAFE_HINTS"
+        fi
+        if test "x$USEMPIO_HINTS" != x ; then
+           PNETCDF_HINTS="$USEMPIO_HINTS;$PNETCDF_HINTS"
+        fi
+        if test "x$INA_HINTS" != x ; then
+           PNETCDF_HINTS="$INA_HINTS;$PNETCDF_HINTS"
+        fi
+
+        export PNETCDF_HINTS="$PNETCDF_HINTS"
         export PNETCDF_SAFE_MODE=$j
-        # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+	    # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
+
+        # echo "${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc"
         ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
 
         # echo "--- validating file ${TESTOUTDIR}/$i.nc"
@@ -67,6 +97,7 @@ for i in ${PARALLEL_PROGS} ; do
            ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc4 4
            # Validator does not support nc4
         fi
+    done
     done
     done
     rm -f ${OUTDIR}/$i.nc

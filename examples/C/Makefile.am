@@ -73,28 +73,28 @@ NC_FILES = $(check_PROGRAMS:%=$(TESTOUTDIR)/%.nc) \
 CLEANFILES = core core.* *.gcda *.gcno *.gcov gmon.out \
              $(NC_FILES) $(TESTOUTDIR)/pthread.nc.* $(TESTOUTDIR)/testfile.nc
 
-EXTRA_DIST = parallel_run.sh run_c_examples.sh cdl_header.txt
+EXTRA_DIST = run_c_examples.sh cdl_header.txt
 
 ptest ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 4 || exit 1
+	$(srcdir)/../parallel_run.sh 4 "C " || exit 1
 
 ptest8: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 8 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 8 || exit 1
+	$(srcdir)/../parallel_run.sh 8 "C " || exit 1
 
 ptest3: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 3 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
-	$(srcdir)/parallel_run.sh 3 || exit 1
+	$(srcdir)/../parallel_run.sh 3 "C " || exit 1
 
 ptests: ptest3 ptest4 ptest8
 ptest2 ptest6 ptest10:

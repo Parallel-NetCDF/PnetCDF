@@ -295,6 +295,8 @@ ncmpi_strerror(int err)
             return "Nonblocking requests already flushed.";
         case NC_EADIOS:
             return "unknown ADIOS error.";
+        case NC_EFSTYPE:
+            return "Invalid file system type.";
 
         default:
             /* check netCDF-3 and netCDF-4 errors */
@@ -719,6 +721,7 @@ ncmpi_strerrno(int err)
         case (NC_EBADLOG):			return "NC_EBADLOG";
         case (NC_EFLUSHED):			return "NC_EFLUSHED";
         case (NC_EADIOS):			return "NC_EADIOS";
+        case (NC_EFSTYPE):			return "NC_EFSTYPE";
 
         case (NC_EMULTIDEFINE):			return "NC_EMULTIDEFINE";
         case (NC_EMULTIDEFINE_OMODE):		return "NC_EMULTIDEFINE_OMODE";

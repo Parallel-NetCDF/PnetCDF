@@ -196,6 +196,9 @@ test_format_nc$1(char *filename)
     foreach(`itype',(text, TYPE_LIST),`_CAT(`
     err=API(def_var)(ncid,"var_'itype`",NC_TYPE(itype),2,dimids,&vid_',itype`); CHECK_ERR')')
 
+    foreach(`itype',(text, TYPE_LIST),`_CAT(`
+    err=API(def_var_fill)(ncid, vid_'itype`, 0, NULL); CHECK_ERR')')
+
     /* For put attribute APIs, the error precedence is the following:
      *    NC_EBADID, NC_EPERM, NC_ENOTVAR, NC_EBADNAME, NC_EBADTYPE, NC_ECHAR,
      *    NC_EINVAL, NC_ENOTINDEFINE, NC_ERANGE

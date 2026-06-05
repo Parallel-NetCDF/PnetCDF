@@ -30,11 +30,13 @@
 #define NY 4
 #define NX 2
 
+static int verbose;
+
 static int
 tst_fmt(char *filename, int cmode)
 {
     int err, nerrs=0, ncid, dimid[NDIMS], varid[5], ndims=NDIMS;
-    int i, j, k, nprocs, rank, req, *buf;
+    int i, j, k, nprocs, rank, req, *buf=NULL;
     MPI_Offset start[NDIMS] = {0};
     MPI_Offset count[NDIMS] = {0};
     MPI_Offset stride[NDIMS] = {0};
@@ -54,12 +56,13 @@ tst_fmt(char *filename, int cmode)
     err = ncmpi_def_var(ncid, "v4", NC_INT, ndims, dimid, &varid[4]); CHECK_ERR
     err = ncmpi_enddef(ncid); CHECK_ERR
 
+    buf = (int*) malloc(sizeof(int) * NY * NX);
+    for (i=0; i<NY*NX; i++) buf[i] = rank+10;
+
     start[0] = 0;
     start[1] = rank*NX;
     count[0] = NY;
     count[1] = NX;
-    buf = (int*) malloc(sizeof(int) * NY * NX);
-    for (i=0; i<NY*NX; i++) buf[i] = rank+10;
 
     err = ncmpi_put_vara_int_all(ncid, varid[0], start, count, buf); CHECK_ERR
     CHECK_PUT_BUF
@@ -109,6 +112,7 @@ tst_fmt(char *filename, int cmode)
     }
     CHECK_PUT_BUF
     free(buf);
+    buf = NULL;
 
     if (!(cmode & NC_NETCDF4)) {
         err = ncmpi_buffer_detach(ncid); CHECK_ERR
@@ -232,7 +236,7 @@ tst_fmt(char *filename, int cmode)
 
 err_out:
     err = ncmpi_close(ncid); CHECK_ERR
-    free(buf);
+    if (buf != NULL) free(buf);
 
     return nerrs;
 }
@@ -260,24 +264,33 @@ int main(int argc, char **argv)
         free(cmd_str);
     }
 
+    verbose = 0;
+
     /* check whether burst buffering is enabled */
     if (inq_env_hint("nc_burst_buf", &hint_value)) {
         if (strcasecmp(hint_value, "enable") == 0) bb_enabled = 1;
         free(hint_value);
     }
 
+    if (verbose && rank == 0) printf("testing CDF-1\n");
     nerrs += tst_fmt(filename, 0);
     if (nerrs) goto fn_exit;
+
+    if (verbose && rank == 0) printf("testing CDF-2\n");
     nerrs += tst_fmt(filename, NC_64BIT_OFFSET);
     if (nerrs) goto fn_exit;
+
     if (!bb_enabled) {
 #ifdef ENABLE_NETCDF4
+        if (verbose && rank == 0) printf("testing NC_NETCDF4\n");
         nerrs += tst_fmt(filename, NC_NETCDF4);
         if (nerrs) goto fn_exit;
+        if (verbose && rank == 0) printf("testing NC_NETCDF4 NC_CLASSIC_MODEL\n");
         nerrs += tst_fmt(filename, NC_NETCDF4 | NC_CLASSIC_MODEL);
         if (nerrs) goto fn_exit;
 #endif
     }
+    if (verbose && rank == 0) printf("testing CDF-5\n");
     nerrs += tst_fmt(filename, NC_64BIT_DATA);
     if (nerrs) goto fn_exit;
 

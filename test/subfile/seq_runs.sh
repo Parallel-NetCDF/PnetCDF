@@ -25,8 +25,30 @@ unset PNETCDF_HINTS
 
 for i in ${TESTPROGRAMS} ; do
     for j in ${safe_modes} ; do
+        if test "$j" = 1 ; then # test only in safe mode
+           SAFE_HINTS="romio_no_indep_rw=true"
+        else
+           SAFE_HINTS="romio_no_indep_rw=false"
+        fi
+    for mpiio_mode in 0 1 ; do
+        if test "$mpiio_mode" = 1 ; then
+           USEMPIO_HINTS="nc_pncio=disable"
+        else
+           USEMPIO_HINTS="nc_pncio=enable"
+        fi
+
+        PNETCDF_HINTS=
+        if test "x$SAFE_HINTS" != x ; then
+           PNETCDF_HINTS="$SAFE_HINTS"
+        fi
+        if test "x$USEMPIO_HINTS" != x ; then
+           PNETCDF_HINTS="$USEMPIO_HINTS;$PNETCDF_HINTS"
+        fi
+
+        export PNETCDF_HINTS="$PNETCDF_HINTS"
         export PNETCDF_SAFE_MODE=$j
-        # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
+        # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
+
         ${TESTSEQRUN} ./$i -f ${TESTOUTDIR}/$i.nc -s 2
 
         # echo "--- validating file ${TESTOUTDIR}/$i.nc"
@@ -54,6 +76,7 @@ for i in ${TESTPROGRAMS} ; do
            # echo "--- ncmpidiff $i.nc.subfile_0.nc $i.bb.nc.subfile_0.nc ---"
            ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$i.nc.subfile_0.nc ${TESTOUTDIR}/$i.bb.nc.subfile_0.nc
         fi
+    done
     done
     rm -f ${OUTDIR}/$i.nc
     rm -f ${OUTDIR}/$i.nc.subfile_0.nc

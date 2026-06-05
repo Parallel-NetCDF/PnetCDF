@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
                 free(cmd_str);
     }
 
-     /* Initialize file info */
+    /* Initialize file info */
     MPI_Info_create(&info);
     MPI_Info_set(info, "nc_burst_buf", "enable");
 
@@ -83,21 +83,25 @@ int main(int argc, char *argv[]) {
 
     /* Standard varn */
     err = ncmpi_put_varn_int_all(ncid, varid, 10, Starts, Counts, buffer);    CHECK_ERR
+    for (i=0; i<10; i++) buffer[0] = -1;
     err = ncmpi_get_varn_int_all(ncid, varid, 10, Starts, Counts, buffer);    CHECK_ERR
     for(i = 0; i < 10; i++){
         if (buffer[i] != rank + i){
-            nerrs++;
             printf("Error at line %d in %s: expecting buffer[%d] = %d but got %d\n", __LINE__, __FILE__, i, rank + 1, buffer[i]);
+            nerrs++;
+            goto err_out;
         }
     }
 
     /* NULL counts */
     err = ncmpi_put_varn_int_all(ncid, varid, 10, Starts, NULL, buffer);    CHECK_ERR
+    for (i=0; i<10; i++) buffer[0] = -1;
     err = ncmpi_get_varn_int_all(ncid, varid, 10, Starts, NULL, buffer);    CHECK_ERR
     for(i = 0; i < 10; i++){
         if (buffer[i] != rank + i){
-            nerrs++;
             printf("Error at line %d in %s: expecting buffer[%d] = %d but got %d\n", __LINE__, __FILE__, i, rank + 1, buffer[i]);
+            nerrs++;
+            goto err_out;
         }
     }
 
@@ -106,14 +110,17 @@ int main(int argc, char *argv[]) {
         Counts[i] = (MPI_Offset*)counts[i];
     }
     err = ncmpi_put_varn_int_all(ncid, varid, 10, Starts, Counts, buffer);    CHECK_ERR
+    for (i=0; i<10; i++) buffer[0] = -1;
     err = ncmpi_get_varn_int_all(ncid, varid, 10, Starts, Counts, buffer);    CHECK_ERR
     for(i = 0; i < 10; i++){
         if (buffer[i] != rank + i){
-            nerrs++;
             printf("Error at line %d in %s: expecting buffer[%d] = %d but got %d\n", __LINE__, __FILE__, i, rank + 1, buffer[i]);
+            nerrs++;
+            goto err_out;
         }
     }
 
+err_out:
     /* Close the file */
     err = ncmpi_close(ncid);    CHECK_ERR
 

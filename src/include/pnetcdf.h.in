@@ -16,6 +16,7 @@
 #define PNETCDF_VERSION_MAJOR @PNETCDF_VERSION_MAJOR@
 #define PNETCDF_VERSION_MINOR @PNETCDF_VERSION_MINOR@
 #define PNETCDF_VERSION_SUB   @PNETCDF_VERSION_SUB@
+#define PNETCDF_VERSION_PRE   "@PNETCDF_VERSION_PRE@"
 #define PNETCDF_RELEASE_DATE  "DIST_DATE"
 
 /* List of PnetCDF features enabled/disabled at configure time.
@@ -657,6 +658,7 @@ by the desired type. */
 #define NC_EBADLOG			(-238) /**< Unrecognized log file format */
 #define NC_EFLUSHED			(-239) /**< Nonblocking request has already been flushed. It is too late to cancel */
 #define NC_EADIOS			(-240) /**< unknown ADIOS error */
+#define NC_EFSTYPE			(-241) /**< Invalid file system type */
 /* add new error here */
 
 /* header inconsistency errors start from -250 */

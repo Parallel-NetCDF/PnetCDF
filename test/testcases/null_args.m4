@@ -295,10 +295,17 @@ test_format_nc$1(char *filename)
     /* define variables */dnl
     foreach(`itype',(text, TYPE_LIST),`_CAT(`
     err = ncmpi_def_var(ncid,"var_'itype`",NC_TYPE(itype),2,dimid,&vid_',itype`);
-    EXP_ERR_MSG(NC_NOERR,"def_var")')')
+    EXP_ERR_MSG(NC_NOERR,"def_var")
+    err = ncmpi_def_var_fill(ncid, vid_'itype`, 0, NULL);
+    EXP_ERR_MSG(NC_NOERR,"def_var_fill")')')
 
     err = ncmpi_enddef(ncid);
     EXP_ERR_MSG(NC_NOERR,"enddef")
+
+    /* fill the 1st record of all variables */dnl
+    foreach(`itype',(text, TYPE_LIST),`_CAT(`
+    err = ncmpi_fill_var_rec(ncid, vid_'itype`, 0);
+    EXP_ERR_MSG(NC_NOERR,"fill_var_rec")')')
 
      start[0] =  start[1] = 0;
      count[0] =  count[1] = 1;

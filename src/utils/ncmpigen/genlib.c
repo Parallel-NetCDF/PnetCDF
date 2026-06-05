@@ -1548,7 +1548,6 @@ cl_fortran(void)
                 }
                 fline(stmnt);
 		if (v->type != NC_CHAR) {
-		    char *sp;
 		    sprintf(stmnt, "%s  %s(", ncftype(v->type),
 			    v->lname);
 		    /* reverse dimensions for FORTRAN */
@@ -1582,12 +1581,12 @@ cl_fortran(void)
                 if (v->has_data) {
                     fline(v->data_stmnt);
                 } else {		/* generate data statement for FILL record */
-                    MPI_Offset rec_len = 1;
+                    MPI_Offset rec_size = 1;
                     for (idim = 1; idim < v->ndims; idim++) {
-                        rec_len *= dims[v->dims[idim]].size;
+                        rec_size *= dims[v->dims[idim]].size;
                     }
                     sprintf(stmnt,"data %s /%lu * %s/", v->lname,
-			(unsigned long) rec_len,
+			(unsigned long) rec_size,
                             f_fill_name(v->type));
                     fline(stmnt);
                 }
@@ -1695,9 +1694,9 @@ close_netcdf(void)
 
 
 void
-check_err(int stat, const char *ncmpi_func, const char *calling_func, int lineno, const char *calling_file) {
+check_err(int stat, const char *ncmpi_func, const char *calling_func, int linenum, const char *calling_file) {
     if (stat != NC_NOERR) {
-	fprintf(stderr, "ncmpigen error when calling %s in %s() at line %d of %s: %s\n", ncmpi_func, calling_func, lineno, calling_file, ncmpi_strerror(stat));
+	fprintf(stderr, "ncmpigen error when calling %s in %s() at line %d of %s: %s\n", ncmpi_func, calling_func, linenum, calling_file, ncmpi_strerror(stat));
 	derror_count++;
     }
 }

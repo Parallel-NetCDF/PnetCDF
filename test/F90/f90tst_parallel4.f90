@@ -45,10 +45,12 @@ program f90tst
   call handle_err(nf90mpi_def_dim(fh, 'dim2', 4_MPI_OFFSET_KIND, dimid(2)))
   call handle_err(nf90mpi_def_dim(fh, 'dim3', 1_MPI_OFFSET_KIND, dimid(3)))
 
-
   call handle_err(nf90mpi_def_var(fh, 'var1', NF90_DOUBLE, dimid, varid))
-  call handle_err(nf90mpi_enddef(fh))
 
+  ! fill with default fill value
+  call handle_err(nf90mpi_def_var_fill(fh, varid, 0, NF90_FILL_DOUBLE))
+
+  call handle_err(nf90mpi_enddef(fh))
 
   do i=1,3
      f(i) = my_rank*3+i

@@ -27,40 +27,10 @@
 #include <ncx.h>
 #include "ncmpio_NC.h"
 
-/*----< ncmpio_file_sync() >-------------------------------------------------*/
-/* This function must be called collectively, no matter if it is in collective
- * or independent data mode.
- */
-int
-ncmpio_file_sync(NC *ncp) {
-    char *mpi_name;
-    int mpireturn;
-
-    if (ncp->independent_fh != MPI_FILE_NULL) {
-        TRACE_IO(MPI_File_sync, (ncp->independent_fh));
-        if (mpireturn != MPI_SUCCESS)
-            return ncmpii_error_mpi2nc(mpireturn, mpi_name);
-    }
-    /* when nprocs == 1, ncp->collective_fh == ncp->independent_fh */
-    if (ncp->nprocs == 1) return NC_NOERR;
-
-    /* ncp->collective_fh is never MPI_FILE_NULL as collective mode is
-     * default in PnetCDF */
-    TRACE_IO(MPI_File_sync, (ncp->collective_fh));
-    if (mpireturn != MPI_SUCCESS)
-        return ncmpii_error_mpi2nc(mpireturn, mpi_name);
-
-    /* Barrier is not necessary ...
-    TRACE_COMM(MPI_Barrier)(ncp->comm);
-     */
-
-    return NC_NOERR;
-}
-
 #define NC_NUMRECS_OFFSET 4
 
 /*----< ncmpio_write_numrecs() >---------------------------------------------*/
-/* root process writes the new record number into file.
+/* Only root process writes the new record number into file.
  * This function is called by:
  * 1. ncmpio_sync_numrecs
  * 2. collective nonblocking wait API, if the new number of records is bigger
@@ -69,32 +39,42 @@ int
 ncmpio_write_numrecs(NC         *ncp,
                      MPI_Offset  new_numrecs)
 {
-    char *mpi_name;
-    int mpireturn, err;
-    MPI_File fh;
-    MPI_Status mpistatus;
+    int err=NC_NOERR;
+    PNCIO_View buf_view;
 
-    if (!fIsSet(ncp->flags, NC_HCOLL) && ncp->rank > 0)
-        /* Only root process writes numrecs in file */
-        return NC_NOERR;
+    buf_view.type = MPI_BYTE;
+    buf_view.size = 0;
+    buf_view.count = 1;
+    buf_view.is_contig = 1;
 
-    /* return now if there is no record variabled defined */
+    /* return now if there is no record variable defined */
     if (ncp->vars.num_rec_vars == 0) return NC_NOERR;
 
-    fh = ncp->independent_fh;
-    if (ncp->nprocs > 1 && !NC_indep(ncp))
-        fh = ncp->collective_fh;
+    /* When intra-node aggregation is enabled, non-aggregators do not
+     * participate any collective calls below.
+     */
+    if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->my_aggr)
+        return NC_NOERR;
 
+    /* If not requiring all MPI-IO calls to be collective, non-root processes
+     * can return now. This is because only root process writes numrecs to the
+     * file header.
+     */
+    if (!fIsSet(ncp->flags, NC_HCOLL) && ncp->rank > 0)
+        return NC_NOERR;
+
+    /* If collective MPI-IO is required for all MPI-IO calls, then all non-root
+     * processes participate the collective write call with zero-size requests.
+     */
     if (ncp->rank > 0 && fIsSet(ncp->flags, NC_HCOLL)) {
-        /* other processes participate the collective call */
-        TRACE_IO(MPI_File_write_at_all, (fh, 0, NULL, 0, MPI_BYTE, &mpistatus));
-        return (mpireturn == MPI_SUCCESS) ? NC_NOERR :
-               ncmpii_error_mpi2nc(mpireturn, mpi_name);
+        ncmpio_file_write_at_all(ncp, 0, NULL, buf_view);
+        return NC_NOERR;
     }
 
     if (new_numrecs > ncp->numrecs || NC_ndirty(ncp)) {
         int len;
         char pos[8], *buf=pos;
+        MPI_Offset wlen;
 
         /* update ncp->numrecs */
         if (new_numrecs > ncp->numrecs) ncp->numrecs = new_numrecs;
@@ -113,41 +93,32 @@ ncmpio_write_numrecs(NC         *ncp,
         }
         /* ncmpix_put_xxx advances the 1st argument with size len */
 
-        /* explicitly initialize mpistatus object to 0. For zero-length read,
-         * MPI_Get_count may report incorrect result for some MPICH version,
-         * due to the uninitialized MPI_Status object passed to MPI-IO calls.
-         * Thus we initialize it above to work around.
-         */
-        memset(&mpistatus, 0, sizeof(MPI_Status));
+        if (ncp->num_aggrs_per_node > 0 && ncp->rank != ncp->my_aggr)
+            /* When intra-node aggregation is enabled, non-aggregators do not
+             * participate the collective call.
+             */
+            return NC_NOERR;
+
+        if (ncp->fstype != PNCIO_FSTYPE_MPIIO) {
+            /* reset fileview */
+            err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, 0, NULL, NULL);
+            if (err != NC_NOERR) DEBUG_RETURN_ERROR(err)
+        }
+
+// printf("%s at %d: new_numrecs=%lld NC_NUMRECS_OFFSET=%d\n",__func__,__LINE__,new_numrecs,NC_NUMRECS_OFFSET);
+        buf_view.size = len;
 
         /* root's file view always includes the entire file header */
-        if (fIsSet(ncp->flags, NC_HCOLL) && ncp->nprocs > 1) {
-            TRACE_IO(MPI_File_write_at_all, (fh, NC_NUMRECS_OFFSET, (void*)pos,
-                                             len, MPI_BYTE, &mpistatus));
-        }
-        else {
-            TRACE_IO(MPI_File_write_at, (fh, NC_NUMRECS_OFFSET, (void*)pos,
-                                         len, MPI_BYTE, &mpistatus));
-        }
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-            if (err == NC_EFILE) DEBUG_RETURN_ERROR(NC_EWRITE)
-        }
-        else {
-            /* update the number of bytes written since file open.
-             * Because the above MPI write writes either 4 or 8 bytes,
-             * calling MPI_Get_count() is sufficient. No need to call
-             * MPI_Get_count_c()
-             */
-            int put_size;
-            mpireturn = MPI_Get_count(&mpistatus, MPI_BYTE, &put_size);
-            if (mpireturn != MPI_SUCCESS || put_size == MPI_UNDEFINED)
-                ncp->put_size += len;
-            else
-                ncp->put_size += put_size;
-        }
+        if (fIsSet(ncp->flags, NC_HCOLL) && ncp->nprocs > 1)
+            wlen = ncmpio_file_write_at_all(ncp, NC_NUMRECS_OFFSET, (void*)pos,
+                                            buf_view);
+        else
+            wlen = ncmpio_file_write_at(ncp, NC_NUMRECS_OFFSET, (void*)pos,
+                                        buf_view);
+        if (wlen < 0)
+            DEBUG_RETURN_ERROR((int)wlen)
     }
-    return NC_NOERR;
+    return err;
 }
 
 /*----< ncmpio_sync_numrecs() >-----------------------------------------------*/
@@ -199,6 +170,7 @@ ncmpio_sync_numrecs(void *ncdp)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
     }
 
+// printf("%s at %d: max_numrecs=%lld\n",__func__,__LINE__,max_numrecs);
     /* root process writes max_numrecs to file */
     status = ncmpio_write_numrecs(ncp, max_numrecs);
 

@@ -61,9 +61,6 @@ testcases_src = ../testcases/add_var.c \
                 ../testcases/test_erange.c \
                 ../testcases/test_fillvalue.c \
                 ../testcases/test_get_varn.c \
-                ../testcases/test_vard.c \
-                ../testcases/test_vard_multiple.c \
-                ../testcases/test_vard_rec.c \
                 ../testcases/test_varm.c \
                 ../testcases/tst_def_var_fill.c \
                 ../testcases/tst_del_attr.c \
@@ -109,10 +106,7 @@ examples_C_src = ../../examples/C/block_cyclic.c \
                  ../../examples/C/put_varn_int.c \
                  ../../examples/C/time_var.c \
                  ../../examples/C/transpose2D.c \
-                 ../../examples/C/transpose.c \
-                 ../../examples/C/vard_bottom.c \
-                 ../../examples/C/vard_int.c \
-                 ../../examples/C/vard_mvars.c
+                 ../../examples/C/transpose.c
 EXAMPLE_PROGS += $(examples_C_src:../../examples/C/%.c=%)
 %.o: ../../examples/C/%.c
 	$(CC) $(CFLAGS) -c $<
@@ -146,8 +140,7 @@ examples_F77_src = ../../examples/F77/block_cyclic.f \
                    ../../examples/F77/put_varn_int.f \
                    ../../examples/F77/put_varn_real.f \
                    ../../examples/F77/time_var.f \
-                   ../../examples/F77/transpose.f \
-                   ../../examples/F77/vard_int.f
+                   ../../examples/F77/transpose.f
 EXAMPLE_PROGS += $(examples_F77_src:../../examples/F77/%.f=%.exe77)
 
 %.77o: ../../examples/F77/%.f
@@ -163,8 +156,7 @@ examples_F90_src = ../../examples/F90/block_cyclic.f90 \
                    ../../examples/F90/put_var.f90 \
                    ../../examples/F90/put_varn_int.f90 \
                    ../../examples/F90/put_varn_real.f90 \
-                   ../../examples/F90/transpose.f90 \
-                   ../../examples/F90/vard_int.f90
+                   ../../examples/F90/transpose.f90
 EXAMPLE_PROGS += $(examples_F90_src:../../examples/F90/%.f90=%.exe90)
 
 all: env_check testutils.o utils.o $(TEST_PROGS) $(EXAMPLE_PROGS) batch.sh interactive.sh

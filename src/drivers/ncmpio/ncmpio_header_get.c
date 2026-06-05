@@ -316,103 +316,101 @@ hdr_len_NC_vararray(const NC_vararray *ncap,
 
 /*----< hdr_fetch() >--------------------------------------------------------*/
 /* Fetch the next header chunk. The chunk buffer, pointed by gbp->base, is of
- * size 'gbp->chunk' bytes. Be careful not to overwrite leftover (yet to be
- * used) data in the buffer before fetching a new chunk.
+ * size 'gbp->ncp->chunk' bytes. Be careful not to overwrite leftover (yet to
+ * be used) data in the buffer before fetching a new chunk.
  */
 static int
 hdr_fetch(bufferinfo *gbp) {
-    char *mpi_name;
     int rank, nprocs, err=NC_NOERR, mpireturn;
-    MPI_Status mpistatus;
+    PNCIO_View buf_view;
 
     assert(gbp->base != NULL);
 
-    MPI_Comm_size(gbp->comm, &nprocs);
-    MPI_Comm_rank(gbp->comm, &rank);
+    buf_view.count = 0;
+    buf_view.off = NULL;
+    buf_view.len = NULL;
+    buf_view.is_contig = 1;
+    buf_view.type = MPI_BYTE;
+
+    MPI_Comm_size(gbp->ncp->comm, &nprocs);
+    MPI_Comm_rank(gbp->ncp->comm, &rank);
     if (rank == 0) {
         char *readBuf;
         int readLen;
         size_t slack;
+        MPI_Offset rlen;
 
         /* any leftover data in the buffer */
-        slack = gbp->chunk - (gbp->pos - gbp->base);
-        if (slack == gbp->chunk) slack = 0;
+        slack = gbp->ncp->chunk - (gbp->pos - gbp->base);
+        if (slack == gbp->ncp->chunk) slack = 0;
 
-        /* When gbp->chunk == (gbp->pos - gbp->base), all data in the buffer has
-         * been consumed. If not, then read additional header of size
-         * (gbp->chunk - slack) into a contiguous buffer, pointed by gbp->base +
-         * slack.
+        /* When gbp->ncp->chunk == (gbp->pos - gbp->base), all data in the
+         * buffer has been consumed. If not, then read additional header of
+         * size (gbp->ncp->chunk - slack) into a contiguous buffer, pointed by
+         * gbp->base + slack.
          */
 
         readBuf = gbp->base;
-        readLen = gbp->chunk;
+        readLen = gbp->ncp->chunk;
         if (slack > 0) { /* move slack to beginning of the buffer, gbp->base */
             memmove(gbp->base, gbp->pos, slack);
             readBuf += slack;
             readLen -= slack;
         }
 
-        /* explicitly initialize mpistatus object to 0. For zero-length read,
-         * MPI_Get_count may report incorrect result for some MPICH version,
-         * due to the uninitialized MPI_Status object passed to MPI-IO calls.
-         */
-        memset(&mpistatus, 0, sizeof(MPI_Status));
+        buf_view.size = readLen;
 
         /* fileview is already entire file visible and MPI_File_read_at does
            not change the file pointer */
-        if (gbp->coll_mode == 1) { /* collective read */
-            TRACE_IO(MPI_File_read_at_all, (gbp->collective_fh, gbp->offset, readBuf,
-                                            readLen, MPI_BYTE, &mpistatus));
-        }
-        else {
-            TRACE_IO(MPI_File_read_at, (gbp->collective_fh, gbp->offset, readBuf,
-                                        readLen, MPI_BYTE, &mpistatus));
-        }
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD)
-        }
-        else {
-            /* Obtain the actual read amount. It may be smaller than readLen,
-             * when the remaining file size is smaller than read chunk size.
-             * Because each MPI File_read reads amount of readLen bytes, and
-             * readLen <= read chunk size which is <= NC_MAX_INT, calling
-             * MPI_Get_count() is sufficient. No need to call MPI_Get_count_c()
-             */
-            int get_size;
-            MPI_Get_count(&mpistatus, MPI_BYTE, &get_size);
-            gbp->get_size += get_size;
+        if (gbp->ncp->nprocs > 1 && fIsSet(gbp->ncp->flags, NC_HCOLL))
+            /* collective read */
+            rlen = ncmpio_file_read_at_all(gbp->ncp, gbp->offset, readBuf,
+                                           buf_view);
+        else
+            /* independent read */
+            rlen = ncmpio_file_read_at(gbp->ncp, gbp->offset, readBuf,
+                                       buf_view);
 
-            /* If actual read amount is shorter than readLen, then we zero-out
-             * the remaining buffer. This is because the MPI_Bcast below
-             * broadcasts a buffer of a fixed size, gbp->chunk. Without zeroing
-             * out, valgrind will complain about the uninitialized values.
+        if (rlen > 0) {
+            /* rlen is the actual read amount. It may be smaller than readLen,
+             * when the remaining file size is smaller than readLen. When
+             * actual read amount is smaller than readLen, then we zero-out the
+             * remaining buffer. This is because the MPI_Bcast below broadcasts
+             * a buffer of a fixed size, gbp->ncp->chunk. Without zeroing out,
+             * valgrind will complain about the uninitialized values.
              */
-            if (get_size < readLen)
-                memset(readBuf + get_size, 0, readLen - get_size);
+            if (rlen < readLen)
+                memset(readBuf + rlen, 0, readLen - rlen);
         }
+        else if (rlen < 0)
+            err = (int)rlen;
+
         /* only root process reads file header, keeps track of current read
          * file pointer location */
-        gbp->offset += readLen;
+        gbp->offset += rlen;
     }
-    else if (gbp->coll_mode == 1) { /* collective read */
-        /* other processes participate the collective call */
-        TRACE_IO(MPI_File_read_at_all, (gbp->collective_fh, 0, NULL,
-                                        0, MPI_BYTE, &mpistatus));
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-            if (err == NC_EFILE) DEBUG_ASSIGN_ERROR(err, NC_EREAD)
-        }
+    else if (gbp->ncp->nprocs > 1 && fIsSet(gbp->ncp->flags, NC_HCOLL)) {
+        /* Collective read: non-root ranks participate the collective call with
+         * a zero-sized request.
+         */
+        buf_view.size = 0;
+        ncmpio_file_read_at_all(gbp->ncp, 0, NULL, buf_view);
     }
 
-    if (gbp->safe_mode == 1 && nprocs > 1) {
-        TRACE_COMM(MPI_Bcast)(&err, 1, MPI_INT, 0, gbp->comm);
+    if (gbp->ncp->safe_mode == 1 && nprocs > 1) {
+        TRACE_COMM(MPI_Bcast)(&err, 1, MPI_INT, 0, gbp->ncp->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
         if (err != NC_NOERR) return err;
     }
 
     /* broadcast root's read (full or partial header) to other processes */
-    if (nprocs > 1)
-        TRACE_COMM(MPI_Bcast)(gbp->base, gbp->chunk, MPI_BYTE, 0, gbp->comm);
+    if (nprocs > 1) {
+        TRACE_COMM(MPI_Bcast)(gbp->base, gbp->ncp->chunk, MPI_BYTE, 0,
+                              gbp->ncp->comm);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
+    }
 
     gbp->pos = gbp->base;
 
@@ -503,7 +501,7 @@ hdr_get_nc_type(bufferinfo *gbp, nc_type *xtypep)
     if (xtype < NC_BYTE)
         DEBUG_RETURN_ERROR(NC_EBADTYPE)
 
-    if (gbp->version < 5) {
+    if (gbp->ncp->format < 5) {
         if (xtype > NC_DOUBLE)
             DEBUG_RETURN_ERROR(NC_EBADTYPE)
     }
@@ -536,7 +534,7 @@ hdr_get_NC_name(bufferinfo *gbp, char **namep, size_t *name_len)
     *namep = NULL;
 
     /* get nelems (string length of name) */
-    if (gbp->version < 5) {
+    if (gbp->ncp->format < 5) {
         uint tmp;
         err = hdr_get_uint32(gbp, &tmp);
         if (err != NC_NOERR) return err;
@@ -564,7 +562,7 @@ hdr_get_NC_name(bufferinfo *gbp, char **namep, size_t *name_len)
     */
     padding = PNETCDF_RNDUP(nchars, X_ALIGN) - nchars;
 
-    bufremain = gbp->chunk - (gbp->pos - gbp->base);
+    bufremain = gbp->ncp->chunk - (gbp->pos - gbp->base);
 
     cpos = *namep;
 
@@ -585,7 +583,7 @@ hdr_get_NC_name(bufferinfo *gbp, char **namep, size_t *name_len)
                 *namep = NULL;
                 return err;
             }
-            bufremain = gbp->chunk;
+            bufremain = gbp->ncp->chunk;
         }
     }
 
@@ -659,7 +657,7 @@ hdr_get_NC_dim(bufferinfo *gbp, int unlimited_id, NC_dim **dimpp)
     else if (err != NC_NOERR) return err;
 
     /* get dim_length */
-    if (gbp->version < 5) {
+    if (gbp->ncp->format < 5) {
         uint tmp;
         err = hdr_get_uint32(gbp, &tmp);
         dim_length = (MPI_Offset)tmp;
@@ -730,7 +728,7 @@ hdr_get_NC_dimarray(bufferinfo *gbp, NC_dimarray *ncap)
     if (err != NC_NOERR) return err;
 
     /* read nelems (number of dimensions) from gbp buffer */
-    if (gbp->version < 5) { /* nelems is <non-negative INT> */
+    if (gbp->ncp->format < 5) { /* nelems is <non-negative INT> */
         uint tmp;
         err = hdr_get_uint32(gbp, &tmp);
         if (err != NC_NOERR) return err;
@@ -809,8 +807,8 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
     nbytes = attrp->nelems * xsz;
     padding = attrp->xsz - nbytes;
 
-    bufremain = gbp->chunk - (gbp->pos - gbp->base);
-    /* gbp->chunk is the read chunk size, which is of type 4-byte int.
+    bufremain = gbp->ncp->chunk - (gbp->pos - gbp->base);
+    /* gbp->ncp->chunk is the read chunk size, which is of type 4-byte int.
      * thus bufremain should be less than INT_MAX */
 
     /* get values */
@@ -823,10 +821,9 @@ hdr_get_NC_attrV(bufferinfo *gbp, NC_attr *attrp)
             value = (void *)((char *)value + attcount);
             bufremain -= attcount;
         } else {
-            int err;
             err = hdr_fetch(gbp);
             if (err != NC_NOERR) return err;
-            bufremain = gbp->chunk;
+            bufremain = gbp->ncp->chunk;
         }
     }
 
@@ -906,7 +903,7 @@ hdr_get_NC_attr(bufferinfo *gbp, NC_attr **attrpp)
     }
 
     /* get nelems */
-    if (gbp->version < 5) {
+    if (gbp->ncp->format < 5) {
         uint tmp;
         err = hdr_get_uint32(gbp, &tmp);
         nelems = (MPI_Offset)tmp;
@@ -977,7 +974,7 @@ hdr_get_NC_attrarray(bufferinfo *gbp, NC_attrarray *ncap)
     if (err != NC_NOERR) return err;
 
     /* read nelems (number of attributes) from gbp buffer */
-    if (gbp->version < 5) { /* nelems is <non-negative INT> */
+    if (gbp->ncp->format < 5) { /* nelems is <non-negative INT> */
         uint tmp;
         err = hdr_get_uint32(gbp, &tmp);
         if (err != NC_NOERR) return err;
@@ -1061,7 +1058,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
     else if (err != NC_NOERR) return err;
 
     /* nelems (number of dimensions) */
-    if (gbp->version < 5) {
+    if (gbp->ncp->format < 5) {
         uint tmp;
         err = hdr_get_uint32(gbp, &tmp);
         if (err != NC_NOERR) {
@@ -1099,7 +1096,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
 
     /* get [dimid ...] */
     for (dim=0; dim<ndims; dim++) {
-        if (gbp->version < 5) {
+        if (gbp->ncp->format < 5) {
             uint tmp;
             err = hdr_get_uint32(gbp, &tmp);
             if (err != NC_NOERR) break;
@@ -1135,7 +1132,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
     ncmpii_xlen_nc_type(varp->xtype, &varp->xsz);
 
     /* get vsize */
-    if (gbp->version < 5) {
+    if (gbp->ncp->format < 5) {
         uint tmp;
         err = hdr_get_uint32(gbp, &tmp);
         varp->len = (MPI_Offset)tmp;
@@ -1164,7 +1161,7 @@ hdr_get_NC_var(bufferinfo  *gbp,
      */
 
     /* get begin */
-    if (gbp->version == 1) {
+    if (gbp->ncp->format == 1) {
         uint tmp;
         err = hdr_get_uint32(gbp, &tmp);
         varp->begin = (MPI_Offset)tmp;
@@ -1223,7 +1220,7 @@ hdr_get_NC_vararray(bufferinfo  *gbp,
     if (err != NC_NOERR) return err;
 
     /* read nelems (number of variables) from gbp buffer */
-    if (gbp->version < 5) { /* nelems is <non-negative INT> */
+    if (gbp->ncp->format < 5) { /* nelems is <non-negative INT> */
         uint tmp;
         err = hdr_get_uint32(gbp, &tmp);
         if (err != NC_NOERR) return err;
@@ -1339,24 +1336,13 @@ ncmpio_hdr_get_NC(NC *ncp)
     assert(ncp != NULL);
 
     /* Initialize the get buffer that stores the header read from the file */
-    getbuf.comm          = ncp->comm;
-    getbuf.collective_fh = ncp->collective_fh;
-    getbuf.get_size      = 0;
-    getbuf.offset        = 0;   /* read from start of the file */
-    getbuf.safe_mode     = ncp->safe_mode;
-    if (ncp->nprocs > 1 && fIsSet(ncp->flags, NC_HCOLL))
-        getbuf.coll_mode = 1;
-    else
-        getbuf.coll_mode = 0;
+    getbuf.ncp    = ncp;
+    getbuf.offset = 0;   /* read from start of the file */
+    getbuf.base   = (char*) NCI_Malloc(getbuf.ncp->chunk);
+    getbuf.pos    = getbuf.base;
+    getbuf.end    = getbuf.base + getbuf.ncp->chunk;
 
-    /* CDF-5's minimum header size is 4 bytes more than CDF-1 and CDF-2's */
-    getbuf.chunk = PNETCDF_RNDUP( MAX(MIN_NC_XSZ+4, ncp->chunk), X_ALIGN );
-
-    getbuf.base = (char*) NCI_Malloc(getbuf.chunk);
-    getbuf.pos  = getbuf.base;
-    getbuf.end  = getbuf.base + getbuf.chunk;
-
-    /* Fetch the next header chunk. The chunk is 'gbp->chunk' bytes big */
+    /* Fetch the next header chunk. The chunk is 'gbp->ncp->chunk' bytes big */
     err = hdr_fetch(&getbuf);
     if (err != NC_NOERR) return err;
 
@@ -1381,20 +1367,20 @@ ncmpio_hdr_get_NC(NC *ncp)
         goto fn_exit;
     }
 
-    /* check version number in last byte of magic */
-    if (magic[3] == 0x1) {
-        getbuf.version = ncp->format = 1;
-    } else if (magic[3] == 0x2) {
-        getbuf.version = ncp->format = 2;
-    } else if (magic[3] == 0x5) {
-        getbuf.version = ncp->format = 5;
-    } else {
+    /* check format version number in last byte of magic */
+    if (magic[3] == 0x1)
+        ncp->format = 1;
+    else if (magic[3] == 0x2)
+        ncp->format = 2;
+    else if (magic[3] == 0x5)
+        ncp->format = 5;
+    else {
         NCI_Free(getbuf.base);
         DEBUG_RETURN_ERROR(NC_ENOTNC) /* not a netCDF file */
     }
 
     /* get numrecs from getbuf into ncp */
-    if (getbuf.version < 5) {
+    if (getbuf.ncp->format < 5) {
         uint tmp=0;
         err = hdr_get_uint32(&getbuf, &tmp);
         if (err != NC_NOERR) goto fn_exit;
@@ -1449,7 +1435,6 @@ ncmpio_hdr_get_NC(NC *ncp)
     if (err != NC_NOERR) goto fn_exit;
 
 fn_exit:
-    ncp->get_size += getbuf.get_size;
     NCI_Free(getbuf.base);
 
     return (err == NC_NOERR) ? status : err;

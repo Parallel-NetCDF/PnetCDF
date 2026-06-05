@@ -144,13 +144,33 @@ fill_var_rec(NC         *ncp,
              NC_var     *varp,
              MPI_Offset  recno) /* record number */
 {
-    char *mpi_name;
     int err, status=NC_NOERR, mpireturn;
     void *buf;
-    MPI_Offset var_len, start, count, offset;
-    MPI_File fh;
-    MPI_Status mpistatus;
-    MPI_Datatype bufType;
+    MPI_Offset var_len, start, count, offset, wlen;
+    PNCIO_View buf_view;
+
+    buf_view.type = MPI_BYTE;
+    buf_view.count = 0;
+    buf_view.is_contig = 1;
+    buf_view.size = 0;
+    buf_view.off = NULL;
+    buf_view.len = NULL;
+
+    /* When intra-node aggregation is enabled, use the communicator consisting
+     * of aggregators in comm, nprocs, and rank. Non-aggregators do not
+     * participate the fill operation.
+     */
+    MPI_Comm comm = ncp->comm;
+    int nprocs = ncp->nprocs;
+    int rank = ncp->rank;
+    if (ncp->num_aggrs_per_node > 0) {
+        if (ncp->my_aggr != ncp->rank)
+            return NC_NOERR;
+
+        comm = ncp->ina_comm;
+        nprocs = ncp->ina_nprocs;
+        rank = ncp->ina_rank;
+    }
 
     if (varp->ndims == 0) /* scalar variable */
         var_len = 1;
@@ -162,14 +182,14 @@ fill_var_rec(NC         *ncp,
         var_len = varp->dsizes[0];
 
     /* divide total number of elements of this variable among all processes */
-    count = var_len / ncp->nprocs;
-    start = count * ncp->rank;
-    if (ncp->rank < var_len % ncp->nprocs) {
-        start += ncp->rank;
+    count = var_len / nprocs;
+    start = count * rank;
+    if (rank < var_len % nprocs) {
+        start += rank;
         count++;
     }
     else {
-        start += var_len % ncp->nprocs;
+        start += var_len % nprocs;
     }
 
     /* allocate buffer space */
@@ -179,9 +199,14 @@ fill_var_rec(NC         *ncp,
     err = fill_var_buf(varp, count, buf);
     if (err != NC_NOERR) {
         NCI_Free(buf);
-        count = 0; /* still participate collective calls below */
+        /* still participate collective calls below */
+        buf_view.size = 0;
         status = err;
     }
+
+    /* make the entire file visible */
+    err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, 0, NULL, NULL);
+    status = (status == NC_NOERR) ? err : status;
 
     /* calculate the starting file offset for each process */
     offset = varp->begin;
@@ -189,54 +214,30 @@ fill_var_rec(NC         *ncp,
         offset += ncp->recsize * recno;
     offset += start * varp->xsz;
 
-    /* when ncp->nprocs == 1, we keep I/O mode in independent mode at all time */
-    fh = ncp->collective_fh;
-
-    /* make the entire file visible */
-    TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, MPI_BYTE, "native",
-                                 MPI_INFO_NULL));
-    if (mpireturn != MPI_SUCCESS) {
-        err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-        if (status == NC_NOERR) status = err;
-    }
-
     count *= varp->xsz;
-
-    bufType = MPI_BYTE;
 
 #ifndef HAVE_MPI_LARGE_COUNT
     if (count > NC_MAX_INT) {
         DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
         if (status == NC_NOERR) status = err;
-        count = 0; /* participate collective write with 0-length request */
+        /* participate collective write with 0-length request */
+        buf_view.size = 0;
     }
 #endif
 
+    if (status == NC_NOERR)
+        buf_view.size = count;
+
+// if (ncp->rank ==0) printf("%s at %d: buf_view count=%lld size=%lld offset=%lld\n",__func__,__LINE__, buf_view.count,buf_view.size,offset);
+
     /* write to variable collectively */
-    if (ncp->nprocs > 1) {
-#ifdef HAVE_MPI_LARGE_COUNT
-        TRACE_IO(MPI_File_write_at_all_c, (fh, offset, buf, (MPI_Count)count,
-                                           bufType, &mpistatus));
-#else
-        TRACE_IO(MPI_File_write_at_all, (fh, offset, buf, (int)count,
-                                         bufType, &mpistatus));
-#endif
-    }
-    else {
-#ifdef HAVE_MPI_LARGE_COUNT
-        TRACE_IO(MPI_File_write_at_c, (fh, offset, buf, (MPI_Count)count,
-                                       bufType, &mpistatus));
-#else
-        TRACE_IO(MPI_File_write_at, (fh, offset, buf, (int)count,
-                                     bufType, &mpistatus));
-#endif
-    }
+    if (nprocs > 1)
+        wlen = ncmpio_file_write_at_all(ncp, offset, buf, buf_view);
+    else
+        wlen = ncmpio_file_write_at(ncp, offset, buf, buf_view);
+    if (status == NC_NOERR && wlen < 0) status = (int)wlen;
+
     NCI_Free(buf);
-    if (bufType != MPI_BYTE) MPI_Type_free(&bufType);
-    if (mpireturn != MPI_SUCCESS) {
-        err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-        if (status == NC_NOERR) status = err;
-    }
 
     if (status != NC_NOERR) return status;
 
@@ -248,9 +249,9 @@ fill_var_rec(NC         *ncp,
          * First, find the max numrecs among all processes.
          */
         MPI_Offset max_numrecs=recno+1;
-        if (ncp->nprocs > 1) {
+        if (nprocs > 1) {
             TRACE_COMM(MPI_Allreduce)(MPI_IN_PLACE, &max_numrecs, 1, MPI_OFFSET,
-                                      MPI_MAX, ncp->comm);
+                                      MPI_MAX, comm);
             if (mpireturn != MPI_SUCCESS) {
                 err = ncmpii_error_mpi2nc(mpireturn, "MPI_Allreduce");
                 if (status == NC_NOERR) status = err;
@@ -363,23 +364,35 @@ fill_added_recs(NC *ncp, NC *old_ncp)
 static int
 fillerup_aggregate(NC *ncp, NC *old_ncp)
 {
-    int i, j, k, mpireturn, err, status=NC_NOERR;
+    int i, j, k, err, status=NC_NOERR;
     int start_vid, recno, nVarsFill;
-    char *buf_ptr, *noFill, *mpi_name;
+    char *buf_ptr, *noFill;
     void *buf;
     size_t nsegs;
-    MPI_Offset buf_len, var_len, nrecs, start, *count;
-    MPI_Datatype filetype, bufType;
-    MPI_File fh;
-    MPI_Status mpistatus;
+    MPI_Offset buf_len, var_len, nrecs, start, *count, wlen;
     NC_var *varp;
+    PNCIO_View buf_view;
 
 #ifdef HAVE_MPI_LARGE_COUNT
-    MPI_Count *blocklengths, *offset;
+    MPI_Count *blocklengths=NULL, *offset=NULL;
 #else
-    int *blocklengths;
-    MPI_Aint *offset;
+    int *blocklengths=NULL;
+    MPI_Offset *offset=NULL;
 #endif
+
+    /* When intra-node aggregation is enabled, use the communicator consisting
+     * of aggregators in comm, nprocs, and rank. Non-aggregators do not
+     * participate the fill operation.
+     */
+    int nprocs = ncp->nprocs;
+    int rank = ncp->rank;
+    if (ncp->num_aggrs_per_node > 0) {
+        if (ncp->my_aggr != ncp->rank)
+            return NC_NOERR;
+
+        nprocs = ncp->ina_nprocs;
+        rank = ncp->ina_rank;
+    }
 
     /* find the starting vid for newly added variables */
     start_vid = 0;
@@ -397,12 +410,16 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
      * variables' fill modes and overwrite local's if an inconsistency is found
      * Note ncp->vars.ndefined is already made consistent by this point.
      */
-    if (ncp->nprocs > 1) {
+    MPI_Comm comm = (ncp->num_aggrs_per_node > 0) ? ncp->ina_comm : ncp->comm;
+
+    if (nprocs > 1) {
+        int mpireturn;
+
         for (i=start_vid; i<ncp->vars.ndefined; i++)
             noFill[i-start_vid] = (char)(ncp->vars.value[i]->no_fill);
 
         TRACE_COMM(MPI_Bcast)(noFill, (ncp->vars.ndefined - start_vid),
-                              MPI_BYTE, 0, ncp->comm);
+                              MPI_BYTE, 0, comm);
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, "MPI_Bcast");
 
@@ -427,9 +444,9 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     nsegs = (size_t)(ncp->vars.ndefined + ncp->vars.num_rec_vars * nrecs);
     count  = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * nsegs);
 #ifdef HAVE_MPI_LARGE_COUNT
-    offset = (MPI_Count*)   NCI_Malloc(sizeof(MPI_Count) * nsegs);
+    offset = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * nsegs);
 #else
-    offset = (MPI_Aint*)   NCI_Malloc(sizeof(MPI_Aint) * nsegs);
+    offset = (MPI_Offset*) NCI_Malloc(sizeof(MPI_Offset) * nsegs);
 #endif
 
     /* calculate each segment's offset and count */
@@ -446,19 +463,23 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
         else                  var_len = varp->dsizes[0];
 
         /* divide evenly total number of variable's elements among processes */
-        count[j] = var_len / ncp->nprocs;
-        start = count[j] * ncp->rank;
-        if (ncp->rank < var_len % ncp->nprocs) {
-            start += ncp->rank;
+        count[j] = var_len / nprocs;
+        start = count[j] * rank;
+        if (rank < var_len % nprocs) {
+            start += rank;
             count[j]++;
         }
         else
-            start += var_len % ncp->nprocs;
+            start += var_len % nprocs;
 
         /* calculate the starting file offset */
         start *= varp->xsz;
         start += varp->begin;
-        offset[j] = (MPI_Aint)start;
+#ifdef HAVE_MPI_LARGE_COUNT
+        offset[j] = (MPI_Count)start;
+#else
+        offset[j] = start;
+#endif
         if (start != offset[j]) {
             DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
             if (status == NC_NOERR) status = err;
@@ -483,19 +504,23 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
             else                  var_len = varp->dsizes[1];
 
             /* divide total number of variable's elements among all processes */
-            count[j] = var_len / ncp->nprocs;
-            start = count[j] * ncp->rank;
-            if (ncp->rank < var_len % ncp->nprocs) {
-                start += ncp->rank;
+            count[j] = var_len / nprocs;
+            start = count[j] * rank;
+            if (rank < var_len % nprocs) {
+                start += rank;
                 count[j]++;
             }
             else
-                start += var_len % ncp->nprocs;
+                start += var_len % nprocs;
 
             /* calculate the starting file offset */
             start *= varp->xsz;
             start += varp->begin + ncp->recsize * recno;
-            offset[j] = (MPI_Aint)start;
+#ifdef HAVE_MPI_LARGE_COUNT
+            offset[j] = (MPI_Count)start;
+#else
+            offset[j] = start;
+#endif
             if (start != offset[j]) {
                 DEBUG_ASSIGN_ERROR(err, NC_EINTOVERFLOW)
                 if (status == NC_NOERR) status = err;
@@ -597,53 +622,26 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     }
     /* k is the number of valid write requests */
     NCI_Free(noFill);
-
-    if (k == 0) {
-        filetype = MPI_BYTE;
-    }
-    else {
-        /* create fileview: a list of contiguous segment for each variable */
-#ifdef HAVE_MPI_LARGE_COUNT
-        mpireturn = MPI_Type_create_hindexed_c(k, blocklengths, offset,
-                                               MPI_BYTE, &filetype);
-#else
-        mpireturn = MPI_Type_create_hindexed(k, blocklengths, offset,
-                                             MPI_BYTE, &filetype);
-#endif
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_hindexed");
-            /* return the first encountered error if there is any */
-            if (status == NC_NOERR) status = err;
-        }
-        else
-            MPI_Type_commit(&filetype);
-    }
-
-    NCI_Free(blocklengths);
     NCI_Free(count);
-    NCI_Free(offset);
 
-    /* when nprocs == 1, we keep I/O mode in independent mode at all time */
-    fh = ncp->collective_fh;
+    err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, k, offset, blocklengths);
+    status = (status == NC_NOERR) ? err : status;
 
-    TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, filetype, "native",
-                                 MPI_INFO_NULL));
-    if (k > 0) MPI_Type_free(&filetype);
-
-    bufType = MPI_BYTE;
+    buf_view.type = MPI_BYTE;
     if (buf_len > NC_MAX_INT) {
 #ifdef HAVE_MPI_LARGE_COUNT
+        int mpireturn;
+
         mpireturn = MPI_Type_contiguous_c((MPI_Count)buf_len, MPI_BYTE,
-                                          &bufType);
+                                          &buf_view.type);
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_Type_contiguous_c");
             /* return the first encountered error if there is any */
             if (status == NC_NOERR) status = err;
-            buf_len = 0;
+            buf_view.size = 0;
         }
         else {
-            MPI_Type_commit(&bufType);
-            buf_len = 1;
+            MPI_Type_commit(&buf_view.type);
         }
 #else
         if (status == NC_NOERR)
@@ -653,39 +651,38 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
 #endif
     }
 
+    MPI_Offset off=0;
+#ifdef HAVE_MPI_LARGE_COUNT
+    MPI_Offset  len=buf_len;
+#else
+    int         len=buf_len;
+#endif
+
+    /* write buffer is contiguous */
+    buf_view.size = buf_len;
+    buf_view.count = 1;
+    buf_view.off = &off;
+    buf_view.len = &len;
+    buf_view.is_contig = 1;
+
     /* write to variable collectively */
-    if (ncp->nprocs > 1) {
-#ifdef HAVE_MPI_LARGE_COUNT
-        TRACE_IO(MPI_File_write_at_all_c, (fh, 0, buf, (MPI_Count)buf_len,
-                                           bufType, &mpistatus));
-#else
-        TRACE_IO(MPI_File_write_at_all, (fh, 0, buf, (int)buf_len,
-                                         bufType, &mpistatus));
-#endif
-    }
-    else {
-#ifdef HAVE_MPI_LARGE_COUNT
-        TRACE_IO(MPI_File_write_at_c, (fh, 0, buf, (MPI_Count)buf_len,
-                                       bufType, &mpistatus));
-#else
-        TRACE_IO(MPI_File_write_at, (fh, 0, buf, (int)buf_len,
-                                     bufType, &mpistatus));
-#endif
-    }
+    if (nprocs > 1)
+        wlen = ncmpio_file_write_at_all(ncp, 0, buf, buf_view);
+    else
+        wlen = ncmpio_file_write_at(ncp, 0, buf, buf_view);
+    if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
+// printf("%s at %d\n",__func__,__LINE__);
     NCI_Free(buf);
-    if (bufType != MPI_BYTE) MPI_Type_free(&bufType);
-    if (mpireturn != MPI_SUCCESS) {
-        err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-        if (status == NC_NOERR) status = err;
-    }
+    if (buf_view.type != MPI_BYTE) MPI_Type_free(&buf_view.type);
 
-    TRACE_IO(MPI_File_set_view, (fh, 0, MPI_BYTE, MPI_BYTE, "native",
-                                 MPI_INFO_NULL));
-    if (mpireturn != MPI_SUCCESS) {
-        err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-        if (status == NC_NOERR) status = err;
-    }
+    if (blocklengths != NULL) NCI_Free(blocklengths);
+    if (offset != NULL) NCI_Free(offset);
+
+    /* reset fileview to make the entire file visible */
+    err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, 0, NULL, NULL);
+    status = (status == NC_NOERR) ? err : status;
+
     return status;
 }
 

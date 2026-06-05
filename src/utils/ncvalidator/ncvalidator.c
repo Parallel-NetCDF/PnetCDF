@@ -1397,7 +1397,7 @@ val_get_NC_attr(int          fd,
                 NC_attr    **attrpp,
                 const char  *loc)
 {
-    char *name=NULL, xloc[1024];
+    char *name=NULL, xloc[2048];
     int err, status=NC_NOERR;
     size_t err_addr, name_len;
     nc_type xtype;
@@ -2401,7 +2401,7 @@ val_get_NC(int fd, NC *ncp)
 
     /* check zero padding in the blank space betwee header size and extent */
     if (repair && ncp->begin_var - ncp->xsz > 0) {
-        size_t i, gap = ncp->begin_var - ncp->xsz;
+        size_t gap = ncp->begin_var - ncp->xsz;
         ssize_t readLen;
         char *buf = (char*) malloc(gap);
 
@@ -2448,7 +2448,7 @@ fn_exit:
 
 #ifndef BUILD_CDFDIFF
 
-/* File system types recognized by ROMIO in MPICH 4.0.0 */
+/* File system types recognized by ROMIO in MPICH 4.0.0, and by PnetCDF */
 static const char* fstypes[] = {"ufs", "nfs", "xfs", "pvfs2", "gpfs", "panfs", "lustre", "daos", "testfs", "ime", "quobyte", NULL};
 
 /* Return a pointer to filename by removing the file system type prefix name if

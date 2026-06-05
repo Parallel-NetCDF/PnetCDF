@@ -9,13 +9,15 @@
        NCI_Malloc(size)
        NCI_Calloc(nelems, esize)
        NCI_Realloc(ptr, size)
+       NCI_Strdup(ptr)
        NCI_Free(ptr)
 
    In macro.h, they are macro-replaced to
-       NCI_Malloc_fn(size, __LINE__, __FILE__) and
-       NCI_Calloc_fn(nelems, esize, __LINE__, __FILE__) and
+       NCI_Malloc_fn(size, __LINE__, __func__, __FILE__)
+       NCI_Calloc_fn(nelems, esize, __LINE__, __func__, __FILE__)
        NCI_Realloc_fn(ptr, size, __LINE__, __func__, __FILE__)
-       NCI_Free_fn(ptr,__LINE__,__FILE__).
+       NCI_Strdup_fn(ptr, __LINE__, __func__, __FILE__)
+       NCI_Free_fn(ptr, __LINE__, __func__, __FILE__).
  */
 
 #ifdef HAVE_CONFIG_H

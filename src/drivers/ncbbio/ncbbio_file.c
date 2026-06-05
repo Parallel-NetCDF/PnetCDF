@@ -375,6 +375,11 @@ ncbbio_begin_indep_data(void *ncdp)
     int err;
     NC_bb *ncbbp = (NC_bb*)ncdp;
 
+    err = ncbbio_sync(ncdp);
+    if (err != NC_NOERR) return err;
+
+    MPI_Barrier(ncbbp->comm);
+
     err = ncbbp->ncmpio_driver->begin_indep_data(ncbbp->ncp);
     if (err != NC_NOERR) return err;
 

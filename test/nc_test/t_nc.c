@@ -112,32 +112,32 @@ static MPI_Offset sizes[] = { NC_UNLIMITED, SIZE_1 , SIZE_2 };
 static const char * const dim_names[] = { "record", "ixx", "iyy"};
 
 static int
-createtestdims(int cdfid, size_t num_dims, const MPI_Offset *sizes, const char * const dim_names[])
+createtestdims(int cdfid, size_t ndims, const MPI_Offset *dim_sizes, const char * const names[])
 {
 	int dimid, err;
-	while(num_dims-- != 0)
+	while(ndims-- != 0)
 	{
-		err = ncmpi_def_dim(cdfid, *dim_names++, *sizes, &dimid); ERR
-		sizes++;
+		err = ncmpi_def_dim(cdfid, *names++, *dim_sizes, &dimid); ERR
+		dim_sizes++;
 	}
 	return 0;
 }
 
 
 static int
-testdims(int cdfid, size_t num_dims, MPI_Offset *sizes, const char * const dim_names[])
+testdims(int cdfid, size_t ndims, MPI_Offset *dim_sizes, const char * const names[])
 {
 	int ii, err;
 	MPI_Offset size;
 	char cp[NC_MAX_NAME];
-	for(ii=0; (size_t) ii < num_dims; ii++, sizes++)
+	for(ii=0; (size_t) ii < ndims; ii++, dim_sizes++)
 	{
 		err = ncmpi_inq_dim(cdfid, ii, cp, &size); ERR
-		if( size != *sizes)
+		if( size != *dim_sizes)
 			(void) fprintf(stderr, "%d: %lu != %lu\n",
-				ii, (unsigned long)size, (unsigned long)*sizes);
-		if ( size != *sizes) return 1;
-		if ( strcmp(cp, *dim_names++) != 0) return 1;
+				ii, (unsigned long)size, (unsigned long)*dim_sizes);
+		if ( size != *dim_sizes) return 1;
+		if ( strcmp(cp, *names++) != 0) return 1;
 	}
 	return 0;
 }
@@ -195,11 +195,11 @@ static struct tcdfvar {
 #define	NUM_TESTVARS	6
 
 static int
-createtestvars(int id, const struct tcdfvar *testvars, size_t count)
+createtestvars(int id, const struct tcdfvar *vars, size_t count)
 {
 	int ii, err;
 	int varid;
-	const struct tcdfvar *vp = testvars;
+	const struct tcdfvar *vp = vars;
 
 	for(ii = 0; (size_t) ii < count; ii++, vp++ )
 	{

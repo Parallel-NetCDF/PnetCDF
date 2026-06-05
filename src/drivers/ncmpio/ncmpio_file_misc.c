@@ -81,8 +81,7 @@ dup_NC(const NC *ref)
 int
 ncmpio_redef(void *ncdp)
 {
-    char *mpi_name;
-    int err, status=NC_NOERR, mpireturn;
+    int err, status=NC_NOERR;
     NC *ncp = (NC*)ncdp;
 
 #if 0
@@ -100,7 +99,7 @@ ncmpio_redef(void *ncdp)
     if (NC_indep(ncp)) /* exit independent mode, if in independent mode */
         ncmpio_end_indep_data(ncp);
 
-    /* duplicate a header to be used in enddef() for checking if header grows */
+    /* duplicate header to be used in enddef() for checking if header grows */
     ncp->old = dup_NC(ncp);
     if (ncp->old == NULL) DEBUG_RETURN_ERROR(NC_ENOMEM)
 
@@ -108,21 +107,8 @@ ncmpio_redef(void *ncdp)
     fSet(ncp->flags, NC_MODE_DEF);
 
     /* must reset fileview as header extent may later change in enddef() */
-    TRACE_IO(MPI_File_set_view, (ncp->collective_fh, 0, MPI_BYTE,
-                                 MPI_BYTE, "native", MPI_INFO_NULL));
-    if (mpireturn != MPI_SUCCESS) {
-        err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-        DEBUG_ASSIGN_ERROR(status, err)
-    }
-
-    if (ncp->independent_fh != MPI_FILE_NULL) {
-        TRACE_IO(MPI_File_set_view, (ncp->independent_fh, 0, MPI_BYTE,
-                                     MPI_BYTE, "native", MPI_INFO_NULL));
-        if (mpireturn != MPI_SUCCESS) {
-            err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
-            DEBUG_ASSIGN_ERROR(status, err)
-        }
-    }
+    err = ncmpio_file_set_view(ncp, 0, MPI_BYTE, 0, NULL, NULL);
+    DEBUG_ASSIGN_ERROR(status, err)
 
     return status;
 }
@@ -132,7 +118,6 @@ ncmpio_redef(void *ncdp)
 int
 ncmpio_begin_indep_data(void *ncdp)
 {
-    char *mpi_name;
     NC *ncp = (NC*)ncdp;
 
     if (NC_indef(ncp))  /* must not be in define mode */
@@ -151,6 +136,66 @@ ncmpio_begin_indep_data(void *ncdp)
     /* raise independent flag */
     fSet(ncp->flags, NC_MODE_INDEP);
 
+    /* Barrier is necessary to prevent non-aggregators from calling open()
+     * before the file is being collectively created by the aggregators.
+     */
+    MPI_Barrier(ncp->comm);
+
+    if (ncp->fstype != PNCIO_FSTYPE_MPIIO) {
+        /* When using PnetCDF's PNCIO driver, there are 2 scenarios:
+         * 1. When intra-node aggregation (INA) is enabled, at the end of
+         *    ncmpi_create/ncmpi_open, non-aggregators' pncio_fh are NULL. Thus
+         *    switching to independent data mode, we can re-use pncio_fh to
+         *    store file handler of file opened with MPI_COMM_SELF. Note
+         *    whether pncio_fh is NULL or not does not tell whether INA is
+         *    enabled or not.
+         * 2. When INA is disabled, all ranks calls PNCIO_File_open() and thus
+         *    pncio_fh should not be NULL. In other word, this scenario should
+         *    not reach here at all. Because PnetCDF's PNCIO driver relaxes
+         *    File_setview subroutine to be able to called independently, the
+         *    same pncio_fh can be used for both collective and independent I/O
+         *    APIs. Note we cannot re-used pncio_fh for the above scenario 1,
+         *    because in the collective data mode, all ranks must participate
+         *    each collective I/O call,
+         */
+        int err;
+        char *filename;
+
+        if (ncp->pncio_fh != NULL)
+            /* Only INA non-aggregators' pncio_fh can be NULL, because
+             * aggregators open the file collectively and their pncio_fh can
+             * never be NULL.
+             */
+            return NC_NOERR;
+
+        filename = ncmpii_remove_file_system_type_prefix(ncp->path);
+
+        ncp->pncio_fh = (PNCIO_File*) NCI_Calloc(1,sizeof(PNCIO_File));
+        ncp->pncio_fh->file_system = ncp->fstype;
+        ncp->pncio_fh->num_nodes = 1;
+        ncp->pncio_fh->node_ids = (int*) NCI_Malloc(sizeof(int));
+        ncp->pncio_fh->node_ids[0] = 0;
+
+        int omode = fClr(ncp->mpiomode, MPI_MODE_CREATE);
+
+        err = PNCIO_File_open(MPI_COMM_SELF, filename, omode, ncp->mpiinfo,
+                              ncp->pncio_fh);
+        if (err != NC_NOERR)
+            return err;
+
+        /* get the I/O hints used/modified by MPI-IO */
+        err = PNCIO_File_get_info(ncp->pncio_fh, &ncp->mpiinfo);
+        if (err != NC_NOERR) return err;
+
+        /* Add PnetCDF hints into ncp->mpiinfo */
+        ncmpio_hint_set(ncp, ncp->mpiinfo);
+
+        NCI_Free(ncp->pncio_fh->node_ids);
+        ncp->pncio_fh->node_ids = NULL;
+
+        return NC_NOERR;
+    }
+
     /* PnetCDF's default mode is collective. MPI file handle, collective_fh,
      * will never be MPI_FILE_NULL. We must use a separate MPI file handle
      * opened with MPI_COMM_SELF, because MPI_File_set_view is a collective
@@ -159,12 +204,20 @@ ncmpio_begin_indep_data(void *ncdp)
      * called.
      */
     if (ncp->independent_fh == MPI_FILE_NULL) {
+        char *mpi_name;
         int mpireturn;
-        TRACE_IO(MPI_File_open, (MPI_COMM_SELF, ncp->path,
-                                 ncp->mpiomode, ncp->mpiinfo,
-                                 &ncp->independent_fh));
+        TRACE_IO(MPI_File_open, (MPI_COMM_SELF, ncp->path, ncp->mpiomode,
+                                 ncp->mpiinfo, &ncp->independent_fh));
         if (mpireturn != MPI_SUCCESS)
             return ncmpii_error_mpi2nc(mpireturn, mpi_name);
+
+        /* get the I/O hints used/modified by MPI-IO */
+        mpireturn = MPI_File_get_info(ncp->independent_fh, &ncp->mpiinfo);
+        if (mpireturn != MPI_SUCCESS)
+            return ncmpii_error_mpi2nc(mpireturn, mpi_name);
+
+        /* Copy MPI-IO hints into ncp->mpiinfo */
+        ncmpio_hint_set(ncp, ncp->mpiinfo);
     }
     return NC_NOERR;
 }
@@ -242,8 +295,13 @@ ncmpio_abort(void *ncdp)
     }
 
     /* close the file */
-    err = ncmpio_close_files(ncp, doUnlink);
+    err = ncmpio_file_close(ncp);
     if (status == NC_NOERR ) status = err;
+
+    if (doUnlink) {
+        err = ncmpio_file_delete(ncp);
+        status = (status == NC_NOERR) ? err : status;
+    }
 
     /* free up space occupied by the header metadata */
     ncmpio_free_NC(ncp);
@@ -444,12 +502,23 @@ int
 ncmpi_delete(const char *filename,
              MPI_Info    info)
 {
+    int err = NC_NOERR;
+#ifdef MIMIC_LUSTRE
+    char *path = ncmpii_remove_file_system_type_prefix(filename);
+    err = unlink(path);
+    if (err != 0)
+        err = ncmpii_error_posix2nc("unlink");
+#else
+    err = PNCIO_File_delete(filename);
+#if 0
     char *mpi_name;
-    int err=NC_NOERR, mpireturn;
+    int mpireturn;
 
-    TRACE_IO(MPI_File_delete, ((char*)filename, info));
+    TRACE_IO(MPI_File_delete, (filename, info));
     if (mpireturn != MPI_SUCCESS)
         err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
+#endif
+#endif
     return err;
 }
 

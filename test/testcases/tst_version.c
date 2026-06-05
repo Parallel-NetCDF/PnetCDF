@@ -2,7 +2,7 @@
  *  Copyright (C) 2019, Northwestern University and Argonne National Laboratory
  *  See COPYRIGHT notice in top-level directory.
  *
- *  Check whether PnetCDF version string returned from ncmpi_inq_libvers() 
+ *  Check whether PnetCDF version string returned from ncmpi_inq_libvers()
  *  matches the constant PNETCDF_VERSION defined in header file pnetcdf.h.
  *
  */

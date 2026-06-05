@@ -82,9 +82,9 @@ static double double_eps;
 static float
 float_epsilon(void)
 {
-    float float_eps;
+    float val_float_eps;
 #ifndef NO_FLOAT_H
-    float_eps = FLT_EPSILON;
+    val_float_eps = FLT_EPSILON;
 #else /* NO_FLOAT_H */
     {
 	float etop, ebot, eps;
@@ -103,19 +103,19 @@ float_epsilon(void)
 		ebot = eps;
 	    eps = ebot + (etop - ebot)/two;
 	}
-	float_eps = two * etop;
+	val_float_eps = two * etop;
     }
 #endif /* NO_FLOAT_H */
-    return float_eps;
+    return val_float_eps;
 }
 
 
 static double
 double_epsilon(void)
 {
-    double double_eps;
+    double val_double_eps;
 #ifndef NO_FLOAT_H
-    double_eps = DBL_EPSILON;
+    val_double_eps = DBL_EPSILON;
 #else /* NO_FLOAT_H */
     {
 	double etop, ebot, eps;
@@ -134,10 +134,10 @@ double_epsilon(void)
 		ebot = eps;
 	    eps = ebot + (etop - ebot)/two;
 	}
-	double_eps = two * etop;
+	val_double_eps = two * etop;
     }
 #endif /* NO_FLOAT_H */
-    return double_eps;
+    return val_double_eps;
 }
 
 

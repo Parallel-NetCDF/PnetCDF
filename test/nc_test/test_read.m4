@@ -111,7 +111,7 @@ TestFunc(strerror)(void)
 
     /* Try on each legitimate error status */
     for (i=0; i<LEN_OF(ncerrs); i++) {
-        const char *message = APIFunc(strerror)(ncerrs[i].status);
+        message = APIFunc(strerror)(ncerrs[i].status);
         IF (strcmp(message, ncerrs[i].msg) != 0)
             error("APIFunc(strerror)(%d) should return \"%s\", not \"%s\"",
                   ncerrs[i].status, ncerrs[i].msg, message);

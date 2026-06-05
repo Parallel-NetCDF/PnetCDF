@@ -60,6 +60,15 @@
     }                                                                        \
 }
 
+#define HANDLE_FILE_ERR(filename) {                                          \
+    if (err != NC_NOERR) {                                                   \
+        fprintf(stderr, "Error at line %d: input file %s (%s)\n", __LINE__,  \
+               filename, ncmpi_strerror(err));                               \
+        MPI_Abort(MPI_COMM_WORLD, -1);                                       \
+        exit(-1);                                                            \
+    }                                                                        \
+}
+
 #define CHECK_GLOBAL_ATT_DIFF_CHAR {                                         \
     int pos;                                                                 \
     char *b1 = (char *)calloc((attlen[0] + 1) * 2, sizeof(char));            \
@@ -300,9 +309,9 @@ struct vspec {
 
 /*----< get_var_names() >-----------------------------------------------------*/
 static void
-get_var_names(char *optarg, struct vspec* vspecp)
+get_var_names(char *opt_arg, struct vspec* vspecp)
 {
-    char *cp=optarg, **cpp;
+    char *cp=opt_arg, **cpp;
     int nvars = 1;
 
     /* compute number of variable names in comma-delimited list */
@@ -316,7 +325,7 @@ get_var_names(char *optarg, struct vspec* vspecp)
 
     cpp = vspecp->names;
     /* copy variable names into list */
-    for (cp = strtok(optarg, ",");
+    for (cp = strtok(opt_arg, ",");
          cp != NULL;
          cp = strtok((char *) NULL, ",")) {
 
@@ -450,7 +459,7 @@ int main(int argc, char **argv)
 
         /* file format version */
         err = ncmpi_inq_file_format(argv[optind+i], &fmt[i]);
-        HANDLE_ERROR
+        HANDLE_FILE_ERR(argv[optind+i])
 
         if (fmt[i] == NC_FORMAT_NETCDF4 || fmt[i] == NC_FORMAT_NETCDF4_CLASSIC) {
 #ifndef ENABLE_NETCDF4

@@ -91,14 +91,30 @@ if BUILD_BENCHMARKS_IN_PNETCDF
 endif
 
 
-ptest ptests ptest4: $(check_PROGRAMS)
+ptest ptest4: $(check_PROGRAMS)
 	@echo "==========================================================="
 	@echo "    $(subdir): Parallel testing on 4 MPI processes"
 	@echo "==========================================================="
 	@$(TESTS_ENVIRONMENT) \
 	$(srcdir)/parallel_run.sh 4 || exit 1
 
-ptest2 ptest6 ptest8 ptest10:
+ptest2: $(check_PROGRAMS)
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 2 MPI processes"
+	@echo "==========================================================="
+	@$(TESTS_ENVIRONMENT) \
+	$(srcdir)/parallel_run.sh 2 || exit 1
+
+ptest10: $(check_PROGRAMS)
+	@echo "==========================================================="
+	@echo "    $(subdir): Parallel testing on 10 MPI processes"
+	@echo "==========================================================="
+	@$(TESTS_ENVIRONMENT) \
+	$(srcdir)/parallel_run.sh 10 || exit 1
+
+ptest6 ptest8:
+
+ptests: ptest2 ptest4 ptest10
 
 # build check targets but not invoke
 tests-local: all $(check_PROGRAMS)

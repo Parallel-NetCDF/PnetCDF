@@ -135,21 +135,6 @@ tst_atts3(char *filename, int cmode)
 {
     char filename2[256];
     int err, nerrs=0;
-    signed char schar_in[ATT_LEN], schar_out[ATT_LEN] = {NC_MIN_BYTE, 1, NC_MAX_BYTE};
-    unsigned char uchar_in[ATT_LEN];
-    short short_in[ATT_LEN], short_out[ATT_LEN] = {NC_MIN_SHORT, -128, NC_MAX_SHORT};
-    int int_in[ATT_LEN], int_out[ATT_LEN] = {-100000, 127, 100000};
-    float float_in[ATT_LEN], float_out[ATT_LEN] = {-0.5, 0.25, 0.125};
-    double double_in[ATT_LEN], double_out[ATT_LEN] = {-0.25, .5, 0.125};
-    long long longlong_in[ATT_LEN] = {-1LL, -1LL, -1LL};
-#ifdef USE_NETCDF4
-    long long_in[ATT_LEN];
-    unsigned short ushort_in[ATT_LEN], ushort_out[ATT_LEN] = {0, 128, NC_MAX_USHORT};
-    unsigned int uint_in[ATT_LEN], uint_out[ATT_LEN] = {0, 128, NC_MAX_UINT};
-    long long longlong_out[ATT_LEN] = {-3123456789LL, 128LL, 3123456789LL};
-    unsigned long long ulonglong_in[ATT_LEN] = {NC_MAX_UINT64, NC_MAX_UINT64, NC_MAX_UINT64};
-    unsigned long long ulonglong_out[ATT_LEN] = {0LL, 128LL, 3123456789LL};
-#endif
 
     (void) signal(SIGFPE, SIG_IGN);
 
@@ -186,12 +171,18 @@ tst_atts3(char *filename, int cmode)
    if (verbose) printf("ok\n");
    if (verbose) printf("*** testing simple global atts...");
    {
-      int ncid;
+      char *speech_in;
+      int i, ncid;
       nc_type att_type;
       MPI_Offset att_len;
-      int i;
 
-      char *speech_in;
+      unsigned char uchar_in[ATT_LEN];
+      signed char schar_in[ATT_LEN], schar_out[ATT_LEN] = {NC_MIN_BYTE, 1, NC_MAX_BYTE};
+      int int_in[ATT_LEN], int_out[ATT_LEN] = {-100000, 127, 100000};
+      short short_in[ATT_LEN], short_out[ATT_LEN] = {NC_MIN_SHORT, -128, NC_MAX_SHORT};
+      float float_in[ATT_LEN], float_out[ATT_LEN] = {-0.5, 0.25, 0.125};
+      double double_in[ATT_LEN], double_out[ATT_LEN] = {-0.25, .5, 0.125};
+      long long longlong_in[ATT_LEN] = {-1LL, -1LL, -1LL};
 
       /* This won't work, because classic files can't create these types. */
       err=ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL,&ncid); ERR
@@ -254,8 +245,14 @@ tst_atts3(char *filename, int cmode)
    if (verbose) printf("*** testing attribute data type conversions...");
 
    {
-      int ncid;
-      int i;
+      int i, ncid;
+      unsigned char uchar_in[ATT_LEN];
+      signed char schar_in[ATT_LEN], schar_out[ATT_LEN] = {NC_MIN_BYTE, 1, NC_MAX_BYTE};
+      short short_in[ATT_LEN], short_out[ATT_LEN] = {NC_MIN_SHORT, -128, NC_MAX_SHORT};
+      int int_in[ATT_LEN], int_out[ATT_LEN] = {-100000, 127, 100000};
+      float float_in[ATT_LEN], float_out[ATT_LEN] = {-0.5, 0.25, 0.125};
+      double double_in[ATT_LEN], double_out[ATT_LEN] = {-0.25, .5, 0.125};
+      long long longlong_in[ATT_LEN] = {-1LL, -1LL, -1LL};
 
       /* Reopen the file and try different type conversions. */
       err=ncmpi_open(MPI_COMM_WORLD, filename, NC_NOWRITE, MPI_INFO_NULL, &ncid); ERR
@@ -410,8 +407,6 @@ tst_atts3(char *filename, int cmode)
    {
       int ncid;
 
-      /*int int_in[ATT_LEN], int_out[ATT_LEN] = {NC_MIN_INT, 128, NC_MAX_INT};*/
-
       /* Create a file with a global attribute of each type of zero length. */
       err=ncmpi_create(MPI_COMM_WORLD, filename, cmode, MPI_INFO_NULL,&ncid); ERR
       err=ncmpi_put_att_text(ncid, NC_GLOBAL, ATT_TEXT_NAME, 0, NULL); ERR
@@ -428,7 +423,6 @@ tst_atts3(char *filename, int cmode)
       int ncid;
       signed char schar_in[ATT_LEN];
       short short_in[ATT_LEN];
-      /*int int_in[ATT_LEN], int_out[ATT_LEN] = {NC_MIN_INT, 128, NC_MAX_INT};*/
       int int_in[ATT_LEN];
       float float_in[ATT_LEN];
       double double_in[ATT_LEN];

@@ -809,7 +809,7 @@ put_vars(int ncid, int numVars)
     MPI_Offset index[MAX_RANK];
     int  i, j, err, allInRange;
     double value[MAX_NELS];
-    char text[MAX_NELS];
+    char txt_buf[MAX_NELS];
     int bb_enabled=0;
     {
         int flag;
@@ -832,14 +832,14 @@ put_vars(int ncid, int numVars)
             IF (err != NC_NOERR) error("toMixedBase");
             if (var_name[i][0] == 'c') { /* var_type[i] is NC_CHAR */
                 assert(var_type[i] == NC_CHAR);
-                text[j] = hash(var_type[i], var_rank[i], index);
+                txt_buf[j] = hash(var_type[i], var_rank[i], index);
             } else {
                 value[j] = hash(var_type[i], var_rank[i], index);
                 allInRange = allInRange && inRange(value[j], var_type[i]);
             }
         }
         if (var_name[i][0] == 'c') {
-            err = ncmpi_put_vara_text_all(ncid, i, start, var_shape[i], text);
+            err = ncmpi_put_vara_text_all(ncid, i, start, var_shape[i], txt_buf);
             IF (err != NC_NOERR)
                 error("ncmpi_put_vara_text_all: %s", ncmpi_strerror(err));
         } else {
@@ -929,7 +929,7 @@ int
 check_vars(int ncid, int numVars)
 {
     MPI_Offset index[MAX_RANK];
-    char text, name[NC_MAX_NAME];
+    char txt_buf, name[NC_MAX_NAME];
     int  i, j, err;
     int  nok = 0;      /* count of valid comparisons */
     int  isChar, ndims, dimids[MAX_RANK];
@@ -961,12 +961,12 @@ check_vars(int ncid, int numVars)
                 error("error in toMixedBase 2");
             expect = hash( var_type[i], var_rank[i], index );
             if (isChar) {
-                err = ncmpi_get_var1_text_all(ncid, i, index, &text);
+                err = ncmpi_get_var1_text_all(ncid, i, index, &txt_buf);
                 IF (err != NC_NOERR)
                     error("ncmpi_get_var1_text_all: %s", ncmpi_strerror(err));
-                IF (text != (char)expect) {
+                IF (txt_buf != (char)expect) {
                     error("Var %s (varid=%d) value[%d] read %d not that expected %d ",
-                          var_name[i], i, j, text, (char)expect);
+                          var_name[i], i, j, txt_buf, (char)expect);
                     print_n_size_t(var_rank[i], index);
                 } else {
                     nok++;
@@ -999,7 +999,7 @@ check_vars(int ncid, int numVars)
 void
 check_atts(int ncid, int numGatts, int numVars)
 {
-    char name[NC_MAX_NAME], text[MAX_NELS];
+    char name[NC_MAX_NAME], txt_buf[MAX_NELS];
     int  i, j, err;        /* status */
     nc_type xtype;
     MPI_Offset k, length, ndx[1];
@@ -1021,13 +1021,13 @@ check_atts(int ncid, int numGatts, int numVars)
             IF (length != ATT_LEN(i,j))
                 error("ncmpi_inq_att: unexpected length");
             if (xtype == NC_CHAR) {
-                err = ncmpi_get_att_text(ncid, i, name, text);
+                err = ncmpi_get_att_text(ncid, i, name, txt_buf);
                 IF (err != NC_NOERR)
                     error("ncmpi_get_att_text: %s", ncmpi_strerror(err));
                 for (k = 0; k < ATT_LEN(i,j); k++) {
                     ndx[0] = k;
                     expect = hash(xtype, -1, ndx);
-                    if (text[k] != (char)expect) {
+                    if (txt_buf[k] != (char)expect) {
                         error("ncmpi_get_att_text: unexpected value");
                     } else {
                         nok++;

@@ -51,9 +51,9 @@ static void pr_att_string(size_t len, const char* string);
 static void pr_att_vals(nc_type  type, size_t len, const double* vals);
 static void pr_att(int ncid, int varid, const char *varname, int ia);
 static void do_ncdump(const char* path, struct fspec* specp);
-static void make_lvars(char* optarg, struct fspec* fspecp);
-static void set_sigdigs( const char* optarg);
-static void set_precision( const char *optarg);
+static void make_lvars(char* opt_arg, struct fspec* fspecp);
+static void set_sigdigs( const char* opt_arg);
+static void set_precision( const char *opt_arg);
 int main(int argc, char** argv);
 
 #define    STREQ(a, b)    (*(a) == *(b) && strcmp((a), (b)) == 0)
@@ -611,9 +611,9 @@ do_ncdump(const char *path, struct fspec* specp)
 
 
 static void
-make_lvars(char *optarg, struct fspec* fspecp)
+make_lvars(char *opt_arg, struct fspec* fspecp)
 {
-    char *cp = optarg;
+    char *cp = opt_arg;
     int nvars = 1;
     char ** cpp;
 
@@ -628,7 +628,7 @@ make_lvars(char *optarg, struct fspec* fspecp)
 
     cpp = fspecp->lvars;
     /* copy variable names into list */
-    for (cp = strtok(optarg, ",");
+    for (cp = strtok(opt_arg, ",");
          cp != NULL;
          cp = strtok((char *) NULL, ",")) {
 
@@ -647,15 +647,15 @@ make_lvars(char *optarg, struct fspec* fspecp)
  * command-line and update the default data formats appropriately.
  */
 static void
-set_sigdigs(const char *optarg)
+set_sigdigs(const char *opt_arg)
 {
     char *ptr1 = 0;
     char *ptr2 = 0;
     int flt_digits = FLT_DIGITS; /* default floating-point digits */
     int dbl_digits = DBL_DIGITS; /* default double-precision digits */
 
-    if (optarg != 0 && (int) strlen(optarg) > 0 && optarg[0] != ',')
-        flt_digits = (int)strtol(optarg, &ptr1, 10);
+    if (opt_arg != 0 && (int) strlen(opt_arg) > 0 && opt_arg[0] != ',')
+        flt_digits = (int)strtol(opt_arg, &ptr1, 10);
 
     if (flt_digits < 1 || flt_digits > 20)
         error("unreasonable value for float significant digits: %d",
@@ -679,15 +679,15 @@ set_sigdigs(const char *optarg)
  * and update the default data formats appropriately.
  */
 static void
-set_precision(const char *optarg)
+set_precision(const char *opt_arg)
 {
     char *ptr1 = 0;
     char *ptr2 = 0;
     int flt_digits = FLT_DIGITS;    /* default floating-point digits */
     int dbl_digits = DBL_DIGITS;    /* default double-precision digits */
 
-    if (optarg != 0 && (int) strlen(optarg) > 0 && optarg[0] != ',') {
-        flt_digits = (int)strtol(optarg, &ptr1, 10);
+    if (opt_arg != 0 && (int) strlen(opt_arg) > 0 && opt_arg[0] != ',') {
+        flt_digits = (int)strtol(opt_arg, &ptr1, 10);
         float_precision_specified = 1;
     }
 

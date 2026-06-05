@@ -76,12 +76,12 @@ define(`CheckRange3',
 #include "tests.h"
 
 static double
-hash2nc(const nc_type var_type, int var_rank, MPI_Offset *index)
+hash2nc(const nc_type xtype, int v_rank, MPI_Offset *index)
 {
     double min;
     double max;
 
-    switch (var_type) {
+    switch (xtype) {
         /* no type conversion will happen for NC_CHAR, use in-memory limits */
         case NC_CHAR:   min = CHAR_MIN;     max = (double)CHAR_MAX;     break;
         case NC_BYTE:   min = X_BYTE_MIN;   max = (double)X_BYTE_MAX;   break;
@@ -98,16 +98,16 @@ hash2nc(const nc_type var_type, int var_rank, MPI_Offset *index)
             return NC_EBADTYPE;
     }
 
-    return MAX(min, MIN(max, hash(var_type, var_rank, index)));
+    return MAX(min, MIN(max, hash(xtype, v_rank, index)));
 }
 
 static int
-dbls2ncs(size_t nels, int var_type, double *inBuf, void *outBuf)
+dbls2ncs(size_t nels, int xtype, double *inBuf, void *outBuf)
 {
     size_t i;
     char *p = (char*)outBuf;
     for (i=0; i<nels; i++) {
-        switch (var_type) {
+        switch (xtype) {
             case NC_CHAR:   {char      a = inBuf[i]; memcpy(p, &a, 1); break;}
             case NC_BYTE:   {schar     a = inBuf[i]; memcpy(p, &a, 1); break;}
             case NC_SHORT:  {short     a = inBuf[i]; memcpy(p, &a, 2); break;}
@@ -122,7 +122,7 @@ dbls2ncs(size_t nels, int var_type, double *inBuf, void *outBuf)
             default:
                 return NC_EBADTYPE;
         }
-        p += sizeof_nctype(var_type);
+        p += sizeof_nctype(xtype);
     }
     return NC_NOERR;
 }

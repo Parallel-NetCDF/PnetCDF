@@ -1,6 +1,8 @@
+/*
 #ifndef lint
 static const char yysccsid[] = "@(#)yaccpar	1.9 (Berkeley) 02/21/93";
 #endif
+*/
 
 #include <stdlib.h>
 #include <string.h>
@@ -617,7 +619,6 @@ static int yygrowstack(void)
 #define YYABORT goto yyabort
 #define YYREJECT goto yyabort
 #define YYACCEPT goto yyaccept
-#define YYERROR goto yyerrlab
 int
 yyparse(void)
 {
@@ -686,11 +687,6 @@ yyloop:
 
     yyerror("syntax error");
 
-#ifdef lint
-    goto yyerrlab;
-#endif
-
-yyerrlab:
     ++yynerrs;
 
 yyinrecovery:

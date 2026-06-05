@@ -720,7 +720,7 @@ int cdl_hdr_open(const char *filename,
         return NC_EFILE;
     }
     rlen = fread(fbuf, 1, file_size, fptr);
-    if (rlen < 0) {
+    if (file_size > 0 && rlen == 0) {
         printf("Error in %s at %d: fail to fread file %s (%s)\n",
                __func__,__LINE__,filename,strerror(errno));
         return NC_EFILE;

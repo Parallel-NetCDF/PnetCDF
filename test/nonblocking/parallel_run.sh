@@ -18,7 +18,7 @@ MPIRUN=`echo ${TESTMPIRUN} | ${SED} -e "s/NP/$1/g"`
 # echo "check_PROGRAMS=${check_PROGRAMS}"
 
 # echo "PNETCDF_DEBUG = ${PNETCDF_DEBUG}"
-if test ${PNETCDF_DEBUG} = 1 ; then
+if test "x${PNETCDF_DEBUG}" = x1 ; then
    safe_modes="0 1"
 else
    safe_modes="0"
@@ -29,22 +29,66 @@ unset PNETCDF_HINTS
 
 for i in ${check_PROGRAMS} ; do
     for j in ${safe_modes} ; do
-    for intra_aggr in 0 1 ; do
         if test "$j" = 1 ; then # test only in safe mode
-           export PNETCDF_HINTS="romio_no_indep_rw=true"
+           SAFE_HINTS="romio_no_indep_rw=true"
         else
-           export PNETCDF_HINTS=
+           SAFE_HINTS="romio_no_indep_rw=false"
         fi
-        if test "$intra_aggr" = 1 ; then
-           export PNETCDF_HINTS="${PNETCDF_HINTS};nc_num_aggrs_per_node=2"
-        fi
-        export PNETCDF_SAFE_MODE=$j
-        # echo "set PNETCDF_SAFE_MODE ${PNETCDF_SAFE_MODE}"
-        ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc
+        OUT_PREFIX="${TESTOUTDIR}/$i"
 
-        if test "$i" != mcoll_perf ; then
-           # echo "--- validating file ${TESTOUTDIR}/$i.nc"
-           ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.nc
+    for mpiio_mode in 0 1 ; do
+        if test "$mpiio_mode" = 1 ; then
+           USEMPIO_HINTS="nc_pncio=disable"
+           DRIVER_OUT_FILE="${OUT_PREFIX}.mpio"
+        else
+           USEMPIO_HINTS="nc_pncio=enable"
+           DRIVER_OUT_FILE="${OUT_PREFIX}.pncio"
+        fi
+    for intra_aggr in 0 1 ; do
+        if test "$intra_aggr" = 1 ; then
+           INA_HINTS="nc_num_aggrs_per_node=2"
+           INA_OUT_FILE="${DRIVER_OUT_FILE}.ina"
+        else
+           INA_HINTS="nc_num_aggrs_per_node=0"
+           INA_OUT_FILE="${DRIVER_OUT_FILE}"
+        fi
+
+        OUT_FILE=$INA_OUT_FILE
+
+        if [[ "$i" == *"vard"* ]] ; then
+           if test "x$mpiio_mode" == x0 || test "x$intra_aggr" == x1 ; then
+              # vard APIs are not supported when using PNCIO
+              continue
+           fi
+        fi
+
+        PNETCDF_HINTS=
+        if test "x$SAFE_HINTS" != x ; then
+           PNETCDF_HINTS="$SAFE_HINTS"
+        fi
+        if test "x$USEMPIO_HINTS" != x ; then
+           PNETCDF_HINTS="$USEMPIO_HINTS;$PNETCDF_HINTS"
+        fi
+        if test "x$INA_HINTS" != x ; then
+           PNETCDF_HINTS="$INA_HINTS;$PNETCDF_HINTS"
+        fi
+
+        export PNETCDF_HINTS="$PNETCDF_HINTS"
+        export PNETCDF_SAFE_MODE=$j
+	    # echo "PNETCDF_SAFE_MODE=$PNETCDF_SAFE_MODE PNETCDF_HINTS=$PNETCDF_HINTS"
+
+        if test "$i" = mcoll_perf ; then
+           # echo "${MPIRUN} ./$i ${OUT_FILE}"
+           ${MPIRUN} ./$i ${OUT_FILE}
+
+           for j in `seq 0 9` ; do
+              ext="2.4.$j.nc"
+              # echo "--- validating file ${OUT_FILE}.$ext"
+              ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.$ext
+           done
+        else
+           # echo "${MPIRUN} ./$i ${OUT_FILE}.nc"
+           ${MPIRUN} ./$i ${OUT_FILE}.nc
         fi
         # echo ""
 
@@ -52,33 +96,57 @@ for i in ${check_PROGRAMS} ; do
            # echo "---- test burst buffering feature"
            saved_PNETCDF_HINTS=${PNETCDF_HINTS}
            export PNETCDF_HINTS="${PNETCDF_HINTS};nc_burst_buf=enable;nc_burst_buf_dirname=${TESTOUTDIR};nc_burst_buf_overwrite=enable"
-           ${MPIRUN} ./$i ${TESTOUTDIR}/$i.bb.nc
+           ${MPIRUN} ./$i ${OUT_FILE}.bb.nc
            export PNETCDF_HINTS=${saved_PNETCDF_HINTS}
 
            if test "$i" = mcoll_perf ; then
               continue
            fi
 
-           # echo "--- validating file ${TESTOUTDIR}/$i.bb.nc"
-           ${TESTSEQRUN} ${VALIDATOR} -q ${TESTOUTDIR}/$i.bb.nc
+           # echo "--- validating file ${OUT_FILE}.bb.nc"
+           ${TESTSEQRUN} ${VALIDATOR} -q ${OUT_FILE}.bb.nc
 
            # burst buffering does not support nonblocking requests in define mode
            if test $i != "i_varn_indef" ; then
-              # echo "--- ncmpidiff $i.nc $i.bb.nc ---"
-              ${MPIRUN} ${NCMPIDIFF} -q ${TESTOUTDIR}/$i.nc ${TESTOUTDIR}/$i.bb.nc
+              # echo "--- ncmpidiff $${OUT_FILE}.nc ${OUT_FILE}.bb.nc ---"
+              ${MPIRUN} ${NCMPIDIFF} -q ${OUT_FILE}.nc ${OUT_FILE}.bb.nc
            fi
         fi
 
         if test "x${ENABLE_NETCDF4}" = x1 ; then
            # echo "test netCDF-4 feature"
-           ${MPIRUN} ./$i ${TESTOUTDIR}/$i.nc4 4
+           ${MPIRUN} ./$i ${OUT_FILE}.nc4 4
            # Validator does not support nc4
         fi
-    done
-    done
-    rm -f ${OUTDIR}/$i.nc
-    rm -f ${OUTDIR}/$i.bb.nc
-    rm -f ${OUTDIR}/$i.nc.*
-    rm -f ${OUTDIR}/$i.bb.nc.*
+    done # intra_aggr
+    done # mpiio_mode
+
+    if [[ "$i" == *"vard"* ]] ; then
+       continue
+    fi
+
+    DIFF_OPT="-q"
+
+    if test "$i" = mcoll_perf ; then
+       for j in `seq 0 9` ; do
+          ext="2.4.$j.nc"
+          # echo "--- ncmpidiff $OUT_PREFIX.mpio.$ext $OUT_PREFIX.mpio.ina.$ext ---"
+          $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.$ext $OUT_PREFIX.mpio.ina.$ext
+          # echo "--- ncmpidiff $OUT_PREFIX.mpio.$ext $OUT_PREFIX.pncio.$ext ---"
+          $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.$ext $OUT_PREFIX.pncio.$ext
+          # echo "--- ncmpidiff $OUT_PREFIX.mpio.$ext $OUT_PREFIX.pncio.ina.$ext ---"
+          $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.$ext $OUT_PREFIX.pncio.ina.$ext
+       done
+    else
+       # echo "--- ncmpidiff $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc ---"
+       $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.mpio.ina.nc
+       # echo "--- ncmpidiff $OUT_PREFIX.mpio.nc $OUT_PREFIX.pncio.nc ---"
+       $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.pncio.nc
+       # echo "--- ncmpidiff $OUT_PREFIX.mpio.nc $OUT_PREFIX.pncio.ina.nc ---"
+       $MPIRUN $NCMPIDIFF $DIFF_OPT $OUT_PREFIX.mpio.nc $OUT_PREFIX.pncio.ina.nc
+    fi
+
+    done # safe_modes
+    rm -f ${OUTDIR}/$i*nc*
 done
 

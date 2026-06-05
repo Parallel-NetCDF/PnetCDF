@@ -58,8 +58,8 @@ NcmpiVlenType::NcmpiVlenType(const NcmpiGroup& grp, const string& name) :
 {}
 
 // constructor
-NcmpiVlenType::NcmpiVlenType(const NcmpiType& ncmpiType):
-  NcmpiType(ncmpiType)
+NcmpiVlenType::NcmpiVlenType(const NcmpiType& xType):
+  NcmpiType(xType)
 {
   // check the nctype object is the base of a Vlen type
   if(getTypeClass() != NC_VLEN) throw NcmpiException("The NcmpiType object must be the base of a Vlen type.",__FILE__,__LINE__);

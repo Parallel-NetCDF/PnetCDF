@@ -24,9 +24,8 @@ program f90tst_vars2
 
   ! We need these ids and other gunk for netcdf.
   integer :: ncid, varid1, varid2, varid3, varid4, varid5, dimids(MAX_DIMS)
-  integer :: x_dimid, y_dimid
+  integer :: x, y, x_dimid, y_dimid, old_fillmode
   integer :: nvars, ngatts, ndims, unlimdimid, file_format
-  integer :: x, y
   integer, parameter :: DEFLATE_LEVEL = 4
   integer, parameter :: EightByteInt = selected_int_kind(18)
   integer (kind = EightByteInt) :: TOE_SAN_VALUE = 2147483648_EightByteInt
@@ -53,6 +52,7 @@ program f90tst_vars2
   call MPI_Comm_size(MPI_COMM_WORLD, p, ierr)
 
   ! take filename from command-line argument if there is any
+  cmd = ' '
   if (my_rank .EQ. 0) then
       filename = FILE_NAME
       err = get_args(cmd, filename)
@@ -93,6 +93,8 @@ program f90tst_vars2
   call check(nf90mpi_def_var(ncid, VAR3_NAME, NF90_INT64, varid3))
   call check(nf90mpi_def_var(ncid, VAR4_NAME, NF90_INT, x_dimid, varid4))
   call check(nf90mpi_def_var(ncid, VAR5_NAME, NF90_INT, dimids, varid5))
+
+  call check(nf90mpi_set_fill(ncid, NF90_FILL, old_fillmode))
 
   call check(nf90mpi_enddef(ncid))
 
