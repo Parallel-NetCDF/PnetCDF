@@ -356,5 +356,5 @@ AC_DEFUN([LT_AC_LINK_SHLIB_IFELSE],[
          m4_ifvaln([$3], [$3])])
    rm -rf $objdir
    rm -f conftest* libconftest*[]dnl
-])# _AC_LINK_IFELSE
+])# LT_AC_LINK_SHLIB_IFELSE
 
