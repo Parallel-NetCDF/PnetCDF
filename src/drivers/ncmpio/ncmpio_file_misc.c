@@ -171,7 +171,7 @@ ncmpio_begin_indep_data(void *ncdp)
         ncp->pncio_fh->file_system = ncp->fstype;
         ncp->pncio_fh->comm_attr = ncp->comm_attr;
 
-        int omode = fIsSet(ncp->iomode, NC_WRITE) ? O_RDWR : O_RDONLY;
+        int omode = fIsSet(ncp->nc_amode, NC_WRITE) ? O_RDWR : O_RDONLY;
 
         err = PNCIO_File_open(MPI_COMM_SELF, filename, omode, ncp->mpiinfo,
                               ncp->pncio_fh);
@@ -206,11 +206,11 @@ ncmpio_begin_indep_data(void *ncdp)
         int mpireturn;
 #ifdef MPICH_VERSION
         /* MPICH recognizes file system type acronym prefixed to file name */
-        TRACE_IO(MPI_File_open, (MPI_COMM_SELF, ncp->path, ncp->mpiomode,
+        TRACE_IO(MPI_File_open, (MPI_COMM_SELF, ncp->path, ncp->mpi_amode,
                                  ncp->mpiinfo, &ncp->independent_fh));
 #else
         char *path = ncmpii_remove_file_system_type_prefix(ncp->path);
-        TRACE_IO(MPI_File_open, (MPI_COMM_SELF, path, ncp->mpiomode,
+        TRACE_IO(MPI_File_open, (MPI_COMM_SELF, path, ncp->mpi_amode,
                                  ncp->mpiinfo, &ncp->independent_fh));
 #endif
         if (mpireturn != MPI_SUCCESS)

@@ -42,7 +42,7 @@ ncmpio_open(MPI_Comm         comm,
             void           **ncpp)
 {
     char *filename, value[MPI_MAX_INFO_VAL + 1], *mpi_name;
-    int i, rank, nprocs, mpiomode, err, status=NC_NOERR, mpireturn, flag;
+    int i, rank, nprocs, mpi_amode, err, status=NC_NOERR, mpireturn, flag;
     int striping_unit;
     MPI_File fh=MPI_FILE_NULL;
     NC *ncp=NULL;
@@ -108,16 +108,16 @@ ncmpio_open(MPI_Comm         comm,
 
     ncp->path     = path;  /* reuse path duplicated in dispatch layer */
     ncp->pncio_fh = NULL;
-    ncp->iomode   = omode;
+    ncp->nc_amode = omode;
 
     ncp->collective_fh  = MPI_FILE_NULL;
     ncp->independent_fh = MPI_FILE_NULL;
 
-    /* Setting file open mode in mpiomode which may later be needed in
+    /* Setting file open mode in mpi_amode which may later be needed in
      * ncmpi_begin_indep_data() to open file for independent data mode.
      */
-    mpiomode = fIsSet(omode, NC_WRITE) ? MPI_MODE_RDWR : MPI_MODE_RDONLY;
-    ncp->mpiomode = mpiomode;
+    mpi_amode = fIsSet(omode, NC_WRITE) ? MPI_MODE_RDWR : MPI_MODE_RDONLY;
+    ncp->mpi_amode = mpi_amode;
 
     /* PnetCDF default fill mode is no fill */
     fClr(ncp->flags, NC_MODE_FILL);
@@ -204,9 +204,9 @@ ncmpio_open(MPI_Comm         comm,
     if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
 #ifdef MPICH_VERSION
         /* MPICH recognizes file system type acronym prefixed to file names */
-        TRACE_IO(MPI_File_open, (comm, path, mpiomode, user_info, &fh));
+        TRACE_IO(MPI_File_open, (comm, path, mpi_amode, user_info, &fh));
 #else
-        TRACE_IO(MPI_File_open, (comm, filename, mpiomode, user_info, &fh));
+        TRACE_IO(MPI_File_open, (comm, filename, mpi_amode, user_info, &fh));
 #endif
         if (mpireturn != MPI_SUCCESS) {
             err = ncmpii_error_mpi2nc(mpireturn, mpi_name);

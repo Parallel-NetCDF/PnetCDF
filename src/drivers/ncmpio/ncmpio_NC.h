@@ -396,8 +396,8 @@ struct NC {
     int           ncid;         /* file ID */
     int           flags;        /* various modes, i.e. define/data, fill,
                                    indep/coll, header dirty, etc */
-    int           iomode;       /* cmode or omode used in ncmpi_create/open */
-    int           mpiomode;     /* mode used in MPI_File_open, passed from
+    int           nc_amode;     /* cmode or omode used in ncmpi_create/open */
+    int           mpi_amode;    /* mode used in MPI_File_open, passed from
                                  * collective open to independent open */
     int           format;       /* 1, 2, or 5 corresponding to CDF-1, 2, or 5 */
 #ifdef ENABLE_SUBFILING
@@ -405,41 +405,49 @@ struct NC {
     int           num_subfiles; /* no. subfiles */
     struct NC    *ncp_sf;       /* ncp of subfile */
     MPI_Comm      comm_sf;      /* subfile MPI communicator */
-    PNC_comm_attr node_ids_sf; /* node IDs of subfile MPI communicator */
+    PNC_comm_attr node_ids_sf;  /* node IDs of subfile MPI communicator */
 #endif
-    int hdr_chunk;    /* chunk size for reading header, one chunk at a time */
-    int data_chunk;   /* chunk size for moving variables to higher offsets */
-    int file_striping;/* PNCIO_STRIPING_AUTO or PNCIO_STRIPING_INHERIT */
+    int           hdr_chunk;    /* chunk size for reading header, one chunk at
+                                 * a time */
+    int           data_chunk;   /* chunk size for moving variables to higher
+                                 * offsets */
+    int           file_striping;/* used to set file striping configuration,
+                                 * either PNCIO_STRIPING_AUTO or
+                                 * PNCIO_STRIPING_INHERIT */
 
-    MPI_Offset    v_align;      /* alignment of beginning of fixed-size variable section */
-    MPI_Offset    r_align;      /* file alignment for record variable section */
+    MPI_Offset    v_align;      /* file offset alignment for the beginning of
+                                 * fixed-size variable section */
+    MPI_Offset    r_align;      /* file offset alignment for the beginning of
+                                 * record variable section */
     MPI_Offset    info_v_align; /* v_align set in MPI Info object */
     MPI_Offset    info_r_align; /* r_align set in MPI Info object */
     MPI_Offset    h_minfree;    /* pad at the end of the header section */
-    MPI_Offset    v_minfree;    /* pad at the end of the data section for fixed-size variable section */
-    MPI_Offset    ibuf_size;    /* packing buffer size for flushing noncontig
-                                   user buffer during wait */
+    MPI_Offset    v_minfree;    /* pad at the end of fixed-size variable
+                                 * section */
+    MPI_Offset    ibuf_size;    /* packing buffer size for write, used when
+                                 * user write buffer is noncontiguous and
+                                 * smaller than this value. */
     MPI_Offset    xsz;          /* size of this file header, <= var[0].begin */
-    MPI_Offset    begin_var;    /* file offset of the first fixed-size variable,
-                                   if no fixed-sized variable, it is the offset
-                                   of first record variable. This value is also
-                                   the size of file header extent. */
+    MPI_Offset    begin_var;    /* file offset of the 1st fixed-size variable,
+                                 * if no fixed-sized variable, it is the offset
+                                 * of first record variable. This value is also
+                                 * the size of file header extent. */
     MPI_Offset    begin_rec;    /* file offset of the first 'record' */
 
-    MPI_Offset    fix_end;   /* end offset of last fix-sized variable */
-    MPI_Offset    recsize;   /* length of 'record': sum of single record sizes
-                                of all the record variables */
-    MPI_Offset    numrecs;   /* no. 'records' allocated */
-    MPI_Offset    put_size;  /* amount of writes committed so far in bytes */
-    MPI_Offset    get_size;  /* amount of reads  committed so far in bytes */
+    MPI_Offset    fix_end;      /* end offset of last fix-sized variable */
+    MPI_Offset    recsize;      /* length of 'record': sum of single record
+                                 * sizes of all the record variables */
+    MPI_Offset    numrecs;      /* no. 'records' allocated */
+    MPI_Offset    put_size;     /* amount of writes committed so far in bytes */
+    MPI_Offset    get_size;     /* amount of reads  committed so far in bytes */
 
-    MPI_Comm      comm;          /* MPI communicator */
-    int           rank;          /* MPI rank of this process */
-    int           nprocs;        /* no. MPI processes */
+    MPI_Comm      comm;         /* MPI communicator */
+    int           rank;         /* MPI rank of this process */
+    int           nprocs;       /* no. MPI processes */
 
-    PNC_comm_attr comm_attr;     /* attributes cached in communicator storing
-                                  * compute node IDs of all processes and INA
-                                  * metadata */
+    PNC_comm_attr comm_attr;    /* attributes cached in communicator storing
+                                 * compute node IDs of all processes and INA
+                                 * metadata */
 
     MPI_Info      mpiinfo;       /* used MPI info object */
     MPI_File      collective_fh; /* MPI-IO file handle for collective mode */

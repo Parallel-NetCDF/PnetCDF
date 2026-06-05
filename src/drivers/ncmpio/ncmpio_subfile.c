@@ -133,7 +133,7 @@ subfile_create(NC *ncp)
                                              &ncp->node_ids_sf.ids);
 
     void *ncp_sf;
-    status = ncmpio_create(ncp->comm_sf, path_sf, ncp->iomode, ncp->ncid,
+    status = ncmpio_create(ncp->comm_sf, path_sf, ncp->nc_amode, ncp->ncid,
                            ncp->flags, info, ncp->node_ids_sf, &ncp_sf);
     if (status != NC_NOERR && myrank == 0)
         fprintf(stderr, "%s: error in creating file(%s): %s\n",
@@ -192,7 +192,7 @@ ncmpio_subfile_open(NC *ncp)
                                              &ncp->node_ids_sf.ids);
 
     void *ncp_sf;
-    status = ncmpio_open(ncp->comm_sf, path_sf, ncp->iomode, ncp->ncid,
+    status = ncmpio_open(ncp->comm_sf, path_sf, ncp->nc_amode, ncp->ncid,
                          ncp->flags, MPI_INFO_NULL, ncp->node_ids_sf, &ncp_sf);
 
     ncp->ncp_sf = (NC*) ncp_sf;

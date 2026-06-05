@@ -124,7 +124,7 @@ ncmpio_create(MPI_Comm         comm,
               void           **ncpp)      /* OUT */
 {
     char *filename, value[MPI_MAX_INFO_VAL + 1], *mpi_name;
-    int rank, nprocs, mpiomode, err, mpireturn, default_format, file_exist=1;
+    int rank, nprocs, mpi_amode, err, mpireturn, default_format, file_exist=1;
     int use_trunc=1, flag, striping_unit;
     MPI_File fh=MPI_FILE_NULL;
     NC *ncp=NULL;
@@ -183,10 +183,10 @@ ncmpio_create(MPI_Comm         comm,
          */
         ncp->fstype = PNCIO_FileSysType(path);
 
-    /* Setting file open mode in mpiomode which may later be needed in
+    /* Setting file open mode in mpi_amode which may later be needed in
      * ncmpi_begin_indep_data() to open file for independent data mode.
      */
-    mpiomode = MPI_MODE_RDWR | MPI_MODE_CREATE;
+    mpi_amode = MPI_MODE_RDWR | MPI_MODE_CREATE;
 
     /* Remove the file system type prefix name if there is any. For example,
      * when path = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
@@ -254,7 +254,7 @@ ncmpio_create(MPI_Comm         comm,
         /* Add MPI_MODE_EXCL mode for MPI_File_open, so it can error out, if
          * the file exists.
          */
-        fSet(mpiomode, MPI_MODE_EXCL);
+        fSet(mpi_amode, MPI_MODE_EXCL);
         errno = 0; /* reset errno, as MPI_File_open may change it */
 #endif
     }
@@ -307,7 +307,7 @@ ncmpio_create(MPI_Comm         comm,
                  * cannot delete it and must truncate it to zero size. In this
                  * case, file open mode needs to remove MPI_MODE_CREATE.
                  */
-                mpiomode = MPI_MODE_RDWR;
+                mpi_amode = MPI_MODE_RDWR;
 
 #ifdef HAVE_TRUNCATE
                 err = truncate(filename, 0); /* This may be expensive */
@@ -379,15 +379,15 @@ ncmpio_create(MPI_Comm         comm,
             }
             if (errno == ENOENT) errno = 0; /* reset errno */
         }
-        /* All processes must wait here until clobbering file by root process
-         * is completed. Note mpiomode may be changed to remove MPI_MODE_CREATE
-         * when the file to be clobbered is a symbolic link.
+        /* All processes must wait here until file clobbering by root process
+         * is completed. Note mpi_amode may be modified by removing
+         * MPI_MODE_CREATE when the file to be clobbered is a symbolic link.
          */
         if (nprocs > 1) {
-            int msg[3] = {err, mpiomode, ncp->fstype};
+            int msg[3] = {err, mpi_amode, ncp->fstype};
             TRACE_COMM(MPI_Bcast)(&msg, 3, MPI_INT, 0, comm);
             err         = msg[0];
-            mpiomode    = msg[1];
+            mpi_amode   = msg[1];
             ncp->fstype = msg[2];
         }
         if (err != NC_NOERR) return err;
@@ -396,13 +396,13 @@ ncmpio_create(MPI_Comm         comm,
      * If it is a symbolic link, it now has been truncated to zero size.
      */
 
-    ncp->path     = path;     /* reuse path duplicated in dispatch layer */
-    ncp->pncio_fh = NULL;     /* non-aggregators have NULL pncio_fh */
-    ncp->mpiomode = mpiomode;
-    ncp->mpiinfo  = MPI_INFO_NULL;
+    ncp->path      = path;     /* reuse path duplicated in dispatch layer */
+    ncp->pncio_fh  = NULL;     /* non-aggregators have NULL pncio_fh */
+    ncp->mpi_amode = mpi_amode;
+    ncp->mpiinfo   = MPI_INFO_NULL;
 
     /* For file create, ignore NC_NOWRITE if set in cmode argument. */
-    ncp->iomode   = cmode | NC_WRITE;
+    ncp->nc_amode = cmode | NC_WRITE;
 
     ncp->collective_fh  = MPI_FILE_NULL;
     ncp->independent_fh = MPI_FILE_NULL;
@@ -574,9 +574,9 @@ ncmpio_create(MPI_Comm         comm,
 
 #ifdef MPICH_VERSION
         /* MPICH recognizes file system type acronym prefixed to file names */
-        TRACE_IO(MPI_File_open, (comm, path, mpiomode, user_info, &fh));
+        TRACE_IO(MPI_File_open, (comm, path, mpi_amode, user_info, &fh));
 #else
-        TRACE_IO(MPI_File_open, (comm, filename, mpiomode, user_info, &fh));
+        TRACE_IO(MPI_File_open, (comm, filename, mpi_amode, user_info, &fh));
 #endif
         if (mpireturn != MPI_SUCCESS) {
 #ifndef HAVE_ACCESS
@@ -601,7 +601,7 @@ ncmpio_create(MPI_Comm         comm,
 #endif
             err = ncmpii_error_mpi2nc(mpireturn, "MPI_File_open");
             DEBUG_FOPEN_ERROR(err);
-            /* for NC_NOCLOBBER, MPI_MODE_EXCL was added to mpiomode. If the
+            /* for NC_NOCLOBBER, MPI_MODE_EXCL was added to mpi_amode. If the
              * file already exists, MPI-IO should return error class
              * MPI_ERR_FILE_EXISTS which PnetCDF will return error code
              * NC_EEXIST. This is checked inside of ncmpii_error_mpi2nc()
