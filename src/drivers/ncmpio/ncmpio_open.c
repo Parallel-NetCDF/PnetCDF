@@ -226,12 +226,15 @@ ncmpio_open(MPI_Comm         comm,
     }
     else {
         /* When ncp->fstype != PNCIO_FSTYPE_MPIIO, use PnetCDF's PNCIO driver */
+        int amode;
+
         ncp->pncio_fh = (PNCIO_File*) NCI_Calloc(1,sizeof(PNCIO_File));
         ncp->pncio_fh->file_system = ncp->fstype;
         ncp->pncio_fh->comm_attr   = ncp->comm_attr;
 
-        err = PNCIO_File_open(comm, filename, mpiomode, user_info,
-                              ncp->pncio_fh);
+        amode = fIsSet(omode, NC_WRITE) ? O_RDWR : O_RDONLY;
+
+        err = PNCIO_File_open(comm, filename, amode, user_info, ncp->pncio_fh);
         if (err != NC_NOERR) DEBUG_FOPEN_ERROR(err);
 
         /* Now the file has been successfully opened, obtain the I/O hints

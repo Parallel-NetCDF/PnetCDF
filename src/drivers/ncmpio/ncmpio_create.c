@@ -335,9 +335,8 @@ ncmpio_create(MPI_Comm         comm,
                 if (ncp->fstype != PNCIO_FSTYPE_MPIIO) {
                     PNCIO_File pncio_fh;
                     pncio_fh = (PNCIO_File*) NCI_Calloc(1,sizeof(PNCIO_File));
-                    err = PNCIO_File_open(MPI_COMM_SELF, filename,
-                                          MPI_MODE_RDWR, MPI_INFO_NULL,
-                                          pncio_fh);
+                    err = PNCIO_File_open(MPI_COMM_SELF, filename, O_RDWR,
+                                          MPI_INFO_NULL, pncio_fh);
                     if (err == NC_NOERR)
                         PNCIO_File_set_size(pncio_fh, 0); /* can be expensive */
                     else
@@ -631,7 +630,7 @@ ncmpio_create(MPI_Comm         comm,
         ncp->pncio_fh->file_system = ncp->fstype;
         ncp->pncio_fh->comm_attr   = ncp->comm_attr;
 
-        err = PNCIO_File_open(comm, filename, mpiomode, user_info,
+        err = PNCIO_File_open(comm, filename, O_CREAT|O_RDWR, user_info,
                               ncp->pncio_fh);
         if (err != NC_NOERR) DEBUG_FOPEN_ERROR(err)
 

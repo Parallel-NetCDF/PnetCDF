@@ -171,7 +171,7 @@ ncmpio_begin_indep_data(void *ncdp)
         ncp->pncio_fh->file_system = ncp->fstype;
         ncp->pncio_fh->comm_attr = ncp->comm_attr;
 
-        int omode = fClr(ncp->mpiomode, MPI_MODE_CREATE);
+        int omode = fIsSet(ncp->iomode, NC_WRITE) ? O_RDWR : O_RDONLY;
 
         err = PNCIO_File_open(MPI_COMM_SELF, filename, omode, ncp->mpiinfo,
                               ncp->pncio_fh);
