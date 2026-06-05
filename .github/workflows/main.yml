@@ -25,6 +25,12 @@ on:
       - '**/*.png'
       - 'docs/*'
       - 'test/test_installed/*'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Enable manual run'
+        required: false
+        default: 'Manual trigger'
 
 env:
    LIBTOOL_VERSION: 2.5.4
