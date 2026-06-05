@@ -243,11 +243,6 @@ void ncmpio_hint_extract(NC       *ncp,
     if (flag && strcasecmp(value, "mpiio") == 0)
         ncp->driver = PNC_DRIVER_MPIIO;
 
-    /* Check if user explicitly want all MPI-IO to be collective. */
-    MPI_Info_get(info, "romio_no_indep_rw", MPI_MAX_INFO_VAL-1, value, &flag);
-    if (flag && strcasecmp(value, "true") == 0)
-        fSet(ncp->flags, NC_HCOLL);
-
     /* Data movement chunk size when variables need to be moved to higher file
      * offsets.
      */

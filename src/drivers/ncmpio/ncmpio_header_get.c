@@ -340,7 +340,8 @@ hdr_fetch(bufferinfo *gbp) {
 
     MPI_Comm_size(gbp->ncp->comm, &nprocs);
     MPI_Comm_rank(gbp->ncp->comm, &rank);
-    if (rank == 0) {
+
+    if (rank == 0) { /* only root reads file header */
         char *readBuf;
         int readLen;
         size_t slack;
@@ -368,14 +369,7 @@ hdr_fetch(bufferinfo *gbp) {
 
         /* fileview is already entire file visible and MPI_File_read_at does
            not change the file pointer */
-        if (gbp->ncp->nprocs > 1 && fIsSet(gbp->ncp->flags, NC_HCOLL))
-            /* collective read */
-            rlen = ncmpio_file_read_at_all(gbp->ncp, gbp->offset, readBuf,
-                                           buf_view);
-        else
-            /* independent read */
-            rlen = ncmpio_file_read_at(gbp->ncp, gbp->offset, readBuf,
-                                       buf_view);
+        rlen = ncmpio_file_read_at(gbp->ncp, gbp->offset, readBuf, buf_view);
 
         if (rlen > 0) {
             /* rlen is the actual read amount. It may be smaller than readLen,
@@ -394,14 +388,6 @@ hdr_fetch(bufferinfo *gbp) {
         /* only root process reads file header, keeps track of current read
          * file pointer location */
         gbp->offset += rlen;
-    }
-    else if (gbp->ncp->nprocs > 1 && fIsSet(gbp->ncp->flags, NC_HCOLL)) {
-        /* Collective read: non-root ranks participate the collective call with
-         * a zero-sized request.
-         */
-        buf_view.type = MPI_BYTE;
-        buf_view.size = 0;
-        ncmpio_file_read_at_all(gbp->ncp, 0, NULL, buf_view);
     }
 
     if (fIsSet(gbp->ncp->flags, NC_MODE_SAFE) && nprocs > 1) {

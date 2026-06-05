@@ -60,13 +60,6 @@ ncmpio_write_numrecs(NC         *ncp,
         if (NC_indep(ncp))
             return NC_NOERR;
 
-        /* If collective MPI-IO is required for all MPI-IO calls, then all
-         * non-root processes participate the collective write call with
-         * zero-size requests.
-         */
-        if (fIsSet(ncp->flags, NC_HCOLL))
-            ncmpio_file_write_at_all(ncp, 0, NULL, buf_view);
-
         /* If not requiring all MPI-IO calls to be collective, non-root
          * processes can return now. This is because only root process writes
          * numrecs to the file header.
@@ -106,15 +99,12 @@ ncmpio_write_numrecs(NC         *ncp,
         buf_view.size = len;
 
         /* root's file view always includes the entire file header */
-        if (!NC_indep(ncp) && fIsSet(ncp->flags, NC_HCOLL) && ncp->nprocs > 1)
-            wlen = ncmpio_file_write_at_all(ncp, NC_NUMRECS_OFFSET, (void*)pos,
-                                            buf_view);
-        else
-            wlen = ncmpio_file_write_at(ncp, NC_NUMRECS_OFFSET, (void*)pos,
-                                        buf_view);
+        wlen = ncmpio_file_write_at(ncp, NC_NUMRECS_OFFSET, (void*)pos,
+                                    buf_view);
         if (wlen < 0)
             DEBUG_RETURN_ERROR((int)wlen)
     }
+
     return err;
 }
 

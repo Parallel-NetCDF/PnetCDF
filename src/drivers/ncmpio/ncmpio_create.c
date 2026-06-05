@@ -191,7 +191,6 @@ ncmpio_create(MPI_Comm         comm,
      *      + nc_ibuf_size                  ncp->ibuf_size
      *      + pnetcdf_subfiling             ncp->subfile_mode/num_subfiles
      *      + nc_data_move_chunk_size       ncp->data_chunk
-     *      + romio_no_indep_rw             fSet(ncp->flags, NC_HCOLL)
      *
      *   Note after a call to MPI_File_open() returns, any hints that are not
      *   used by MPI_File_open() will be discarded, which includes all PnetCDF

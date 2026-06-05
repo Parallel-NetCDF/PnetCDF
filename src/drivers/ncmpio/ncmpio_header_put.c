@@ -547,10 +547,7 @@ int ncmpio_write_header(NC *ncp)
             buf_view.type = MPI_BYTE;
             buf_view.size = writeLen;
 
-            if (fIsSet(ncp->flags, NC_HCOLL)) /* header collective write */
-                wlen = ncmpio_file_write_at_all(ncp, offset, buf_ptr, buf_view);
-            else /* header independent write */
-                wlen = ncmpio_file_write_at(ncp, offset, buf_ptr, buf_view);
+            wlen = ncmpio_file_write_at(ncp, offset, buf_ptr, buf_view);
             if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
             offset  += writeLen;
@@ -558,12 +555,6 @@ int ncmpio_write_header(NC *ncp)
             remain  -= writeLen;
         }
         NCI_Free(buf);
-    }
-    else if (ncp->nprocs > 1 && fIsSet(ncp->flags, NC_HCOLL)) {
-        /* collective write: non-root ranks participate the collective call */
-        buf_view.type = MPI_BYTE;
-        buf_view.size = 0;
-        ncmpio_file_write_at_all(ncp, 0, NULL, buf_view);
     }
 
     if (fIsSet(ncp->flags, NC_MODE_SAFE)) {

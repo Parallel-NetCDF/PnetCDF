@@ -157,14 +157,17 @@ move_file_block(NC         *ncp,
 }
 #else
 /*----< move_file_block() >--------------------------------------------------*/
-/* Call MPI I/O subroutines to move data */
+/* Call PNCIO/MPI collective I/O subroutines to move data.
+ * PNCIO/MPI collective I/O subroutines themselves may switch to use
+ * independent subroutines if the file access pattern meet the condition.
+ */
 static int
 move_file_block(NC         *ncp,
                 MPI_Offset  to,     /* destination starting file offset */
                 MPI_Offset  from,   /* source      starting file offset */
                 MPI_Offset  nbytes) /* amount to be moved */
 {
-    int rank, align_rank, nprocs, status=NC_NOERR, do_coll;
+    int rank, align_rank, nprocs, status=NC_NOERR;
     void *buf;
     MPI_Offset mv_amnt, p_units, end_off, end_block;
     MPI_Offset off_last, off_from, off_to, rlen, wlen;
@@ -174,10 +177,10 @@ move_file_block(NC         *ncp,
     /* check if this is a valid move request */
     if (to == from || nbytes == 0) return NC_NOERR;
 
-    /* When intra-node aggregation is enabled, only INA aggregators perform
-     * the data movement.
-     */
     if (ncp->num_aggrs_per_node > 0) {
+        /* When intra-node aggregation is enabled, only INA aggregators perform
+         * the data movement.
+         */
         if (ncp->comm_attr.ina_comm == MPI_COMM_NULL)
             return NC_NOERR;
 
@@ -186,6 +189,9 @@ move_file_block(NC         *ncp,
         nprocs = ncp->ina_nprocs;
     }
     else {
+        /* When intra-node aggregation is disabled, all processes perform the
+         * data movement.
+         */
         comm = ncp->comm;
         rank = ncp->rank;
         nprocs = ncp->nprocs;
@@ -236,13 +242,6 @@ move_file_block(NC         *ncp,
     /* pad the remaining of last p_units */
     nbytes += p_units - end_block;
 
-    /* Use MPI collective I/O subroutines to move data, only if nproc > 1 and
-     * MPI-IO hint "romio_no_indep_rw" is set to true. Otherwise, use MPI
-     * independent I/O subroutines, as the data partitioned among processes are
-     * not interleaved and thus need no collective I/O.
-     */
-    do_coll = (nprocs > 1 && fIsSet(ncp->flags, NC_HCOLL));
-
     /* No need to set fileview, as fileview has been reset in ncmpi_redef() to
      * make the entire file visible.
      */
@@ -251,11 +250,7 @@ move_file_block(NC         *ncp,
         buf_view.size = mv_amnt;
 
         /* read from file at off_from for amount of mv_amnt */
-        rlen = 0;
-        if (do_coll)
-            rlen = ncmpio_file_read_at_all(ncp, off_from, buf, buf_view);
-        else if (mv_amnt > 0)
-            rlen = ncmpio_file_read_at(ncp, off_from, buf, buf_view);
+        rlen = ncmpio_file_read_at_all(ncp, off_from, buf, buf_view);
         if (status == NC_NOERR && rlen < 0) status = (int)rlen;
 
         /* To prevent from one rank's write run faster than other's read,
@@ -271,10 +266,8 @@ move_file_block(NC         *ncp,
          */
         buf_view.size = rlen;
         wlen = 0;
-        if (do_coll) /* even when rlen == 0, must still participate */
-            wlen = ncmpio_file_write_at_all(ncp, off_to, buf, buf_view);
-        else if (rlen > 0)
-            wlen = ncmpio_file_write_at(ncp, off_to, buf, buf_view);
+        /* even when rlen == 0, must still participate */
+        wlen = ncmpio_file_write_at_all(ncp, off_to, buf, buf_view);
         if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
         /* move on to the next round */
@@ -626,11 +619,14 @@ NC_begins(NC         *ncp,
  * Write out the header
  * 1. Call ncmpio_hdr_put_NC() to copy the header object, ncp, to a buffer.
  * 2. Process rank 0 writes the header to file.
+ *
+ * Writing file header is always done by root process only, by calling the
+ * independent write subroutines.
  */
 static int
 write_NC(NC *ncp)
 {
-    int status=NC_NOERR, is_coll=0;
+    int status=NC_NOERR;
     MPI_Offset i, header_wlen, ntimes;
     PNCIO_View buf_view;
 
@@ -639,20 +635,6 @@ write_NC(NC *ncp)
     buf_view.count = 0;
     buf_view.off = NULL;
     buf_view.len = NULL;
-
-    /* Depending on whether NC_HCOLL is set, writing file header can be done
-     * through either MPI collective or independent write call.
-     * When ncp->nprocs == 1, ncp->collective_fh == ncp->independent_fh
-     * For those ranks participating the collective MPI write call, their
-     * is_coll is set to 1, otherwise 0.
-     */
-    if (fIsSet(ncp->flags, NC_HCOLL)) {
-        if (ncp->num_aggrs_per_node > 0)
-            is_coll = (ncp->ina_nprocs > 1 &&
-                       ncp->rank == ncp->comm_attr.my_aggr);
-        else
-            is_coll = (ncp->nprocs > 1);
-    }
 
     /* In NC_begins(), root's ncp->xsz and ncp->begin_var, root's header
      * size and extent, have been broadcast (sync-ed) among processes.
@@ -719,10 +701,7 @@ write_NC(NC *ncp)
         for (i=0; i<ntimes; i++) {
             MPI_Offset wlen;
             buf_view.size = MIN(remain, NC_MAX_INT);
-            if (is_coll)
-                wlen = ncmpio_file_write_at_all(ncp, offset, buf_ptr, buf_view);
-            else
-                wlen = ncmpio_file_write_at(ncp, offset, buf_ptr, buf_view);
+            wlen = ncmpio_file_write_at(ncp, offset, buf_ptr, buf_view);
             if (status == NC_NOERR && wlen < 0) status = (int)wlen;
 
             offset  += buf_view.size;
@@ -730,14 +709,6 @@ write_NC(NC *ncp)
             remain  -= buf_view.size;
         }
         NCI_Free(buf);
-    }
-    else if (is_coll) {
-        /* other processes participate the collective call */
-        buf_view.type = MPI_BYTE;
-        buf_view.count = 0;
-        buf_view.size = 0;
-        for (i=0; i<ntimes; i++)
-            ncmpio_file_write_at_all(ncp, 0, NULL, buf_view);
     }
 
 fn_exit:

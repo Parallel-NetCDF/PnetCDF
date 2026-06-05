@@ -390,7 +390,6 @@ typedef struct NC_buf {
 #define NC_HSYNC  0x200000  /* synchronise whole header on change */
 #define NC_NDIRTY 0x400000  /* numrecs has changed */
 #define NC_HDIRTY 0x800000  /* header info has changed */
-#define NC_HCOLL  0x000001  /* write header collectively */
 
 struct NC {
     int           ncid;         /* file ID */
