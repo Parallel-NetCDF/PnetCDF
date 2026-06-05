@@ -494,10 +494,10 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
 
     /* create file collectively -------------------------------------------- */
     if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
-        /* If hint nc_striping is set to "auto" and hint striping_factor is not
+        /* If hint pnc_striping is set to "auto" and hint striping_factor is not
          * set by the user, then set hint striping_factor to ncp->num_nodes.
          */
-        if (ncp->nc_striping == PNCIO_STRIPING_AUTO) {
+        if (ncp->pnc_striping == PNCIO_STRIPING_AUTO) {
             int striping_factor=0;
             if (user_info != MPI_INFO_NULL) {
                 MPI_Info_get(user_info, "striping_factor", MPI_MAX_INFO_VAL-1,
@@ -510,7 +510,7 @@ if (rank == 0) printf("%s at %d fstype=%s\n", __func__,__LINE__,(ncp->fstype == 
                 MPI_Info_set(user_info, "striping_factor", value);
             }
         }
-        else { /* ncp->nc_striping == PNCIO_STRIPING_INHERIT */
+        else { /* ncp->pnc_striping == PNCIO_STRIPING_INHERIT */
             if (user_info != MPI_INFO_NULL) {
                 int stripings[2] = {0, 0};
 
