@@ -1685,6 +1685,7 @@ AC_SUBST(INTENTV)dnl for src/binding/f90/api.fh.in
 AC_TYPE_SIZE_T
 AC_TYPE_OFF_T
 AC_TYPE_SSIZE_T
+AC_TYPE_UINT64_T
 
 AC_CHECK_TYPES([ptrdiff_t, schar, uchar, ushort, uint, longlong, ulonglong, int64, uint64])
 
