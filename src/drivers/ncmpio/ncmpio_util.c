@@ -65,8 +65,8 @@ void ncmpio_hint_extract(NC       *ncp,
     /* number of INA aggregators per compute node */
     ncp->num_aggrs_per_node = 0;
 
-    /* file system type */
-    ncp->fstype = PNCIO_FSTYPE_CHECK;
+    /* default I/O driver */
+    ncp->driver = PNC_DRIVER_PNCIO;
 
     if (info == MPI_INFO_NULL) return;
 
@@ -241,7 +241,7 @@ void ncmpio_hint_extract(NC       *ncp,
      */
     MPI_Info_get(info, "nc_driver", MPI_MAX_INFO_VAL-1, value, &flag);
     if (flag && strcasecmp(value, "mpiio") == 0)
-        ncp->fstype = PNCIO_FSTYPE_MPIIO;
+        ncp->driver = PNC_DRIVER_MPIIO;
 
     /* Check if user explicitly want all MPI-IO to be collective. */
     MPI_Info_get(info, "romio_no_indep_rw", MPI_MAX_INFO_VAL-1, value, &flag);
@@ -354,7 +354,7 @@ void ncmpio_hint_set(NC       *ncp,
     MPI_Info_set(info, "nc_hash_size_vattr", int_str);
 
     /* Whether using MPI-IO instead of PnetCDF's internal PNCIO driver. */
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO)
+    if (ncp->driver == PNC_DRIVER_MPIIO)
         MPI_Info_set(info, "nc_driver", "mpiio");
     else
         MPI_Info_set(info, "nc_driver", "pncio");

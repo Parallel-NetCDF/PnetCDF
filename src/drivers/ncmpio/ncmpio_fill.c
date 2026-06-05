@@ -203,7 +203,7 @@ fill_var_rec(NC         *ncp,
         status = err;
     }
 
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_MPIIO) {
         /* make the entire file visible */
         err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
         status = (status == NC_NOERR) ? err : status;
@@ -712,7 +712,7 @@ fillerup_aggregate(NC *ncp, NC *old_ncp)
     if (blocklengths != NULL) NCI_Free(blocklengths);
     if (offset != NULL) NCI_Free(offset);
 
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_MPIIO) {
         /* reset fileview to make the entire file visible */
         err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
         status = (status == NC_NOERR) ? err : status;

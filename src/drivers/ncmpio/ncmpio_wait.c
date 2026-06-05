@@ -2044,7 +2044,7 @@ req_aggregation(NC     *ncp,
     }
     NCI_Free(reqs);
 
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_MPIIO) {
         /* set the MPI-IO fileview, this is a collective call */
         err = ncmpio_file_set_view(ncp, filetype, 0, NULL, NULL);
         if (filetype != MPI_BYTE) MPI_Type_free(&filetype);
@@ -2387,7 +2387,7 @@ mgetput(NC     *ncp,
 mpi_io:
     NCI_Free(reqs);
 
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_MPIIO) {
         /* set the MPI-IO fileview, this is a collective call */
         err = ncmpio_file_set_view(ncp, filetype, 0, NULL, NULL);
         if (filetype != MPI_BYTE) MPI_Type_free(&filetype);

@@ -88,7 +88,7 @@ ncmpio_file_read_at(NC         *ncp,
      */
     memset(&mpistatus, 0, sizeof(MPI_Status));
 
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_MPIIO) {
         char *mpi_name;
         MPI_File fh;
 
@@ -156,7 +156,7 @@ ncmpio_file_read_at_all(NC         *ncp,
      */
     memset(&mpistatus, 0, sizeof(MPI_Status));
 
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_MPIIO) {
         char *mpi_name;
         MPI_File fh;
 
@@ -226,7 +226,7 @@ ncmpio_file_write_at(NC         *ncp,
      */
     memset(&mpistatus, 0, sizeof(MPI_Status));
 
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_MPIIO) {
         char *mpi_name;
         MPI_File fh;
 
@@ -293,7 +293,7 @@ ncmpio_file_write_at_all(NC         *ncp,
      */
     memset(&mpistatus, 0, sizeof(MPI_Status));
 
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_MPIIO) {
         char *mpi_name;
         MPI_File fh;
 
@@ -384,7 +384,7 @@ ncmpio_getput_zero_req(NC *ncp, int reqMode)
         if (status == NC_NOERR && wlen < 0) status = (int)wlen;
     }
 
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO)
+    if (ncp->driver == PNC_DRIVER_MPIIO)
         /* Reset fileview is necessary only when using MPI-IO driver. Note
          * fileview is never reused in PnetCDF.
          */
@@ -477,7 +477,7 @@ ncmpio_read_write(NC         *ncp,
             buf_view.type = MPI_BYTE;
             buf_view.count = 0;
         }
-        else if (buf_view.count > 1 && ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+        else if (buf_view.count > 1 && ncp->driver == PNC_DRIVER_MPIIO) {
             /* construct a buftype */
 #ifdef HAVE_MPI_LARGE_COUNT
             /* TODO: MPI_Type_create_hindexed_c
@@ -575,7 +575,7 @@ ncmpio_read_write(NC         *ncp,
             buf_view.type = MPI_BYTE;
             buf_view.count = 0;
         }
-        else if (buf_view.count > 1 && ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+        else if (buf_view.count > 1 && ncp->driver == PNC_DRIVER_MPIIO) {
             /* construct a buftype */
 #ifdef HAVE_MPI_LARGE_COUNT
             /* TODO: MPI_Type_create_hindexed_c
@@ -642,7 +642,7 @@ ncmpio_read_write(NC         *ncp,
     }
 
 fn_exit:
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO)
+    if (ncp->driver == PNC_DRIVER_MPIIO)
         /* Reset fileview is necessary only when using MPI-IO driver. Note
          * fileview is never reused in PnetCDF.
          */
@@ -660,7 +660,7 @@ ncmpio_file_close(NC *ncp)
 {
     int err=NC_NOERR;
 
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_MPIIO) {
         char *mpi_name;
         int mpireturn;
 
@@ -706,7 +706,7 @@ ncmpio_file_delete(NC *ncp)
 
     if (ncp->rank == 0) {
         char *path = ncmpii_remove_file_system_type_prefix(ncp->path);
-        if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+        if (ncp->driver == PNC_DRIVER_MPIIO) {
             char *mpi_name;
             int mpireturn;
 #ifdef MPICH_VERSION
@@ -737,7 +737,7 @@ ncmpio_file_sync(NC *ncp) {
     char *mpi_name;
     int mpireturn;
 
-    if (ncp->fstype != PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_PNCIO) {
         if (ncp->pncio_fh == NULL)
             return NC_NOERR;
         return PNCIO_File_sync(ncp->pncio_fh);
@@ -794,7 +794,7 @@ ncmpio_file_set_view(const NC     *ncp,
 
 assert(filetype == MPI_BYTE);
 
-    if (ncp->fstype != PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_PNCIO) {
         /* Skip setting fileview for ranks whose pncio_fh is NULL */
         if (ncp->pncio_fh == NULL)
             return NC_NOERR;
@@ -809,7 +809,7 @@ assert(filetype == MPI_BYTE);
         return PNCIO_File_set_view(ncp->pncio_fh, npairs, offsets, lengths);
     }
 
-    /* Now, ncp->fstype == PNCIO_FSTYPE_MPIIO, i.e. using MPI-IO. */
+    /* Now, ncp->driver == PNC_DRIVER_MPIIO, i.e. using MPI-IO. */
     int to_free_filetype=0;
 
     /* when ncp->nprocs == 1, ncp->collective_fh == ncp->independent_fh */
@@ -877,7 +877,7 @@ ncmpio_file_open(NC         *ncp,
     int err=NC_NOERR;
 
     /* open file collectively */
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_MPIIO) {
         char *mpi_name;
         int mpireturn;
         MPI_File fh;
@@ -895,7 +895,7 @@ ncmpio_file_open(NC         *ncp,
         if (mpireturn != MPI_SUCCESS)
             err = ncmpii_error_mpi2nc(mpireturn, mpi_name);
     }
-    else { /* ncp->fstype != PNCIO_FSTYPE_MPIIO */
+    else { /* ncp->driver == PNC_DRIVER_PNCIO */
         ncp->pncio_fh = (PNCIO_File*) NCI_Calloc(1,sizeof(PNCIO_File));
 
         err = PNCIO_File_open(comm, path, omode, info, ncp->pncio_fh);

@@ -103,7 +103,7 @@ ncmpio_redef(void *ncdp)
     /* we are now entering define mode */
     fSet(ncp->flags, NC_MODE_DEF);
 
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_MPIIO) {
         /* must reset fileview as header extent may later change in enddef() */
         err = ncmpio_file_set_view(ncp, MPI_BYTE, 0, NULL, NULL);
         DEBUG_ASSIGN_ERROR(status, err)
@@ -140,7 +140,7 @@ ncmpio_begin_indep_data(void *ncdp)
      */
     MPI_Barrier(ncp->comm);
 
-    if (ncp->fstype != PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver != PNC_DRIVER_MPIIO) {
         /* When using PnetCDF's PNCIO driver, there are 2 scenarios:
          * 1. When intra-node aggregation (INA) is enabled, at the end of
          *    ncmpi_create/ncmpi_open, non-aggregators' pncio_fh are NULL. Thus
@@ -170,7 +170,7 @@ ncmpio_begin_indep_data(void *ncdp)
         filename = ncmpii_remove_file_system_type_prefix(ncp->path);
 
         ncp->pncio_fh = (PNCIO_File*) NCI_Calloc(1,sizeof(PNCIO_File));
-        ncp->pncio_fh->file_system = ncp->fstype;
+        ncp->pncio_fh->fstype = ncp->fstype;
         ncp->pncio_fh->comm_attr = ncp->comm_attr;
 
         int omode = fIsSet(ncp->nc_amode, NC_WRITE) ? O_RDWR : O_RDONLY;

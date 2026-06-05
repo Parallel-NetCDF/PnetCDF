@@ -83,21 +83,19 @@ ncmpio_open(MPI_Comm         comm,
      *     nc_num_aggrs_per_node: number of processes per node to be INA
      *     aggregators.
      *
-     * ncp->fstype will be initialized in ncmpio_hint_extract() and set in
-     * PNCIO_FileSysType().
+     * ncp->driver is initialized in ncmpio_hint_extract().
+     * ncp->fstype is set in PNCIO_FileSysType().
      */
     ncmpio_hint_extract(ncp, user_info);
 
-    if (ncp->fstype == PNCIO_FSTYPE_CHECK) {
-        if (rank == 0)
-            /* Check file system type. If the given file does not exist, check
-             * its parent folder. Currently PnetCDF's PNCIO drivers support
-             * Lustre (PNCIO_LUSTRE) and Unix File System (PNCIO_UFS).
-             */
-            ncp->fstype = PNCIO_FileSysType(path);
+    if (rank == 0)
+        /* Check file system type. If the given file does not exist, check
+         * its parent folder. Currently PnetCDF's PNCIO drivers support
+         * Lustre (PNCIO_FS_LUSTRE) and Unix File System (PNCIO_FS_UFS).
+         */
+        ncp->fstype = PNCIO_FileSysType(path);
 
-        MPI_Bcast(&ncp->fstype, 1, MPI_INT, 0, ncp->comm);
-    }
+    MPI_Bcast(&ncp->fstype, 1, MPI_INT, 0, ncp->comm);
 
     /* Remove the file system type prefix name if there is any. For example,
      * when path = "lustre:/home/foo/testfile.nc", remove "lustre:" to make
@@ -201,7 +199,7 @@ ncmpio_open(MPI_Comm         comm,
     }
 
     /* open file collectively ---------------------------------------------- */
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_MPIIO) {
 #ifdef MPICH_VERSION
         /* MPICH recognizes file system type acronym prefixed to file names */
         TRACE_IO(MPI_File_open, (comm, path, mpi_amode, user_info, &fh));
@@ -225,12 +223,12 @@ ncmpio_open(MPI_Comm         comm,
         }
     }
     else {
-        /* When ncp->fstype != PNCIO_FSTYPE_MPIIO, use PnetCDF's PNCIO driver */
+        /* When ncp->driver == PNC_DRIVER_PNCIO, use PnetCDF's PNCIO driver */
         int amode;
 
         ncp->pncio_fh = (PNCIO_File*) NCI_Calloc(1,sizeof(PNCIO_File));
-        ncp->pncio_fh->file_system = ncp->fstype;
-        ncp->pncio_fh->comm_attr   = ncp->comm_attr;
+        ncp->pncio_fh->fstype = ncp->fstype;
+        ncp->pncio_fh->comm_attr = ncp->comm_attr;
 
         amode = fIsSet(omode, NC_WRITE) ? O_RDWR : O_RDONLY;
 

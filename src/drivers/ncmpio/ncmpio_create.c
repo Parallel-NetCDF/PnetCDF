@@ -171,15 +171,15 @@ ncmpio_create(MPI_Comm         comm,
      *     nc_num_aggrs_per_node: number of processes per node to be the INA
      *     aggregators.
      *
-     * ncp->fstype will be initialized in ncmpio_hint_extract(), and set in
-     * PNCIO_FileSysType().
+     * ncp->driver is initialized in ncmpio_hint_extract().
+     * ncp->fstype is set in PNCIO_FileSysType().
      */
     ncmpio_hint_extract(ncp, user_info);
 
-    if (ncp->fstype == PNCIO_FSTYPE_CHECK && rank == 0)
+    if (rank == 0)
         /* Check file system type. If the given file does not exist, check its
          * folder. Currently PnetCDF's PNCIO drivers support Lustre
-         * (PNCIO_LUSTRE) and Unix File System (PNCIO_UFS).
+         * (PNCIO_FS_LUSTRE) and Unix File System (PNCIO_FS_UFS).
          */
         ncp->fstype = PNCIO_FileSysType(path);
 
@@ -281,7 +281,7 @@ ncmpio_create(MPI_Comm         comm,
                     err = NC_NOERR;
 #else
                 err = NC_NOERR;
-                if (ncp->fstype != PNCIO_FSTYPE_MPIIO)
+                if (ncp->driver == PNC_DRIVER_PNCIO)
                     err = PNCIO_File_delete(filename);
                 else {
 #ifdef MPICH_VERSION
@@ -332,7 +332,7 @@ ncmpio_create(MPI_Comm         comm,
                  * truncate(), this option can be expensive.
                  */
                 err = NC_NOERR;
-                if (ncp->fstype != PNCIO_FSTYPE_MPIIO) {
+                if (ncp->driver == PNC_DRIVER_PNCIO) {
                     PNCIO_File pncio_fh;
                     pncio_fh = (PNCIO_File*) NCI_Calloc(1,sizeof(PNCIO_File));
                     err = PNCIO_File_open(MPI_COMM_SELF, filename, O_RDWR,
@@ -505,7 +505,7 @@ ncmpio_create(MPI_Comm         comm,
     }
 
     /* create file collectively -------------------------------------------- */
-    if (ncp->fstype == PNCIO_FSTYPE_MPIIO) {
+    if (ncp->driver == PNC_DRIVER_MPIIO) {
         /* If hint file_striping is set to "auto" and hint striping_factor is
          * not set by the user, then set hint striping_factor to
          * ncp->comm_attr.num_nodes.
@@ -625,10 +625,10 @@ ncmpio_create(MPI_Comm         comm,
         }
     }
     else {
-        /* When ncp->fstype != PNCIO_FSTYPE_MPIIO, use PnetCDF's PNCIO driver */
+        /* When ncp->driver == PNC_DRIVER_PNCIO, use PnetCDF's PNCIO driver */
         ncp->pncio_fh = (PNCIO_File*) NCI_Calloc(1, sizeof(PNCIO_File));
-        ncp->pncio_fh->file_system = ncp->fstype;
-        ncp->pncio_fh->comm_attr   = ncp->comm_attr;
+        ncp->pncio_fh->fstype = ncp->fstype;
+        ncp->pncio_fh->comm_attr = ncp->comm_attr;
 
         err = PNCIO_File_open(comm, filename, O_CREAT|O_RDWR, user_info,
                               ncp->pncio_fh);
