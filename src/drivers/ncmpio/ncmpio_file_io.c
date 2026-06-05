@@ -791,8 +791,7 @@ assert(filetype == MPI_BYTE);
          * type struct, which avoids repeated work of constructing and
          * flattening the filetype.
          */
-        return PNCIO_File_set_view(ncp->pncio_fh, filetype, npairs, offsets,
-                                   lengths);
+        return PNCIO_File_set_view(ncp->pncio_fh, npairs, offsets, lengths);
     }
 
     /* Now, ncp->fstype == PNCIO_FSTYPE_MPIIO, i.e. using MPI-IO. */
