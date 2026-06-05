@@ -1566,16 +1566,16 @@ void print_profiled(MPI_Comm comm)
 
     /* print 2-phase write timers */
     if (rank == 0 && pnc_wr_count[0] > 0) {
-        printf("PNC 2-PHASE write: init %.2f pwrite %.2f pread %.2f post %.2f hsort %.2f comm %.2f collw %.2f\n",
+        printf("PNC 2-PHASE write: init %.2f pwrite %.2f pread %.2f post %.2f hsort %.2f comm %.2f total %.2f\n",
         pnc_drv_wr_t[1], pnc_drv_wr_t[2], pnc_drv_rd_t[2], pnc_drv_wr_t[4], pnc_drv_wr_t[5], pnc_drv_wr_t[3], pnc_drv_wr_t[0]);
-        printf("PNC 2-PHASE write: ntimes %lld check_hole %lld (total_num %lld nrecv %lld) no check %lld (total_num %lld nrecv %lld)\n",
+        printf("PNC 2-PHASE write: ntimes %lld check_hole %lld (npairs %lld nrecv %lld) no check %lld (npairs %lld nrecv %lld)\n",
         pnc_wr_count[0], pnc_wr_count[1], pnc_wr_count[2], pnc_wr_count[3], pnc_wr_count[4], pnc_wr_count[5], pnc_wr_count[6]);
     }
 
     /* print 2-phase read timers */
     if (rank == 0 && pnc_rd_count[0] > 0)
-        printf("PNC 2-PHASE read: init %.2f pread %.2f post %.2f wait %.2f collr %.2f ntimes %lld\n",
-        pnc_drv_rd_t[1], pnc_drv_rd_t[2], pnc_drv_rd_t[4], pnc_drv_rd_t[3], pnc_drv_rd_t[0], pnc_rd_count[0]);
+        printf("PNC 2-PHASE read: init %.2f pread %.2f post %.2f wait %.2f total %.2f (ntimes %lld)\n",
+        pnc_drv_rd_t[1], pnc_drv_rd_t[2], pnc_drv_rd_t[3], pnc_drv_rd_t[4], pnc_drv_rd_t[0], pnc_rd_count[0]);
 
     /* print intra-node aggregation timing breakdown */
     if (pnc_num_aggrs_per_node > 0) {
@@ -1613,9 +1613,9 @@ void print_profiled(MPI_Comm comm)
             printf("INA put npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
                    pnc_ina_npairs_put,
                    max_MiB[0],max_MiB[1],max_MiB[2],max_MiB[3],max_MiB[4],max_MiB[5]);
-            printf("INA put time: %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f = %5.2f\n",
+            printf("INA put time: init %.2f flat %.2f MD %.2f sort %.2f post %.2f wait %.2f setview %.2f write %.2f total %.2f\n",
                    pnc_ina_init,pnc_ina_flatten,
-                   pnc_ina_put[0],pnc_ina_put[1],pnc_ina_put[2],pnc_ina_put[3],pnc_ina_put[4],
+                   pnc_ina_put[0],pnc_ina_put[1],pnc_ina_put[2],pnc_ina_put[3],pnc_ina_put[4],pnc_ina_put[5],
                    wr_total);
         }
 
@@ -1632,7 +1632,7 @@ void print_profiled(MPI_Comm comm)
             printf("INA get npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
                    pnc_ina_npairs_get,
                    max_MiB[0],max_MiB[1],max_MiB[2],max_MiB[3],max_MiB[4],max_MiB[5]);
-            printf("INA get time: %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f = %5.2f\n",
+            printf("INA get time: init %.2f flat %.2f MD %.2f sort %.2f read %.2f post %.2f wait %.2f total %.2f\n",
                    pnc_ina_init,pnc_ina_flatten,
                    pnc_ina_get[0],pnc_ina_get[1],pnc_ina_get[2],pnc_ina_get[3],pnc_ina_get[4],
                    rd_total);

@@ -199,7 +199,6 @@ qsort_off_len_buf(MPI_Aint    num,
 static
 void heap_merge(int              nprocs,
                 const MPI_Aint  *count,    /* [nprocs] */
-                MPI_Aint         nelems,
 #ifdef HAVE_MPI_LARGE_COUNT
                 MPI_Count       *offsets,  /* [nelems] */
                 MPI_Count       *blklens,  /* [nelems] */
@@ -224,6 +223,9 @@ void heap_merge(int              nprocs,
     heap_struct *a, tmp;
     int i, j, heapsize, l, r, k, smallest;
     size_t sum;
+    MPI_Aint nelems;
+
+    for (nelems=0, i=0; i<nprocs; i++) nelems += count[i];
 
     /* This heap_merge is not in-place, taking too much memory footprint */
 #ifdef HAVE_MPI_LARGE_COUNT
@@ -1157,7 +1159,7 @@ int ina_put(NC         *ncp,
     char *recv_buf=NULL, *wr_buf = NULL;
     int i, j, err, mpireturn, status=NC_NOERR, free_buf_view_off=0;
     int coalesceable=0;
-    MPI_Aint npairs=0, *meta=NULL, *count=NULL, *bufAddr=NULL;
+    MPI_Aint npairs=0, *meta=NULL, *bufAddr=NULL;
     MPI_Aint buf_npairs=0, file_npairs=0;
     MPI_Offset wr_amnt=0;
     PNC_comm_attr ina_meta = ncp->comm_attr;
@@ -1252,8 +1254,9 @@ int ina_put(NC         *ncp,
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_put[1] = MAX(pnc_ina_mem_put[1], mem_max);
+
     endT = MPI_Wtime();
-    if (ncp->rank == ina_meta.my_aggr) pnc_ina_put[0] += endT - startT;
+    pnc_ina_put[0] += endT - startT; /* collect MD */
     startT = endT;
 #endif
 
@@ -1325,18 +1328,6 @@ int ina_put(NC         *ncp,
             }
         }
 
-        if (do_sort && indv_sorted) {
-            /* Interleaved offsets are found but individual offsets are already
-             * sorted. This is commonly seen from the checkerboard domain
-             * partitioning pattern. In this case, heap_merge() must be called
-             * to merge all individually already-sorted offsets into one single
-             * sorted offset list. Note count[] is initialized and will be used
-             * in heap_merge()
-             */
-            count = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) * ina_meta.num_nonaggrs);
-            for (i=0; i<ina_meta.num_nonaggrs; i++) count[i] = meta[i*3];
-        }
-
         /* Construct an array of buffer addresses containing a mapping of the
          * buffer used to receive write data from non-aggregators and the
          * buffer used to write to file. bufAddr[] is calculated based on the
@@ -1354,12 +1345,25 @@ int ina_put(NC         *ncp,
              * an increasing order.
              */
             if (indv_sorted) {
+                /* Interleaved offsets are found but individual offsets are
+                 * already sorted. This is commonly seen from the checkerboard
+                 * domain partitioning pattern. In this case, heap_merge() is
+                 * faster to merge all offsets into one single sorted offset
+                 * list. Note count[] must be initialized, so it can be used
+                 * in heap_merge()
+                 */
+                MPI_Aint *count;
+                count = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) *
+                                               ina_meta.num_nonaggrs);
+                for (i=0; i<ina_meta.num_nonaggrs; i++)
+                    count[i] = meta[i*3];
+
                 /* heap-merge() runs much faster than qsort() when individual
                  * lists have already been sorted. However, it has a much
                  * bigger memory footprint.
                  */
-                heap_merge(ina_meta.num_nonaggrs, count, npairs, off_ptr,
-                           len_ptr, bufAddr);
+                heap_merge(ina_meta.num_nonaggrs, count, off_ptr, len_ptr,
+                           bufAddr);
                 NCI_Free(count);
             }
             else
@@ -1491,10 +1495,10 @@ int ina_put(NC         *ncp,
         ncmpi_inq_malloc_size(&mem_max);
         // ncmpi_inq_malloc_max_size(&mem_max);
         pnc_ina_mem_put[2] = MAX(pnc_ina_mem_put[2], mem_max);
+        pnc_ina_npairs_put = MAX(pnc_ina_npairs_put, npairs);
 
         endT = MPI_Wtime();
-        pnc_ina_put[1] += endT - startT;
-        pnc_ina_npairs_put = MAX(pnc_ina_npairs_put, npairs);
+        pnc_ina_put[1] += endT - startT; /* sorting */
         startT = endT;
 #endif
 
@@ -1517,12 +1521,6 @@ int ina_put(NC         *ncp,
         else
             recv_buf = (char*) NCI_Malloc(recv_amnt);
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-        ncmpi_inq_malloc_size(&mem_max);
-        // ncmpi_inq_malloc_max_size(&mem_max);
-        pnc_ina_mem_put[3] = MAX(pnc_ina_mem_put[3], mem_max);
-#endif
-
         if (recv_buf != buf) {
             /* Pack this aggregator's write data into front of recv_buf */
             if (buf_view.count <= 1 && buf_view.type == MPI_BYTE)
@@ -1541,12 +1539,6 @@ int ina_put(NC         *ncp,
 #endif
             }
         }
-
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-        endT = MPI_Wtime();
-        pnc_ina_put[2] += endT - startT;
-        startT = endT;
-#endif
 
         /* Receive write data sent from non-aggregators. Note we cannot move
          * the posting of MPI_Irecv calls to before sorting and leave
@@ -1570,6 +1562,16 @@ int ina_put(NC         *ncp,
             ptr += meta[i*3 + 1];
         }
 
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+        ncmpi_inq_malloc_size(&mem_max);
+        // ncmpi_inq_malloc_max_size(&mem_max);
+        pnc_ina_mem_put[3] = MAX(pnc_ina_mem_put[3], mem_max);
+
+        endT = MPI_Wtime();
+        pnc_ina_put[2] += endT - startT; /* post irecv */
+        startT = endT;
+#endif
+
         if (nreqs > 0) {
 #ifdef HAVE_MPI_STATUSES_IGNORE
             TRACE_COMM(MPI_Waitall)(nreqs, req, MPI_STATUSES_IGNORE);
@@ -1588,9 +1590,9 @@ int ina_put(NC         *ncp,
         NCI_Free(req);
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    endT = MPI_Wtime();
-    if (ncp->rank == ina_meta.my_aggr) pnc_ina_put[3] += endT - startT;
-    startT = endT;
+        endT = MPI_Wtime();
+        pnc_ina_put[3] += endT - startT; /* wait */
+        startT = endT;
 #endif
 
         /* Now all write data has been collected into recv_buf. In case of any
@@ -1670,11 +1672,6 @@ int ina_put(NC         *ncp,
 
     NCI_Free(meta);
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    endT = MPI_Wtime();
-    if (ncp->rank == ina_meta.my_aggr) pnc_ina_put[4] += endT - startT;
-#endif
-
     /* set the fileview */
     err = ncmpio_file_set_view(ncp, MPI_BYTE, file_npairs, off_ptr, file_len);
     if (err != NC_NOERR) {
@@ -1686,6 +1683,10 @@ int ina_put(NC         *ncp,
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_put[4] = MAX(pnc_ina_mem_put[4], mem_max);
+
+    endT = MPI_Wtime();
+    pnc_ina_put[4] += endT - startT; /* setview */
+    startT = endT;
 #endif
 
     /* carry out write request to file */
@@ -1707,6 +1708,15 @@ int ina_put(NC         *ncp,
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
     pnc_ina_mem_put[5] = MAX(pnc_ina_mem_put[5], mem_max);
+#endif
+
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+    ncmpi_inq_malloc_size(&mem_max);
+    // ncmpi_inq_malloc_max_size(&mem_max);
+    pnc_ina_mem_put[5] = MAX(pnc_ina_mem_put[5], mem_max);
+
+    endT = MPI_Wtime();
+    pnc_ina_put[5] += endT - startT; /* write */
 #endif
 
     return status;
@@ -1766,7 +1776,7 @@ int ina_get(NC         *ncp,
     int i, j, err, mpireturn, status=NC_NOERR, nreqs;
     int do_sort=0, indv_sorted=1, overlap=0;
     char *rd_buf = NULL;
-    MPI_Aint npairs=0, max_npairs, *meta=NULL, *count=NULL;
+    MPI_Aint npairs=0, max_npairs, *meta=NULL;
     MPI_Offset send_amnt=0, rd_amnt=0, off_start;
     MPI_Request *req=NULL;
     PNCIO_View rd_buf_view;
@@ -1809,13 +1819,13 @@ int ina_get(NC         *ncp,
     meta[1] = bufLen;
     meta[2] = is_incr;
 
-    /* Each aggregator first collects metadata about its offset-length pairs,
-     * size of read request, and whether the offsets are in an incremental
-     * order. The aggregator will gather these metadata from non-aggregators
-     * assigned to it.
+    /* Each aggregator first collects metadata about its own offset-length
+     * pairs, size of read request, and checks whether the offsets are in an
+     * incremental order. The aggregator will gather the same metadata from the
+     * non-aggregators assigned to it.
      *
-     * Once ina_collect_md() returns, this aggregator's offsets and lengths may
-     * grow to include the ones from non-aggregators (appended).
+     * Once ina_collect_md() returns, this aggregator's offsets[] and lengths[]
+     * may grow to include the ones from non-aggregators (appended).
      */
     if (ina_meta.num_nonaggrs > 1) {
         err = ina_collect_md(ncp, meta, &offsets, &lengths, &npairs);
@@ -1827,7 +1837,7 @@ int ina_get(NC         *ncp,
     else
         npairs = num_pairs;
 
-    if (ncp->rank != ina_meta.my_aggr) {
+    if (ncp->rank != ina_meta.my_aggr) { /* not an INA aggregator */
         if (meta[0] > 0) {
             /* For read operation, the non-aggregators now can start receiving
              * their read data from the aggregator.
@@ -1850,19 +1860,30 @@ int ina_get(NC         *ncp,
         if (offsets != NULL) NCI_Free(offsets);
         if (lengths != NULL) NCI_Free(lengths);
 
-        /* Non-aggregators are now done, as they do not participate MPI-IO or
-         * PNCIO file read.
+        /* Non-INA aggregators are now done, as they do not participate MPI-IO
+         * or PNCIO file read (neither collective nor independent).
          */
         NCI_Free(meta);
         return status;
     }
 
-    /* The remaining of this subroutine is for aggregators only. */
+    /* The remaining of this subroutine is for INA aggregators only. */
 
-    /* For read operation, the original offsets and lengths must be kept
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+    ncmpi_inq_malloc_size(&mem_max);
+    // ncmpi_inq_malloc_max_size(&mem_max);
+    pnc_ina_mem_get[1] = MAX(pnc_ina_mem_get[1], mem_max);
+
+    endT = MPI_Wtime();
+    pnc_ina_get[0] += endT - startT; /* collect MD */
+    startT = endT;
+#endif
+
+    /* For read operations, the original offsets[] and lengths[] must be kept
      * untouched, because the later sorting and coalescing will mess up the
-     * original order of offsets and lengths, which are needed to construct a
-     * datatype when an aggregator sends read data to its non-aggregators.
+     * original order of offsets[] and lengths[], which are necessary for
+     * constructing a datatype used by the INA aggregator to send data read
+     * from the file to its non-INA aggregators.
      */
 #ifdef HAVE_MPI_LARGE_COUNT
     orig_offsets = (MPI_Count*) NCI_Malloc(sizeof(MPI_Count) * npairs);
@@ -1883,7 +1904,7 @@ int ina_get(NC         *ncp,
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
-    pnc_ina_mem_get[1] = MAX(pnc_ina_mem_get[1], mem_max);
+    pnc_ina_mem_get[2] = MAX(pnc_ina_mem_get[2], mem_max);
 #endif
 
     /* MPI-IO has the following requirements about filetype.
@@ -1894,11 +1915,11 @@ int ina_get(NC         *ncp,
      *    is permitted to contain overlapping regions.
      */
     if (npairs > 0) {
-        /* Now this aggregator has received all offset-length pairs from its
-         * non-aggregators. At first, check if a sorting is necessary.
+        /* Now this INA aggregator has received all offset-length pairs from
+         * its non-aggregators. At first, it checks if a sorting is necessary.
          */
 
-        /* check if offsets of all non-aggregators are individual sorted */
+        /* Check if offsets of all non-aggregators are individually sorted */
         indv_sorted = 1;
         for (i=-1,j=0; j<ina_meta.num_nonaggrs; j++) {
             if (i == -1 && meta[j*3] > 0) /* find 1st whose num_pairs > 0 */
@@ -1914,10 +1935,10 @@ int ina_get(NC         *ncp,
          */
 
         if (i >= 0 && indv_sorted == 1) {
-            /* When all ranks' offsets are individually sorted, we still need
-             * to check if offsets are interleaved among all non-aggregators to
-             * determine whether a sort for all offset-length pairs is
-             * necessary.
+            /* Even when the offsets of all non-INA aggregators and this
+             * aggregator offsets are individually sorted, we still need to
+             * check if offsets are interleaved. If interleaved, we must sort
+             * all offset-length pairs.
              */
 #ifdef HAVE_MPI_LARGE_COUNT
             MPI_Count prev_end_off;
@@ -1945,31 +1966,35 @@ int ina_get(NC         *ncp,
             }
         }
 
-        if (do_sort && indv_sorted) {
-            /* Interleaved offsets are found but individual offsets are already
-             * sorted. In this case, heap_merge() is called to merge all
-             * offsets into one single sorted offset list. Note count[] is
-             * initialized and will be used in heap_merge()
-             */
-            count = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint)* ina_meta.num_nonaggrs);
-            for (i=0; i<ina_meta.num_nonaggrs; i++) count[i] = meta[i*3];
-        }
-
-        /* Construct an array of buffer addresses containing a mapping of the
-         * buffer used to receive write data from non-aggregators and the
-         * buffer used to write to file.
-         */
         if (do_sort) {
-            /* Sort offsets and lengths, based on offsets into an increasing
-             * order.
+            /* Sort the offsets into an increasing order. Note during sorting,
+             * the length and buffer must also be moved together with their
+             * corresponding offset.
+             *
+             * At first, construct an array of buffer addresses containing a
+             * mapping of the buffer used to send read data to the non-INA
+             * aggregators and the buffer used to read from the file.
              */
             if (indv_sorted) {
+                /* Interleaved offsets are found but individual offsets are
+                 * already sorted. This is commonly seen from the checkerboard
+                 * domain partitioning pattern. In this case, heap_merge() is
+                 * faster to merge all offsets into one single sorted offset
+                 * list. Note count[] must be initialized, so it can be used
+                 * in heap_merge()
+                 */
+                MPI_Aint *count;
+                count = (MPI_Aint*) NCI_Malloc(sizeof(MPI_Aint) *
+                                               ina_meta.num_nonaggrs);
+                for (i=0; i<ina_meta.num_nonaggrs; i++)
+                    count[i] = meta[i*3];
+
                 /* heap-merge() runs much faster than qsort() when individual
                  * lists have already been sorted. However, it has a much
                  * bigger memory footprint.
                  */
-                heap_merge(ina_meta.num_nonaggrs, count, npairs, off_ptr,
-                           len_ptr, NULL);
+                heap_merge(ina_meta.num_nonaggrs, count, off_ptr, len_ptr,
+                           NULL);
                 NCI_Free(count);
             }
             else
@@ -1978,13 +2003,6 @@ int ina_get(NC         *ncp,
                  */
                 qsort_off_len_buf(npairs, off_ptr, len_ptr, NULL);
         }
-
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-        ncmpi_inq_malloc_size(&mem_max);
-        // ncmpi_inq_malloc_max_size(&mem_max);
-        pnc_ina_mem_get[2] = MAX(pnc_ina_mem_get[2], mem_max);
-        pnc_ina_npairs_get = MAX(pnc_ina_npairs_get, npairs);
-#endif
 
         /* Coalesce the offset-length pairs and calculate the total read amount
          * and send amount by this aggregator.
@@ -2028,11 +2046,16 @@ int ina_get(NC         *ncp,
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
         ncmpi_inq_malloc_size(&mem_max);
         // ncmpi_inq_malloc_max_size(&mem_max);
-        pnc_ina_mem_get[3] = MAX(pnc_ina_mem_get[3], mem_max);
+        pnc_ina_mem_get[2] = MAX(pnc_ina_mem_get[2], mem_max);
+        pnc_ina_npairs_get = MAX(pnc_ina_npairs_get, npairs);
+
+        endT = MPI_Wtime();
+        pnc_ina_get[1] += endT - startT; /* sorting */
+        startT = endT;
 #endif
     } /* if (npairs > 0) */
-    /* else case: This aggregation group may not have data to read, but must
-     * participate the collective MPI-IO calls.
+    /* else case: This INA aggregation group has zero data to read, but this
+     * aggregator must participate the collective I/O calls.
      */
 
     /* set the fileview */
@@ -2047,13 +2070,13 @@ int ina_get(NC         *ncp,
      * will be directly used to send the read request data to non-aggregators.
      *
      * Note rd_amnt may not be the same as send_amnt, as there can be overlaps
-     * between adjacent offset-length pairs after sorted.
+     * between adjacent offset-length pairs after sort.
      *
      * If file offset-length pairs have not been re-ordered, i.e. sorted and
      * overlaps removed, and this aggregator will not send any read data to its
-     * non-aggregators, then we can use user's buffer, buf, to call
-     * MPI-IO/PNCIO to read from the file, without allocating an additional
-     * temporary buffer.
+     * non-aggregators, then we can use user's buffer, buf, to call MPI-IO/
+     * PNCIO to read from the file, without allocating an additional temporary
+     * buffer.
      */
     if (!do_sort && buf_view.size == send_amnt && !overlap) {
         rd_buf_view = buf_view;
@@ -2068,22 +2091,17 @@ int ina_get(NC         *ncp,
             rd_buf = (char*) NCI_Malloc(rd_amnt);
     }
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    ncmpi_inq_malloc_size(&mem_max);
-    // ncmpi_inq_malloc_max_size(&mem_max);
-    pnc_ina_mem_get[4] = MAX(pnc_ina_mem_get[4], mem_max);
-    endT = MPI_Wtime();
-    pnc_ina_get[0] += endT - startT;
-#endif
-
     err = ncmpio_read_write(ncp, NC_REQ_RD, 0, rd_buf_view, rd_buf);
     if (status == NC_NOERR) status = err;
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
     ncmpi_inq_malloc_size(&mem_max);
     // ncmpi_inq_malloc_max_size(&mem_max);
-    pnc_ina_mem_get[5] = MAX(pnc_ina_mem_get[5], mem_max);
-    startT = MPI_Wtime();
+    pnc_ina_mem_get[3] = MAX(pnc_ina_mem_get[3], mem_max);
+
+    endT = MPI_Wtime();
+    pnc_ina_get[2] += endT - startT;
+    startT = endT;
 #endif
 
     /* If sorting has been performed, the orders of off_ptr[] and len_ptr[] may
@@ -2167,12 +2185,6 @@ int ina_get(NC         *ncp,
             NCI_Free(tmp_buf);
         }
     }
-
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    endT = MPI_Wtime();
-    pnc_ina_get[1] += endT - startT;
-    startT = endT;
-#endif
 
     if (ina_meta.num_nonaggrs == 1)
         /* In this case, communication will not be necessary. */
@@ -2276,8 +2288,12 @@ int ina_get(NC         *ncp,
         }
     }
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+    ncmpi_inq_malloc_size(&mem_max);
+    // ncmpi_inq_malloc_max_size(&mem_max);
+    pnc_ina_mem_get[4] = MAX(pnc_ina_mem_get[4], mem_max);
+
     endT = MPI_Wtime();
-    pnc_ina_get[2] += endT - startT;
+    pnc_ina_get[3] += endT - startT;
     startT = endT;
 #endif
 
@@ -2316,8 +2332,12 @@ fn_exit:
     if (lengths != NULL) NCI_Free(lengths);
 
 #if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+    ncmpi_inq_malloc_size(&mem_max);
+    // ncmpi_inq_malloc_max_size(&mem_max);
+    pnc_ina_mem_get[5] = MAX(pnc_ina_mem_get[5], mem_max);
+
     endT = MPI_Wtime();
-    pnc_ina_get[3] += endT - startT;
+    pnc_ina_get[4] += endT - startT;
 #endif
 
     return status;
