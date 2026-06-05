@@ -18,6 +18,10 @@
 #include "ncmpio_driver.h"
 #include "pncio.h"
 
+#define PNC_DRIVER_MPIIO  -1  /* Use MPI-IO driver */
+#define PNC_DRIVER_GIO    0   /* Use GIO driver */
+#define PNC_DRIVER_PNCIO  1   /* Use PNCIO driver */
+
 /* default free space in the file header section. */
 #define NC_DEFAULT_H_MINFREE 0
 
