@@ -22,7 +22,7 @@
 #define NC_REQ_NBI     0x00000100  /* nonblocking iget/iput API */
 #define NC_REQ_NBB     0x00000200  /* nonblocking bput API */
 
-#define NC_MODE_RDONLY 0x00001000  /* file is opned in read-only mode */
+#define NC_MODE_RDONLY 0x00001000  /* file is opened in read-only mode */
 #define NC_MODE_DEF    0x00002000  /* in define mode */
 #define NC_MODE_INDEP  0x00004000  /* in independent data mode */
 #define NC_MODE_CREATE 0x00008000  /* just created and still in define mode */
@@ -155,7 +155,7 @@ extern PNC_driver* ncmpio_inq_driver(void);
 
 extern PNC_driver* nc4io_inq_driver(void);
 
-extern PNC_driver* ncadios_inq_driver(void); 
+extern PNC_driver* ncadios_inq_driver(void);
 
 extern PNC_driver* ncfoo_inq_driver(void);
 
