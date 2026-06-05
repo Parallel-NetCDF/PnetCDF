@@ -263,6 +263,14 @@ void ncmpio_hint_extract(NC       *ncp,
                 ncp->data_chunk = (int)llval;
         }
     }
+
+    /* When creating a file, inherit file striping from the parent folder or
+     * let PnetCDF to decide.
+     */
+    ncp->striping = PNCIO_STRIPING_AUTO;
+    MPI_Info_get(info, "nc_striping", MPI_MAX_INFO_VAL-1, value, &flag);
+    if (flag && strcasecmp(value, "inherit") == 0)
+        ncp->striping = PNCIO_STRIPING_INHERIT;
 }
 
 /*----< ncmpio_hint_set() >--------------------------------------------------*/
@@ -372,6 +380,14 @@ void ncmpio_hint_set(NC       *ncp,
     }
     else /* Update hint "num_aggrs_per_node" to indicate disabled. */
         MPI_Info_set(info, "nc_num_aggrs_per_node", "0");
+
+    /* When creating a file, inherit file striping from the parent folder or
+     * let PnetCDF to decide.
+     */
+    if (ncp->striping == PNCIO_STRIPING_AUTO)
+        MPI_Info_set(info, "nc_striping", "auto");
+    else
+        MPI_Info_set(info, "nc_striping", "inherit");
 }
 
 /*----< ncmpio_first_offset() >-----------------------------------------------*/
