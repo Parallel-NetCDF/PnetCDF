@@ -323,11 +323,11 @@ int ina_init(MPI_Comm        comm,
  */
 static
 int PNC_comm_attr_copy(MPI_Comm  comm,
-                         int       keyval,
-                         void     *extra,
-                         void     *attr_inP,
-                         void     *attr_outP,
-                         int      *flag)
+                       int       keyval,
+                       void     *extra,
+                       void     *attr_inP,
+                       void     *attr_outP,
+                       int      *flag)
 {
     PNC_comm_attr *attr_in   = (PNC_comm_attr*) attr_inP;
     PNC_comm_attr **attr_out = (PNC_comm_attr**)attr_outP;
@@ -350,9 +350,9 @@ int PNC_comm_attr_copy(MPI_Comm  comm,
  */
 static
 int PNC_comm_attr_delete(MPI_Comm  comm,
-                           int       keyval,
-                           void     *attr_val,
-                           void     *extra)
+                         int       keyval,
+                         void     *attr_val,
+                         void     *extra)
 {
     PNC_comm_attr *attr = (PNC_comm_attr*) attr_val;
 
