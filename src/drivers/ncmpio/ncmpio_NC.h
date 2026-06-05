@@ -489,17 +489,6 @@ struct NC {
                              * aggregation, -1 to let PnetCDF to decide.This
                              * value must be the same among all processes.
                              */
-
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    double ina_time_init;
-    double ina_time_flatten;
-    double ina_time_put[5];
-    double ina_time_get[5];
-    size_t ina_npairs_put;
-    size_t ina_npairs_get;
-    size_t maxmem_put[6];
-    size_t maxmem_get[6];
-#endif
 };
 
 typedef struct bufferinfo {

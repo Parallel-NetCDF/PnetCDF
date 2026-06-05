@@ -170,4 +170,21 @@ extern PNC_driver* ncbbio_inq_driver(void);
 
 extern int PNC_check_id(int ncid, PNC **pncp);
 
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+#define NTIMERS 10
+extern int       pnc_num_aggrs_per_node;
+extern double    pnc_drv_wr_t[NTIMERS];
+extern double    pnc_drv_rd_t[NTIMERS];
+extern MPI_Count pnc_wr_count[NTIMERS];
+extern MPI_Count pnc_rd_count[NTIMERS];
+extern double    pnc_ina_init;
+extern double    pnc_ina_flatten;
+extern double    pnc_ina_put[NTIMERS];
+extern double    pnc_ina_get[NTIMERS];
+extern MPI_Count pnc_ina_npairs_put;
+extern MPI_Count pnc_ina_npairs_get;
+extern MPI_Count pnc_ina_mem_put[NTIMERS];
+extern MPI_Count pnc_ina_mem_get[NTIMERS];
+#endif
+
 #endif /* H_PNC_DISPATCH */

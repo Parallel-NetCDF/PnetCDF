@@ -796,16 +796,6 @@ fn_exit:
     if (ncp->pncio_fh != NULL)
         ncp->pncio_fh->comm_attr.ids = NULL;
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    int i, nelems = sizeof(ncp->ina_time_put) / sizeof(ncp->ina_time_put[0]);
-    ncp->ina_time_init = ncp->ina_time_flatten = 0.0;
-    for (i=0; i<nelems; i++) {
-        ncp->ina_time_put[i] = ncp->ina_time_get[i] = 0;
-        ncp->maxmem_put[i] = ncp->maxmem_get[i] = 0;
-    }
-    ncp->ina_npairs_put = ncp->ina_npairs_get = 0;
-#endif
-
     return NC_NOERR;
 }
 

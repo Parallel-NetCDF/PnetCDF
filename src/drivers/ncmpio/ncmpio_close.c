@@ -123,68 +123,6 @@ ncmpio_close(void *ncdp)
     }
 #endif
 
-#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
-    int i, j, ntimers;
-    double tt[16], max_t[16], put_time=0, get_time=0;
-    MPI_Offset sizes[16], max_sizes[16], max_npairs_put=0, max_npairs_get=0;
-
-    /* print intra-node aggregation timing breakdown */
-    if (ncp->num_aggrs_per_node > 0) {
-        j = 0;
-        for (i=0; i<6; i++) sizes[j++] = ncp->maxmem_put[i];
-        for (i=0; i<6; i++) sizes[j++] = ncp->maxmem_get[i];
-        sizes[12] = ncp->ina_npairs_put;
-        sizes[13] = ncp->ina_npairs_get;
-
-        MPI_Allreduce(sizes, max_sizes, 14, MPI_OFFSET, MPI_MAX, ncp->comm);
-        max_npairs_put = max_sizes[12];
-        max_npairs_get = max_sizes[13];
-
-        for (i=0; i<12; i++)
-            tt[i] = (float)(max_sizes[i]) / 1048576.0; /* in MiB */
-        if (ncp->rank == 0 && max_npairs_put > 0)
-            printf("%s: INA put npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
-                   __func__, max_sizes[12], tt[0],tt[1],tt[2],tt[3],tt[4],tt[5]);
-        if (ncp->rank == 0 && max_npairs_get > 0)
-            printf("%s: INA get npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
-                   __func__, max_sizes[13], tt[6],tt[7],tt[8],tt[9],tt[10],tt[11]);
-
-        if (max_npairs_put > 0) { /* put npairs > 0 */
-            put_time = ncp->ina_time_init + ncp->ina_time_flatten;
-            ntimers = 5;
-            for (i=0; i<ntimers; i++) {
-                tt[i]     = ncp->ina_time_put[i];
-                put_time += tt[i];
-            }
-            tt[ntimers]   = ncp->ina_time_init;
-            tt[ntimers+1] = ncp->ina_time_flatten;
-            tt[ntimers+2] = put_time;
-
-            MPI_Reduce(tt, max_t, ntimers+3, MPI_DOUBLE, MPI_MAX, 0, ncp->comm);
-            put_time = max_t[ntimers+2];
-            if (ncp->rank == 0)
-                printf("%s: INA put timing %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f = %5.2f\n",
-                __func__, max_t[ntimers],max_t[ntimers+1],max_t[0],max_t[1],max_t[2],max_t[3],max_t[4],put_time);
-        }
-        if (max_npairs_get > 0) { /* get npairs > 0 */
-            get_time = ncp->ina_time_init + ncp->ina_time_flatten;
-            ntimers = 5;
-            for (i=0; i<ntimers; i++) {
-                tt[i]     = ncp->ina_time_get[i];
-                get_time += tt[i];
-            }
-            tt[ntimers]   = ncp->ina_time_init;
-            tt[ntimers+1] = ncp->ina_time_flatten;
-            tt[ntimers+2] = get_time;
-
-            MPI_Reduce(tt, max_t, ntimers+3, MPI_DOUBLE, MPI_MAX, 0, ncp->comm);
-            if (ncp->rank == 0)
-                printf("%s: INA get timing %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f = %5.2f\n",
-                __func__, max_t[ntimers],max_t[ntimers+1],max_t[0],max_t[1],max_t[2],max_t[3],max_t[4],max_t[ntimers+2]);
-        }
-    }
-#endif
-
     /* close the file */
     err = ncmpio_file_close(ncp);
     if (status == NC_NOERR) status = err;

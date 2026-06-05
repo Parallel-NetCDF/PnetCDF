@@ -133,6 +133,10 @@ int ina_init(MPI_Comm        comm,
     int my_rank_index, *ranks_my_node, my_node_id, nprocs_my_node, rem;
     int *ina_flags;
 
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+    double timing = MPI_Wtime();
+#endif
+
     if (num_aggrs_per_node == 0) return NC_NOERR;
 
     MPI_Comm_size(comm, &nprocs);
@@ -330,6 +334,10 @@ int ina_init(MPI_Comm        comm,
      *      node.
      */
 
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+    pnc_ina_init = MPI_Wtime() - timing;
+#endif
+
     return NC_NOERR;
 }
 
@@ -417,8 +425,8 @@ int PNCIO_end_call(MPI_Comm  comm,
  * the user application.
  */
 static
-int set_get_comm_attr(MPI_Comm          comm,
-                      int               num_aggrs_per_node,
+int set_get_comm_attr(MPI_Comm        comm,
+                      int             num_aggrs_per_node,
                       PNC_comm_attr  *attrP)
 {
     int err, nprocs;
@@ -850,6 +858,24 @@ ncmpi_create(MPI_Comm    comm,
     int enable_bb_driver=0;
 #endif
 
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+    {
+        int i;
+        pnc_num_aggrs_per_node = 0;
+        pnc_ina_init = 0;
+        pnc_ina_flatten = 0;
+        pnc_ina_npairs_put = 0;
+        pnc_ina_npairs_get = 0;
+
+        for (i=0; i<NTIMERS; i++) {
+            pnc_drv_wr_t[i]    = pnc_drv_rd_t[i] = 0;
+            pnc_wr_count[i]    = pnc_rd_count[i] = 0;
+            pnc_ina_put[i]     = pnc_ina_get[i] = 0;
+            pnc_ina_mem_put[i] = pnc_ina_mem_get[i] = 0;
+        }
+    }
+#endif
+
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
 
@@ -908,6 +934,9 @@ ncmpi_create(MPI_Comm    comm,
                 num_aggrs_per_node = ival;
         }
     }
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+    pnc_num_aggrs_per_node = num_aggrs_per_node;
+#endif
 
     /* creating communicator attributes must be protected by a mutex */
     set_get_comm_attr(comm, num_aggrs_per_node, &comm_attr);
@@ -1144,6 +1173,21 @@ ncmpi_open(MPI_Comm    comm,
     int enable_bb_driver=0;
 #endif
 
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+    pnc_num_aggrs_per_node = 0;
+    pnc_ina_init = 0;
+    pnc_ina_flatten = 0;
+    pnc_ina_npairs_put = 0;
+    pnc_ina_npairs_get = 0;
+
+    for (i=0; i<NTIMERS; i++) {
+        pnc_drv_wr_t[i]    = pnc_drv_rd_t[i] = 0;
+        pnc_wr_count[i]    = pnc_rd_count[i] = 0;
+        pnc_ina_put[i]     = pnc_ina_get[i] = 0;
+        pnc_ina_mem_put[i] = pnc_ina_mem_get[i] = 0;
+    }
+#endif
+
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &nprocs);
 
@@ -1235,6 +1279,9 @@ ncmpi_open(MPI_Comm    comm,
                 num_aggrs_per_node = ival;
         }
     }
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+    pnc_num_aggrs_per_node = num_aggrs_per_node;
+#endif
 
     /* creating communicator attributes must be protected by a mutex */
     set_get_comm_attr(comm, num_aggrs_per_node, &comm_attr);
@@ -1479,6 +1526,121 @@ fn_exit:
     return status;
 }
 
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+
+int       pnc_num_aggrs_per_node;
+double    pnc_drv_wr_t[NTIMERS];
+double    pnc_drv_rd_t[NTIMERS];
+MPI_Count pnc_wr_count[NTIMERS];
+MPI_Count pnc_rd_count[NTIMERS];
+double    pnc_ina_init;
+double    pnc_ina_flatten;
+double    pnc_ina_put[NTIMERS];
+double    pnc_ina_get[NTIMERS];
+MPI_Count pnc_ina_npairs_put;
+MPI_Count pnc_ina_npairs_get;
+MPI_Count pnc_ina_mem_put[NTIMERS];
+MPI_Count pnc_ina_mem_get[NTIMERS];
+
+static
+void print_profiled(MPI_Comm comm)
+{
+    int i, rank;
+    double max_t[NTIMERS];
+    MPI_Count max_c[NTIMERS];
+
+    MPI_Comm_rank(comm, &rank);
+
+    /* collect two-phase I/O timers */
+    MPI_Reduce(pnc_drv_wr_t, max_t, NTIMERS, MPI_DOUBLE, MPI_MAX, 0, comm);
+    for (i=0; i<NTIMERS; i++) pnc_drv_wr_t[i] = max_t[i];
+
+    MPI_Reduce(pnc_drv_rd_t, max_t, NTIMERS, MPI_DOUBLE, MPI_MAX, 0, comm);
+    for (i=0; i<NTIMERS; i++) pnc_drv_rd_t[i] = max_t[i];
+
+    MPI_Reduce(pnc_wr_count, max_c, NTIMERS, MPI_COUNT, MPI_MAX, 0, comm);
+    for (i=0; i<NTIMERS; i++) pnc_wr_count[i] = max_c[i];
+
+    MPI_Reduce(pnc_rd_count, max_c, NTIMERS, MPI_COUNT, MPI_MAX, 0, comm);
+    for (i=0; i<NTIMERS; i++) pnc_rd_count[i] = max_c[i];
+
+    /* print 2-phase write timers */
+    if (rank == 0 && pnc_wr_count[0] > 0) {
+        printf("PNC 2-PHASE write: init %.2f pwrite %.2f pread %.2f post %.2f hsort %.2f comm %.2f collw %.2f\n",
+        pnc_drv_wr_t[1], pnc_drv_wr_t[2], pnc_drv_rd_t[2], pnc_drv_wr_t[4], pnc_drv_wr_t[5], pnc_drv_wr_t[3], pnc_drv_wr_t[0]);
+        printf("PNC 2-PHASE write: ntimes %lld check_hole %lld (total_num %lld nrecv %lld) no check %lld (total_num %lld nrecv %lld)\n",
+        pnc_wr_count[0], pnc_wr_count[1], pnc_wr_count[2], pnc_wr_count[3], pnc_wr_count[4], pnc_wr_count[5], pnc_wr_count[6]);
+    }
+
+    /* print 2-phase read timers */
+    if (rank == 0 && pnc_rd_count[0] > 0)
+        printf("PNC 2-PHASE read: init %.2f pread %.2f post %.2f wait %.2f collr %.2f ntimes %lld\n",
+        pnc_drv_rd_t[1], pnc_drv_rd_t[2], pnc_drv_rd_t[4], pnc_drv_rd_t[3], pnc_drv_rd_t[0], pnc_rd_count[0]);
+
+    /* print intra-node aggregation timing breakdown */
+    if (pnc_num_aggrs_per_node > 0) {
+        double timing, max_MiB[NTIMERS], wr_total, rd_total;
+        MPI_Count count;
+
+        wr_total = pnc_ina_init + pnc_ina_flatten;
+        for (i=0; i<NTIMERS; i++) wr_total += pnc_ina_put[i];
+
+        rd_total = pnc_ina_init + pnc_ina_flatten;
+        for (i=0; i<NTIMERS; i++) rd_total += pnc_ina_get[i];
+
+        MPI_Reduce(&pnc_ina_init, &timing, 1, MPI_DOUBLE, MPI_MAX, 0, comm);
+        pnc_ina_init = timing;
+
+        MPI_Reduce(&pnc_ina_flatten, &timing, 1, MPI_DOUBLE, MPI_MAX, 0, comm);
+        pnc_ina_flatten = timing;
+
+        MPI_Reduce(&wr_total, &timing, 1, MPI_DOUBLE, MPI_MAX, 0, comm);
+        wr_total = timing;
+
+        MPI_Reduce(&rd_total, &timing, 1, MPI_DOUBLE, MPI_MAX, 0, comm);
+        rd_total = timing;
+
+        MPI_Reduce(&pnc_ina_npairs_put, &count, 1, MPI_COUNT, MPI_MAX, 0, comm);
+        pnc_ina_npairs_put = count;
+
+        MPI_Reduce(pnc_ina_put, max_t, NTIMERS, MPI_DOUBLE, MPI_MAX, 0, comm);
+        for (i=0; i<NTIMERS; i++) pnc_ina_put[i] = max_t[i];
+
+        MPI_Reduce(pnc_ina_mem_put, max_c, NTIMERS, MPI_COUNT, MPI_MAX, 0, comm);
+        for (i=0; i<NTIMERS; i++) max_MiB[i] = (float)max_c[i] / 1048576.0;
+
+        if (rank == 0 && pnc_ina_npairs_put > 0) {
+            printf("INA put npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
+                   pnc_ina_npairs_put,
+                   max_MiB[0],max_MiB[1],max_MiB[2],max_MiB[3],max_MiB[4],max_MiB[5]);
+            printf("INA put time: %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f = %5.2f\n",
+                   pnc_ina_init,pnc_ina_flatten,
+                   pnc_ina_put[0],pnc_ina_put[1],pnc_ina_put[2],pnc_ina_put[3],pnc_ina_put[4],
+                   wr_total);
+        }
+
+        MPI_Reduce(&pnc_ina_npairs_get, &count, 1, MPI_COUNT, MPI_MAX, 0, comm);
+        pnc_ina_npairs_get = count;
+
+        MPI_Reduce(pnc_ina_get, max_t, NTIMERS, MPI_DOUBLE, MPI_MAX, 0, comm);
+        for (i=0; i<NTIMERS; i++) pnc_ina_get[i] = max_t[i];
+
+        MPI_Reduce(pnc_ina_mem_get, max_c, NTIMERS, MPI_COUNT, MPI_MAX, 0, comm);
+        for (i=0; i<NTIMERS; i++) max_MiB[i] = (float)max_c[i] / 1048576.0;
+
+        if (rank == 0 && pnc_ina_npairs_get > 0) {
+            printf("INA get npairs=%lld mem=%.1f %.1f %.1f %.1f %.1f %.1f (MiB)\n",
+                   pnc_ina_npairs_get,
+                   max_MiB[0],max_MiB[1],max_MiB[2],max_MiB[3],max_MiB[4],max_MiB[5]);
+            printf("INA get time: %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f %5.2f = %5.2f\n",
+                   pnc_ina_init,pnc_ina_flatten,
+                   pnc_ina_get[0],pnc_ina_get[1],pnc_ina_get[2],pnc_ina_get[3],pnc_ina_get[4],
+                   rd_total);
+        }
+    }
+}
+#endif
+
 /*----< ncmpi_close() >------------------------------------------------------*/
 /* This is a collective subroutine. */
 int
@@ -1496,6 +1658,10 @@ ncmpi_close(int ncid)
 
     /* Remove from the PNCList, even if err != NC_NOERR */
     del_from_PNCList(ncid);
+
+#if defined(PNETCDF_PROFILING) && (PNETCDF_PROFILING == 1)
+    print_profiled(pncp->comm);
+#endif
 
     /* free the PNC object */
     if (pncp->comm != MPI_COMM_WORLD && pncp->comm != MPI_COMM_SELF)
