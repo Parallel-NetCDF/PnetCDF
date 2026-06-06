@@ -424,8 +424,8 @@ ncmpio_file_read(NC         *ncp,
                            &ncp->gio_fh);
             if (err != GIO_NOERR) {
                 err = ncmpii_error_gio2nc(err, "GIO_open");
-                DEBUG_FOPEN_ERROR(err);
                 if (status == NC_NOERR) status = err;
+                DEBUG_FOPEN_ERROR(err);
             }
         }
 
@@ -674,8 +674,8 @@ ncmpio_file_write(NC         *ncp,
                            &ncp->gio_fh);
             if (err != GIO_NOERR) {
                 err = ncmpii_error_gio2nc(err, "GIO_open");
-                DEBUG_FOPEN_ERROR(err);
                 if (status == NC_NOERR) status = err;
+                DEBUG_FOPEN_ERROR(err);
             }
         }
 
