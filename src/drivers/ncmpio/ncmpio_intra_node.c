@@ -941,11 +941,13 @@ int ina_put(NC         *ncp,
             PNCIO_View  buf_view,
             void       *buf)       /* user write buffer */
 {
-    char *recv_buf=NULL, *wr_buf = NULL;
+    char *recv_buf=NULL, *wr_buf = NULL, *ptr;
     int i, j, err, mpireturn, status=NC_NOERR, rank, nprocs, coalesceable=0;
+    int nreqs, indv_sorted, do_sort, overlap;
     MPI_Offset *meta=NULL, wr_amnt=0, *bufAddr=NULL;
-    MPI_Offset saved_put_fview_count, *saved_put_fview_len;
+    MPI_Offset saved_put_fview_count, *saved_put_fview_len, recv_amnt;
     MPI_Comm intra_comm;
+    MPI_Request *req=NULL;
     PNCIO_View put_fview, put_bview;
 
 #if PNETCDF_PROFILING == 1
@@ -1111,10 +1113,6 @@ int ina_put(NC         *ncp,
      * non-aggregators. If this INA group makes a non-zero sized request, the
      * first step is to check if a sorting of file offsets is necessary.
      */
-    char *ptr;
-    int nreqs, indv_sorted, do_sort, overlap;
-    MPI_Request *req=NULL;
-    MPI_Offset recv_amnt;
 
     /* Check whether or not all INA group members' file_view.off[] are
      * individually sorted.
@@ -1371,7 +1369,7 @@ int ina_put(NC         *ncp,
         /* Copy this aggregator's write data into front of recv_buf */
         char *recv_ptr=recv_buf;
         for (j=0; j<buf_view.count; j++) {
-            memcpy(recv_ptr, buf+buf_view.off[j], buf_view.len[j]);
+            memcpy(recv_ptr, (char*)buf+buf_view.off[j], buf_view.len[j]);
             recv_ptr += buf_view.len[j];
         }
     }
