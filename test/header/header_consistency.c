@@ -138,15 +138,14 @@ int test_attr(const char *filename, MPI_Comm comm, int safe_mode, MPI_Info info)
 {
     int err, rank, ncid, cmode, nerrs=0;
     char  gattr[128];
-    int   int_attr;
-    float flt_attr;
+    int   int_attr=1;
+    float flt_attr=1.0;
 
     MPI_Comm_rank(comm, &rank);
     cmode = NC_CLOBBER|NC_64BIT_OFFSET;
 
     /* Test inconsistent global attribute name -------------------------------*/
     err = ncmpi_create(comm, filename, cmode, info, &ncid); CHECK_ERR
-    int_attr = 1;
     sprintf(gattr, "gattr_name.%d",rank);
     err = ncmpi_put_att_int(ncid, NC_GLOBAL, gattr, NC_INT, 1, &int_attr);
     if (safe_mode)
@@ -198,8 +197,8 @@ static
 int test_var(const char *filename, MPI_Comm comm, int safe_mode, MPI_Info info)
 {
     int err, rank, ncid, cmode, nerrs=0;
-    int dimid[3], varid1, int_attr;
-    float flt_attr;
+    int dimid[3], varid1, int_attr=1;
+    float flt_attr=1.0;
     char name[128], var_attr[128];
 
     MPI_Comm_rank(comm, &rank);
@@ -209,7 +208,6 @@ int test_var(const char *filename, MPI_Comm comm, int safe_mode, MPI_Info info)
     err = ncmpi_create(comm, filename, cmode, info, &ncid); CHECK_ERR
     err = ncmpi_def_dim(ncid, "dim1", NC_UNLIMITED, &dimid[0]); CHECK_ERR
     err = ncmpi_def_var(ncid, "var1", NC_INT, 1, dimid, &varid1); CHECK_ERR
-    int_attr = 1;
     sprintf(var_attr, "var_attr_name.%d",rank);
     err = ncmpi_put_att_int(ncid, varid1, var_attr, NC_INT, 1, &int_attr);
     if (safe_mode)
