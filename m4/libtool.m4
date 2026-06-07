@@ -133,6 +133,7 @@ func_cc_basename ()
         cc | CC | ftn | *[[\\/]]cc | *[[\\/]]CC | *[[\\/]]ftn )
            # For Cray PrgEnv-intel, cc is a wrapper of icc
            # For Cray PrgEnv-gnu, cc is a wrapper of gcc
+           # For Cray PrgEnv-nvidia, cc is a wrapper of nvc
            # func_cc_basename_result=`$cc_temp --version |& head -n 1 | cut -d' ' -f1 | xargs basename`
            eval "$cc_temp --version" < /dev/null >& conftest.ver
            func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
@@ -147,6 +148,16 @@ func_cc_basename ()
            # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
               return
            fi
+           # For Cray PrgEnv-nvidia, cc is a wrapper of nvc
+           # 'cc --version' may also include error of ld error
+           # Output of 'nvc --version -c' contains a blank line, must skip it.
+           func_cc_basename_result=`$cc_temp --version -c |& grep -v '^$' | head -n1 | cut -d' ' -f1`
+           if test "x${func_cc_basename_result}" = xnvc ||
+              test "x${func_cc_basename_result}" = xnvc++ ||
+              test "x${func_cc_basename_result}" = xnvfortran ; then
+              return
+           fi
+
            # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
            # Cray cc -V sends the output to stderr.
            # func_cc_basename_result=`$cc_temp -V |& head -n 1 | cut -d' ' -f1 | xargs basename`
@@ -2399,10 +2410,18 @@ if test yes = "$GCC"; then
     mingw* | windows* | cegcc*) lt_sed_strip_eq='s|=\([[A-Za-z]]:\)|\1|g' ;;
     *) lt_sed_strip_eq='s|=/|/|g' ;;
   esac
-  lt_search_path_spec=`$CC -print-search-dirs | awk $lt_awk_arg | $SED -e "s/^libraries://" -e $lt_sed_strip_eq`
   case $cc_basename in
-    fccpx* | FCCpx* ) lt_search_path_spec=`$CC --showme:libdirs` ;;
-    *) lt_search_path_spec=`$CC -print-search-dirs | awk $lt_awk_arg | $SED -e "s/^libraries://" -e $lt_sed_strip_eq` ;;
+    fccpx* | FCCpx* )
+      # special care for Fujitsu C or C++ compilers
+      lt_search_path_spec=`$CC --showme:libdirs`
+      ;;
+    nvc* )
+      # NVIDIA's C or C++ compilers have no flag for such inquiry
+      lt_search_path_spec=
+      ;;
+    *)
+      lt_search_path_spec=`$CC -print-search-dirs | awk $lt_awk_arg | $SED -e "s/^libraries://" -e $lt_sed_strip_eq`
+      ;;
   esac
   case $lt_search_path_spec in
   *\;*)
@@ -4590,8 +4609,14 @@ m4_if([$1], [CXX], [
 	    _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fPIC'
 	    _LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
 	    ;;
-	  pgCC* | pgcpp*)
+	  pgCC* | pgcpp* | pgc++* )
 	    # Portland Group C++ compiler
+	    _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
+	    _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fpic'
+	    _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
+	    ;;
+	  nvc++* )
+            # NVIDIA compilers are based on PGI
 	    _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
 	    _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fpic'
 	    _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
@@ -4842,6 +4867,13 @@ m4_if([$1], [CXX], [
         _LT_TAGVAR(lt_prog_compiler_pic, $1)="-Xcompiler $_LT_TAGVAR(lt_prog_compiler_pic, $1)"
       fi
       ;;
+    nvc*) # Cuda Compiler nvc no longer takes option -Xcompiler
+          # nvc, nvc++, nvfortran
+      _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Xlinker '
+      if test -n "$_LT_TAGVAR(lt_prog_compiler_pic, $1)"; then
+        _LT_TAGVAR(lt_prog_compiler_pic, $1)="$_LT_TAGVAR(lt_prog_compiler_pic, $1)"
+      fi
+      ;;
     fccpx*) # Fujitsu C Compiler
       _LT_TAGVAR(lt_prog_compiler_pic, $1)='-Xg -KPIC'
       _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
@@ -4962,6 +4994,12 @@ m4_if([$1], [CXX], [
       pgcc* | pgf77* | pgf90* | pgf95* | pgfortran*)
         # Portland Group compilers (*not* the Pentium gcc compiler,
 	# which looks to be a dead project)
+	_LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
+	_LT_TAGVAR(lt_prog_compiler_pic, $1)='-fpic'
+	_LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
+        ;;
+      nvfortran*)
+        # NVIDIA's compilers are based on PGI
 	_LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
 	_LT_TAGVAR(lt_prog_compiler_pic, $1)='-fpic'
 	_LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
@@ -5440,8 +5478,12 @@ _LT_EOF
 	  _LT_TAGVAR(whole_archive_flag_spec, $1)='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
 	  tmp_addflag=' $pic_flag'
 	  ;;
-	pgf77* | pgf90* | pgf95* | pgfortran*)
-					# Portland Group f77 and f90 compilers
+	pgf77* | pgf90* | pgf95* | pgfortran* )
+	  # Portland Group f77 and f90 compilers
+	  _LT_TAGVAR(whole_archive_flag_spec, $1)='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
+	  tmp_addflag=' $pic_flag -Mnomain' ;;
+	nvfortran* )
+	  # NVIDIA Fortran compiler
 	  _LT_TAGVAR(whole_archive_flag_spec, $1)='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
 	  tmp_addflag=' $pic_flag -Mnomain' ;;
 	ecc*,ia64* | icc*,ia64*)	# Intel C compiler on ia64
@@ -7248,10 +7290,10 @@ if test yes != "$_lt_caught_CXX_error"; then
 	    _LT_TAGVAR(export_dynamic_flag_spec, $1)='$wl--export-dynamic'
 	    _LT_TAGVAR(whole_archive_flag_spec, $1)='$wl--whole-archive$convenience $wl--no-whole-archive'
 	    ;;
-          pgCC* | pgcpp*)
+	  pgCC* | pgcpp* | pgc++* )
             # Portland Group C++ compiler
 	    case `$CC -V` in
-	    *pgCC\ [[1-5]].* | *pgcpp\ [[1-5]].*)
+	    *pgCC\ [[1-5]].* | *pgcpp\ [[1-5]].* | *pgc++\ [[1-5]].* )
 	      _LT_TAGVAR(prelink_cmds, $1)='tpldir=Template.dir~
                rm -rf $tpldir~
                $CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~

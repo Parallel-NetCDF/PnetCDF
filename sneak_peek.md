@@ -122,6 +122,8 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Bug fixes
+  + Fix problem of building PnetCDF shared library when using NVIDIA HPC
+    compilers, nvc, nvc++, and nvfortran.
   + Fix data movement when new record variables are added to an existing file
     that does not change the starting offset of record variable section.
     See [PR #199](https://github.com/Parallel-NetCDF/PnetCDF/pull/199).
