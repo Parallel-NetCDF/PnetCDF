@@ -74,11 +74,12 @@ int test_io(const char *out_path,
             fprintf(stderr,"Error at %s:%d : file (%s) should not be created\n",
                    __FILE__,__LINE__, out_path);
             nerrs++;
-            /* delete the file and ignore error */
-            unlink(path);
         }
         /* else : file does not exist */
     }
+    MPI_Bcast(&nerrs, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    if (nerrs > 0) return nerrs;
+
     MPI_Barrier(MPI_COMM_WORLD);
 
     if (format == NC_FORMAT_NETCDF4 || format == NC_FORMAT_NETCDF4_CLASSIC) {
@@ -99,11 +100,12 @@ int test_io(const char *out_path,
                 fprintf(stderr,"Error at %s:%d : file (%s) should not be created\n",
                        __FILE__,__LINE__, out_path);
                 nerrs++;
-                /* delete the file and ignore error */
-                unlink(path);
             }
             /* else : file does not exist */
         }
+        MPI_Bcast(&nerrs, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        if (nerrs > 0) return nerrs;
+
         MPI_Barrier(MPI_COMM_WORLD);
 
         /* It is illegal to use both NC_64BIT_DATA and NC_NETCDF4 together */
@@ -123,11 +125,12 @@ int test_io(const char *out_path,
                 fprintf(stderr,"Error at %s:%d : file (%s) should not be created\n",
                        __FILE__,__LINE__, out_path);
                 nerrs++;
-                /* delete the file and ignore error */
-                unlink(path);
             }
             /* else : file does not exist */
         }
+        MPI_Bcast(&nerrs, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        if (nerrs > 0) return nerrs;
+
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
@@ -156,12 +159,13 @@ int test_io(const char *out_path,
                 fprintf(stderr,"Error at line %d in %s: file (%s) should not be created\n",
                        __LINE__,__FILE__, out_path);
                 nerrs++;
-                /* delete the file and ignore error */
-                unlink(path);
             }
             /* else : file does not exist */
         }
+        MPI_Bcast(&nerrs, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        if (nerrs > 0) return nerrs;
     }
+
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* Collectively opening a non-existing file for write, expect error code
@@ -189,11 +193,11 @@ int test_io(const char *out_path,
                 fprintf(stderr,"Error at line %d in %s: file (%s) should not be created\n",
                        __LINE__,__FILE__, out_path);
                 nerrs++;
-                /* delete the file and ignore error */
-                unlink(path);
             }
             /* else : file does not exist */
         }
+        MPI_Bcast(&nerrs, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        if (nerrs > 0) return nerrs;
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
