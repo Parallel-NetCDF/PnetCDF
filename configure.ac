@@ -40,6 +40,10 @@ env >& AS_MESSAGE_LOG_FD
 echo '-------------------------------' >& AS_MESSAGE_LOG_FD
 echo '' >& AS_MESSAGE_LOG_FD
 
+dnl search all local macro files in folder m4
+dnl m4_ifdef([AC_CONFIG_MACRO_DIRS], [AC_CONFIG_MACRO_DIRS([m4])], [AC_CONFIG_MACRO_DIR([m4])])
+AC_CONFIG_MACRO_DIRS([m4])
+
 dnl Note getting command line should be done before calling AM_INIT_AUTOMAKE
 dnl as AM_INIT_AUTOMAKE modifies command line $*
 if test "x$ac_configure_args_raw" = x ; then
@@ -58,9 +62,25 @@ dnl if maintainer mode is disabled, make will *never* attempt to rebuild
 dnl configure, Makefile.ins, etc.
 AM_MAINTAINER_MODE([enable])
 
-dnl search all local macro files in folder m4
-dnl m4_ifdef([AC_CONFIG_MACRO_DIRS], [AC_CONFIG_MACRO_DIRS([m4])], [AC_CONFIG_MACRO_DIR([m4])])
-AC_CONFIG_MACRO_DIRS([m4])
+dnl AM_PROG_AR is first recognized/traced in autoconf 2.68
+dnl Use it only if we want support for unusual archivers such as Microsoft
+dnl lib.. AM_PROG_AR must be called before LT_INIT
+AM_PROG_AR
+dnl UD_PROG_AR()
+dnl UD_PROG_NM()
+dnl We could use the PAC check for ranlib (it also makes sure that ranlib
+dnl works, which is not always true, particularly when GNU tools are
+dnl installed on a system that does not have (or need) ranlib
+dnl libtoolize: `AC_PROG_RANLIB' is rendered obsolete by `LT_INIT'
+dnl AC_PROG_RANLIB
+
+dnl libtool v2.4.6 was released in 2015-02-15
+dnl Travis CI only has v2.4.2
+LT_PREREQ([2.5.4])
+dnl LT_INIT([dlopen disable-shared])
+dnl LT_INIT([dlopen])
+dnl LT_INIT([disable-shared])  # build without shared libraries
+LT_INIT
 
 dnl AM_EXTRA_RECURSIVE_TARGETS macro was introduced into automake 1.13
 dnl m4_ifdef([AM_EXTRA_RECURSIVE_TARGETS], [AM_EXTRA_RECURSIVE_TARGETS([tests])])
@@ -330,7 +350,7 @@ UD_MSG_DEBUG([MPICC=$MPICC])
 
 dnl Now MPICC is configured, do some basic compiler tests
 CC=${MPICC}
-AC_PROG_CC
+AC_PROG_CC([${MPICC}])
 dnl AM_PROG_CC_C_O
 
 dnl get compiler vendor in ax_cv_c_compiler_vendor (e.g. gnu, intel)
@@ -433,26 +453,6 @@ dnl compute canonical system types
 AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 
-dnl AM_PROG_AR is first recognized/traced in autoconf 2.68
-dnl Use it only if we want support for unusual archivers such as Microsoft
-dnl lib.. AM_PROG_AR must be called before LT_INIT
-AM_PROG_AR
-dnl UD_PROG_AR()
-dnl UD_PROG_NM()
-dnl We could use the PAC check for ranlib (it also makes sure that ranlib
-dnl works, which is not always true, particularly when GNU tools are
-dnl installed on a system that does not have (or need) ranlib
-dnl libtoolize: `AC_PROG_RANLIB' is rendered obsolete by `LT_INIT'
-dnl AC_PROG_RANLIB
-
-dnl libtool v2.4.6 was released in 2015-02-15
-dnl Travis CI only has v2.4.2
-LT_PREREQ([2.5.4])
-dnl LT_INIT([dlopen disable-shared])
-dnl LT_INIT([dlopen])
-dnl LT_INIT([disable-shared])  # build without shared libraries
-LT_INIT
-
 dnl check MPI C++ compiler
 AC_ARG_ENABLE(cxx,
     [AS_HELP_STRING([--disable-cxx],
@@ -523,7 +523,7 @@ dnl Must invoke AC_PROG_CXX here, because AC_PROG_CXX cannot be called
 dnl conditionally in Automake, otherwise got "error: conditional
 dnl "am__fastdepCXX" was never defined." So, if has_mpicxx is no, then
 dnl AC_PROG_CXX will search for g++. However, g++ will not be used at all.
-AC_PROG_CXX
+AC_PROG_CXX([${MPICXX}])
 
 dnl autoconf 2.59 has not yet implemented AC_PROG_CXX_C_O
 dnl AC_PROG_CXX_C_O
@@ -720,7 +720,7 @@ if test "x${has_fortran}" = xyes ; then
 
    dnl Check if MPIF77 is a valid MPI compiler
    F77=${MPIF77}
-   AC_PROG_F77
+   AC_PROG_F77([${MPIF77}])
    dnl FFLAGS is set in AC_PROG_F77
 
    AC_F77_LIBRARY_LDFLAGS
@@ -761,7 +761,7 @@ if test "x${has_fortran}" = xyes ; then
 
    dnl Check if MPIF90 is a valid MPI compiler
    FC=${MPIF90}
-   AC_PROG_FC
+   AC_PROG_FC([${MPIF90}])
    dnl FCFLAGS is set in AC_PROG_FC
 
    dnl FCLIBS_save="$FCLIBS"
