@@ -382,14 +382,18 @@ AC_DEFUN([MPI_COMPILER_BASE],[
                     AC_CHECK_PROG(cc_basename, icc, [icc])
                  fi
                  compile_basename=$cc_basename
+                 unset cc_basename
               else
                  unset cxx_basename
                  AC_CHECK_PROG(cxx_basename, icpx, [icpx])
-                 if test "x$cc_basename" = x ; then
+                 if test "x$cxx_basename" = x ; then
                     AC_CHECK_PROG(cxx_basename, icpc, [icpc])
                  fi
                  compile_basename=$cxx_basename
+                 unset cxx_basename
               fi
+           elif test "x${compile_basename}" = xGNU ; then
+              compile_basename="gfortran"
            elif test "x${compile_basename}" = x ; then
               # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
               # Cray cc -V sends the output to stderr.

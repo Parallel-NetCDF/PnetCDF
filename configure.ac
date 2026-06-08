@@ -74,6 +74,15 @@ dnl installed on a system that does not have (or need) ranlib
 dnl libtoolize: `AC_PROG_RANLIB' is rendered obsolete by `LT_INIT'
 dnl AC_PROG_RANLIB
 
+# Check if variable MPICC is set before calling LT_INIT, because LT_INIT will
+# use CC, if set, to check internally. We would like LT_INIT to use MPICC if
+# set to do such checking.
+if test "x$CC" = x ; then
+   if test "x$MPICC" != x ; then
+      CC=$MPICC
+   fi
+fi
+
 dnl libtool v2.4.6 was released in 2015-02-15
 dnl Travis CI only has v2.4.2
 LT_PREREQ([2.5.4])
@@ -356,6 +365,10 @@ dnl AM_PROG_CC_C_O
 dnl get compiler vendor in ax_cv_c_compiler_vendor (e.g. gnu, intel)
 AX_COMPILER_VENDOR
 
+dnl get compiler basename (e.g. gcc-14, nvc)
+UD_MPI_COMPILER_BASENAME(MPICC)
+UD_MSG_DEBUG(MPICC=${MPICC} basename=$ud_cv_mpi_compiler_basename_MPICC)
+
 if test "x${ax_cv_c_compiler_vendor}" = xgnu ; then
    dnl gcc command-line option "-dumpversion" can also show version.
    AC_MSG_CHECKING([whether gcc version is greater than 10.0.0])
@@ -533,6 +546,11 @@ if test "x${has_mpicxx}" = xyes ; then
    AC_LANG_PUSH(C++)
    dnl get compiler vendor in ax_cv_cxx_compiler_vendor (e.g. gnu, intel)
    AX_COMPILER_VENDOR
+
+   dnl get compiler basename (e.g. g++-14, nvfortran)
+   UD_MPI_COMPILER_BASENAME(MPICXX)
+   UD_MSG_DEBUG(MPICXX=${MPICXX} basename=$ud_cv_mpi_compiler_basename_MPICXX)
+
    dnl get base compiler command of MPI C++ compiler wrapper in
    dnl ac_cv_mpi_compiler_base_MPICXX (e.g. /usr/bin/g++)
    MPI_COMPILER_BASE(MPICXX)
@@ -754,6 +772,10 @@ if test "x${has_fortran}" = xyes ; then
    -----------------------------------------------------------------------])
       fi
    fi
+
+   dnl get compiler basename (e.g. GNU, nvfortran)
+   UD_MPI_COMPILER_BASENAME(MPIF77)
+   UD_MSG_DEBUG(MPIF77=${MPIF77} basename=$ud_cv_mpi_compiler_basename_MPIF77)
 fi
 
 mpi_mod=no
@@ -905,6 +927,11 @@ if test "x${has_fortran}" = xyes ; then
    AC_LANG_PUSH([Fortran])
    dnl get compiler vendor in ax_cv_fc_compiler_vendor (e.g. gnu, intel)
    AX_COMPILER_VENDOR
+
+   dnl get compiler basename (e.g. GNU, nvfortran)
+   UD_MPI_COMPILER_BASENAME(MPIF90)
+   UD_MSG_DEBUG(MPIF90=${MPIF90} basename=$ud_cv_mpi_compiler_basename_MPIF90)
+
    AC_LANG_POP([Fortran])
 
    dnl get base compiler command of MPI Fortran compiler wrapper in

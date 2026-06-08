@@ -141,11 +141,12 @@ func_cc_basename ()
            if test "x${func_cc_basename_result}" = xicc ||
               test "x${func_cc_basename_result}" = xicpc ||
               test "x${func_cc_basename_result}" = xifort ||
+              test "x${func_cc_basename_result}" = xifx ||
               test "x${func_cc_basename_result}" = xgcc ||
               test "x${func_cc_basename_result}" = xg++ ||
               test "x${func_cc_basename_result}" = xgfortran ||
               test "x${func_cc_basename_result}" = xGNU ; then
-           # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
+              # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
               return
            fi
            # For Cray PrgEnv-nvidia, cc is a wrapper of nvc
@@ -156,6 +157,22 @@ func_cc_basename ()
               test "x${func_cc_basename_result}" = xnvc++ ||
               test "x${func_cc_basename_result}" = xnvfortran ; then
               return
+           fi
+
+           # For Cray PrgEnv-intel that uses oneAPI, cc/CC is a wrapper of icx/icpx
+           func_cc_basename_result=`$cc_temp --version -c |& grep -v '^$' | head -n1 | cut -d' ' -f1`
+           if test "x${func_cc_basename_result}" = "xIntel(R)" ; then
+              compile_cmd=`$cc_temp --version -c |& grep icx`
+              if test "x${compile_cmd}" != x ; then
+                 func_cc_basename_result=icx
+                 return
+              else
+                 compile_cmd=`$cc_temp --version -c |& grep icpx`
+                 if test "x${compile_cmd}" != x ; then
+                    func_cc_basename_result=icpx
+                    return
+                 fi
+              fi
            fi
 
            # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
@@ -1211,7 +1228,7 @@ m4_defun([_LT_DARWIN_LINKER_FEATURES],
   _LT_TAGVAR(link_all_deplibs, $1)=yes
   _LT_TAGVAR(allow_undefined_flag, $1)=$_lt_dar_allow_undefined
   case $cc_basename in
-     ifort*|nagfor*)
+     ifort* | nagfor* | ifx* )
         _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
         _lt_dar_can_shared=yes
       ;;
@@ -4602,7 +4619,7 @@ m4_if([$1], [CXX], [
 	    _LT_TAGVAR(lt_prog_compiler_pic, $1)='-KPIC'
 	    _LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
 	    ;;
-	  icpc* )
+	  icpc* | icpx* )
 	    # Intel C++, used to be incompatible with GCC.
 	    # ICC 10 doesn't accept -KPIC any more.
 	    _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
@@ -4956,7 +4973,7 @@ m4_if([$1], [CXX], [
         ;;
       # icc used to be incompatible with GCC.
       # ICC 10 doesn't accept -KPIC any more.
-      icc* | ifort*)
+      icc* | ifort* | icx* | icpx* | ifx*)
 	_LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
 	_LT_TAGVAR(lt_prog_compiler_pic, $1)='-fPIC'
 	_LT_TAGVAR(lt_prog_compiler_static, $1)='-static'
@@ -5490,7 +5507,7 @@ _LT_EOF
 	  tmp_addflag=' -i_dynamic' ;;
 	efc*,ia64* | ifort*,ia64*)	# Intel Fortran compiler on ia64
 	  tmp_addflag=' -i_dynamic -nofor_main' ;;
-	ifc* | ifort*)			# Intel Fortran compiler
+	ifc* | ifort* | ifx*)			# Intel Fortran compiler
 	  tmp_addflag=' -nofor_main' ;;
 	lf95*)				# Lahey Fortran 8.1
 	  _LT_TAGVAR(whole_archive_flag_spec, $1)=
@@ -7265,7 +7282,7 @@ if test yes != "$_lt_caught_CXX_error"; then
 	    # "CC -Bstatic", where "CC" is the KAI C++ compiler.
 	    _LT_TAGVAR(old_archive_cmds, $1)='$CC -Bstatic -o $oldlib $oldobjs'
 	    ;;
-	  icpc* | ecpc* )
+	  icpc* | ecpc* | icpx* )
 	    # Intel C++
 	    with_gnu_ld=yes
 	    # version 8.0 and above of icpc choke on multiply defined symbols
