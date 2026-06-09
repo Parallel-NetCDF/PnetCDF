@@ -337,14 +337,14 @@ m4_define([_UD_CHECK_MPI_CONSTANTS],
 AC_DEFUN([UD_CHECK_MPI_CONSTANTS],
    [m4_map_args_sep([_$0(], [, [$2], [$3], [$4])], [], $1)])
 
-# MPI_COMPILER_BASE
+# UD_MPI_COMPILER_BASENAME
 # -----------------------------------------------------------------
 # Returns the base compiler command used in MPI compiler wrapper in
-# ac_cv_mpi_compiler_base_MPICC, ac_cv_mpi_compiler_base_MPICXX,
-# ac_cv_mpi_compiler_base_MPIF90, such as /usr/bin/gcc, /usr/bin/g++,
+# ud_cv_mpi_compiler_basename_MPICC, ud_cv_mpi_compiler_basename_MPICXX,
+# ud_cv_mpi_compiler_basename_MPIF90, such as /usr/bin/gcc, /usr/bin/g++,
 # /usr/bin/gfortran
 #
-AC_DEFUN([MPI_COMPILER_BASE],[
+AC_DEFUN([UD_MPI_COMPILER_BASENAME],[
    # before checking, remove compile command-line options, if there is any
    compile_cmd=`echo $$1 | cut -d" " -f1`
    AC_MSG_CHECKING([base compiler command in $1 wrapper])
@@ -362,55 +362,130 @@ AC_DEFUN([MPI_COMPILER_BASE],[
            # Fujitsu MPI compilers: fccpx, FCCpx, frtpx
            compile_basename=`$compile_cmd -showme | cut -d' ' -f1`
            ;;
-        cc | CC | ftn | *[[\\/]]cc | *[[\\/]]CC | *[[\\/]]ftn )
+        cc | *[[\\/]]cc )
            # For Cray PrgEnv-intel, cc is a wrapper of icc
            # For Cray PrgEnv-gnu, cc is a wrapper of gcc
+           # For Cray PrgEnv-nvidia, cc is a wrapper of nvc
            #    % cc --version
-           #      gcc-12 (SUSE Linux) 12.3.0
+           #      gcc-14 (SUSE Linux) 14.3.0
            #    % cc --version
-           #      Intel(R) oneAPI DPC++/C++ Compiler 2023.2.0 (2023.2.0.20230622)
-           eval "$compile_cmd --version" < /dev/null >& conftest.ver
-           compile_basename=`head -n1 conftest.ver |cut -d' ' -f1`
-           ${RM} -f conftest.ver
-           if test "x${compile_basename}" = "xIntel(R)"; then
-              # Intel C/C++ compiler
-              compiler_name=$(basename "$compile_cmd")
-              if test "x${compiler_name}" = xcc ; then
-                 unset cc_basename
-                 AC_CHECK_PROG(cc_basename, icx, [icx])
-                 if test "x$cc_basename" = x ; then
-                    AC_CHECK_PROG(cc_basename, icc, [icc])
-                 fi
-                 compile_basename=$cc_basename
-                 unset cc_basename
-              else
-                 unset cxx_basename
-                 AC_CHECK_PROG(cxx_basename, icpx, [icpx])
-                 if test "x$cxx_basename" = x ; then
-                    AC_CHECK_PROG(cxx_basename, icpc, [icpc])
-                 fi
-                 compile_basename=$cxx_basename
-                 unset cxx_basename
-              fi
-           elif test "x${compile_basename}" = xGNU ; then
-              compile_basename="gfortran"
-           elif test "x${compile_basename}" = x ; then
-              # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
-              # Cray cc -V sends the output to stderr.
-              eval "$compile_cmd -V" < /dev/null >& conftest.ver
-              compile_basename=`head -n1 conftest.ver |cut -d' ' -f1`
-              ${RM} -f conftest.ver
-           fi
+           #      Intel(R) oneAPI DPC++/C++ Compiler 2025.3.1 (2025.3.1.20251023)
+           #    % cc --version
+           #      nvc 25.5-0 64-bit target on x86-64 Linux -tp zen3-64
+
+           compile_basename=`$compile_cmd --version -c |& grep -v '^$' | head -n1 | cut -d' ' -f1`
+           case "$compile_basename" in
+               "gcc"*)
+                   ;;
+               "Intel"*)
+                   unset cc_basename
+                   AC_CHECK_PROG(cc_basename, icx, [icx])
+                   compile_basename=$cc_basename
+                   unset cc_basename
+                   ;;
+               "nvc"*)
+                   unset cc_basename
+                   AC_CHECK_PROG(cc_basename, nvc, [nvc])
+                   compile_basename=$cc_basename
+                   unset cc_basename
+                   ;;
+               *)
+                   # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
+                   # Cray cc -V sends the output to stderr.
+                   eval "$compile_cmd -V" < /dev/null >& conftest.ver
+                   compile_basename=`head -n1 conftest.ver |cut -d' ' -f1`
+                   ${RM} -f conftest.ver
+                   ;;
+           esac
+           ;;
+        CC | *[[\\/]]CC )
+           # For Cray PrgEnv-intel, CC is a wrapper of icpx
+           # For Cray PrgEnv-gnu, CC is a wrapper of g++
+           # For Cray PrgEnv-nvidia, CC is a wrapper of nvc++
+           #    % CC --version
+           #      g++-14 (SUSE Linux) 14.3.0
+           #    % CC --version
+           #      Intel(R) oneAPI DPC++/C++ Compiler 2025.3.1 (2025.3.1.20251023)
+           #    % CC --version
+           #      nvc++ 25.5-0 64-bit target on x86-64 Linux -tp zen3-64
+
+           compile_basename=`$compile_cmd --version -c |& grep -v '^$' | head -n1 | cut -d' ' -f1`
+           case "$compile_basename" in
+               "g++"*)
+                   ;;
+               "Intel"*)
+                   unset cxx_basename
+                   AC_CHECK_PROG(cxx_basename, icpx, [icpx])
+                   compile_basename=$cxx_basename
+                   unset cxx_basename
+                   ;;
+               "nvc"*)
+                   unset cxx_basename
+                   AC_CHECK_PROG(cxx_basename, nvc++, [nvc++])
+                   compile_basename=$cxx_basename
+                   unset cxx_basename
+                   ;;
+               *)
+                   # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
+                   # Cray cc -V sends the output to stderr.
+                   eval "$compile_cmd -V" < /dev/null >& conftest.ver
+                   compile_basename=`head -n1 conftest.ver |cut -d' ' -f1`
+                   ${RM} -f conftest.ver
+                   ;;
+           esac
+           ;;
+        ftn | *[[\\/]]ftn )
+           # For Cray PrgEnv-intel, ftn is a wrapper of icc
+           # For Cray PrgEnv-gnu, ftn is a wrapper of gfortran
+           # For Cray PrgEnv-nvidia, ftn is a wrapper of nvfortran
+           #    % ftn --version
+           #      GNU Fortran (SUSE Linux) 14.3.0
+           #    % ftn --version
+           #      ifx (IFX) 2025.3.0 20251023
+           #    % ftn --version
+           #      nvfortran 25.5-0 64-bit target on x86-64 Linux -tp zen3-64
+
+           compile_basename=`$compile_cmd --version -c |& grep -v '^$' | head -n1 | cut -d' ' -f1`
+           case "$compile_basename" in
+               "gfortran"*)
+                   ;;
+               "GNU"*)
+                   compile_basename="gfortran"
+                   ;;
+               "ifx"*)
+                   ;;
+               "Intel"*)
+                   unset ftn_basename
+                   AC_CHECK_PROG(ftn_basename, ifx, [ifx])
+                   compile_basename=$ftn_basename
+                   unset ftn_basename
+                   ;;
+               "nvfortran"*)
+                   ;;
+               "NVIDIA"*)
+                   unset ftn_basename
+                   AC_CHECK_PROG(ftn_basename, nvfortran, [nvfortran])
+                   compile_basename=$ftn_basename
+                   unset ftn_basename
+                   ;;
+               *)
+                   # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
+                   # Cray cc -V sends the output to stderr.
+                   eval "$compile_cmd -V" < /dev/null >& conftest.ver
+                   compile_basename=`head -n1 conftest.ver |cut -d' ' -f1`
+                   ${RM} -f conftest.ver
+                   ;;
+           esac
            ;;
         *) break;;
    esac
    if test "x${compile_basename}" != x ; then
       AC_MSG_RESULT([$compile_basename])
-      AC_PATH_PROG([ac_cv_mpi_compiler_base_$1], [$compile_basename])
+      AC_PATH_PROG([ud_cv_mpi_compiler_basename_$1], [$compile_basename])
    else
       AC_MSG_RESULT([not found])
    fi
    unset compile_basename
    unset compile_cmd
-])# MPI_COMPILER_BASE
+])# UD_MPI_COMPILER_BASENAME
 

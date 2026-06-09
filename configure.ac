@@ -365,10 +365,6 @@ dnl AM_PROG_CC_C_O
 dnl get compiler vendor in ax_cv_c_compiler_vendor (e.g. gnu, intel)
 AX_COMPILER_VENDOR
 
-dnl get compiler basename (e.g. gcc-14, nvc)
-UD_MPI_COMPILER_BASENAME(MPICC)
-UD_MSG_DEBUG(MPICC=${MPICC} basename=$ud_cv_mpi_compiler_basename_MPICC)
-
 if test "x${ax_cv_c_compiler_vendor}" = xgnu ; then
    dnl gcc command-line option "-dumpversion" can also show version.
    AC_MSG_CHECKING([whether gcc version is greater than 10.0.0])
@@ -381,8 +377,9 @@ if test "x${ax_cv_c_compiler_vendor}" = xgnu ; then
 fi
 
 dnl get base compiler command of MPI C compiler wrapper in
-dnl ac_cv_mpi_compiler_base_MPICC (e.g. /usr/bin/gcc)
-MPI_COMPILER_BASE(MPICC)
+dnl ud_cv_mpi_compiler_basename_MPICC (e.g. /usr/bin/gcc, icx)
+UD_MPI_COMPILER_BASENAME(MPICC)
+UD_MSG_DEBUG(MPICC=${MPICC} basename=$ud_cv_mpi_compiler_basename_MPICC)
 
 dnl Set output variable CPP to a command that runs the C preprocessor.
 dnl Some C compilers require -E to be used as C preprocessor.
@@ -547,13 +544,11 @@ if test "x${has_mpicxx}" = xyes ; then
    dnl get compiler vendor in ax_cv_cxx_compiler_vendor (e.g. gnu, intel)
    AX_COMPILER_VENDOR
 
-   dnl get compiler basename (e.g. g++-14, nvfortran)
+   dnl get base compiler command of MPI C++ compiler wrapper in
+   dnl ud_cv_mpi_compiler_basename_MPICXX (e.g. /usr/bin/g++, g++-14, icpx)
    UD_MPI_COMPILER_BASENAME(MPICXX)
    UD_MSG_DEBUG(MPICXX=${MPICXX} basename=$ud_cv_mpi_compiler_basename_MPICXX)
 
-   dnl get base compiler command of MPI C++ compiler wrapper in
-   dnl ac_cv_mpi_compiler_base_MPICXX (e.g. /usr/bin/g++)
-   MPI_COMPILER_BASE(MPICXX)
    AC_CHECK_FUNC([MPI_File_close], [],
       dnl maybe -lmpi++ is needed at link stage
       [AC_SEARCH_LIBS([MPI_File_close], [mpi mpio mpi++ mpichcxx mpi_cxx], [],
@@ -773,7 +768,8 @@ if test "x${has_fortran}" = xyes ; then
       fi
    fi
 
-   dnl get compiler basename (e.g. GNU, nvfortran)
+   dnl get base compiler command of MPI F77 compiler wrapper in
+   dnl ud_cv_mpi_compiler_basename_MPIF77 (e.g. /usr/bin/gfortran, ifx)
    UD_MPI_COMPILER_BASENAME(MPIF77)
    UD_MSG_DEBUG(MPIF77=${MPIF77} basename=$ud_cv_mpi_compiler_basename_MPIF77)
 fi
@@ -927,16 +923,12 @@ if test "x${has_fortran}" = xyes ; then
    AC_LANG_PUSH([Fortran])
    dnl get compiler vendor in ax_cv_fc_compiler_vendor (e.g. gnu, intel)
    AX_COMPILER_VENDOR
-
-   dnl get compiler basename (e.g. GNU, nvfortran)
-   UD_MPI_COMPILER_BASENAME(MPIF90)
-   UD_MSG_DEBUG(MPIF90=${MPIF90} basename=$ud_cv_mpi_compiler_basename_MPIF90)
-
    AC_LANG_POP([Fortran])
 
-   dnl get base compiler command of MPI Fortran compiler wrapper in
-   dnl ac_cv_mpi_compiler_base_MPIF90 (e.g. /usr/bin/gfortran)
-   MPI_COMPILER_BASE(MPIF90)
+   dnl get base compiler command of MPI F90 compiler wrapper in
+   dnl ud_cv_mpi_compiler_basename_MPIF90 (e.g. /usr/bin/gfortran, ifx)
+   UD_MPI_COMPILER_BASENAME(MPIF90)
+   UD_MSG_DEBUG(MPIF90=${MPIF90} basename=$ud_cv_mpi_compiler_basename_MPIF90)
 
    dnl customized AC_FC_FIXEDFORM: to just get ac_cv_fc_fixedform without
    dnl appending ac_cv_fc_fixedform to FCFLAGS
@@ -1063,17 +1055,17 @@ AM_CONDITIONAL(UPPER_CASE_MOD, [test x$ac_cv_prog_f90_uppercase_mod = xyes])
 if test "x${has_fortran}" = xyes && test "x${ax_cv_fc_compiler_vendor}" = xnag ; then
    # Special treatment for NAG Fortran compiler
    # Command 'nagfor -dryrun dummy.f90' can reveal the C linker nagfor uses.
-   if test "x${ac_cv_mpi_compiler_base_MPICC}" != x ; then
-      UD_MSG_DEBUG([ac_cv_mpi_compiler_base_MPICC=$ac_cv_mpi_compiler_base_MPICC])
+   if test "x${ud_cv_mpi_compiler_basename_MPICC}" != x ; then
+      UD_MSG_DEBUG([ud_cv_mpi_compiler_basename_MPICC=$ud_cv_mpi_compiler_basename_MPICC])
       str_found=`echo "${FFLAGS}" | ${EGREP} -- "-Wc="`
       if test "x$?" != x0 ; then
-         AC_MSG_WARN([Add to FFLAGS -Wc=$ac_cv_mpi_compiler_base_MPICC])
-         AS_VAR_APPEND([FFLAGS], [" -Wc=$ac_cv_mpi_compiler_base_MPICC"])
+         AC_MSG_WARN([Add to FFLAGS -Wc=$ud_cv_mpi_compiler_basename_MPICC])
+         AS_VAR_APPEND([FFLAGS], [" -Wc=$ud_cv_mpi_compiler_basename_MPICC"])
       fi
       str_found=`echo "${FCFLAGS}" | ${EGREP} -- "-Wc="`
       if test "x$?" != x0 ; then
-         AC_MSG_WARN([Add to FCFLAGS -Wc=$ac_cv_mpi_compiler_base_MPICC])
-         AS_VAR_APPEND([FCFLAGS], [" -Wc=$ac_cv_mpi_compiler_base_MPICC"])
+         AC_MSG_WARN([Add to FCFLAGS -Wc=$ud_cv_mpi_compiler_basename_MPICC])
+         AS_VAR_APPEND([FCFLAGS], [" -Wc=$ud_cv_mpi_compiler_basename_MPICC"])
       fi
       unset str_found
    fi
@@ -2742,11 +2734,11 @@ if test "x$SEQ_CC" = x ; then
    # elif test "x$ac_cv_mpicc_base" = xFCCPX ; then
    #    AC_PATH_PROG([SEQ_CC], [fccpx], [$MPICC])
    # fi
-   if test "x$ac_cv_mpi_compiler_base_MPICC" = x ; then
+   if test "x$ud_cv_mpi_compiler_basename_MPICC" = x ; then
       # gcc should be available on most of the machines today
       AC_PATH_PROG([SEQ_CC], [gcc], [$MPICC])
    else
-      SEQ_CC=$ac_cv_mpi_compiler_base_MPICC
+      SEQ_CC=$ud_cv_mpi_compiler_basename_MPICC
    fi
 fi
 AC_MSG_CHECKING([C compiler for serial utility programs])
