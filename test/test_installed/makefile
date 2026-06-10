@@ -2,7 +2,7 @@
 .PRECIOUS: %.o %.77o %.90o %.testcases77o
 
 PNETCDF_SRC = ../..
-CPPFLAGS = -I$(PNETCDF_DIR)/include -I../common -I$(PNETCDF_SRC)/src/utils/ncmpidiff
+CPPFLAGS = -I$(PNETCDF_DIR)/include -I../common -I$(PNETCDF_SRC)/src/utils/ncmpidiff -I$(PNETCDF_SRC)/src/include
 CFLAGS = $(CPPFLAGS)
 FCFLAGS = -w -fallow-argument-mismatch
 LDFLAGS = -L$(PNETCDF_DIR)/lib
