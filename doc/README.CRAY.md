@@ -1,4 +1,48 @@
-## Build instructions for Cray XC40
+## Build instructions for Cray machines
+
+* [Perlmutter @ NERSC](https://docs.nersc.gov/systems/perlmutter/architecture/)
+
+  + Below shows a typical configure command for building PnetCDF, which will
+    build both static and shared libraries.
+    ```console
+    ./configure --prefix=/path/to/install \
+                cross_compiling="yes" \
+                MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn
+    ```
+
+  + The Intel oneAPI compilers may not work properly when used to build the
+    PnetCDF library. Note on Permutter, the GNU compiler module is loaded by
+    default. If this is not your case, commands below can be used
+    to switch to the GNU/NVIDIA module.
+    ```console
+    module swap PrgEnv-intel PrgEnv-gnu
+    ```
+    or
+    ```console
+    module swap PrgEnv-intel PrgEnv-nvidia
+    ```
+
+  + When using Intel oneAPI compilers to building PnetCDF with Fortran feature
+    enabled, the building process, i.e. running "make" and "make install".
+    However, using the library to compile a C application program may fail with
+    the following messages complaining some MPI functions cannot be found.
+    ```
+    cc test.c -L /install/path/lib -lpnetcdf
+
+    /usr/lib64/gcc/x86_64-suse-linux/14/../../../../x86_64-suse-linux/bin/ld: /opt/cray/pe/lib64/libmpifort_intel.so.12: undefined reference to `MPL_trfree'
+    ```
+    * In this case, user must add '-lmpifort' to the compile/link command
+      line, even if the application program is not a Fortran program, for
+      example,
+      ```
+      cc test.c -L /install/path/lib -lpnetcdf -lmpifort
+      ```
+    * Because of this issue, we recommend to use the GNU based compilers to
+      build PnetCDF on Perlmutter. Note an application program can always be
+      compiled using Intel based MPI compilers and linked with PnetCDF
+      libraries built with the GNU compilers.
+    * This issue does not happen when the PnetCDF's Fortran feature is
+      disabled, i.e. adding '--disable-fortran' at the configure command line.
 
 * [Cori @ NERSC](http://www.nersc.gov/systems/cori/)
   ```console
