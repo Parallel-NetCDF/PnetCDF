@@ -72,7 +72,7 @@ int main(int argc, char **argv)
         long long old_nrec, new_nrec;
         read(fd, &old_nrec, 8);
         if (is_little_endian) swap8b(&old_nrec);
-        printf("old numrecs=%d\n",old_nrec);
+        printf("old numrecs=%lld\n",old_nrec);
         lseek(fd, 8, SEEK_SET);
         new_nrec = atoi(argv[2]);
         printf("change number of records from %lld to %lld\n",old_nrec,new_nrec);

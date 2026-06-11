@@ -332,7 +332,7 @@ static int test_ivarn(int ncid)
     if (err != NC_NOERR) {
         for (i=0; i<4; i++) {
             if (st[i] != NC_NOERR) {
-                fprintf(stderr,"Error at line %d in %s: st[%d] %s\n",
+                fprintf(stderr,"Error at %s line %d: st[%d] %s\n",
                 __FILE__,__LINE__,i,ncmpi_strerror(st[i]));
             }
         }
@@ -426,7 +426,7 @@ int main(int argc, char **argv) {
     MPI_Allreduce(MPI_IN_PLACE, &nerrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (rank == 0) {
         if (nerrs) printf(FAIL_STR,nerrs);
-        else       printf(PASS_STR);
+        else       printf(PASS_STR, 0.0);
     }
 
     MPI_Finalize();
