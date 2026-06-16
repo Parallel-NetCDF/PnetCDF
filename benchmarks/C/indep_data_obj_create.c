@@ -1265,7 +1265,10 @@ int define_all_hdr(struct hdr **all_recv_hdr, int nproc, int ncid){
 
 static int free_all_hdr(struct hdr **all_recv_hdr, int nproc){
     if (all_recv_hdr != NULL){
-        for (int i=0; i< nproc; i++) free_hdr(all_recv_hdr[i]);
+        for (int i=0; i< nproc; i++) {
+            free_hdr(all_recv_hdr[i]);
+            tracked_free(all_recv_hdr[i]);
+        }
         tracked_free(all_recv_hdr);
     }
     return 0;
@@ -1370,7 +1373,7 @@ int main(int argc, char *argv[]) {
     total_recv_size = min_size = max_size = all_collection_sizes[0];
     recv_displs[0] = 0;
 
-    for (int i = 1; i < nproc; ++i) {
+    for (i = 1; i < nproc; ++i) {
         recv_displs[i] = recv_displs[i - 1] + (int)all_collection_sizes[i - 1];
         total_recv_size += all_collection_sizes[i];
         if(all_collection_sizes[i] > max_size){
@@ -1383,7 +1386,7 @@ int main(int argc, char *argv[]) {
 
     char* all_collections_buffer = (char*) tracked_malloc(total_recv_size);
     int* recvcounts =  (int*)tracked_malloc(nproc * sizeof(int));
-    for (int i = 0; i < nproc; ++i) {
+    for (i = 0; i < nproc; ++i) {
         recvcounts[i] = (int)all_collection_sizes[i];
     }
     // Phase 2: Communicate the actual header data
@@ -1399,6 +1402,8 @@ int main(int argc, char *argv[]) {
 
     struct hdr **all_recv_hdr = (struct hdr **)tracked_malloc(nproc * sizeof(struct hdr*));
     deserialize_all_hdr(all_recv_hdr, all_collections_buffer, recv_displs, recvcounts, nproc);
+    tracked_free(recvcounts);
+
     MPI_Info info = MPI_INFO_NULL;
     MPI_Info_create(&info);
     char hash_size_str[64];
@@ -1476,7 +1481,7 @@ int main(int argc, char *argv[]) {
         double mib = total_recv_size / (1024.0);
         double gib = total_recv_size / (1024.0 * 1024.0);
         printf("Total metadata amount        = %10lld B = %10.2f MiB = %8.2f GiB\n", total_recv_size, mib, gib);
-        for (int i = 0; i < 6; i++) {
+        for (i = 0; i < 6; i++) {
             // printf("Min %s time: %f seconds\n", names[i], min_times[i]);
             printf("Max %-25s time =     %.4f sec\n", names[i], max_times[i]);
         }
