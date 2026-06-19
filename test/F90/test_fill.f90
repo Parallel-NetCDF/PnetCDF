@@ -18,7 +18,7 @@
           if (err .NE. NF90_NOERR) then
               write(6,*) trim(message), trim(nf90mpi_strerror(err))
               msg = '*** TESTING F90 test_fill.f90 '
-              call pass_fail(1, msg, 0)
+              call pass_fail(1, msg, 0D0)
               STOP 2
           end if
       end subroutine check
@@ -37,7 +37,6 @@
           integer(kind=MPI_OFFSET_KIND), parameter :: len = 3
           integer, parameter :: k = selected_int_kind(18)
           integer(kind=k) :: buf(len)
-          logical keep_files
 
           call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr)
           call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)

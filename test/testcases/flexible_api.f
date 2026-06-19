@@ -28,7 +28,7 @@
           if (err .NE. NF_NOERR) then
               write(6,*) message(1:XTRIM(message)), nfmpi_strerror(err)
               msg = '*** TESTING F77 flexible_api.f - flexible API '
-              call pass_fail(1, msg, 0)
+              call pass_fail(1, msg, 0D0)
               STOP 2
           end if
       end ! subroutine check

@@ -21,7 +21,7 @@
           if (err .NE. NF90_NOERR) then
               write(6,*) trim(message), trim(nf90mpi_strerror(err))
               msg = '*** TESTING F90 test_intent.f90 '
-              call pass_fail(1, msg, 0)
+              call pass_fail(1, msg, 0D0)
               STOP 2
           end if
       end subroutine check

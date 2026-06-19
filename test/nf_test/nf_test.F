@@ -84,7 +84,7 @@ C implementation of the netCDF library.
             print *, ' '
             print *, '  ### ', nfails, ' FAILURES TESTING ', name,
      +               '! Stop ... ###'
-            call report_test
+            call report_test(0D0)
             stop 2
         end if
         end

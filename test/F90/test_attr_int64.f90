@@ -18,7 +18,7 @@
           if (err .NE. NF90_NOERR) then
               write(6,*) trim(message), trim(nf90mpi_strerror(err))
               msg = '*** TESTING F90 test_attr_int64.f90 '
-              call pass_fail(1, msg, 0)
+              call pass_fail(1, msg, 0D0)
               STOP 2
           end if
       end subroutine check
@@ -69,7 +69,7 @@
 
           if (xtype .NE. NF90_INT64) then
               msg = '*** TESTING F90 test_attr_int64.f90 '
-              call pass_fail(1, msg, 0)
+              call pass_fail(1, msg, 0D0)
               STOP 2
           endif
 
@@ -93,7 +93,7 @@
           if (err .NE. NF90_EBADTYPE) then
 10            FORMAT(A,I3)
               write(msg,10) '*** test_attr_int64.f90 expects NF90_EBADTYPE but got ', err
-              call pass_fail(1, msg, 0)
+              call pass_fail(1, msg, 0D0)
               STOP 2
           endif
 

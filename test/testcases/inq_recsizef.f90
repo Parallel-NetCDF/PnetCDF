@@ -30,7 +30,7 @@
           if (err .NE. NF90_NOERR) then
               write(6,*) trim(message), trim(nf90mpi_strerror(err))
               msg = '*** TESTING F90 inq_recsizef.f90 - inquiring record size'
-              call pass_fail(1, msg, 0)
+              call pass_fail(1, msg, 0D0)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
       end subroutine check

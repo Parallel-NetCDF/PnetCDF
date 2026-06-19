@@ -64,7 +64,7 @@
           if (err .NE. NF_NOERR) then
               write(6,*) message(1:XTRIM(message)), nfmpi_strerror(err)
               msg = '*** TESTING F77 test_vardf.f for vard API '
-              call pass_fail(1, msg, 0)
+              call pass_fail(1, msg, 0D0)
               call MPI_Abort(MPI_COMM_WORLD, -1, err)
           end if
       end ! subroutine check
