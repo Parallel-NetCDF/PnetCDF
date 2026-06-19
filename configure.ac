@@ -609,6 +609,19 @@ UD_MSG_DEBUG(has_mpicxx=$has_mpicxx)
 AM_CONDITIONAL(HAS_MPICXX, [test x$has_mpicxx = xyes])
 AM_CONDITIONAL(SEEK_SET_REDEFINED, [test x$ac_cv_CHECK_MPI_CPP_SEEK_SET = xyes])
 
+# Declare visibility of all functions are by default hidden if the compiler
+# supports it. Check if the C compiler supports -fvisibility=hidden
+AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
+                      [CFLAGS="$CFLAGS -fvisibility=hidden"])
+
+if test "x${has_mpicxx}" = xyes ; then
+   # In addition to -fvisibility=hidden, declare visibility of all functions
+   # are by default hidden if the compiler supports it. Check if the C++
+   # compiler supports -fvisibility-inlines-hidden (recommended for C++)
+   AX_CHECK_COMPILE_FLAG([-fvisibility-inlines-hidden],
+                         [CXXFLAGS="$CXXFLAGS -fvisibility-inlines-hidden"])
+fi
+
 dnl Note this must be done after the type of C compiler is determined
 AC_ARG_ENABLE(strict,
     [AS_HELP_STRING([--enable-strict],

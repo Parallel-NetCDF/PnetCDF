@@ -40,14 +40,18 @@
 
 /* Support Windows extension to specify which functions are exported from
    shared (DLL) libraries */
-#ifdef HAVE_FORTRAN_API
-# ifdef FORTRAN_EXPORTS
-#  define FORTRAN_API __declspec(dllexport)
-# else
-#  define FORTRAN_API __declspec(dllimport)
-# endif
+#if defined _WIN32 || defined __CYGWIN__
+  #ifdef BUILDING_DLL
+    #define FORTRAN_API __declspec(dllexport)
+  #else
+    #define FORTRAN_API __declspec(dllimport)
+  #endif
 #else
-# define FORTRAN_API
+  #if __GNUC__ >= 4
+    #define FORTRAN_API __attribute__ ((visibility ("default")))
+  #else
+    #define FORTRAN_API
+  #endif
 #endif
 
 /* Support an alternate approach for declaring a weak symbol supported by

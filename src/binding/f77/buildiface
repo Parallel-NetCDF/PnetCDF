@@ -3334,7 +3334,7 @@ sub ReadAndProcessInterface {
 	}
 
 	# if (/^int\s+$routine_prefix($routine_pattern)\s*\((.*)/) {
-	if (/extern int/) { # next line is the API
+	if (/PUBLIC_API int/) { # next line is the API
             $_ = <FD>;
           if (/$routine_prefix($routine_pattern)\s*\((.*)/) {
 	    $routine_name = $1;
