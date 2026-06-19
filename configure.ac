@@ -615,11 +615,17 @@ AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
                       [CFLAGS="$CFLAGS -fvisibility=hidden"])
 
 if test "x${has_mpicxx}" = xyes ; then
+   AC_LANG_PUSH([C++])
+   # Again check if the C++ compiler supports -fvisibility=hidden
+   AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
+                         [CXXFLAGS="$CXXFLAGS -fvisibility=hidden"])
+
    # In addition to -fvisibility=hidden, declare visibility of all functions
    # are by default hidden if the compiler supports it. Check if the C++
    # compiler supports -fvisibility-inlines-hidden (recommended for C++)
    AX_CHECK_COMPILE_FLAG([-fvisibility-inlines-hidden],
                          [CXXFLAGS="$CXXFLAGS -fvisibility-inlines-hidden"])
+   AC_LANG_POP([C++])
 fi
 
 dnl Note this must be done after the type of C compiler is determined
