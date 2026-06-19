@@ -16,8 +16,28 @@ using various I/O access patterns.
      simulation program, https://github.com/wrf-model/WRF, developed at NCAR.
    + This benchmark is an extraction of the I/O kernel of WRF and can be used
      to evaluate the file write performance of WRF.
+   + The metadata (dimension size, number of variables, etc.) can be found in
+     [WRF-IO/wrf_header.txt)(WRF-IO/wrf_header.txt), which is also used as an
+     an input file to the benchmark.
    + It's data partitioning pattern is a 2D block-block checkerboard pattern,
      along the longitude and latitude.
+   + Example of performance evaluation results (measured on June 19, 2026).
+     * Machine: [Perlmutter](https://docs.nersc.gov/systems/perlmutter/architecture/)
+       at NERSC.
+     * Lustre file striping configuration: 1 MB striping size and the number
+       of striping count equal to the number of compute nodes allocated to
+       the jobs.
+     * The number of MPI processes allocated to each compute node = 128.
+     * The number of time steps = 1
+     * Table below shows the write bandwidths in GiB/sec in a weak scaling
+       configuration. It compares PnetCDF versions 1.14.1 and 1.15.0.
+
+       | Number of MPI processes and grid size   | amount (GiB) | 1.14.1 (GiB/s) | 1.15.0 (GiB/s) |
+       |:----------------------------------------|-------------:|---------------:|---------------:|
+       | nprocs = 1024  and grids = 2600 x 3800  |       31.5   |         3.70   |         9.42   |
+       | nprocs = 2048  and grids = 2600 x 7600  |       63.1   |         7.62   |        18.44   |
+       | nprocs = 4096  and grids = 5200 x 7600  |      126.2   |         8.26   |        28.92   |
+       | nprocs = 8192  and grids = 5200 x 15200 |      252.3   |        12.97   |        50.68   |
 
 ### FLASH-IO
    + FLASH is a reacting hydrodynamics code developed at University of Chicago.
