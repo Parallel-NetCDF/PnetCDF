@@ -116,6 +116,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Updated utility programs
+  + `pnetcdf_version` - add information about MPI compiler vendors, supported
+    MPI standard version, names of base compilers, and LMOD PrgEnv module
+    loaded if available.
   + `ncmpidiff` now will error out when the two input file names are identical.
 
 * Other updates:

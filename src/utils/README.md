@@ -936,11 +936,11 @@ Available values for OPTION include:
         pnetcdf_version - print the version information of PnetCDF library
 
  SYNOPSIS
-        pnetcdf_version [-v] [-d] [-c] [-b] [-h]
+        pnetcdf_version [-v] [-d] [-c] [-b] [-l] [-h]
 
  DESCRIPTION
         pnetcdf_version  prints  the version information of PnetCDF library and
-        the configure command line used to build the library
+        the configure command line used to build the library.
 
         If no argument is given, all information is printed.
 
@@ -953,6 +953,8 @@ Available values for OPTION include:
 
         -b     MPI compilers used to build this PnetCDF library
 
+        -l     LMOD PrgEnv module loaded, if available
+
         -h     Print the available command-line options of pnetcdf_version
 
  EXAMPLES
@@ -964,10 +966,30 @@ Available values for OPTION include:
         PnetCDF Version:         1.12.3
         PnetCDF Release date:    February 21, 2022
         PnetCDF configure:  --with-mpi=/usr/local/bin
-        MPICC:  /usr/local/bin/mpicc -g -O2
-        MPICXX: /usr/local/bin/mpicxx -g -O2
-        MPIF77: /usr/local/bin/mpif77 -g -O2
-        MPIF90: /usr/local/bin/mpif90 -g -O2
+
+        MPICC:  /opt/cray/pe/craype/2.7.35/bin/cc
+                CFLAGS: -O2
+                MPI standard version: 4.0
+                MPI compiler vendor: Cray MPICH 9.0.1.498
+                Base compiler: /usr/bin/gcc-14
+                Base compiler version: gcc-14 (SUSE Linux) 14.3.0
+
+        MPICXX: /opt/cray/pe/craype/2.7.35/bin/CC
+                CXXFLAGS: -O2
+                Base compiler: /usr/bin/g++-14
+                Base compiler version: g++-14 (SUSE Linux) 14.3.0
+
+        MPIF77: /opt/cray/pe/craype/2.7.35/bin/ftn
+                FFLAGS: -O2
+                Base compiler: /opt/cray/pe/gcc-native/14/bin/gfortran
+                Base compiler version: GNU Fortran (SUSE Linux) 14.3.0
+
+        MPIF90: /opt/cray/pe/craype/2.7.35/bin/ftn
+                FCFLAGS: -O2
+                Base compiler: /opt/cray/pe/gcc-native/14/bin/gfortran
+                Base compiler version: GNU Fortran (SUSE Linux) 14.3.0
+
+        LMOD PrgEnv module loaded: PrgEnv-gnu
 
  SEE ALSO
         pnetcdf(3)

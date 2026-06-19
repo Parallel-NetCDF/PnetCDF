@@ -364,6 +364,8 @@ dnl AM_PROG_CC_C_O
 
 dnl get compiler vendor in ax_cv_c_compiler_vendor (e.g. gnu, intel)
 AX_COMPILER_VENDOR
+UD_MSG_DEBUG([ax_cv_c_compiler_vendor=$ax_cv_c_compiler_vendor])
+# AC_MSG_WARN([ax_cv_c_compiler_vendor=$ax_cv_c_compiler_vendor])
 
 if test "x${ax_cv_c_compiler_vendor}" = xgnu ; then
    dnl gcc command-line option "-dumpversion" can also show version.
@@ -380,6 +382,10 @@ dnl get base compiler command of MPI C compiler wrapper in
 dnl ud_cv_mpi_compiler_basename_MPICC (e.g. /usr/bin/gcc, icx)
 UD_MPI_COMPILER_BASENAME(MPICC)
 UD_MSG_DEBUG(MPICC=${MPICC} basename=$ud_cv_mpi_compiler_basename_MPICC)
+# AC_MSG_WARN(MPICC=${MPICC} basename=$ud_cv_mpi_compiler_basename_MPICC)
+# AC_MSG_WARN(ud_vendor_version_MPICC=$ud_vendor_version_MPICC)
+AC_SUBST([MPICC_BASE], [$ud_cv_mpi_compiler_basename_MPICC])
+AC_SUBST([MPICC_BASE_VERSION], [$ud_vendor_version_MPICC])
 
 dnl Set output variable CPP to a command that runs the C preprocessor.
 dnl Some C compilers require -E to be used as C preprocessor.
@@ -426,6 +432,12 @@ AM_CONDITIONAL(MPICC_IS_FCCPX,[test "x${ax_cv_c_compiler_vendor}" = xfujitsu])
 
 dnl print out MPI version and vendor information
 CHECK_MPI_VERSION
+# AC_MSG_WARN(ud_mpi_standard_ver=$ud_mpi_standard_ver)
+# AC_MSG_WARN([ax_cv_mpi_compiler_vendor=$ax_cv_mpi_compiler_vendor])
+# AC_MSG_WARN([ax_cv_mpi_compiler_version=$ax_cv_mpi_compiler_version])
+AC_SUBST([MPI_VERSION], [$ud_mpi_standard_ver])
+AC_SUBST([MPI_VENDOR], [$ax_cv_mpi_compiler_vendor])
+AC_SUBST([MPI_VENDOR_VERSION], [$ax_cv_mpi_compiler_version])
 
 dnl PnetCDF requires MPI-IO support and MPI-IO was first introduced in MPI 2.0
 if test "x$mpi_version" = x ; then
@@ -543,11 +555,16 @@ if test "x${has_mpicxx}" = xyes ; then
    AC_LANG_PUSH(C++)
    dnl get compiler vendor in ax_cv_cxx_compiler_vendor (e.g. gnu, intel)
    AX_COMPILER_VENDOR
+   # AC_MSG_WARN([ax_cv_cxx_compiler_vendor=$ax_cv_cxx_compiler_vendor])
 
    dnl get base compiler command of MPI C++ compiler wrapper in
    dnl ud_cv_mpi_compiler_basename_MPICXX (e.g. /usr/bin/g++, g++-14, icpx)
    UD_MPI_COMPILER_BASENAME(MPICXX)
    UD_MSG_DEBUG(MPICXX=${MPICXX} basename=$ud_cv_mpi_compiler_basename_MPICXX)
+   # AC_MSG_WARN(MPICXX=${MPICXX} basename=$ud_cv_mpi_compiler_basename_MPICXX)
+   # AC_MSG_WARN(ud_vendor_version_MPICXX=$ud_vendor_version_MPICXX)
+   AC_SUBST([MPICXX_BASE], [$ud_cv_mpi_compiler_basename_MPICXX])
+   AC_SUBST([MPICXX_BASE_VERSION], [$ud_vendor_version_MPICXX])
 
    AC_CHECK_FUNC([MPI_File_close], [],
       dnl maybe -lmpi++ is needed at link stage
@@ -772,6 +789,9 @@ if test "x${has_fortran}" = xyes ; then
    dnl ud_cv_mpi_compiler_basename_MPIF77 (e.g. /usr/bin/gfortran, ifx)
    UD_MPI_COMPILER_BASENAME(MPIF77)
    UD_MSG_DEBUG(MPIF77=${MPIF77} basename=$ud_cv_mpi_compiler_basename_MPIF77)
+   # AC_MSG_WARN(MPIF77=${MPIF77} basename=$ud_cv_mpi_compiler_basename_MPIF77)
+   AC_SUBST([MPIF77_BASE], [$ud_cv_mpi_compiler_basename_MPIF77])
+   AC_SUBST([MPIF77_BASE_VERSION], [$ud_vendor_version_MPIF77])
 fi
 
 mpi_mod=no
@@ -864,6 +884,16 @@ AM_CONDITIONAL(HAS_FORTRAN, [test x$has_fortran = xyes])
 AM_CONDITIONAL(HAVE_MPI_MOD, [test x$mpi_mod = xyes])
 
 if test "x${has_fortran}" = xyes ; then
+   # Declare visibility of all functions are by default hidden if the compiler
+   # supports it. Check if the C compiler supports -fvisibility=hidden
+   AC_LANG_PUSH([Fortran])
+   AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
+                         [FCFLAGS="$FCFLAGS -fvisibility=hidden"
+                          FFLAGS="$FFLAGS -fvisibility=hidden"])
+   AC_LANG_POP([Fortran])
+fi
+
+if test "x${has_fortran}" = xyes ; then
    if test "x${enable_strict}" = xyes && test "x${GFC}" = xyes; then
       dnl not all Fortran compilers recognize -Wall
       FFLAGS="$FFLAGS -Wall"
@@ -928,7 +958,10 @@ if test "x${has_fortran}" = xyes ; then
    dnl get base compiler command of MPI F90 compiler wrapper in
    dnl ud_cv_mpi_compiler_basename_MPIF90 (e.g. /usr/bin/gfortran, ifx)
    UD_MPI_COMPILER_BASENAME(MPIF90)
-   UD_MSG_DEBUG(MPIF90=${MPIF90} basename=$ud_cv_mpi_compiler_basename_MPIF90)
+   # UD_MSG_DEBUG(MPIF90=${MPIF90} basename=$ud_cv_mpi_compiler_basename_MPIF90)
+   # AC_MSG_WARN(MPIF90=${MPIF90} basename=$ud_cv_mpi_compiler_basename_MPIF90)
+   AC_SUBST([MPIF90_BASE], [$ud_cv_mpi_compiler_basename_MPIF90])
+   AC_SUBST([MPIF90_BASE_VERSION], [$ud_vendor_version_MPIF90])
 
    dnl customized AC_FC_FIXEDFORM: to just get ac_cv_fc_fixedform without
    dnl appending ac_cv_fc_fixedform to FCFLAGS

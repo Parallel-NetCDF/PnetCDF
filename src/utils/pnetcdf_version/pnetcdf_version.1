@@ -14,12 +14,13 @@ pnetcdf_version
 \%[-d]
 \%[-c]
 \%[-b]
+\%[-l]
 \%[-h]
 .hy
 .ft
 .SH DESCRIPTION
 \fBpnetcdf_version\fP prints the version information of PnetCDF library and
-the configure command line used to build the library
+the configure command line used to build the library.
 
 If no argument is given, all information is printed.
 .SH OPTIONS
@@ -31,6 +32,8 @@ Release date.
 Configure command-line arguments used to build this PnetCDF
 .IP "\fB-b\fP"
 MPI compilers used to build this PnetCDF library
+.IP "\fB-l\fP"
+LMOD PrgEnv module loaded, if available
 .IP "\fB-h\fP"
 Print the available command-line options of pnetcdf_version
 
@@ -43,11 +46,31 @@ Print all information about the PnetCDF library by running the command with no o
 .nf
 PnetCDF Version:    	PNETCDF_RELEASE_VERSION
 PnetCDF Release date:	PNETCDF_RELEASE_DATE
-PnetCDF configure: 	--with-mpi=/usr/local/bin
-MPICC:  /usr/local/bin/mpicc -g -O2
-MPICXX: /usr/local/bin/mpicxx -g -O2
-MPIF77: /usr/local/bin/mpif77 -g -O2
-MPIF90: /usr/local/bin/mpif90 -g -O2
+PnetCDF configure: 	    --with-mpi=/usr/local/bin
+
+MPICC:  /opt/cray/pe/craype/2.7.35/bin/cc
+        CFLAGS: -O2
+        MPI standard version: 4.0
+        MPI compiler vendor: Cray MPICH 9.0.1.498
+        Base compiler: /usr/bin/gcc-14
+        Base compiler version: gcc-14 (SUSE Linux) 14.3.0
+
+MPICXX: /opt/cray/pe/craype/2.7.35/bin/CC
+        CXXFLAGS: -O2
+        Base compiler: /usr/bin/g++-14
+        Base compiler version: g++-14 (SUSE Linux) 14.3.0
+
+MPIF77: /opt/cray/pe/craype/2.7.35/bin/ftn
+        FFLAGS: -O2
+        Base compiler: /opt/cray/pe/gcc-native/14/bin/gfortran
+        Base compiler version: GNU Fortran (SUSE Linux) 14.3.0
+
+MPIF90: /opt/cray/pe/craype/2.7.35/bin/ftn
+        FCFLAGS: -O2
+        Base compiler: /opt/cray/pe/gcc-native/14/bin/gfortran
+        Base compiler version: GNU Fortran (SUSE Linux) 14.3.0
+
+LMOD PrgEnv module loaded: PrgEnv-gnu
 .fi
 
 .SH "SEE ALSO"
