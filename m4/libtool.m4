@@ -134,7 +134,7 @@ func_cc_basename ()
            # For Cray PrgEnv-intel, cc is a wrapper of icc
            # For Cray PrgEnv-gnu, cc is a wrapper of gcc
            # For Cray PrgEnv-nvidia, cc is a wrapper of nvc
-           # func_cc_basename_result=`$cc_temp --version |& head -n 1 | cut -d' ' -f1 | xargs basename`
+           # func_cc_basename_result=`$cc_temp --version 2>&1 | head -n 1 | cut -d' ' -f1 | xargs basename`
            eval "$cc_temp --version" < /dev/null >& conftest.ver
            func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
            ${RM} -f conftest.ver
@@ -152,7 +152,7 @@ func_cc_basename ()
            # For Cray PrgEnv-nvidia, cc is a wrapper of nvc
            # 'cc --version' may also include error of ld error
            # Output of 'nvc --version -c' contains a blank line, must skip it.
-           func_cc_basename_result=`$cc_temp --version -c |& grep -v '^$' | head -n1 | cut -d' ' -f1`
+           func_cc_basename_result=`$cc_temp --version -c 2>&1 | grep -v '^$' | head -n1 | cut -d' ' -f1`
            if test "x${func_cc_basename_result}" = xnvc ||
               test "x${func_cc_basename_result}" = xnvc++ ||
               test "x${func_cc_basename_result}" = xnvfortran ; then
@@ -160,14 +160,14 @@ func_cc_basename ()
            fi
 
            # For Cray PrgEnv-intel that uses oneAPI, cc/CC is a wrapper of icx/icpx
-           func_cc_basename_result=`$cc_temp --version -c |& grep -v '^$' | head -n1 | cut -d' ' -f1`
+           func_cc_basename_result=`$cc_temp --version -c 2>&1 | grep -v '^$' | head -n1 | cut -d' ' -f1`
            if test "x${func_cc_basename_result}" = "xIntel(R)" ; then
-              compile_cmd=`$cc_temp --version -c |& grep icx`
+              compile_cmd=`$cc_temp --version -c 2>&1 | grep icx`
               if test "x${compile_cmd}" != x ; then
                  func_cc_basename_result=icx
                  return
               else
-                 compile_cmd=`$cc_temp --version -c |& grep icpx`
+                 compile_cmd=`$cc_temp --version -c 2>&1 | grep icpx`
                  if test "x${compile_cmd}" != x ; then
                     func_cc_basename_result=icpx
                     return
@@ -177,7 +177,7 @@ func_cc_basename ()
 
            # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
            # Cray cc -V sends the output to stderr.
-           # func_cc_basename_result=`$cc_temp -V |& head -n 1 | cut -d' ' -f1 | xargs basename`
+           # func_cc_basename_result=`$cc_temp -V 2>&1 | head -n 1 | cut -d' ' -f1 | xargs basename`
            eval "$cc_temp -V" < /dev/null >& conftest.ver
            func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
            ${RM} -f conftest.ver
