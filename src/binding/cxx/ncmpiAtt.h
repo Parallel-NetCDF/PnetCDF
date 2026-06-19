@@ -10,7 +10,7 @@ namespace PnetCDF
 {
 
   /*! Abstract base class represents inherited by ncmpiVarAtt and ncmpiGroupAtt. */
-  class NcmpiAtt
+  class PUBLIC_API NcmpiAtt
   {
   public:
 

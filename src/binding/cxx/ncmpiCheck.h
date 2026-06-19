@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <pnetcdf.h>
 
 #ifndef NcmpiCheckFunction
 #define NcmpiCheckFunction

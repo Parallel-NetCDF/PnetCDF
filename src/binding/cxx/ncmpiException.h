@@ -2,6 +2,9 @@
 #include <string>
 #include <iostream>
 
+#include <mpi.h>
+#include <pnetcdf.h>
+
 #ifndef NcmpiExceptionClasses
 #define NcmpiExceptionClasses
 
@@ -21,7 +24,7 @@ namespace PnetCDF
       generates an exception using an object inheriting this class.  All other netCDF-related
       errors  including those originating in the C++ binding, generates an NcmpiException.
     */
-    class NcmpiException : public std::exception {
+    class PUBLIC_API NcmpiException : public std::exception {
     public:
       //NcmpiException(const string& complaint,const char* fileName,int lineNumber);
       NcmpiException(const char* complaint,const char* fileName,int lineNumber);

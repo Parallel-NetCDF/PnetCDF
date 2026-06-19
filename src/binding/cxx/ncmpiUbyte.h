@@ -7,7 +7,7 @@ namespace PnetCDF
 {
 
   /*! Class represents a netCDF atomic Ubyte type. */
-  class NcmpiUbyte : public NcmpiType
+  class PUBLIC_API NcmpiUbyte : public NcmpiType
   {
   public:
 
@@ -22,7 +22,7 @@ namespace PnetCDF
   };
 
   /*! A global instance  of the NcmpiUbyte class within the netCDF namespace. */
-  extern NcmpiUbyte ncmpiUbyte;
+  extern PUBLIC_API NcmpiUbyte ncmpiUbyte;
 
 }
 #endif

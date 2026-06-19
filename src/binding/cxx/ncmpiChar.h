@@ -7,7 +7,7 @@ namespace PnetCDF
 {
 
   /*! Class represents a netCDF atomic Char type. */
-  class NcmpiChar : public NcmpiType
+  class PUBLIC_API NcmpiChar : public NcmpiType
   {
   public:
 
@@ -21,7 +21,7 @@ namespace PnetCDF
   };
 
   /*! A global instance  of the NcmpiChar class within the netCDF namespace. */
-  extern NcmpiChar ncmpiChar;
+  extern PUBLIC_API NcmpiChar ncmpiChar;
 
 }
 #endif

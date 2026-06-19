@@ -21,7 +21,7 @@ namespace PnetCDF
   class NcmpiOpaqueType;   // forward declaration.
 
   /*! Class represents a netCDF group. */
-  class NcmpiGroup
+  class PUBLIC_API NcmpiGroup
   {
 
   public:

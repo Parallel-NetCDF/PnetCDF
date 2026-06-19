@@ -7,7 +7,7 @@ namespace PnetCDF
 {
 
   /*! Class represents a netCDF atomic Byte type. */
-  class NcmpiByte : public NcmpiType
+  class PUBLIC_API NcmpiByte : public NcmpiType
   {
   public:
 
@@ -24,7 +24,7 @@ namespace PnetCDF
   };
 
   /*! A global instance  of the NcmpiByte class within the netCDF namespace. */
-  extern NcmpiByte ncmpiByte;
+  extern PUBLIC_API NcmpiByte ncmpiByte;
 
 }
 #endif

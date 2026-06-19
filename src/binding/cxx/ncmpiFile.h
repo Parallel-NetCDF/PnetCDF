@@ -1,5 +1,6 @@
 #include <string>
 #include "ncmpiGroup.h"
+#include <pnetcdf.h>
 
 #ifndef NcmpiFileClass
 #define NcmpiFileClass
@@ -13,7 +14,7 @@ namespace PnetCDF
     The Ncfile class is the same as the NcmpiGroup class with the additional
     functionality for opening and closing files.
    */
-  class NcmpiFile : public NcmpiGroup
+  class PUBLIC_API NcmpiFile : public NcmpiGroup
    {
    public:
 

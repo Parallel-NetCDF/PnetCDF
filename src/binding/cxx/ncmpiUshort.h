@@ -7,7 +7,7 @@ namespace PnetCDF
 {
 
   /*! Class represents a netCDF atomic Ushort type. */
-  class NcmpiUshort : public NcmpiType
+  class PUBLIC_API NcmpiUshort : public NcmpiType
   {
   public:
 
@@ -22,7 +22,7 @@ namespace PnetCDF
   };
 
   // declare that the class instance ncmpiUshort is known by all....
-  extern NcmpiUshort ncmpiUshort;
+  extern PUBLIC_API NcmpiUshort ncmpiUshort;
 
 }
 #endif

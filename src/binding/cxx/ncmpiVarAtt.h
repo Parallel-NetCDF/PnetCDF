@@ -1,4 +1,5 @@
 #include "ncmpiAtt.h"
+#include <pnetcdf.h>
 
 #ifndef NcmpiVarAttClass
 #define NcmpiVarAttClass
@@ -9,7 +10,7 @@ namespace PnetCDF
   class NcmpiVar;    // forward declaration.
 
   /*! Class represents a netCDF attribute local to a netCDF variable. */
-  class NcmpiVarAtt : public NcmpiAtt
+  class PUBLIC_API NcmpiVarAtt : public NcmpiAtt
   {
   public:
 

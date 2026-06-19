@@ -7,7 +7,7 @@ namespace PnetCDF
 {
 
   /*! Class represents a netCDF atomic Short type. */
-  class NcmpiShort : public NcmpiType
+  class PUBLIC_API NcmpiShort : public NcmpiType
   {
   public:
 
@@ -22,7 +22,7 @@ namespace PnetCDF
   };
 
   /*! A global instance  of the NcmpiShort class within the netCDF namespace. */
-  extern NcmpiShort ncmpiShort;
+  extern PUBLIC_API NcmpiShort ncmpiShort;
 
 }
 #endif

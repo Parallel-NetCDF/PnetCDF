@@ -1,4 +1,5 @@
 #include "ncmpiAtt.h"
+#include <pnetcdf.h>
 
 #ifndef NcmpiGroupAttClass
 #define NcmpiGroupAttClass
@@ -8,7 +9,7 @@ namespace PnetCDF
   class NcmpiGroup;  // forward declaration.
 
   /*! Class represents a netCDF group attribute */
-  class NcmpiGroupAtt : public NcmpiAtt
+  class PUBLIC_API NcmpiGroupAtt : public NcmpiAtt
   {
   public:
 

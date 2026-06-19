@@ -7,7 +7,7 @@ namespace PnetCDF
 {
 
   /*! Class represents a netCDF atomic Float type. */
-  class NcmpiFloat : public NcmpiType
+  class PUBLIC_API NcmpiFloat : public NcmpiType
   {
   public:
 
@@ -22,7 +22,7 @@ namespace PnetCDF
   };
 
   /*! A global instance  of the NcmpiFloat class within the netCDF namespace. */
-  extern NcmpiFloat ncmpiFloat;
+  extern PUBLIC_API NcmpiFloat ncmpiFloat;
 
 }
 #endif

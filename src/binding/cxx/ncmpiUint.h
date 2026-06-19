@@ -7,7 +7,7 @@ namespace PnetCDF
 {
 
   /*! Class represents a netCDF atomic Uint type. */
-  class NcmpiUint : public NcmpiType
+  class PUBLIC_API NcmpiUint : public NcmpiType
   {
   public:
 
@@ -22,7 +22,7 @@ namespace PnetCDF
   };
 
   /*! A global instance  of the NcmpiUint class within the netCDF namespace. */
-  extern NcmpiUint ncmpiUint;
+  extern PUBLIC_API NcmpiUint ncmpiUint;
 
 }
 #endif

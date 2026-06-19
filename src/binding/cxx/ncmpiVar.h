@@ -29,7 +29,7 @@ namespace PnetCDF
   class NcmpiType;   // forward declaration.
 
   /*! Class represents a netCDF variable. */
-  class NcmpiVar
+  class PUBLIC_API NcmpiVar
   {
   public:
 

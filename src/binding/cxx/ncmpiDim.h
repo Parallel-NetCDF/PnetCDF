@@ -1,5 +1,6 @@
 #include <string>
 #include <mpi.h>
+#include <pnetcdf.h>
 
 #ifndef NcmpiDimClass
 #define NcmpiDimClass
@@ -10,7 +11,7 @@ namespace PnetCDF
   class NcmpiGroup;  // forward declaration.
 
   /*! Class represents a netCDF dimension */
-  class NcmpiDim   {
+  class PUBLIC_API NcmpiDim   {
 
   public:
 
