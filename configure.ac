@@ -74,23 +74,6 @@ dnl installed on a system that does not have (or need) ranlib
 dnl libtoolize: `AC_PROG_RANLIB' is rendered obsolete by `LT_INIT'
 dnl AC_PROG_RANLIB
 
-# Check if variable MPICC is set before calling LT_INIT, because LT_INIT will
-# use CC, if set, to check internally. We would like LT_INIT to use MPICC if
-# set to do such checking.
-if test "x$CC" = x ; then
-   if test "x$MPICC" != x ; then
-      CC=$MPICC
-   fi
-fi
-
-dnl libtool v2.4.6 was released in 2015-02-15
-dnl Travis CI only has v2.4.2
-LT_PREREQ([2.5.4])
-dnl LT_INIT([dlopen disable-shared])
-dnl LT_INIT([dlopen])
-dnl LT_INIT([disable-shared])  # build without shared libraries
-LT_INIT
-
 dnl AM_EXTRA_RECURSIVE_TARGETS macro was introduced into automake 1.13
 dnl m4_ifdef([AM_EXTRA_RECURSIVE_TARGETS], [AM_EXTRA_RECURSIVE_TARGETS([tests])])
 AM_EXTRA_RECURSIVE_TARGETS([tests])
@@ -1143,6 +1126,16 @@ if test "x${has_fortran}" = xyes ; then
    AC_MSG_RESULT($decl_get_environment_variable)
 fi
 AM_CONDITIONAL(DECL_GET_ENVIRONMENT_VARIABLE, [test x$decl_get_environment_variable = xyes])
+
+# AC_PROG_CC, AC_PROG_CXX, AC_PROG_FC, AC_PROG_F77 should always be called
+# before LT_INIT
+dnl libtool v2.4.6 was released in 2015-02-15
+dnl Travis CI only has v2.4.2
+LT_PREREQ([2.5.4])
+dnl LT_INIT([dlopen disable-shared])
+dnl LT_INIT([dlopen])
+dnl LT_INIT([disable-shared])  # build without shared libraries
+LT_INIT
 
 if test "x$enable_shared" = xyes ; then
    dnl Call LT_OUTPUT to produce file ./libtool which is used later in
