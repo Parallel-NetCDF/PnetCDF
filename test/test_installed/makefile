@@ -236,5 +236,9 @@ batch.sh: batch.sh.in makefile
 	@sed -i -e "s|__PNETCDF_DIR__|$(PNETCDF_DIR)|" $@
 
 clean:
-	rm -f *.o *.77o *.90o *.testcases77o $(TEST_PROGS) $(EXAMPLE_PROGS) batch.sh interactive.sh
+	rm -f *.o *.77o *.90o *.testcases77o
+	rm -f batch.sh interactive.sh
+	rm -f $(TEST_PROGS) $(EXAMPLE_PROGS)
+	rm -f $(OUT_DIR)/*.nc
+	rmdir $(OUT_DIR)
 

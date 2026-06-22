@@ -24,6 +24,8 @@ export LD_LIBRARY_PATH=__PNETCDF_DIR__/lib:$LD_LIBRARY_PATH
 
 OUT_DIR=__OUT_DIR__
 
+mkdir -p $OUT_DIR
+
 export TESTOUTDIR=$OUT_DIR
 
 NP=4

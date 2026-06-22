@@ -29,7 +29,7 @@
 
 static
 int test_io(const char *out_path,
-            const char *in_path, /* ignored */
+            const char *in_path,
             int         format,
             int         coll_io,
             MPI_Info    info)
