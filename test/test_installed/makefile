@@ -4,7 +4,10 @@
 PNETCDF_SRC = ../..
 CPPFLAGS = -I$(PNETCDF_DIR)/include -I../common -I$(PNETCDF_SRC)/src/utils/ncmpidiff -I$(PNETCDF_SRC)/src/include
 CFLAGS = $(CPPFLAGS)
+
+# NVIDIA Fortran, nvfortran, does not take option -fallow-argument-mismatch
 FCFLAGS = -w -fallow-argument-mismatch
+
 LDFLAGS = -L$(PNETCDF_DIR)/lib
 LDLIBS = ncmpidiff_core.o testutils.o -lpnetcdf
 
