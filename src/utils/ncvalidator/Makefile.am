@@ -11,6 +11,8 @@ SUFFIXES = .o .c
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/include
 
+AM_CFLAGS = @C_VISIBILITY_FLAGS@
+
 bin_PROGRAMS = ncvalidator
 ncvalidator_SOURCES = ncvalidator.c
 

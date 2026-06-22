@@ -6,6 +6,11 @@
 #
 # @configure_input@
 
+AM_CFLAGS = @C_VISIBILITY_FLAGS@
+AM_CXXFLAGS = @CXX_VISIBILITY_FLAGS@
+AM_FCFLAGS = @F90_VISIBILITY_FLAGS@
+AM_FFLAGS = @F77_VISIBILITY_FLAGS@
+
 lib_LTLIBRARIES = libpnetcdf.la
 
 # Using libpnetcdf_la_LDFLAGS = $(ABIVERSIONFLAGS) does NOT seem to work,

@@ -17,6 +17,8 @@ if ENABLE_GIO
    AM_CPPFLAGS += -I${top_builddir}/gio/src
 endif
 
+AM_CFLAGS = @C_VISIBILITY_FLAGS@
+
 noinst_LTLIBRARIES = libcommon.la
 
 H_SRCS = utf8proc_data.h \

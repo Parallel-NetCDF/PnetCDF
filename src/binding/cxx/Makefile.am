@@ -18,6 +18,8 @@ if REPLACE_CXX_FUNC_MACRO
 AM_CPPFLAGS += -D__func__=__FUNCTION__
 endif
 
+AM_CXXFLAGS = @CXX_VISIBILITY_FLAGS@
+
 CXX_HEADER = pnetcdf
 
 nodist_include_HEADERS = $(CXX_HEADER)

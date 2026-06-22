@@ -594,20 +594,24 @@ AM_CONDITIONAL(SEEK_SET_REDEFINED, [test x$ac_cv_CHECK_MPI_CPP_SEEK_SET = xyes])
 
 # Declare visibility of all functions are by default hidden if the compiler
 # supports it. Check if the C compiler supports -fvisibility=hidden
+C_VISIBILITY_FLAGS=
 AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
-                      [CFLAGS="$CFLAGS -fvisibility=hidden"])
+                      [C_VISIBILITY_FLAGS="-fvisibility=hidden"])
+AC_SUBST(C_VISIBILITY_FLAGS)
 
 if test "x${has_mpicxx}" = xyes ; then
    AC_LANG_PUSH([C++])
+   CXX_VISIBILITY_FLAGS=
    # Again check if the C++ compiler supports -fvisibility=hidden
    AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
-                         [CXXFLAGS="$CXXFLAGS -fvisibility=hidden"])
+                         [CXX_VISIBILITY_FLAGS="-fvisibility=hidden"])
 
    # In addition to -fvisibility=hidden, declare visibility of all functions
    # are by default hidden if the compiler supports it. Check if the C++
    # compiler supports -fvisibility-inlines-hidden (recommended for C++)
    AX_CHECK_COMPILE_FLAG([-fvisibility-inlines-hidden],
-                         [CXXFLAGS="$CXXFLAGS -fvisibility-inlines-hidden"])
+                         [CXX_VISIBILITY_FLAGS="$CXX_VISIBILITY_FLAGS -fvisibility-inlines-hidden"])
+   AC_SUBST(CXX_VISIBILITY_FLAGS)
    AC_LANG_POP([C++])
 fi
 
@@ -889,9 +893,13 @@ if test "x${has_fortran}" = xyes ; then
    # Declare visibility of all functions are by default hidden if the compiler
    # supports it. Check if the C compiler supports -fvisibility=hidden
    AC_LANG_PUSH([Fortran])
+   F77_VISIBILITY_FLAGS=
+   F90_VISIBILITY_FLAGS=
    AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
-                         [FCFLAGS="$FCFLAGS -fvisibility=hidden"
-                          FFLAGS="$FFLAGS -fvisibility=hidden"])
+                         [F77_VISIBILITY_FLAGS="-fvisibility=hidden"
+                          F90_VISIBILITY_FLAGS="-fvisibility=hidden"])
+   AC_SUBST(F77_VISIBILITY_FLAGS)
+   AC_SUBST(F90_VISIBILITY_FLAGS)
    AC_LANG_POP([Fortran])
 fi
 

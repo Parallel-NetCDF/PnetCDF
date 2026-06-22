@@ -10,7 +10,7 @@ SUFFIXES = .a .o .mod .f90 .m4 .fh
 
 AM_DEFAULT_SOURCE_EXT = .f90
 
-AM_FCFLAGS = -I. -I$(srcdir)
+AM_FCFLAGS = -I. -I$(srcdir) @F90_VISIBILITY_FLAGS@
 
 if UPPER_CASE_MOD
    PNETCDF_MOD = PNETCDF.$(FC_MODEXT)

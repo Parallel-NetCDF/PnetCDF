@@ -17,6 +17,8 @@ if ENABLE_GIO
    AM_CPPFLAGS += -I${top_builddir}/gio/src
 endif
 
+AM_CFLAGS = @C_VISIBILITY_FLAGS@
+
 noinst_LTLIBRARIES = libncmpio.la
 
 M4FLAGS += -I${top_srcdir}/m4

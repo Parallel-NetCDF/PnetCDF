@@ -10,6 +10,8 @@ AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/include
 AM_CPPFLAGS += @ADIOS_INC@
 
+AM_CFLAGS = @C_VISIBILITY_FLAGS@
+
 NCGEN = ../ncmpigen/ncmpigen
 
 bin_PROGRAMS = ncmpidump

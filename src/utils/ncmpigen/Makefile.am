@@ -13,6 +13,8 @@ AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/drivers/ncmpio
 
+AM_CFLAGS = @C_VISIBILITY_FLAGS@
+
 bin_PROGRAMS = ncmpigen
 ncmpigen_SOURCES = main.c load.c escapes.c getfill.c init.c genlib.c ncmpigentab.c
 ncmpigen_LDADD  = $(top_builddir)/src/libs/libpnetcdf.la

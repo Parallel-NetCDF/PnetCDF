@@ -11,6 +11,9 @@ SUFFIXES = .a .o .c .h .f .inc
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/include
 
+AM_CFLAGS = @C_VISIBILITY_FLAGS@
+AM_FFLAGS = @F77_VISIBILITY_FLAGS@
+
 nodist_include_HEADERS = pnetcdf.inc
 
 C2F_SRCS = issyserrf.c \

@@ -6,6 +6,8 @@
 #
 # @configure_input@
 
+AM_CFLAGS = @C_VISIBILITY_FLAGS@
+
 bin_PROGRAMS = ncoffsets
 EXTRA_DIST = ncoffsets.c
 

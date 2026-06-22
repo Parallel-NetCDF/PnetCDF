@@ -6,6 +6,9 @@
 
 AM_CPPFLAGS  = -I$(top_srcdir)/src/include
 AM_CPPFLAGS += -I$(top_builddir)/src/include
+
+AM_CFLAGS = @C_VISIBILITY_FLAGS@
+
 noinst_bindir =
 noinst_bin_PROGRAMS = ncmpilogdump
 nodist_ncmpilogdump_SOURCES = ncmpilogdump.c

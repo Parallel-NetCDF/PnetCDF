@@ -14,6 +14,8 @@ AM_CPPFLAGS += -I${top_srcdir}/src/drivers/include
 AM_CPPFLAGS += -I${top_builddir}/src/drivers/include
 AM_CPPFLAGS += @NETCDF4_INC@
 
+AM_CFLAGS = @C_VISIBILITY_FLAGS@
+
 noinst_LTLIBRARIES = libnc4io.la
 
 M4FLAGS += -I${top_srcdir}/m4

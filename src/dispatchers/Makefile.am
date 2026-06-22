@@ -13,6 +13,8 @@ AM_CPPFLAGS += -I${top_builddir}/src/include
 AM_CPPFLAGS += -I${top_srcdir}/src/drivers/include
 AM_CPPFLAGS += @NETCDF4_INC@ @ADIOS_INC@
 
+AM_CFLAGS = @C_VISIBILITY_FLAGS@
+
 noinst_LTLIBRARIES = libdispatchers.la
 
 M4FLAGS += -I${top_srcdir}/m4

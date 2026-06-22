@@ -6,6 +6,8 @@
 #
 # @configure_input@
 
+AM_CFLAGS = @C_VISIBILITY_FLAGS@
+
 bin_PROGRAMS = pnetcdf_version
 
 XDEFS = -DMPICC="\"$(MPICC)\""   -DCFLAGS="\"$(CFLAGS)\""
