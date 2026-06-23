@@ -11,11 +11,40 @@ using various I/O access patterns.
 
 ---
 
+### E3SM-IO
+   + [E3SM](https://github.com/E3SM-Project/E3SM) (Energy Exascale Earth System
+     Model) is a climate simulation model and one of the Department of Energy
+     (DOE) mission applications designed to run on the DOE leadership parallel
+     computers.
+   + The I/O kernel of E3SM is extracted into an I/O case study in
+     [E3SM-IO](https://github.com/Parallel-NetCDF/E3SM-IO) which can be used to
+     evaluate the I/O performance of E3SM.
+   + It's data partitioning method is based on the Hilbert space curve
+     algorithm, which results in a highly irregular, non-contiguous pattern.
+     Such patterns always post a great challenge for I/O libraries to achieve a
+     scalable performance when storing data in files in the canonical order.
+   + Example of performance evaluation results (measured on June 23, 2026).
+     * Machine: [Perlmutter](https://docs.nersc.gov/systems/perlmutter/architecture/)
+       at NERSC.
+     * Lustre file striping configuration: 1 MB striping size and the number
+       of striping count equal to the number of compute nodes allocated to
+       the jobs.
+     * The number of MPI processes allocated to each compute node = 128.
+     * Table below shows the write bandwidths in GiB/sec in a strong scaling
+       configuration. It compares PnetCDF versions 1.14.1 and 1.15.0.
+
+       | Case   | # processes | amount (GiB) | 1.14.1 (GiB/s) | 1.15.0 (GiB/s) |
+       |:------:|:-----------:|:------------:|:--------------:|:--------------:|
+       | I case | 1344        |       30.0   |         0.92   |         7.16   |
+       | G case | 9600        |       79.7   |         2.70   |        21.93   |
+       | F case | 21600       |       28.2   |         1.19   |        12.98   |
+
 ### WRF-IO
-   + WRF (Weather Research and Forecast Model) is a weather prediction computer
-     simulation program, https://github.com/wrf-model/WRF, developed at NCAR.
+   + [WRF](https://github.com/wrf-model/WRF) (Weather Research and Forecast
+     Model) is a weather prediction computer simulation program developed at
+     NCAR.
    + This benchmark is an extraction of the I/O kernel of WRF and can be used
-     to evaluate the file write performance of WRF.
+     to evaluate the file I/O performance of WRF.
    + The metadata (dimension size, number of variables, etc.) can be found in
      [WRF-IO/wrf_header.txt)(WRF-IO/wrf_header.txt), which is also used as an
      an input file to the benchmark.
@@ -32,12 +61,12 @@ using various I/O access patterns.
      * Table below shows the write bandwidths in GiB/sec in a weak scaling
        configuration. It compares PnetCDF versions 1.14.1 and 1.15.0.
 
-       | Number of MPI processes and grid size   | amount (GiB) | 1.14.1 (GiB/s) | 1.15.0 (GiB/s) |
-       |:----------------------------------------|-------------:|---------------:|---------------:|
-       | nprocs = 1024  and grids = 2600 x 3800  |       31.5   |         3.70   |         9.42   |
-       | nprocs = 2048  and grids = 2600 x 7600  |       63.1   |         7.62   |        18.44   |
-       | nprocs = 4096  and grids = 5200 x 7600  |      126.2   |         8.26   |        28.92   |
-       | nprocs = 8192  and grids = 5200 x 15200 |      252.3   |        12.97   |        50.68   |
+       | # processes | grid size    | amount (GiB) | 1.14.1 (GiB/s) | 1.15.0 (GiB/s) |
+       |:-----------:|:------------:|:------------:|:--------------:|:--------------:|
+       | 1024        | 2600 x 3800  |       31.5   |         3.70   |         9.42   |
+       | 2048        | 2600 x 7600  |       63.1   |         7.62   |        18.44   |
+       | 4096        | 5200 x 7600  |      126.2   |         8.26   |        28.92   |
+       | 8192        | 5200 x 15200 |      252.3   |        12.97   |        50.68   |
 
 ### FLASH-IO
    + FLASH is a reacting hydrodynamics code developed at University of Chicago.
