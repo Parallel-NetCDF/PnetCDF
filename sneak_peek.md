@@ -114,6 +114,7 @@ This is essentially a placeholder for the next release note ...
 
 * Build recipes
   + `doc/NERSC.md` - note for building PnetCDF on machines at NERSC
+  + `doc/ALCF.md` - note for building PnetCDF on machines at ALCF
 
 * Updated utility programs
   + `pnetcdf_version` - add information about MPI compiler vendors, supported

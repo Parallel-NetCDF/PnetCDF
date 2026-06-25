@@ -23,7 +23,9 @@ EXTRA_DIST = README.CRAY.md \
              README.NetCDF4.md \
              README.ADIOS.md \
              README.burst_buffering.md \
-             pbs.script
+             pbs.script \
+             NERSC.md \
+             ALCF.md
 
 # For VPATH build (parallel build), try delete all sub-directories
 distclean-local:
