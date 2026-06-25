@@ -113,7 +113,7 @@ This is essentially a placeholder for the next release note ...
     variable, the default tests both I/O drivers.
 
 * Build recipes
-  + none
+  + `doc/NERSC.md` - note for building PnetCDF on machines at NERSC
 
 * Updated utility programs
   + `pnetcdf_version` - add information about MPI compiler vendors, supported
