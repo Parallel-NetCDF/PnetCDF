@@ -5,7 +5,7 @@
 /* $Id$ */
 
 #include <stdio.h>
-#include <stdlib.h> /* getenv() */
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h> /* getopt() */
 
@@ -144,11 +144,18 @@ int main( int argc, char *argv[] )
     }
 
     if (flags[Lmod]) {
-        char *env_str = getenv("LMOD_FAMILY_PRGENV");
-
-        if (env_str == NULL) env_str = "N/A";
-
-        printf("LMOD PrgEnv module loaded: %s\n", env_str);
+#ifdef LMOD_FAMILY_PRGENV
+        printf("LMOD module loaded:\n");
+        printf("\tLMOD_VERSION\t\t\t%s\n", LMOD_VERSION);
+        printf("\tLMOD_FAMILY_PRGENV\t\t%s\n", LMOD_FAMILY_PRGENV);
+        printf("\tLMOD_FAMILY_PRGENV_VERSION\t%s\n", LMOD_FAMILY_PRGENV_VERSION);
+        printf("\tLMOD_FAMILY_COMPILER\t\t%s\n", LMOD_FAMILY_COMPILER);
+        printf("\tLMOD_FAMILY_COMPILER_VERSION\t%s\n", LMOD_FAMILY_COMPILER_VERSION);
+        printf("\tLMOD_FAMILY_MPI\t\t\t%s\n", LMOD_FAMILY_MPI);
+        printf("\tLMOD_FAMILY_MPI_VERSION\t\t%s\n", LMOD_FAMILY_MPI_VERSION);
+#else
+        printf("LMOD PrgEnv module loaded: N/A\n");
+#endif
         printf("\n");
     }
 

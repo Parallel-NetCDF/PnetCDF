@@ -2954,6 +2954,16 @@ AC_SUBST(enable_adios)
 AC_SUBST(adios_libdir)
 AM_CONDITIONAL(BUILD_SHARED_LIB, [test x${enable_shared} = xyes])
 
+# check LMOD environment variables (often on Cray systems) if available
+AM_CONDITIONAL(HAVE_LMOD_ENV, [test x${LMOD_FAMILY_PRGENV} != x])
+AC_SUBST(LMOD_VERSION)
+AC_SUBST(LMOD_FAMILY_PRGENV)
+AC_SUBST(LMOD_FAMILY_PRGENV_VERSION)
+AC_SUBST(LMOD_FAMILY_COMPILER)
+AC_SUBST(LMOD_FAMILY_COMPILER_VERSION)
+AC_SUBST(LMOD_FAMILY_MPI)
+AC_SUBST(LMOD_FAMILY_MPI_VERSION)
+
 AC_OUTPUT
 echo "------------------------------------------------------------------------------"
 echo \
