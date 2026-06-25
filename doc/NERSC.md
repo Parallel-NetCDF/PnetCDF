@@ -51,9 +51,7 @@
     cc test.c -L /install/path/lib -lpnetcdf -lmpifort
     ```
   * Because of this issue, we recommend to use the GNU based compilers to
-    build PnetCDF on Perlmutter. Note an application program can always be
-    compiled using Intel based MPI compilers and linked with PnetCDF
-    libraries built with the GNU compilers.
+    build PnetCDF on Perlmutter.
   * This issue does not happen when the PnetCDF's Fortran feature is
     disabled, i.e. adding '--disable-fortran' at the configure command line.
 
