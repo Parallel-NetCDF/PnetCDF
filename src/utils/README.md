@@ -1,13 +1,13 @@
 ## Utility Programs
 
-* [ncmpidiff](#ncmpidiff)
-* [cdfdiff](#cdfdiff)
-* [ncmpidump](#ncmpidump)
-* [ncmpigen](#ncmpigen)
-* [ncoffsets](#ncoffsets)
-* [ncvalidator](#ncvalidator)
-* [pnetcdf-config](#pnetcdf-config)
-* [pnetcdf_version](#pnetcdf_version)
+* [ncmpidiff](#ncmpidiff) - compares the contents of the two files.
+* [cdfdiff](#cdfdiff) - a sequential version of `ncmpidiff`.
+* [ncmpidump](#ncmpidump) - prints a file's contents in an ASCII representation to standard output.
+* [ncmpigen](#ncmpigen) - generates either a netCDF file, or C or Fortran source code to create a netCDF file.
+* [ncoffsets](#ncoffsets) - prints the file offsets information of variables defined in a netCDF file.
+* [ncvalidator](#ncvalidator) - validates whether a netCDF file conforms the classic CDF file formats.
+* [pnetcdf-config](#pnetcdf-config) - displays the build information of an installed PnetCDF library.
+* [pnetcdf_version](#pnetcdf_version) - prints the version information of an installed PnetCDF library.
 
 ### ncmpidiff
 <ul>
