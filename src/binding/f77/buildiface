@@ -1287,10 +1287,10 @@ sub print_weak_decl {
     my $basename = lc($name);
     $basename =~ s/_*$//;
     if (defined($altweak{$basename})) {
-	print $OUTFD "extern FORTRAN_API $altweakrtype{$basename} FORT_CALL $name($altweak{$basename});\n";
+	print $OUTFD "extern PNETCDF_PUBLIC_API $altweakrtype{$basename} FORT_CALL $name($altweak{$basename});\n";
     }
     else {
-	print $OUTFD "extern FORTRAN_API $returnType FORT_CALL $name";
+	print $OUTFD "extern PNETCDF_PUBLIC_API $returnType FORT_CALL $name";
 	&print_args( $OUTFD, $args, 1, $lcname );
 	print $OUTFD ";\n";
     }
@@ -2162,7 +2162,7 @@ sub checkdatarep_in_decl {
 # /* Else leave name alone */
 # #endif
 # /* Add the prototype so the routine knows what this is */
-# extern FORTRAN_API int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+# extern PNETCDF_PUBLIC_API int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
 # #endif
 # ";
 #     }
@@ -2598,10 +2598,10 @@ sub clean_args {
 sub print_routine_type_decl {
     my $OUTFD = $_[0];
     my $lcname = $_[1];
-    # The name "FORTRAN_API" may be use to tell the compiler that
+    # The name "PNETCDF_PUBLIC_API" may be use to tell the compiler that
     #
     if ($do_subdecls) {
-	print $OUTFD "FORTRAN_API $returnType FORT_CALL ";
+	print $OUTFD "PNETCDF_PUBLIC_API $returnType FORT_CALL ";
     }
     else {
 	print $OUTFD "$returnType ";
@@ -2692,10 +2692,10 @@ sub build_specials {
    this file.  Note that the last argument is a character array, so
    we need to include the elements of the Fortran character \"dope vector\".
 */
-FORTRAN_API void FORT_CALL mpirinitc_( void *, void *, void *, void *,
+PNETCDF_PUBLIC_API void FORT_CALL mpirinitc_( void *, void *, void *, void *,
                                          void *, void * FORT_MIXED_LEN_DECL
                                          FORT_END_LEN_DECL );
-FORTRAN_API void FORT_CALL mpirinitc2_( char * FORT_MIXED_LEN_DECL
+PNETCDF_PUBLIC_API void FORT_CALL mpirinitc2_( char * FORT_MIXED_LEN_DECL
                                           FORT_END_LEN_DECL );
 ";
     # These are here rather than in initf.c to solve some link order
@@ -2735,7 +2735,7 @@ void *MPI_F_ARGVS_NULL      = 0;
 
 
     print $OUTFD "
-FORTRAN_API void FORT_CALL mpirinitc_( void *a, void *b, void *c, void *d,
+PNETCDF_PUBLIC_API void FORT_CALL mpirinitc_( void *a, void *b, void *c, void *d,
                                          void *e, void *f FORT_MIXED_LEN(d1)
                                          FORT_END_LEN(d1) )
 {
@@ -2749,7 +2749,7 @@ FORTRAN_API void FORT_CALL mpirinitc_( void *a, void *b, void *c, void *d,
 /* Initialize the Fortran ARGV_NULL to a blank.  Using this routine
    avoids potential problems with string manipulation routines that
    exist in the Fortran runtime but not in the C runtime libraries */
-FORTRAN_API void FORT_CALL mpirinitc2_( char *a FORT_MIXED_LEN(d1)
+PNETCDF_PUBLIC_API void FORT_CALL mpirinitc2_( char *a FORT_MIXED_LEN(d1)
                                           FORT_END_LEN(d1) )
 {
     *a = ' ';
@@ -3334,7 +3334,7 @@ sub ReadAndProcessInterface {
 	}
 
 	# if (/^int\s+$routine_prefix($routine_pattern)\s*\((.*)/) {
-	if (/PUBLIC_API int/) { # next line is the API
+	if (/PNETCDF_PUBLIC_API int/) { # next line is the API
             $_ = <FD>;
           if (/$routine_prefix($routine_pattern)\s*\((.*)/) {
 	    $routine_name = $1;
@@ -3402,7 +3402,7 @@ sub ReadAndProcessInterface {
 		}
 		&print_header( $routine_name, $lcname, $args );
 		if ($do_subdecls) {
-		    print $OUTFD "FORTRAN_API $returnType FORT_CALL ";
+		    print $OUTFD "PNETCDF_PUBLIC_API $returnType FORT_CALL ";
 		}
 		else {
 		    print $OUTFD "$returnType ";
@@ -3514,7 +3514,7 @@ print $OUTFD "#endif\n";
 		}
 		if ($build_prototypes) {
 		    if ($do_subdecls) {
-			print PROTOFD "extern FORTRAN_API $returnType FORT_CALL ${out_prefix}${lcname}_ ";
+			print PROTOFD "extern PNETCDF_PUBLIC_API $returnType FORT_CALL ${out_prefix}${lcname}_ ";
 		    }
 		    else {
 			print PROTOFD "extern $returnType ${out_prefix}${lcname}_ ";
@@ -3859,10 +3859,10 @@ sub HelperForRegister_datarep {
        Like the attribute null functions, we provide multiple weak versions
        of this if possible */
 #if defined(USE_WEAK_SYMBOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK)
-extern FORTRAN_API int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
-extern FORTRAN_API int FORT_CALL mpi_conversion_fn_null__ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
-extern FORTRAN_API int FORT_CALL mpi_conversion_fn_null ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
-extern FORTRAN_API int FORT_CALL MPI_CONVERSION_FN_NULL ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern PNETCDF_PUBLIC_API int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern PNETCDF_PUBLIC_API int FORT_CALL mpi_conversion_fn_null__ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern PNETCDF_PUBLIC_API int FORT_CALL mpi_conversion_fn_null ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern PNETCDF_PUBLIC_API int FORT_CALL MPI_CONVERSION_FN_NULL ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
 /* */
 #ifndef MPICH_MPI_FROM_PMPI
 #pragma weak mpi_conversion_fn_null__ = mpi_conversion_fn_null_
@@ -3883,14 +3883,14 @@ extern FORTRAN_API int FORT_CALL MPI_CONVERSION_FN_NULL ( void*v1, MPI_Fint*v2, 
 #endif /* Test on name mapping */
 
 /* Add the prototype so the routine knows what this is */
-extern FORTRAN_API int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern PNETCDF_PUBLIC_API int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
 
 
 #endif /* Test on use multiple weak symbols */
 #ifndef MPICH_MPI_FROM_PMPI
 
 /* This isn't a callable function */
-FORTRAN_API int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr ) {
+PNETCDF_PUBLIC_API int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr ) {
     return 0;
 }
 #endif

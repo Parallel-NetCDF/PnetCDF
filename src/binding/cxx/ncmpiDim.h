@@ -11,7 +11,7 @@ namespace PnetCDF
   class NcmpiGroup;  // forward declaration.
 
   /*! Class represents a netCDF dimension */
-  class PUBLIC_API NcmpiDim   {
+  class PNETCDF_PUBLIC_API NcmpiDim   {
 
   public:
 

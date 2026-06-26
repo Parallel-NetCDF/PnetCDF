@@ -10,7 +10,7 @@ namespace PnetCDF
   class NcmpiVar;    // forward declaration.
 
   /*! Class represents a netCDF attribute local to a netCDF variable. */
-  class PUBLIC_API NcmpiVarAtt : public NcmpiAtt
+  class PNETCDF_PUBLIC_API NcmpiVarAtt : public NcmpiAtt
   {
   public:
 

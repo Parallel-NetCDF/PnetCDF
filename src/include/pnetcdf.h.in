@@ -712,352 +712,352 @@ by the desired type. */
 /*
  * The Interface
  */
-#ifdef PUBLIC_API
-#undef PUBLIC_API
+#ifdef PNETCDF_PUBLIC_API
+#undef PNETCDF_PUBLIC_API
 #endif
 
 #if defined _WIN32 || defined __CYGWIN__
   #ifdef BUILDING_DLL
-    #define PUBLIC_API __declspec(dllexport)
+    #define PNETCDF_PUBLIC_API __declspec(dllexport)
   #else
-    #define PUBLIC_API __declspec(dllimport)
+    #define PNETCDF_PUBLIC_API __declspec(dllimport)
   #endif
 #else
   #if __GNUC__ >= 4
-    #define PUBLIC_API __attribute__ ((visibility ("default")))
+    #define PNETCDF_PUBLIC_API __attribute__ ((visibility ("default")))
   #else
-    #define PUBLIC_API
+    #define PNETCDF_PUBLIC_API
   #endif
 #endif
 
 /* Begin Prototypes */
 
-PUBLIC_API const char*
+PNETCDF_PUBLIC_API const char*
 ncmpi_strerror(int err);
 
-PUBLIC_API const char*
+PNETCDF_PUBLIC_API const char*
 ncmpi_strerrno(int err);
 
 /* Begin File Functions */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_create(MPI_Comm comm, const char *path, int cmode, MPI_Info info,
              int *ncidp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_open(MPI_Comm comm, const char *path, int omode, MPI_Info info,
            int *ncidp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_file_info(int ncid, MPI_Info *info_used);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_file_info(int ncid, MPI_Info *info_used); /* deprecated */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_delete(const char *filename, MPI_Info info);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_enddef(int ncid);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi__enddef(int ncid, MPI_Offset h_minfree, MPI_Offset v_align,
               MPI_Offset v_minfree, MPI_Offset r_align);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_redef(int ncid);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_set_default_format(int format, int *old_formatp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_default_format(int *formatp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_sync(int ncid);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_flush(int ncid);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_sync_numrecs(int ncid);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_abort(int ncid);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_begin_indep_data(int ncid);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_end_indep_data(int ncid);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_close(int ncid);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_set_fill(int ncid, int fillmode, int *old_modep);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_def_var_fill(int ncid, int varid, int no_fill, const void *fill_value);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_fill_var_rec(int ncid, int varid, MPI_Offset recno);
 
 /* End File Functions */
 
 /* Begin Define Mode Functions */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_def_dim(int ncid, const char *name, MPI_Offset len, int *idp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_def_var(int ncid, const char *name, nc_type xtype, int ndims,
               const int *dimidsp, int *varidp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_rename_dim(int ncid, int dimid, const char *name);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_rename_var(int ncid, int varid, const char *name);
 
 /* End Define Mode Functions */
 
 /* Begin Inquiry Functions */
 
-PUBLIC_API const char* ncmpi_inq_libvers(void);
+PNETCDF_PUBLIC_API const char* ncmpi_inq_libvers(void);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq(int ncid, int *ndimsp, int *nvarsp, int *ngattsp, int *unlimdimidp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_format(int ncid, int *formatp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_file_format(const char *filename, int *formatp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_version(int ncid, int *NC_mode);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_striping(int ncid, int *striping_size, int *striping_count);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_ndims(int ncid, int *ndimsp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_nvars(int ncid, int *nvarsp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_num_rec_vars(int ncid, int *nvarsp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_num_fix_vars(int ncid, int *nvarsp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_natts(int ncid, int *ngattsp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_unlimdim(int ncid, int *unlimdimidp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_dimid(int ncid, const char *name, int *idp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_dim(int ncid, int dimid, char *name, MPI_Offset *lenp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_dimname(int ncid, int dimid, char *name);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_dimlen(int ncid, int dimid, MPI_Offset *lenp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_var(int ncid, int varid, char *name, nc_type *xtypep, int *ndimsp,
               int *dimidsp, int *nattsp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_varid(int ncid, const char *name, int *varidp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_varname(int ncid, int varid, char *name);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_vartype(int ncid, int varid, nc_type *xtypep);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_varndims(int ncid, int varid, int *ndimsp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_vardimid(int ncid, int varid, int *dimidsp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_varnatts(int ncid, int varid, int *nattsp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_varoffset(int ncid, int varid, MPI_Offset *offset);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_put_size(int ncid, MPI_Offset *size);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_get_size(int ncid, MPI_Offset *size);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_header_size(int ncid, MPI_Offset *size);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_header_extent(int ncid, MPI_Offset *extent);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_malloc_size(MPI_Offset *size);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_malloc_max_size(MPI_Offset *size);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_malloc_list(void);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_files_opened(int *num, int *ncids);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_recsize(int ncid, MPI_Offset *recsize);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_var_fill(int ncid, int varid, int *no_fill, void *fill_value);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_path(int ncid, int *pathlen, char *path);
 
 /* End Inquiry Functions */
 
 /* Begin _att */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_att(int ncid, int varid, const char *name, nc_type *xtypep,
               MPI_Offset *lenp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_attid(int ncid, int varid, const char *name, int *idp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_atttype(int ncid, int varid, const char *name, nc_type *xtypep);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_attlen(int ncid, int varid, const char *name, MPI_Offset *lenp);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_attname(int ncid, int varid, int attnum, char *name);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_copy_att(int ncid_in, int varid_in, const char *name, int ncid_out,
                int varid_out);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_rename_att(int ncid, int varid, const char *name, const char *newname);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_del_att(int ncid, int varid, const char *name);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_att(int ncid, int varid, const char *name, nc_type xtype,
               MPI_Offset nelems, const void *value);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_att_text(int ncid, int varid, const char *name, MPI_Offset len,
               const char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_att_schar(int ncid, int varid, const char *name, nc_type xtype,
               MPI_Offset len, const signed char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_att_short(int ncid, int varid, const char *name, nc_type xtype,
               MPI_Offset len, const short *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_att_int(int ncid, int varid, const char *name, nc_type xtype,
               MPI_Offset len, const int *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_att_float(int ncid, int varid, const char *name, nc_type xtype,
               MPI_Offset len, const float *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_att_double(int ncid, int varid, const char *name, nc_type xtype,
               MPI_Offset len, const double *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_att_longlong(int ncid, int varid, const char *name, nc_type xtype,
               MPI_Offset len, const long long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_att(int ncid, int varid, const char *name, void *value);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_att_text(int ncid, int varid, const char *name, char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_att_schar(int ncid, int varid, const char *name, signed char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_att_short(int ncid, int varid, const char *name, short *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_att_int(int ncid, int varid, const char *name, int *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_att_float(int ncid, int varid, const char *name, float *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_att_double(int ncid, int varid, const char *name, double *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_att_longlong(int ncid, int varid, const char *name, long long *ip);
 
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_att_uchar(int ncid, int varid, const char *name, nc_type xtype,
               MPI_Offset len, const unsigned char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_att_ubyte(int ncid, int varid, const char *name, nc_type xtype,
               MPI_Offset len, const unsigned char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_att_ushort(int ncid, int varid, const char *name, nc_type xtype,
               MPI_Offset len, const unsigned short *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_att_uint(int ncid, int varid, const char *name, nc_type xtype,
               MPI_Offset len, const unsigned int *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_att_long(int ncid, int varid, const char *name, nc_type xtype,
               MPI_Offset len, const long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_att_ulonglong(int ncid, int varid, const char *name, nc_type xtype,
               MPI_Offset len, const unsigned long long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_att_uchar(int ncid, int varid, const char *name, unsigned char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_att_ubyte(int ncid, int varid, const char *name, unsigned char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_att_ushort(int ncid, int varid, const char *name, unsigned short *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_att_uint(int ncid, int varid, const char *name, unsigned int *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_att_long(int ncid, int varid, const char *name, long *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_att_ulonglong(int ncid, int varid, const char *name,
               unsigned long long *ip);
 
@@ -1067,188 +1067,188 @@ ncmpi_get_att_ulonglong(int ncid, int varid, const char *name,
 
 /* Begin {put,get}_var1 */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1(int ncid, int varid, const MPI_Offset *start,
                const void *op, MPI_Offset bufcount, MPI_Datatype buftype);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_all(int ncid, int varid, const MPI_Offset *start,
                const void *op, MPI_Offset bufcount, MPI_Datatype buftype);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_text(int ncid, int varid, const MPI_Offset *start,
                const char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_text_all(int ncid, int varid, const MPI_Offset *start,
                const char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_schar(int ncid, int varid, const MPI_Offset *start,
                const signed char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_schar_all(int ncid, int varid, const MPI_Offset *start,
                const signed char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_short(int ncid, int varid, const MPI_Offset *start,
                const short *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_short_all(int ncid, int varid, const MPI_Offset *start,
                const short *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_int(int ncid, int varid, const MPI_Offset *start,
                const int *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_int_all(int ncid, int varid, const MPI_Offset *start,
                const int *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_float(int ncid, int varid, const MPI_Offset *start,
                const float *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_float_all(int ncid, int varid, const MPI_Offset *start,
                const float *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_double(int ncid, int varid, const MPI_Offset *start,
                const double *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_double_all(int ncid, int varid, const MPI_Offset *start,
                const double *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_longlong(int ncid, int varid, const MPI_Offset *start,
                const long long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_longlong_all(int ncid, int varid, const MPI_Offset *start,
                const long long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1(int ncid, int varid, const MPI_Offset *start,
                void *ip, MPI_Offset bufcount, MPI_Datatype buftype);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_all(int ncid, int varid, const MPI_Offset *start,
                void *ip, MPI_Offset bufcount, MPI_Datatype buftype);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_text(int ncid, int varid, const MPI_Offset *start,
                char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_text_all(int ncid, int varid, const MPI_Offset *start,
                char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_schar(int ncid, int varid, const MPI_Offset *start,
                signed char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_schar_all(int ncid, int varid, const MPI_Offset *start,
                signed char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_short(int ncid, int varid, const MPI_Offset *start,
                short *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_short_all(int ncid, int varid, const MPI_Offset *start,
                short *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_int(int ncid, int varid, const MPI_Offset *start,
                int *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_int_all(int ncid, int varid, const MPI_Offset *start,
                int *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_float(int ncid, int varid, const MPI_Offset *start,
                float *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_float_all(int ncid, int varid, const MPI_Offset *start,
                float *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_double(int ncid, int varid, const MPI_Offset *start,
                double *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_double_all(int ncid, int varid, const MPI_Offset *start,
                double *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_longlong(int ncid, int varid, const MPI_Offset *start,
                long long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_longlong_all(int ncid, int varid, const MPI_Offset *start,
                long long *ip);
 
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_uchar(int ncid, int varid, const MPI_Offset *start,
                const unsigned char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_uchar_all(int ncid, int varid, const MPI_Offset *start,
                const unsigned char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_ushort(int ncid, int varid, const MPI_Offset *start,
                const unsigned short *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_ushort_all(int ncid, int varid, const MPI_Offset *start,
                const unsigned short *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_uint(int ncid, int varid, const MPI_Offset *start,
                const unsigned int *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_uint_all(int ncid, int varid, const MPI_Offset *start,
                const unsigned int *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_long(int ncid, int varid, const MPI_Offset *start,
                const long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_long_all(int ncid, int varid, const MPI_Offset *start,
                const long *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_ulonglong(int ncid, int varid, const MPI_Offset *start,
                const unsigned long long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var1_ulonglong_all(int ncid, int varid, const MPI_Offset *start,
                const unsigned long long *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_uchar(int ncid, int varid, const MPI_Offset *start,
                unsigned char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_uchar_all(int ncid, int varid, const MPI_Offset *start,
                unsigned char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_ushort(int ncid, int varid, const MPI_Offset *start,
                unsigned short *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_ushort_all(int ncid, int varid, const MPI_Offset *start,
                unsigned short *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_uint(int ncid, int varid, const MPI_Offset *start,
                unsigned int *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_uint_all(int ncid, int varid, const MPI_Offset *start,
                unsigned int *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_long(int ncid, int varid, const MPI_Offset *start,
                long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_long_all(int ncid, int varid, const MPI_Offset *start,
                long *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_ulonglong(int ncid, int varid, const MPI_Offset *start,
                unsigned long long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var1_ulonglong_all(int ncid, int varid, const MPI_Offset *start,
                unsigned long long *ip);
 /* End Skip Prototypes for Fortran binding */
@@ -1257,142 +1257,142 @@ ncmpi_get_var1_ulonglong_all(int ncid, int varid, const MPI_Offset *start,
 
 /* Begin {put,get}_var */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var(int ncid, int varid, const void *op, MPI_Offset bufcount,
               MPI_Datatype buftype);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_all(int ncid, int varid, const void *op, MPI_Offset bufcount,
               MPI_Datatype buftype);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_text(int ncid, int varid, const char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_text_all(int ncid, int varid, const char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_schar(int ncid, int varid, const signed char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_schar_all(int ncid, int varid, const signed char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_short(int ncid, int varid, const short *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_short_all(int ncid, int varid, const short *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_int(int ncid, int varid, const int *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_int_all(int ncid, int varid, const int *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_float(int ncid, int varid, const float *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_float_all(int ncid, int varid, const float *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_double(int ncid, int varid, const double *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_double_all(int ncid, int varid, const double *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_longlong(int ncid, int varid, const long long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_longlong_all(int ncid, int varid, const long long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var(int ncid, int varid, void *ip, MPI_Offset bufcount,
               MPI_Datatype buftype);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_all(int ncid, int varid, void *ip, MPI_Offset bufcount,
               MPI_Datatype buftype);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_text(int ncid, int varid, char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_text_all(int ncid, int varid, char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_schar(int ncid, int varid, signed char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_schar_all(int ncid, int varid, signed char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_short(int ncid, int varid, short *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_short_all(int ncid, int varid, short *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_int(int ncid, int varid, int *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_int_all(int ncid, int varid, int *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_float(int ncid, int varid, float *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_float_all(int ncid, int varid, float *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_double(int ncid, int varid, double *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_double_all(int ncid, int varid, double *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_longlong(int ncid, int varid, long long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_longlong_all(int ncid, int varid, long long *ip);
 
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_uchar(int ncid, int varid, const unsigned char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_uchar_all(int ncid, int varid, const unsigned char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_ushort(int ncid, int varid, const unsigned short *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_ushort_all(int ncid, int varid, const unsigned short *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_uint(int ncid, int varid, const unsigned int *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_uint_all(int ncid, int varid, const unsigned int *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_long(int ncid, int varid, const long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_long_all(int ncid, int varid, const long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_ulonglong(int ncid, int varid, const unsigned long long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_var_ulonglong_all(int ncid, int varid, const unsigned long long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_uchar(int ncid, int varid, unsigned char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_uchar_all(int ncid, int varid, unsigned char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_ushort(int ncid, int varid, unsigned short *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_ushort_all(int ncid, int varid, unsigned short *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_uint(int ncid, int varid, unsigned int *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_uint_all(int ncid, int varid, unsigned int *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_long(int ncid, int varid, long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_long_all(int ncid, int varid, long *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_ulonglong(int ncid, int varid, unsigned long long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_var_ulonglong_all(int ncid, int varid, unsigned long long *ip);
 /* End Skip Prototypes for Fortran binding */
 
@@ -1400,193 +1400,193 @@ ncmpi_get_var_ulonglong_all(int ncid, int varid, unsigned long long *ip);
 
 /* Begin {put,get}_vara */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const void *op,
                MPI_Offset bufcount, MPI_Datatype buftype);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const void *op,
                MPI_Offset bufcount, MPI_Datatype buftype);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_text(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_text_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_schar(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const signed char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_schar_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const signed char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_short(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const short *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_short_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const short *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_int(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const int *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_int_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const int *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_float(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const float *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_float_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const float *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_double(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const double *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_double_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const double *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_longlong(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const long long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_longlong_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const long long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, void *ip, MPI_Offset bufcount,
                MPI_Datatype buftype);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, void *ip, MPI_Offset bufcount,
                MPI_Datatype buftype);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_text(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_text_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_schar(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, signed char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_schar_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, signed char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_short(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, short *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_short_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, short *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_int(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, int *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_int_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, int *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_float(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, float *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_float_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, float *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_double(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, double *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_double_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, double *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_longlong(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, long long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_longlong_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, long long *ip);
 
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_uchar(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const unsigned char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_uchar_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const unsigned char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_ushort(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const unsigned short *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_ushort_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const unsigned short *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_uint(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const unsigned int *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_uint_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const unsigned int *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_long(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_long_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_ulonglong(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const unsigned long long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vara_ulonglong_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const unsigned long long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_uchar(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, unsigned char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_uchar_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, unsigned char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_ushort(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, unsigned short *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_ushort_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, unsigned short *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_uint(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, unsigned int *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_uint_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, unsigned int *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_long(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_long_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, long *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_ulonglong(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, unsigned long long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vara_ulonglong_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, unsigned long long *ip);
 
@@ -1596,136 +1596,136 @@ ncmpi_get_vara_ulonglong_all(int ncid, int varid, const MPI_Offset *start,
 
 /* Begin {put,get}_vars */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const void *op, MPI_Offset bufcount, MPI_Datatype buftype);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const void *op, MPI_Offset bufcount, MPI_Datatype buftype);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_text(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_text_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_schar(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const signed char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_schar_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const signed char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_short(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const short *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_short_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const short *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_int(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const int *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_int_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const int *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_float(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const float *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_float_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const float *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_double(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const double *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_double_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const double *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_longlong(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const long long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_longlong_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const long long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                void *ip, MPI_Offset bufcount, MPI_Datatype buftype);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                void *ip, MPI_Offset bufcount, MPI_Datatype buftype);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_schar(int ncid, int varid, const MPI_Offset *start,
                    const MPI_Offset *count, const MPI_Offset *stride,
                    signed char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_schar_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                signed char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_text(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride, char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_text_all(int ncid, int varid, const MPI_Offset *start,
                    const MPI_Offset *count, const MPI_Offset *stride, char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_short(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride, short *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_short_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride, short *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_int(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride, int *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_int_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride, int *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_float(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride, float *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_float_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride, float *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_double(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride, double *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_double_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride, double *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_longlong(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                long long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_longlong_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                long long *ip);
@@ -1733,92 +1733,92 @@ ncmpi_get_vars_longlong_all(int ncid, int varid, const MPI_Offset *start,
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_uchar(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const unsigned char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_uchar_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const unsigned char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_ushort(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const unsigned short *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_ushort_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const unsigned short *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_uint(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const unsigned int *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_uint_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const unsigned int *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_long(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_long_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_ulonglong(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const unsigned long long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vars_ulonglong_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const unsigned long long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_uchar(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                unsigned char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_uchar_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                unsigned char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_ushort(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                unsigned short *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_ushort_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                unsigned short *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_uint(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                unsigned int *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_uint_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                unsigned int *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_long(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_long_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                long *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_ulonglong(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                unsigned long long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vars_ulonglong_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                unsigned long long *ip);
@@ -1829,150 +1829,150 @@ ncmpi_get_vars_ulonglong_all(int ncid, int varid, const MPI_Offset *start,
 
 /* Begin {put,get}_varm */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const void *op,
                MPI_Offset bufcount, MPI_Datatype buftype);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const void *op,
                MPI_Offset bufcount, MPI_Datatype buftype);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_text(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_text_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_schar(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const signed char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_schar_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const signed char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_short(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const short *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_short_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const short *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_int(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const int *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_int_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const int *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_float(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const float *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_float_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const float *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_double(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const double *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_double_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const double *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_longlong(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const long long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_longlong_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const long long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, void *ip, MPI_Offset bufcount,
                MPI_Datatype buftype);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, void *ip, MPI_Offset bufcount,
                MPI_Datatype buftype);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_schar(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, signed char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_schar_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, signed char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_text(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_text_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_short(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, short *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_short_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, short *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_int(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, int *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_int_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, int *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_float(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, float *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_float_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, float *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_double(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, double *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_double_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, double *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_longlong(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, long long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_longlong_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, long long *ip);
@@ -1980,92 +1980,92 @@ ncmpi_get_varm_longlong_all(int ncid, int varid, const MPI_Offset *start,
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_uchar(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const unsigned char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_uchar_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const unsigned char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_ushort(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const unsigned short *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_ushort_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const unsigned short *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_uint(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const unsigned int *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_uint_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const unsigned int *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_long(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_long_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_ulonglong(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const unsigned long long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varm_ulonglong_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, const unsigned long long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_uchar(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, unsigned char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_uchar_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, unsigned char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_ushort(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, unsigned short *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_ushort_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, unsigned short *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_uint(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, unsigned int *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_uint_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, unsigned int *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_long(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_long_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, long *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_ulonglong(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, unsigned long long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varm_ulonglong_all(int ncid, int varid, const MPI_Offset *start,
                const MPI_Offset *count, const MPI_Offset *stride,
                const MPI_Offset *imap, unsigned long long *ip);
@@ -2076,83 +2076,83 @@ ncmpi_get_varm_ulonglong_all(int ncid, int varid, const MPI_Offset *start,
 
 /* Begin of {put,get}_varn{kind} */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn(int ncid, int varid, int num, MPI_Offset* const *starts,
                MPI_Offset* const *counts, const void *op,
                MPI_Offset bufcount, MPI_Datatype buftype);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                 const void *op, MPI_Offset bufcount, MPI_Datatype buftype);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn(int ncid, int varid, int num, MPI_Offset* const *starts,
                MPI_Offset* const *counts,  void *ip, MPI_Offset bufcount,
                MPI_Datatype buftype);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                void *ip, MPI_Offset bufcount, MPI_Datatype buftype);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_text(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_text_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_schar(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const signed char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_schar_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const signed char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_short(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const short *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_short_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const short *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_int(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const int *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_int_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const int *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_float(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const float *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_float_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const float *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_double(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const double *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_double_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const double *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_longlong(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const long long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_longlong_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const long long *op);
@@ -2160,112 +2160,112 @@ ncmpi_put_varn_longlong_all(int ncid, int varid, int num,
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_uchar(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned char *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_uchar_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned char *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_ushort(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned short *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_ushort_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned short *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_uint(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned int *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_uint_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned int *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_long(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_long_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const long *op);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_ulonglong(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned long long *op);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_varn_ulonglong_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned long long *op);
 
 /* End Skip Prototypes for Fortran binding */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_text(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_text_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_schar(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                signed char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_schar_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                signed char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_short(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                short *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_short_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                short *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_int(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                int *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_int_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                int *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_float(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                float *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_float_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                float *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_double(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                double *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_double_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                double *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_longlong(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                long long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_longlong_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                long long *ip);
@@ -2273,47 +2273,47 @@ ncmpi_get_varn_longlong_all(int ncid, int varid, int num,
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_uchar(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned char *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_uchar_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned char *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_ushort(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned short *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_ushort_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned short *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_uint(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned int *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_uint_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned int *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_long(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_long_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                long *ip);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_ulonglong(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned long long *ip);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_varn_ulonglong_all(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned long long *ip);
@@ -2323,16 +2323,16 @@ ncmpi_get_varn_ulonglong_all(int ncid, int varid, int num,
 /* End of {put,get}_varn{kind} */
 
 /* Begin {put,get}_vard */
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vard(int ncid, int varid, MPI_Datatype filetype, void *ip,
                MPI_Offset bufcount, MPI_Datatype buftype);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_get_vard_all(int ncid, int varid, MPI_Datatype filetype, void *ip,
                MPI_Offset bufcount, MPI_Datatype buftype);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vard(int ncid, int varid, MPI_Datatype filetype, const void *ip,
                MPI_Offset bufcount, MPI_Datatype buftype);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_put_vard_all(int ncid, int varid, MPI_Datatype filetype, const void *ip,
                MPI_Offset bufcount, MPI_Datatype buftype);
 /* End of {put,get}_vard */
@@ -2344,187 +2344,187 @@ ncmpi_put_vard_all(int ncid, int varid, MPI_Datatype filetype, const void *ip,
 
 /* Begin non-blocking data access functions */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_wait(int ncid, int count, int array_of_requests[],
            int array_of_statuses[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_wait_all(int ncid, int count, int array_of_requests[],
                int array_of_statuses[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_cancel(int ncid, int num, int *reqs, int *statuses);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_buffer_attach(int ncid, MPI_Offset bufsize);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_buffer_detach(int ncid);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_buffer_usage(int ncid, MPI_Offset *usage);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_buffer_size(int ncid, MPI_Offset *buf_size);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_inq_nreqs(int ncid, int *nreqs);
 
 /* Begin {iput,iget,bput}_var1 */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var1(int ncid, int varid, const MPI_Offset *start,
                 const void *op, MPI_Offset bufcount,
                 MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var1_text(int ncid, int varid, const MPI_Offset *start,
                 const char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var1_schar(int ncid, int varid, const MPI_Offset *start,
                 const signed char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var1_short(int ncid, int varid, const MPI_Offset *start,
                 const short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var1_int(int ncid, int varid, const MPI_Offset *start,
                 const int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var1_float(int ncid, int varid, const MPI_Offset *start,
                 const float *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var1_double(int ncid, int varid, const MPI_Offset *start,
                 const double *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var1_longlong(int ncid, int varid, const MPI_Offset *start,
                 const long long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var1(int ncid, int varid, const MPI_Offset *start, void *ip,
                 MPI_Offset bufcount, MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var1_schar(int ncid, int varid, const MPI_Offset *start,
                 signed char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var1_text(int ncid, int varid, const MPI_Offset *start,
                 char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var1_short(int ncid, int varid, const MPI_Offset *start,
                 short *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var1_int(int ncid, int varid, const MPI_Offset *start,
                 int *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var1_float(int ncid, int varid, const MPI_Offset *start,
                 float *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var1_double(int ncid, int varid, const MPI_Offset *start,
                 double *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var1_longlong(int ncid, int varid, const MPI_Offset *start,
                 long long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var1(int ncid, int varid, const MPI_Offset *start, const void *op,
                 MPI_Offset bufcount, MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var1_text(int ncid, int varid, const MPI_Offset *start,
                 const char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var1_schar(int ncid, int varid, const MPI_Offset *start,
                 const signed char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var1_short(int ncid, int varid, const MPI_Offset *start,
                 const short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var1_int(int ncid, int varid, const MPI_Offset *start,
                 const int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var1_float(int ncid, int varid, const MPI_Offset *start,
                 const float *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var1_double(int ncid, int varid, const MPI_Offset *start,
                 const double *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var1_longlong(int ncid, int varid, const MPI_Offset *start,
                 const long long *op, int *req);
 
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var1_uchar(int ncid, int varid, const MPI_Offset *start,
                 const unsigned char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var1_ushort(int ncid, int varid, const MPI_Offset *start,
                 const unsigned short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var1_uint(int ncid, int varid, const MPI_Offset *start,
                 const unsigned int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var1_long(int ncid, int varid, const MPI_Offset *start,
                 const long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var1_ulonglong(int ncid, int varid, const MPI_Offset *start,
                 const unsigned long long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var1_uchar(int ncid, int varid, const MPI_Offset *start,
                 unsigned char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var1_ushort(int ncid, int varid, const MPI_Offset *start,
                 unsigned short *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var1_uint(int ncid, int varid, const MPI_Offset *start,
                 unsigned int *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var1_long(int ncid, int varid, const MPI_Offset *start,
                 long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var1_ulonglong(int ncid, int varid, const MPI_Offset *start,
                 unsigned long long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var1_uchar(int ncid, int varid, const MPI_Offset *start,
                 const unsigned char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var1_ushort(int ncid, int varid, const MPI_Offset *start,
                 const unsigned short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var1_uint(int ncid, int varid, const MPI_Offset *start,
                 const unsigned int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var1_long(int ncid, int varid, const MPI_Offset *start,
                 const long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var1_ulonglong(int ncid, int varid, const MPI_Offset *start,
                 const unsigned long long *op, int *req);
 
@@ -2534,128 +2534,128 @@ ncmpi_bput_var1_ulonglong(int ncid, int varid, const MPI_Offset *start,
 
 /* Begin {iput,iget,bput}_var */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var(int ncid, int varid, const void *op, MPI_Offset bufcount,
                MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var_schar(int ncid, int varid, const signed char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var_text(int ncid, int varid, const char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var_short(int ncid, int varid, const short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var_int(int ncid, int varid, const int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var_float(int ncid, int varid, const float *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var_double(int ncid, int varid, const double *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var_longlong(int ncid, int varid, const long long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var(int ncid, int varid, void *ip, MPI_Offset bufcount,
                MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var_schar(int ncid, int varid, signed char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var_text(int ncid, int varid, char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var_short(int ncid, int varid, short *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var_int(int ncid, int varid, int *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var_float(int ncid, int varid, float *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var_double(int ncid, int varid, double *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var_longlong(int ncid, int varid, long long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var(int ncid, int varid, const void *op, MPI_Offset bufcount,
                MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var_schar(int ncid, int varid, const signed char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var_text(int ncid, int varid, const char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var_short(int ncid, int varid, const short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var_int(int ncid, int varid, const int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var_float(int ncid, int varid, const float *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var_double(int ncid, int varid, const double *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var_longlong(int ncid, int varid, const long long *op, int *req);
 
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var_uchar(int ncid, int varid, const unsigned char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var_ushort(int ncid, int varid, const unsigned short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var_uint(int ncid, int varid, const unsigned int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var_long(int ncid, int varid, const long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_var_ulonglong(int ncid, int varid, const unsigned long long *op,
                int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var_uchar(int ncid, int varid, unsigned char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var_ushort(int ncid, int varid, unsigned short *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var_uint(int ncid, int varid, unsigned int *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var_long(int ncid, int varid, long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_var_ulonglong(int ncid, int varid, unsigned long long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var_uchar(int ncid, int varid, const unsigned char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var_ushort(int ncid, int varid, const unsigned short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var_uint(int ncid, int varid, const unsigned int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var_long(int ncid, int varid, const long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_var_ulonglong(int ncid, int varid, const unsigned long long *op,
                int *req);
 
@@ -2665,166 +2665,166 @@ ncmpi_bput_var_ulonglong(int ncid, int varid, const unsigned long long *op,
 
 /* Begin {iput,iget,bput}_vara */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vara(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const void *op,
                 MPI_Offset bufcount, MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vara_schar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const signed char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vara_text(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vara_short(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vara_int(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vara_float(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const float *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vara_double(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const double *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vara_longlong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const long long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vara(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, void *ip, MPI_Offset bufcount,
                 MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vara_schar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, signed char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vara_text(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vara_short(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, short *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vara_int(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, int *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vara_float(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, float *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vara_double(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, double *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vara_longlong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, long long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vara(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const void *op,
                 MPI_Offset bufcount, MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vara_schar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const signed char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vara_text(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vara_short(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vara_int(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vara_float(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const float *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vara_double(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const double *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vara_longlong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const long long *op, int *req);
 
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vara_uchar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const unsigned char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vara_ushort(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const unsigned short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vara_uint(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const unsigned int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vara_long(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vara_ulonglong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const unsigned long long *op,
                 int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vara_uchar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, unsigned char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vara_ushort(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, unsigned short *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vara_uint(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, unsigned int *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vara_long(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vara_ulonglong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, unsigned long long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vara_uchar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const unsigned char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vara_ushort(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const unsigned short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vara_uint(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const unsigned int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vara_long(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vara_ulonglong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const unsigned long long *op,
                 int *req);
@@ -2835,124 +2835,124 @@ ncmpi_bput_vara_ulonglong(int ncid, int varid, const MPI_Offset *start,
 
 /* Begin {iput,iget,bput}_vars */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vars(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const void *op, MPI_Offset bufcount,
                 MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vars_schar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const signed char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vars_text(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vars_short(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vars_int(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vars_float(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const float *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vars_double(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const double *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vars_longlong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const long long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vars(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride, void *ip,
                 MPI_Offset bufcount, MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vars_schar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 signed char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vars_text(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vars_short(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 short *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vars_int(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 int *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vars_float(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 float *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vars_double(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 double *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vars_longlong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 long long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vars(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const void *op, MPI_Offset bufcount,
                 MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vars_schar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const signed char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vars_text(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vars_short(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vars_int(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vars_float(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const float *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vars_double(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const double *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vars_longlong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const long long *op, int *req);
@@ -2960,77 +2960,77 @@ ncmpi_bput_vars_longlong(int ncid, int varid, const MPI_Offset *start,
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vars_uchar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const unsigned char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vars_ushort(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const unsigned short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vars_uint(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const unsigned int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vars_long(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_vars_ulonglong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const unsigned long long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vars_uchar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 unsigned char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vars_ushort(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 unsigned short *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vars_uint(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 unsigned int *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vars_long(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_vars_ulonglong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 unsigned long long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vars_uchar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const unsigned char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vars_ushort(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const unsigned short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vars_uint(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const unsigned int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vars_long(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_vars_ulonglong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const unsigned long long *op, int *req);
@@ -3041,126 +3041,126 @@ ncmpi_bput_vars_ulonglong(int ncid, int varid, const MPI_Offset *start,
 
 /* Begin {iput,iget,bput}_varm */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varm(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const void *op,
                 MPI_Offset bufcount, MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varm_schar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const signed char *op,
                 int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varm_text(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varm_short(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varm_int(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varm_float(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const float *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varm_double(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const double *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varm_longlong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const long long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varm(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, void *ip, MPI_Offset bufcount,
                 MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varm_schar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, signed char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varm_text(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varm_short(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, short *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varm_int(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, int *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varm_float(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, float *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varm_double(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, double *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varm_longlong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, long long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varm(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const void *op,
                 MPI_Offset bufcount, MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varm_schar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const signed char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varm_text(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varm_short(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varm_int(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varm_float(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const float *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varm_double(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const double *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varm_longlong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const long long *op, int *req);
@@ -3168,81 +3168,81 @@ ncmpi_bput_varm_longlong(int ncid, int varid, const MPI_Offset *start,
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varm_uchar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const unsigned char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varm_ushort(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const unsigned short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varm_uint(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const unsigned int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varm_long(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varm_ulonglong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const unsigned long long *op,
                 int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varm_uchar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, unsigned char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varm_ushort(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, unsigned short *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varm_uint(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, unsigned int *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varm_long(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varm_ulonglong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, unsigned long long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varm_uchar(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const unsigned char *op,
                 int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varm_ushort(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const unsigned short *op,
                 int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varm_uint(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const unsigned int *op,
                 int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varm_long(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varm_ulonglong(int ncid, int varid, const MPI_Offset *start,
                 const MPI_Offset *count, const MPI_Offset *stride,
                 const MPI_Offset *imap, const unsigned long long *op,
@@ -3254,47 +3254,47 @@ ncmpi_bput_varm_ulonglong(int ncid, int varid, const MPI_Offset *start,
 
 /* Begin of nonblocking {iput,iget}_varn{kind} */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varn(int ncid, int varid, int num, MPI_Offset* const *starts,
                 MPI_Offset* const *counts, const void *op,
                 MPI_Offset bufcount, MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varn(int ncid, int varid, int num, MPI_Offset* const *starts,
                 MPI_Offset* const *counts,  void *op, MPI_Offset bufcount,
                 MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varn_text(int ncid, int varid, int num,
                 MPI_Offset* const *starts,
                 MPI_Offset* const *counts, const char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varn_schar(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const signed char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varn_short(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varn_int(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varn_float(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const float *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varn_double(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const double *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varn_longlong(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const long long *op, int *req);
@@ -3303,64 +3303,64 @@ ncmpi_iput_varn_longlong(int ncid, int varid, int num,
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varn_uchar(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varn_ushort(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varn_uint(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varn_long(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iput_varn_ulonglong(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned long long *op, int *req);
 
 /* End Skip Prototypes for Fortran binding */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varn_text(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varn_schar(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                signed char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varn_short(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                short *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varn_int(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                int *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varn_float(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                float *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varn_double(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                double *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varn_longlong(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                long long *ip, int *req);
@@ -3369,27 +3369,27 @@ ncmpi_iget_varn_longlong(int ncid, int varid, int num,
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varn_uchar(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned char *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varn_ushort(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned short *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varn_uint(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned int *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varn_long(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                long *ip, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_iget_varn_ulonglong(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned long long *ip, int *req);
@@ -3400,42 +3400,42 @@ ncmpi_iget_varn_ulonglong(int ncid, int varid, int num,
 
 /* Begin of nonblocking bput_varn{kind} */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varn(int ncid, int varid, int num, MPI_Offset* const *starts,
                MPI_Offset* const *counts, const void *op,
                MPI_Offset bufcount, MPI_Datatype buftype, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varn_text(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varn_schar(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const signed char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varn_short(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varn_int(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varn_float(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const float *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varn_double(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const double *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varn_longlong(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const long long *op, int *req);
@@ -3444,27 +3444,27 @@ ncmpi_bput_varn_longlong(int ncid, int varid, int num,
 /* Begin Skip Prototypes for Fortran binding */
 /* skip types: uchar, ubyte, ushort, uint, long, ulonglong string */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varn_uchar(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned char *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varn_ushort(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned short *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varn_uint(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned int *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varn_long(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const long *op, int *req);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_bput_varn_ulonglong(int ncid, int varid, int num,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                const unsigned long long *op, int *req);
@@ -3478,1092 +3478,1092 @@ ncmpi_bput_varn_ulonglong(int ncid, int varid, int num,
 /* Begin Skip Prototypes for Fortran binding */
 /* skip all mput/mget APIs as Fortran cannot handle array of buffers */
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var(int ncid, int num, int *varids, void* const *buf,
                const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_all(int ncid, int num, int *varids, void* const *buf,
                const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_text(int ncid, int num, int *varids, char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_text_all(int ncid, int num, int *varids, char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_schar(int ncid, int num, int *varids, signed char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_schar_all(int ncid, int num, int *varids, signed char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_uchar(int ncid, int num, int *varids, unsigned char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_uchar_all(int ncid, int num, int *varids, unsigned char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_short(int ncid, int num, int *varids, short* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_short_all(int ncid, int num, int *varids, short* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_ushort(int ncid, int num, int *varids, unsigned short* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_ushort_all(int ncid, int num, int *varids,
                unsigned short* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_int(int ncid, int num, int *varids, int* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_int_all(int ncid, int num, int *varids, int* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_uint(int ncid, int num, int *varids, unsigned int* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_uint_all(int ncid, int num, int *varids, unsigned int* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_long(int ncid, int num, int *varids, long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_long_all(int ncid, int num, int *varids, long* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_float(int ncid, int num, int *varids, float* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_float_all(int ncid, int num, int *varids, float* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_double(int ncid, int num, int *varids, double* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_double_all(int ncid, int num, int *varids, double* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_longlong(int ncid, int num, int *varids, long long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_longlong_all(int ncid, int num, int *varids, long long* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_ulonglong(int ncid, int num, int *varids,
                unsigned long long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var_ulonglong_all(int ncid, int num, int *varids,
                unsigned long long* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1(int ncid, int num, int *varids,
                MPI_Offset* const *starts, void* const *buf,
                const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, void* const *buf,
                const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_text(int ncid, int num, int *varids,
                MPI_Offset* const *starts, char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_text_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_schar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, signed char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_schar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, signed char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_uchar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_uchar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_short(int ncid, int num, int *varids,
                MPI_Offset* const *starts, short* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_short_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, short* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_ushort(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned short* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_ushort_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned short* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_int(int ncid, int num, int *varids,
                MPI_Offset* const *starts, int* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_int_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, int* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_uint(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned int* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_uint_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned int* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_long(int ncid, int num, int *varids,
                MPI_Offset* const *starts, long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_long_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, long* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_float(int ncid, int num, int *varids,
                MPI_Offset* const *starts, float* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_float_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, float* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_double(int ncid, int num, int *varids,
                MPI_Offset* const *starts, double* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_double_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, double* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_longlong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, long long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_longlong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, long long* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_ulonglong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned long long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_var1_ulonglong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned long long* const *buf);
 
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara(int ncid, int num, int *varids, MPI_Offset* const *starts,
                MPI_Offset* const *counts, void* const *buf,
                const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                void* const *buf, const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_text(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_text_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_schar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                signed char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_schar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                signed char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_uchar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_uchar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_short(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                short* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_short_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                short* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_ushort(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned short* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_ushort_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned short* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_int(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                int* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_int_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                int* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_uint(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned int* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_uint_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned int* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_long(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_long_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                long* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_float(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                float* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_float_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                float* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_double(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                double* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_double_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                double* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_longlong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                long long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_longlong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                long long* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_ulonglong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned long long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vara_ulonglong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned long long* const *buf);
 
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, void* const *buf,
                const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, void* const *buf,
                const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_text(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_text_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_schar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, signed char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_schar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, signed char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_uchar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_uchar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_short(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, short* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_short_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, short* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_ushort(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned short* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_ushort_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned short* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_int(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, int* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_int_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, int* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_uint(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned int* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_uint_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned int* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_long(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_long_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, long* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_float(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, float* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_float_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, float* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_double(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, double* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_double_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, double* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_longlong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, long long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_longlong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, long long* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_ulonglong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned long long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_vars_ulonglong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned long long* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                void* const *buf, const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                void* const *buf, const MPI_Offset *bufcounts, const MPI_Datatype datatypes[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_text(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_text_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_schar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                signed char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_schar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                signed char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_uchar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned char* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_uchar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned char* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_short(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                short* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_short_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                short* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_ushort(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned short* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_ushort_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned short* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_int(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                int* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_int_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                int* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_uint(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned int* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_uint_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned int* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_long(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_long_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                long* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_float(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                float* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_float_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                float* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_double(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                double* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_double_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                double* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_longlong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                long long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_longlong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                long long* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_ulonglong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned long long* const *buf);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mput_varm_ulonglong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned long long* const *buf);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var(int ncid, int num, int *varids, void *bufs[],
                const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_all(int ncid, int num, int *varids, void *bufs[],
                const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_text(int ncid, int num, int *varids, char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_text_all(int ncid, int num, int *varids, char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_schar(int ncid, int num, int *varids, signed char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_schar_all(int ncid, int num, int *varids, signed char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_uchar(int ncid, int num, int *varids, unsigned char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_uchar_all(int ncid, int num, int *varids, unsigned char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_short(int ncid, int num, int *varids, short *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_short_all(int ncid, int num, int *varids, short *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_ushort(int ncid, int num, int *varids, unsigned short *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_ushort_all(int ncid, int num, int *varids,
                unsigned short *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_int(int ncid, int num, int *varids, int *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_int_all(int ncid, int num, int *varids, int *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_uint(int ncid, int num, int *varids, unsigned int *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_uint_all(int ncid, int num, int *varids, unsigned int *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_long(int ncid, int num, int *varids, long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_long_all(int ncid, int num, int *varids, long *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_float(int ncid, int num, int *varids, float *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_float_all(int ncid, int num, int *varids, float *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_double(int ncid, int num, int *varids, double *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_double_all(int ncid, int num, int *varids, double *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_longlong(int ncid, int num, int *varids, long long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_longlong_all(int ncid, int num, int *varids, long long *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_ulonglong(int ncid, int num, int *varids,
                unsigned long long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var_ulonglong_all(int ncid, int num, int *varids,
                unsigned long long *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1(int ncid, int num, int *varids,
                MPI_Offset* const *starts, void *bufs[],
                const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, void *bufs[],
                const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_text(int ncid, int num, int *varids,
                MPI_Offset* const *starts, char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_text_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_schar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, signed char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_schar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, signed char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_uchar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_uchar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_short(int ncid, int num, int *varids,
                MPI_Offset* const *starts, short *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_short_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, short *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_ushort(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned short *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_ushort_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned short *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_int(int ncid, int num, int *varids,
                MPI_Offset* const *starts, int *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_int_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, int *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_uint(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned int *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_uint_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned int *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_long(int ncid, int num, int *varids,
                MPI_Offset* const *starts, long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_long_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, long *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_float(int ncid, int num, int *varids,
                MPI_Offset* const *starts, float *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_float_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, float *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_double(int ncid, int num, int *varids,
                MPI_Offset* const *starts, double *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_double_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, double *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_longlong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, long long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_longlong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, long long *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_ulonglong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned long long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_var1_ulonglong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, unsigned long long *bufs[]);
 
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                void *bufs[], const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                void *bufs[], const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_text(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_text_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_schar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                signed char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_schar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                signed char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_uchar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_uchar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_short(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                short *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_short_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                short *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_ushort(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned short *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_ushort_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned short *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_int(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                int *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_int_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                int *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_uint(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned int *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_uint_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned int *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_long(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_long_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                long *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_float(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                float *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_float_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                float *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_double(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                double *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_double_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                double *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_longlong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                long long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_longlong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                long long *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_ulonglong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned long long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vara_ulonglong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                unsigned long long *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, void *bufs[],
                const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, void *bufs[],
                const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_text(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_text_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_schar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, signed char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_schar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, signed char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_uchar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_uchar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_short(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, short *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_short_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, short *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_ushort(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned short *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_ushort_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned short *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_int(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, int *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_int_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, int *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_uint(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned int *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_uint_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned int *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_long(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_long_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, long *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_float(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, float *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_float_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, float *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_double(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, double *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_double_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, double *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_longlong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, long long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_longlong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, long long *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_ulonglong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned long long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_vars_ulonglong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, unsigned long long *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                void *bufs[], const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                void *bufs[], const MPI_Offset *bufcounts, const MPI_Datatype *datatypes);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_text(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_text_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_schar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                signed char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_schar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                signed char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_uchar(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned char *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_uchar_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned char *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_short(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                short *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_short_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                short *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_ushort(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned short *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_ushort_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned short *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_int(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                int *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_int_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                int *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_uint(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned int *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_uint_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned int *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_long(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_long_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                long *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_float(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                float *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_float_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                float *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_double(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                double *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_double_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                double *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_longlong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                long long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_longlong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                long long *bufs[]);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_ulonglong(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
                unsigned long long *bufs[]);
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 ncmpi_mget_varm_ulonglong_all(int ncid, int num, int *varids,
                MPI_Offset* const *starts, MPI_Offset* const *counts,
                MPI_Offset* const *strides, MPI_Offset* const *imaps,
@@ -4574,32 +4574,32 @@ ncmpi_mget_varm_ulonglong_all(int ncid, int num, int *varids,
 /* End {mput,mget}_var */
 
 /* Prototypes for CDF file header parser APIs */
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 cdl_hdr_open(const char *filename, int *hid);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 cdl_hdr_close(int hid);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 cdl_hdr_inq_format(int hid, int *format);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 cdl_hdr_inq_ndims(int hid, int *ndims);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 cdl_hdr_inq_dim(int hid, int dimid, char **name, MPI_Offset *size);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 cdl_hdr_inq_nvars(int hid, int *nvars);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 cdl_hdr_inq_var(int hid, int varid, char **name, nc_type *xtype, int *ndims,
                 int **dimids);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 cdl_hdr_inq_nattrs(int hid, int varid, int *nattrs);
 
-PUBLIC_API int
+PNETCDF_PUBLIC_API int
 cdl_hdr_inq_attr(int hid, int varid, int attrid, char **name, nc_type *xtype,
                  MPI_Offset *nelems, void **value);
 

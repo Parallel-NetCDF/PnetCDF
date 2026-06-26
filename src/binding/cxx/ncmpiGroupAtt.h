@@ -9,7 +9,7 @@ namespace PnetCDF
   class NcmpiGroup;  // forward declaration.
 
   /*! Class represents a netCDF group attribute */
-  class PUBLIC_API NcmpiGroupAtt : public NcmpiAtt
+  class PNETCDF_PUBLIC_API NcmpiGroupAtt : public NcmpiAtt
   {
   public:
 

@@ -18,7 +18,7 @@ $BUILDIFACE -infile=../lib/pnetcdf.h -deffile=defs $@
 for file in *f.c mpifnetcdf.h ; do
     if grep FORT_DLL_SPEC $file >/dev/null 2>&1 ; then
 	rm -f .tmp
-        sed -e 's/FORT_DLL_SPEC/FORTRAN_API/g' $file > .tmp
+        sed -e 's/FORT_DLL_SPEC/PNETCDF_PUBLIC_API/g' $file > .tmp
 	mv .tmp $file
     fi
 done

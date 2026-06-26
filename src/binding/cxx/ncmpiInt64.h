@@ -7,7 +7,7 @@ namespace PnetCDF
 {
 
   /*! Class represents a netCDF atomic Int64 type. */
-  class PUBLIC_API NcmpiInt64 : public NcmpiType
+  class PNETCDF_PUBLIC_API NcmpiInt64 : public NcmpiType
   {
   public:
 
@@ -22,7 +22,7 @@ namespace PnetCDF
   };
 
   /*! A global instance  of the NcmpiInt64 class within the netCDF namespace. */
-  extern PUBLIC_API NcmpiInt64 ncmpiInt64;
+  extern PNETCDF_PUBLIC_API NcmpiInt64 ncmpiInt64;
 
 }
 #endif

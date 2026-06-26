@@ -38,22 +38,6 @@
 #define FORT_END_LEN(a)       , int a
 #endif
 
-/* Support Windows extension to specify which functions are exported from
-   shared (DLL) libraries */
-#if defined _WIN32 || defined __CYGWIN__
-  #ifdef BUILDING_DLL
-    #define FORTRAN_API __declspec(dllexport)
-  #else
-    #define FORTRAN_API __declspec(dllimport)
-  #endif
-#else
-  #if __GNUC__ >= 4
-    #define FORTRAN_API __attribute__ ((visibility ("default")))
-  #else
-    #define FORTRAN_API
-  #endif
-#endif
-
 /* Support an alternate approach for declaring a weak symbol supported by
    some versions of gcc */
 #ifdef USE_WEAK_ATTRIBUTE
@@ -65,10 +49,10 @@
 /* Utility functions */
 int ncmpixVardim( int, int );
 
-extern FORTRAN_API int FORT_CALL nfmpi_xstrerror_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(d2) FORT_END_LEN(d2) );
-extern FORTRAN_API int FORT_CALL nfmpi_xstrerrno_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(d2) FORT_END_LEN(d2) );
-extern FORTRAN_API int FORT_CALL nfmpi_xinq_libvers_ ( char *v1 FORT_MIXED_LEN(d1) FORT_END_LEN(d1) );
-extern FORTRAN_API int FORT_CALL nfmpi_issyserr_ ( MPI_Fint *v1 );
+extern PNETCDF_PUBLIC_API int FORT_CALL nfmpi_xstrerror_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(d2) FORT_END_LEN(d2) );
+extern PNETCDF_PUBLIC_API int FORT_CALL nfmpi_xstrerrno_ ( MPI_Fint *v1, char *v2 FORT_MIXED_LEN(d2) FORT_END_LEN(d2) );
+extern PNETCDF_PUBLIC_API int FORT_CALL nfmpi_xinq_libvers_ ( char *v1 FORT_MIXED_LEN(d1) FORT_END_LEN(d1) );
+extern PNETCDF_PUBLIC_API int FORT_CALL nfmpi_issyserr_ ( MPI_Fint *v1 );
 /* Define the internal values needed for Fortran support */
 
 /* Fortran logicals */

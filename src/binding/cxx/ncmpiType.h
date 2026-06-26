@@ -10,7 +10,7 @@ namespace PnetCDF
   class NcmpiGroup; // forward declaration to avoid cyclic reference.
 
   /*! Base class inherited by NcOpaque, NcVlen, NcCompound and NcEnum classes. */
-  class PUBLIC_API NcmpiType
+  class PNETCDF_PUBLIC_API NcmpiType
   {
 
   public:

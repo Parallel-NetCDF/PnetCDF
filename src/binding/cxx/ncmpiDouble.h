@@ -7,7 +7,7 @@ namespace PnetCDF
 {
 
   /*! Class represents a netCDF atomic Double type. */
-  class PUBLIC_API NcmpiDouble : public NcmpiType
+  class PNETCDF_PUBLIC_API NcmpiDouble : public NcmpiType
   {
   public:
 
@@ -22,7 +22,7 @@ namespace PnetCDF
   };
 
   /*! A global instance  of the NcmpiDouble class within the netCDF namespace. */
-  extern PUBLIC_API NcmpiDouble ncmpiDouble;
+  extern PNETCDF_PUBLIC_API NcmpiDouble ncmpiDouble;
 
 }
 #endif

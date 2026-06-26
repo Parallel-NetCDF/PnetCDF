@@ -14,7 +14,7 @@ namespace PnetCDF
     The Ncfile class is the same as the NcmpiGroup class with the additional
     functionality for opening and closing files.
    */
-  class PUBLIC_API NcmpiFile : public NcmpiGroup
+  class PNETCDF_PUBLIC_API NcmpiFile : public NcmpiGroup
    {
    public:
 
