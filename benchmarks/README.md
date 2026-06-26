@@ -20,9 +20,10 @@ using various I/O access patterns.
      [E3SM-IO](https://github.com/Parallel-NetCDF/E3SM-IO) which can be used to
      evaluate the I/O performance of E3SM.
    + It's data partitioning method is based on the Hilbert space curve
-     algorithm, which results in a highly irregular, non-contiguous pattern.
-     Such patterns always post a great challenge for I/O libraries to achieve a
-     scalable performance when storing data in files in the canonical order.
+     algorithm, which results in a highly irregular, non-contiguous pattern,
+     per variable. Such patterns always post a great challenge for I/O
+     libraries to achieve a scalable performance when storing data in files in
+     the canonical order.
    + Example of performance evaluation results (measured on June 23, 2026).
      * Machine: [Perlmutter](https://docs.nersc.gov/systems/perlmutter/architecture/)
        at NERSC.
@@ -33,11 +34,11 @@ using various I/O access patterns.
      * Table below shows the write bandwidths in GiB/sec in a strong scaling
        configuration. It compares PnetCDF versions 1.14.1 and 1.15.0.
 
-       | Case   | # processes | amount (GiB) | 1.14.1 (GiB/s) | 1.15.0 (GiB/s) |
-       |:------:|:-----------:|:------------:|:--------------:|:--------------:|
-       | I case | 1344        |       30.0   |         0.92   |         7.16   |
-       | G case | 9600        |       79.7   |         2.70   |        21.93   |
-       | F case | 21600       |       28.2   |         1.19   |        12.98   |
+       | Case   | # nodes | # processes | amount (GiB) | 1.14.1 (GiB/s) | 1.15.0 (GiB/s) |
+       |:------:|:-------:|:-----------:|:------------:|:--------------:|:--------------:|
+       | I case |    11   |     1344    |       30.0   |         0.92   |         7.16   |
+       | G case |    75   |     9600    |       79.7   |         2.70   |        21.93   |
+       | F case |   169   |    21600    |       28.2   |         1.19   |        12.98   |
 
 ### WRF-IO
    + [WRF](https://github.com/wrf-model/WRF) (Weather Research and Forecast
@@ -47,9 +48,9 @@ using various I/O access patterns.
      to evaluate the file I/O performance of WRF.
    + The metadata (dimension size, number of variables, etc.) can be found in
      [WRF-IO/wrf_header.txt)(WRF-IO/wrf_header.txt), which is also used as an
-     an input file to the benchmark.
+     input file to the benchmark.
    + It's data partitioning pattern is a 2D block-block checkerboard pattern,
-     along the longitude and latitude.
+     along the longitude and latitude, per variable.
    + Example of performance evaluation results (measured on June 19, 2026).
      * Machine: [Perlmutter](https://docs.nersc.gov/systems/perlmutter/architecture/)
        at NERSC.
@@ -61,18 +62,38 @@ using various I/O access patterns.
      * Table below shows the write bandwidths in GiB/sec in a weak scaling
        configuration. It compares PnetCDF versions 1.14.1 and 1.15.0.
 
-       | # processes | grid size    | amount (GiB) | 1.14.1 (GiB/s) | 1.15.0 (GiB/s) |
-       |:-----------:|:------------:|:------------:|:--------------:|:--------------:|
-       | 1024        | 2600 x 3800  |       31.5   |         3.70   |         9.42   |
-       | 2048        | 2600 x 7600  |       63.1   |         7.62   |        18.44   |
-       | 4096        | 5200 x 7600  |      126.2   |         8.26   |        28.92   |
-       | 8192        | 5200 x 15200 |      252.3   |        12.97   |        50.68   |
+       | # nodes | # processes | grid size    | amount (GiB) | 1.14.1 (GiB/s) | 1.15.0 (GiB/s) |
+       |:-------:|:-----------:|:------------:|:------------:|:--------------:|:--------------:|
+       |    8    | 1024        | 2600 x 3800  |       31.5   |         3.70   |         9.42   |
+       |   16    | 2048        | 2600 x 7600  |       63.1   |         7.62   |        18.44   |
+       |   32    | 4096        | 5200 x 7600  |      126.2   |         8.26   |        28.92   |
+       |   64    | 8192        | 5200 x 15200 |      252.3   |        12.97   |        50.68   |
 
 ### FLASH-IO
    + FLASH is a reacting hydrodynamics code developed at University of Chicago.
      https://astro.uchicago.edu/research/flash.php
    + This benchmark is algorithmically identical to its I/O kernel.
    + This distribution contains only PnetCDF I/O method.
+   + It's data partitioning pattern is each process writes to a contiguous
+     space per variable in the file.
+   + Example of performance evaluation results (measured on June 26, 2026).
+     * Machine: [Perlmutter](https://docs.nersc.gov/systems/perlmutter/architecture/)
+       at NERSC.
+     * Lustre file striping configuration: 1 MB striping size and the number
+       of striping count equal to the number of compute nodes allocated to
+       the jobs.
+     * The number of MPI processes allocated to each compute node = 128.
+     * The problem domain sizes per process is 16 x 16 x 16.
+     * It used collective write option.
+     * Table below shows the write bandwidths in GiB/sec in a weak scaling
+       configuration. It compares PnetCDF versions 1.14.1 and 1.15.0.
+
+       | # nodes | # processes | amount (GiB) | 1.14.1 (GiB/s) | 1.15.0 (GiB/s) |
+       |:-------:|:-----------:|:------------:|:--------------:|:--------------:|
+       |    8    | 1024        |       71.9   |         5.16   |        11.02   |
+       |   16    | 2048        |      143.8   |         9.84   |        21.21   |
+       |   32    | 4096        |      287.7   |        17.56   |        35.06   |
+       |   64    | 8192        |      575.3   |        26.56   |        52.12   |
 
 ### C/aggregation.c
    + This program writes a series of 2D variables with data partitioning
