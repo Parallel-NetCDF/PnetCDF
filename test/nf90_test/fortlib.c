@@ -18,21 +18,21 @@
 #include <mpinetcdf_impl.h>
 #include <mpifnetcdf.h>
 
-extern FORTRAN_API void FORT_CALL ud_exit_(int *v1);
-extern FORTRAN_API void FORT_CALL ud_abort_(int *v1);
-extern FORTRAN_API double FORT_CALL ud_rand_(int *seed);
-extern FORTRAN_API int FORT_CALL ud_shift_(int * value, int *amount);
-extern FORTRAN_API void FORT_CALL nc_ignorefpe_(int *doit);
-extern FORTRAN_API double FORT_CALL min_schar_(void);
-extern FORTRAN_API double FORT_CALL min_short_(void);
-extern FORTRAN_API double FORT_CALL min_int_(void);
-extern FORTRAN_API double FORT_CALL min_int64_(void);
-extern FORTRAN_API double FORT_CALL max_schar_(void);
-extern FORTRAN_API double FORT_CALL max_short_(void);
-extern FORTRAN_API double FORT_CALL max_int_(void);
-extern FORTRAN_API double FORT_CALL max_int64_(void);
-extern FORTRAN_API double FORT_CALL max_float_(void);
-extern FORTRAN_API double FORT_CALL max_double_(void);
+extern PNETCDF_PUBLIC_API void FORT_CALL ud_exit_(int *v1);
+extern PNETCDF_PUBLIC_API void FORT_CALL ud_abort_(int *v1);
+extern PNETCDF_PUBLIC_API double FORT_CALL ud_rand_(int *seed);
+extern PNETCDF_PUBLIC_API int FORT_CALL ud_shift_(int * value, int *amount);
+extern PNETCDF_PUBLIC_API void FORT_CALL nc_ignorefpe_(int *doit);
+extern PNETCDF_PUBLIC_API double FORT_CALL min_schar_(void);
+extern PNETCDF_PUBLIC_API double FORT_CALL min_short_(void);
+extern PNETCDF_PUBLIC_API double FORT_CALL min_int_(void);
+extern PNETCDF_PUBLIC_API double FORT_CALL min_int64_(void);
+extern PNETCDF_PUBLIC_API double FORT_CALL max_schar_(void);
+extern PNETCDF_PUBLIC_API double FORT_CALL max_short_(void);
+extern PNETCDF_PUBLIC_API double FORT_CALL max_int_(void);
+extern PNETCDF_PUBLIC_API double FORT_CALL max_int64_(void);
+extern PNETCDF_PUBLIC_API double FORT_CALL max_float_(void);
+extern PNETCDF_PUBLIC_API double FORT_CALL max_double_(void);
 
 
 #ifdef F77_NAME_UPPER
@@ -44,7 +44,7 @@ extern FORTRAN_API double FORT_CALL max_double_(void);
 /* Else leave name alone */
 #endif
 
-FORTRAN_API void FORT_CALL ud_exit_(int *v1) {
+PNETCDF_PUBLIC_API void FORT_CALL ud_exit_(int *v1) {
 	if (*v1 == 0) {
 		MPI_Finalize();
 		exit(0);
@@ -62,7 +62,7 @@ FORTRAN_API void FORT_CALL ud_exit_(int *v1) {
 /* Else leave name alone */
 #endif
 
-FORTRAN_API void FORT_CALL ud_abort_(int *v1) {
+PNETCDF_PUBLIC_API void FORT_CALL ud_abort_(int *v1) {
 	MPI_Abort(MPI_COMM_WORLD, *v1);
 	return;
 }
@@ -82,7 +82,7 @@ FORTRAN_API void FORT_CALL ud_abort_(int *v1) {
 * We don't use RAND_MAX here because not all compilation
 * environments define it (e.g. gcc(1) under SunOS 4.1.3).
 */
-FORTRAN_API double FORT_CALL ud_rand_(int *seed) {
+PNETCDF_PUBLIC_API double FORT_CALL ud_rand_(int *seed) {
 	if (*seed != 0) srandom(*seed);
 	return (double)(random() % 32768 ) / 32767.0;
 }
@@ -96,7 +96,7 @@ FORTRAN_API double FORT_CALL ud_rand_(int *seed) {
 /* Else leave name alone */
 #endif
 
-FORTRAN_API int FORT_CALL ud_shift_(int * value, int *amount) {
+PNETCDF_PUBLIC_API int FORT_CALL ud_shift_(int * value, int *amount) {
 	if(*amount < 0)
 		*value >>= -*amount;
 	else if (*amount > 0)
@@ -113,7 +113,7 @@ FORTRAN_API int FORT_CALL ud_shift_(int * value, int *amount) {
 /* Else leave name alone */
 #endif
 #include <signal.h>
-FORTRAN_API void FORT_CALL nc_ignorefpe_(int *doit)
+PNETCDF_PUBLIC_API void FORT_CALL nc_ignorefpe_(int *doit)
 {
 	if(doit)
 		(void) signal(SIGFPE, SIG_IGN);
@@ -127,7 +127,7 @@ FORTRAN_API void FORT_CALL nc_ignorefpe_(int *doit)
 #define min_schar_  min_schar
 /* Else leave name alone */
 #endif
-FORTRAN_API double FORT_CALL min_schar_(void) {
+PNETCDF_PUBLIC_API double FORT_CALL min_schar_(void) {
 	return (double)SCHAR_MIN;
 }
 
@@ -139,7 +139,7 @@ FORTRAN_API double FORT_CALL min_schar_(void) {
 #define min_short_  min_short
 /* Else leave name alone */
 #endif
-FORTRAN_API double FORT_CALL min_short_(void) {
+PNETCDF_PUBLIC_API double FORT_CALL min_short_(void) {
 	return (double)SHRT_MIN;
 }
 
@@ -151,7 +151,7 @@ FORTRAN_API double FORT_CALL min_short_(void) {
 #define min_int_  min_int
 /* Else leave name alone */
 #endif
-FORTRAN_API double FORT_CALL min_int_(void) {
+PNETCDF_PUBLIC_API double FORT_CALL min_int_(void) {
 	return (double)INT_MIN;
 }
 
@@ -163,7 +163,7 @@ FORTRAN_API double FORT_CALL min_int_(void) {
 #define min_int64_  min_int64
 /* Else leave name alone */
 #endif
-FORTRAN_API double FORT_CALL min_int64_(void) {
+PNETCDF_PUBLIC_API double FORT_CALL min_int64_(void) {
 	return (double)INT64_MIN;
 }
 
@@ -175,7 +175,7 @@ FORTRAN_API double FORT_CALL min_int64_(void) {
 #define max_schar_  max_schar
 /* Else leave name alone */
 #endif
-FORTRAN_API double FORT_CALL max_schar_(void) {
+PNETCDF_PUBLIC_API double FORT_CALL max_schar_(void) {
 	return (double)SCHAR_MAX;
 }
 
@@ -187,7 +187,7 @@ FORTRAN_API double FORT_CALL max_schar_(void) {
 #define max_short_  max_short
 /* Else leave name alone */
 #endif
-FORTRAN_API double FORT_CALL max_short_(void) {
+PNETCDF_PUBLIC_API double FORT_CALL max_short_(void) {
 	return (double)SHRT_MAX;
 }
 
@@ -199,7 +199,7 @@ FORTRAN_API double FORT_CALL max_short_(void) {
 #define max_int_  max_int
 /* Else leave name alone */
 #endif
-FORTRAN_API double FORT_CALL max_int_(void) {
+PNETCDF_PUBLIC_API double FORT_CALL max_int_(void) {
 	return (double)INT_MAX;
 }
 
@@ -211,7 +211,7 @@ FORTRAN_API double FORT_CALL max_int_(void) {
 #define max_int64_  max_int64
 /* Else leave name alone */
 #endif
-FORTRAN_API double FORT_CALL max_int64_(void) {
+PNETCDF_PUBLIC_API double FORT_CALL max_int64_(void) {
 	return (double)INT64_MAX;
 }
 
@@ -223,7 +223,7 @@ FORTRAN_API double FORT_CALL max_int64_(void) {
 #define max_float_  max_float
 /* Else leave name alone */
 #endif
-FORTRAN_API double FORT_CALL max_float_(void) {
+PNETCDF_PUBLIC_API double FORT_CALL max_float_(void) {
 	return (double)FLT_MAX;
 }
 
@@ -235,7 +235,7 @@ FORTRAN_API double FORT_CALL max_float_(void) {
 #define max_double_  max_double
 /* Else leave name alone */
 #endif
-FORTRAN_API double FORT_CALL max_double_(void) {
+PNETCDF_PUBLIC_API double FORT_CALL max_double_(void) {
 	return (double)DBL_MAX;
 }
 
@@ -250,7 +250,7 @@ FORTRAN_API double FORT_CALL max_double_(void) {
 /* Else leave name alone */
 #endif
 
-FORTRAN_API int FORT_CALL nfmpi_issyserr_(int * A1) {
+PNETCDF_PUBLIC_API int FORT_CALL nfmpi_issyserr_(int * A1) {
 	if (*A1 > 0)
 		return 1;
 	else
@@ -266,7 +266,7 @@ FORTRAN_API int FORT_CALL nfmpi_issyserr_(int * A1) {
 #define nfmpi_delete_  nfmpi_delete
 /* Else leave name alone */
 #endif
-FORTRAN_API void FORT_CALL nfmpi_delete_(char * name, int *err, int d1) {
+PNETCDF_PUBLIC_API void FORT_CALL nfmpi_delete_(char * name, int *err, int d1) {
     char *p1;
 
     {char *p = name + d1 - 1;
