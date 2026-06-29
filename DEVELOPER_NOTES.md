@@ -38,7 +38,19 @@
     svn commit -m "set release date of version 1.6.1 to today"
     ```
 
- 6. Commit all changes to repo servers
+ 6. Update GIO submodule URL to only official and latest tag SHA
+    ```
+    git submodule set-url gio https://github.com/wkliao/gio.git
+    git submodule sync
+    cd gio
+    git fetch --tags origin
+    git checkout v1.0.0
+    cd ..
+    git add gio
+    git commit -m "Update GIO submodule URL to tag 1.0.0 SHA".
+    ```
+
+ 7. Commit all changes to repo servers
     * 1.8.1 and priors -- run `svn commit` to upload changes to SVN server.
     * 1.9.0 and after --
         + `git commit -m "prepare release of 1.14.1"
@@ -46,7 +58,7 @@
         + Create a pull request at github.com
         + When all github actions passed, merge the PR.
 
- 7. Generate release tar ball (use it for testing)
+ 8. Generate release tar ball (use it for testing)
     * Generate a new `configure` file
       + Run command `autoreconf -i` to generate file `configure` to be included
         in the release (but ignored by the SVN/Git repo).
@@ -64,7 +76,7 @@
         `make dist`. This setting will be done automatically, unlike step 4
         above that manually update the release date.
 
- 8. Test the new release tar ball (not source codes from the repo)
+ 9. Test the new release tar ball (not source codes from the repo)
     * build under the same directory as source
       - run `configure` (with command-line options: `--enable-strict`,
         `--enable-coverage`, `--disable-cxx`, `--disable-fortran` and their
@@ -132,7 +144,7 @@
       run instructions. Remember to add new test/example programs added in the
       new release.
 
- 9. Create a checkpoint
+ 10. Create a checkpoint
     * For 1.9.0 and priors - Create a new SVN tag on svn repo, by running
       command below to duplicate the current trunk to a new tag:
       ```
@@ -146,7 +158,7 @@
       git tag -a checkpoint.1.11.0 -m "Checkpoint right before 1.11.0 release"
       git push origin checkpoint.1.11.0
       ```
- 10. Generate SHA1 checksums
+ 11. Generate SHA1 checksums
     * Run command:
       ```
       openssl sha1 pnetcdf-1.11.0.tar.gz
@@ -160,7 +172,7 @@
       sha256sum pnetcdf-1.11.0.tar.gz
       a18a1a43e6c4fd7ef5827dbe90e9dcf1363b758f513af1f1356ed6c651195a9f pnetcdf-1.11.0.tar.gz
       ```
-11. Update PnetCDF Web Page
+12. Update PnetCDF Web Page
     * https://github.com/Parallel-NetCDF/Parallel-NetCDF.github.io
     * Create a new file of release note Parallel-NetCDF.github.io/Release_notes/1.11.0.md.
     * Add a news item in index.html to announce the new release version.
