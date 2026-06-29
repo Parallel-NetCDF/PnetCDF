@@ -24,6 +24,7 @@ EXTRA_DIST = COPYRIGHT \
              INSTALL \
              README \
              RELEASE_NOTES \
+             SECURITY.md \
              m4/foreach.m4 \
              m4/utils.m4
 
