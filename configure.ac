@@ -15,7 +15,7 @@ dnl AC_REVISION([$Revision$])dnl
 dnl autoconf v2.70 and later is required. See https://github.com/Parallel-NetCDF/PnetCDF/issues/94
 dnl autoconf v2.70 was released in 2021-01-28
 AC_PREREQ([2.70])
-AC_INIT([PnetCDF], [1.15.0-alpha],
+AC_INIT([PnetCDF], [1.15.0],
         [parallel-netcdf@mcs.anl.gov],
         [pnetcdf],
         [https://parallel-netcdf.github.io])
@@ -2835,7 +2835,7 @@ dnl Update the version information only immediately before a public release.
 dnl PnetCDF starts with 1:0:0 (shared library is first supported in 1.9.0)
 dnl because some package distributors, such as Debian, may have already built
 dnl PnetCDF with shared libraries.
-ABIVERSION="8:0:1"
+ABIVERSION="8:0:0"
 AC_SUBST(ABIVERSION)
 if test "$enable_versioning" = "yes" ; then
    ABIVERSIONFLAGS="-version-info \$(ABIVERSION)"
