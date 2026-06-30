@@ -216,7 +216,7 @@ ncmpio_create(MPI_Comm         comm,
      *      + striping_unit
      *      + striping_factor
      *      + start_iodevice
-     *      + lustre_overstriping_ratio
+     *      + overstriping_ratio
      *      + lustre_num_osts
      */
     ncmpio_hint_extract(ncp, user_info);
