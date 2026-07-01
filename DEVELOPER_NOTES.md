@@ -158,6 +158,12 @@
       git tag -a checkpoint.1.11.0 -m "Checkpoint right before 1.11.0 release"
       git push origin checkpoint.1.11.0
       ```
+      FYI. When needed, one can `force` update a tag (local and remote):
+      ```
+      git tag -fa checkpoint.1.11.0
+      git push -f origin checkpoint.1.11.0
+      ```
+
  11. Generate SHA1 checksums
     * Run command:
       ```
@@ -172,6 +178,8 @@
       sha256sum pnetcdf-1.11.0.tar.gz
       a18a1a43e6c4fd7ef5827dbe90e9dcf1363b758f513af1f1356ed6c651195a9f pnetcdf-1.11.0.tar.gz
       ```
+    * The above commands can also be used to verify the SHA numbers.
+
 12. Update PnetCDF Web Page
     * https://github.com/Parallel-NetCDF/Parallel-NetCDF.github.io
     * Create a new file of release note Parallel-NetCDF.github.io/Release_notes/1.11.0.md.
