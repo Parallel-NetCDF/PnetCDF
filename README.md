@@ -15,11 +15,10 @@ Northwestern University and Argonne National Laboratory.
   contains more information about PnetCDF.
 
 ### PnetCDF official software releases
-* The [alpha release of 1.15.0](https://parallel-netcdf.github.io/Release/pnetcdf-1.15.0-alpha.tar.gz) is available on October 27, 2025.
-* The latest stable release is
-  [pnetcdf-1.14.1.tar.gz](https://parallel-netcdf.github.io/Release/pnetcdf-1.14.1.tar.gz)
-  ([release note](https://github.com/Parallel-NetCDF/Parallel-NetCDF.github.io/blob/master/Release_notes/1.14.1.md)),
-  available since July 31, 2025.
+* The latest release is
+  [pnetcdf-1.15.0.tar.gz](https://parallel-netcdf.github.io/Release/pnetcdf-1.15.0.tar.gz)
+  ([release note](https://github.com/Parallel-NetCDF/Parallel-NetCDF.github.io/blob/master/Release_notes/1.15.0.md)),
+  available since July 1, 2026.
 * All **official released versions** can be found in
   https://parallel-netcdf.github.io/wiki/Download.html
 * Note the ["releases"](https://github.com/Parallel-NetCDF/PnetCDF/releases)
@@ -43,18 +42,20 @@ Northwestern University and Argonne National Laboratory.
   + [m4](https://www.gnu.org/software/m4) version 1.4.17
 * Clone, build, and installation commands:
   ```console
-  git clone https://github.com/Parallel-NetCDF/PnetCDF.git
+  git clone --recurse-submodules https://github.com/Parallel-NetCDF/PnetCDF.git
 
   cd PnetCDF
+
   autoreconf -i
 
   ./configure --prefix=/install/path --with-mpi=/mpi/path
+
   make install
   ```
 
 ### Build instructions and recipes
-* Please read file [INSTALL](./INSTALL) for build instructions. There are also
-  several build recipes under folder [doc](./doc#readme) for a few popular
+* Please refer to file [INSTALL](./INSTALL) for build instructions. There are
+  also several build recipes under folder [doc](./doc#readme) for a few popular
   systems.
 
 ### Users documents
