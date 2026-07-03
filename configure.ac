@@ -2964,6 +2964,15 @@ AC_SUBST(LMOD_FAMILY_COMPILER_VERSION)
 AC_SUBST(LMOD_FAMILY_MPI)
 AC_SUBST(LMOD_FAMILY_MPI_VERSION)
 
+# check if command git is available.
+is_srcdir_git_clone=
+AC_CHECK_PROG(GIT_CMD, git, git)
+if test "x$GIT_CMD" != x ; then
+   # Check if folder ${srcdir} is in a git repository clone
+   is_srcdir_git_clone=`git -C ${srcdir} rev-parse --is-inside-work-tree 2>/dev/null`
+fi
+AM_CONDITIONAL(IS_GIT_CLONE, [test "x${is_srcdir_git_clone}" = xtrue])
+
 AC_OUTPUT
 echo "------------------------------------------------------------------------------"
 echo \

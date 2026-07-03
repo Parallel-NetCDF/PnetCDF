@@ -112,4 +112,8 @@ dist-hook:
 	$(SED_I) -e "s|PNETCDF_RELEASE_VERSION|$(PNETCDF_VERSION)|g"            $(distdir)/ncvalidator.1
 	$(SED_I) -e "s|PNETCDF_RELEASE_DATE_FULL|@PNETCDF_RELEASE_DATE_FULL@|g" $(distdir)/ncvalidator.1
 	$(SED_I) -e "s|PNETCDF_RELEASE_DATE|@PNETCDF_RELEASE_DATE@|g"           $(distdir)/ncvalidator.1
+if IS_GIT_CLONE
+	last_commit_date=`git -C $(abs_top_srcdir) log -1 --format='%cd' --date=short $(abs_srcdir)/ncvalidator.1` ; \
+	$(SED_I) -e "s|GIT_SRC_LAST_COMMIT|$$last_commit_date|g"                $(distdir)/ncvalidator.1
+endif
 

@@ -1,7 +1,4 @@
-.nr yr \n(yr+1900
-.af mo 01
-.af dy 01
-.TH PnetCDF 3f "PnetCDF PNETCDF_VERSION" "Printed: \n(yr.\n(mo.\n(dy" "LIBRARY FUNCTIONS"
+.TH PnetCDF 3f "PnetCDF PNETCDF_VERSION" "Last modified: GIT_SRC_LAST_COMMIT" "LIBRARY FUNCTIONS"
 .SH NAME
 PnetCDF \- Parallel library for accessing files in Network Common Data Form (CDF, CDF-2 and CDF-5 formats)
 .SH SYNOPSIS
