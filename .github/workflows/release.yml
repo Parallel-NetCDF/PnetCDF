@@ -1,0 +1,136 @@
+name: Publish to PyPI
+
+# pinc depends on commux, which is Linux-only (UCX does not build on macOS), so
+# only Linux wheels are produced. The wheel links commux + torch at runtime via
+# rpath into their installed packages (not vendored); libnetcdf and its deps are
+# vendored by auditwheel for self-containment.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to publish, for example v0.1.0"
+        required: true
+
+concurrency:
+  group: publish-pypi-${{ github.event.inputs.tag }}
+  cancel-in-progress: false
+
+env:
+  BUILD_TYPE: Release
+  LINUX_ARCH: x86_64
+  HOST_PYTHON: "3.11"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-linux:
+    name: Build Linux Wheels
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag }}
+
+      - name: Setup Host Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.HOST_PYTHON }}
+          cache: pip
+
+      - name: Configure Linux build env
+        run: |
+          PV=${{ matrix.python-version }}
+          PV=${PV//./}
+          echo "PY_VERSION=$PV" >> $GITHUB_ENV
+
+      - name: Free up disk space
+        run: |
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          python -m pip cache purge || true
+
+      - name: Check disk usage
+        run: df -h
+
+      - name: Build Linux wheel
+        env:
+          CIBW_PLATFORM: linux
+          # Match the image commux 0.2.1 was built in for torch/commux ABI parity.
+          CIBW_MANYLINUX_X86_64_IMAGE: docker.io/pytorch/manylinux2_28-builder:cuda12.8
+          CIBW_BUILD: cp${{ env.PY_VERSION }}*
+          CIBW_ARCHS: ${{ env.LINUX_ARCH }}
+          CIBW_SKIP: "*musllinux*"
+          # pinc's CMake locates commux/torch by importing them at configure
+          # time, so build without isolation against the env prepared below.
+          CIBW_BUILD_FRONTEND: "pip; args: --no-build-isolation"
+          CIBW_ENVIRONMENT: >
+            PIP_NO_CACHE_DIR=1
+            PIP_DISABLE_PIP_VERSION_CHECK=1
+          CIBW_BEFORE_BUILD: |
+            export PATH="/opt/python/cp${{ env.PY_VERSION }}-cp${{ env.PY_VERSION }}/bin:$PATH"
+
+            # System build deps: UCX headers (ucp/api/ucp.h) and NetCDF.
+            dnf install -y epel-release 'dnf-command(config-manager)' || true
+            dnf config-manager --set-enabled powertools || \
+            dnf config-manager --set-enabled PowerTools || \
+            dnf config-manager --set-enabled codeready-builder-for-rhel-8-$(arch)-rpms || true
+            yum install -y netcdf-devel ucx-devel
+
+            pip install numpy 'cmake<=3.30' ninja scikit-build-core setuptools-scm patchelf wheel
+            pip install 'torch==2.10.0'
+            pip install 'commux==0.2.1'
+          # commux/torch libs resolve at runtime via rpath into their installed
+          # packages, so exclude them from vendoring; libnetcdf (+ deps) is
+          # vendored for a self-contained wheel.
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
+            export LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/local/lib64:/usr/lib64:$LD_LIBRARY_PATH
+            auditwheel repair \
+              --exclude 'libcommux*.so*' \
+              --exclude 'libtorch*.so*' \
+              --exclude 'libc10*.so*' \
+              -w {dest_dir} {wheel}
+        run: |
+          pip install cibuildwheel
+          python -m cibuildwheel --output-dir wheelhouse
+
+      - name: Upload Linux Wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-linux-${{ matrix.python-version }}-${{ env.LINUX_ARCH }}
+          path: wheelhouse/*.whl
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [build-linux]
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "wheels-*"
+
+      - name: Aggregate into dist/
+        run: |
+          mkdir -p dist
+          find . -name '*.whl' -exec mv {} dist/ \;
+
+      - name: Publish to PyPI
+        if: ${{ needs.build-linux.result == 'success' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}

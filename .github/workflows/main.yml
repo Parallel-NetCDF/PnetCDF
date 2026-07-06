@@ -6,7 +6,7 @@ permissions:
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths-ignore:
       - '**/*.md'
       - '**/*.txt'
@@ -16,7 +16,7 @@ on:
       - 'docs/*'
       - 'test/test_installed/*'
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     paths-ignore:
       - '**/*.md'
       - '**/*.txt'

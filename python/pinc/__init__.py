@@ -5,7 +5,13 @@ The package distributes the public C headers under ``pinc/include`` and
 the same C ABI used by C callers.
 """
 
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
+
+try:
+    __version__ = version("pinc")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
 
 package_root = Path(__file__).resolve().parent
 include_dir = package_root / "include"

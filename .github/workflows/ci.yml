@@ -1,0 +1,62 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main]
+
+# Cancel an in-progress run when a new commit lands on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least privilege: CI only needs to read the repo.
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.11"
+
+# pinc depends on commux, which is Linux-only (UCX does not build on macOS),
+# so CI is Linux-only. CI uses the system UCX headers (apt) for the fast path;
+# the pinc wheel links commux/torch at runtime via rpath into their installed
+# packages, so those libs are not vendored here.
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # full history for setuptools-scm version
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: Install system dependencies (UCX headers + NetCDF)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libucx-dev libnetcdf-dev pkg-config
+
+      - name: Install Python dependencies
+        run: |
+          pip install scikit-build-core ninja cmake setuptools-scm wheel
+          pip install 'torch==2.10.0' --index-url https://download.pytorch.org/whl/cpu
+          pip install 'commux==0.2.1'
+
+      - name: Build and install pinc
+        # --no-build-isolation: CMake locates commux/torch by importing them,
+        # so they must be present in the build environment (installed above).
+        run: pip install --no-build-isolation --no-deps .
+
+      - name: Smoke import + extension check
+        run: |
+          python -c "import pinc; print('pinc', pinc.__version__); print(pinc.include_dir)"
+          python -c "import pinc; assert hasattr(pinc, 'init'), 'commux extension (_pnetcdf_commux) failed to load'"
