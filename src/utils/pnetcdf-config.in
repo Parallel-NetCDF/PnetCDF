@@ -66,6 +66,9 @@ enable_relax_coord_bound="@RELAX_COORD_BOUND@"
 is_bigendian="@ac_cv_c_bigendian@"
 in_place_swap="@in_place_swap@"
 enable_bbdriver="@ENABLE_BURST_BUFFER@"
+comm_backend="@PNETCDF_COMM_BACKEND@"
+enable_commux="@ENABLE_COMMUX@"
+commux_dir="@COMMUX_DIR@"
 
 enable_gio="@ENABLE_GIO@"
 # GIO is built as a sub-module of PnetCDF, thus it is not necessary to add
@@ -116,6 +119,8 @@ Available values for OPTION include:
   --ldflags                   Linker flags used to build PnetCDF
   --libs                      Extra libraries used to build PnetCDF
   --gio                       Whether GIO support is enabled or disabled
+  --comm-backend              Communication backend used to build PnetCDF
+  --commux                    Whether commux support is enabled or disabled
   --netcdf4                   Whether NetCDF-4 support is enabled or disabled
   --adios                     Whether ADIOS support is enabled or disabled
   --relax-coord-bound         Whether using a relaxed coordinate boundary check
@@ -144,6 +149,12 @@ all()
         echo
         echo "  --has-c++                   -> $has_cxx"
         echo "  --has-fortran               -> $has_fortran"
+        echo "  --comm-backend              -> $comm_backend"
+if test "x$enable_commux" = x1; then
+        echo "  --commux                    -> enabled ($commux_dir)"
+else
+        echo "  --commux                    -> disabled"
+fi
 if test "x$enable_gio" = x1; then
         echo "  --gio                       -> enabled"
 else
@@ -340,13 +351,23 @@ while test $# -gt 0; do
 #        echo "$FCLIBS" | sed -e 's/^[ \t]*//'
 #        ;;
 
-    --gio)
+        --gio)
 if test "x$enable_gio" = x1; then
         echo "enabled"
 else
         echo "disabled"
 fi
-        ;;
+            ;;
+        --comm-backend)
+            echo $comm_backend
+            ;;
+        --commux)
+            if test "x$enable_commux" = x1; then
+               echo enabled
+            else
+               echo disabled
+            fi
+            ;;
 
     --netcdf4)
 if test "x$enable_netcdf4" = x1; then

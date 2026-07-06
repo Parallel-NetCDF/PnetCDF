@@ -25,6 +25,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 libpnetcdf_la_LIBADD = $(LTLIBOBJS)
 
 libpnetcdf_la_SOURCES =
+libpnetcdf_la_LIBADD += ../comm/libpnccomm.la
 libpnetcdf_la_LIBADD += ../dispatchers/libdispatchers.la
 libpnetcdf_la_LIBADD += ../drivers/common/libcommon.la
 libpnetcdf_la_LIBADD += ../drivers/ncmpio/libncmpio.la
@@ -43,7 +44,6 @@ endif
 if ENABLE_GIO
    libpnetcdf_la_LIBADD += ${top_builddir}/gio/src/libgio.la
 endif
-
 nodist_EXTRA_libpnetcdf_la_SOURCES = dummyc.c
 
 if HAS_MPICXX
@@ -73,6 +73,9 @@ endif
 ../dispatchers/libdispatchers.la:
 	set -e; cd ../dispatchers && $(MAKE) $(MFLAGS)
 
+../comm/libpnccomm.la:
+	set -e; cd ../comm && $(MAKE) $(MFLAGS)
+
 ../drivers/common/libcommon.la:
 	set -e; cd ../drivers/common && $(MAKE) $(MFLAGS)
 
@@ -97,4 +100,3 @@ endif
 CLEANFILES = a.out
 
 tests-local: all
-

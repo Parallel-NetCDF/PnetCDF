@@ -36,6 +36,8 @@
 #define PNETCDF_DRIVER_NETCDF4           @ENABLE_NETCDF4@
 #define PNETCDF_DRIVER_ADIOS             @ENABLE_ADIOS@
 #define PNETCDF_DRIVER_GIO               @ENABLE_GIO@
+#define PNETCDF_ENABLE_COMMUX            @ENABLE_COMMUX@
+#define PNETCDF_COMM_BACKEND_NAME        "@PNETCDF_COMM_BACKEND@"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -4633,4 +4635,3 @@ cdl_hdr_inq_attr(int hid, int varid, int attrid, char **name, nc_type *xtype,
 }
 #endif
 #endif
-

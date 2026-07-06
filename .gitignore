@@ -306,3 +306,6 @@ Makefile
 /test/testcases/varn_intf
 /test/testcases/varn_real
 /test/testcases/vectors
+
+# build files
+build*/

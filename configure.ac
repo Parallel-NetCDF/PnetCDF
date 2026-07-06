@@ -380,6 +380,84 @@ dnl AC_USE_SYSTEM_EXTENSIONS
 dnl enable large file support
 AC_SYS_LARGEFILE
 
+dnl Communication backend selection. MPI remains the default and compatibility
+dnl backend. The commux option records and links against the installed Python
+dnl commux package, whose current public surface is a PyTorch c10d C++ backend.
+AC_ARG_WITH([comm-backend],
+   [AS_HELP_STRING([--with-comm-backend=mpi|commux|auto],
+                   [Select communication backend. @<:@default: mpi@:>@])],
+   [with_comm_backend=${withval}], [with_comm_backend=mpi]
+)
+case "x$with_comm_backend" in
+   xmpi|xcommux|xauto) ;;
+   *) AC_MSG_ERROR([Invalid --with-comm-backend value "$with_comm_backend"; use mpi, commux, or auto]) ;;
+esac
+
+AC_ARG_WITH([commux],
+   [AS_HELP_STRING([--with-commux=DIR],
+                   [Path to installed commux Python package directory])],
+   [COMMUX_DIR=${withval}], [COMMUX_DIR=]
+)
+
+AC_ARG_VAR([PYTHON], [Python interpreter used to locate commux])
+if test "x$PYTHON" = x ; then
+   AC_PATH_PROGS([PYTHON], [python3 python], [])
+fi
+
+ENABLE_COMMUX=0
+COMMUX_CPPFLAGS=
+COMMUX_LDFLAGS=
+COMMUX_LIBS=
+COMMUX_RPATH=
+PNETCDF_COMM_BACKEND=mpi
+PNETCDF_COMM_BACKEND_VALUE=1
+
+if test "x$with_comm_backend" = xcommux || test "x$with_comm_backend" = xauto ; then
+   if test "x$COMMUX_DIR" = x || test "x$COMMUX_DIR" = xyes ; then
+      if test "x$PYTHON" != x ; then
+         AC_MSG_CHECKING([for installed Python commux package])
+         COMMUX_DIR=`$PYTHON -c 'import commux, os; print(os.path.dirname(commux.__file__))' 2>/dev/null`
+         if test "x$COMMUX_DIR" = x ; then
+            AC_MSG_RESULT([no])
+         else
+            AC_MSG_RESULT([$COMMUX_DIR])
+         fi
+      fi
+   fi
+
+   if test "x$COMMUX_DIR" != x && test "x$COMMUX_DIR" != xno && \
+      test -f "$COMMUX_DIR/include/commux/process_group_ucx.hpp" && \
+      test -f "$COMMUX_DIR/lib/libcommux.so" ; then
+      ENABLE_COMMUX=1
+      COMMUX_CPPFLAGS="-I$COMMUX_DIR/include"
+      COMMUX_LDFLAGS="-L$COMMUX_DIR/lib"
+      COMMUX_LIBS="-lcommux"
+      COMMUX_RPATH="-Wl,-rpath,$COMMUX_DIR/lib"
+      if test "x$with_comm_backend" = xcommux ; then
+         PNETCDF_COMM_BACKEND=commux
+         PNETCDF_COMM_BACKEND_VALUE=2
+      fi
+   elif test "x$with_comm_backend" = xcommux ; then
+      AC_MSG_ERROR([
+   -----------------------------------------------------------------------
+     --with-comm-backend=commux was requested, but a usable commux package
+     was not found. Install/import commux in PYTHON or pass --with-commux=DIR.
+     Expected DIR/include/commux/process_group_ucx.hpp and DIR/lib/libcommux.so.
+   -----------------------------------------------------------------------])
+   fi
+fi
+
+AC_SUBST([PNETCDF_COMM_BACKEND])
+AC_SUBST([PNETCDF_COMM_BACKEND_VALUE])
+AC_SUBST([ENABLE_COMMUX])
+AC_SUBST([COMMUX_DIR])
+AC_SUBST([COMMUX_CPPFLAGS])
+AC_SUBST([COMMUX_LDFLAGS])
+AC_SUBST([COMMUX_LIBS])
+AC_SUBST([COMMUX_RPATH])
+AM_CONDITIONAL([ENABLE_COMMUX], [test "x$ENABLE_COMMUX" = x1])
+AM_CONDITIONAL([COMM_BACKEND_COMMUX], [test "x$PNETCDF_COMM_BACKEND" = xcommux])
+
 dnl UD_PROG_CC_MAKEDEPEND
 
 dnl AC_HEADER_STDC
@@ -2870,10 +2948,12 @@ AM_CONDITIONAL(ENABLE_GIO, [test "x$enable_gio" = xyes])
 dnl AC_CONFIG_HEADERS([src/binding/f77/nfconfig_inc])
 AC_CONFIG_FILES(Makefile \
                 src/Makefile \
+                src/comm/Makefile \
                 src/dispatchers/Makefile \
                 src/libs/Makefile \
                 src/include/Makefile \
                 src/include/pnetcdf.h \
+                src/include/pnetcdf_comm.h \
                 src/drivers/Makefile \
                 src/drivers/common/Makefile \
                 src/drivers/include/Makefile \
@@ -2974,7 +3054,9 @@ echo \
               Build shared libraries                      - ${enable_shared}
               Build Fortran APIs                          - ${has_fortran}
               Build C++ APIs                              - ${has_mpicxx}
-              GIO support                                 - ${enable_gio}"
+              GIO support                                 - ${enable_gio}
+              Communication backend                       - ${PNETCDF_COMM_BACKEND}
+              commux package                              - ${COMMUX_DIR:-not used}"
 if test "x${enable_netcdf4}" = xyes; then
    echo "\
               NetCDF-4 support                            - enabled"
@@ -3116,4 +3198,3 @@ echo "\
               install  - install PnetCDF library in ${prefix}
 
 ------------------------------------------------------------------------------"
-

@@ -1,0 +1,128 @@
+/*
+ *  Copyright (C) 2026, Northwestern University and Argonne National Laboratory
+ *  See COPYRIGHT notice in top-level directory.
+ *
+ * @configure_input@
+ */
+
+#ifndef H_PNETCDF_COMM
+#define H_PNETCDF_COMM
+
+#define PNETCDF_COMM_BACKEND_MPI    1
+#define PNETCDF_COMM_BACKEND_COMMUX 2
+#define PNETCDF_COMM_BACKEND        @PNETCDF_COMM_BACKEND_VALUE@
+#define PNETCDF_ENABLE_COMMUX       @ENABLE_COMMUX@
+
+#if PNETCDF_COMM_BACKEND == PNETCDF_COMM_BACKEND_MPI
+#include <pnetcdf.h>
+
+typedef MPI_Comm     PNC_Comm;
+typedef MPI_Info     PNC_Info;
+typedef MPI_Datatype PNC_Datatype;
+
+#define PNC_COMM_WORLD     MPI_COMM_WORLD
+#define PNC_COMM_SELF      MPI_COMM_SELF
+#define PNC_COMM_NULL      MPI_COMM_NULL
+#define PNC_INFO_NULL      MPI_INFO_NULL
+#define PNC_DATATYPE_NULL  MPI_DATATYPE_NULL
+
+#else
+#include <netcdf.h>
+
+#ifdef PNETCDF_PUBLIC_API
+#undef PNETCDF_PUBLIC_API
+#endif
+
+#if defined _WIN32 || defined __CYGWIN__
+  #ifdef BUILDING_DLL
+    #define PNETCDF_PUBLIC_API __declspec(dllexport)
+  #else
+    #define PNETCDF_PUBLIC_API __declspec(dllimport)
+  #endif
+#else
+  #if __GNUC__ >= 4
+    #define PNETCDF_PUBLIC_API __attribute__ ((visibility ("default")))
+  #else
+    #define PNETCDF_PUBLIC_API
+  #endif
+#endif
+
+#ifndef NC_ENOTBUILT
+#define NC_ENOTBUILT (-128)
+#endif
+
+typedef struct PNC_Comm_obj    *PNC_Comm;
+typedef struct PNC_Info_obj    *PNC_Info;
+typedef struct PNC_Datatype_obj *PNC_Datatype;
+typedef long long PNC_Offset;
+
+#define PNC_COMM_WORLD     ((PNC_Comm)0)
+#define PNC_COMM_SELF      ((PNC_Comm)1)
+#define PNC_COMM_NULL      ((PNC_Comm)0)
+#define PNC_INFO_NULL      ((PNC_Info)0)
+#define PNC_DATATYPE_NULL  ((PNC_Datatype)0)
+#endif
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+PNETCDF_PUBLIC_API const char*
+ncmpix_comm_backend(void);
+
+PNETCDF_PUBLIC_API int
+ncmpix_create(PNC_Comm comm, const char *path, int cmode, PNC_Info info,
+              int *ncidp);
+
+PNETCDF_PUBLIC_API int
+ncmpix_open(PNC_Comm comm, const char *path, int omode, PNC_Info info,
+            int *ncidp);
+
+PNETCDF_PUBLIC_API const char*
+ncmpix_strerror(int err);
+
+PNETCDF_PUBLIC_API int
+ncmpix_close(int ncid);
+
+PNETCDF_PUBLIC_API int
+ncmpix_def_dim(int ncid, const char *name, PNC_Offset len, int *idp);
+
+PNETCDF_PUBLIC_API int
+ncmpix_def_var(int ncid, const char *name, nc_type xtype, int ndims,
+               const int *dimids, int *varidp);
+
+PNETCDF_PUBLIC_API int
+ncmpix_put_att_text(int ncid, int varid, const char *name, PNC_Offset len,
+                    const char *value);
+
+PNETCDF_PUBLIC_API int
+ncmpix_put_att_int(int ncid, int varid, const char *name, nc_type xtype,
+                   PNC_Offset len, const int *value);
+
+PNETCDF_PUBLIC_API int
+ncmpix_put_att_float(int ncid, int varid, const char *name, nc_type xtype,
+                     PNC_Offset len, const float *value);
+
+PNETCDF_PUBLIC_API int
+ncmpix_enddef(int ncid);
+
+PNETCDF_PUBLIC_API int
+ncmpix_put_vara_float_all(int ncid, int varid, const PNC_Offset *start,
+                          const PNC_Offset *count, const float *value);
+
+PNETCDF_PUBLIC_API int
+ncmpix_iput_vara_float(int ncid, int varid, const PNC_Offset *start,
+                       const PNC_Offset *count, const float *value,
+                       int *reqidp);
+
+PNETCDF_PUBLIC_API int
+ncmpix_iput_var_float(int ncid, int varid, const float *value, int *reqidp);
+
+PNETCDF_PUBLIC_API int
+ncmpix_wait_all(int ncid, int num, int *reqids, int *statuses);
+
+#if defined(__cplusplus)
+}
+#endif
+
+#endif /* H_PNETCDF_COMM */

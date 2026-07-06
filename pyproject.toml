@@ -1,0 +1,33 @@
+[build-system]
+requires = [
+  "scikit-build-core>=0.8",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "pinc"
+version = "0.1.0"
+description = "Parallel NetCDF I/O with UCX Communication"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "See COPYRIGHT" }
+authors = [{ name = "Northwestern University and Argonne National Laboratory" }]
+classifiers = [
+  "Programming Language :: C",
+  "Programming Language :: C++",
+  "Programming Language :: Python :: 3",
+  "Topic :: System :: Distributed Computing",
+  "Operating System :: POSIX :: Linux",
+]
+dependencies = ["commux>=0.2.1", "torch"]
+
+[tool.scikit-build]
+cmake.version = ">=3.18"
+cmake.build-type = "Release"
+wheel.packages = ["python/pinc"]
+
+[tool.scikit-build.cmake.define]
+PNETCDF_COMM_BACKEND = "commux"
+PNETCDF_BUILD_PYTHON_COMMUX = "ON"
+BUILD_SHARED_LIBS = "ON"
+BUILD_TESTING = "OFF"

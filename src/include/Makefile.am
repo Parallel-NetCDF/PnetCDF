@@ -6,10 +6,11 @@
 #
 # @configure_input@
 
-nodist_include_HEADERS = pnetcdf.h
+include_HEADERS = pnetcdf_commux.h
 
-EXTRA_DIST = nctypes.h dispatch.h pnc_debug.h
+nodist_include_HEADERS = pnetcdf.h pnetcdf_comm.h
+
+EXTRA_DIST = nctypes.h dispatch.h pnc_debug.h pnetcdf_comm.h.in
 
 dist-hook:
 	$(SED_I) -e "s|DIST_DATE|@PNETCDF_RELEASE_DATE@|g" $(distdir)/pnetcdf.h.in
-
