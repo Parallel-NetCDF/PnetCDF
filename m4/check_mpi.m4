@@ -363,6 +363,10 @@ AC_DEFUN([UD_MPI_COMPILER_BASENAME],[
            # Fujitsu MPI compilers: fccpx, FCCpx, frtpx
            compile_basename=`$compile_cmd -showme | cut -d' ' -f1`
            ;;
+        mpiicc | mpiicx | mpiicpc | mpiifort | mpiifx | *[[\\/]]mpiicc | *[[\\/]]mpiicx | *[[\\/]]mpiicpc | *[[\\/]]mpiifort | *[[\\/]]mpiifx )
+           # Intel MPI classic compilers: icc, icpc, ifort. OneAPI compilers: icx, icpx, ifx.
+           compile_basename=`$compile_cmd --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1 | cut -d' ' -f1 | cut -d':' -f1`
+           ;;
         cc | *[[\\/]]cc )
            # For Cray PrgEnv-intel, cc is a wrapper of icc
            # For Cray PrgEnv-gnu, cc is a wrapper of gcc
@@ -374,9 +378,11 @@ AC_DEFUN([UD_MPI_COMPILER_BASENAME],[
            #    % cc --version
            #      nvc 25.5-0 64-bit target on x86-64 Linux -tp zen3-64
 
-           compile_basename=`$compile_cmd --version -c 2>&1 | grep -v '^$' | head -n1 | cut -d' ' -f1`
+           compile_basename=`$compile_cmd --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1 | cut -d' ' -f1 | cut -d':' -f1`
            case "$compile_basename" in
                "gcc"*)
+                   ;;
+               "icc"*)
                    ;;
                "Intel"*)
                    unset cc_basename
@@ -410,9 +416,11 @@ AC_DEFUN([UD_MPI_COMPILER_BASENAME],[
            #    % CC --version
            #      nvc++ 25.5-0 64-bit target on x86-64 Linux -tp zen3-64
 
-           compile_basename=`$compile_cmd --version -c 2>&1 | grep -v '^$' | head -n1 | cut -d' ' -f1`
+           compile_basename=`$compile_cmd --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1 | cut -d' ' -f1 | cut -d':' -f1`
            case "$compile_basename" in
                "g++"*)
+                   ;;
+               "icpc"*)
                    ;;
                "Intel"*)
                    unset cxx_basename
@@ -446,14 +454,14 @@ AC_DEFUN([UD_MPI_COMPILER_BASENAME],[
            #    % ftn --version
            #      nvfortran 25.5-0 64-bit target on x86-64 Linux -tp zen3-64
 
-           compile_basename=`$compile_cmd --version -c 2>&1 | grep -v '^$' | head -n1 | cut -d' ' -f1`
+           compile_basename=`$compile_cmd --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1 | cut -d' ' -f1 | cut -d':' -f1`
            case "$compile_basename" in
                "gfortran"*)
                    ;;
                "GNU"*)
                    compile_basename="gfortran"
                    ;;
-               "ifx"*)
+               "ifx"* | "ifort"* )
                    ;;
                "Intel"*)
                    unset ftn_basename
@@ -486,7 +494,7 @@ AC_DEFUN([UD_MPI_COMPILER_BASENAME],[
    else
       AC_MSG_RESULT([not found])
    fi
-   ud_vendor_version_$1=`$compile_basename --version -c 2>&1 | grep -v '^$' | head -n1`
+   ud_vendor_version_$1=`$compile_basename --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1`
    unset compile_basename
    unset compile_cmd
 ])# UD_MPI_COMPILER_BASENAME
