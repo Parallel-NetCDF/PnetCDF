@@ -62,7 +62,9 @@ This is essentially a placeholder for the next release note ...
     See [PR #230](https://github.com/Parallel-NetCDF/PnetCDF/pull/230).
 
 * Bug fixes
-  + none
+  + Fix utility program `pnetcdf_version` for printing the version string of
+    the base compiler of MPICC when the base is a classic Intel compiler.
+    See [PR #232](https://github.com/Parallel-NetCDF/PnetCDF/pull/232).
 
 * New example programs
   + none
