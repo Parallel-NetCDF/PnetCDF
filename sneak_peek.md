@@ -57,7 +57,9 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Other updates:
-  + none
+  + All man pages have been updated with string "Print date" being replaced
+    with "Last modified date".
+    See [PR #230](https://github.com/Parallel-NetCDF/PnetCDF/pull/230).
 
 * Bug fixes
   + none
