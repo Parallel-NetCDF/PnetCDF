@@ -116,81 +116,133 @@ func_cc_basename ()
         distcc | *[[\\/]]distcc | purify | *[[\\/]]purify ) ;;
         \-*) ;;
         mpicc | mpicxx | mpif77 | mpif90 | mpifort | *[[\\/]]mpicc | *[[\\/]]mpicxx | *[[\\/]]mpif77 | *[[\\/]]mpif90 | *[[\\/]]mpifort )
-           # MPICH compilers
-           #   eval "$cc_temp -show" < /dev/null >& conftest.ver
-           #   func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
-           #   ${RM} -f conftest.ver
-           func_cc_basename_result=`$cc_temp -show | cut -d' ' -f1 | xargs basename`
-           # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
-           return
-           ;;
-        mpifccpx | mpiFCCpx | mpifrtpx | *[[\\/]]mpifccpx | *[[\\/]]mpiFCCpx | *[[\\/]]mpifrtpx )
-           # MPI compilers based on Fujitsu compilers: fccpx, FCCpx, frtpx
-           func_cc_basename_result=`$cc_temp -showme | cut -d' ' -f1 | xargs basename`
-           # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
-           return
-           ;;
-        cc | CC | ftn | *[[\\/]]cc | *[[\\/]]CC | *[[\\/]]ftn )
-           # For Cray PrgEnv-intel, cc is a wrapper of icc
-           # For Cray PrgEnv-gnu, cc is a wrapper of gcc
-           # For Cray PrgEnv-nvidia, cc is a wrapper of nvc
-           # func_cc_basename_result=`$cc_temp --version 2>&1 | head -n 1 | cut -d' ' -f1 | xargs basename`
-           eval "$cc_temp --version" < /dev/null >& conftest.ver
-           func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
-           ${RM} -f conftest.ver
-           if test "x${func_cc_basename_result}" = xicc ||
-              test "x${func_cc_basename_result}" = xicpc ||
-              test "x${func_cc_basename_result}" = xifort ||
-              test "x${func_cc_basename_result}" = xifx ||
-              test "x${func_cc_basename_result}" = xgcc ||
-              test "x${func_cc_basename_result}" = xg++ ||
-              test "x${func_cc_basename_result}" = xgfortran ||
-              test "x${func_cc_basename_result}" = xGNU ; then
-              # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
-              return
-           fi
-           # For Cray PrgEnv-nvidia, cc is a wrapper of nvc
-           # 'cc --version' may also include error of ld error
-           # Output of 'nvc --version -c' contains a blank line, must skip it.
-           func_cc_basename_result=`$cc_temp --version -c 2>&1 | grep -v '^$' | head -n1 | cut -d' ' -f1`
-           if test "x${func_cc_basename_result}" = xnvc ||
-              test "x${func_cc_basename_result}" = xnvc++ ||
-              test "x${func_cc_basename_result}" = xnvfortran ; then
-              return
-           fi
-
-           # For Cray PrgEnv-intel that uses oneAPI, cc/CC is a wrapper of icx/icpx
-           func_cc_basename_result=`$cc_temp --version -c 2>&1 | grep -v '^$' | head -n1 | cut -d' ' -f1`
-           if test "x${func_cc_basename_result}" = "xIntel(R)" ; then
-              compile_cmd=`$cc_temp --version -c 2>&1 | grep icx`
-              if test "x${compile_cmd}" != x ; then
-                 func_cc_basename_result=icx
-                 return
-              else
-                 compile_cmd=`$cc_temp --version -c 2>&1 | grep icpx`
-                 if test "x${compile_cmd}" != x ; then
-                    func_cc_basename_result=icpx
-                    return
-                 fi
-              fi
-           fi
-
-           # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
-           # Cray cc -V sends the output to stderr.
-           # func_cc_basename_result=`$cc_temp -V 2>&1 | head -n 1 | cut -d' ' -f1 | xargs basename`
-           eval "$cc_temp -V" < /dev/null >& conftest.ver
-           func_cc_basename_result=`head -n1 conftest.ver |cut -d' ' -f1`
-           ${RM} -f conftest.ver
-           if test "x${func_cc_basename_result}" = xCray ; then
-           # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
-              return
-           fi
+           # MPICH, OpenMPI
+           func_cc_basename_result=`$cc_temp -show | cut -d' ' -f1`
            return
            ;;
         mpixlc | mpixlcxx | mpixlf77 | mpixlf90 | *[[\\/]]mpixlc | *[[\\/]]mpixlcxx | *[[\\/]]mpixlf77 | *[[\\/]]mpixlf90 )
-           func_cc_basename_result=`$cc_temp -show | cut -d' ' -f1 | xargs basename`
-           # echo "cc_temp=$cc_temp func_cc_basename_result=$func_cc_basename_result"
+           # IBM XL MPI compilers
+           func_cc_basename_result=`$cc_temp -show | cut -d' ' -f1`
            return
+           ;;
+        mpifccpx | mpiFCCpx | mpifrtpx | *[[\\/]]mpifccpx | *[[\\/]]mpiFCCpx | *[[\\/]]mpifrtpx )
+           # Fujitsu MPI compilers: fccpx, FCCpx, frtpx
+           func_cc_basename_result=`$cc_temp -showme | cut -d' ' -f1`
+           return
+           ;;
+        mpiicc | mpiicx | mpiicpc | mpiifort | mpiifx | *[[\\/]]mpiicc | *[[\\/]]mpiicx | *[[\\/]]mpiicpc | *[[\\/]]mpiifort | *[[\\/]]mpiifx )
+           # Intel MPI classic compilers: icc, icpc, ifort. OneAPI compilers: icx, icpx, ifx.
+           func_cc_basename_result=`$cc_temp --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1 | cut -d' ' -f1 | cut -d':' -f1`
+           return
+           ;;
+        cc | *[[\\/]]cc )
+           # For Cray PrgEnv-gnu, cc is a wrapper of gcc
+           #    % cc --version
+           #      gcc-14 (SUSE Linux) 14.3.0
+           # For Cray PrgEnv-intel, cc is a wrapper of icc
+           #    % cc --version
+           #      Intel(R) oneAPI DPC++/C++ Compiler 2025.3.1 (2025.3.1.20251023)
+           # For Cray PrgEnv-nvidia, cc is a wrapper of nvc
+           #    % cc --version
+           #      nvc 25.5-0 64-bit target on x86-64 Linux -tp zen3-64
+           # For Cray PrgEnv-cray, cc is a wrapper of clang
+           #    % cc --version
+           #      Cray clang version 20.0.0  (8a1c0a28f36ae0bf2fce3f49eb977f008b7bbf87)
+           ver_line=`$cc_temp --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1`
+           func_cc_basename_result=`echo $ver_line | cut -d' ' -f1 | cut -d':' -f1`
+           case "$func_cc_basename_result" in
+               "gcc"* | "icc"* | "nvc"* )
+                   return
+                   ;;
+               "Intel"*)
+                   func_cc_basename_result="icx"
+                   return
+                   ;;
+               "Cray"*)
+                   func_cc_basename_result=`echo $ver_line | cut -d' ' -f2`
+                   return
+                   ;;
+               *)
+                   # base compiler name unknown compiler
+                   func_cc_basename_result="cc"
+                   return
+                   ;;
+           esac
+           ;;
+        CC | *[[\\/]]CC )
+           # For Cray PrgEnv-gnu, CC is a wrapper of g++
+           #    % CC --version
+           #      g++-14 (SUSE Linux) 14.3.0
+           # For Cray PrgEnv-intel, CC is a wrapper of icpx
+           #    % CC --version
+           #      Intel(R) oneAPI DPC++/C++ Compiler 2025.3.1 (2025.3.1.20251023)
+           # For Cray PrgEnv-nvidia, CC is a wrapper of nvc++
+           #    % CC --version
+           #      nvc++ 25.5-0 64-bit target on x86-64 Linux -tp zen3-64
+           # For Cray PrgEnv-cray, CC is a wrapper of clang
+           #    % CC --version
+           #      Cray clang version 20.0.0  (8a1c0a28f36ae0bf2fce3f49eb977f008b7bbf87)
+           ver_line=`$cc_temp --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1`
+           func_cc_basename_result=`echo $ver_line | cut -d' ' -f1 | cut -d':' -f1`
+           case "$func_cc_basename_result" in
+               "g++"* | "icpc"* | "nvc"* )
+                   return
+                   ;;
+               "Intel"*)
+                   func_cc_basename_result="icpx"
+                   return
+                   ;;
+               "Cray"*)
+                   func_cc_basename_result=`echo $ver_line | cut -d' ' -f2`
+                   return
+                   ;;
+               *)
+                   # base compiler name unknown compiler
+                   func_cc_basename_result="CC"
+                   return
+                   ;;
+           esac
+           ;;
+        ftn | *[[\\/]]ftn )
+           # For Cray PrgEnv-gnu, ftn is a wrapper of gfortran
+           #    % ftn --version
+           #      GNU Fortran (SUSE Linux) 14.3.0
+           # For Cray PrgEnv-intel, ftn is a wrapper of ifx
+           #    % ftn --version
+           #      ifx (IFX) 2025.3.0 20251023
+           # For Cray PrgEnv-nvidia, ftn is a wrapper of nvfortran
+           #    % ftn --version
+           #      nvfortran 25.5-0 64-bit target on x86-64 Linux -tp zen3-64
+           # For Cray PrgEnv-cray, ftn is just Cray Fortran compiler name
+           #    % ftn --version
+           #      Cray Fortran : Version 20.0.0 (20250827170814_8a1c0a28f36ae0bf2fce3f49eb977f008b7bbf87)
+           ver_line=`$cc_temp --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1`
+           func_cc_basename_result=`echo $ver_line | cut -d' ' -f1 | cut -d':' -f1`
+           case "$func_cc_basename_result" in
+               "gfortran"* | "ifx"* | "ifort"* | "nvfortran"* )
+                   return
+                   ;;
+               "GNU"*)
+                   func_cc_basename_result="gfortran"
+                   return
+                   ;;
+               "Intel"*)
+                   func_cc_basename_result="ifx"
+                   return
+                   ;;
+               "NVIDIA"*)
+                   func_cc_basename_result="nvfortran"
+                   return
+                   ;;
+               "Cray"*)
+                   func_cc_basename_result="ftn"
+                   return
+                   ;;
+               *)
+                   # base compiler name unknown compiler
+                   func_cc_basename_result="ftn"
+                   ;;
+           esac
            ;;
         *) break;;
       esac
