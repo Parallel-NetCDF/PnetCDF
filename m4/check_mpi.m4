@@ -350,6 +350,7 @@ AC_DEFUN([UD_MPI_COMPILER_BASENAME],[
    compile_cmd=`echo $$1 | cut -d" " -f1`
    AC_MSG_CHECKING([base compiler command in $1 wrapper])
    compile_basename=
+   ver_line=`$compile_cmd --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1`
    case $compile_cmd in
         mpicc | mpicxx | mpif77 | mpif90 | mpifort | *[[\\/]]mpicc | *[[\\/]]mpicxx | *[[\\/]]mpif77 | *[[\\/]]mpif90 | *[[\\/]]mpifort )
            # MPICH, OpenMPI
@@ -368,93 +369,90 @@ AC_DEFUN([UD_MPI_COMPILER_BASENAME],[
            compile_basename=`$compile_cmd --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1 | cut -d' ' -f1 | cut -d':' -f1`
            ;;
         cc | *[[\\/]]cc )
-           # For Cray PrgEnv-intel, cc is a wrapper of icc
            # For Cray PrgEnv-gnu, cc is a wrapper of gcc
-           # For Cray PrgEnv-nvidia, cc is a wrapper of nvc
            #    % cc --version
            #      gcc-14 (SUSE Linux) 14.3.0
+           # For Cray PrgEnv-intel, cc is a wrapper of icc
            #    % cc --version
            #      Intel(R) oneAPI DPC++/C++ Compiler 2025.3.1 (2025.3.1.20251023)
+           # For Cray PrgEnv-nvidia, cc is a wrapper of nvc
            #    % cc --version
            #      nvc 25.5-0 64-bit target on x86-64 Linux -tp zen3-64
+           # For Cray PrgEnv-cray, cc is a wrapper of clang
+           #    % cc --version
+           #      Cray clang version 20.0.0  (8a1c0a28f36ae0bf2fce3f49eb977f008b7bbf87)
 
-           compile_basename=`$compile_cmd --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1 | cut -d' ' -f1 | cut -d':' -f1`
+           compile_basename=`echo $ver_line | cut -d' ' -f1 | cut -d':' -f1`
            case "$compile_basename" in
                "gcc"*)
                    ;;
                "icc"*)
                    ;;
                "Intel"*)
-                   unset cc_basename
-                   AC_CHECK_PROG(cc_basename, icx, [icx])
-                   compile_basename=$cc_basename
-                   unset cc_basename
+                   compile_basename="icx"
                    ;;
                "nvc"*)
-                   unset cc_basename
-                   AC_CHECK_PROG(cc_basename, nvc, [nvc])
-                   compile_basename=$cc_basename
-                   unset cc_basename
+                   compile_basename="nvc"
+                   ;;
+               "Cray"*)
+                   compile_basename="cc"
                    ;;
                *)
-                   # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
-                   # Cray cc -V sends the output to stderr.
-                   eval "$compile_cmd -V" < /dev/null >& conftest.ver
-                   compile_basename=`head -n1 conftest.ver |cut -d' ' -f1`
-                   ${RM} -f conftest.ver
+                   # unknown compiler
+                   compile_basename="cc"
                    ;;
            esac
            ;;
         CC | *[[\\/]]CC )
-           # For Cray PrgEnv-intel, CC is a wrapper of icpx
            # For Cray PrgEnv-gnu, CC is a wrapper of g++
-           # For Cray PrgEnv-nvidia, CC is a wrapper of nvc++
            #    % CC --version
            #      g++-14 (SUSE Linux) 14.3.0
+           # For Cray PrgEnv-intel, CC is a wrapper of icpx
            #    % CC --version
            #      Intel(R) oneAPI DPC++/C++ Compiler 2025.3.1 (2025.3.1.20251023)
+           # For Cray PrgEnv-nvidia, CC is a wrapper of nvc++
            #    % CC --version
            #      nvc++ 25.5-0 64-bit target on x86-64 Linux -tp zen3-64
+           # For Cray PrgEnv-cray, CC is a wrapper of clang
+           #    % CC --version
+           #      Cray clang version 20.0.0  (8a1c0a28f36ae0bf2fce3f49eb977f008b7bbf87)
 
-           compile_basename=`$compile_cmd --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1 | cut -d' ' -f1 | cut -d':' -f1`
+           compile_basename=`echo $ver_line | cut -d' ' -f1 | cut -d':' -f1`
            case "$compile_basename" in
                "g++"*)
                    ;;
                "icpc"*)
                    ;;
                "Intel"*)
-                   unset cxx_basename
-                   AC_CHECK_PROG(cxx_basename, icpx, [icpx])
-                   compile_basename=$cxx_basename
-                   unset cxx_basename
+                   compile_basename="icx"
                    ;;
                "nvc"*)
-                   unset cxx_basename
-                   AC_CHECK_PROG(cxx_basename, nvc++, [nvc++])
-                   compile_basename=$cxx_basename
-                   unset cxx_basename
+                   compile_basename="nvc++"
+                   ;;
+               "Cray"*)
+                   compile_basename="CC"
                    ;;
                *)
-                   # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
-                   # Cray cc -V sends the output to stderr.
-                   eval "$compile_cmd -V" < /dev/null >& conftest.ver
-                   compile_basename=`head -n1 conftest.ver |cut -d' ' -f1`
-                   ${RM} -f conftest.ver
+                   # unknown compiler
+                   compile_basename="CC"
                    ;;
            esac
            ;;
         ftn | *[[\\/]]ftn )
-           # For Cray PrgEnv-intel, ftn is a wrapper of icc
            # For Cray PrgEnv-gnu, ftn is a wrapper of gfortran
-           # For Cray PrgEnv-nvidia, ftn is a wrapper of nvfortran
            #    % ftn --version
            #      GNU Fortran (SUSE Linux) 14.3.0
+           # For Cray PrgEnv-intel, ftn is a wrapper of ifx
            #    % ftn --version
            #      ifx (IFX) 2025.3.0 20251023
+           # For Cray PrgEnv-nvidia, ftn is a wrapper of nvfortran
            #    % ftn --version
            #      nvfortran 25.5-0 64-bit target on x86-64 Linux -tp zen3-64
+           # For Cray PrgEnv-cray, ftn is just Cray Fortran compiler name
+           #    % ftn --version
+           #      Cray Fortran : Version 20.0.0 (20250827170814_8a1c0a28f36ae0bf2fce3f49eb977f008b7bbf87)
 
-           compile_basename=`$compile_cmd --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1 | cut -d' ' -f1 | cut -d':' -f1`
+           compile_basename=`echo $ver_line | cut -d' ' -f1 | cut -d':' -f1`
            case "$compile_basename" in
                "gfortran"*)
                    ;;
@@ -464,25 +462,19 @@ AC_DEFUN([UD_MPI_COMPILER_BASENAME],[
                "ifx"* | "ifort"* )
                    ;;
                "Intel"*)
-                   unset ftn_basename
-                   AC_CHECK_PROG(ftn_basename, ifx, [ifx])
-                   compile_basename=$ftn_basename
-                   unset ftn_basename
+                   compile_basename="ifx"
                    ;;
                "nvfortran"*)
                    ;;
                "NVIDIA"*)
-                   unset ftn_basename
-                   AC_CHECK_PROG(ftn_basename, nvfortran, [nvfortran])
-                   compile_basename=$ftn_basename
-                   unset ftn_basename
+                   compile_basename="nvfortran"
+                   ;;
+               "Cray"*)
+                   compile_basename="ftn"
                    ;;
                *)
-                   # For Cray PrgEnv-cray, cc is a wrapper of Cray CC
-                   # Cray cc -V sends the output to stderr.
-                   eval "$compile_cmd -V" < /dev/null >& conftest.ver
-                   compile_basename=`head -n1 conftest.ver |cut -d' ' -f1`
-                   ${RM} -f conftest.ver
+                   # unknown compiler
+                   compile_basename="ftn"
                    ;;
            esac
            ;;
@@ -491,11 +483,13 @@ AC_DEFUN([UD_MPI_COMPILER_BASENAME],[
    if test "x${compile_basename}" != x ; then
       AC_MSG_RESULT([$compile_basename])
       AC_PATH_PROG([ud_cv_mpi_compiler_basename_$1], [$compile_basename])
+      ud_vendor_version_$1="$ver_line"
    else
       AC_MSG_RESULT([not found])
+      ud_vendor_version_$1=`$compile_cmd --version -c 2>&1 | grep -v '^$' | head -n1`
    fi
-   ud_vendor_version_$1=`$compile_basename --version -c 2>&1 | grep -v '^$' | grep -v "remark" | head -n1`
    unset compile_basename
    unset compile_cmd
+   unset ver_line
 ])# UD_MPI_COMPILER_BASENAME
 
