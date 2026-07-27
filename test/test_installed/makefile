@@ -7,19 +7,23 @@ CFLAGS = $(CPPFLAGS)
 
 # NVIDIA Fortran, nvfortran, does not take option -fallow-argument-mismatch
 FCFLAGS = -w -fallow-argument-mismatch
+FCFLAGS =
 
 LDFLAGS = -L$(PNETCDF_DIR)/lib
 LDLIBS = ncmpidiff_core.o testutils.o -lpnetcdf
 
 TEST_PROGS =
+TEST_C_PROGS =
 
 C_src = ../C/pres_temp_4D_wr_rd.c
 TEST_PROGS += $(C_src:../C/%.c=%)
+TEST_C_PROGS += $(C_src:../C/%.c=%)
 %.o: ../C/%.c
 	$(CC) $(CFLAGS) -c $<
 
 header_src = ../header/header_consistency.c
 TEST_PROGS += $(header_src:../header/%.c=%)
+TEST_C_PROGS += $(header_src:../header/%.c=%)
 %.o: ../header/%.c
 	$(CC) $(CFLAGS) -c $<
 
@@ -33,6 +37,7 @@ nonblocking_src = ../nonblocking/flexible_bput.c \
                   ../nonblocking/mcoll_perf.c \
                   ../nonblocking/wait_after_indep.c
 TEST_PROGS += $(nonblocking_src:../nonblocking/%.c=%)
+TEST_C_PROGS += $(nonblocking_src:../nonblocking/%.c=%)
 %.o: ../nonblocking/%.c
 	$(CC) $(CFLAGS) -c $<
 
@@ -77,11 +82,13 @@ testcases_src = ../testcases/add_var.c \
                 ../testcases/varn_int.c \
                 ../testcases/vectors.c
 TEST_PROGS += $(testcases_src:../testcases/%.c=%)
+TEST_C_PROGS += $(testcases_src:../testcases/%.c=%)
 %.o: ../testcases/%.c
 	$(CC) $(CFLAGS) -c $<
 
 cdl_src = ../cdl/tst_cdl_hdr_parser.c
 TEST_PROGS += $(cdl_src:../cdl/%.c=%)
+TEST_C_PROGS += $(cdl_src:../cdl/%.c=%)
 %.o: ../cdl/%.c
 	$(CC) $(CFLAGS) -c $<
 
@@ -164,6 +171,9 @@ EXAMPLE_PROGS += $(examples_F90_src:../../examples/F90/%.f90=%.exe90)
 
 all: env_check ncmpidiff_core.o testutils.o utils.o $(TEST_PROGS) $(EXAMPLE_PROGS) batch.sh interactive.sh
 
+$(TEST_C_PROGS): %: %.o testutils.o ncmpidiff_core.o
+	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@ $(LDFLAGS) -lpnetcdf
+
 f90tst_parallel.exe90: ../F90/f90tst_parallel.f90 testutilsf.o
 	$(FC) $(CPPFLAGS) $(FCFLAGS) -o $@ $< testutilsf.o $(LDFLAGS) -lpnetcdf
 f90tst_parallel2.exe90: ../F90/f90tst_parallel2.f90 testutilsf.o
@@ -241,4 +251,6 @@ clean:
 	rm -f $(TEST_PROGS) $(EXAMPLE_PROGS)
 	rm -f $(OUT_DIR)/*.nc
 	rmdir $(OUT_DIR)
+
+.PHONY: all clean
 
