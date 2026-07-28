@@ -14,7 +14,8 @@ C_SUBDIRS = common \
             header \
             testcases \
             nonblocking \
-            cdl
+            cdl \
+            Lustre
 
 DIST_SUBDIRS = $(C_SUBDIRS) CXX nf_test nf90_test F90 subfile \
                largefile burst_buffer nc4 adios
