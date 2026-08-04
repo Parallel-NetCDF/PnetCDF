@@ -2937,6 +2937,7 @@ AC_CONFIG_FILES(Makefile \
                 test/F90/Makefile \
                 test/burst_buffer/Makefile \
                 test/cdl/Makefile \
+                test/Lustre/Makefile \
 )
 
 dnl The following dependency is for configure.in and configure

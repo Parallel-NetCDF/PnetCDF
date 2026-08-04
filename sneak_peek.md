@@ -62,6 +62,10 @@ This is essentially a placeholder for the next release note ...
     See [PR #230](https://github.com/Parallel-NetCDF/PnetCDF/pull/230).
 
 * Bug fixes
+  + Fix a divide-by-zero error when opening a file that is striped using the
+    Lustre Progressive File Layout (PFL). The bug was reported in
+    [Issue #234](https://github.com/Parallel-NetCDF/PnetCDF/issues/234).
+    See fix in [PR #236](https://github.com/Parallel-NetCDF/PnetCDF/pull/236).
   + Fix detection of the MPI base compiler names when PrgEnv-cray is loaded,
     where cc, CC, and ftn are wrappers of Cray clang and Cray Fortran
     compilers.
