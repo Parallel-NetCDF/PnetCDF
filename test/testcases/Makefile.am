@@ -104,6 +104,7 @@ check_PROGRAMS = file_create_open \
                  put_all_kinds \
                  redef1 \
                  iput_all_kinds \
+                 tst_zero_len_recvar \
                  tst_version
 
 M4_SRCS      = put_all_kinds.m4 \

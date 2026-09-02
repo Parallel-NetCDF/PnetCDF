@@ -122,7 +122,7 @@ put_varm(NC               *ncp,
     MPI_Offset nelems=0, bnelems=0, nbytes=0;
     MPI_Datatype itype, imaptype;
 
-    if (varp == NULL) { /* zero-sized request */
+    if (varp == NULL || fIsSet(reqMode, NC_REQ_ZERO)) { /* zero-sized request */
         itype = MPI_BYTE;
         el_size = 0;
         bnelems = 0;
@@ -345,7 +345,7 @@ get_varm(NC               *ncp,
     MPI_Offset nelems=0, bnelems=0, nbytes=0;
     MPI_Datatype itype, imaptype=MPI_DATATYPE_NULL;
 
-    if (varp == NULL) { /* zero-sized request */
+    if (varp == NULL || fIsSet(reqMode, NC_REQ_ZERO)) { /* zero-sized request */
         itype = MPI_BYTE;
         el_size = 0;
         bnelems = 0;
@@ -509,14 +509,16 @@ ncmpio_$1_var(void             *ncdp,
 
 {
     NC     *ncp=(NC*)ncdp;
-    NC_var *varp;
+    NC_var *varp=NULL;
 
     /* Check if this is a true zero-sized request. Note NC_REQ_ZERO is added to
-     * reqMode only when an error is detected at the dispatcher level.
+     * reqMode only when an error is detected at the dispatcher level, in which
+     * case varid may not be valid and must not be used to look up varp.
      */
     if (!fIsSet(reqMode, NC_REQ_ZERO)) {
         int i;
-        for (i=0; i<ncp->vars.value[varid]->ndims; i++)
+        varp = ncp->vars.value[varid];
+        for (i=0; i<varp->ndims; i++)
             if (count[i] == 0) {
                 reqMode |= NC_REQ_ZERO;
                 break;
@@ -529,8 +531,17 @@ ncmpio_$1_var(void             *ncdp,
         /* In case some processes in an aggregation group have nothing to
          * write, they still need to participate the communication part of the
          * intra-node aggregation operation.
+         *
+         * varp is handed down whenever it is known to be valid, because
+         * put_varm() consults it to decide whether this is a record variable.
+         * A zero-length collective request to a record variable must still
+         * take part in the MPI_Allreduce() and ncmpio_write_numrecs() that
+         * synchronise numrecs: the processes that do have data call them
+         * unconditionally, so a process skipping them leaves the communicator
+         * out of step. varp stays NULL only when NC_REQ_ZERO came from a
+         * dispatcher-level error, where varid cannot be trusted.
          */
-        return $1_varm(ncp, NULL, NULL, NULL, NULL, imap, NULL, 0,
+        return $1_varm(ncp, varp, NULL, NULL, NULL, imap, NULL, 0,
                        buftype, reqMode);
     }
 
