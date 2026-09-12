@@ -12,8 +12,8 @@
 
   + The Intel oneAPI compilers may not work properly when used to build the
     PnetCDF library. Note on Permutter, the GNU compiler module is loaded by
-    default. If this is not your case, commands below can be used
-    to switch to the GNU/NVIDIA module.
+    default. If this is not your case, commands below can be used to switch to
+    the GNU/NVIDIA module.
     ```console
     module swap PrgEnv-intel PrgEnv-gnu
     ```
@@ -23,24 +23,21 @@
     ```
 
   + When using Intel oneAPI compilers to building PnetCDF with Fortran feature
-    enabled, the building process, i.e. running "make" and "make install".
-    However, using the library to compile a C application program may fail with
-    the following messages complaining some MPI functions cannot be found.
+    enabled, the building process, i.e. running "make", may fail with the
+    following error messages.
     ```
-    cc test.c -L /install/path/lib -lpnetcdf
-
-    /usr/lib64/gcc/x86_64-suse-linux/14/../../../../x86_64-suse-linux/bin/ld: /opt/cray/pe/lib64/libmpifort_intel.so.12: undefined reference to `MPL_trfree'
+    Making all in FLASH-IO
+    /usr/lib64/gcc/x86_64-suse-linux/13/../../../../x86_64-suse-linux/bin/ld: flash_benchmark_io.o: in function `report_io_performance_':
+    $SCRATCH/pnetcdf-1.15.0/benchmarks/FLASH-IO/flash_benchmark_io.F90:336:(.text+0x2e4a): undefined reference to `nfmpi_inq_malloc_max_size_'
     ```
-    * In this case, user must add '-lmpifort' to the compile/link command
-      line, even if the application program is not a Fortran program, for
-      example,
-      ```
-      cc test.c -L /install/path/lib -lpnetcdf -lmpifort
-      ```
-    * Because of this issue, we recommend to use the GNU based compilers to
-      build PnetCDF on Perlmutter.
-    * This issue does not happen when the PnetCDF's Fortran feature is
-      disabled, i.e. adding '--disable-fortran' at the configure command line.
+    NERSC Consulting and Support suggested a workaround which adds the
+    following line to the configure command.
+    ```
+    --disable-shared LDFLAGS="-L${CRAY_MPICH_DIR}/lib -Wl,-rpath-link,${CRAY_MPICH_DIR}/lib"
+    ```
+    However, note that this solution will not build the shared libraries.
+    Because of this, we recommend to use the GNU based compilers to build
+    PnetCDF on Perlmutter.
 
 * [Cori @ NERSC](http://www.nersc.gov/systems/cori/)
   ```console
