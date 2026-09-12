@@ -6,6 +6,33 @@ PnetCDF Release Notes
 Version _PNETCDF_VERSION_ (_PNETCDF_RELEASE_DATE_)
 -------------------------------------
 
+* Bug fixes
+  + Fix a divide-by-zero error when opening a file that is striped using the
+    Lustre Progressive File Layout (PFL). The bug was reported in
+    [Issue #234](https://github.com/Parallel-NetCDF/PnetCDF/issues/234).
+    See fix in [PR #236](https://github.com/Parallel-NetCDF/PnetCDF/pull/236).
+  + Fix detection of the MPI base compiler names when PrgEnv-cray is loaded,
+    where cc, CC, and ftn are wrappers of Cray clang and Cray Fortran
+    compilers.
+    See [PR #233](https://github.com/Parallel-NetCDF/PnetCDF/pull/233).
+  + Fix utility program `pnetcdf_version` for printing the version string of
+    the base compiler of MPICC when the base is a classic Intel compiler.
+    See [PR #232](https://github.com/Parallel-NetCDF/PnetCDF/pull/232).
+
+* Build recipes
+  + When using Intel oneAPI compilers to build PnetCDF, users may encounter
+    errors at the link time. An ad hoc solution provided by NERSC Consulting
+    and Support has been added to `doc/README.CRAY.md`.
+
+* Other updates:
+  + All man pages have been updated with string "Print date" being replaced
+    with "Last modified date".
+    See [PR #230](https://github.com/Parallel-NetCDF/PnetCDF/pull/230).
+
+-------------------------------------
+Version 1.15.0 (July 1, 2026)
+-------------------------------------
+
 * New feature
   + Intra-node aggregation for read requests is added. This is the complement
     to the write counterpart first added to version 1.14.0. Now the intra-node
