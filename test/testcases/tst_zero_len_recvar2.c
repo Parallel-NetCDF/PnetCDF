@@ -30,7 +30,7 @@
 }
 #endif
 
-#define DIM_X 24
+#define LEN_X 4
 
 static
 int test_io(const char *out_path,
@@ -40,8 +40,8 @@ int test_io(const char *out_path,
             MPI_Info    info)
 {
     int i, err, nerrs=0, rank, nprocs, verbose=0;
-    int ncid, dimids[2], varid, buf[DIM_X], unlimdimid, req=0;
-    MPI_Offset start[2], count[2], num_rec=0;
+    int ncid, dimids[2], varid, buf[LEN_X], unlimdimid, req=0;
+    MPI_Offset dim_x, start[2], count[2], num_rec=0;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -53,8 +53,10 @@ int test_io(const char *out_path,
     err  = ncmpi_create(MPI_COMM_WORLD, out_path, NC_CLOBBER, info, &ncid);
     CHECK_ERR
 
+    dim_x = (nprocs == 1) ? LEN_X : LEN_X * (nprocs - 1);
+
     err = ncmpi_def_dim(ncid, "time", NC_UNLIMITED, dimids); CHECK_ERR
-    err = ncmpi_def_dim(ncid, "X", DIM_X, &dimids[1]); CHECK_ERR
+    err = ncmpi_def_dim(ncid, "X", dim_x, &dimids[1]); CHECK_ERR
 
     /* create a record variable of type NC_INT */
     err = ncmpi_def_var(ncid, "var", NC_INT, 2, dimids, &varid); CHECK_ERR
@@ -67,28 +69,31 @@ int test_io(const char *out_path,
 
     /* Write some records of var data. */
     count[0] = 1;
-    count[1] = DIM_X / nprocs;
+    count[1] = LEN_X;
     start[0] = 0;
-    start[1] = count[1] * rank;
+    start[1] = LEN_X * rank;
 
     /* The last process makes a zero-length request */
-    if (rank == nprocs - 1)
+    if (nprocs > 1 && rank == nprocs - 1)
         count[0] = count[1] = 0;
 
     if (verbose)
         printf("%d: start %lld %lld count %lld %lld\n", rank,
                start[0], start[1], count[0], count[1]);
 
-    for (i=0; i<DIM_X; i++) buf[i] = rank;
+    for (i=0; i<LEN_X; i++) buf[i] = rank;
 
     /* test nonblocking API */
-    err = ncmpi_iput_vara_int(ncid, varid, start, count, buf, &req); CHECK_ERR
+    if (format != NC_FORMAT_NETCDF4_CLASSIC && format != NC_FORMAT_NETCDF4) {
+        err = ncmpi_iput_vara_int(ncid, varid, start, count, buf, &req);
+        CHECK_ERR
 
-    if (coll_io)
-        err = ncmpi_wait_all(ncid, 1, &req, NULL);
-    else
-        err = ncmpi_wait(ncid, 1, &req, NULL);
-    CHECK_ERR
+        if (coll_io)
+            err = ncmpi_wait_all(ncid, 1, &req, NULL);
+        else
+            err = ncmpi_wait(ncid, 1, &req, NULL);
+        CHECK_ERR
+    }
 
     /* test blocking API */
     if (coll_io)
@@ -159,7 +164,7 @@ int main(int argc, char **argv) {
     opt.hdr_diff = true; /* run ncmpidiff for file header */
     opt.var_diff = true; /* run ncmpidiff for variables */
 
-    err = tst_main(argc, argv, "only one record variable", opt, test_io);
+    err = tst_main(argc, argv, "0-len req to record var", opt, test_io);
 
     MPI_Finalize();
 
