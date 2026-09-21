@@ -22,7 +22,7 @@
 typedef bool boolean;
 #else
 typedef int boolean;
-#if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 202311L
+#if !defined(__cplusplus) && (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 202311L)
 enum {false=0, true=1};
 #endif
 #endif
