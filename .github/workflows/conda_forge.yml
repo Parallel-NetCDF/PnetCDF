@@ -1,0 +1,206 @@
+# Test under Condar Forge environment (allows to use different version of GCC)
+name: CI - conda-forge toolchain
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - '**/*.1'
+      - '**/*.jpg'
+      - '**/*.png'
+      - 'docs/*'
+      - 'test/test_installed/*'
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+      - '**/*.1'
+      - '**/*.jpg'
+      - '**/*.png'
+      - 'docs/*'
+      - 'test/test_installed/*'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Enable manual run'
+        required: false
+        default: 'Manual trigger'
+
+jobs:
+    build:
+      strategy:
+        fail-fast: false # This disables the default cancel-on-failure behavior
+        matrix:
+          os: [ ubuntu-latest ]
+          mpi_vendor: [ mpich, openmpi ]    # [ mpich, openmpi ]
+          gcc: [ "15" ]                     # [ "14", "15" ]
+          fstype: [ ufs, mimic_lustre ]     # [ ufs, mimic_lustre ]
+          debug_mode: [ nodebug ]           # [ debug, nodebug ]
+
+      runs-on: ${{ matrix.os }}
+      timeout-minutes: 120
+
+      defaults:
+        run:
+          shell: bash -el {0}
+      steps:
+        - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+
+        - uses: mamba-org/setup-micromamba@v3
+          with:
+            environment-name: ci
+            create-args: >-
+              gcc_linux-64=${{ matrix.gcc }}
+              gxx_linux-64=${{ matrix.gcc }}
+              gfortran_linux-64=${{ matrix.gcc }}
+              ${{ matrix.mpi_vendor }}
+              autoconf>=2.72 automake libtool=2.5.4 m4 make
+
+        - name: Check versions of autotools, gcc, mpicc, etc.
+          run: |
+            set -x
+            which autoconf
+            autoconf --version
+            which automake
+            automake --version
+            which libtool
+            libtool --version
+            which m4
+            m4 --version
+            which mpicc
+            mpicc -show
+            mpifort -show
+            echo "CC=$CC"
+            $CC --version
+            echo "CXX=$CXX"
+            echo "FC=$FC"
+
+        - name: Configure UCX for GitHub-hosted runners
+          run: |
+            echo "UCX_TLS=tcp,sm,self" >> ${GITHUB_ENV}
+            echo "UCX_LOG_LEVEL=error" >> ${GITHUB_ENV}
+
+        - name: Set MPI env variables to run more processes than physical cores
+          run: |
+            if test ${{ matrix.mpi_vendor }} == mpich ; then
+              echo "MPIR_CVAR_CH4_PROGRESS_THROTTLE=1" >> ${GITHUB_ENV}
+              echo "MPIR_CVAR_CH4_PROGRESS_THROTTLE_NO_PROGRESS_COUNT=64" >> ${GITHUB_ENV}
+            else # openmpi
+              echo "OMPI_MCA_pml=ob1" >> ${GITHUB_ENV}
+              echo "OMPI_MCA_btl=self,sm" >> ${GITHUB_ENV}
+              echo "OMPI_MCA_mpi_yield_when_idle=1" >> ${GITHUB_ENV}
+            fi
+
+        - name: Clean up git untracked files
+          run: |
+            git clean -fx
+
+        - name: Initialize submodules used by PnetCDF
+          run: |
+            set -x
+            git submodule update --init --recursive
+          continue-on-error: true  # Job continues and stays "green" if this fails
+
+        - name: Build PnetCDF - ${{ matrix.fstype }}
+          env:
+            MPICC: mpicc
+            MPICXX: mpicxx
+            MPIF77: mpifort
+            MPIF90: mpifort
+            # let OpenMPI start more ranks than the runner has cores
+            OMPI_MCA_rmaps_base_oversubscribe: "yes"
+
+          run: |
+            set -x
+            autoreconf -i
+            mkdir -p ${GITHUB_WORKSPACE}/pnetcdf_output
+            if test ${{ matrix.fstype }} == mimic_lustre ; then
+                export MIMIC_LUSTRE=yes
+            fi
+            if test ${{ matrix.debug_mode }} == debug ; then
+                CONFIG_OPTS="--enable-debug"
+            else
+                CONFIG_OPTS="--disable-debug"
+            fi
+            MPI_RUN="mpiexec -n NP"
+            if test "${{ matrix.mpi_vendor }}" = "openmpi" ; then
+               MPI_RUN="mpirun --host localhost --oversubscribe -np NP"
+            fi
+            ./configure --prefix=${GITHUB_WORKSPACE}/PnetCDF \
+                        pnc_ac_debug=yes \
+                        --enable-burst_buffering \
+                        --enable-subfiling \
+                        --enable-thread-safe \
+                        --with-pthread \
+                        ${CONFIG_OPTS} \
+                        TESTOUTDIR=${GITHUB_WORKSPACE}/pnetcdf_output \
+                        TESTMPIRUN="${MPI_RUN}"
+            make -s LIBTOOLFLAGS=--silent V=1 -j 8 tests
+
+        - name: Print config.log
+          if: ${{ always() }}
+          run: |
+            cat ${GITHUB_WORKSPACE}/config.log
+
+        - name: make check
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            make -s LIBTOOLFLAGS=--silent V=1 check
+
+        - name: Print test log files
+          if: ${{ always() }}
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            fname=`find src test examples benchmarks -type f -name "*.log"`
+            for f in $fname ; do \
+               bname=`basename $f` ; \
+               if test "x$bname" != xconfig.log ; then \
+                  echo "" ; \
+                  echo "-------- dump $f ----------------------------" ; \
+                  cat $f ; \
+               fi ; \
+            done
+
+        - name: make ptests (run on 4,6,8 MPI processes)
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            make -s LIBTOOLFLAGS=--silent V=1 ptests
+
+        - name: make distcheck
+          env:
+            MPICC: mpicc
+            MPICXX: mpicxx
+            MPIF77: mpifort
+            MPIF90: mpifort
+            # let OpenMPI start more ranks than the runner has cores
+            OMPI_MCA_rmaps_base_oversubscribe: "yes"
+
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            make -j 8 distcheck DISTCHECK_CONFIGURE_FLAGS="--silent"
+
+        - name: make install
+          run: |
+            set -x
+            cd ${GITHUB_WORKSPACE}
+            prefix_path=${GITHUB_WORKSPACE}/pnetcdf_install
+            echo "---- test make install prefix=${prefix_path}"
+            make -s LIBTOOLFLAGS=--silent V=1 install prefix=${prefix_path}
+            test/tst_install.sh ${prefix_path}
+            prefix_path="/pnetcdf_install"
+            destdir_path=${GITHUB_WORKSPACE}/inst
+            echo "---- test make install prefix=${prefix_path} DESTDIR=${destdir_path}"
+            make -s LIBTOOLFLAGS=--silent V=1 install prefix=${prefix_path} DESTDIR=${destdir_path}
+            test/tst_install.sh ${prefix_path} ${destdir_path}
+
+        - name: Cleanup
+          if: ${{ always() }}
+          run: |
+            cd ${GITHUB_WORKSPACE}
+            make -s LIBTOOLFLAGS=--silent V=1 distclean
