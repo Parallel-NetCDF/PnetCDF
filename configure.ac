@@ -890,20 +890,6 @@ AM_CONDITIONAL(HAS_FORTRAN, [test x$has_fortran = xyes])
 AM_CONDITIONAL(HAVE_MPI_MOD, [test x$mpi_mod = xyes])
 
 if test "x${has_fortran}" = xyes ; then
-   # Declare visibility of all functions are by default hidden if the compiler
-   # supports it. Check if the C compiler supports -fvisibility=hidden
-   AC_LANG_PUSH([Fortran])
-   F77_VISIBILITY_FLAGS=
-   F90_VISIBILITY_FLAGS=
-   AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],
-                         [F77_VISIBILITY_FLAGS="-fvisibility=hidden"
-                          F90_VISIBILITY_FLAGS="-fvisibility=hidden"])
-   AC_SUBST(F77_VISIBILITY_FLAGS)
-   AC_SUBST(F90_VISIBILITY_FLAGS)
-   AC_LANG_POP([Fortran])
-fi
-
-if test "x${has_fortran}" = xyes ; then
    if test "x${enable_strict}" = xyes && test "x${GFC}" = xyes; then
       dnl not all Fortran compilers recognize -Wall
       FFLAGS="$FFLAGS -Wall"
