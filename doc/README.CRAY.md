@@ -10,34 +10,18 @@
                 MPICC=cc MPICXX=CC MPIF77=ftn MPIF90=ftn
     ```
 
-  + The Intel oneAPI compilers may not work properly when used to build the
-    PnetCDF library. Note on Permutter, the GNU compiler module is loaded by
-    default. If this is not your case, commands below can be used to switch to
-    the GNU/NVIDIA module.
+  + PnetCDF can also be built using the Intel oneAPI compilers or NVIDIA
+    compilers. Note on Perlmutter, the GNU compiler module is loaded by
+    default. To switch to use the Intel compilers, run command below to swap
+    the two modules.
     ```console
-    module swap PrgEnv-intel PrgEnv-gnu
+    module swap PrgEnv-gnu PrgEnv-intel
     ```
-    or
+    To switch to use the NVIDIA compilers, run command below to swap the two
+    modules.
     ```console
-    module swap PrgEnv-intel PrgEnv-nvidia
+    module swap PrgEnv-gnu PrgEnv-nvidia
     ```
-
-  + When using Intel oneAPI compilers to building PnetCDF with Fortran feature
-    enabled, the building process, i.e. running "make", may fail with the
-    following error messages.
-    ```
-    Making all in FLASH-IO
-    /usr/lib64/gcc/x86_64-suse-linux/13/../../../../x86_64-suse-linux/bin/ld: flash_benchmark_io.o: in function `report_io_performance_':
-    $SCRATCH/pnetcdf-1.15.0/benchmarks/FLASH-IO/flash_benchmark_io.F90:336:(.text+0x2e4a): undefined reference to `nfmpi_inq_malloc_max_size_'
-    ```
-    NERSC Consulting and Support suggested a workaround which adds the
-    following line to the configure command.
-    ```
-    --disable-shared LDFLAGS="-L${CRAY_MPICH_DIR}/lib -Wl,-rpath-link,${CRAY_MPICH_DIR}/lib"
-    ```
-    However, note that this solution will not build the shared libraries.
-    Because of this, we recommend to use the GNU based compilers to build
-    PnetCDF on Perlmutter.
 
 * [Cori @ NERSC](http://www.nersc.gov/systems/cori/)
   ```console
