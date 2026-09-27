@@ -60,7 +60,16 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Bug fixes
-  + none
+  + Fix a compilation error when using Intel oneAPI compilers causing some
+    Fortran APIs not visible in the shared library. Thanks to Xylar Asay-Davis
+    for reporting and suggesting the fix in
+    [Issue #242](https://github.com/Parallel-NetCDF/PnetCDF/issues/242). See
+    the fix in [PR #244](https://github.com/Parallel-NetCDF/PnetCDF/pull/244).
+  + Fix a compilation error when using C23 compilers, where boolean true and
+    false are keywords rather than macros. Thanks to Xylar Asay-Davis for
+    reporting and suggesting the fix in
+    [Issue #240](https://github.com/Parallel-NetCDF/PnetCDF/issues/240). See
+    the fix in [PR #241](https://github.com/Parallel-NetCDF/PnetCDF/pull/241).
 
 * New example programs
   + none
