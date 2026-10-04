@@ -60,6 +60,12 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Bug fixes
+  + Fix PnetCDF package file, pnetcdf.pc.in, by removing GIO library as a
+    required library. Because GIO's source codes are included in all PnetCDF
+    official releases, it is not necessary to make gio as a required package.
+    Thanks Victor Eijkhout for reporting in
+    [Issue #245](https://github.com/Parallel-NetCDF/PnetCDF/issues/245). See
+    the fix in [PR #246](https://github.com/Parallel-NetCDF/PnetCDF/pull/246).
   + Fix a compilation error when using Intel oneAPI compilers causing some
     Fortran APIs not visible in the shared library. Thanks to Xylar Asay-Davis
     for reporting and suggesting the fix in
