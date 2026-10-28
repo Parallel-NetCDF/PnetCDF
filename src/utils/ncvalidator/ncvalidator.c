@@ -97,7 +97,14 @@ static const char *off_limit = "https://docs.unidata.ucar.edu/nug/current/file_s
 
 typedef int nc_type;
 
-#define MIN_NC_XSZ 32
+/*
+ * The minimum file size of a CDF-1 or CDF-2 file is 32 bytes.
+ * For CDF-5 files, the minimum is 48 bytes.
+ */
+#define CDF1_MIN_FSIZE 32
+#define CDF2_MIN_FSIZE 32
+#define CDF5_MIN_FSIZE 48
+
 #define NC_DEFAULT_CHUNKSIZE 1048576
 
 #define NC_FORMAT_UNKNOWN         -1
@@ -2263,14 +2270,19 @@ val_get_NC(int fd, NC *ncp)
     /* Initialize the get buffer that stores the header read from the file */
     getbuf.offset = 0;     /* read from start of the file */
 
-    /* CDF-5's minimum header size is 4 bytes more than CDF-1 and CDF-2's */
+    /* CDF-1 and 2's minimum header size is 32 bytes.
+     * CDF-5's minimum header size is 48 bytes.
+     * netcdf_file = header data
+     * header      = magic numrecs dim_list gatt_list var_list
+     * CDF-1/2
+     *               4     4       8        8         8           = 32 bytes
+     * CDF-5
+     *               4     8       12       12        12          = 48 bytes
+     */
     getbuf.size = NC_DEFAULT_CHUNKSIZE;
     getbuf.pos  = getbuf.base = (void *)malloc(getbuf.size);
 
-    /* Fetch the next header chunk. The chunk is 'gbp->size' bytes big
-     * netcdf_file = header data
-     * header      = magic numrecs dim_list gatt_list var_list
-    */
+    /* Fetch the first header chunk. The chunk is of size 'gbp->size' bytes. */
     status = val_fetch(fd, &getbuf);
     if (status != NC_NOERR) goto fn_exit;
 
@@ -2507,10 +2519,34 @@ check_signature(char *filename)
         else if (signature[3] == 2) format = NC_FORMAT_CDF2;
         else if (signature[3] == 1) format = NC_FORMAT_CLASSIC;
 
+        /* Check if file size is at least the minimal sizes of CDF-1/2/5. */
         if (format != NC_FORMAT_UNKNOWN) {
-            close(fd); /* ignore error */
-            return format;
+            /* CDF-1 and 2's minimum header size is 32 bytes.
+             * CDF-5's minimum header size is 48 bytes.
+             * netcdf_file = header data
+             * header      = magic numrecs dim_list gatt_list var_list
+             * CDF-1/2
+             *               4     4       8        8         8   = 32 bytes
+             * CDF-5
+             *               4     8       12       12        12  = 48 bytes
+             */
+            offset = lseek(fd, 0, SEEK_END);
+            if (format == NC_FORMAT_CDF5 && offset < CDF5_MIN_FSIZE) {
+                format = NC_FORMAT_UNKNOWN;
+                fprintf(stderr,"\tfile size (%lld) is less than CDF-5 minimum (%d)!\n",(long long)offset, CDF5_MIN_FSIZE);
+            }
+            else if (format == NC_FORMAT_CDF2 && offset < CDF2_MIN_FSIZE) {
+                format = NC_FORMAT_UNKNOWN;
+                fprintf(stderr,"\tfile size (%lld) is less than CDF-2 minimum (%d)!\n",(long long)offset, CDF2_MIN_FSIZE);
+            }
+            else if (format == NC_FORMAT_CLASSIC && offset < CDF1_MIN_FSIZE) {
+                format = NC_FORMAT_UNKNOWN;
+                fprintf(stderr,"\tfile size (%lld) is less than CDF-1 minimum (%d)!\n",(long long)offset, CDF1_MIN_FSIZE);
+            }
         }
+
+        close(fd); /* ignore error */
+        return format;
     }
 
     /* The HDF5 superblock is located by searching for the HDF5 format
@@ -2631,7 +2667,8 @@ int main(int argc, char **argv)
         status = NC_EFILE;
         goto prog_exit;
     }
-    if (ncp->numrecs > 0) {
+
+    if (ncp->numrecs > 0) { /* If the file contains record variables */
         long long expect_fsize;
         expect_fsize = ncp->begin_rec + ncp->recsize * ncp->numrecs;
         if (expect_fsize < ncfilestat.st_size) {
