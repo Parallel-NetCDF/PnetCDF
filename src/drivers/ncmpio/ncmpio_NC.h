@@ -105,12 +105,6 @@ typedef struct {
  * and vice versa */
 #define NCMPII_ECHAR(nctype, mpitype) ((((nctype) == NC_CHAR) == ((mpitype) != MPI_CHAR)) ? NC_ECHAR : NC_NOERR)
 
-/*
- * The external size of an empty netcdf version 1 file is 32 bytes, which is
- * also set as the initial value of ncp->xsz.
- */
-#define MIN_NC_XSZ 32
-
 typedef enum {
     NC_UNSPECIFIED =  0,  /* ABSENT */
     NC_DIMENSION   = 10,  /* \x00 \x00 \x00 \x0A */

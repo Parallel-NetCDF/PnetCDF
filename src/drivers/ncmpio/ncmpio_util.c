@@ -135,14 +135,16 @@ void ncmpio_hint_extract(NC       *ncp,
                 ncp->hdr_chunk = PNC_HDR_READ_CHUNK_SIZE;
             else if (llval > NC_MAX_INT) /* limit to NC_MAX_INT */
                 ncp->hdr_chunk = NC_MAX_INT;
-            else if (llval < 48)
-                /* minimum file sizes: 32 bytes for CDF-1 and 2, 48 for CDF5 */
-                ncp->hdr_chunk = 48;
+            else if (llval < CDF5_MIN_FSIZE)
+                /* minimum file header size for CDF-1 and 2 files is 32 bytes,
+                 * and 48 bytes for CDF-5.
+                 */
+                ncp->hdr_chunk = CDF5_MIN_FSIZE;
             else
                 ncp->hdr_chunk = (int)llval;
 
-            /* CDF-5's minimum header size is 4 bytes more than CDF-1 2's */
-            ncp->hdr_chunk = PNETCDF_RNDUP(MAX(MIN_NC_XSZ+4, ncp->hdr_chunk),
+            /* CDF-5's minimum header size is CDF5_MIN_FSIZE, 48 bytes */
+            ncp->hdr_chunk = PNETCDF_RNDUP(MAX(CDF5_MIN_FSIZE, ncp->hdr_chunk),
                                            X_ALIGN);
         }
     }
