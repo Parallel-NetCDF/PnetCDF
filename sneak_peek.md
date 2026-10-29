@@ -57,7 +57,11 @@ This is essentially a placeholder for the next release note ...
   + none
 
 * Other updates:
-  + none
+  + Check the size of a given netCDF file to be opened against the minimum size
+    calculated based on the CDF file format specifications. The error code
+    NC_ENOTNC will be returned if the file size is smaller than the minimum.
+    The minimum file size for CDF-1 and 2 is 32 bytes, and for CDF-5 48 bytes.
+    See [PR #247](https://github.com/Parallel-NetCDF/PnetCDF/pull/247).
 
 * Bug fixes
   + Fix PnetCDF package file, pnetcdf.pc.in, by removing GIO library as a

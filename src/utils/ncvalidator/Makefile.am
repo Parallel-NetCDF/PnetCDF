@@ -65,7 +65,10 @@ ENOTNC_FILES =   bad_magic.nc \
                  bad_tag_vattr.nc5 \
                  bad_tag_variable.nc1 \
                  bad_tag_variable.nc2 \
-                 bad_tag_variable.nc5
+                 bad_tag_variable.nc5 \
+                 bad_min.nc1 \
+                 bad_min.nc2 \
+                 bad_min.nc5
 
 EVARSIZE_FILES = bad_large_fixed_var.nc2 \
                  bad_large_rec_2_vars.nc2 \

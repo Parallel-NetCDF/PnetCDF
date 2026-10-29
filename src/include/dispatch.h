@@ -10,6 +10,14 @@
 #include <pnetcdf.h>
 #include <mpi.h>
 
+/*
+ * The minimum file size of a CDF-1 or CDF-2 file is 32 bytes.
+ * For CDF-5 files, the minimum is 48 bytes.
+ */
+#define CDF1_MIN_FSIZE 32
+#define CDF2_MIN_FSIZE 32
+#define CDF5_MIN_FSIZE 48
+
 /* various I/O modes or types */
 #define NC_REQ_COLL    0x00000001  /* collective request */
 #define NC_REQ_INDEP   0x00000002  /* independent request */

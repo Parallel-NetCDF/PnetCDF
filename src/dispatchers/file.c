@@ -2073,13 +2073,65 @@ ncmpi_inq_file_format(const char *filename,
         close(fd); /* ignore error */
         DEBUG_RETURN_ERROR(NC_EFILE)
     }
-    if (close(fd) == -1)
-        DEBUG_RETURN_ERROR(NC_EFILE)
 
     if (memcmp(signature, cdf_signature, 3) == 0) {
+        /* The first 3 characters of the file are "CDF" */
              if (signature[3] == 5)  *formatp = NC_FORMAT_CDF5;
         else if (signature[3] == 2)  *formatp = NC_FORMAT_CDF2;
         else if (signature[3] == 1)  *formatp = NC_FORMAT_CLASSIC;
+
+        /* Check if file size is at least the minimal sizes of CDF-1/2/5. */
+        if (*formatp != NC_FORMAT_UNKNOWN) {
+            /* CDF-1 and 2's minimum header size is 32 bytes.
+             * CDF-5's minimum header size is 48 bytes.
+             * netcdf_file = header data
+             * header      = magic numrecs dim_list gatt_list var_list
+             * CDF-1/2
+             *               4     4       8        8         8   = 32 bytes
+             * CDF-5
+             *               4     8       12       12        12  = 48 bytes
+             */
+            off_t offset = lseek(fd, 0, SEEK_END);
+            if (*formatp == NC_FORMAT_CDF5 && offset < CDF5_MIN_FSIZE) {
+                *formatp = NC_FORMAT_UNKNOWN;
+                char *_env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");
+                if (_env_str != NULL && *_env_str != '0') {
+                    int _rank;
+                    MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
+                    fprintf(stderr,"Rank %d: error at line %d of %s in %s\n",
+                    _rank,__LINE__,__func__,__FILE__);
+                    fprintf(stderr,"\tfile size (%lld) is less than CDF-5 minimum (%d)!\n",(long long)offset, CDF5_MIN_FSIZE);
+                }
+            }
+            else if (*formatp == NC_FORMAT_CDF2 && offset < CDF2_MIN_FSIZE) {
+                *formatp = NC_FORMAT_UNKNOWN;
+                char *_env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");
+                if (_env_str != NULL && *_env_str != '0') {
+                    int _rank;
+                    MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
+                    fprintf(stderr,"Rank %d: error at line %d of %s in %s\n",
+                    _rank,__LINE__,__func__,__FILE__);
+                    fprintf(stderr,"\tfile size (%lld) is less than CDF-2 minimum (%d)!\n",(long long)offset, CDF2_MIN_FSIZE);
+                }
+            }
+            else if (*formatp == NC_FORMAT_CLASSIC && offset < CDF1_MIN_FSIZE) {
+                *formatp = NC_FORMAT_UNKNOWN;
+                char *_env_str = getenv("PNETCDF_VERBOSE_DEBUG_MODE");
+                if (_env_str != NULL && *_env_str != '0') {
+                    int _rank;
+                    MPI_Comm_rank(MPI_COMM_WORLD, &_rank);
+                    fprintf(stderr,"Rank %d: error at line %d of %s in %s\n",
+                    _rank,__LINE__,__func__,__FILE__);
+                    fprintf(stderr,"\tfile size (%lld) is less than CDF-1 minimum (%d)!\n",(long long)offset, CDF1_MIN_FSIZE);
+                }
+            }
+        }
+
+        /* close the file */
+        if (close(fd) == -1)
+            DEBUG_RETURN_ERROR(NC_EFILE)
+
+        return NC_NOERR;
     }
 
     /* check if the file is an HDF5. */
@@ -2093,7 +2145,9 @@ ncmpi_inq_file_format(const char *filename,
          */
         off_t offset=0;
 
-        fd = open(path, O_RDONLY, 00400); /* error check already done */
+        /* reset file pointer to the beginning of the file */
+        lseek(fd, 0, SEEK_SET);
+
         /* get first 8 bytes of file */
         rlen = read(fd, signature, 8); /* error check already done */
 
@@ -2102,7 +2156,10 @@ ncmpi_inq_file_format(const char *filename,
             lseek(fd, offset, SEEK_SET);
             rlen = read(fd, signature, 8);
         }
-        close(fd); /* ignore error */
+
+        /* close the file */
+        if (close(fd) == -1)
+            DEBUG_RETURN_ERROR(NC_EFILE)
 
         if (rlen == 8) { /* HDF5 signature found */
             /* TODO: whether the file is NC_FORMAT_NETCDF4_CLASSIC is
